@@ -27,6 +27,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.Conve
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ViewPagerAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
@@ -91,7 +92,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     protected open fun onInitialMediaList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
-            mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
+            val adapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
                 it.setNeedMediaDataCallback { data ->
                     viewModel.needMediaInfo(data)
                 }
@@ -99,27 +100,31 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                     onMediaClick(item)
                 })
-            })
+            }).also { mediaAdapter = it }
+
             with((binding ?: return).rvFiles) {
                 setHasFixedSize(true)
-                adapter = mediaAdapter
+                this.adapter = adapter
                 layoutManager = GridLayoutManager(requireContext(), getSpanCount()).also {
                     it.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                         override fun getSpanSize(position: Int): Int {
-                            return when (mediaAdapter?.getItemViewType(position)) {
+                            return when (adapter.getItemViewType(position)) {
                                 ChannelAttachmentViewHolderFactory.ItemType.Loading.ordinal -> 3
+                                ChannelAttachmentViewHolderFactory.ItemType.MediaDate.ordinal -> 3
                                 else -> 1
                             }
                         }
                     }
                 }
 
+                addItemDecoration(MediaStickHeaderItemDecoration(adapter))
+
                 addOnScrollListener(object : RecyclerView.OnScrollListener() {
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(recyclerView, dx, dy)
                         if (isLastItemDisplaying() && viewModel.canLoadPrev())
-                            loadMoreMediaList(mediaAdapter?.getLastMediaItem()?.file?.id ?: 0,
-                                mediaAdapter?.getFileItems()?.size ?: 0)
+                            loadMoreMediaList(adapter.getLastMediaItem()?.file?.id
+                                    ?: 0, adapter.getFileItems().size)
                     }
                 })
             }
