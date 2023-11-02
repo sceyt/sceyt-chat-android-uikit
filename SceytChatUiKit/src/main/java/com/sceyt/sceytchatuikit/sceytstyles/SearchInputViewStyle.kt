@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.sceytconfigs
+package com.sceyt.sceytchatuikit.sceytstyles
 
 import android.content.Context
 import android.content.res.TypedArray

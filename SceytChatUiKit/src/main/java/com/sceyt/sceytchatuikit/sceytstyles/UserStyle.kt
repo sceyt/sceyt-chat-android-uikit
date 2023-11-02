@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.sceytconfigs
+package com.sceyt.sceytchatuikit.sceytstyles
 
 import androidx.annotation.DrawableRes
 import com.sceyt.sceytchatuikit.R

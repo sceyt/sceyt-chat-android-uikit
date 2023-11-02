@@ -10,7 +10,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytItemReactedUserBinding
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
+import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 
 class ReactedUsersAdapter(private var clickListener: OnItemClickListener) : ListAdapter<ReactedUserItem, BaseViewHolder<ReactedUserItem>>(DIFF_UTIL) {
 

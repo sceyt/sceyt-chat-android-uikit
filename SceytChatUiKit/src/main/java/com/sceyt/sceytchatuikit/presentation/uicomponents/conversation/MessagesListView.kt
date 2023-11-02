@@ -71,7 +71,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.Po
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupReactionsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.forward.SceytForwardActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
-import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MAX_SELF_REACTIONS_SIZE
 

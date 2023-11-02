@@ -3,8 +3,8 @@ package com.sceyt.sceytchatuikit.shared.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import android.text.format.DateFormat
-import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
-import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
+import com.sceyt.sceytchatuikit.sceytstyles.ChannelStyle
+import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.dateformaters.DateFormatData
 import java.text.ParseException
 import java.text.SimpleDateFormat

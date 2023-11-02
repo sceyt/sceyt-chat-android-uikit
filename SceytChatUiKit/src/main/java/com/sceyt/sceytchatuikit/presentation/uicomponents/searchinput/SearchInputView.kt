@@ -19,7 +19,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputEventListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputEventListenersImpl
-import com.sceyt.sceytchatuikit.sceytconfigs.SearchInputViewStyle
+import com.sceyt.sceytchatuikit.sceytstyles.SearchInputViewStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
