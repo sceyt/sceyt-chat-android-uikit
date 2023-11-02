@@ -12,7 +12,12 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentChannelLinksBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
+import com.sceyt.sceytchatuikit.extensions.openLink
+import com.sceyt.sceytchatuikit.extensions.parcelable
+import com.sceyt.sceytchatuikit.extensions.screenHeightPx
+import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
@@ -21,6 +26,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.Conve
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ViewPagerAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
@@ -89,21 +95,22 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     open fun onInitialLinksList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
-            mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext(), LinkPreviewHelper(lifecycleScope)).also {
+            val adapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext(), LinkPreviewHelper(lifecycleScope)).also {
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                     onLinkClick(item.file.url)
                 })
-            })
+            }).also { mediaAdapter = it }
 
             with((binding ?: return).rvLinks) {
-                adapter = mediaAdapter
+                this.adapter = adapter
+                addItemDecoration(MediaStickHeaderItemDecoration(adapter))
 
                 addOnScrollListener(object : RecyclerView.OnScrollListener() {
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(recyclerView, dx, dy)
                         if (isLastItemDisplaying() && viewModel.canLoadPrev()) {
-                            loadMoreLinksList(mediaAdapter?.getLastMediaItem()?.file?.id ?: 0,
-                                mediaAdapter?.getFileItems()?.size ?: 0)
+                            loadMoreLinksList(adapter.getLastMediaItem()?.file?.id ?: 0,
+                                adapter.getFileItems().size)
                         }
                     }
                 })

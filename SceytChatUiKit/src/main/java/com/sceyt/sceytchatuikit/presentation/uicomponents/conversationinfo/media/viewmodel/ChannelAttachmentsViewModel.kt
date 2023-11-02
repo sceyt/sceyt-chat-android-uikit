@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
+import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -91,20 +92,24 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
     private fun mapToFileListItem(data: List<AttachmentWithUserData>?, hasPrev: Boolean): List<ChannelFileItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
         val fileItems = arrayListOf<ChannelFileItem>()
+        var prevItem: AttachmentWithUserData? = null
 
-        data.map {
-            val item: ChannelFileItem? = when (it.attachment.type) {
-                AttachmentTypeEnum.Video.value() -> ChannelFileItem.Video(it)
-                AttachmentTypeEnum.Image.value() -> ChannelFileItem.Image(it)
-                AttachmentTypeEnum.File.value() -> ChannelFileItem.File(it)
-                AttachmentTypeEnum.Voice.value() -> ChannelFileItem.Voice(it)
-                AttachmentTypeEnum.Link.value() -> ChannelFileItem.Link(it)
+        data.sortedByDescending { it.attachment.createdAt }.forEach { item ->
+            if (prevItem == null || !DateTimeUtil.isSameDay(prevItem?.attachment?.createdAt
+                            ?: 0, item.attachment.createdAt)) {
+                fileItems.add(ChannelFileItem.MediaDate(item))
+            }
+            val fileItem: ChannelFileItem? = when (item.attachment.type) {
+                AttachmentTypeEnum.Video.value() -> ChannelFileItem.Video(item)
+                AttachmentTypeEnum.Image.value() -> ChannelFileItem.Image(item)
+                AttachmentTypeEnum.File.value() -> ChannelFileItem.File(item)
+                AttachmentTypeEnum.Voice.value() -> ChannelFileItem.Voice(item)
+                AttachmentTypeEnum.Link.value() -> ChannelFileItem.Link(item)
                 else -> null
             }
-            item?.let { fileItem -> fileItems.add(fileItem) }
+            fileItem?.let { fileItems.add(it) }
+            prevItem = item
         }
-
-        fileItems.sortByDescending { it.file.createdAt }
 
         if (hasPrev)
             fileItems.add(ChannelFileItem.LoadingMoreItem)

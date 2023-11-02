@@ -18,7 +18,6 @@ import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
-import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
@@ -27,6 +26,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.Conve
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ViewPagerAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -74,22 +74,24 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     open fun onInitialVoiceList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
-            mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
+           val adapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, _ ->
                     // voice message play functionality is handled in VoiceMessageViewHolder
                 })
 
                 it.setNeedMediaDataCallback { data -> viewModel.needMediaInfo(data) }
-            })
+            }).also { mediaAdapter = it }
+
             with((binding ?: return).rvVoice) {
-                adapter = mediaAdapter
+                this.adapter = adapter
+                addItemDecoration(MediaStickHeaderItemDecoration(adapter))
 
                 addOnScrollListener(object : RecyclerView.OnScrollListener() {
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(recyclerView, dx, dy)
                         if (isLastItemDisplaying() && viewModel.canLoadPrev())
-                            loadMoreFilesList(mediaAdapter?.getLastMediaItem()?.file?.id ?: 0,
-                                mediaAdapter?.getFileItems()?.size ?: 0)
+                            loadMoreFilesList(adapter.getLastMediaItem()?.file?.id ?: 0,
+                                adapter.getFileItems().size)
                     }
                 })
             }

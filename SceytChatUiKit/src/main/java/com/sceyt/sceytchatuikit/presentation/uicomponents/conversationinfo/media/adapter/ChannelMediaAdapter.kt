@@ -4,16 +4,19 @@ import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelMediaDateBinding
 import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.AttachmentsDiffUtil
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
+import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import java.util.Date
 
 class ChannelMediaAdapter(
         private var attachments: ArrayList<ChannelFileItem>,
         private val attachmentViewHolderFactory: ChannelAttachmentViewHolderFactory,
-) : RecyclerView.Adapter<BaseFileViewHolder<ChannelFileItem>>() {
+) : RecyclerView.Adapter<BaseFileViewHolder<ChannelFileItem>>(), MediaStickHeaderItemDecoration.StickyHeaderInterface {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<ChannelFileItem> {
         return attachmentViewHolderFactory.createViewHolder(parent, viewType)
@@ -51,16 +54,32 @@ class ChannelMediaAdapter(
         removeLoading()
         if (items.isEmpty()) return
 
-        attachments.addAll(items)
-        if (attachments.size == items.size)
+        val updatedItems = checkMaybeShouldRemoveDateItem(items)
+
+        attachments.addAll(updatedItems)
+        if (attachments.size == updatedItems.size)
             notifyDataSetChanged()
         else
-            notifyItemRangeInserted(attachments.size - items.size, items.size)
+            notifyItemRangeInserted(attachments.size - updatedItems.size, updatedItems.size)
     }
 
-    fun getLastMediaItem() = attachments.findLast { it !is ChannelFileItem.LoadingMoreItem }
+    private fun checkMaybeShouldRemoveDateItem(itemsToAdd: List<ChannelFileItem>): List<ChannelFileItem> {
+        return attachments.findLast { it is ChannelFileItem.MediaDate }?.let { date1 ->
+            itemsToAdd.find { item -> item is ChannelFileItem.MediaDate }?.let { date2 ->
+                if (DateTimeUtil.isSameDay(date1.getCreatedAt(), date2.getCreatedAt())) {
+                    val newItems = itemsToAdd.toArrayList()
+                    newItems.remove(date2)
+                    newItems
+                } else itemsToAdd
+            }
+        } ?: itemsToAdd
+    }
 
-    fun getFileItems() = attachments.filter { it !is ChannelFileItem.LoadingMoreItem }
+    fun getLastMediaItem() = attachments.findLast { it.isMediaItem() }
+
+    fun getFileItems() = attachments.filter { it.isMediaItem() }
+
+    fun getData() = attachments
 
     @SuppressLint("NotifyDataSetChanged")
     fun clearData() {
@@ -73,5 +92,13 @@ class ChannelMediaAdapter(
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
         productDiffResult.dispatchUpdatesToSafety(recyclerView)
         attachments = data.toArrayList()
+    }
+
+    override fun bindHeaderData(header: SceytItemChannelMediaDateBinding, headerPosition: Int) {
+        header.tvDate.text = DateTimeUtil.convertDateToString(Date(attachments[headerPosition].getCreatedAt()), "MMMM dd")
+    }
+
+    override fun isHeader(itemPosition: Int): Boolean {
+        return attachments[itemPosition] is ChannelFileItem.MediaDate
     }
 }

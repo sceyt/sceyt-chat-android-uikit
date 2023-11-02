@@ -26,6 +26,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.Conve
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ViewPagerAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import kotlinx.coroutines.flow.filterNot
@@ -73,20 +74,22 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     open fun onInitialFilesList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
-            mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
+            val adapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                     item.file.openFile(requireContext())
                 })
-            })
+            }).also { mediaAdapter = it }
+
             with((binding ?: return).rvFiles) {
-                adapter = mediaAdapter
+                this.adapter = adapter
+                addItemDecoration(MediaStickHeaderItemDecoration(adapter))
 
                 addOnScrollListener(object : RecyclerView.OnScrollListener() {
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(recyclerView, dx, dy)
                         if (isLastItemDisplaying() && viewModel.canLoadPrev())
-                            loadMoreFilesList(mediaAdapter?.getLastMediaItem()?.file?.id
-                                    ?: 0, mediaAdapter?.getFileItems()?.size ?: 0)
+                            loadMoreFilesList(adapter.getLastMediaItem()?.file?.id
+                                    ?: 0, adapter.getFileItems().size)
                     }
                 })
             }
