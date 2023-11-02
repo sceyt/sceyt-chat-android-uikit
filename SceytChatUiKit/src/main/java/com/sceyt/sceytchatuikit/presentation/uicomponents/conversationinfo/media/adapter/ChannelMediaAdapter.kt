@@ -95,10 +95,14 @@ class ChannelMediaAdapter(
     }
 
     override fun bindHeaderData(header: SceytItemChannelMediaDateBinding, headerPosition: Int) {
-        header.tvDate.text = DateTimeUtil.convertDateToString(Date(attachments[headerPosition].getCreatedAt()), "MMMM dd")
+        header.tvDate.text = DateTimeUtil.convertDateToString(Date(attachments[headerPosition].getCreatedAt()), MEDIA_DATE_PATTERN)
     }
 
     override fun isHeader(itemPosition: Int): Boolean {
         return attachments[itemPosition] is ChannelFileItem.MediaDate
+    }
+
+    companion object {
+        const val MEDIA_DATE_PATTERN = "MMMM dd"
     }
 }
