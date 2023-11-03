@@ -17,7 +17,7 @@ import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
-import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
+import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
@@ -61,6 +61,8 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     private fun initViewModel() {
+        viewModel.observeToUpdateAfterOnResume(this)
+
         lifecycleScope.launch {
             viewModel.filesFlow.filterNot { it.isEmpty() }.collect(::onInitialFilesList)
         }
@@ -74,10 +76,16 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     open fun onInitialFilesList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
-            val adapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
+            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(requireContext()).also {
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                     item.file.openFile(requireContext())
                 })
+
+                it.setClickListener(AttachmentClickListeners.AttachmentLoaderClickListener { _, item ->
+                    viewModel.pauseOrResumeUpload(item, channel.id)
+                })
+
+                it.setNeedMediaDataCallback { data -> viewModel.needMediaInfo(data) }
             }).also { mediaAdapter = it }
 
             with((binding ?: return).rvFiles) {

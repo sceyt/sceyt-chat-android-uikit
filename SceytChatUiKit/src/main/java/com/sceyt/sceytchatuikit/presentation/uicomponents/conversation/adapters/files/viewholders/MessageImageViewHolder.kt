@@ -2,9 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import android.util.Size
 import com.sceyt.sceytchatuikit.databinding.SceytMessageImageItemBinding
-import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -22,7 +20,6 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoad
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
-import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
@@ -50,23 +47,8 @@ class MessageImageViewHolder(
         }
     }
 
-    override fun bind(item: FileListItem) {
-        super.bind(item)
-
-        setListener()
-
-        binding.loadProgress.release(item.file.progressPercent)
-        viewHolderHelper.transferData?.let {
-            updateState(it, true)
-            if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
-        }
-    }
-
-    private fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
-
-        binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
+    override fun updateState(data: TransferData, isOnBind: Boolean) {
+        super.updateState(data, isOnBind)
         when (data.state) {
             PendingUpload, ErrorUpload, PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(binding.fileImage, ::requestThumb)
@@ -120,10 +102,6 @@ class MessageImageViewHolder(
     override fun getThumbSize() = Size(1080, 1080)
 
     override fun needThumbFor() = ThumbFor.ConversationInfo
-
-    private fun setListener() {
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
-    }
 
     private fun SceytMessageImageItemBinding.setupStyle() {
         loadProgress.setProgressColor(context.getCompatColor(MessagesStyle.mediaLoaderColor))

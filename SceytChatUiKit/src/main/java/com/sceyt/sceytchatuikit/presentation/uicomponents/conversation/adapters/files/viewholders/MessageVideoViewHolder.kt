@@ -3,9 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 import android.util.Size
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.databinding.SceytMessageVideoItemBinding
-import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -23,7 +21,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoad
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
-import com.sceyt.sceytchatuikit.persistence.filetransfer.getProgressWithState
+import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -62,22 +60,11 @@ class MessageVideoViewHolder(
         super.bind(item)
         binding.parentLayout.clipToOutline = true
         binding.videoView.isVisible = false
-        binding.loadProgress.release(item.file.progressPercent)
         setVideoDuration()
-
-        setListener()
-
-        viewHolderHelper.transferData?.let {
-            updateState(it, true)
-            if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
-        }
     }
 
-    private fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
-
-        binding.loadProgress.getProgressWithState(data.state, data.progressPercent)
+    override fun updateState(data: TransferData, isOnBind: Boolean) {
+        super.updateState(data, isOnBind)
         val imageView = binding.videoViewController.getImageView()
         when (data.state) {
             PendingUpload, ErrorUpload, PauseUpload -> {
@@ -150,9 +137,8 @@ class MessageVideoViewHolder(
 
     override fun needThumbFor() = ThumbFor.ConversationInfo
 
-    private fun setListener() {
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
-    }
+    override val loadingProgressView: SceytCircularProgressView?
+        get() = binding.loadProgress
 
     private fun initializePlayer(mediaPath: String?) {
         binding.videoViewController.setPlayerViewAndPath(binding.videoView, mediaPath)

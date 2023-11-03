@@ -19,8 +19,8 @@ import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
 class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
                      private val linkPreview: LinkPreviewHelper?,
-                     private val clickListener: AttachmentClickListenersImpl)
-    : BaseFileViewHolder<ChannelFileItem>(binding.root, {}) {
+                     private val clickListener: AttachmentClickListenersImpl
+) : BaseFileViewHolder<ChannelFileItem>(binding.root, {}) {
 
 
     init {

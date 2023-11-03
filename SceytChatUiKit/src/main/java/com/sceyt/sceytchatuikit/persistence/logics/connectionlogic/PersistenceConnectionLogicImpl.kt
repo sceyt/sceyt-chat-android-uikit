@@ -11,19 +11,19 @@ import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
 
 internal class PersistenceConnectionLogicImpl(
         private var preference: SceytSharedPreference,
         private val usersDao: UserDao,
-        private val usersRepository: UsersRepository) : PersistenceConnectionLogic, CoroutineScope {
+        private val usersRepository: UsersRepository,
+        globalScope: CoroutineScope) : PersistenceConnectionLogic {
 
     init {
         if (ConnectionEventsObserver.connectionState == ConnectionState.Connected)
-            launch { onChangedConnectStatus(ConnectionStateData(ConnectionState.Connected)) }
+            globalScope.launch {
+                onChangedConnectStatus(ConnectionStateData(ConnectionState.Connected))
+            }
     }
 
     override suspend fun onChangedConnectStatus(state: ConnectionStateData) {
@@ -41,7 +41,4 @@ internal class PersistenceConnectionLogicImpl(
                 response.data?.toUserEntity()?.let { entity -> usersDao.insertUser(entity) }
         }
     }
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
 }

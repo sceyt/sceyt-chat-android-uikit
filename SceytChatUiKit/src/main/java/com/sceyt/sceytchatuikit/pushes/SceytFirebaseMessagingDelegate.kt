@@ -69,7 +69,7 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
     }
 
     @JvmStatic
-    fun handleRemoteMessage(remoteMessage: RemoteMessage): Boolean {
+    suspend fun handleRemoteMessage(remoteMessage: RemoteMessage): Boolean {
         if (!remoteMessage.isValid()) {
             return false
         }
@@ -84,7 +84,7 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
     }
 
     @JvmStatic
-    fun handleRemoteMessageGetData(remoteMessage: RemoteMessage): RemoteMessageData? {
+    suspend fun handleRemoteMessageGetData(remoteMessage: RemoteMessage): RemoteMessageData? {
         if (!remoteMessage.isValid()) {
             return null
         }
