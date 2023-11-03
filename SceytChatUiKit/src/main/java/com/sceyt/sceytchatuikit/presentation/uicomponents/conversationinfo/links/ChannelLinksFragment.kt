@@ -18,7 +18,7 @@ import com.sceyt.sceytchatuikit.extensions.openLink
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
-import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
+import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
@@ -95,7 +95,7 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     open fun onInitialLinksList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
-            val adapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext(), LinkPreviewHelper(lifecycleScope)).also {
+            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(requireContext(), LinkPreviewHelper(lifecycleScope)).also {
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                     onLinkClick(item.file.url)
                 })

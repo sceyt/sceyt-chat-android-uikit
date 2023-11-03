@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelMediaDateBinding
 import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
+import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.AttachmentsDiffUtil
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
@@ -14,7 +15,7 @@ import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
 class ChannelMediaAdapter(
-        private var attachments: ArrayList<ChannelFileItem>,
+        private var attachments: SyncArrayList<ChannelFileItem>,
         private val attachmentViewHolderFactory: ChannelAttachmentViewHolderFactory,
 ) : RecyclerView.Adapter<BaseFileViewHolder<ChannelFileItem>>(), MediaStickHeaderItemDecoration.StickyHeaderInterface {
 
@@ -45,8 +46,10 @@ class ChannelMediaAdapter(
     }
 
     private fun removeLoading() {
-        if (attachments.remove(ChannelFileItem.LoadingMoreItem))
-            notifyItemRemoved(attachments.lastIndex + 1)
+        attachments.indexOf(ChannelFileItem.LoadingMoreItem).takeIf { it != -1 }?.let {
+            attachments.removeAt(it)
+            notifyItemRemoved(it)
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -83,7 +86,7 @@ class ChannelMediaAdapter(
 
     @SuppressLint("NotifyDataSetChanged")
     fun clearData() {
-        attachments = arrayListOf()
+        attachments = SyncArrayList()
         notifyDataSetChanged()
     }
 
@@ -91,7 +94,7 @@ class ChannelMediaAdapter(
         val myDiffUtil = AttachmentsDiffUtil(attachments, data)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
         productDiffResult.dispatchUpdatesToSafety(recyclerView)
-        attachments = data.toArrayList()
+        attachments = SyncArrayList(data)
     }
 
     override fun bindHeaderData(header: SceytItemChannelMediaDateBinding, headerPosition: Int) {

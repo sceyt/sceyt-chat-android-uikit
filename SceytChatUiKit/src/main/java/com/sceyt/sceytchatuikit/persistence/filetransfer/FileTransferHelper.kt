@@ -22,17 +22,16 @@ import com.sceyt.sceytchatuikit.persistence.mappers.upsertSizeMetadata
 import com.sceyt.sceytchatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 import java.io.File
-import kotlin.coroutines.CoroutineContext
 
-object FileTransferHelper : SceytKoinComponent, CoroutineScope {
+object FileTransferHelper : SceytKoinComponent {
     private val fileTransferService by inject<FileTransferService>()
     private val messagesLogic by inject<PersistenceAttachmentLogic>()
     private val fileChecksumDao by inject<FileChecksumDao>()
     private val messagesCache by inject<MessagesCache>()
+    private val globalScope by inject<CoroutineScope>()
 
     private val onTransferUpdatedLiveData_ = MutableLiveData<TransferData>()
     val onTransferUpdatedLiveData: LiveData<TransferData> = onTransferUpdatedLiveData_
@@ -64,7 +63,7 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
         it.withPrettySizes(attachment.fileSize)
         messagesCache.updateAttachmentTransferData(it)
         emitAttachmentTransferUpdate(it)
-        launch {
+        globalScope.launch(Dispatchers.IO) {
             messagesLogic.updateTransferDataByMsgTid(it)
         }
     }
@@ -74,7 +73,7 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
         it.withPrettySizes(attachment.fileSize)
         messagesCache.updateAttachmentTransferData(it)
         emitAttachmentTransferUpdate(it)
-        launch {
+        globalScope.launch(Dispatchers.IO) {
             messagesLogic.updateTransferDataByMsgTid(it)
         }
     }
@@ -87,7 +86,7 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
 
                 attachment.updateWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData)
-                launch {
+                globalScope.launch(Dispatchers.IO) {
                     messagesLogic.updateAttachmentWithTransferData(transferData)
                 }
             }
@@ -99,7 +98,7 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
 
                 attachment.updateWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData)
-                launch {
+                globalScope.launch(Dispatchers.IO) {
                     messagesLogic.updateAttachmentWithTransferData(transferData)
                 }
                 SceytLog.e(this.TAG, "Couldn't download file url:${attachment.url} error:${it.message}")
@@ -115,7 +114,7 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
 
                 attachment.updateWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData)
-                launch {
+                globalScope.launch(Dispatchers.IO) {
                     messagesLogic.updateAttachmentWithTransferData(transferData)
                 }
             }
@@ -127,7 +126,7 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
 
                 attachment.updateWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData)
-                launch {
+                globalScope.launch(Dispatchers.IO) {
                     messagesLogic.updateAttachmentWithTransferData(transferData)
                 }
                 SceytLog.e(this.TAG, "Couldn't upload file " + result.message.toString())
@@ -152,7 +151,7 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
             attachment.upsertSizeMetadata(dimensions)
 
             emitAttachmentTransferUpdate(transferData.withPrettySizes(fileSize))
-            launch {
+            globalScope.launch(Dispatchers.IO) {
                 messagesLogic.updateAttachmentFilePathAndMetadata(attachment.messageTid, newPath, fileSize, attachment.metadata)
 
                 originalFilePath?.let {
@@ -184,7 +183,4 @@ object FileTransferHelper : SceytKoinComponent, CoroutineScope {
         val fileLoadedSize = (fileSize * progressPercent / 100).toPrettySize(format)
         return Pair(fileLoadedSize, fileTotalSize)
     }
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
 }

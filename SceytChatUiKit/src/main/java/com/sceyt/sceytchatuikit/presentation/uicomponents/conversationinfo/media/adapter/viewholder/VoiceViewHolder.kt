@@ -6,7 +6,6 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelVoiceBinding
 import com.sceyt.sceytchatuikit.extensions.TAG_REF
-import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.durationToMinSecShort
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
@@ -14,10 +13,10 @@ import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayer
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
-import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
@@ -28,8 +27,8 @@ import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
                       private val clickListener: AttachmentClickListenersImpl,
                       private val userNameBuilder: ((User) -> String)?,
-                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit)
-    : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
+                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     private var lastFilePath: String? = ""
 
@@ -38,19 +37,21 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
         binding.root.setOnClickListener {
             clickListener.onAttachmentClick(it, item = fileItem)
         }
+
+        binding.loadProgress.setOnClickListener {
+            clickListener.onAttachmentLoaderClick(it, fileItem)
+        }
+
+        binding.icFile.setOnClickListener {
+            if (AudioPlayerHelper.alreadyInitialized(fileItem.file.filePath ?: "")) {
+                AudioPlayerHelper.toggle(lastFilePath)
+            } else initAudioPlayer()
+        }
     }
 
     override fun bind(item: ChannelFileItem) {
         super.bind(item)
         val attachment = item.file
-        setListener()
-
-        viewHolderHelper.transferData?.let {
-            if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
-
-            updateState(it)
-        }
 
         lastFilePath = attachment.filePath
 
@@ -66,12 +67,6 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
 
             setVoiceDuration()
             setPlayingState(AudioPlayerHelper.isPlaying(lastFilePath ?: ""))
-
-            icFile.setOnClickListener {
-                if (AudioPlayerHelper.alreadyInitialized(fileItem.file.filePath ?: "")) {
-                    AudioPlayerHelper.toggle(lastFilePath)
-                } else initAudioPlayer()
-            }
         }
     }
 
@@ -125,21 +120,14 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
         }, TAG_REF)
     }
 
-    private fun updateState(data: TransferData) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
+    override fun updateState(data: TransferData, isOnBind: Boolean) {
+        super.updateState(data, isOnBind)
 
         when (data.state) {
             TransferState.PendingDownload -> needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
-            TransferState.Downloaded -> {
-                lastFilePath = data.filePath
-            }
-
+            TransferState.Downloaded -> lastFilePath = data.filePath
             else -> return
         }
-    }
-
-    private fun SceytItemChannelVoiceBinding.setupStyle() {
-        icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
     private fun setPlayingState(playing: Boolean) {
@@ -165,7 +153,12 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
         }
     }
 
-    private fun setListener() {
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
+    override val loadingProgressView: SceytCircularProgressView
+        get() = binding.loadProgress
+
+    private fun SceytItemChannelVoiceBinding.setupStyle() {
+        icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        loadProgress.setIconTintColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        loadProgress.setProgressColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 }

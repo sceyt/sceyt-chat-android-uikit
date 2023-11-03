@@ -71,9 +71,7 @@ import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.awaitClose
@@ -84,11 +82,10 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
-import kotlin.coroutines.CoroutineContext
 
 internal class PersistenceMessagesLogicImpl(
         private val context: Context,
@@ -103,15 +100,12 @@ internal class PersistenceMessagesLogicImpl(
         private val preference: SceytSharedPreference,
         private val messagesCache: MessagesCache,
         private val channelCache: ChannelsCache
-) : PersistenceMessagesLogic, SceytKoinComponent, CoroutineScope {
+) : PersistenceMessagesLogic, SceytKoinComponent {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
     private val persistenceAttachmentLogic: PersistenceAttachmentLogic by inject()
     private val persistenceReactionLogic: PersistenceReactionsLogic by inject()
     private val createChannelAndSendMessageMutex = Mutex()
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
 
     private val onMessageFlow: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> = MutableSharedFlow(
         extraBufferCapacity = 10,
@@ -129,30 +123,28 @@ internal class PersistenceMessagesLogicImpl(
             markMessagesAs(data.first.id, Received, message.id)
     }
 
-    override fun onFcmMessage(data: RemoteMessageData) {
-        launch {
-            val message = data.message
-            if (message?.id == 0L) return@launch
-            val channelDb = persistenceChannelsLogic.getChannelFromDb(data.channel?.id
-                    ?: return@launch)
-            if (channelDb != null && (message?.createdAt ?: 0) <= channelDb.messagesClearedAt)
-                return@launch
+    override suspend fun onFcmMessage(data: RemoteMessageData) {
+        val message = data.message
+        if (message?.id == 0L) return
+        val channelDb = persistenceChannelsLogic.getChannelFromDb(data.channel?.id
+                ?: return)
+        if (channelDb != null && (message?.createdAt ?: 0) <= channelDb.messagesClearedAt)
+            return
 
-            val messageDb = messageDao.getMessageById(message?.id ?: return@launch)
+        val messageDb = messageDao.getMessageById(message?.id ?: return)
 
-            val isReaction = data.reaction != null
+        val isReaction = data.reaction != null
 
-            if (messageDb == null && !isReaction) {
-                saveMessagesToDb(arrayListOf(message), false)
-                messagesCache.add(data.channel.id, message)
-                onMessageFlow.tryEmit(Pair(data.channel, message))
-                persistenceChannelsLogic.onFcmMessage(data)
-            }
-
-            if (messageDb != null && isReaction)
-                persistenceReactionLogic.onMessageReactionUpdated(ReactionUpdateEventData(
-                    messageDb.toSceytMessage(), data.reaction!!, ReactionUpdateEventEnum.Add))
+        if (messageDb == null && !isReaction) {
+            saveMessagesToDb(arrayListOf(message), false)
+            messagesCache.add(data.channel.id, message)
+            onMessageFlow.tryEmit(Pair(data.channel, message))
+            persistenceChannelsLogic.onFcmMessage(data)
         }
+
+        if (messageDb != null && isReaction)
+            persistenceReactionLogic.onMessageReactionUpdated(ReactionUpdateEventData(
+                messageDb.toSceytMessage(), data.reaction!!, ReactionUpdateEventEnum.Add))
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
@@ -642,9 +634,9 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    private fun markMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
+    private suspend fun markMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
         // Mark messages as received
-        launch(Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             checkAndMarkChannelMessagesAsDelivered(channelId, messages)
         }
     }
