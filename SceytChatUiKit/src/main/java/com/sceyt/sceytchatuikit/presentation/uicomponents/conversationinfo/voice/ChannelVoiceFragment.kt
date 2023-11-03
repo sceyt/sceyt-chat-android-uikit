@@ -31,7 +31,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     private lateinit var channel: SceytChannel
@@ -39,7 +39,7 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     private var mediaAdapter: ChannelMediaAdapter? = null
     private var pageStateView: PageStateView? = null
     private val mediaType = listOf(AttachmentTypeEnum.Voice.value())
-    private val viewModel by viewModel<ChannelAttachmentsViewModel>()
+    private val viewModel by activityViewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelVoiceBinding.inflate(inflater, container, false).also {
@@ -132,7 +132,7 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             pageStateView = this
 
             post {
-                (requireActivity() as? ConversationInfoActivity)?.getViewPagerY()?.let {
+                (activity as? ConversationInfoActivity)?.getViewPagerY()?.let {
                     if (it > 0)
                         layoutParams.height = screenHeightPx() - it
                 }
@@ -140,9 +140,19 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         })
     }
 
-    companion object {
-        const val CHANNEL = "CHANNEL"
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mediaAdapter = null
+    }
 
+    override fun onHistoryCleared() {
+        mediaAdapter?.clearData()
+        pageStateView?.updateState(PageState.StateEmpty())
+    }
+
+    companion object {
+
+        const val CHANNEL = "CHANNEL"
         fun newInstance(channel: SceytChannel): ChannelVoiceFragment {
             val fragment = ChannelVoiceFragment()
             fragment.setBundleArguments {
@@ -150,10 +160,5 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             }
             return fragment
         }
-    }
-
-    override fun onCleared() {
-        mediaAdapter?.clearData()
-        pageStateView?.updateState(PageState.StateEmpty())
     }
 }

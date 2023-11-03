@@ -168,7 +168,8 @@ object DateTimeUtil {
         }
 
         return if (formatter.shouldFormat)
-            DateFormat.format(formatter.format, cal).toString() else formatter.title
+            "${formatter.beginTittle}${DateFormat.format(formatter.format, cal)}${formatter.endTitle}"
+        else formatter.beginTittle + formatter.endTitle
     }
 
     fun getDateTimeString(time: Long?, format: String = "HH:mm"): String {
