@@ -32,7 +32,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
 import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     protected lateinit var channel: SceytChannel
@@ -40,7 +40,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     protected var mediaAdapter: ChannelMediaAdapter? = null
     protected open val mediaType = listOf("image", "video")
     protected var pageStateView: PageStateView? = null
-    protected val viewModel by viewModel<ChannelAttachmentsViewModel>()
+    protected val viewModel by activityViewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelMediaBinding.inflate(inflater, container, false).also {
@@ -84,7 +84,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             pageStateView = this
 
             post {
-                (requireActivity() as? ConversationInfoActivity)?.getViewPagerY()?.let {
+                (activity as? ConversationInfoActivity)?.getViewPagerY()?.let {
                     if (it > 0)
                         layoutParams.height = screenHeightPx() - it
                 }
@@ -165,9 +165,19 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         viewModel.loadAttachments(channel.id, lastAttachmentId, true, mediaType, offset)
     }
 
-    companion object {
-        const val CHANNEL = "CHANNEL"
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mediaAdapter = null
+    }
 
+    override fun onHistoryCleared() {
+        mediaAdapter?.clearData()
+        pageStateView?.updateState(PageState.StateEmpty())
+    }
+
+    companion object {
+
+        const val CHANNEL = "CHANNEL"
         fun newInstance(channel: SceytChannel): ChannelMediaFragment {
             val fragment = ChannelMediaFragment()
             fragment.setBundleArguments {
@@ -175,10 +185,5 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             }
             return fragment
         }
-    }
-
-    override fun onCleared() {
-        mediaAdapter?.clearData()
-        pageStateView?.updateState(PageState.StateEmpty())
     }
 }

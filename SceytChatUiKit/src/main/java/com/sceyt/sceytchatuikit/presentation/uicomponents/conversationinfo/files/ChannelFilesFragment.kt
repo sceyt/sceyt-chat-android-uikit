@@ -31,7 +31,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     protected lateinit var channel: SceytChannel
@@ -39,7 +39,7 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     protected var mediaAdapter: ChannelMediaAdapter? = null
     protected var pageStateView: PageStateView? = null
     protected val mediaType = listOf(AttachmentTypeEnum.File.value())
-    protected val viewModel by viewModel<ChannelAttachmentsViewModel>()
+    protected val viewModel by activityViewModel<ChannelAttachmentsViewModel>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelFilesBinding.inflate(inflater, container, false).also {
@@ -133,12 +133,22 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             pageStateView = this
 
             post {
-                (requireActivity() as? ConversationInfoActivity)?.getViewPagerY()?.let {
+                (activity as? ConversationInfoActivity)?.getViewPagerY()?.let {
                     if (it > 0)
                         layoutParams.height = screenHeightPx() - it
                 }
             }
         })
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mediaAdapter = null
+    }
+
+    override fun onHistoryCleared() {
+        mediaAdapter?.clearData()
+        pageStateView?.updateState(PageState.StateEmpty())
     }
 
     companion object {
@@ -151,10 +161,5 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             }
             return fragment
         }
-    }
-
-    override fun onCleared() {
-        mediaAdapter?.clearData()
-        pageStateView?.updateState(PageState.StateEmpty())
     }
 }
