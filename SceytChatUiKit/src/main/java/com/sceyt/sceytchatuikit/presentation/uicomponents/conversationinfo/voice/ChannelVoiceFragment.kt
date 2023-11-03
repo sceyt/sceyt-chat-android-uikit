@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
@@ -31,7 +32,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     private lateinit var channel: SceytChannel
@@ -39,7 +39,7 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     private var mediaAdapter: ChannelMediaAdapter? = null
     private var pageStateView: PageStateView? = null
     private val mediaType = listOf(AttachmentTypeEnum.Voice.value())
-    private val viewModel by activityViewModel<ChannelAttachmentsViewModel>()
+    private lateinit var viewModel: ChannelAttachmentsViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelVoiceBinding.inflate(inflater, container, false).also {
@@ -51,8 +51,8 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         super.onViewCreated(view, savedInstanceState)
 
         getBundleArguments()
-        addPageStateView()
         initViewModel()
+        addPageStateView()
         loadInitialFilesList()
     }
 
@@ -61,6 +61,8 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     private fun initViewModel() {
+        viewModel = viewModels<ChannelAttachmentsViewModel>().value
+
         lifecycleScope.launch {
             viewModel.filesFlow.collect(::onInitialVoiceList)
         }

@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
@@ -39,7 +40,7 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     protected var mediaAdapter: ChannelMediaAdapter? = null
     protected var pageStateView: PageStateView? = null
     protected val mediaType = listOf("link")
-    protected val viewModel by activityViewModel<ChannelAttachmentsViewModel>()
+    protected lateinit var viewModel: ChannelAttachmentsViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelLinksBinding.inflate(inflater, container, false).also {
@@ -51,8 +52,8 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         super.onViewCreated(view, savedInstanceState)
 
         getBundleArguments()
-        addPageStateView()
         initViewModel()
+        addPageStateView()
         loadInitialLinksList()
     }
 
@@ -61,6 +62,8 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     private fun initViewModel() {
+        viewModel = viewModels<ChannelAttachmentsViewModel>().value
+
         lifecycleScope.launch {
             viewModel.filesFlow.collect(::onInitialLinksList)
         }

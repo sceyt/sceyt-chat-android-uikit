@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -32,7 +33,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
 import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     protected lateinit var channel: SceytChannel
@@ -40,7 +40,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     protected var mediaAdapter: ChannelMediaAdapter? = null
     protected open val mediaType = listOf("image", "video")
     protected var pageStateView: PageStateView? = null
-    protected val viewModel by activityViewModel<ChannelAttachmentsViewModel>()
+    protected lateinit var viewModel: ChannelAttachmentsViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelMediaBinding.inflate(inflater, container, false).also {
@@ -52,8 +52,8 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         super.onViewCreated(view, savedInstanceState)
 
         getBundleArguments()
-        addPageStateView()
         initViewModel()
+        addPageStateView()
         loadInitialMediaList()
     }
 
@@ -62,6 +62,8 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     private fun initViewModel() {
+        viewModel = viewModels<ChannelAttachmentsViewModel>().value
+
         viewModel.observeToUpdateAfterOnResume(this)
 
         lifecycleScope.launch {
