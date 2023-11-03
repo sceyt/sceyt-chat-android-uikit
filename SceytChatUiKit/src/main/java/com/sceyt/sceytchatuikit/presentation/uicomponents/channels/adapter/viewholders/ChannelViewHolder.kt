@@ -34,8 +34,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
-import com.sceyt.sceytchatuikit.sceytstyles.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytstyles.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import java.text.NumberFormat
@@ -314,7 +314,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
             else -> channel.createdAt
         }
-        return Pair(DateTimeUtil.getDateTimeStringCheckToday(context, lastMsgCreatedAt), shouldShowStatus)
+        return Pair(DateTimeUtil.getDateTimeStringWithDateFormatter(context, lastMsgCreatedAt, ChannelStyle.channelDateFormat), shouldShowStatus)
     }
 
     private fun SceytItemChannelBinding.setChannelItemStyle() {
