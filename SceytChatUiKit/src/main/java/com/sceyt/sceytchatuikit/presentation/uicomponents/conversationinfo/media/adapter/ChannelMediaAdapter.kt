@@ -11,8 +11,8 @@ import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.AttachmentsDiffUtil
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
+import com.sceyt.sceytchatuikit.sceytstyles.ConversationInfoMediaStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
-import java.util.Date
 
 class ChannelMediaAdapter(
         private var attachments: SyncArrayList<ChannelFileItem>,
@@ -98,14 +98,15 @@ class ChannelMediaAdapter(
     }
 
     override fun bindHeaderData(header: SceytItemChannelMediaDateBinding, headerPosition: Int) {
-        header.tvDate.text = DateTimeUtil.convertDateToString(Date(attachments[headerPosition].getCreatedAt()), MEDIA_DATE_PATTERN)
+        val date = DateTimeUtil.getDateTimeStringWithDateFormatter(
+            context = header.root.context,
+            time = attachments.getOrNull(headerPosition)?.getCreatedAt(),
+            dateFormatter = ConversationInfoMediaStyle.mediaDateSeparatorFormat)
+
+        header.tvDate.text = date
     }
 
     override fun isHeader(itemPosition: Int): Boolean {
-        return attachments[itemPosition] is ChannelFileItem.MediaDate
-    }
-
-    companion object {
-        const val MEDIA_DATE_PATTERN = "MMMM dd"
+        return attachments.getOrNull(itemPosition) is ChannelFileItem.MediaDate
     }
 }
