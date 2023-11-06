@@ -69,11 +69,11 @@ abstract class BaseMediaMessageViewHolder(
     }
 
     protected fun setImageSize(fileImage: View) {
+        val layoutBubble = (layoutBubble as? ConstraintLayout) ?: return
         val size = calculateScaleWidthHeight(maxSize, minSize, imageWidth = fileItem.size?.width
                 ?: maxSize,
             imageHeight = fileItem.size?.height ?: maxSize)
         resizedImageSize = size
-        val layoutBubble = (layoutBubble as? ConstraintLayout) ?: return
         val constraintSet = ConstraintSet()
         constraintSet.clone(layoutBubble)
         constraintSet.constrainMinHeight(fileImage.id, size.height)
