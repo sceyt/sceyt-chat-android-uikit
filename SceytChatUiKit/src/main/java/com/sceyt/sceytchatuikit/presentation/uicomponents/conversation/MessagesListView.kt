@@ -681,6 +681,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         multiselectDestination = map
     }
 
+    fun removeUnreadMessagesSeparator() {
+        messagesRV.removeUnreadMessagesSeparator()
+    }
+
     fun getData() = messagesRV.getData()
 
     fun getFirstMessage() = messagesRV.getFirstMsg()

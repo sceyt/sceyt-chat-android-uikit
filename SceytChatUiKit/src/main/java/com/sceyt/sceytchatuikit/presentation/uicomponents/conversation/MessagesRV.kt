@@ -303,6 +303,11 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             mAdapter.removeLoadingNext()
     }
 
+    fun removeUnreadMessagesSeparator() {
+        if (::mAdapter.isInitialized)
+            mAdapter.removeUnreadMessagesSeparator()
+    }
+
     fun clearData() {
         if (::mAdapter.isInitialized)
             mAdapter.clearData()

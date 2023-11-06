@@ -197,6 +197,13 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         }
     }
 
+    fun removeUnreadMessagesSeparator() {
+        messages.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
+            messages.removeAt(it.first)
+            notifyItemRemoved(it.first)
+        }
+    }
+
     fun sort(recyclerView: RecyclerView) {
         debounceHelper.submit {
             val myDiffUtil = MessagesDiffUtil(ArrayList(this@MessagesAdapter.messages), messages.apply {
