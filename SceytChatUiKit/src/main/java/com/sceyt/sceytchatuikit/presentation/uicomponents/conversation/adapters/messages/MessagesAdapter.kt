@@ -201,6 +201,18 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         messages.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
             messages.removeAt(it.first)
             notifyItemRemoved(it.first)
+
+            // Hide avatar and name after removing unread separator, if the previous message is from the same user
+            messages.getOrNull(it.first)?.let { item ->
+                if (item is MessageItem && item.message.canShowAvatarAndName) {
+                    messages.getOrNull(it.first - 1)?.let { prevItem ->
+                        if (prevItem is MessageItem && prevItem.message.canShowAvatarAndName && prevItem.message.user?.id == item.message.user?.id) {
+                            item.message.canShowAvatarAndName = false
+                            notifyItemChanged(it.first, Unit)
+                        }
+                    }
+                }
+            }
         }
     }
 

@@ -506,6 +506,7 @@ class MessageListViewModel(
                 val messageItem = MessageListItem.MessageItem(initMessageInfoData(sceytMessage, prevMessage, true))
 
                 if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
+                    messageItem.message.apply { canShowAvatarAndName = incoming && isGroup }
                     messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
                         unreadLineMessage = it
                     })
