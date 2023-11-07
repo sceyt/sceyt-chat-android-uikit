@@ -12,6 +12,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytInfoPageLayoutButtonsPublicChannelBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.extensions.setDrawableTop
@@ -78,7 +79,7 @@ class InfoButtonsPublicChannelFragment : Fragment() {
 
     private fun determinateState() {
         val myRole = channel.userRole
-        val isMember = myRole != null
+        val isMember = myRole.isNotNullOrBlank()
         with(binding) {
             if (!isMember) {
                 join.isVisible = true
