@@ -76,6 +76,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
@@ -587,7 +588,20 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success) {
             SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
             SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
-            deleteChannelDb(channelId)
+            val channel = channelsCache.get(channelId)
+                    ?: channelDao.getChannelById(channelId)?.toChannel()
+
+            // if channel type is public, update user role to none and remove user from members list
+            if (channel?.isPublic() == true) {
+                channel.userRole = RoleTypeEnum.None.toString()
+                channel.members = channel.members?.filter { member -> member.id != myId.toString() }
+                channel.memberCount--
+                channelsCache.upsertChannel(channel)
+                channelDao.updateUserRole(channelId, RoleTypeEnum.None.toString())
+                channelDao.deleteUserChatLinks(channelId, myId.toString())
+                channelDao.updateMemberCount(channelId, channel.memberCount.toInt())
+            } else
+                deleteChannelDb(channelId)
         }
 
         return response
@@ -707,10 +721,7 @@ internal class PersistenceChannelsLogicImpl(
                         chatId = it.id,
                         role = sceytMember.role.name))
 
-                    if (channelsCache.get(channelId) == null)
-                        channelsCache.add(it)
-                    else
-                        channelsCache.addedMembers(channelId, sceytMember)
+                    channelsCache.upsertChannel(it)
                 }
             }
 

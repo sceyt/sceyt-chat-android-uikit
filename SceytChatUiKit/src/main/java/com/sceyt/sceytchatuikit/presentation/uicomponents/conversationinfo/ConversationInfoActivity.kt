@@ -561,7 +561,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onLeaveChannel(channelId: Long) {
-        finish()
+        if (!channel.isPublic())
+            finish()
     }
 
     open fun onDeleteChannel(channelId: Long) {
