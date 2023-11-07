@@ -140,6 +140,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     ChannelsCache.channelUpdatedFlow
         .filter { it.channel.id == channel.id }
         .onEach {
+            channel = it.channel.clone()
             if (channel.userRole.isNotNullOrBlank())
                 messageInputView.joinSuccess()
             else messageInputView.onChannelLeft()
