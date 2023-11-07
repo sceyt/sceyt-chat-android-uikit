@@ -58,14 +58,12 @@ import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntit
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageUserLink
-import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.sceytchatuikit.persistence.mappers.createPendingDirectChannelData
 import com.sceyt.sceytchatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
-import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toReactionData
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
@@ -417,7 +415,7 @@ internal class PersistenceChannelsLogicImpl(
         val links = arrayListOf<UserChatLink>()
         val users = arrayListOf<UserEntity>()
         val directChatsWithDeletedPeers = arrayListOf<Long>()
-        val lastMessages = arrayListOf<MessageDb>()
+        val lastMessages = arrayListOf<SceytMessage>()
         val userReactions = arrayListOf<ChatUserReactionEntity>()
 
         fun addEntitiesToLists(channelId: Long, members: List<SceytMember>?, lastMessage: SceytMessage?, userMessageReactions: List<SceytReaction>?) {
@@ -427,7 +425,7 @@ internal class PersistenceChannelsLogicImpl(
             }
 
             lastMessage?.let {
-                lastMessages.add(it.toMessageDb(false))
+                lastMessages.add(it)
             }
 
             userMessageReactions?.forEach {
@@ -451,7 +449,7 @@ internal class PersistenceChannelsLogicImpl(
             fillChannelsNeededInfo(channel)
         }
         usersDao.insertUsers(users)
-        messageLogic.saveChannelLastMessagesToDb(lastMessages.map { it.toSceytMessage() })
+        messageLogic.saveChannelLastMessagesToDb(lastMessages)
         chatUsersReactionDao.replaceChannelUserReactions(userReactions)
 
         // Delete old links where channel peer is deleted.
