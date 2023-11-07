@@ -4,7 +4,6 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.diff
@@ -184,17 +183,6 @@ class ChannelsCache {
                 } else channel.muted = false
 
                 channelUpdated(channel, false, ChannelUpdatedType.MuteState)
-            }
-        }
-    }
-
-    fun addedMembers(channelId: Long, sceytMember: SceytMember) {
-        synchronized(lock) {
-            cachedData[channelId]?.let { channel ->
-                channel.members = channel.members?.toArrayList()?.apply {
-                    add(sceytMember.copy())
-                }
-                channelUpdated(channel, false, ChannelUpdatedType.Members)
             }
         }
     }
