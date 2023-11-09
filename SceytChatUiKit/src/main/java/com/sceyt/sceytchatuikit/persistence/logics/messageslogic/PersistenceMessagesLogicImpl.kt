@@ -421,11 +421,8 @@ internal class PersistenceMessagesLogicImpl(
         when (response ?: return) {
             is SceytResponse.Success -> {
                 response.data?.let { responseMsg ->
-                    messageDao.updateMessageByParams(
-                        tid = responseMsg.tid, serverId = responseMsg.id,
-                        date = responseMsg.createdAt, status = DeliveryStatus.Sent)
-
                     messagesCache.messageUpdated(channelId, responseMsg)
+                    messageDao.updateMessage(responseMsg.toMessageEntity(false))
                     persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, responseMsg)
                 }
             }

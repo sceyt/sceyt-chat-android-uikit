@@ -228,12 +228,6 @@ abstract class MessageDao {
     @Query("select exists(select * from messages where message_id =:messageId)")
     abstract suspend fun existsMessageById(messageId: Long): Boolean
 
-    @Query("update messages set message_id =:serverId, createdAt =:date where tid= :tid")
-    abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long): Int
-
-    @Query("update messages set message_id =:serverId, createdAt =:date, deliveryStatus =:status where tid= :tid")
-    abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long, status: DeliveryStatus): Int
-
     @Query("update messages set deliveryStatus =:status where message_id in (:ids)")
     abstract suspend fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
 
