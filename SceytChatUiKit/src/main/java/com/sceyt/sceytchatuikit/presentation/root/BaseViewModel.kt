@@ -5,7 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.hadilq.liveevent.LiveEvent
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
-import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNear
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNewest
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -42,15 +45,17 @@ open class BaseViewModel : ViewModel() {
         }
     }
 
-    protected fun setPagingLoadingStarted(loadType: PaginationResponse.LoadType, ignoreDb: Boolean = false) {
+    protected fun setPagingLoadingStarted(loadType: PaginationResponse.LoadType,
+                                          ignoreDb: Boolean = false,
+                                          ignoreServer: Boolean = false) {
         fun initPrev() {
             loadingPrevItemsDb.set(ignoreDb.not())
-            loadingPrevItems.set(true)
+            loadingPrevItems.set(ignoreServer.not())
         }
 
         fun initNext() {
             loadingNextItemsDb.set(ignoreDb.not())
-            loadingNextItems.set(true)
+            loadingNextItems.set(ignoreServer.not())
         }
 
         when (loadType) {
@@ -60,6 +65,7 @@ open class BaseViewModel : ViewModel() {
                 initPrev()
                 initNext()
             }
+
             LoadNewest -> initPrev()
         }
     }
@@ -114,6 +120,7 @@ open class BaseViewModel : ViewModel() {
                 initPrev()
                 initNext()
             }
+
             LoadNewest -> {
                 initPrev()
                 initNext()
@@ -127,9 +134,9 @@ open class BaseViewModel : ViewModel() {
         if (response.data.isNotEmpty()) return false
         // When db data is empty, check  maybe loading data from server
         return when (response.loadType) {
-            LoadPrev, LoadNewest -> hasPrev || loadingPrevItems.get()
+            LoadPrev -> hasPrev || loadingPrevItems.get()
             LoadNext -> hasNext || loadingNextItems.get()
-            LoadNear -> (hasPrev || loadingPrevItems.get()) && (hasNext || loadingNextItems.get())
+            LoadNear, LoadNewest -> true
         }
     }
 
