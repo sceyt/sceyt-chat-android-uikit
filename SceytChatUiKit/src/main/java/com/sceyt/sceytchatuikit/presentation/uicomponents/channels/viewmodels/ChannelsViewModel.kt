@@ -52,7 +52,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     fun getChannels(offset: Int, query: String = searchQuery, loadKey: LoadKeyData? = null, ignoreDb: Boolean = false) {
         //Reset search if any
         searchQuery = query
-        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
+        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDb = ignoreDb)
 
         notifyPageLoadingState(false)
 
@@ -69,7 +69,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
                                   notifyFlow: NotifyFlow, onlyMine: Boolean, ignoreDb: Boolean = false,
                                   loadKey: LoadKeyData? = null) {
         if (notifyFlow == NotifyFlow.LOAD) {
-            setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
+            setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDb = ignoreDb)
 
             notifyPageLoadingState(false)
         }

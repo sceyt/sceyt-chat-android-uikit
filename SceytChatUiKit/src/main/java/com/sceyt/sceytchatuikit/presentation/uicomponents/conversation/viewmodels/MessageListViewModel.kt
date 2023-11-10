@@ -241,7 +241,7 @@ class MessageListViewModel(
     }
 
     fun loadNearMessages(messageId: Long, loadKey: LoadKeyData, ignoreServer: Boolean) {
-        setPagingLoadingStarted(LoadNear)
+        setPagingLoadingStarted(LoadNear, ignoreServer = ignoreServer)
 
         viewModelScope.launch(Dispatchers.IO) {
             val limit = min(50, MESSAGES_LOAD_SIZE * 2)
