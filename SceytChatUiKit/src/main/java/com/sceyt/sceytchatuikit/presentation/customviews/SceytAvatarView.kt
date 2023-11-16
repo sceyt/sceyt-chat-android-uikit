@@ -44,6 +44,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
             a.recycle()
         }
         scaleType = ScaleType.CENTER_CROP
+        background = context.getCompatDrawable(R.drawable.sceyt_bg_ripple_circle)
     }
 
     override fun draw(canvas: Canvas) {
