@@ -8,6 +8,7 @@
         <attr name="sceytAvatarViewTextSize" format="dimension|integer" />
         <attr name="sceytAvatarColor" format="color|reference" />
         <attr name="sceytAvatarDefaultIcon" format="reference" />
+        <attr name="sceytAvatarEnableRipple" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="SceytToReplyLineView">

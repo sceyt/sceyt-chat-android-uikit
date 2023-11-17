@@ -33,6 +33,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     private var defaultAvatarResId: Int = 0
 
     init {
+        var enableRipple = true
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SceytAvatarView)
             isGroup = a.getBoolean(R.styleable.SceytAvatarView_sceytAvatarViewIsGroup, false)
@@ -41,10 +42,12 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
             textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytAvatarViewTextSize, textSize)
             avatarBackgroundColor = a.getColor(R.styleable.SceytAvatarView_sceytAvatarColor, 0)
             defaultAvatarResId = a.getResourceId(R.styleable.SceytAvatarView_sceytAvatarDefaultIcon, defaultAvatarResId)
+            enableRipple = a.getBoolean(R.styleable.SceytAvatarView_sceytAvatarEnableRipple, true)
             a.recycle()
         }
         scaleType = ScaleType.CENTER_CROP
-        background = context.getCompatDrawable(R.drawable.sceyt_bg_ripple_circle)
+        if (enableRipple)
+            background = context.getCompatDrawable(R.drawable.sceyt_bg_ripple_circle)
     }
 
     override fun draw(canvas: Canvas) {
