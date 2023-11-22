@@ -112,7 +112,8 @@ internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
                 || parentMessage?.state != other.parentMessage?.state,
         reactionsChanged = messageReactions?.equalsIgnoreNull(other.messageReactions)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
-        showAvatarAndNameChanged = canShowAvatarAndName != other.canShowAvatarAndName,
+        showAvatarAndNameChanged = shouldShowAvatarAndName != other.shouldShowAvatarAndName
+                || disabledShowAvatarAndName != other.disabledShowAvatarAndName,
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected
     )

@@ -34,7 +34,7 @@ class IncDeletedMsgViewHolder(
                 if (diff.showAvatarAndNameChanged)
                     setMessageUserAvatarAndName(avatar, tvUserName, message)
 
-                if (item.message.canShowAvatarAndName)
+                if (item.message.shouldShowAvatarAndName)
                     avatar.setOnClickListener {
                         messageListeners?.onAvatarClick(it, item)
                     }

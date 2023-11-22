@@ -88,7 +88,7 @@ class IncAttachmentsMsgViewHolder(
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, binding.viewReply, false)
 
-                if (item.message.canShowAvatarAndName)
+                if (item.message.shouldShowAvatarAndName)
                     avatar.setOnClickListener {
                         messageListeners?.onAvatarClick(it, item)
                     }

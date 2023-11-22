@@ -110,6 +110,7 @@ class MessageListViewModel(
     internal val messageActionBridge by lazy { MessageActionBridge() }
     internal val placeToSavePathsList = mutableSetOf<String>()
     internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
+    private var showSenderAvatarAndNameIfNeeded = true
 
     private val isGroup = channel.isGroup
 
@@ -484,6 +485,10 @@ class MessageListViewModel(
         }
     }
 
+    fun showSenderAvatarAndNameIfNeeded(show: Boolean) {
+        showSenderAvatarAndNameIfNeeded = show
+    }
+
     internal suspend fun mapToMessageListItem(
             data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
             compareMessage: SceytMessage? = null,
@@ -506,7 +511,10 @@ class MessageListViewModel(
                 val messageItem = MessageListItem.MessageItem(initMessageInfoData(sceytMessage, prevMessage, true))
 
                 if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
-                    messageItem.message.apply { canShowAvatarAndName = incoming && isGroup }
+                    messageItem.message.apply {
+                        shouldShowAvatarAndName = incoming && isGroup && !showSenderAvatarAndNameIfNeeded
+                        disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
+                    }
                     messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
                         unreadLineMessage = it
                     })
@@ -531,8 +539,9 @@ class MessageListViewModel(
         return sceytMessage.apply {
             isGroup = this@MessageListViewModel.isGroup
             files = attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(this) }
-            if (initNameAndAvatar)
-                canShowAvatarAndName = shouldShowAvatarAndName(this, prevMessage)
+            if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
+                shouldShowAvatarAndName = shouldShowAvatarAndName(this, prevMessage)
+            disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
             messageReactions = initReactionsItems(this)
         }
     }
