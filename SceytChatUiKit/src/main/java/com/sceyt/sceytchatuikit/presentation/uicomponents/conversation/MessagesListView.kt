@@ -71,9 +71,9 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.Po
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupReactionsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.forward.SceytForwardActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
-import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MAX_SELF_REACTIONS_SIZE
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -664,7 +664,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun cancelMultiSelectMode() {
         (messagesRV.getMessagesAdapter())?.setMultiSelectableMode(false)
-        messagesRV.enableDisableSwipeToReply(true)
+        messagesRV.enableDisableSwipeToReply(enabledActions)
         for (i in 0 until messagesRV.childCount) {
             messagesRV.getChildAt(i)?.let {
                 val holder = messagesRV.getChildViewHolder(it)
