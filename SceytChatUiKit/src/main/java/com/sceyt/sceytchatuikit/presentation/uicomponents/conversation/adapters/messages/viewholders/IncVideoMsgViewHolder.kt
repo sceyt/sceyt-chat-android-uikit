@@ -116,7 +116,7 @@ class IncVideoMsgViewHolder(
             if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
                 initWidthsDependReactions(recyclerViewReactions, layoutDetails)
 
-            if (item.message.canShowAvatarAndName)
+            if (item.message.shouldShowAvatarAndName)
                 avatar.setOnClickListener {
                     messageListeners?.onAvatarClick(it, item)
                 }

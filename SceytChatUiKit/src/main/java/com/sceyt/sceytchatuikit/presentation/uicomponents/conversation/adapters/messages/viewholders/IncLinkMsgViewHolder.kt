@@ -77,7 +77,7 @@ class IncLinkMsgViewHolder(
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, binding.viewReply)
 
-                if (item.message.canShowAvatarAndName)
+                if (item.message.shouldShowAvatarAndName)
                     avatar.setOnClickListener {
                         messageListeners?.onAvatarClick(it, item)
                     }

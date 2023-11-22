@@ -46,7 +46,10 @@ data class SceytMessage(var id: Long,
 
 
     @IgnoredOnParcel
-    var canShowAvatarAndName = false
+    var shouldShowAvatarAndName = false
+
+    @IgnoredOnParcel
+    var disabledShowAvatarAndName = false
 
     @IgnoredOnParcel
     var isGroup = false
@@ -128,7 +131,8 @@ data class SceytMessage(var id: Long,
             forwardingDetails = forwardingDetails,
             pendingReactions = pendingReactions,
             bodyAttributes = bodyAttributes).also {
-            it.canShowAvatarAndName = canShowAvatarAndName
+            it.shouldShowAvatarAndName = shouldShowAvatarAndName
+            it.disabledShowAvatarAndName = disabledShowAvatarAndName
             it.isGroup = isGroup
             it.files = files
             it.messageReactions = messageReactions

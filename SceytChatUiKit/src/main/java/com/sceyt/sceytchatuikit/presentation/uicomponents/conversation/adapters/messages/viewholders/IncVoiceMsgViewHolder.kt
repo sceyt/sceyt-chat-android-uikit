@@ -118,7 +118,7 @@ class IncVoiceMsgViewHolder(
             if (diff.filesChanged)
                 initAttachment()
 
-            if (item.message.canShowAvatarAndName)
+            if (item.message.shouldShowAvatarAndName)
                 avatar.setOnClickListener {
                     messageListeners.onAvatarClick(it, item)
                 }

@@ -19,10 +19,12 @@ import com.sceyt.sceytchatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class InfoButtonsPrivateChatFragment : Fragment() {
-    private lateinit var binding: SceytInfoPageLayoutButtonsPrivateChannelBinding
+open class InfoButtonsPrivateChatFragment : Fragment() {
+    lateinit var binding: SceytInfoPageLayoutButtonsPrivateChannelBinding
+        private set
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
-    private lateinit var channel: SceytChannel
+    lateinit var channel: SceytChannel
+        private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytInfoPageLayoutButtonsPrivateChannelBinding.inflate(layoutInflater, container, false)
@@ -42,7 +44,7 @@ class InfoButtonsPrivateChatFragment : Fragment() {
         channel = requireNotNull(arguments?.parcelable(ChannelLinksFragment.CHANNEL))
     }
 
-    private fun SceytInfoPageLayoutButtonsPrivateChannelBinding.setOnClickListeners() {
+    open fun SceytInfoPageLayoutButtonsPrivateChannelBinding.setOnClickListeners() {
         muteUnMute.apply {
             if (channel.muted) {
                 text = getString(R.string.sceyt_un_mute)

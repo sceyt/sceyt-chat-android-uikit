@@ -9,16 +9,24 @@ import androidx.fragment.app.Fragment
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytInfoPageLayoutButtonsDirectChannelBinding
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.parcelable
+import com.sceyt.sceytchatuikit.extensions.setBundleArguments
+import com.sceyt.sceytchatuikit.extensions.setDrawableTop
+import com.sceyt.sceytchatuikit.extensions.setOnClickListenerDisableClickViewForWhile
+import com.sceyt.sceytchatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 open class InfoButtonsDirectChatFragment : Fragment() {
-    private lateinit var binding: SceytInfoPageLayoutButtonsDirectChannelBinding
+    lateinit var binding: SceytInfoPageLayoutButtonsDirectChannelBinding
+        private set
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
-    private lateinit var channel: SceytChannel
-    private var showStartChatIcon: Boolean = false
+    lateinit var channel: SceytChannel
+        private set
+    protected var showStartChatIcon: Boolean = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytInfoPageLayoutButtonsDirectChannelBinding.inflate(layoutInflater, container, false)
@@ -39,7 +47,7 @@ open class InfoButtonsDirectChatFragment : Fragment() {
         showStartChatIcon = arguments?.getBoolean(SHOW_OPEN_CHAT_BUTTON) ?: false
     }
 
-    private fun SceytInfoPageLayoutButtonsDirectChannelBinding.initViews() {
+    open fun SceytInfoPageLayoutButtonsDirectChannelBinding.initViews() {
         val isPeerDeleted = channel.isPeerDeleted()
         video.isVisible = !isPeerDeleted
         audio.isVisible = !isPeerDeleted

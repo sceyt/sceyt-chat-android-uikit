@@ -281,9 +281,9 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     protected fun setMessageUserAvatarAndName(avatarView: SceytAvatarView, tvName: TextView, message: SceytMessage) {
-        if (!message.isGroup) return
+        if (!message.isGroup || message.disabledShowAvatarAndName) return
 
-        if (message.canShowAvatarAndName) {
+        if (message.shouldShowAvatarAndName) {
             val user = message.user
             val displayName = getSenderName(user)
             if (isDeletedUser(user)) {
@@ -395,7 +395,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                 if (it.type == AttachmentTypeEnum.File.value()) {
                     setPadding(ViewUtil.dpToPx(8f))
                 } else {
-                    if (message.isForwarded || message.isReplied || message.canShowAvatarAndName || message.body.isNotNullOrBlank())
+                    if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName || message.body.isNotNullOrBlank())
                         setPadding(0, ViewUtil.dpToPx(4f), 0, 0)
                     else setPadding(0)
                 }
