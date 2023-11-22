@@ -512,7 +512,7 @@ class MessageListViewModel(
 
                 if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
                     messageItem.message.apply {
-                        shouldShowAvatarAndName = incoming && isGroup && !showSenderAvatarAndNameIfNeeded
+                        shouldShowAvatarAndName = incoming && isGroup && showSenderAvatarAndNameIfNeeded
                         disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
                     }
                     messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
