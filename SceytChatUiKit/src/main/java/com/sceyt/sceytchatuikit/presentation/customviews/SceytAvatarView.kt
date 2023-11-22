@@ -46,8 +46,12 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
             a.recycle()
         }
         scaleType = ScaleType.CENTER_CROP
-        if (enableRipple)
-            background = context.getCompatDrawable(R.drawable.sceyt_bg_ripple_circle)
+        if (enableRipple) {
+            val ripple = context.getCompatDrawable(R.drawable.sceyt_bg_ripple_circle)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                foreground = ripple
+            } else background = ripple
+        }
     }
 
     override fun draw(canvas: Canvas) {
