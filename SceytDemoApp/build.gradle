@@ -39,7 +39,7 @@ android {
 
         prod {
             dimension = "environment"
-            buildConfigField("String", "HOST", "\"https://us-ohio-api.sceyt.com/dev\"")
+            buildConfigField("String", "HOST", "\"https://us-ohio-api.sceyt.com\"")
             buildConfigField("String", "APP_ID", "\"8lwox2ge93\"")
             buildConfigField("String", "GEN_TOKEN_BASE_URL", "\"https://tlnig20qy7.execute-api.us-east-2.amazonaws.com\"")
             buildConfigField("String", "GEN_TOKEN_ENDPOINT", "\"/dev/user/genToken\"")
