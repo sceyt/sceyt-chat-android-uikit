@@ -420,6 +420,7 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun onMessageSentResponse(channelId: Long, response: SceytResponse<SceytMessage>?, message: Message) {
         when (response ?: return) {
             is SceytResponse.Success -> {
+                SceytLog.i(TAG, "Send message success, channel id $channelId, tid:${message.tid}, id:${message.id}")
                 response.data?.let { responseMsg ->
                     messagesCache.messageUpdated(channelId, responseMsg)
                     messageDao.updateMessage(responseMsg.toMessageEntity(false))
@@ -431,8 +432,9 @@ internal class PersistenceMessagesLogicImpl(
                 if ((response as? SceytResponse.Error)?.exception?.type == SDKErrorTypeEnum.BadParam.toString()) {
                     messageDao.deleteMessageByTid(message.tid)
                     SceytLog.e(TAG, "Received BadParam error: ${response.exception?.message}, " +
-                            "deleting message from db tid:${message.tid} id:${message.id}")
-                }
+                            "deleting message from db channel id $channelId, tid:${message.tid} id:${message.id}")
+                } else
+                    SceytLog.e(TAG, "Send message error: ${response.message}, channel id $channelId, tid:${message.tid} id:${message.id}")
             }
         }
     }
