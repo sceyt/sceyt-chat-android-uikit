@@ -586,20 +586,7 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success) {
             SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
             SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
-            val channel = channelsCache.get(channelId)
-                    ?: channelDao.getChannelById(channelId)?.toChannel()
-
-            // if channel type is public, update user role to none and remove user from members list
-            if (channel?.isPublic() == true) {
-                channel.userRole = RoleTypeEnum.None.toString()
-                channel.members = channel.members?.filter { member -> member.id != myId.toString() }
-                channel.memberCount--
-                channelsCache.upsertChannel(channel)
-                channelDao.updateUserRole(channelId, RoleTypeEnum.None.toString())
-                channelDao.deleteUserChatLinks(channelId, myId.toString())
-                channelDao.updateMemberCount(channelId, channel.memberCount.toInt())
-            } else
-                deleteChannelDb(channelId)
+            deleteChannelDb(channelId)
         }
 
         return response
