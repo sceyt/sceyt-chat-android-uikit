@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 internal class PersistenceConnectionLogicImpl(
@@ -21,7 +22,7 @@ internal class PersistenceConnectionLogicImpl(
 
     init {
         if (ConnectionEventsObserver.connectionState == ConnectionState.Connected)
-            globalScope.launch {
+            globalScope.launch(Dispatchers.IO) {
                 onChangedConnectStatus(ConnectionStateData(ConnectionState.Connected))
             }
     }
