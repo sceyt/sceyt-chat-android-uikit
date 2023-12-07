@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.data.channeleventobserver
 
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.Channel
+import com.sceyt.chat.models.channel.ChannelEvent
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.user.User
@@ -181,6 +182,9 @@ object ChannelEventsObserver : ChannelEventManager.AllEventManagers {
 
             override fun onReadReceiptReceived(channel: Channel, from: User, messageIds: MutableList<Long>) {
                 eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Displayed, messageIds))
+            }
+
+            override fun onChannelEvent(channel: Channel?, event: ChannelEvent?) {
             }
         })
     }

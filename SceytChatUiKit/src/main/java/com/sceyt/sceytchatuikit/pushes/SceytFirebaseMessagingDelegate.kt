@@ -58,7 +58,7 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
 
     private fun registerClientPushToken(fcmToken: String?) {
         fcmToken ?: return
-        ChatClient.getClient().registerPushToken(fcmToken, object : ActionCallback {
+        ChatClient.getClient().registerPushToken(fcmToken, PushServiceType.Fcm.stingValue(), object : ActionCallback {
             override fun onSuccess() {
                 preferences.setString(KEY_FCM_TOKEN, fcmToken)
                 preferences.setBoolean(KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION, true)
