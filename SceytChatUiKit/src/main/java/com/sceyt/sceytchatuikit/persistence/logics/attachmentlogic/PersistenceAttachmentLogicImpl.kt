@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic
 
-import androidx.lifecycle.asFlow
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
@@ -57,7 +56,7 @@ internal class PersistenceAttachmentLogicImpl(
     private val messagesLogic: PersistenceMessagesLogic by inject()
 
     override suspend fun setupFileTransferUpdateObserver() {
-        FileTransferHelper.onTransferUpdatedLiveData.asFlow().collect {
+        FileTransferHelper.onTransferUpdatedFlow.collect {
             attachmentsCache.updateAttachmentTransferData(it)
         }
     }

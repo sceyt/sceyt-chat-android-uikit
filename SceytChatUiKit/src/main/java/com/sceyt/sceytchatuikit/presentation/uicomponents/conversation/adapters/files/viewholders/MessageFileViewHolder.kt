@@ -98,7 +98,7 @@ class MessageFileViewHolder(
     }
 
     private fun setListener() {
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
+        FileTransferHelper.getFileTransferUpdateLiveData(fileItem.file.messageTid).observe(context.asComponentActivity(), ::updateState)
     }
 
     private fun SceytMessageFileItemBinding.setupStyle() {

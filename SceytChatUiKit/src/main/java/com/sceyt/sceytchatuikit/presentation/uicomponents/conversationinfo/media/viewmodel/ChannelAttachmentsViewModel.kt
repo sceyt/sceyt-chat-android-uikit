@@ -212,7 +212,7 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
     }
 
     fun observeToUpdateAfterOnResume(fragment: Fragment) {
-        FileTransferHelper.onTransferUpdatedLiveData.asFlow().onEach {
+        FileTransferHelper.onTransferUpdatedFlow.onEach {
             viewModelScope.launch(Dispatchers.Default) {
                 if (!fragment.isResumed)
                     needToUpdateTransferAfterOnResume[it.messageTid] = it

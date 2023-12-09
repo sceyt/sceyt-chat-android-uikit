@@ -271,7 +271,7 @@ abstract class BaseMsgViewHolder(private val view: View,
 
         if (path.isNullOrBlank()) {
             imageAttachment.setImageDrawable(placeHolder)
-            FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity()) {
+            FileTransferHelper.getFileTransferUpdateLiveData(attachment.messageTid).observe(context.asComponentActivity()) {
                 if (it.state == TransferState.Downloaded && it.messageTid == attachment.messageTid) {
                     attachment.filePath = it.filePath
                     loadImage(it.filePath)

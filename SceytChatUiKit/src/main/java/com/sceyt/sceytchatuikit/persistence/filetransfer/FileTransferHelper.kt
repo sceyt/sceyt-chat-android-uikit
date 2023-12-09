@@ -22,9 +22,13 @@ import com.sceyt.sceytchatuikit.persistence.mappers.upsertSizeMetadata
 import com.sceyt.sceytchatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 import java.io.File
+import java.util.Collections
+import kotlin.collections.MutableMap.MutableEntry
 
 object FileTransferHelper : SceytKoinComponent {
     private val fileTransferService by inject<FileTransferService>()
@@ -33,8 +37,19 @@ object FileTransferHelper : SceytKoinComponent {
     private val messagesCache by inject<MessagesCache>()
     private val globalScope by inject<CoroutineScope>()
 
-    private val onTransferUpdatedLiveData_ = MutableLiveData<TransferData>()
-    val onTransferUpdatedLiveData: LiveData<TransferData> = onTransferUpdatedLiveData_
+    private val onTransferUpdatedFlow_ = MutableSharedFlow<TransferData>()
+    val onTransferUpdatedFlow = onTransferUpdatedFlow_.asSharedFlow()
+
+    fun getFileTransferUpdateLiveData(messageTid: Long): LiveData<TransferData> {
+        return findOrCreateLiveData(messageTid)
+    }
+
+    private val transferUpdateMap = Collections.synchronizedMap(
+        object : LinkedHashMap<Long, MutableLiveData<TransferData>>(30) {
+            override fun removeEldestEntry(eldest: MutableEntry<Long, MutableLiveData<TransferData>>): Boolean {
+                return size > 30
+            }
+        })
 
     fun createTransferTask(attachment: SceytAttachment, isFromUpload: Boolean): TransferTask {
         return TransferTask(
@@ -171,8 +186,15 @@ object FileTransferHelper : SceytKoinComponent {
     }
 
     fun emitAttachmentTransferUpdate(data: TransferData) {
-        runOnMainThread {
-            onTransferUpdatedLiveData_.value = data
+        findOrCreateLiveData(data.messageTid).let {
+            runOnMainThread { it.value = data }
+        }
+        onTransferUpdatedFlow_.tryEmit(data)
+    }
+
+    private fun findOrCreateLiveData(messageTid: Long): MutableLiveData<TransferData> {
+        return transferUpdateMap[messageTid] ?: MutableLiveData<TransferData>().also {
+            transferUpdateMap[messageTid] = it
         }
     }
 

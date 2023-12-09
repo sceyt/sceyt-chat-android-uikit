@@ -410,7 +410,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         messagesListView.updateMessagesStatus(it.status, it.messageIds)
     }.launchIn(viewModelScope)
 
-    onTransferUpdatedLiveData.asFlow().onEach {
+    onTransferUpdatedFlow.onEach {
         viewModelScope.launch(Dispatchers.Default) {
             if (lifecycleOwner.isResumed()) {
                 messagesListView.updateProgress(it, false)

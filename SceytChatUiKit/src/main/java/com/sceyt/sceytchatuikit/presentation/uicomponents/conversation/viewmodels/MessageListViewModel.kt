@@ -77,6 +77,7 @@ import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
@@ -142,7 +143,7 @@ class MessageListViewModel(
     val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
 
     // val onOutGoingThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
-    val onTransferUpdatedLiveData: LiveData<TransferData>
+    val onTransferUpdatedFlow: SharedFlow<TransferData>
 
 
     // Chanel events
@@ -208,7 +209,7 @@ class MessageListViewModel(
         /*onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id && it.replyInThread }*/
 
-        onTransferUpdatedLiveData = FileTransferHelper.onTransferUpdatedLiveData
+        onTransferUpdatedFlow = FileTransferHelper.onTransferUpdatedFlow
     }
 
     fun loadPrevMessages(lastMessageId: Long, offset: Int, loadKey: LoadKeyData = LoadKeyData(value = lastMessageId)) {
