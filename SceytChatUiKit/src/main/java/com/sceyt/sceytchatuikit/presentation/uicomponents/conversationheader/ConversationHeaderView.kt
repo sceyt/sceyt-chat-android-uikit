@@ -48,9 +48,9 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiu
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.sceytchatuikit.sceytconfigs.ConversationHeaderViewStyle
+import com.sceyt.sceytchatuikit.sceytstyles.ConversationHeaderViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
+import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Job
@@ -136,8 +136,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         title.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.titleColor))
         subTitle.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.subTitleColor))
         toolbarUnderline.background = ColorDrawable(context.getCompatColor(ConversationHeaderViewStyle.underlineColor))
+        toolbarUnderline.isVisible = ConversationHeaderViewStyle.enableUnderline
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun setChannelTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
         if (replyInThread) {
             with(titleTextView) {
@@ -425,6 +427,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             addedMenu = menu
         }
     }
+
+    fun getToolbarMenu() = binding.headerToolbar.menu
 
     fun enableDisableToShowPresence(enable: Boolean) {
         enablePresence = enable

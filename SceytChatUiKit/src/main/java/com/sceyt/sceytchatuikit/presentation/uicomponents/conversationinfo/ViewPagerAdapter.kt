@@ -38,11 +38,11 @@ class ViewPagerAdapter(private val activity: AppCompatActivity,
 
     fun historyCleared() {
         fragments.forEach {
-            (it as? HistoryClearedListener)?.onCleared()
+            (it as? HistoryClearedListener)?.onHistoryCleared()
         }
     }
 
     fun interface HistoryClearedListener{
-        fun onCleared()
+        fun onHistoryCleared()
     }
 }

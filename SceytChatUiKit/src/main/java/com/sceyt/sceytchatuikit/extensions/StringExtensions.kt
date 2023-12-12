@@ -89,7 +89,7 @@ fun String?.toByteArraySafety(): ByteArray? {
     }
 }
 
-fun String?.extractLinks(): Array<String> {
+fun CharSequence?.extractLinks(): Array<String> {
     if (this.isNullOrBlank() || isValidEmail()) return emptyArray()
     val links = ArrayList<String>()
     val m = Patterns.WEB_URL.matcher(this)
@@ -105,7 +105,7 @@ fun String?.isValidUrl(context: Context): Boolean {
     return Linkify.addLinks(TextView(context).apply { text = this@isValidUrl }, Linkify.WEB_URLS)
 }
 
-fun String?.isValidEmail(): Boolean {
+fun CharSequence?.isValidEmail(): Boolean {
     this ?: return false
     val emailRegex = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+".toRegex()
     return emailRegex.matches(this)
@@ -169,10 +169,22 @@ fun String.autoCorrectable(): String {
     return replace("\u2068".toRegex(), "")
 }
 
+fun CharSequence.removeSpaces(): CharSequence {
+    return replace(" ".toRegex(), "")
+}
+
 fun String.toSha256(): Long {
     val bytes = toByteArray(StandardCharsets.UTF_8)
     val md = MessageDigest.getInstance("SHA-256")
     val digest = md.digest(bytes)
     val bigInt = BigInteger(1, digest)
     return bigInt.toLong()
+}
+
+fun Char.isVisuallyEmpty(): Boolean {
+    return Character.isWhitespace(this) || hashSetOf('\u200E',  // left-to-right mark
+        '\u200F',  // right-to-left mark
+        '\u2007',  // figure space
+        '\u200B',  // zero-width space
+        '\u2800').contains(this) // braille blank
 }

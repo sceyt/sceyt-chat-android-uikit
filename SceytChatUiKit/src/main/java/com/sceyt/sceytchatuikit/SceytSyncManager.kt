@@ -14,18 +14,16 @@ import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.ConcurrentHashSet
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWare,
                        private val messagesMiddleWare: PersistenceMessagesMiddleWare,
-                       private val channelsCache: ChannelsCache) : SceytKoinComponent, CoroutineScope {
+                       private val channelsCache: ChannelsCache) : SceytKoinComponent {
 
     private var syncResultData: SyncResultData = SyncResultData()
 
@@ -40,7 +38,7 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
         val syncChannelMessagesFinished: LiveData<Pair<SceytChannel, List<SceytMessage>>> = syncChannelMessagesFinished_
     }
 
-    fun startSync(force: Boolean, resultCallback: ((Result<SyncResultData>) -> Unit)? = null) {
+    suspend fun startSync(force: Boolean, resultCallback: ((Result<SyncResultData>) -> Unit)? = null) {
         resultCallback?.let { syncResultCallbacks.add(it) }
 
         if (syncIsInProcess)
@@ -53,12 +51,14 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
             return
         }
 
-        launch {
+        withContext(Dispatchers.IO) {
             syncIsInProcess = true
             syncResultData = SyncResultData()
             val result = getChannels()
-            syncResultCallbacks.forEach {
-                it(Result.success(result))
+            withContext(Dispatchers.Main) {
+                syncResultCallbacks.forEach {
+                    it(Result.success(result))
+                }
             }
             syncResultCallbacks.clear()
             syncIsInProcess = false
@@ -74,7 +74,7 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
     private suspend fun getChannels(): SyncResultData {
         return coroutineScope {
             suspendCancellableCoroutine { cont ->
-                launch {
+                launch(Dispatchers.IO) {
                     val syncChannelData = SyncChannelData(mutableSetOf(), false)
                     channelsMiddleWare.syncChannels(CHANNELS_LOAD_SIZE).collect {
                         when (it) {
@@ -167,7 +167,4 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
                     "syncedChannelsCount-> $syncedChannelsCount, syncedMessagesCount-> $syncedMessagesCount"
         }
     }
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
 }

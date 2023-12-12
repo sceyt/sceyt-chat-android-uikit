@@ -188,8 +188,10 @@ class MessagesRepositoryImpl : MessagesRepository {
         return suspendCancellableCoroutine { continuation ->
             val transformMessage = SceytKitConfig.messageTransformer?.transformToSend(message)
                     ?: message
+            SceytLog.i(TAG, "sending message with channelId $channelId, tid: ${transformMessage.tid}, body: ${transformMessage.body}")
             val tmpMessage = ChannelOperator.build(channelId).sendMessage(transformMessage, object : MessageCallback {
                 override fun onResult(message: Message) {
+                    SceytLog.i(TAG, "send message success with tid: ${message.tid}, body: ${message.body}, initialTid: ${transformMessage.tid}")
                     val resultTransformed = SceytKitConfig.messageTransformer?.transformToGet(message)
                             ?: message
                     continuation.safeResume(SceytResponse.Success(resultTransformed.toSceytUiMessage()))
@@ -197,7 +199,8 @@ class MessagesRepositoryImpl : MessagesRepository {
 
                 override fun onError(error: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(error))
-                    SceytLog.e(TAG, "sendMessage error: ${error?.message}")
+                    SceytLog.e(TAG, "sendMessage error: ${error?.message}, messageTid: " +
+                            "${transformMessage.tid}, body: ${transformMessage.body}")
                 }
             })
             tmpMessageCb?.invoke(tmpMessage)

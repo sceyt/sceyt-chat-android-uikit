@@ -26,7 +26,7 @@ class ReactionsInfoViewModel : BaseViewModel(), SceytKoinComponent {
 
 
     fun getReactions(messageId: Long, offset: Int, key: String, loadKey: LoadKeyData? = null, ignoreDb: Boolean = false) {
-        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
+        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDb = ignoreDb)
 
         viewModelScope.launch(Dispatchers.IO) {
             messageReactionsMiddleWare.loadReactions(messageId, offset, key, loadKey, ignoreDb)

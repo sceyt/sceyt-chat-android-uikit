@@ -12,6 +12,7 @@ import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import android.view.animation.LinearInterpolator
+import androidx.annotation.ColorInt
 import androidx.annotation.FloatRange
 import androidx.core.animation.doOnEnd
 import androidx.core.graphics.toColorInt
@@ -130,6 +131,10 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
             if (isInEditMode) initCenterIcon()
             val left = (width - iconWidth) / 2
             val top = (height - iconHeight) / 2
+
+            if (iconTintColor != 0)
+                it.setTint(iconTintColor)
+
             it.setBounds(left, top, left + iconWidth, top + iconHeight)
             it.draw(canvas)
         }
@@ -251,7 +256,7 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
         drawProgress(calculateAngle(progress))
     }
 
-    fun setProgressColor(color: Int) {
+    fun setProgressColor(@ColorInt color: Int) {
         progressPaint.color = color
         progressColor = color
         invalidate()
@@ -284,6 +289,11 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
 
     fun setIcon(drawable: Drawable?) {
         centerIcon = drawable
+        invalidate()
+    }
+
+    fun setIconTintColor(@ColorInt color: Int) {
+        iconTintColor = color
         invalidate()
     }
 

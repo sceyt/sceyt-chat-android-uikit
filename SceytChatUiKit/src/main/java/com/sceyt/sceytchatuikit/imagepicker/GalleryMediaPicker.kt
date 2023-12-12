@@ -39,7 +39,7 @@ import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.imagepicker.adapter.GalleryMediaAdapter
 import com.sceyt.sceytchatuikit.imagepicker.adapter.MediaItem
 import com.sceyt.sceytchatuikit.logger.SceytLog
-import com.sceyt.sceytchatuikit.sceytconfigs.GalleryPickerStyle
+import com.sceyt.sceytchatuikit.sceytstyles.GalleryPickerStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow

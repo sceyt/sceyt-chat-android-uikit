@@ -1,7 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel
 
 import android.app.Application
-import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
@@ -15,11 +14,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.extractLinks
 import com.sceyt.sceytchatuikit.extensions.getFileSize
-import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
-import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
-import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
-import com.sceyt.sceytchatuikit.persistence.extensions.transcodeVideo
 import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.shared.utils.FileUtil
@@ -28,7 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 import java.io.File
@@ -54,11 +48,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
                     .setType(MessageTypeEnum.Text.value())
                     .apply {
                         if (isContainsLink)
-                            setAttachments(arrayOf(Attachment.Builder("", links[0], AttachmentTypeEnum.Link.value())
-                                .withTid(ClientWrapper.generateTid())
-                                .setName("")
-                                .setMetadata("")
-                                .build()))
+                            setAttachments(arrayOf(buildAttachment("", links[0], AttachmentTypeEnum.Link, "", 0)))
                     }
                     .build()
 
@@ -89,23 +79,15 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
             channelIds.forEach { channelId ->
                 val attachments = paths.map { path ->
                     val fileName = File(path).name
-                    Attachment.Builder(path, "", getAttachmentType(path).value())
-                        .setName(fileName)
-                        .withTid(ClientWrapper.generateTid())
-                        .setFileSize(getFileSize(path))
-                        .setUpload(false)
-                        .build()
+                    buildAttachment(path, "", getAttachmentType(path), fileName, getFileSize(path))
                 }
                 attachments.mapIndexed { index, attachment ->
                     val message = MessageBuilder(channelId)
                         .setBody(if (index == 0) messageBody else "")
                         .apply {
                             if (index == 0 && isContainsLink) {
-                                setAttachments(arrayOf(attachment, Attachment.Builder("", links[0], AttachmentTypeEnum.Link.value())
-                                    .withTid(ClientWrapper.generateTid())
-                                    .setName("")
-                                    .setMetadata("")
-                                    .build()))
+                                val link = buildAttachment("", links[0], AttachmentTypeEnum.Link, "", 0)
+                                setAttachments(arrayOf(attachment, link))
                             } else setAttachments(arrayOf(attachment))
                         }
                         .setTid(ClientWrapper.generateTid())
@@ -121,34 +103,13 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
         awaitClose()
     }
 
-    data class ResizeFileInfo(
-            var resizedPath: String,
-            val originalFilePath: String,
-            val type: AttachmentTypeEnum
-    )
-
-    private suspend fun checkAndResizeMessageFile(context: Context, path: String) = suspendCancellableCoroutine { continuation ->
-        val type = getAttachmentType(path)
-        val data = ResizeFileInfo(path, path, type)
-        when (type.value()) {
-            AttachmentTypeEnum.Image.value() -> {
-                val result = resizeImage(context, path, 1080)
-                if (result.isSuccess && result.getOrNull().isNotNullOrBlank())
-                    data.resizedPath = result.getOrThrow()
-
-                continuation.safeResume(data)
-            }
-            AttachmentTypeEnum.Video.value() -> {
-                transcodeVideo(context, path) { result ->
-                    if (result.isSuccess && result.getOrNull().isNotNullOrBlank())
-                        data.resizedPath = result.getOrThrow()
-
-                    continuation.safeResume(data)
-                }
-            }
-            else -> continuation.safeResume(data)
-        }
-    }
+    private fun buildAttachment(path: String, url: String, typeEnum: AttachmentTypeEnum, fileName: String, fileSize: Long) =
+            Attachment.Builder(path, url, typeEnum.value())
+                .setName(fileName)
+                .withTid(ClientWrapper.generateTid())
+                .setFileSize(fileSize)
+                .setUpload(false)
+                .build()
 
     private fun getPathFromFile(vararg uris: Uri): List<String> {
         val paths = mutableListOf<String>()

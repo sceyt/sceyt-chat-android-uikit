@@ -24,7 +24,9 @@ object ViewUtil {
         return (dp * density).roundToInt()
     }
 
-    fun expandHeight(v: View, from: Int = 0, duration: Long, endListener: (() -> Unit)? = null): ValueAnimator {
+    fun expandHeight(v: View, from: Int = 0, duration: Long,
+                     updateListener: ((Int) -> Unit)? = null,
+                     endListener: (() -> Unit)? = null): ValueAnimator {
         v.measure(
             View.MeasureSpec.makeMeasureSpec(v.rootView.width, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(v.rootView.height, View.MeasureSpec.AT_MOST)
@@ -33,8 +35,10 @@ object ViewUtil {
 
         val heightAnimator = ValueAnimator.ofInt(from, targetHeight)
         heightAnimator.addUpdateListener { animation ->
-            v.layoutParams.height = animation.animatedValue as Int
+            val animatedValue = animation.animatedValue as Int
+            v.layoutParams.height = animatedValue
             v.requestLayout()
+            updateListener?.invoke(animatedValue)
         }
         heightAnimator.doOnEnd {
             endListener?.invoke()
@@ -68,13 +72,17 @@ object ViewUtil {
         widthAnimator.start()
     }
 
-    fun collapseHeight(v: View, duration: Long, to: Int = 0, endListener: (() -> Unit)? = null): ValueAnimator {
+    fun collapseHeight(v: View, duration: Long, to: Int = 0,
+                       updateListener: ((Int) -> Unit)? = null,
+                       endListener: (() -> Unit)? = null): ValueAnimator {
         val initialHeight = v.measuredHeight
         val heightAnimator = ValueAnimator.ofInt(to, initialHeight)
         heightAnimator.addUpdateListener { animation ->
             val animatedValue = animation.animatedValue as Int
-            v.layoutParams.height = max(to, initialHeight - animatedValue)
+            val height = max(to, initialHeight - animatedValue)
+            v.layoutParams.height = height
             v.requestLayout()
+            updateListener?.invoke(height)
         }
         heightAnimator.doOnEnd {
             endListener?.invoke()

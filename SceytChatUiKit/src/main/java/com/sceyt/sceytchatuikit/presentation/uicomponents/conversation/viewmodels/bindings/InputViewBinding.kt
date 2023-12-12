@@ -14,6 +14,8 @@ import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.mappers.isDeleted
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
@@ -24,8 +26,10 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageIn
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper.getValueData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionValidatorWatcher
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -133,9 +137,19 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
+    ChannelsCache.channelUpdatedFlow
+        .filter { it.channel.id == channel.id }
+        .onEach {
+            channel = it.channel.clone()
+            if (channel.userRole.isNotNullOrBlank())
+                messageInputView.joinSuccess()
+            else messageInputView.onChannelLeft()
+        }
+        .launchIn(lifecycleOwner.lifecycleScope)
+
     var mentionJob: Job? = null
 
-    messageInputView.messageInputActionCallback = object : MessageInputView.MessageInputActionCallback {
+    messageInputView.setInputActionCallback(object : MessageInputView.MessageInputActionCallback {
         override fun sendMessage(message: Message) {
             this@bind.sendMessage(message)
         }
@@ -153,8 +167,8 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
             sendTypingEvent(typing)
         }
 
-        override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
-            this@bind.updateDraftMessage(text, mentionUserIds, replyOrEditMessage, isReply)
+        override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+            this@bind.updateDraftMessage(text, mentionUserIds, styling, replyOrEditMessage, isReply)
         }
 
         override fun mention(query: String) {
@@ -190,7 +204,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
                 selectedMessagesMap.clear()
             })
         }
-    }
+    })
 }
 
 @Suppress("unused")

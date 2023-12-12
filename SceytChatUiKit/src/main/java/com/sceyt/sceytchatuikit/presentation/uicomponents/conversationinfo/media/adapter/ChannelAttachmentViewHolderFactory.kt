@@ -4,13 +4,24 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.databinding.*
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelFileBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelImageBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelLinkBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelMediaDateBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelVideoBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemChannelVoiceBinding
+import com.sceyt.sceytchatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.*
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.ChannelMediaDateViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.FileViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.ImageViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.LinkViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.VideoViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.VoiceViewHolder
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
@@ -29,6 +40,7 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
             ItemType.File.ordinal -> createFileViewHolder(parent)
             ItemType.Voice.ordinal -> createVoiceViewHolder(parent)
             ItemType.Link.ordinal -> createLinkViewHolder(parent)
+            ItemType.MediaDate.ordinal -> createMediaDateViewHolder(parent)
             ItemType.Loading.ordinal -> createLoadingMoreViewHolder(parent)
             else -> throw RuntimeException("Not supported view type")
         }
@@ -64,6 +76,11 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
             clickListeners)
     }
 
+    open fun createMediaDateViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
+        val binding = SceytItemChannelMediaDateBinding.inflate(layoutInflater, parent, false)
+        return ChannelMediaDateViewHolder(binding)
+    }
+
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         val binding = SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
         return object : BaseFileViewHolder<ChannelFileItem>(binding.root, {}) {
@@ -79,6 +96,7 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
             is ChannelFileItem.File -> ItemType.File.ordinal
             is ChannelFileItem.Voice -> ItemType.Voice.ordinal
             is ChannelFileItem.Link -> ItemType.Link.ordinal
+            is ChannelFileItem.MediaDate -> ItemType.MediaDate.ordinal
             is ChannelFileItem.LoadingMoreItem -> ItemType.Loading.ordinal
         }
     }
@@ -100,6 +118,6 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
     protected fun getNeedMediaDataCallback() = needMediaDataCallback
 
     enum class ItemType {
-        Image, Video, File, Voice, Link, Loading
+        Image, Video, File, Voice, Link, MediaDate, Loading
     }
 }

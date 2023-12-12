@@ -56,9 +56,10 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.viewholders.ReactionViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
-import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
+import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import com.sceyt.sceytchatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
@@ -130,14 +131,15 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     protected fun setMessageBody(messageBody: TextView, message: SceytMessage,
                                  checkLinks: Boolean = true, isLinkViewHolder: Boolean = false) {
-        val bodyText = message.body.trim()
-        val text = if (!MentionUserHelper.containsMentionsUsers(message)) {
-            bodyText
-        } else MentionUserHelper.buildWithMentionedUsers(context, bodyText,
-            message.metadata, message.mentionedUsers) {
-            messageListeners?.onMentionClick(messageBody, it)
+        var text: CharSequence = message.body.trim()
+        if (!message.bodyAttributes.isNullOrEmpty()) {
+            text = MessageBodyStyleHelper.buildOnlyStylesWithAttributes(text, message.bodyAttributes)
+            if (!message.mentionedUsers.isNullOrEmpty())
+                text = MentionUserHelper.buildWithMentionedUsers(context, text,
+                    message.bodyAttributes, message.mentionedUsers) {
+                    messageListeners?.onMentionClick(messageBody, it)
+                }
         }
-
         setTextAutoLinkMasks(messageBody, text.toString(), checkLinks, isLinkViewHolder)
         messageBody.setText(text, TextView.BufferType.SPANNABLE)
     }
@@ -279,9 +281,9 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     protected fun setMessageUserAvatarAndName(avatarView: SceytAvatarView, tvName: TextView, message: SceytMessage) {
-        if (!message.isGroup) return
+        if (!message.isGroup || message.disabledShowAvatarAndName) return
 
-        if (message.canShowAvatarAndName) {
+        if (message.shouldShowAvatarAndName) {
             val user = message.user
             val displayName = getSenderName(user)
             if (isDeletedUser(user)) {
@@ -393,7 +395,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                 if (it.type == AttachmentTypeEnum.File.value()) {
                     setPadding(ViewUtil.dpToPx(8f))
                 } else {
-                    if (message.isForwarded || message.isReplied || message.canShowAvatarAndName || message.body.isNotNullOrBlank())
+                    if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName || message.body.isNotNullOrBlank())
                         setPadding(0, ViewUtil.dpToPx(4f), 0, 0)
                     else setPadding(0)
                 }
@@ -461,7 +463,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     private fun getBubbleMaxWidth(context: Context): Int {
-        return (context.screenPortraitWidthPx() * 0.77f).toInt()
+        return (context.screenPortraitWidthPx() * 0.75f).toInt()
     }
 
     fun getMessageItem(): MessageListItem? {

@@ -90,7 +90,7 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
             val prevMessage = prevItem.message
             if (prevItem.message.isGroup) {
                 val prevIndex = messages.indexOf(prevItem)
-                prevMessage.canShowAvatarAndName = prevMessage.incoming && prevMessage.user?.id != newItem.message.user?.id
+                prevMessage.shouldShowAvatarAndName = prevMessage.incoming && prevMessage.user?.id != newItem.message.user?.id
                 notifyItemChanged(prevIndex, Unit)
             }
 
@@ -117,13 +117,15 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
     }
 
     fun addNextPageMessagesList(items: List<MessageListItem>) {
-        if (items.isEmpty()) return
-        val filteredItems = items.toSet().minus(messages.toSet())
         removeLoadingNext()
+        if (items.isEmpty()) return
+
+        val filteredItems = items.toSet().minus(messages.toSet())
         addNewMessages(filteredItems.toList())
     }
 
     fun addNewMessages(items: List<MessageListItem>) {
+        removeLoadingNext()
         if (items.isEmpty()) return
         val filteredItems = items.toSet().minus(messages.toSet())
         if (filteredItems.isEmpty()) return
@@ -190,6 +192,25 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                 messages.findIndexed { it == item }?.let {
                     messages.removeAt(it.first)
                     notifyItemRemoved(it.first)
+                }
+            }
+        }
+    }
+
+    fun removeUnreadMessagesSeparator() {
+        messages.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
+            messages.removeAt(it.first)
+            notifyItemRemoved(it.first)
+
+            // Hide avatar and name after removing unread separator, if the previous message is from the same user
+            messages.getOrNull(it.first)?.let { item ->
+                if (item is MessageItem && item.message.shouldShowAvatarAndName) {
+                    messages.getOrNull(it.first - 1)?.let { prevItem ->
+                        if (prevItem is MessageItem && prevItem.message.shouldShowAvatarAndName && prevItem.message.user?.id == item.message.user?.id) {
+                            item.message.shouldShowAvatarAndName = false
+                            notifyItemChanged(it.first, Unit)
+                        }
+                    }
                 }
             }
         }

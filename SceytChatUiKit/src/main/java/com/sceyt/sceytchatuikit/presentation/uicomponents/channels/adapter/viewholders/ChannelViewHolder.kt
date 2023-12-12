@@ -33,12 +33,11 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.Chann
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
-import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
+import com.sceyt.sceytchatuikit.sceytstyles.ChannelStyle
+import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
-import okhttp3.internal.lowercase
 import java.text.NumberFormat
 import java.util.*
 
@@ -153,7 +152,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 "${context.getString(R.string.sceyt_your_last_message)}: "
 
             (textView as SceytColorSpannableTextView).buildSpannable()
-                .setSpannableString(MentionUserHelper.buildOnlyNamesWithMentionedUsers(body, message.metadata, message.mentionedUsers))
+                .setSpannableString(MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(body, message.mentionedUsers, message.bodyAttributes))
                 .append(fromText)
                 .setForegroundColorId(R.color.sceyt_color_last_message_from)
                 .setIndexSpan(0, fromText.length)
@@ -205,8 +204,8 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         return if (draftMessage != null) {
             val draft = context.getString(R.string.sceyt_draft)
             val text = SpannableStringBuilder("$draft: ").apply {
-                append(MentionUserHelper.buildOnlyNamesWithMentionedUsers(
-                    draftMessage.message.toString(), draftMessage.metadata, draftMessage.mentionUsers?.toTypedArray()))
+                append(MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(draftMessage.message.toString(),
+                    draftMessage.mentionUsers?.toTypedArray(), draftMessage.bodyAttributes))
                 setSpan(ForegroundColorSpan(context.getCompatColor(R.color.sceyt_color_red)), 0, draft.length + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
             textView.text = text
@@ -315,7 +314,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
             else -> channel.createdAt
         }
-        return Pair(DateTimeUtil.getDateTimeStringCheckToday(context, lastMsgCreatedAt), shouldShowStatus)
+        return Pair(DateTimeUtil.getDateTimeStringWithDateFormatter(context, lastMsgCreatedAt, ChannelStyle.channelDateFormat), shouldShowStatus)
     }
 
     private fun SceytItemChannelBinding.setChannelItemStyle() {

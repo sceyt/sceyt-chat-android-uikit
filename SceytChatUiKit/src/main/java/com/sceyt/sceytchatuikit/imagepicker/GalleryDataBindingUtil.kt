@@ -2,7 +2,7 @@ package com.sceyt.sceytchatuikit.imagepicker
 
 import android.widget.ImageView
 import androidx.databinding.BindingAdapter
-import com.sceyt.sceytchatuikit.sceytconfigs.GalleryPickerStyle
+import com.sceyt.sceytchatuikit.sceytstyles.GalleryPickerStyle
 
 object GalleryDataBindingUtil {
 

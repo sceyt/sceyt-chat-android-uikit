@@ -1,10 +1,11 @@
-package com.sceyt.sceytchatuikit.sceytconfigs
+package com.sceyt.sceytchatuikit.sceytstyles
 
 import android.content.res.TypedArray
 import android.graphics.Typeface
 import androidx.annotation.*
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.dpToPx
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.dateformaters.MessageDateSeparatorFormatter
 
 object MessagesStyle {

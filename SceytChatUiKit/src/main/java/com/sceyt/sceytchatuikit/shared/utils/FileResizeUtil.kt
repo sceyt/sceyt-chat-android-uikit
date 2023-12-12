@@ -293,7 +293,12 @@ object FileResizeUtil {
             val heightRatio = (height.toFloat() / reqHeight.toFloat()).roundToInt()
             val widthRatio = (width.toFloat() / reqWidth.toFloat()).roundToInt()
 
-            inSampleSize = (heightRatio + widthRatio) / 2
+            // If the req size is greater than 500, then we can use max simple size, if lower than 500,
+            // then we don't use max simple size, because it will be bad quality.
+            // Note: 500 is a conditional value, you can change it to any value you want.
+            val useMaxSimpleSize = max(reqWidth, reqHeight) > 500
+            inSampleSize = if (useMaxSimpleSize)
+                max(heightRatio, widthRatio) else (heightRatio + widthRatio) / 2
         }
         return inSampleSize
     }

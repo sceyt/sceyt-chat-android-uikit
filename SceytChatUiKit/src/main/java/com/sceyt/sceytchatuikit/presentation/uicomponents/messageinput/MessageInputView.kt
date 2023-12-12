@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
 import android.text.Editable
-import android.text.SpannableString
 import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -22,7 +21,6 @@ import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
-import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
@@ -31,19 +29,15 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.data.toSceytAttachment
 import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
-import com.sceyt.sceytchatuikit.extensions.extractLinks
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
-import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.getString
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
-import com.sceyt.sceytchatuikit.extensions.isValidUrl
 import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
 import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.extensions.setBoldSpan
@@ -53,11 +47,7 @@ import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import com.sceyt.sceytchatuikit.persistence.mappers.createEmptyUser
-import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
-import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
@@ -84,11 +74,13 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.M
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionAnnotation
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionValidatorWatcher
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQuery
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQueryChangedListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
-import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import com.sceyt.sceytchatuikit.sceytstyles.MessageInputViewStyle
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.AttachmentChooseType
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
@@ -121,7 +113,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var voiceMessageRecorderView: SceytVoiceMessageRecorderView? = null
     private var mentionUserContainer: MentionUserContainer? = null
     private var inputTextWatcher: TextWatcher? = null
-    var messageInputActionCallback: MessageInputActionCallback? = null
+    private var messageInputActionCallback: MessageInputActionCallback? = null
+    private val messageToSendHelper by lazy { MessageToSendHelper(context) }
 
     var isInputHidden = false
         private set
@@ -160,7 +153,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         with(binding) {
             setUpStyle()
             setOnClickListeners()
-            addMentionUserListener()
+            addInoutListeners()
             determineInputState()
             addInputTextWatcher()
             post { onStateChanged(inputState) }
@@ -194,7 +187,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun updateDraftMessage() {
         val replyOrEditMessage = replyMessage ?: editMessage
         val isReply = replyMessage != null
-        messageInputActionCallback?.updateDraftMessage(binding.messageInput.text, binding.messageInput.mentions, replyOrEditMessage, isReply)
+        with(binding.messageInput) {
+            messageInputActionCallback?.updateDraftMessage(text, mentions, styling, replyOrEditMessage, isReply)
+        }
     }
 
     private fun SceytMessageInputViewBinding.setOnClickListeners() {
@@ -227,7 +222,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun addMentionUserListener() {
+    private fun addInoutListeners() {
         binding.messageInput.setInlineQueryChangedListener(object : InlineQueryChangedListener {
             override fun onQueryChanged(inlineQuery: InlineQuery) {
                 when (inlineQuery) {
@@ -240,114 +235,25 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
         })
+
+        binding.messageInput.setStylingChangedListener(::updateDraftMessage)
     }
 
     private fun sendMessage() {
-        val messageBody = binding.messageInput.text.toString().trim()
-        if (messageBody.isEmpty() && allAttachments.isEmpty() && editMessage?.attachments.isNullOrEmpty()) {
+        val body = binding.messageInput.text
+        if (body.isNullOrBlank() && allAttachments.isEmpty() && editMessage?.attachments.isNullOrEmpty()) {
             if (isEditingMessage())
                 customToastSnackBar(this, context.getString(R.string.sceyt_empty_message_body_message))
             return
         }
 
-        if (!checkIsEditingMessage(messageBody)) {
-            cancelReply {
-                val link = getLinkAttachmentFromBody()
-                if (allAttachments.isNotEmpty()) {
-                    val messages = arrayListOf<Message>()
-                    allAttachments.forEachIndexed { index, attachment ->
-                        var attachments = arrayOf(attachment)
-                        val message = if (index == 0) {
-                            if (link != null)
-                                attachments = attachments.plus(link)
-                            buildMessage(messageBody, attachments, true)
-                        } else buildMessage("", attachments, false)
-
-                        messages.add(message)
-                    }
-                    messageInputActionCallback?.sendMessages(messages)
-                } else {
-                    val attachment = if (link != null) arrayOf(link) else arrayOf()
-                    messageInputActionCallback?.sendMessage(buildMessage(messageBody, attachment, true))
-                }
-                reset()
-            }
+        cancelReply {
+            messageToSendHelper.sendMessage(allAttachments, body, editMessage, replyMessage, replyThreadMessageId)
+            reset()
         }
-    }
-
-    private fun buildMessage(body: String, attachments: Array<Attachment>, withMentionedUsers: Boolean): Message {
-        val message = Message.MessageBuilder()
-            .setTid(ClientWrapper.generateTid())
-            .setAttachments(attachments)
-            .setType("text")
-            .setBody(body)
-            .setCreatedAt(System.currentTimeMillis())
-            .initRelyMessage()
-            .build()
-
-        if (withMentionedUsers) {
-            val data = getMentionUsersAndMetadata()
-            message.metadata = data.first
-            message.mentionedUsers = data.second
-        }
-
-        return message
-    }
-
-    private fun Message.MessageBuilder.initRelyMessage(): Message.MessageBuilder {
-        replyMessage?.let {
-            setParentMessageId(it.id)
-            setParentMessage(it.toMessage())
-            // setReplyInThread(replyThreadMessageId != null)
-        } ?: replyThreadMessageId?.let {
-            setParentMessageId(it)
-            //setReplyInThread(true)
-        }
-        return this
-    }
-
-    private fun checkIsEditingMessage(messageBody: String): Boolean {
-        editMessage?.let { message ->
-            if (message.body.trim() == messageBody.trim()) {
-                cancelReply()
-                reset()
-                return true
-            }
-            val linkAttachment = getLinkAttachmentFromBody()?.toSceytAttachment(message.tid, TransferState.Uploaded)
-            message.body = messageBody
-
-            if (linkAttachment != null)
-                if (message.attachments.isNullOrEmpty())
-                    message.attachments = arrayOf(linkAttachment)
-                else message.attachments = (message.attachments ?: arrayOf()).plus(linkAttachment)
-
-            val data = getMentionUsersAndMetadata()
-            message.metadata = data.first
-            message.mentionedUsers = data.second
-
-            cancelReply {
-                messageInputActionCallback?.sendEditMessage(message)
-                reset()
-            }
-
-            return true
-        }
-        return false
     }
 
     private fun isEditingMessage() = editMessage != null
-
-    private fun getMentionUsersAndMetadata(): Pair<String?, Array<User>?> {
-        val mentionedUsers = binding.messageInput.mentions
-        if (mentionedUsers.isEmpty())
-            return Pair("", null)
-        var metadata: String
-        MentionUserHelper.initMentionMetaData(binding.messageInput.text.toString(), mentionedUsers).let {
-            metadata = it
-        }
-        val mentionedUsersData = mentionedUsers.map { createEmptyUser(it.recipientId, it.name) }.toTypedArray()
-        return Pair(metadata, mentionedUsersData)
-    }
 
     private fun tryToSendRecording(file: File, amplitudes: IntArray, duration: Int) {
         val metadata = Gson().toJson(AudioMetadata(amplitudes, duration))
@@ -419,22 +325,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         })
         voiceMessageRecorderView?.isVisible = false
         binding.voiceRecordPresenter.isVisible = true
-    }
-
-    private fun getLinkAttachmentFromBody(): Attachment? {
-        val body = binding.messageInput.text.toString()
-        val links = body.extractLinks()
-        val isContainsLink = links.isNotEmpty() && links[0].isValidUrl(context)
-        if (isContainsLink) {
-            return Attachment.Builder("", links[0], AttachmentTypeEnum.Link.value())
-                .withTid(ClientWrapper.generateTid())
-                .setName("")
-                .setMetadata("")
-                .setCreatedAt(System.currentTimeMillis())
-                .setUpload(false)
-                .build()
-        }
-        return null
     }
 
     private fun handleAttachmentClick() {
@@ -600,9 +490,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun initInputWithEditMessage(message: SceytMessage) {
         with(binding) {
-            var body = SpannableString(message.body)
+            var body = MessageBodyStyleHelper.buildOnlyStylesWithAttributes(message.body, message.bodyAttributes)
             if (!message.mentionedUsers.isNullOrEmpty()) {
-                val data = MentionUserHelper.getMentionsIndexed(message.metadata, message.mentionedUsers)
+                val data = MentionUserHelper.getMentionsIndexed(message.bodyAttributes, message.mentionedUsers)
                 body = MentionAnnotation.setMentionAnnotations(body, data)
             }
             messageInput.setText(body)
@@ -625,7 +515,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 layoutImage.isVisible = false
                 tvName.text = getString(R.string.sceyt_edit_message)
                 tvMessageBody.text = if (message.isTextMessage())
-                    MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
+                    MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message)
                 else message.getShowBody(context)
             }
             if (!initWithDraft)
@@ -655,7 +545,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 } else binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
 
                 tvMessageBody.text = if (message.isTextMessage())
-                    MentionUserHelper.buildOnlyNamesWithMentionedUsers(message.body, message.metadata, message.mentionedUsers)
+                    MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message)
                 else message.getShowBody(context)
             }
 
@@ -673,11 +563,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun setDraftMessage(draftMessage: DraftMessage?) {
         if (draftMessage == null || draftMessage.message.isNullOrEmpty())
             return
-        var body = SpannableString(draftMessage.message)
+        var body: CharSequence = draftMessage.message
         binding.messageInput.removeTextChangedListener(inputTextWatcher)
         with(binding.messageInput) {
+            body = MessageBodyStyleHelper.buildWithMentionsAndAttributes(context, body.toString(),
+                draftMessage.mentionUsers?.toTypedArray(), draftMessage.bodyAttributes)
+
             if (!draftMessage.mentionUsers.isNullOrEmpty()) {
-                val data = MentionUserHelper.getMentionsIndexed(draftMessage.metadata, draftMessage.mentionUsers.toTypedArray())
+                val data = MentionUserHelper.getMentionsIndexed(draftMessage.bodyAttributes, draftMessage.mentionUsers.toTypedArray())
                 body = MentionAnnotation.setMentionAnnotations(body, data)
             }
             setTextAndMoveSelectionEnd(body)
@@ -731,6 +624,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun getEventListeners() = eventListeners
 
+    fun setInputActionCallback(callback: MessageInputActionCallback) {
+        messageInputActionCallback = callback
+        messageToSendHelper.setInputActionCallback(callback)
+    }
+
+    @SuppressWarnings("WeakerAccess")
     fun checkIfRecordingAndConfirm(onConfirm: () -> Unit) {
         if (isRecording()) {
             SceytDialog.showSceytDialog(context, R.string.sceyt_stop_recording,
@@ -741,27 +640,18 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         } else onConfirm()
     }
 
+    @SuppressWarnings("WeakerAccess")
     fun createAttachmentWithPaths(vararg filePath: String, metadata: String = "", attachmentType: String? = null): MutableList<Attachment> {
         val attachments = mutableListOf<Attachment>()
         for (path in filePath) {
             if (checkIsExistAttachment(path))
                 continue
 
-            val file = File(path)
-            if (file.exists()) {
-                val type = attachmentType ?: getAttachmentType(path).value()
-                val attachment = Attachment.Builder(path, null, type)
-                    .setName(File(path).name)
-                    .withTid(ClientWrapper.generateTid())
-                    .setMetadata(metadata)
-                    .setCreatedAt(System.currentTimeMillis())
-                    .setFileSize(getFileSize(path))
-                    .setUpload(false)
-                    .build()
-
+            val attachment = messageToSendHelper.buildAttachment(path, metadata, attachmentType)
+            if (attachment != null) {
                 attachments.add(attachment)
             } else
-                Toast.makeText(context, "\"${file.name}\" ${getString(R.string.sceyt_unsupported_file_format)}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "\"${File(path).name}\" ${getString(R.string.sceyt_unsupported_file_format)}", Toast.LENGTH_SHORT).show()
         }
         return attachments
     }
@@ -771,6 +661,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         addAttachments(attachments)
     }
 
+    @SuppressWarnings("WeakerAccess")
     fun reset(clearInput: Boolean = true) {
         if (clearInput)
             binding.messageInput.text = null
@@ -783,11 +674,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         updateDraftMessage()
     }
 
+    @Suppress("Unused")
     fun disableInputWithMessage(message: String, @DrawableRes startIcon: Int = R.drawable.sceyt_ic_warning) {
         disabledInputByGesture = true
         hideInputWithMessage(message, startIcon)
     }
 
+    @Suppress("unused")
     fun enableInput() {
         disabledInputByGesture = false
         if (!isInputHidden)
@@ -798,16 +691,19 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.messageInput.setMentionValidator(validator)
     }
 
+    @Suppress("unused")
     fun enableDisableMention(enable: Boolean) {
         enableMention = enable
     }
 
+    @SuppressWarnings("WeakerAccess")
     fun stopRecording() {
         voiceMessageRecorderView?.forceStopRecording()
     }
 
     fun isEmpty() = binding.messageInput.text.isNullOrBlank() && allAttachments.isEmpty()
 
+    @SuppressWarnings("WeakerAccess")
     fun isRecording() = voiceMessageRecorderView?.isRecording == true
 
     fun getComposedMessage() = binding.messageInput.text
@@ -817,7 +713,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         fun sendMessages(message: List<Message>)
         fun sendEditMessage(message: SceytMessage)
         fun typing(typing: Boolean)
-        fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, replyOrEditMessage: SceytMessage?, isReply: Boolean)
+        fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, styling: List<BodyStyleRange>?,
+                               replyOrEditMessage: SceytMessage?, isReply: Boolean)
+
         fun mention(query: String)
         fun join()
         fun clearChat()
@@ -835,6 +733,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         clickListeners = listener
     }
 
+    @Suppress("unused")
     fun setEventListener(listener: InputEventsListener) {
         eventListeners.setListener(listener)
     }
@@ -843,6 +742,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         eventListeners = listener
     }
 
+    @Suppress("unused")
     fun setCustomSelectFileTypePopupClickListener(listener: SelectFileTypePopupClickListenersImpl) {
         selectFileTypePopupClickListeners = listener
     }
@@ -854,7 +754,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun setMentionList(data: List<SceytMember>) {
         if (data.isEmpty() && mentionUserContainer == null) return
         initMentionUsersContainer()
-        mentionUserContainer?.setMentionList(data.take(30))
+        mentionUserContainer?.setMentionList(data.toSet().take(30))
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {

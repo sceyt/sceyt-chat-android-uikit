@@ -118,7 +118,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     factory<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get()) }
     factory<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
-    factory<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get()) }
+    factory<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get()) }
 
     single<FileTransferLogic> { FileTransferLogicImpl(get()) }
 }

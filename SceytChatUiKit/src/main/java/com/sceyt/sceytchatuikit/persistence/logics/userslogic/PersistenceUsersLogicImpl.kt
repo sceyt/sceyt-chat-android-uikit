@@ -67,6 +67,10 @@ internal class PersistenceUsersLogicImpl(
         return userDao.getUserById(id)?.toUser()
     }
 
+    override suspend fun getUsersDbByIds(id: List<String>): List<User> {
+        return userDao.getUsersById(id).map { it.toUser() }
+    }
+
     override suspend fun getCurrentUser(): User? {
         var clientUser = ClientWrapper.currentUser
         if (clientUser?.id.isNullOrBlank())

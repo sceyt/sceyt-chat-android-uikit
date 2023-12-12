@@ -40,7 +40,8 @@ fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
     displayCount = displayCount,
     autoDeleteAt = autoDeleteAt,
     forwardingDetailsDb = forwardingDetails?.toForwardingDetailsDb(),
-    unList = unList
+    unList = unList,
+    bodyAttribute = bodyAttributes
 )
 
 fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
@@ -99,7 +100,8 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             displayCount = displayCount,
             autoDeleteAt = autoDeleteAt,
             forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toUser()),
-            pendingReactions = pendingReactions?.map { it.toReactionData() }
+            pendingReactions = pendingReactions?.map { it.toReactionData() },
+            bodyAttributes = bodyAttribute
         )
     }
 }
@@ -151,7 +153,8 @@ private fun MessageEntity.parentMessageToSceytMessage(attachments: Array<SceytAt
     displayCount = displayCount,
     autoDeleteAt = autoDeleteAt,
     forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, null),
-    pendingReactions = null
+    pendingReactions = null,
+    bodyAttributes = bodyAttribute
 )
 
 fun MessageDb.toMessage(): Message {
@@ -179,9 +182,10 @@ fun MessageDb.toMessage(): Message {
             emptyArray(),
             parent?.toSceytMessage()?.toMessage(),
             replyCount,
-            messageEntity.displayCount,
-            messageEntity.autoDeleteAt ?: 0L,
-            messageEntity.forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toUser())
+            displayCount,
+            autoDeleteAt ?: 0L,
+            forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toUser()),
+            bodyAttribute?.toTypedArray()
         )
     }
 }
@@ -226,7 +230,8 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         displayCount = displayCount.toShort(),
         autoDeleteAt = autoDeleteAt,
         forwardingDetails = forwardingDetails,
-        pendingReactions = null
+        pendingReactions = null,
+        bodyAttributes = bodyAttributes?.toList()
     ).apply {
         isGroup?.let {
             this.isGroup = it
@@ -260,7 +265,8 @@ fun SceytMessage.toMessage(): Message {
         replyCount,
         displayCount,
         autoDeleteAt ?: 0L,
-        forwardingDetails)
+        forwardingDetails,
+        bodyAttributes?.toTypedArray())
 }
 
 fun ForwardingDetails.toForwardingDetailsDb() = ForwardingDetailsDb(

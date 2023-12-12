@@ -3,9 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.extensions
 import android.content.Context
 import android.util.Log
 import com.abedelazizshe.lightcompressorlibrary.VideoQuality
-import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.sceytchatuikit.extensions.getMimeTypeTakeExtension
-import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Cancelled
 import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Failure
 import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Progress
@@ -13,6 +11,7 @@ import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Start
 import com.sceyt.sceytchatuikit.shared.mediaencoder.TranscodeResultEnum.Success
 import com.sceyt.sceytchatuikit.shared.mediaencoder.VideoTranscodeData
 import com.sceyt.sceytchatuikit.shared.mediaencoder.VideoTranscodeHelper
+import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import java.io.File
 import java.util.UUID
 
@@ -29,22 +28,6 @@ fun resizeImage(context: Context, path: String?, reqSize: Int = 600): Result<Str
         Log.e("ImageResize", ex.message.toString())
         Result.failure(ex)
     }
-}
-
-suspend fun Attachment.transcodeVideo(context: Context, quality: VideoQuality): Attachment {
-    var transcodeAttachment = this
-    val dest = File(context.cacheDir.toString() + UUID.randomUUID())
-    val result = VideoTranscodeHelper.transcodeAsResult(destination = dest, path = url, quality)
-    if (result.resultType == Success) {
-        transcodeAttachment = Attachment.Builder(dest.path, url, type)
-            .withTid(tid)
-            .setName(name)
-            .setMetadata(metadata)
-            .setUpload(true)
-            .build()
-    }
-
-    return transcodeAttachment
 }
 
 fun transcodeVideo(context: Context, path: String?, quality: VideoQuality = VideoQuality.MEDIUM,

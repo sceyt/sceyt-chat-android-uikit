@@ -34,15 +34,17 @@ fun <T> List<T>.updateCommon(newList: List<T>, predicate: (old: T, new: T) -> Bo
     return updateList
 }
 
-fun <T> MutableList<T>.removeAllIf(predicate: Predicate<T>) {
+fun <T> MutableIterable<T>.removeAllIf(predicate: Predicate<T>): Boolean {
     val itr = iterator()
-
+    var removed = false
     while (itr.hasNext()) {
         val t = itr.next()
         if (predicate.test(t)) {
             itr.remove()
+            removed = true
         }
     }
+    return removed
 }
 
 fun <K, V> HashMap<K, V>.removeAllIf(predicate: Predicate<V>): Boolean {

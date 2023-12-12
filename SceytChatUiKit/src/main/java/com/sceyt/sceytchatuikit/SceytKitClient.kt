@@ -27,7 +27,6 @@ import com.sceyt.sceytchatuikit.pushes.SceytFirebaseMessagingDelegate
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -37,9 +36,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 import kotlin.collections.set
-import kotlin.coroutines.CoroutineContext
 
-object SceytKitClient : SceytKoinComponent, CoroutineScope {
+object SceytKitClient : SceytKoinComponent {
     private val context: Context by inject()
     private val preferences: SceytSharedPreference by inject()
     private val connectionStateService: ConnectionStateService by inject()
@@ -56,6 +54,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
     private val listenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
     private var clientUserId: String? = null
 
+    @JvmStatic
     val myId
         get() = clientUserId ?: preferences.getUserId().also {
             clientUserId = it
@@ -76,11 +75,12 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
         setListener()
     }
 
-    fun connect(token: String, userName: String) {
-        preferences.setUserId(userName)
+    @JvmStatic
+    fun connect(token: String) {
         getChatClient()?.connect(token)
     }
 
+    @JvmStatic
     fun updateToken(token: String, listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
         ChatClient.updateToken(token, object : ActionCallback {
             override fun onSuccess() {
@@ -93,10 +93,12 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
         })
     }
 
+    @JvmStatic
     fun reconnect() {
         getChatClient()?.reconnect()
     }
 
+    @JvmStatic
     fun disconnect() {
         getChatClient()?.disconnect()
     }
@@ -106,14 +108,14 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
             when (it.state) {
                 ConnectionState.Connected -> {
                     notifyState(true, null)
-                    launch {
+                    globalScope.launch {
                         ProcessLifecycleOwner.get().repeatOnLifecycle(Lifecycle.State.RESUMED) {
                             if (ConnectionEventsObserver.isConnected)
                                 persistenceUsersMiddleWare.setPresenceState(PresenceState.Online)
                         }
                     }
                     SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
-                    launch(Dispatchers.IO) {
+                    globalScope.launch(Dispatchers.IO) {
                         persistenceMessagesMiddleWare.sendAllPendingMarkers()
                         persistenceMessagesMiddleWare.sendAllPendingMessages()
                         persistenceMessagesMiddleWare.sendAllPendingMessageStateUpdates()
@@ -134,15 +136,15 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
 
                 else -> {}
             }
-        }.launchIn(this)
+        }.launchIn(globalScope)
 
         ConnectionEventsObserver.onTokenExpired.onEach {
             onTokenExpired_.tryEmit(Unit)
-        }.launchIn(this)
+        }.launchIn(globalScope)
 
         ConnectionEventsObserver.onTokenWillExpire.onEach {
             onTokenWillExpire_.tryEmit(Unit)
-        }.launchIn(this)
+        }.launchIn(globalScope)
     }
 
     private fun notifyState(success: Boolean, errorMessage: String?) {
@@ -153,26 +155,36 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
 
     private fun getChatClient(): ChatClient? = ChatClient.getClient()
 
+    @JvmStatic
     fun getConnectionService() = connectionStateService
 
+    @JvmStatic
     fun getChannelsMiddleWare() = persistenceChannelsMiddleWare
 
+    @JvmStatic
     fun getMessagesMiddleWare() = persistenceMessagesMiddleWare
 
+    @JvmStatic
     fun getAttachmentsMiddleWare() = persistenceAttachmentsMiddleWare
 
+    @JvmStatic
     fun getMembersMiddleWare() = persistenceMembersMiddleWare
 
+    @JvmStatic
     fun getUserMiddleWare() = persistenceUsersMiddleWare
 
+    @JvmStatic
     fun getSyncManager() = sceytSyncManager
 
+    @JvmStatic
     fun getFileTransferService() = filesTransferService
 
+    @JvmStatic
     fun addListener(key: String, listener: (success: Boolean, errorMessage: String?) -> Unit) {
         listenersMap[key] = listener
     }
 
+    @JvmStatic
     fun clearData() {
         globalScope.launch(Dispatchers.IO) {
             database.clearAllTables()
@@ -181,6 +193,7 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
         }
     }
 
+    @JvmStatic
     fun logOut(unregisterPushCallback: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
         clearData()
         WorkManager.getInstance(context).cancelAllWork()
@@ -197,7 +210,4 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
             }
         })
     }
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
 }

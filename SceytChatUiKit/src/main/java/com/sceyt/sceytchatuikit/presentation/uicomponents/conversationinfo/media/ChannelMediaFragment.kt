@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -18,7 +19,7 @@ import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
-import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
+import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
@@ -27,11 +28,11 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.Conve
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ViewPagerAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
 import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     protected lateinit var channel: SceytChannel
@@ -39,7 +40,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     protected var mediaAdapter: ChannelMediaAdapter? = null
     protected open val mediaType = listOf("image", "video")
     protected var pageStateView: PageStateView? = null
-    protected val viewModel by viewModel<ChannelAttachmentsViewModel>()
+    protected lateinit var viewModel: ChannelAttachmentsViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelMediaBinding.inflate(inflater, container, false).also {
@@ -51,8 +52,8 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         super.onViewCreated(view, savedInstanceState)
 
         getBundleArguments()
-        addPageStateView()
         initViewModel()
+        addPageStateView()
         loadInitialMediaList()
     }
 
@@ -61,6 +62,10 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     private fun initViewModel() {
+        viewModel = viewModels<ChannelAttachmentsViewModel>().value
+
+        viewModel.observeToUpdateAfterOnResume(this)
+
         lifecycleScope.launch {
             viewModel.filesFlow.collect(::onInitialMediaList)
         }
@@ -81,7 +86,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             pageStateView = this
 
             post {
-                (requireActivity() as? ConversationInfoActivity)?.getViewPagerY()?.let {
+                (activity as? ConversationInfoActivity)?.getViewPagerY()?.let {
                     if (it > 0)
                         layoutParams.height = screenHeightPx() - it
                 }
@@ -91,7 +96,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     protected open fun onInitialMediaList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
-            mediaAdapter = ChannelMediaAdapter(list.toArrayList(), ChannelAttachmentViewHolderFactory(requireContext()).also {
+            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(requireContext()).also {
                 it.setNeedMediaDataCallback { data ->
                     viewModel.needMediaInfo(data)
                 }
@@ -99,27 +104,31 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                     onMediaClick(item)
                 })
-            })
+            }).also { mediaAdapter = it }
+
             with((binding ?: return).rvFiles) {
                 setHasFixedSize(true)
-                adapter = mediaAdapter
+                this.adapter = adapter
                 layoutManager = GridLayoutManager(requireContext(), getSpanCount()).also {
                     it.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                         override fun getSpanSize(position: Int): Int {
-                            return when (mediaAdapter?.getItemViewType(position)) {
+                            return when (adapter.getItemViewType(position)) {
                                 ChannelAttachmentViewHolderFactory.ItemType.Loading.ordinal -> 3
+                                ChannelAttachmentViewHolderFactory.ItemType.MediaDate.ordinal -> 3
                                 else -> 1
                             }
                         }
                     }
                 }
 
+                addItemDecoration(MediaStickHeaderItemDecoration(adapter))
+
                 addOnScrollListener(object : RecyclerView.OnScrollListener() {
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(recyclerView, dx, dy)
                         if (isLastItemDisplaying() && viewModel.canLoadPrev())
-                            loadMoreMediaList(mediaAdapter?.getLastMediaItem()?.file?.id ?: 0,
-                                mediaAdapter?.getFileItems()?.size ?: 0)
+                            loadMoreMediaList(adapter.getLastMediaItem()?.file?.id
+                                    ?: 0, adapter.getFileItems().size)
                     }
                 })
             }
@@ -158,9 +167,19 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         viewModel.loadAttachments(channel.id, lastAttachmentId, true, mediaType, offset)
     }
 
-    companion object {
-        const val CHANNEL = "CHANNEL"
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mediaAdapter = null
+    }
 
+    override fun onHistoryCleared() {
+        mediaAdapter?.clearData()
+        pageStateView?.updateState(PageState.StateEmpty())
+    }
+
+    companion object {
+
+        const val CHANNEL = "CHANNEL"
         fun newInstance(channel: SceytChannel): ChannelMediaFragment {
             val fragment = ChannelMediaFragment()
             fragment.setBundleArguments {
@@ -168,10 +187,5 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             }
             return fragment
         }
-    }
-
-    override fun onCleared() {
-        mediaAdapter?.clearData()
-        pageStateView?.updateState(PageState.StateEmpty())
     }
 }

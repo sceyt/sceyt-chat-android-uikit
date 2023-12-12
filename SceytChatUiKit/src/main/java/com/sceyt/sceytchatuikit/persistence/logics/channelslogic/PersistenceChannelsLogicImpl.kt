@@ -58,13 +58,12 @@ import com.sceyt.sceytchatuikit.persistence.entity.channel.ChatUserReactionEntit
 import com.sceyt.sceytchatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageUserLink
-import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.sceytchatuikit.persistence.mappers.createPendingDirectChannelData
+import com.sceyt.sceytchatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.sceytchatuikit.persistence.mappers.toChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
-import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toReactionData
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
@@ -75,8 +74,9 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
@@ -209,13 +209,20 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun onFcmMessage(data: RemoteMessageData) {
         val dataChannel = data.channel ?: return
         val dataMessage = data.message ?: return
-        //Update channel last message if channel exist
-        channelDao.getChannelById(dataChannel.id)?.let {
-            channelDao.updateLastMessage(it.channelEntity.id, dataMessage.id, dataMessage.createdAt)
-        } ?: run {
+
+        val channel: SceytChannel
+        val channelDb = channelDao.getChannelById(dataChannel.id)
+        if (channelDb != null) {
+            channel = channelDb.toChannel()
+            channel.lastMessage = dataMessage
+            channelDao.updateLastMessage(channelDb.channelEntity.id, dataMessage.id, dataMessage.createdAt)
+        } else {
             // Insert channel from push data
             channelDao.insertChannel(dataChannel.toChannelEntity())
+            channel = dataChannel
         }
+        fillChannelsNeededInfo(channel)
+        channelsCache.upsertChannel(channel)
     }
 
     override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
@@ -408,7 +415,7 @@ internal class PersistenceChannelsLogicImpl(
         val links = arrayListOf<UserChatLink>()
         val users = arrayListOf<UserEntity>()
         val directChatsWithDeletedPeers = arrayListOf<Long>()
-        val lastMessages = arrayListOf<MessageDb>()
+        val lastMessages = arrayListOf<SceytMessage>()
         val userReactions = arrayListOf<ChatUserReactionEntity>()
 
         fun addEntitiesToLists(channelId: Long, members: List<SceytMember>?, lastMessage: SceytMessage?, userMessageReactions: List<SceytReaction>?) {
@@ -418,7 +425,7 @@ internal class PersistenceChannelsLogicImpl(
             }
 
             lastMessage?.let {
-                lastMessages.add(it.toMessageDb(false))
+                lastMessages.add(it)
             }
 
             userMessageReactions?.forEach {
@@ -442,7 +449,7 @@ internal class PersistenceChannelsLogicImpl(
             fillChannelsNeededInfo(channel)
         }
         usersDao.insertUsers(users)
-        messageLogic.saveChannelLastMessagesToDb(lastMessages.map { it.toSceytMessage() })
+        messageLogic.saveChannelLastMessagesToDb(lastMessages)
         chatUsersReactionDao.replaceChannelUserReactions(userReactions)
 
         // Delete old links where channel peer is deleted.
@@ -699,10 +706,7 @@ internal class PersistenceChannelsLogicImpl(
                         chatId = it.id,
                         role = sceytMember.role.name))
 
-                    if (channelsCache.get(channelId) == null)
-                        channelsCache.add(it)
-                    else
-                        channelsCache.addedMembers(channelId, sceytMember)
+                    channelsCache.upsertChannel(it)
                 }
             }
 
@@ -738,13 +742,17 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>,
-                                            replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+                                            styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
         val draftMessage = if (message.isNullOrBlank()) {
             draftMessageDao.deleteDraftByChannelId(channelId)
             null
         } else {
+            val attributes = mentionUsers.map { it.toBodyAttribute() }.toMutableList()
+            styling?.let {
+                attributes.addAll(it.map { styleRange -> styleRange.toBodyAttribute() })
+            }
             val draftMessageEntity = DraftMessageEntity(channelId, message, System.currentTimeMillis(),
-                MentionUserHelper.initMentionMetaData(message, mentionUsers), replyOrEditMessage?.id, isReply)
+                replyOrEditMessage?.id, isReply, attributes)
             val links = mentionUsers.map { DraftMessageUserLink(chatId = channelId, userId = it.recipientId) }
             draftMessageDao.insertWithUserLinks(draftMessageEntity, links)
             draftMessageEntity.toDraftMessage(mentionUsers.map { createEmptyUser(it.recipientId, it.name) }, replyOrEditMessage)

@@ -3,15 +3,16 @@ package com.sceyt.chat.demo
 import android.app.Application
 import android.util.Log
 import com.sceyt.chat.ChatClient
-import com.sceyt.chat.models.SCTLogLevel
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.di.apiModule
 import com.sceyt.chat.demo.di.appModules
 import com.sceyt.chat.demo.di.repositoryModule
 import com.sceyt.chat.demo.di.viewModelModules
 import com.sceyt.chat.demo.presentation.conversation.ConversationActivity
+import com.sceyt.chat.models.SCTLogLevel
 import com.sceyt.sceytchatuikit.SceytUIKitInitializer
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.isAppInDarkMode
 import com.sceyt.sceytchatuikit.sceytconfigs.BackgroundUploadNotificationClickData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import org.koin.android.ext.android.inject
@@ -31,6 +32,7 @@ class SceytChatDemoApp : Application() {
             modules(arrayListOf(appModules, viewModelModules, apiModule, repositoryModule))
         }
 
+        SceytKitConfig.SceytUITheme.isDarkMode = isAppInDarkMode()
         initSceyt()
         connectionProvider.init()
     }
@@ -40,8 +42,8 @@ class SceytChatDemoApp : Application() {
         ChatClient.setEnableNetworkChangeDetection(true)
         chatClient = SceytUIKitInitializer(this).initialize(
             clientId = UUID.randomUUID().toString(),
-            appId = "8lwox2ge93",
-            host = "https://us-ohio-api.sceyt.com/",
+            appId = BuildConfig.APP_ID,
+            host = BuildConfig.HOST,
             enableDatabase = true)
 
         SceytKitConfig.backgroundUploadNotificationClickData = BackgroundUploadNotificationClickData(

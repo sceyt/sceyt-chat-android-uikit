@@ -81,7 +81,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.photo
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
+import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -135,31 +135,31 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             channel = it
         }
 
-        viewModel.leaveChannelLiveData.observe(this, ::onLeaveChannel)
+        viewModel.leaveChannelLiveData.observe(this, ::onLeftChannel)
 
-        viewModel.deleteChannelLiveData.observe(this, ::onDeleteChannel)
+        viewModel.deleteChannelLiveData.observe(this, ::onDeletedChannel)
 
-        viewModel.clearHistoryLiveData.observe(this, ::onClearHistory)
+        viewModel.clearHistoryLiveData.observe(this, ::onClearedHistory)
 
-        viewModel.blockUnblockUserLiveData.observe(this, ::onBlockUnblockUser)
+        viewModel.blockUnblockUserLiveData.observe(this, ::onBlockedOrUnblockedUser)
 
         viewModel.joinLiveData.observe(this) {
             channel = it
             initButtons()
-            onJoinChannel(it)
+            onJoinedChannel(it)
         }
 
         viewModel.muteUnMuteLiveData.observe(this) {
             channel.muted = it.muted
             initButtons()
-            onMuteUnMuteChannel(it)
+            onMutedOrUnMutedChannel(it)
         }
 
-        viewModel.channelAddMemberLiveData.observe(this, ::onAddMember)
+        viewModel.channelAddMemberLiveData.observe(this, ::onAddedMember)
 
         viewModel.findOrCreateChatLiveData.observe(this, ::onFindOrCreateChat)
 
-        viewModel.pageStateLiveData.observe(this, ::onPageStateChange)
+        viewModel.pageStateLiveData.observe(this, ::onPageStateChanged)
     }
 
     private fun initButtons() {
@@ -230,7 +230,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         when (clickActionsEnum) {
             ClickActionsEnum.Mute -> onMuteUnMuteClick(channel, true)
             ClickActionsEnum.UnMute -> onMuteUnMuteClick(channel, false)
-            ClickActionsEnum.Call -> onAudioCallClick(channel)
+            ClickActionsEnum.AudioCall -> onAudioCallClick(channel)
             ClickActionsEnum.VideoCall -> onVideoCallClick(channel)
             ClickActionsEnum.More -> onMoreClick(channel)
         }
@@ -504,7 +504,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     open fun onCallOutClick(channel: SceytChannel) {
     }
 
-    open fun onAddMember(data: ChannelMembersEventData) {
+    open fun onAddedMember(data: ChannelMembersEventData) {
     }
 
     open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
@@ -560,26 +560,26 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
-    open fun onLeaveChannel(channelId: Long) {
+    open fun onLeftChannel(channelId: Long) {
         finish()
     }
 
-    open fun onDeleteChannel(channelId: Long) {
+    open fun onDeletedChannel(channelId: Long) {
         finish()
     }
 
-    open fun onMuteUnMuteChannel(sceytChannel: SceytChannel) {
+    open fun onMutedOrUnMutedChannel(sceytChannel: SceytChannel) {
     }
 
-    open fun onJoinChannel(sceytChannel: SceytChannel) {
+    open fun onJoinedChannel(sceytChannel: SceytChannel) {
     }
 
-    open fun onClearHistory(channelId: Long) {
+    open fun onClearedHistory(channelId: Long) {
         pagerAdapter.historyCleared()
         customToastSnackBar(getString(R.string.sceyt_history_was_successfully_cleared))
     }
 
-    open fun onBlockUnblockUser(users: List<User>) {
+    open fun onBlockedOrUnblockedUser(users: List<User>) {
         val peer = channel.getFirstMember()
         users.find { user -> user.id == peer?.id }?.let { user ->
             peer?.user = user
@@ -748,7 +748,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     //Additional info
     open fun getChannelAdditionalInfoFragment(channel: SceytChannel): Fragment? = null
 
-    open fun onPageStateChange(pageState: PageState) {
+    open fun onPageStateChanged(pageState: PageState) {
         if (pageState is PageState.StateError) {
             setChannelDetails(channel)
             if (pageState.showMessage)

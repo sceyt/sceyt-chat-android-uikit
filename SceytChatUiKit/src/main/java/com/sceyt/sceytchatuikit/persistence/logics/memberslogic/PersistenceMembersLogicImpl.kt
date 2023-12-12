@@ -27,22 +27,11 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMember
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
-import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE
-import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import org.koin.core.component.inject
-import kotlin.coroutines.CoroutineContext
 
 internal class PersistenceMembersLogicImpl(
         private val channelsRepository: ChannelsRepository,
@@ -50,27 +39,9 @@ internal class PersistenceMembersLogicImpl(
         private val messageDao: MessageDao,
         private val membersDao: MembersDao,
         private val usersDao: UserDao,
-        private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent, CoroutineScope {
+        private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
-
-    init {
-        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach {
-            launch(Dispatchers.IO) {
-                it.forEach { presenceUser ->
-                    channelsCache.getData().forEach { channel ->
-                        val user = presenceUser.user
-                        val peer = channel.getFirstMember()
-                        if (channel.isDirect() && peer?.id == user.id)
-                            channelsCache.updateChannelPeer(channel.id, user)
-                    }
-                }
-            }
-        }.launchIn(this)
-    }
 
     override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
         val chatId = data.channel.id
@@ -120,7 +91,7 @@ internal class PersistenceMembersLogicImpl(
         membersDao.updateOwner(data.channel.id, data.oldOwner.id, data.newOwner.id)
     }
 
-    override suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
+    override fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
         val normalizedOffset = offset / CHANNELS_MEMBERS_LOAD_SIZE * CHANNELS_MEMBERS_LOAD_SIZE
         return callbackFlow {
             val dbMembers = getMembersDb(channelId, normalizedOffset, role, CHANNELS_MEMBERS_LOAD_SIZE)

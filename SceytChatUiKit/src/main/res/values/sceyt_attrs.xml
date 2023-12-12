@@ -8,6 +8,7 @@
         <attr name="sceytAvatarViewTextSize" format="dimension|integer" />
         <attr name="sceytAvatarColor" format="color|reference" />
         <attr name="sceytAvatarDefaultIcon" format="reference" />
+        <attr name="sceytAvatarEnableRipple" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="SceytToReplyLineView">
@@ -66,25 +67,28 @@
     </declare-styleable>
 
     <declare-styleable name="SceytCircularProgressView">
-        <attr name="progressColor" format="color"/>
-        <attr name="trackColor" format="color"/>
-        <attr name="progress" format="float"/>
-        <attr name="minProgress" format="float"/>
-        <attr name="roundedProgress" format="boolean"/>
-        <attr name="trackThickness" format="dimension"/>
-        <attr name="centerIcon" format="reference"/>
-        <attr name="iconTint" format="color"/>
-        <attr name="rotateAnimEnabled" format="boolean"/>
-        <attr name="backgroundColor" format="color"/>
-        <attr name="iconSizeInPercent" format="float"/>
-        <attr name="enableProgressDownAnimation" format="boolean"/>
+        <attr name="progressColor" format="color" />
+        <attr name="trackColor" format="color" />
+        <attr name="progress" format="float" />
+        <attr name="minProgress" format="float" />
+        <attr name="roundedProgress" format="boolean" />
+        <attr name="trackThickness" format="dimension" />
+        <attr name="centerIcon" format="reference" />
+        <attr name="iconTint" format="color" />
+        <attr name="rotateAnimEnabled" format="boolean" />
+        <attr name="backgroundColor" format="color" />
+        <attr name="iconSizeInPercent" format="float" />
+        <attr name="enableProgressDownAnimation" format="boolean" />
 
     </declare-styleable>
 
     <declare-styleable name="SceytCustomToolbar">
         <attr name="title" format="string" />
+        <attr name="titleTextColor" format="color|reference" />
         <attr name="navigationIcon" format="reference" />
-        <attr name="navigationEndIcon" format="reference" />
+        <attr name="menuIcon" format="reference" />
+        <attr name="iconsTint" format="color|reference" />
+        <attr name="enableDivider" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="ScalableVideoView">

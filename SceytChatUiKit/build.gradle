@@ -92,14 +92,13 @@ dependencies {
     api supportDependencies.coreKtx
     api supportDependencies.sceytSdk
     api supportDependencies.lifecycleRuntime
+    api supportDependencies.liveDataKtx
     api supportDependencies.liveEvent
     api supportDependencies.glide
     api supportDependencies.glideTransformations
     api supportDependencies.ion
     api supportDependencies.firebaseBom
     api supportDependencies.firebaseMessaging
-    api supportDependencies.okHttp
-    api supportDependencies.voley
     annotationProcessor supportDependencies.roomCompiler
     kapt supportDependencies.roomCompiler
     api supportDependencies.roomRuntime

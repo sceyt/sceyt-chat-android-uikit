@@ -22,6 +22,8 @@ import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.extensions.isResumed
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
@@ -50,9 +52,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     clearPreparingThumbs()
 
     val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
+    val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
 
-    /** Send pending markers and pending messages when lifecycle come back onResume state,
-     * Also set update current chat Id in ChannelsCache*/
+    /** Send pending markers, pending messages and update attachments transfer states when
+     * lifecycle come back onResume state. */
     viewModelScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             if (ConnectionEventsObserver.connectionState == ConnectionState.Connected) {
@@ -61,6 +64,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     pendingDisplayMsgIds.clear()
                 }
                 sendPendingMessages()
+            }
+            messagesListView.post {
+                if (needToUpdateTransferAfterOnResume.isNotEmpty()) {
+                    needToUpdateTransferAfterOnResume.values.forEach { data ->
+                        messagesListView.updateProgress(data, true)
+                    }
+                    needToUpdateTransferAfterOnResume.clear()
+                }
             }
         }
     }
@@ -167,10 +178,20 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         when (response.data) {
             is SceytResponse.Success -> {
                 if (response.hasDiff) {
-                    val newMessages = mapToMessageListItem(data = response.cacheData,
+                    val dataToMap = if (response.dbResultWasEmpty) {
+                        response.data.data ?: return
+                    } else response.cacheData
+
+                    val newMessages = mapToMessageListItem(data = dataToMap,
                         hasNext = response.hasNext,
                         hasPrev = response.hasPrev)
-                    messagesListView.setMessagesList(newMessages, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
+
+                    if (response.dbResultWasEmpty) {
+                        if (response.loadType == LoadNext || response.loadType == LoadNewest)
+                            messagesListView.addNextPageMessages(newMessages)
+                        else messagesListView.addPrevPageMessages(newMessages)
+                    } else
+                        messagesListView.setMessagesList(newMessages, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
                 } else
                     checkToHildeLoadingMoreItemByLoadType(response.loadType)
 
@@ -335,35 +356,32 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     onNewOutGoingMessageFlow.onEach {
         if (hasNext || hasNextDb) return@onEach
-        viewModelScope.launch {
-            val initMessage = mapToMessageListItem(
-                data = arrayListOf(it),
-                hasNext = false,
-                hasPrev = false,
-                compareMessage = messagesListView.getLastMessage()?.message)
+        val initMessage = mapToMessageListItem(
+            data = arrayListOf(it),
+            hasNext = false,
+            hasPrev = false,
+            compareMessage = messagesListView.getLastMessage()?.message)
 
-            messagesListView.addNewMessages(*initMessage.toTypedArray())
-            messagesListView.updateViewState(PageState.Nothing)
-        }
+        messagesListView.addNewMessages(*initMessage.toTypedArray())
+        messagesListView.updateViewState(PageState.Nothing)
     }.launchIn(viewModelScope)
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
         checkEnableDisableActions(it)
     }
 
-    fun checkStateAndMarkAsRead(messageItem: MessageListItem) {
-        (messageItem as? MessageListItem.MessageItem)?.message?.let { message ->
-            if (!message.incoming || message.userMarkers?.any { it.name == MarkerTypeEnum.Displayed.value() } == true)
-                return
+    fun checkStateAndMarkAsRead(messageItem: MessageListItem.MessageItem) {
+        val message = messageItem.message
+        if (!message.incoming || message.userMarkers?.any { it.name == MarkerTypeEnum.Displayed.value() } == true)
+            return
 
-            if (lifecycleOwner.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                pendingDisplayMsgIds.add(message.id)
-                sendDisplayedHelper.submit {
-                    markMessageAsRead(*(pendingDisplayMsgIds).toLongArray())
-                    pendingDisplayMsgIds.clear()
-                }
-            } else pendingDisplayMsgIds.add(message.id)
-        }
+        if (lifecycleOwner.isResumed()) {
+            pendingDisplayMsgIds.add(message.id)
+            sendDisplayedHelper.submit {
+                markMessageAsRead(*(pendingDisplayMsgIds).toLongArray())
+                pendingDisplayMsgIds.clear()
+            }
+        } else pendingDisplayMsgIds.add(message.id)
     }
 
     onNewMessageFlow.onEach {
@@ -379,7 +397,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }.launchIn(viewModelScope)
 
     // todo reply in thread
-    /*  onNewThreadMessageFlow.onEach {
+    /*
+    onNewThreadMessageFlow.onEach {
           messagesListView.updateReplyCount(it)
       }.launchIn(viewModelScope)
 
@@ -391,11 +410,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         messagesListView.updateMessagesStatus(it.status, it.messageIds)
     }.launchIn(viewModelScope)
 
-    onTransferUpdatedLiveData.observe(lifecycleOwner) { data ->
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            messagesListView.updateProgress(data)
+    onTransferUpdatedLiveData.asFlow().onEach {
+        viewModelScope.launch(Dispatchers.Default) {
+            if (lifecycleOwner.isResumed()) {
+                messagesListView.updateProgress(it, false)
+            } else
+                needToUpdateTransferAfterOnResume[it.messageTid] = it
         }
-    }
+    }.launchIn(viewModelScope)
 
     onChannelEventFlow.onEach {
         when (it.eventType) {
@@ -412,7 +434,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }.launchIn(viewModelScope)
 
     onOutGoingMessageStatusFlow.onEach {
-        messagesListView.updateMessagesStatusByTid(DeliveryStatus.Sent, it.second.tid)
+        viewModelScope.launch {
+            messagesListView.updateMessagesStatusByTid(DeliveryStatus.Sent, it.second.tid)
+        }
     }.launchIn(viewModelScope)
 
     joinLiveData.observe(lifecycleOwner) {
@@ -538,7 +562,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     messagesListView.setMessageDisplayedListener {
-        checkStateAndMarkAsRead(it)
+        if (it is MessageListItem.MessageItem)
+            checkStateAndMarkAsRead(it)
     }
 }
 

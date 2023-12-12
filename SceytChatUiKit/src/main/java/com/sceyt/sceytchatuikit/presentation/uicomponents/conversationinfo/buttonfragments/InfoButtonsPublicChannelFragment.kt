@@ -12,6 +12,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytInfoPageLayoutButtonsPublicChannelBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.extensions.setDrawableTop
@@ -20,10 +21,12 @@ import com.sceyt.sceytchatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class InfoButtonsPublicChannelFragment : Fragment() {
-    private lateinit var binding: SceytInfoPageLayoutButtonsPublicChannelBinding
+open class InfoButtonsPublicChannelFragment : Fragment() {
+    lateinit var binding: SceytInfoPageLayoutButtonsPublicChannelBinding
+        private set
     private var buttonsListener: ((PublicChannelClickActionsEnum) -> Unit)? = null
-    private lateinit var channel: SceytChannel
+    lateinit var channel: SceytChannel
+        private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytInfoPageLayoutButtonsPublicChannelBinding.inflate(layoutInflater, container, false)
@@ -44,7 +47,7 @@ class InfoButtonsPublicChannelFragment : Fragment() {
         channel = requireNotNull(arguments?.parcelable(ChannelLinksFragment.CHANNEL))
     }
 
-    private fun SceytInfoPageLayoutButtonsPublicChannelBinding.setOnClickListeners() {
+    open fun SceytInfoPageLayoutButtonsPublicChannelBinding.setOnClickListeners() {
         muteUnMute.apply {
             if (channel.muted) {
                 text = getString(R.string.sceyt_un_mute)
@@ -76,9 +79,9 @@ class InfoButtonsPublicChannelFragment : Fragment() {
         }
     }
 
-    private fun determinateState() {
+    open fun determinateState() {
         val myRole = channel.userRole
-        val isMember = myRole != null
+        val isMember = myRole.isNotNullOrBlank()
         with(binding) {
             if (!isMember) {
                 join.isVisible = true

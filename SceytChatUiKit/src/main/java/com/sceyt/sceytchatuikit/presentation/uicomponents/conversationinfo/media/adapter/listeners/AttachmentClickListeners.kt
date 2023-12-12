@@ -9,6 +9,10 @@ sealed interface AttachmentClickListeners {
         fun onAttachmentClick(view: View, item: ChannelFileItem)
     }
 
+    fun interface AttachmentLoaderClickListener : AttachmentClickListeners {
+        fun onAttachmentLoaderClick(view: View, item: ChannelFileItem)
+    }
+
     /** Use this if you want to implement all callbacks */
-    interface ClickListeners : AttachmentClickListener
+    interface ClickListeners : AttachmentClickListener, AttachmentLoaderClickListener
 }
