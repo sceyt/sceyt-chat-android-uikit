@@ -754,7 +754,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun setMentionList(data: List<SceytMember>) {
         if (data.isEmpty() && mentionUserContainer == null) return
         initMentionUsersContainer()
-        mentionUserContainer?.setMentionList(data.take(30))
+        mentionUserContainer?.setMentionList(data.toSet().take(30))
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
