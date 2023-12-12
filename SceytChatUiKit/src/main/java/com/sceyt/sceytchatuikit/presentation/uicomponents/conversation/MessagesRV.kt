@@ -7,12 +7,14 @@ import android.os.Looper
 import android.util.AttributeSet
 import android.view.animation.AnimationUtils
 import androidx.core.util.Predicate
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.sceytchatuikit.extensions.getLastVisibleItemPosition
 import com.sceyt.sceytchatuikit.extensions.lastVisibleItemPosition
@@ -25,6 +27,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.MessageSwipeController
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -78,13 +82,12 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         }
 
         addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@postDelayed
-                val lastPos = getLastVisibleItemPosition()
-                checkScrollDown(lastPos)
+            if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@addOnLayoutChangeListener
+            context.asComponentActivity().lifecycleScope.launch {
+                delay(100)
                 checkNeedLoadPrev(-1)
                 checkNeedLoadNext(1)
-            }, 80)
+            }
         }
     }
 
@@ -92,10 +95,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         if (mAdapter.itemCount == 0) return
         val firstVisiblePosition = getFirstVisibleItemPosition()
         if (firstVisiblePosition <= SceytKitConfig.MESSAGES_LOAD_SIZE / 2 && dy < 0) {
-            val skip = mAdapter.getSkip()
-            val firstItem = mAdapter.getFirstMessageItem()
             if (firstVisiblePosition == 0) {
                 if (!richToStartInvoked) {
+                    val skip = mAdapter.getSkip()
+                    val firstItem = mAdapter.getFirstMessageItem()
                     richToStartInvoked = true
                     richToPrefetchDistanceToLoadPrevInvoked = true
                     richToStartListener?.invoke(skip, firstItem)
@@ -105,7 +108,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
             if (!richToPrefetchDistanceToLoadPrevInvoked) {
                 richToPrefetchDistanceToLoadPrevInvoked = true
-                needLoadPrevMessagesListener?.invoke(skip, firstItem)
+                needLoadPrevMessagesListener?.invoke(mAdapter.getSkip(), mAdapter.getFirstMessageItem())
             }
         } else richToPrefetchDistanceToLoadPrevInvoked = false
     }
@@ -116,12 +119,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         checkScrollDown(lastVisiblePosition)
 
         if (mAdapter.itemCount - lastVisiblePosition <= SceytKitConfig.MESSAGES_LOAD_SIZE / 2 && dy > 0) {
-            val skip = mAdapter.getSkip()
-            val lastSentItem = mAdapter.getLastMessageBy {
-                it is MessageListItem.MessageItem && it.message.deliveryStatus != DeliveryStatus.Pending
-            }
-            if (lastVisiblePosition == mAdapter.itemCount) {
+            if (lastVisiblePosition == mAdapter.itemCount - 1) {
                 if (!richToEndInvoked) {
+                    val skip = mAdapter.getSkip()
+                    val lastSentItem = getLastSentItem()
                     richToEndInvoked = true
                     richToPrefetchDistanceToLoadNextInvoked = true
                     richToEndListener?.invoke(skip, lastSentItem)
@@ -131,9 +132,13 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
             if (!richToPrefetchDistanceToLoadNextInvoked) {
                 richToPrefetchDistanceToLoadNextInvoked = true
-                needLoadNextMessagesListener?.invoke(skip, lastSentItem)
+                needLoadNextMessagesListener?.invoke(mAdapter.getSkip(), getLastSentItem())
             }
         } else richToPrefetchDistanceToLoadNextInvoked = false
+    }
+
+    private fun getLastSentItem() = mAdapter.getLastMessageBy {
+        it is MessageListItem.MessageItem && it.message.deliveryStatus != DeliveryStatus.Pending
     }
 
     private fun checkScrollDown(lastVisiblePosition: Int) {
@@ -296,6 +301,11 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     fun hideLoadingNextItem() {
         if (::mAdapter.isInitialized)
             mAdapter.removeLoadingNext()
+    }
+
+    fun removeUnreadMessagesSeparator() {
+        if (::mAdapter.isInitialized)
+            mAdapter.removeUnreadMessagesSeparator()
     }
 
     fun clearData() {

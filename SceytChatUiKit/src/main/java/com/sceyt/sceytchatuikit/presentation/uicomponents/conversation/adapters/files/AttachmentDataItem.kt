@@ -14,6 +14,9 @@ open class AttachmentDataItem {
     var duration: Long? = null
     var audioMetadata: AudioMetadata? = null
 
+    val isFileItemInitialized: Boolean
+        get() = ::file.isInitialized
+
     protected constructor()
 
     constructor(attachment: SceytAttachment) {

@@ -1,4 +1,4 @@
-package com.sceyt.sceytchatuikit.sceytconfigs
+package com.sceyt.sceytchatuikit.sceytstyles
 
 import android.content.res.TypedArray
 import androidx.annotation.ColorRes
@@ -7,6 +7,7 @@ import androidx.annotation.LayoutRes
 import androidx.annotation.StyleRes
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.pxToDp
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.dateformaters.ChannelDateFormatter
 
 object ChannelStyle {
@@ -63,27 +64,6 @@ object ChannelStyle {
     var popupStyle: Int = R.style.SceytPopupMenuStyle
 
     var channelDateFormat = ChannelDateFormatter()
-
-    /*internal constructor(context: Context) : this(
-        titleColor = context.getCompatColor(R.color.colorFontDark),
-        lastMessageTextColor = context.getCompatColor(R.color.colorFontGray),
-        unreadCountColor = context.getCompatColor(R.color.colorAccent)
-    )*/
-
-    /* internal constructor(context: Context, typedArray: TypedArray) : this(
-         titleColor = typedArray.getResourceId(
-             R.styleable.ChannelListView_sceytUiChannelTitleTextColor,
-             R.color.colorFontDark
-         ),
-         lastMessageTextColor = typedArray.getColor(
-             R.styleable.ChannelListView_sceytUiLastMessageTextColor,
-             context.getCompatColor(R.color.colorFontGray)
-         ),
-         unreadCountColor = typedArray.getColor(
-             R.styleable.ChannelListView_sceytUiUnreadMessageCounterTextColor,
-             context.getCompatColor(R.color.colorAccent)
-         )
-     )*/
 
 
     internal fun updateWithAttributes(typedArray: TypedArray): ChannelStyle {

@@ -5,5 +5,6 @@
         <attr name="sceytConvHeaderTitleColor" format="reference" />
         <attr name="sceytConvHeaderSubTitleColor" format="reference" />
         <attr name="sceytConvHeaderUnderlineColor" format="reference" />
+        <attr name="sceytConvHeaderEnableUnderline" format="boolean" />
     </declare-styleable>
 </resources>

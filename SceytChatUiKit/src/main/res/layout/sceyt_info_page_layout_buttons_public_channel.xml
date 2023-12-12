@@ -19,7 +19,6 @@
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="13sp"
         android:visibility="visible"
-        app:iconSize="@dimen/_34sdp"
         app:layout_constraintEnd_toStartOf="@+id/report"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintHorizontal_chainStyle="packed"

@@ -27,8 +27,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media
 
 class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
                       private val clickListeners: AttachmentClickListenersImpl,
-                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) :
-        BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
+                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     init {
         binding.root.setOnClickListener {
@@ -36,20 +36,8 @@ class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
         }
     }
 
-    override fun bind(item: ChannelFileItem) {
-        super.bind(item)
-        setListener()
-
-        viewHolderHelper.transferData?.let {
-            updateState(it, true)
-            if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
-        }
-    }
-
-
-    private fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
+    override fun updateState(data: TransferData, isOnBind: Boolean) {
+        super.updateState(data, isOnBind)
 
         when (data.state) {
             PendingUpload, ErrorUpload, PauseUpload -> {
@@ -104,8 +92,4 @@ class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
     override fun getThumbSize() = Size(itemView.width, itemView.height)
 
     override fun needThumbFor() = ThumbFor.ConversationInfo
-
-    private fun setListener() {
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
-    }
 }

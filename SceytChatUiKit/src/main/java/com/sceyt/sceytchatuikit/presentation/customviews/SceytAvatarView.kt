@@ -18,8 +18,7 @@ import com.sceyt.sceytchatuikit.extensions.getFirstCharIsEmoji
 import com.sceyt.sceytchatuikit.extensions.processEmojiCompat
 import com.sceyt.sceytchatuikit.extensions.roundUp
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import java.math.BigInteger
-import java.security.MessageDigest
+import kotlin.math.abs
 
 
 class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -34,6 +33,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     private var defaultAvatarResId: Int = 0
 
     init {
+        var enableRipple = true
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SceytAvatarView)
             isGroup = a.getBoolean(R.styleable.SceytAvatarView_sceytAvatarViewIsGroup, false)
@@ -42,22 +42,32 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
             textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytAvatarViewTextSize, textSize)
             avatarBackgroundColor = a.getColor(R.styleable.SceytAvatarView_sceytAvatarColor, 0)
             defaultAvatarResId = a.getResourceId(R.styleable.SceytAvatarView_sceytAvatarDefaultIcon, defaultAvatarResId)
+            enableRipple = a.getBoolean(R.styleable.SceytAvatarView_sceytAvatarEnableRipple, true)
             a.recycle()
         }
         scaleType = ScaleType.CENTER_CROP
+        if (enableRipple) {
+            val ripple = context.getCompatDrawable(R.drawable.sceyt_bg_ripple_circle)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                foreground = ripple
+            } else background = ripple
+        }
     }
 
     override fun draw(canvas: Canvas) {
-        super.draw(canvas)
         if (visibility != VISIBLE) return
         if (imageUrl.isNullOrBlank()) {
             if (defaultAvatarResId == 0) {
                 setImageResource(0)
                 drawBackgroundColor(canvas)
                 drawName(canvas)
-            } else
+            } else {
+                if (avatarBackgroundColor != 0)
+                    drawBackgroundColor(canvas)
                 loadDefaultImage()
+            }
         }
+        super.draw(canvas)
     }
 
     private fun drawName(canvas: Canvas) {
@@ -102,10 +112,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private fun getAvatarRandomColor(): Int {
         val colors = SceytKitConfig.avatarColors
-        val md = MessageDigest.getInstance("MD5")
-        val name = fullName ?: ""
-        val h = BigInteger(1, md.digest(name.toByteArray(Charsets.UTF_16))).toString(16).padStart(32, '0').takeLast(6)
-        return colors[Integer.valueOf(h, 16) % colors.size].toColorInt()
+        return colors[abs((fullName ?: "").hashCode()) % colors.size].toColorInt()
     }
 
     @Suppress("DEPRECATION")

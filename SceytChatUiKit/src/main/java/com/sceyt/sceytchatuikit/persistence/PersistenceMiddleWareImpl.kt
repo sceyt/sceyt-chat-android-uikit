@@ -40,6 +40,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMess
 import com.sceyt.sceytchatuikit.persistence.logics.reactionslogic.PersistenceReactionsLogic
 import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLogic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -99,17 +100,13 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     private fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
-        launch(Dispatchers.IO) {
-            messagesLogic.onMessageStatusChangeEvent(data)
-            channelLogic.onMessageStatusChangeEvent(data)
-        }
+        launch(Dispatchers.IO) { messagesLogic.onMessageStatusChangeEvent(data) }
+        launch(Dispatchers.IO) { channelLogic.onMessageStatusChangeEvent(data) }
     }
 
     private fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
-        launch(Dispatchers.IO) {
-            messagesLogic.onMessage(data)
-            channelLogic.onMessage(data)
-        }
+        launch(Dispatchers.IO) { messagesLogic.onMessage(data) }
+        launch(Dispatchers.IO) { channelLogic.onMessage(data) }
     }
 
     private fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
@@ -117,10 +114,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     private fun onMessageEditedOrDeleted(sceytMessage: SceytMessage) {
-        launch(Dispatchers.IO) {
-            messagesLogic.onMessageEditedOrDeleted(sceytMessage)
-            channelLogic.onMessageEditedOrDeleted(sceytMessage)
-        }
+        launch(Dispatchers.IO) { messagesLogic.onMessageEditedOrDeleted(sceytMessage) }
+        launch(Dispatchers.IO) { channelLogic.onMessageEditedOrDeleted(sceytMessage) }
     }
 
     private fun onChangedConnectStatus(data: ConnectionStateData) {
@@ -215,15 +210,15 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     override suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>,
-                                            replyOrEditMessage: SceytMessage?, isReply: Boolean) {
-        channelLogic.updateDraftMessage(channelId, message, mentionUsers, replyOrEditMessage, isReply)
+                                            styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+        channelLogic.updateDraftMessage(channelId, message, mentionUsers, styling, replyOrEditMessage, isReply)
     }
 
     override fun getTotalUnreadCount(): Flow<Int> {
         return channelLogic.getTotalUnreadCount()
     }
 
-    override suspend fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
+    override fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
         return membersLogic.loadChannelMembers(channelId, offset, role)
     }
 
@@ -420,6 +415,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     override suspend fun getUserDbById(id: String): User? {
         return usersLogic.getUserDbById(id)
+    }
+
+    override suspend fun getUsersDbByIds(id: List<String>): List<User> {
+        return usersLogic.getUsersDbByIds(id)
     }
 
     override suspend fun getCurrentUser(): User? {

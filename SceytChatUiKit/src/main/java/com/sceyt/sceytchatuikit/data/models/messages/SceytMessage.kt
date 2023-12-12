@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.data.models.messages
 
 import android.os.Parcelable
+import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Marker
@@ -40,11 +41,15 @@ data class SceytMessage(var id: Long,
                         val displayCount: Short,
                         var autoDeleteAt: Long?,
                         var forwardingDetails: ForwardingDetails?,
-                        var pendingReactions: List<PendingReactionData>?) : Parcelable, Cloneable {
+                        var pendingReactions: List<PendingReactionData>?,
+                        var bodyAttributes: List<BodyAttribute>?) : Parcelable, Cloneable {
 
 
     @IgnoredOnParcel
-    var canShowAvatarAndName = false
+    var shouldShowAvatarAndName = false
+
+    @IgnoredOnParcel
+    var disabledShowAvatarAndName = false
 
     @IgnoredOnParcel
     var isGroup = false
@@ -94,6 +99,7 @@ data class SceytMessage(var id: Long,
         messageReactions = message.messageReactions
         files = message.files?.map { it.sceytMessage = this; it }
         pendingReactions = message.pendingReactions
+        bodyAttributes = message.bodyAttributes
     }
 
     public override fun clone(): SceytMessage {
@@ -123,8 +129,10 @@ data class SceytMessage(var id: Long,
             displayCount = displayCount,
             autoDeleteAt = autoDeleteAt,
             forwardingDetails = forwardingDetails,
-            pendingReactions = pendingReactions).also {
-            it.canShowAvatarAndName = canShowAvatarAndName
+            pendingReactions = pendingReactions,
+            bodyAttributes = bodyAttributes).also {
+            it.shouldShowAvatarAndName = shouldShowAvatarAndName
+            it.disabledShowAvatarAndName = disabledShowAvatarAndName
             it.isGroup = isGroup
             it.files = files
             it.messageReactions = messageReactions

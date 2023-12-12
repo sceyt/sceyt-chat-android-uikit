@@ -3,8 +3,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.medi
 import android.util.Size
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelVideoBinding
-import com.sceyt.sceytchatuikit.extensions.asComponentActivity
-import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -29,8 +27,8 @@ import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
 class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
                       private val clickListeners: AttachmentClickListenersImpl,
-                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit)
-    : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
+                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     init {
         binding.root.setOnClickListener {
@@ -41,18 +39,10 @@ class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
     override fun bind(item: ChannelFileItem) {
         super.bind(item)
         setVideoDuration()
-
-        setListener()
-
-        viewHolderHelper.transferData?.let {
-            updateState(it, true)
-            if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
-        }
     }
 
-    private fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
+    override fun updateState(data: TransferData, isOnBind: Boolean) {
+        super.updateState(data, isOnBind)
 
         when (data.state) {
             PendingUpload, ErrorUpload, PauseUpload -> {
@@ -113,8 +103,4 @@ class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
     override fun getThumbSize() = Size(binding.root.width, binding.root.height)
 
     override fun needThumbFor() = ThumbFor.ConversationInfo
-
-    private fun setListener() {
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
-    }
 }

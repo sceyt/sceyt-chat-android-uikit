@@ -5,18 +5,29 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.Chann
 
 class AttachmentClickListenersImpl : AttachmentClickListeners.ClickListeners {
     private var attachmentClickListener: AttachmentClickListeners.AttachmentClickListener? = null
+    private var attachmentLoaderClickListener: AttachmentClickListeners.AttachmentLoaderClickListener? = null
 
     override fun onAttachmentClick(view: View, item: ChannelFileItem) {
         attachmentClickListener?.onAttachmentClick(view, item)
     }
 
+    override fun onAttachmentLoaderClick(view: View, item: ChannelFileItem) {
+        attachmentLoaderClickListener?.onAttachmentLoaderClick(view, item)
+    }
+
     fun setListener(listener: AttachmentClickListeners) {
-        attachmentClickListener = when (listener) {
+        when (listener) {
             is AttachmentClickListeners.ClickListeners -> {
-                listener
+                attachmentClickListener = listener
+                attachmentLoaderClickListener = listener
             }
+
             is AttachmentClickListeners.AttachmentClickListener -> {
-                listener
+                attachmentClickListener = listener
+            }
+
+            is AttachmentClickListeners.AttachmentLoaderClickListener -> {
+                attachmentLoaderClickListener = listener
             }
         }
     }

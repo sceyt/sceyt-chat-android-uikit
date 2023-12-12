@@ -3,9 +3,9 @@ package com.sceyt.sceytchatuikit.shared.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import android.text.format.DateFormat
-import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
-import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
+import com.sceyt.sceytchatuikit.sceytconfigs.dateformaters.BaseDateFormatter
 import com.sceyt.sceytchatuikit.sceytconfigs.dateformaters.DateFormatData
+import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -149,18 +149,27 @@ object DateTimeUtil {
             )
     }
 
-    fun getDateTimeStringCheckToday(context: Context, time: Long?): String {
+    fun getDateTimeStringWithDateFormatter(context: Context, time: Long?, dateFormatter: BaseDateFormatter): String {
         if (time == null) return ""
         val now = Calendar.getInstance()
         val cal = Calendar.getInstance()
         cal.timeInMillis = time
-        return when {
-            (now.get(Calendar.DAY_OF_YEAR) - cal.get(Calendar.DAY_OF_YEAR) < 1) ->
-                DateFormat.format(ChannelStyle.channelDateFormat.today(context), cal).toString()
-            (now.get(Calendar.YEAR) - cal.get(Calendar.YEAR) <= 1) ->
-                DateFormat.format(ChannelStyle.channelDateFormat.thisYear(context), cal).toString()
-            else -> DateFormat.format(ChannelStyle.channelDateFormat.olderThisYear(context), cal).toString()
+
+        val formatter = when {
+            (now.get(Calendar.DAY_OF_YEAR) - cal.get(Calendar.DAY_OF_YEAR) < 1) -> {
+                dateFormatter.today(context)
+            }
+
+            (now.get(Calendar.YEAR) - cal.get(Calendar.YEAR) <= 1) -> {
+                dateFormatter.thisYear(context)
+            }
+
+            else -> dateFormatter.olderThisYear(context)
         }
+
+        return if (formatter.shouldFormat)
+            "${formatter.beginTittle}${DateFormat.format(formatter.format, cal)}${formatter.endTitle}"
+        else formatter.beginTittle + formatter.endTitle
     }
 
     fun getDateTimeString(time: Long?, format: String = "HH:mm"): String {
@@ -213,24 +222,31 @@ object DateTimeUtil {
                 yearsDiff > 0 -> {
                     getDateText(date, UserStyle.userPresenceDateFormat.olderThisYear(context, date))
                 }
+
                 weeksDiff > 0 -> {
                     getDateText(date, UserStyle.userPresenceDateFormat.thisYear(context, date))
                 }
+
                 weeksDiff == 0 && daysDiff > 1 -> {
                     getDateText(date, UserStyle.userPresenceDateFormat.currentWeek(context, date))
                 }
+
                 daysDiff == 1 -> {
                     getDateText(date, UserStyle.userPresenceDateFormat.yesterday(context, date))
                 }
+
                 hoursDiff > 1 -> {
                     getDateText(date, UserStyle.userPresenceDateFormat.today(context, date))
                 }
+
                 hoursDiff == 1 -> {
                     getDateText(date, UserStyle.userPresenceDateFormat.oneHourAgo(context, date))
                 }
+
                 minDiff > 1 -> {
                     getDateText(date, UserStyle.userPresenceDateFormat.lessThenOneHour(context, minDiff, date))
                 }
+
                 else -> {
                     getDateText(date, UserStyle.userPresenceDateFormat.oneMinAgo(context, date))
                 }
@@ -257,9 +273,9 @@ object DateTimeUtil {
     fun millisecondsToTime(milliseconds: Long): String {
         val hours = TimeUnit.MILLISECONDS.toHours(milliseconds)
         val minutes =
-            TimeUnit.MILLISECONDS.toMinutes(milliseconds) - TimeUnit.HOURS.toMinutes(hours)
+                TimeUnit.MILLISECONDS.toMinutes(milliseconds) - TimeUnit.HOURS.toMinutes(hours)
         val seconds =
-            TimeUnit.MILLISECONDS.toSeconds(milliseconds) - TimeUnit.MINUTES.toSeconds(minutes)
+                TimeUnit.MILLISECONDS.toSeconds(milliseconds) - TimeUnit.MINUTES.toSeconds(minutes)
 
         return if (hours > 0)
             if (hours > 9)

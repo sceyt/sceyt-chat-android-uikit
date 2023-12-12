@@ -1,6 +1,10 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentPayLoadData
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
+import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.presentation.common.diffBetweenServerData
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -33,6 +37,7 @@ class AttachmentsCache {
     fun add(attachment: SceytAttachment) {
         synchronized(lock) {
             val exist = cachedAttachments[attachment.messageTid] != null
+            initMessagePayLoads(attachment)
             cachedAttachments[attachment.messageTid] = attachment
             if (exist)
                 emitAttachmentUpdated(attachment)
@@ -85,6 +90,66 @@ class AttachmentsCache {
         }
     }
 
+    fun updateAttachmentTransferData(updateDate: TransferData) {
+        synchronized(lock) {
+            fun update(attachment: SceytAttachment) {
+                attachment.transferState = updateDate.state
+                attachment.progressPercent = updateDate.progressPercent
+                attachment.filePath = updateDate.filePath
+                attachment.url = updateDate.url
+            }
+
+            cachedAttachments[updateDate.messageTid]?.let { attachment ->
+                if (attachment.type == AttachmentTypeEnum.Link.value())
+                    return
+
+                when (updateDate.state) {
+                    TransferState.PendingUpload, TransferState.Uploading, TransferState.Uploaded, TransferState.ErrorUpload, TransferState.PauseUpload, TransferState.Preparing, TransferState.WaitingToUpload -> {
+                        if (attachment.filePath == updateDate.filePath)
+                            update(attachment)
+                    }
+
+                    TransferState.Downloading, TransferState.Downloaded, TransferState.PendingDownload, TransferState.ErrorDownload, TransferState.PauseDownload -> {
+                        if (attachment.url == updateDate.url)
+                            update(attachment)
+                    }
+
+                    TransferState.FilePathChanged, TransferState.ThumbLoaded -> return
+                }
+            }
+        }
+    }
+
+    /** Set attachment data from cash, which saved in local db.*/
+    private fun initMessagePayLoads(attachmentToUpdate: SceytAttachment) {
+        setPayloads(attachmentToUpdate)
+    }
+
+    private fun setPayloads(attachmentToUpdate: SceytAttachment) {
+        val cashedMessage = get(attachmentToUpdate.messageTid) ?: return
+        val attachmentPayLoadData = getAttachmentPayLoads(cashedMessage)
+        updateAttachmentsPayLoads(attachmentPayLoadData, attachmentToUpdate)
+    }
+
+    private fun getAttachmentPayLoads(cashedAttachment: SceytAttachment?): AttachmentPayLoadData? {
+        cashedAttachment ?: return null
+        return AttachmentPayLoadData(
+            messageTid = cashedAttachment.messageTid,
+            transferState = cashedAttachment.transferState,
+            progressPercent = cashedAttachment.progressPercent,
+            url = cashedAttachment.url,
+            filePath = cashedAttachment.filePath
+        )
+    }
+
+    private fun updateAttachmentsPayLoads(data: AttachmentPayLoadData?, attachment: SceytAttachment) {
+        if (attachment.type == AttachmentTypeEnum.Link.value() || data == null) return
+        attachment.transferState = data.transferState
+        attachment.progressPercent = data.progressPercent
+        attachment.filePath = data.filePath
+        attachment.url = data.url
+    }
+
     private fun emitAttachmentUpdated(vararg message: SceytAttachment) {
         attachmentUpdatedFlow_.tryEmit(message.map { it.clone() })
     }
@@ -92,6 +157,7 @@ class AttachmentsCache {
     private fun putAndCheckHasDiff(includeNotExistToDiff: Boolean, vararg messages: SceytAttachment): Boolean {
         var detectedDiff = false
         messages.forEach {
+            initMessagePayLoads(it)
             if (!detectedDiff) {
                 val old = cachedAttachments[it.messageTid]
                 detectedDiff = old?.diffBetweenServerData(it)?.hasDifference()

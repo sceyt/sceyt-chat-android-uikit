@@ -1,8 +1,9 @@
-package com.sceyt.sceytchatuikit.sceytconfigs
+package com.sceyt.sceytchatuikit.sceytstyles
 
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 object GalleryPickerStyle {
     @ColorRes

@@ -5,6 +5,7 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
@@ -31,7 +32,7 @@ data class MessageEntity(
         var deliveryStatus: DeliveryStatus,
         var state: MessageState,
         var fromId: String?,
-        var markerCount: List<MarkerTotal>?,
+        val markerCount: List<MarkerTotal>?,
         var mentionedUsersIds: List<String>?,
         var parentId: Long?,
         var replyCount: Long,
@@ -39,6 +40,7 @@ data class MessageEntity(
         val autoDeleteAt: Long?,
         @Embedded
         val forwardingDetailsDb: ForwardingDetailsDb?,
+        val bodyAttribute: List<BodyAttribute>?,
         @ColumnInfo(index = true)
         // This flag is used to ignore getting this message, when querying get channel messages
         var unList: Boolean

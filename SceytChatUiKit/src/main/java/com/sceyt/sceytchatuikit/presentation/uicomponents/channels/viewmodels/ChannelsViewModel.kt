@@ -12,7 +12,6 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
-import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
@@ -25,7 +24,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 
 class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
@@ -54,7 +52,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     fun getChannels(offset: Int, query: String = searchQuery, loadKey: LoadKeyData? = null, ignoreDb: Boolean = false) {
         //Reset search if any
         searchQuery = query
-        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
+        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDb = ignoreDb)
 
         notifyPageLoadingState(false)
 
@@ -71,7 +69,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
                                   notifyFlow: NotifyFlow, onlyMine: Boolean, ignoreDb: Boolean = false,
                                   loadKey: LoadKeyData? = null) {
         if (notifyFlow == NotifyFlow.LOAD) {
-            setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
+            setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDb = ignoreDb)
 
             notifyPageLoadingState(false)
         }
@@ -112,42 +110,43 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         pagingResponseReceived(response)
     }
 
-    internal suspend fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean,
-                                          includeDirectChannelsWithDeletedPeers: Boolean = true): List<ChannelListItem> {
-        return suspendCancellableCoroutine {
+    internal fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean,
+                                  includeDirectChannelsWithDeletedPeers: Boolean = true): List<ChannelListItem> {
 
-            val filteredChannels = if (includeDirectChannelsWithDeletedPeers) data ?: emptyList()
-            else data?.filter { channel -> !channel.isPeerDeleted() }
-                    ?: emptyList()
+        val filteredChannels = if (includeDirectChannelsWithDeletedPeers) data ?: emptyList()
+        else data?.filter { channel -> !channel.isPeerDeleted() }
+                ?: emptyList()
 
-            if (filteredChannels.isEmpty())
-                it.safeResume(emptyList())
+        if (filteredChannels.isEmpty())
+            return emptyList()
 
-            val channelItems: List<ChannelListItem>
-            channelItems = filteredChannels.map { item -> ChannelListItem.ChannelItem(item) }
+        val channelItems: List<ChannelListItem>
+        channelItems = filteredChannels.map { item -> ChannelListItem.ChannelItem(item) }
 
-            if (hasNext)
-                (channelItems as ArrayList).add(ChannelListItem.LoadingMoreItem)
+        if (hasNext)
+            (channelItems as ArrayList).add(ChannelListItem.LoadingMoreItem)
 
-            it.safeResume(channelItems)
-        }
+        return channelItems
     }
 
     fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.markChannelAsRead(channelId)
+            val response = channelMiddleWare.markChannelAsRead(channelId)
+            notifyPageStateWithResponse(response)
         }
     }
 
     fun markChannelAsUnRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.markChannelAsUnRead(channelId)
+            val response = channelMiddleWare.markChannelAsUnRead(channelId)
+            notifyPageStateWithResponse(response)
         }
     }
 
     fun blockAndLeaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.blockAndLeaveChannel(channelId)
+            val response = channelMiddleWare.blockAndLeaveChannel(channelId)
+            notifyPageStateWithResponse(response)
         }
     }
 
@@ -155,6 +154,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         viewModelScope.launch(Dispatchers.IO) {
             val response = membersMiddleWare.blockUnBlockUser(userId, true)
             _blockUserLiveData.postValue(response)
+            notifyPageStateWithResponse(response)
         }
     }
 
@@ -162,42 +162,49 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         viewModelScope.launch(Dispatchers.IO) {
             val response = membersMiddleWare.blockUnBlockUser(userId, false)
             _blockUserLiveData.postValue(response)
+            notifyPageStateWithResponse(response)
         }
     }
 
     fun clearHistory(channelId: Long, forEveryone: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.clearHistory(channelId, forEveryone)
+            val response = channelMiddleWare.clearHistory(channelId, forEveryone)
+            notifyPageStateWithResponse(response)
         }
     }
 
     fun deleteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.deleteChannel(channelId)
+            val response = channelMiddleWare.deleteChannel(channelId)
+            notifyPageStateWithResponse(response)
         }
     }
 
     fun leaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.leaveChannel(channelId)
+            val response = channelMiddleWare.leaveChannel(channelId)
+            notifyPageStateWithResponse(response)
         }
     }
 
     fun muteChannel(channelId: Long, muteUntil: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.muteChannel(channelId, muteUntil)
+            val response = channelMiddleWare.muteChannel(channelId, muteUntil)
+            notifyPageStateWithResponse(response)
         }
     }
 
     fun unMuteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.unMuteChannel(channelId)
+            val response = channelMiddleWare.unMuteChannel(channelId)
+            notifyPageStateWithResponse(response)
         }
     }
 
     fun hideChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.hideChannel(channelId)
+            val response = channelMiddleWare.hideChannel(channelId)
+            notifyPageStateWithResponse(response)
         }
     }
 

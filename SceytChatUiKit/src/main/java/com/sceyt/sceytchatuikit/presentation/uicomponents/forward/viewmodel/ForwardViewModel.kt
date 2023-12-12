@@ -22,7 +22,7 @@ class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
         trySend(State.Loading)
         channelIds.forEach { channelId ->
             val messagesToSend = mutableListOf<Message>()
-            messages.forEach {
+            messages.sortedBy { it.createdAt }.forEach {
                 val message = MessageBuilder(channelId)
                     .setBody(it.body)
                     .setTid(ClientWrapper.generateTid())
@@ -33,6 +33,7 @@ class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
                     }
                     .setAttachments(initAttachments(it.attachments).toTypedArray())
                     .setMetadata(it.metadata)
+                    .setBodyAttributes(it.bodyAttributes?.toTypedArray() ?: emptyArray())
                     .setMentionedUserIds(it.mentionedUsers?.map { user -> user.id }?.toTypedArray()
                             ?: arrayOf())
                     //.setReplyInThread(it.replyInThread)

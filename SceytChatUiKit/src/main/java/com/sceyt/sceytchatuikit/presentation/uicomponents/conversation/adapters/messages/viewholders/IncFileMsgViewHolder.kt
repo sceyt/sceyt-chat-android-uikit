@@ -31,7 +31,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class IncFileMsgViewHolder(
@@ -113,7 +113,7 @@ class IncFileMsgViewHolder(
             if (diff.reactionsChanged)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
-            if (item.message.canShowAvatarAndName)
+            if (item.message.shouldShowAvatarAndName)
                 avatar.setOnClickListener {
                     messageListeners?.onAvatarClick(it, item)
                 }

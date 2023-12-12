@@ -7,7 +7,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
-import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
 import androidx.databinding.BindingAdapter
 import androidx.databinding.Observable
@@ -103,6 +102,7 @@ object BindingUtil {
 
     @BindingAdapter("themedSpannableTextColor")
     @JvmStatic
+    @Suppress("UNUSED_PARAMETER")
     fun themedSpannableTextColor(view: SceytColorSpannableTextView, param: Boolean) {
         if (!SceytKitConfig.enableDarkMode) return
         themeColorSpannableTextViews.add(view)

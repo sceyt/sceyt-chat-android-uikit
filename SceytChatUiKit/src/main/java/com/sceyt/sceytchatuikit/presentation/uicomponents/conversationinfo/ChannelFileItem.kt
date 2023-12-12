@@ -22,7 +22,16 @@ sealed class ChannelFileItem : AttachmentDataItem {
         var linkPreviewMetaData: LinkPreviewHelper.PreviewMetaData? = null
     }
 
+    data class MediaDate(val data: AttachmentWithUserData) : ChannelFileItem(data)
+
     object LoadingMoreItem : ChannelFileItem()
+
+    fun getCreatedAt(): Long {
+        return if (isFileItemInitialized)
+            file.createdAt else 0
+    }
+
+    fun isMediaItem() = this !is MediaDate && this !is LoadingMoreItem
 
     companion object {
         fun ChannelFileItem.getData(): AttachmentWithUserData? {
@@ -32,6 +41,7 @@ sealed class ChannelFileItem : AttachmentDataItem {
                 is Link -> data
                 is Video -> data
                 is Voice -> data
+                is MediaDate -> data
                 is LoadingMoreItem -> null
             }
         }

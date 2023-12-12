@@ -1,23 +1,37 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention
 
+import android.content.ClipboardManager
 import android.content.Context
+import android.graphics.Typeface
 import android.text.Annotation
 import android.text.Editable
+import android.text.Selection
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
-import android.text.TextPaint
 import android.text.TextUtils
-import android.text.style.ClickableSpan
+import android.text.style.StrikethroughSpan
+import android.text.style.StyleSpan
+import android.text.style.TypefaceSpan
+import android.text.style.UnderlineSpan
 import android.util.AttributeSet
 import android.util.Log
-import android.view.View
+import android.view.ActionMode
+import android.view.Menu
+import android.view.MenuItem
+import androidx.annotation.IdRes
 import androidx.appcompat.widget.AppCompatEditText
+import androidx.core.text.getSpans
 import androidx.core.widget.doAfterTextChanged
+import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionValidatorWatcher.MentionValidator
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQuery
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQueryChangedListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQueryReplacement
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyler
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.StyleType
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.UnderlineTextSpan
 
 
 class MentionSupportEditText : AppCompatEditText {
@@ -37,6 +51,7 @@ class MentionSupportEditText : AppCompatEditText {
     private var mentionValidatorWatcher: MentionValidatorWatcher = MentionValidatorWatcher()
     private var cursorPositionChangedListener: CursorPositionChangedListener? = null
     private var inlineQueryChangedListener: InlineQueryChangedListener? = null
+    private var stylingChangedListener: StylingChangedListener? = null
 
     private fun initialize() {
         addTextChangedListener(mentionValidatorWatcher)
@@ -46,6 +61,103 @@ class MentionSupportEditText : AppCompatEditText {
         doAfterTextChanged {
             onInputTextChanged(it ?: return@doAfterTextChanged)
         }
+
+        customSelectionActionModeCallback = object : ActionMode.Callback {
+            override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+                val copy = menu.findItem(android.R.id.copy)
+                val cut = menu.findItem(android.R.id.cut)
+                val paste = menu.findItem(android.R.id.paste)
+                val copyOrder = copy?.order ?: 0
+                val cutOrder = cut?.order ?: 0
+                val pasteOrder = paste?.order ?: 0
+                val largestOrder = maxOf(copyOrder, cutOrder, pasteOrder)
+                menu.add(0, R.id.sceyt_bold, largestOrder, SpannableString(context.getString(R.string.sceyt_bold)).apply {
+                    setSpan(StyleSpan(Typeface.BOLD), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                })
+                menu.add(0, R.id.sceyt_italic, largestOrder, SpannableString(context.getString(R.string.sceyt_italic)).apply {
+                    setSpan(StyleSpan(Typeface.ITALIC), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                })
+                menu.add(0, R.id.sceyt_strikethrough, largestOrder, SpannableString(context.getString(R.string.sceyt_strikethrough)).apply {
+                    setSpan(StrikethroughSpan(), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                })
+                menu.add(0, R.id.sceyt_monospace, largestOrder, SpannableString(context.getString(R.string.sceyt_monospace)).apply {
+                    setSpan(TypefaceSpan(BodyStyler.MONOSPACE), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                })
+                menu.add(0, R.id.sceyt_underline, largestOrder, SpannableString(context.getString(R.string.sceyt_underline)).apply {
+                    setSpan(UnderlineSpan(), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                })
+                text?.let {
+                    val start = selectionStart
+                    val end = selectionEnd
+                    if (BodyStyler.hasStyling(it, start, end))
+                        menu.add(0, R.id.sceyt_clear_formatting, largestOrder, context.getString(R.string.sceyt_clear_formatting))
+                }
+                return true
+            }
+
+            override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+                val handled: Boolean = handleFormatText(item.itemId)
+                if (handled) {
+                    mode.finish()
+                }
+                return handled
+            }
+
+            override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
+                return false
+            }
+
+            override fun onDestroyActionMode(mode: ActionMode) {}
+        }
+    }
+
+    override fun onTextContextMenuItem(id: Int): Boolean {
+        when (id) {
+            android.R.id.paste -> {
+                // Replace underline spans to our UnderlineTextSpan
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                val clipData = clipboard?.primaryClip
+                if (clipData != null && clipData.itemCount > 0) {
+                    val textToPaste = clipData.getItemAt(0).text
+                    (textToPaste as? SpannableString)?.getSpans<UnderlineSpan>(0, textToPaste.length)?.forEach { span ->
+                        val start = textToPaste.getSpanStart(span)
+                        val end = textToPaste.getSpanEnd(span)
+                        textToPaste.setSpan(UnderlineTextSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        textToPaste.removeSpan(span)
+                    } ?: run {
+                        return super.onTextContextMenuItem(id)
+                    }
+                    append(textToPaste)
+                }
+                return true
+            }
+
+            else -> return super.onTextContextMenuItem(id)
+        }
+    }
+
+    fun handleFormatText(@IdRes id: Int): Boolean {
+        val text = text ?: return false
+        val start = selectionStart
+        val end = selectionEnd
+        val style: StyleType? = when (id) {
+            R.id.sceyt_bold -> StyleType.Bold
+            R.id.sceyt_italic -> StyleType.Italic
+            R.id.sceyt_strikethrough -> StyleType.Strikethrough
+            R.id.sceyt_monospace -> StyleType.Monospace
+            R.id.sceyt_underline -> StyleType.Underline
+            R.id.sceyt_clear_formatting -> null
+            else -> return false
+        }
+        clearComposingText()
+        if (style != null) {
+            BodyStyler.toggleStyle(style, text, start, end)
+        } else {
+            BodyStyler.clearStyling(text, start, end)
+        }
+        Selection.setSelection(getText(), end)
+        stylingChangedListener?.onStylingChanged()
+        return true
     }
 
     override fun onSelectionChanged(selectionStart: Int, selectionEnd: Int) {
@@ -62,6 +174,7 @@ class MentionSupportEditText : AppCompatEditText {
         cursorPositionChangedListener?.onCursorPositionChanged(selectionStart, selectionEnd)
     }
 
+    @Suppress("unused")
     fun setCursorPositionChangedListener(listener: CursorPositionChangedListener?) {
         cursorPositionChangedListener = listener
     }
@@ -74,6 +187,11 @@ class MentionSupportEditText : AppCompatEditText {
         mentionValidatorWatcher.setMentionValidator(mentionValidator)
     }
 
+    fun setStylingChangedListener(listener: StylingChangedListener?) {
+        stylingChangedListener = listener
+    }
+
+    @Suppress("unused")
     fun hasMentions(): Boolean {
         val text = text
         return if (text != null) {
@@ -82,7 +200,16 @@ class MentionSupportEditText : AppCompatEditText {
     }
 
     val mentions: List<Mention>
-        get() = MentionAnnotation.getMentionsFromAnnotations(text)
+        get() = MentionAnnotation.getMentionsFromAnnotations(text?.trim())
+
+    @Suppress("unused")
+    fun hasStyling(): Boolean {
+        val trimmed: CharSequence = text?.trim() ?: return false
+        return trimmed is Spanned && BodyStyler.hasStyling(trimmed)
+    }
+
+    val styling: List<BodyStyleRange>?
+        get() = BodyStyler.getStyling(text?.trim())
 
     private fun changeSelectionForPartialMentions(spanned: Spanned, selectionStart: Int, selectionEnd: Int): Boolean {
         val annotations = spanned.getSpans(0, spanned.length, Annotation::class.java)
@@ -141,6 +268,7 @@ class MentionSupportEditText : AppCompatEditText {
         replaceText(createReplacementToken(displayName, recipientId), false)
     }
 
+    @Suppress("unused")
     fun replaceText(replacement: InlineQueryReplacement) {
         replaceText(replacement.toCharSequence(context), replacement.keywordSearch)
     }
@@ -169,20 +297,7 @@ class MentionSupportEditText : AppCompatEditText {
             val spannableString = SpannableString("$text ")
             TextUtils.copySpansFrom(text, 0, text.length, Any::class.java, spannableString, 0)
             builder.append(spannableString)
-        } else
-            builder.append(text).append(" ")
-
-        val clickableSpan = object : ClickableSpan() {
-            override fun onClick(textView: View) {
-                //todo: implement click action
-            }
-
-            override fun updateDrawState(ds: TextPaint) {
-                super.updateDrawState(ds)
-                ds.isUnderlineText = false
-            }
-        }
-
+        } else builder.append(text).append(" ")
         builder.setSpan(MentionAnnotation.mentionAnnotationForRecipientId(recipientId, text.trim().toString()), 0, builder.length - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         return builder
     }
@@ -229,7 +344,11 @@ class MentionSupportEditText : AppCompatEditText {
 
     private class QueryStart(var index: Int, var isMentionQuery: Boolean)
 
-    interface CursorPositionChangedListener {
+    fun interface CursorPositionChangedListener {
         fun onCursorPositionChanged(start: Int, end: Int)
+    }
+
+    fun interface StylingChangedListener {
+        fun onStylingChanged()
     }
 }

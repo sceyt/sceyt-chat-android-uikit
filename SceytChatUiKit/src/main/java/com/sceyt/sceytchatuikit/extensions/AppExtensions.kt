@@ -13,10 +13,12 @@ import android.view.View
 import android.view.WindowInsetsController
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.annotation.ColorRes
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.android.material.snackbar.Snackbar
 import com.sceyt.sceytchatuikit.R
@@ -65,7 +67,11 @@ fun Application.isAppOnForeground(): Boolean {
 }
 
 fun isAppOnForeground(): Boolean {
-    return ProcessLifecycleOwner.get().lifecycle.currentState == Lifecycle.State.RESUMED
+    return ProcessLifecycleOwner.get().isResumed()
+}
+
+fun Context.isAppInDarkMode(): Boolean {
+    return resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
 }
 
 fun Context.getOrientation(): Int {
@@ -168,7 +174,7 @@ fun Activity.getRootView() = findViewById<View>(android.R.id.content)
 fun Activity.recreateWithoutAnim() {
     finish()
     startActivity(intent)
-    overrideTransitions(0, 0,false)
+    overrideTransitions(0, 0, false)
 }
 
 fun Context.isRtl() = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
@@ -177,11 +183,13 @@ fun Context.isLandscape(): Boolean {
     return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
 
-fun Activity.statusBarIconsColorWithBackground(isDark: Boolean) {
-    val themeColor = getCompatColorByTheme(R.color.sceyt_color_status_bar, isDark)
-    window.statusBarColor = themeColor
+fun Activity.statusBarIconsColorWithBackground(isDark: Boolean,
+                                               @ColorRes statusBarColor: Int = R.color.sceyt_color_status_bar,
+                                               @ColorRes navigationBarColor: Int = R.color.sceyt_color_status_bar) {
+
+    window.statusBarColor = getCompatColorByTheme(statusBarColor, isDark)
     if (isDark)
-        window.navigationBarColor = themeColor
+        window.navigationBarColor = getCompatColorByTheme(navigationBarColor, true)
 
     if (SDK_INT >= M) {
         if (SDK_INT >= Build.VERSION_CODES.R) {
@@ -214,6 +222,8 @@ fun Context.keepScreenOn(): PowerManager.WakeLock {
         }
     }
 }
+
+fun LifecycleOwner.isResumed() = lifecycle.currentState == Lifecycle.State.RESUMED
 
 inline fun activityLifecycleCallbacks(
         crossinline onActivityCreated: (activity: Activity, savedInstanceState: Bundle?) -> Unit = { _, _ -> },

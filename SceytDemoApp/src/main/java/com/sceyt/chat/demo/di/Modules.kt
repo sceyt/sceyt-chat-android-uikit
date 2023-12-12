@@ -1,5 +1,6 @@
 package com.sceyt.chat.demo.di
 
+import com.sceyt.chat.demo.BuildConfig
 import com.sceyt.chat.demo.data.interceptors.RetryInterceptor
 import com.sceyt.chat.demo.connection.ChatClientConnectionInterceptor
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
@@ -40,7 +41,7 @@ val apiModule = module {
     single<Retrofit> {
         Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())
-            .baseUrl("https://tlnig20qy7.execute-api.us-east-2.amazonaws.com/")
+            .baseUrl(BuildConfig.GEN_TOKEN_BASE_URL)
             .apply { client(get()) }
             .build()
     }

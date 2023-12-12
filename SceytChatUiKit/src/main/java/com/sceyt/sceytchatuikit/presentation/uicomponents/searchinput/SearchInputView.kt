@@ -19,7 +19,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputEventListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputEventListenersImpl
-import com.sceyt.sceytchatuikit.sceytconfigs.SearchInputViewStyle
+import com.sceyt.sceytchatuikit.sceytstyles.SearchInputViewStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -29,8 +29,6 @@ import org.koin.core.component.inject
 class SearchInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), SearchInputClickListeners.ClickListeners,
         SearchInputEventListeners.EventListeners, SceytKoinComponent {
-
-    private val appDatabase: SceytDatabase by inject()
 
     private companion object {
         private const val TYPING_DEBOUNCE_MS = 300L
@@ -80,12 +78,14 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
                     hideSoftInput()
                     true
                 }
+
                 else -> false
             }
         }
 
         binding.root.setOnLongClickListener {
             GlobalScope.launch {
+                val appDatabase: SceytDatabase by inject()
                 appDatabase.clearAllTables()
             }
             Toast.makeText(context, "Database was cleared", Toast.LENGTH_SHORT).show()
@@ -144,7 +144,7 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
         eventListeners = listener
     }
 
-    fun clearSearchAndFocus(){
+    fun clearSearchAndFocus() {
         binding.input.setText("")
         binding.input.clearFocus()
     }

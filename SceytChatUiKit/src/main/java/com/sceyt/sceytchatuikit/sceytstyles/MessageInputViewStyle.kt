@@ -1,10 +1,11 @@
-package com.sceyt.sceytchatuikit.sceytconfigs
+package com.sceyt.sceytchatuikit.sceytstyles
 
 import android.content.Context
 import android.content.res.TypedArray
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 object MessageInputViewStyle {
     @DrawableRes

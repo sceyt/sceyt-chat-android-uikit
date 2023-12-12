@@ -4,7 +4,6 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.diff
@@ -72,7 +71,7 @@ class ChannelsCache {
             return if (checkDifference)
                 putAndCheckHasDiff(list)
             else {
-                cachedData.putAll(list.map { it.clone() }.associateBy { it.id })
+                putToCache(*list.toTypedArray())
                 false
             }
         }
@@ -188,17 +187,6 @@ class ChannelsCache {
         }
     }
 
-    fun addedMembers(channelId: Long, sceytMember: SceytMember) {
-        synchronized(lock) {
-            cachedData[channelId]?.let { channel ->
-                channel.members = channel.members?.toArrayList()?.apply {
-                    add(sceytMember.copy())
-                }
-                channelUpdated(channel, false, ChannelUpdatedType.Members)
-            }
-        }
-    }
-
     fun updateUnreadCount(channelId: Long, count: Int) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
@@ -306,7 +294,7 @@ class ChannelsCache {
                 val old = cachedData[it.id]
                 detectedDiff = old?.diff(it)?.hasDifference() ?: true
             }
-            cachedData[it.id] = it.clone()
+            putToCache(it)
         }
         return detectedDiff
     }
@@ -315,6 +303,15 @@ class ChannelsCache {
         val old = cachedData[channel.id]
         cachedData[channel.id] = channel.clone()
         return old?.diff(channel) ?: ChannelItemPayloadDiff.DEFAULT
+    }
+
+    private fun putToCache(vararg channel: SceytChannel) {
+        channel.groupBy { it.pending }.forEach { group ->
+            if (group.key)
+                pendingChannelsData.putAll(group.value.map { it.clone() }.associateBy { channel -> channel.id })
+            else
+                cachedData.putAll(group.value.map { it.clone() }.associateBy { channel -> channel.id })
+        }
     }
 
     private fun checkNeedSortByLastMessage(oldMsg: SceytMessage?, newMsg: SceytMessage?): Boolean {

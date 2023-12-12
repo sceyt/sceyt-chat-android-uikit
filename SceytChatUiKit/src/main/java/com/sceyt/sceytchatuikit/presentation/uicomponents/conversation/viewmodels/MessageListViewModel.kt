@@ -26,8 +26,8 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNewe
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -69,6 +69,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
@@ -109,6 +110,7 @@ class MessageListViewModel(
     internal val messageActionBridge by lazy { MessageActionBridge() }
     internal val placeToSavePathsList = mutableSetOf<String>()
     internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
+    private var showSenderAvatarAndNameIfNeeded = true
 
     private val isGroup = channel.isGroup
 
@@ -240,7 +242,7 @@ class MessageListViewModel(
     }
 
     fun loadNearMessages(messageId: Long, loadKey: LoadKeyData, ignoreServer: Boolean) {
-        setPagingLoadingStarted(LoadNear)
+        setPagingLoadingStarted(LoadNear, ignoreServer = ignoreServer)
 
         viewModelScope.launch(Dispatchers.IO) {
             val limit = min(50, MESSAGES_LOAD_SIZE * 2)
@@ -370,6 +372,7 @@ class MessageListViewModel(
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceReactionsMiddleWare.addReaction(channel.id, message.id, scoreKey, 1)
@@ -377,6 +380,7 @@ class MessageListViewModel(
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     fun deleteReaction(message: SceytMessage, scoreKey: String, isPending: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceReactionsMiddleWare.deleteReaction(channel.id, message.id, scoreKey, isPending)
@@ -384,14 +388,9 @@ class MessageListViewModel(
         }
     }
 
-
     fun sendMessage(message: Message) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect { result ->
-                if (result is SendMessageResult.Error) {
-                    // Implement logic if you want to show failed status
-                }
-            }
+            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect()
         }
     }
 
@@ -407,6 +406,7 @@ class MessageListViewModel(
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     fun deleteMessage(message: SceytMessage, onlyForMe: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)
@@ -433,9 +433,11 @@ class MessageListViewModel(
         }
     }
 
-    fun updateDraftMessage(text: Editable?, mentionUsers: List<Mention>, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+    fun updateDraftMessage(text: Editable?, mentionUsers: List<Mention>, styling: List<BodyStyleRange>?,
+                           replyOrEditMessage: SceytMessage?, isReply: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceChanelMiddleWare.updateDraftMessage(channel.id, text.toString(), mentionUsers, replyOrEditMessage, isReply)
+            persistenceChanelMiddleWare.updateDraftMessage(channel.id, text.toString(),
+                mentionUsers, styling, replyOrEditMessage, isReply)
         }
     }
 
@@ -468,14 +470,23 @@ class MessageListViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val count = persistenceMembersMiddleWare.getMembersCountDb(channel.id)
             if (channel.memberCount > count && count < SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE)
-                persistenceMembersMiddleWare.loadChannelMembers(channel.id, 0, null).collect()
+                loadChannelMembers(0, null).collect()
         }
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    fun loadChannelMembers(offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
+        return persistenceMembersMiddleWare.loadChannelMembers(channel.id, offset, role)
     }
 
     fun clearHistory(forEveryOne: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             persistenceChanelMiddleWare.clearHistory(channel.id, forEveryOne)
         }
+    }
+
+    fun showSenderAvatarAndNameIfNeeded(show: Boolean) {
+        showSenderAvatarAndNameIfNeeded = show
     }
 
     internal suspend fun mapToMessageListItem(
@@ -500,6 +511,10 @@ class MessageListViewModel(
                 val messageItem = MessageListItem.MessageItem(initMessageInfoData(sceytMessage, prevMessage, true))
 
                 if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
+                    messageItem.message.apply {
+                        shouldShowAvatarAndName = incoming && isGroup && showSenderAvatarAndNameIfNeeded
+                        disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
+                    }
                     messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
                         unreadLineMessage = it
                     })
@@ -524,8 +539,9 @@ class MessageListViewModel(
         return sceytMessage.apply {
             isGroup = this@MessageListViewModel.isGroup
             files = attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(this) }
-            if (initNameAndAvatar)
-                canShowAvatarAndName = shouldShowAvatarAndName(this, prevMessage)
+            if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
+                shouldShowAvatarAndName = shouldShowAvatarAndName(this, prevMessage)
+            disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
             messageReactions = initReactionsItems(this)
         }
     }

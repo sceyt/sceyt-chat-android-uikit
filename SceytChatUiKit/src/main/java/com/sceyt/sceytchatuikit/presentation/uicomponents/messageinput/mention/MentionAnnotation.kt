@@ -34,7 +34,7 @@ object MentionAnnotation {
         return MENTION_ANNOTATION == annotation.key
     }
 
-    fun setMentionAnnotations(body: Spannable, mentions: List<Mention>): SpannableString {
+    fun setMentionAnnotations(body: CharSequence, mentions: List<Mention>): SpannableString {
         val newBody = SpannableStringBuilder(body)
         for ((recipientId, name, start, length) in mentions.sortedByDescending { it.start }) {
             try {

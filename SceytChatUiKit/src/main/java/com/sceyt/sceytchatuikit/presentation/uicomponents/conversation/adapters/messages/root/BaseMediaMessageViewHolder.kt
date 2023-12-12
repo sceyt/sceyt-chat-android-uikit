@@ -69,11 +69,11 @@ abstract class BaseMediaMessageViewHolder(
     }
 
     protected fun setImageSize(fileImage: View) {
+        val layoutBubble = (layoutBubble as? ConstraintLayout) ?: return
         val size = calculateScaleWidthHeight(maxSize, minSize, imageWidth = fileItem.size?.width
                 ?: maxSize,
             imageHeight = fileItem.size?.height ?: maxSize)
         resizedImageSize = size
-        val layoutBubble = (layoutBubble as? ConstraintLayout) ?: return
         val constraintSet = ConstraintSet()
         constraintSet.clone(layoutBubble)
         constraintSet.constrainMinHeight(fileImage.id, size.height)
@@ -83,7 +83,7 @@ abstract class BaseMediaMessageViewHolder(
         val message = fileItem.sceytMessage
         with(fileImage) {
             val defaultMargin = marginLeft
-            if (message.isForwarded || message.isReplied || message.canShowAvatarAndName || message.body.isNotNullOrBlank()) {
+            if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName || message.body.isNotNullOrBlank()) {
                 setMargins(defaultMargin, defaultMargin + dpToPx(4f), defaultMargin, defaultMargin)
             } else setMargins(defaultMargin)
         }

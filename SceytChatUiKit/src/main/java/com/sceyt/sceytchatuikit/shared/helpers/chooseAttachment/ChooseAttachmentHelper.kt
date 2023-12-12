@@ -57,8 +57,7 @@ class ChooseAttachmentHelper {
     private var chooseFilesCb: ((List<String>) -> Unit)? = null
     private var takePictureCb: ((String) -> Unit)? = null
     private var takeVideoCb: ((String) -> Unit)? = null
-    private lateinit var scope: CoroutineScope
-    private val debounceHelper by lazy { DebounceHelper(300L, scope) }
+    private var scope: CoroutineScope
     private var placeToSavePathsList: MutableSet<String> = mutableSetOf()
 
     constructor(activity: ComponentActivity) {
@@ -219,6 +218,7 @@ class ChooseAttachmentHelper {
         val paths = mutableListOf<String>()
         val filteredUris = uris.filterNotNull()
         if (filteredUris.isEmpty()) return emptyList()
+        val debounceHelper by lazy { DebounceHelper(300L, scope) }
 
         filteredUris.forEach { uri ->
             try {
