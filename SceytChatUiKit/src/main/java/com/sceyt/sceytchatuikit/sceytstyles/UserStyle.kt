@@ -7,7 +7,7 @@ import com.sceyt.sceytchatuikit.sceytconfigs.dateformaters.UserPresenceDateForma
 object UserStyle {
 
     @DrawableRes
-    var userDefaultAvatar: Int = 0
+    var userDefaultAvatar: Int = R.drawable.sceyt_ic_default_avatar
 
     @DrawableRes
     var deletedUserAvatar: Int = R.drawable.sceyt_ic_deleted_user

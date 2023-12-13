@@ -10,8 +10,6 @@ import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytDialogDirectChannelActionsBinding
-import com.sceyt.sceytchatuikit.extensions.getString
-import com.sceyt.sceytchatuikit.extensions.setDrawableStart
 import com.sceyt.sceytchatuikit.extensions.setTextViewDrawableColor
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
@@ -55,24 +53,6 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
             unBlockUser.isVisible = it.user.blocked
         }
 
-        muteUnMute.apply {
-            if (showMuteIcon) {
-                if (channel.muted) {
-                    text = getString(R.string.sceyt_un_mute_)
-                    setDrawableStart(R.drawable.sceyt_ic_un_mute, SceytKitConfig.sceytColorAccent)
-                } else {
-                    text = getString(R.string.sceyt_mute_)
-                    setDrawableStart(R.drawable.sceyt_ic_muted_channel, SceytKitConfig.sceytColorAccent)
-                }
-            }
-            isVisible = showMuteIcon
-        }
-
-        muteUnMute.setOnClickListener {
-            listener?.invoke(if (channel.muted) ActionsEnum.UnMute else ActionsEnum.Mute)
-            dismiss()
-        }
-
         clearHistory.setOnClickListener {
             listener?.invoke(ActionsEnum.ClearHistory)
             dismiss()
@@ -95,7 +75,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     }
 
     enum class ActionsEnum {
-        ClearHistory, BlockUser, UnBlockUser, Delete, Mute, UnMute
+        ClearHistory, BlockUser, UnBlockUser, Delete
     }
 
     private fun SceytDialogDirectChannelActionsBinding.setupStyle() {

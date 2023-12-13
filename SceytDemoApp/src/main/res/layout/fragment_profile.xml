@@ -84,6 +84,7 @@
                 android:layout_height="72dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
+                app:sceytAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar"
                 app:sceytAvatarViewTextSize="@dimen/extraLargeTextSize"
                 tools:sceytAvatarViewFullName="User name" />
 
@@ -94,12 +95,13 @@
                 android:layout_gravity="center"
                 android:background="@drawable/sceyt_bg_circle"
                 android:backgroundTint="#60E3E7FF"
-                android:scaleType="centerInside"
+                android:scaleType="centerCrop"
+                android:padding="20dp"
                 app:layout_constraintBottom_toBottomOf="@+id/avatar"
                 app:layout_constraintEnd_toEndOf="@+id/avatar"
                 app:layout_constraintStart_toStartOf="@id/avatar"
                 app:layout_constraintTop_toTopOf="@id/avatar"
-                app:srcCompat="@drawable/sceyt_ic_pick_photo" />
+                app:srcCompat="@drawable/sceyt_ic_camera" />
 
             <ProgressBar
                 android:id="@+id/loadingProfileImage"

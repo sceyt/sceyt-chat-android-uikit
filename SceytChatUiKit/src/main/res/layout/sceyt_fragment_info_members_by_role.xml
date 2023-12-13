@@ -8,13 +8,12 @@
         android:id="@+id/members"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
         android:background="?selectableItemBackground"
         android:drawableStart="@drawable/sceyt_ic_members"
         android:drawablePadding="16dp"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
-        android:paddingVertical="6dp"
+        android:paddingVertical="10dp"
         android:text="@string/sceyt_members"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="16sp"
@@ -22,29 +21,34 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <View
+        android:id="@+id/divider1"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/sceyt_color_input"
+        app:layout_constraintTop_toBottomOf="@+id/members" />
+
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/admins"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
         android:background="?selectableItemBackground"
         android:drawableStart="@drawable/sceyt_ic_admin"
         android:drawablePadding="16dp"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
-        android:paddingVertical="6dp"
+        android:paddingVertical="10dp"
         android:text="@string/sceyt_admins"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/members" />
+        app:layout_constraintTop_toBottomOf="@+id/divider1" />
 
     <View
         android:id="@+id/divider4"
         android:layout_width="match_parent"
-        android:layout_height="8dp"
-        android:layout_marginTop="10dp"
+        android:layout_height="16dp"
         android:background="@color/sceyt_color_input"
         app:layout_constraintTop_toBottomOf="@+id/admins" />
 

@@ -99,12 +99,13 @@
                 android:layout_gravity="center"
                 android:background="@drawable/sceyt_bg_circle"
                 android:backgroundTint="#60E3E7FF"
-                android:scaleType="centerInside"
+                android:scaleType="centerCrop"
+                android:padding="20dp"
                 app:layout_constraintBottom_toBottomOf="@+id/avatar"
                 app:layout_constraintEnd_toEndOf="@+id/avatar"
                 app:layout_constraintStart_toStartOf="@id/avatar"
                 app:layout_constraintTop_toTopOf="@id/avatar"
-                app:srcCompat="@drawable/sceyt_ic_pick_photo" />
+                app:srcCompat="@drawable/sceyt_ic_camera" />
 
             <androidx.appcompat.widget.AppCompatEditText
                 android:id="@+id/subjectInput"
@@ -224,18 +225,18 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="22dp"
                 android:fontFamily="@font/roboto_medium"
-                android:text="@string/metadata"
+                android:text="@string/sceyt_description"
                 android:textColor="@color/sceyt_color_accent"
                 android:textSize="@dimen/smallTextSize"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/labelInput" />
 
             <androidx.appcompat.widget.AppCompatEditText
-                android:id="@+id/metaDataInput"
+                android:id="@+id/descriptionInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="-4dp"
-                android:hint="@string/enter_a_metadata"
+                android:hint="@string/enter_a_description"
                 android:textColor="@color/sceyt_color_text_themed"
                 android:textColorHint="@color/sceyt_color_hint"
                 android:theme="@style/SceytEditTextTheme"

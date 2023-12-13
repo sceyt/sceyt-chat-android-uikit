@@ -42,7 +42,7 @@
                 android:layout_height="0dp"
                 android:background="@drawable/sceyt_bg_circle"
                 android:backgroundTint="#4D000000"
-                android:padding="26dp"
+                android:padding="25dp"
                 android:tint="@color/sceyt_color_white"
                 app:layout_constraintBottom_toBottomOf="@+id/avatar"
                 app:layout_constraintEnd_toEndOf="@+id/avatar"
@@ -79,6 +79,76 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="@+id/tvSubject"
                 app:layout_constraintTop_toBottomOf="@+id/tvSubject" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/uriBegin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layoutDirection="ltr"
+                android:paddingVertical="15dp"
+                android:text="\@"
+                android:textColor="@color/sceyt_color_text_themed"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="@+id/tvDescription"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toStartOf="@+id/tvDescription"
+                app:layout_constraintTop_toBottomOf="@+id/tvDescription"
+                tools:ignore="HardcodedText" />
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/inputUri"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:hint="sceytchn1"
+                android:inputType="textUri"
+                android:layoutDirection="ltr"
+                android:paddingVertical="15dp"
+                android:singleLine="true"
+                android:textAlignment="viewStart"
+                android:textColor="@color/sceyt_color_text_themed"
+                android:textColorHint="@color/sceyt_color_hint"
+                android:textSize="16sp"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintBottom_toBottomOf="@+id/uriBegin"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toEndOf="@+id/uriBegin"
+                app:layout_constraintTop_toTopOf="@+id/uriBegin"
+                tools:ignore="HardcodedText" />
+
+            <View
+                android:id="@+id/uriUnderline"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/sceyt_color_divider"
+                app:layout_constraintEnd_toEndOf="@+id/inputUri"
+                app:layout_constraintStart_toStartOf="@+id/uriBegin"
+                app:layout_constraintTop_toBottomOf="@+id/inputUri" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/uriWarning"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:inputType="textUri"
+                android:textColor="@color/sceyt_color_red"
+                android:textSize="13sp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/uriUnderline"
+                tools:text="@string/the_url_exist_title"
+                tools:visibility="visible" />
+
+            <androidx.constraintlayout.widget.Group
+                android:id="@+id/groupUrl"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:constraint_referenced_ids="uriBegin,inputUri,uriUnderline"
+                tools:visibility="visible" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

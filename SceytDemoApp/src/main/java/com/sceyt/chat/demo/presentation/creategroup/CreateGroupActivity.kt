@@ -7,9 +7,11 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import com.google.gson.Gson
 import com.sceyt.chat.demo.databinding.ActivityCreateGroupBinding
 import com.sceyt.chat.demo.presentation.conversation.ConversationActivity
 import com.sceyt.sceytchatuikit.R.anim
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
@@ -98,7 +100,7 @@ class CreateGroupActivity : AppCompatActivity() {
         icSave.setOnClickListener {
             with(createChannelData) {
                 uri = uriInput.text.toString().trim()
-                metadata = metaDataInput.text.toString().trim()
+                metadata = Gson().toJson(ChannelDescriptionData(descriptionInput.text.toString().trim()))
                 subject = subjectInput.text.toString().trim()
                 members = intent.parcelableArrayList<SceytMember>(MEMBERS)?.map {
                     it.toMember()

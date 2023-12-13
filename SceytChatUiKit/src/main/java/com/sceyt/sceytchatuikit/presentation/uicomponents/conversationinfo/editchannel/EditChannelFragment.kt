@@ -4,36 +4,45 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.ColorRes
+import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.google.gson.Gson
+import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.FragmentEditChannelBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.extensions.jsonToObject
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader.showLoading
-import com.sceyt.sceytchatuikit.presentation.common.getChannelType
+import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.editchannel.viewmodel.EditChannelViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class EditChannelFragment : Fragment(), SceytKoinComponent {
     protected var binding: FragmentEditChannelBinding? = null
-    protected val viewModel: ConversationInfoViewModel by viewModel()
+    protected val viewModel: EditChannelViewModel by viewModels()
     protected val chooseAttachmentHelper = ChooseAttachmentHelper(this)
     protected var avatarUrl: String? = null
+    private var urlIsValidByServer = false
+    private var checkingUrl: String? = null
     protected lateinit var channel: SceytChannel
         private set
 
@@ -66,6 +75,21 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             }
         }
 
+        viewModel.isValidUrlLiveData.observe(viewLifecycleOwner) { (isValid, url) ->
+            if (url != binding?.inputUri?.text?.toString()) return@observe
+
+            urlIsValidByServer = isValid
+            if (isValid)
+                checkSaveEnabled(false)
+            binding?.uriWarning?.apply {
+                if (!isValid) {
+                    setUriStatusText(getString(R.string.the_url_exist_title), R.color.sceyt_color_red)
+                } else
+                    setUriStatusText(getString(R.string.valid_url_title), R.color.sceyt_color_green)
+                isVisible = true
+            }
+        }
+
         viewModel.pageStateLiveData.observe(viewLifecycleOwner) {
             if (it is PageState.StateError) {
                 customToastSnackBar(it.errorMessage.toString())
@@ -75,8 +99,14 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun FragmentEditChannelBinding.initViews() {
-        tvSubject.doAfterTextChanged { checkSaveState() }
-        tvDescription.doAfterTextChanged { checkSaveState() }
+        tvSubject.doAfterTextChanged { checkSaveEnabled(false) }
+
+        inputUri.doAfterTextChanged {
+            urlIsValidByServer = false
+            binding?.uriWarning?.isVisible = false
+            checkingUrl = null
+            checkSaveEnabled(true)
+        }
 
         layoutToolbar.navigationIcon.setOnClickListener {
             requireActivity().onBackPressedDispatcher.onBackPressed()
@@ -91,20 +121,73 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    private fun setDetails() {
+    open fun setDetails() {
         avatarUrl = channel.avatarUrl
         with(binding ?: return) {
+            groupUrl.isVisible = channel.isPublic()
             avatar.setImageUrl(avatarUrl)
+            inputUri.setText(channel.uri)
             tvSubject.setText(channel.channelSubject.trim())
-            //todo need to set channel description
-            //tvDescription.setText(channel.label?.trim())
+            tvDescription.setText(channel.metadata.jsonToObject(ChannelDescriptionData::class.java)?.description?.trim())
         }
     }
 
-    private fun checkSaveState() {
+    open fun checkSaveEnabled(checkUriFormat: Boolean) {
         with(binding ?: return) {
-            val enable = tvSubject.text?.trim().isNotNullOrBlank() && tvDescription.text?.trim().isNotNullOrBlank()
-            icSave.setEnabledOrNot(enable)
+            val isValidSubject = tvSubject.text?.trim().isNotNullOrBlank()
+            when {
+                !isValidSubject -> {
+                    icSave.setEnabledOrNot(false)
+                    return
+                }
+
+                channel.isPublic() -> {
+                    val inputUrl = inputUri.text?.trim().toString()
+
+                    if (inputUrl == channel.uri) {
+                        icSave.setEnabledOrNot(true)
+                        return
+                    }
+
+                    icSave.setEnabledOrNot(urlIsValidByServer)
+
+                    if (urlIsValidByServer)
+                        return
+
+                    if (!checkUriFormat) return
+
+                    val isValid = checkIsValidUrlFormat(inputUrl)
+
+                    if (isValid && checkingUrl != inputUri.text.toString()) {
+                        checkingUrl = inputUri.text.toString()
+                        viewModel.checkIsValidUrl(inputUri.text.toString().lowercase())
+                    } else
+                        icSave.setEnabledOrNot(false)
+                }
+
+                else -> icSave.setEnabledOrNot(true)
+            }
+        }
+    }
+
+    open fun checkIsValidUrlFormat(url: String): Boolean {
+        with(binding ?: return false) {
+            val isValidUrl = "^\\w{5,50}".toPattern().matcher(url).matches()
+            if (!isValidUrl) {
+                if (inputUri.text.toString().length < 5 || inputUri.text.toString().length > 50)
+                    setUriStatusText(getString(R.string.url_length_validation_text), R.color.sceyt_color_red)
+                else
+                    setUriStatusText(getString(R.string.url_characters_validation_text), R.color.sceyt_color_red)
+                uriWarning.isVisible = true
+            }
+            return isValidUrl
+        }
+    }
+
+    open fun setUriStatusText(title: String, @ColorRes color: Int) {
+        binding?.uriWarning?.apply {
+            text = title
+            setTextColor(requireContext().getCompatColor(color))
         }
     }
 
@@ -117,7 +200,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     open fun setProfileImage(filePath: String?) {
         avatarUrl = resizeImage(requireContext(), filePath, 500).getOrNull()
         binding?.avatar?.setImageUrl(avatarUrl)
-        checkSaveState()
+        checkSaveEnabled(false)
     }
 
     open fun onChangePhotoClick() {
@@ -147,16 +230,17 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         val newSubject = binding?.tvSubject?.text?.trim().toString()
         val newDescription = binding?.tvDescription?.text?.trim().toString()
         val isEditedAvatar = avatarUrl != channel.avatarUrl
-        val isEditedSubjectOrDesc = newSubject != channel.channelSubject.trim() /*|| newDescription != channel.label?.trim()*/
+        val oldDesc = channel.metadata.jsonToObject(ChannelDescriptionData::class.java)?.description?.trim()
+        val isEditedSubjectOrDesc = newSubject != channel.channelSubject.trim() || newDescription != oldDesc
         if (isEditedAvatar || isEditedSubjectOrDesc) {
             showLoading(requireContext())
             val data = EditChannelData(newSubject = newSubject,
-                metadata = channel.metadata,
+                metadata = Gson().toJson(ChannelDescriptionData(newDescription)),
                 avatarUrl = avatarUrl,
                 channelUri = channel.uri,
                 channelType = channel.type,
                 avatarEdited = isEditedAvatar)
-            viewModel.saveChanges(channel.id, data)
+            viewModel.editChannelChanges(channel.id, data)
         } else requireActivity().onBackPressedDispatcher.onBackPressed()
     }
 

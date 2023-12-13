@@ -18,7 +18,7 @@
     <string name="uri">URI</string>
     <string name="enter_channel_uri">Enter channel URI</string>
     <string name="metadata">Metadata</string>
-    <string name="enter_a_metadata">Enter a metadata</string>
+    <string name="enter_a_description">Enter a descriotion</string>
     <string name="users">Users</string>
     <string name="change_role">Change role</string>
     <string name="something_went_wrong">Something went wrong</string>
