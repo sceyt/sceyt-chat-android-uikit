@@ -44,6 +44,7 @@ import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setOnClickListenerDisableClickViewForWhile
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
+import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getDefaultAvatar
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
@@ -108,7 +109,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         viewModel.getChannelFromServer(channel.id)
         setupPagerAdapter(binding?.viewPager, binding?.tabLayout)
         addAppBarOffsetChangeListener(binding?.appbar)
-        initButtons()
         viewModel.observeToChannelUpdate(channel.id)
         observeUserUpdateIfNeeded()
     }
@@ -141,13 +141,11 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
         viewModel.joinLiveData.observe(this) {
             channel = it
-            initButtons()
             onJoinedChannel(it)
         }
 
         viewModel.muteUnMuteLiveData.observe(this) {
             channel.muted = it.muted
-            initButtons()
             onMutedOrUnMutedChannel(it)
         }
 
@@ -156,10 +154,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         viewModel.findOrCreateChatLiveData.observe(this, ::onFindOrCreateChat)
 
         viewModel.pageStateLiveData.observe(this, ::onPageStateChanged)
-    }
-
-    private fun initButtons() {
-       //todo need to update join state
     }
 
     private fun observeUserUpdateIfNeeded() {
@@ -306,6 +300,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             val isOwnerOrAdmin = myRole == RoleTypeEnum.Owner.toString() || myRole == RoleTypeEnum.Admin.toString()
 
             icEdit.isVisible = !channel.isDirect() && isOwnerOrAdmin
+            icMore.isVisible = channel.checkIsMemberInChannel()
 
             setChannelToolbarTitle(channel)
             setChannelToolbarAvatar(channel)
@@ -480,7 +475,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     open fun onChannel(channel: SceytChannel) {
         lifecycleScope.launch {
             setChannelDetails(channel)
-            initButtons()
             pagerAdapter.getFragment().find { fragment -> fragment is ChannelMembersFragment }?.let { membersFragment ->
                 (membersFragment as ChannelMembersFragment).updateChannel(channel)
             }
