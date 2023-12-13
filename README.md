@@ -14,7 +14,7 @@ In addition to the UI components, the Sceyt Chat UIKit also includes pre-built f
 
 - **SceytDemoApp:** Inside the SceytDemoApp folder, you'll discover a fully functional chat application with a range of additional features and components. Similar to SceytSimpleChatApp, this app also harnesses the power of SceytChatUiKit for extended functionality and customization options.
 
-## Table of contents
+## Table of contentshttps://github.com/sceyt/sceyt-chat-android-uikit/blob/main/README.md
 
 * [Requirements](#requirements)
 * [Installation](#installation)
@@ -48,7 +48,7 @@ This will enable your project to use libraries from Maven Central.
 
 ```python
 dependencies {
-    implementation 'com.sceyt:sceyt-chat-android-uikit:1.5.0'
+    implementation 'com.sceyt:sceyt-chat-android-uikit:1.5.3'
 }
 ```
 
