@@ -7,7 +7,6 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.toMember
@@ -15,8 +14,16 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelUpdateData
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
+import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
+import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
@@ -26,9 +33,6 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
 
     private val _channelLiveData = MutableLiveData<SceytChannel>()
     val channelLiveData: LiveData<SceytChannel> = _channelLiveData
-
-    private val _editChannelLiveData = MutableLiveData<SceytChannel>()
-    val editChannelLiveData: LiveData<SceytChannel> = _editChannelLiveData
 
     private val _leaveChannelLiveData = MutableLiveData<Long>()
     val leaveChannelLiveData: LiveData<Long> = _leaveChannelLiveData
@@ -54,17 +58,34 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val _findOrCreateChatLiveData = MutableLiveData<SceytChannel>()
     val findOrCreateChatLiveData = _findOrCreateChatLiveData.asLiveData()
 
+    private val _userPresenceUpdatedLiveData = MutableLiveData<SceytPresenceChecker.PresenceUser>()
+    val userPresenceUpdateLiveData = _userPresenceUpdatedLiveData.asLiveData()
+
+    private val _channelUpdatedLiveData = MutableLiveData<ChannelUpdateData>()
+    val channelUpdatedLiveData = _channelUpdatedLiveData.asLiveData()
+
+    fun observeUserPresenceUpdate(channel: SceytChannel) {
+        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged()
+            .onEach {
+                it.find { user -> user.user.id == channel.getFirstMember()?.id }?.let { presenceUser ->
+                    _userPresenceUpdatedLiveData.postValue(presenceUser)
+                }
+            }.launchIn(viewModelScope)
+    }
+
+    fun observeToChannelUpdate(channelId: Long) {
+        ChannelsCache.channelUpdatedFlow
+            .filter { it.channel.id == channelId }
+            .onEach {
+                _channelUpdatedLiveData.postValue(it)
+            }
+            .launchIn(viewModelScope)
+    }
+
     fun getChannelFromServer(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelsMiddleWare.getChannelFromServer(id)
             notifyResponseAndPageState(_channelLiveData, response, showError = false)
-        }
-    }
-
-    fun saveChanges(channelId: Long, data: EditChannelData) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.editChannel(channelId, data)
-            notifyResponseAndPageState(_editChannelLiveData, response)
         }
     }
 

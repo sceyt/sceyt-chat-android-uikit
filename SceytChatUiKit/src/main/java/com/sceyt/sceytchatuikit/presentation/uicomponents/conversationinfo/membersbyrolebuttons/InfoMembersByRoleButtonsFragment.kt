@@ -15,9 +15,10 @@ import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPrivate
 import com.sceyt.sceytchatuikit.presentation.common.isPublic
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 
-open class InfoMembersByRoleButtonsFragment : Fragment() {
+open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener {
     protected lateinit var binding: SceytFragmentInfoMembersByRoleBinding
         private set
     protected lateinit var channel: SceytChannel
@@ -83,5 +84,9 @@ open class InfoMembersByRoleButtonsFragment : Fragment() {
             }
             return fragment
         }
+    }
+
+    override fun onChannelUpdated(channel: SceytChannel) {
+        setDetails(channel)
     }
 }

@@ -29,6 +29,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialo
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.profile.viewmodel.ProfileViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
@@ -230,6 +231,6 @@ class ProfileFragment : Fragment() {
 
     private fun setProfileImage(filePath: String?) {
         avatarUrl = filePath
-        binding.avatar.setImageUrl(filePath)
+        binding.avatar.setImageUrl(filePath, UserStyle.userDefaultAvatar)
     }
 }

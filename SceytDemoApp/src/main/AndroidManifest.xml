@@ -60,7 +60,7 @@
             android:name=".presentation.conversationinfo.CustomConversationInfoActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme"
-            android:windowSoftInputMode="adjustNothing" />
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".presentation.conversation.ConversationActivity"
             android:exported="false"
