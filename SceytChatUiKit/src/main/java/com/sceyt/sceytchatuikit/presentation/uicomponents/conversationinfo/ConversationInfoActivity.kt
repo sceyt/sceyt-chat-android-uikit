@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
-import android.view.animation.AlphaAnimation
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isInvisible
@@ -52,9 +51,6 @@ import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.root.PageState
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsDirectChatFragment
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsPrivateChatFragment
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.buttonfragments.InfoButtonsPublicChannelFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.channelInfo.InfoDetailsFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.description.InfoDescriptionFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog
@@ -92,7 +88,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     private lateinit var pagerAdapter: ViewPagerAdapter
     private var binding: SceytActivityConversationInfoBinding? = null
     protected val viewModel: ConversationInfoViewModel by viewModel()
-    private var alphaAnimation: AlphaAnimation? = null
     private var showStartChatIcon: Boolean = false
 
     @CallSuper
@@ -559,12 +554,10 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     private fun setChannelMembersByRoleButtons(channel: SceytChannel) {
         initOrUpdateFragmentChannel(binding?.frameLayoutMembersByRole ?: return) {
-            getChannelMembersByRoleFragment(channel).also {
-                it.setClickActionsListener { actionsEnum ->
-                    when (actionsEnum) {
-                        InfoMembersByRoleButtonsFragment.ClickActionsEnum.Admins -> onAdminsClick(channel)
-                        InfoMembersByRoleButtonsFragment.ClickActionsEnum.Members -> onMembersClick(channel)
-                    }
+            getChannelMembersByRoleFragment(channel) { actionsEnum ->
+                when (actionsEnum) {
+                    InfoMembersByRoleButtonsFragment.ClickActionsEnum.Admins -> onAdminsClick(channel)
+                    InfoMembersByRoleButtonsFragment.ClickActionsEnum.Members -> onMembersClick(channel)
                 }
             }
         }
@@ -610,14 +603,12 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     open fun setChannelSettings(channel: SceytChannel) {
         initOrUpdateFragmentChannel(binding?.frameLayoutSettings ?: return) {
-            getChannelSettingsFragment(channel).also {
-                it.setClickActionsListener { actionsEnum ->
-                    when (actionsEnum) {
-                        InfoSettingsFragment.ClickActionsEnum.Mute -> onMuteUnMuteClick(channel, true)
-                        InfoSettingsFragment.ClickActionsEnum.UnMute -> onMuteUnMuteClick(channel, false)
-                        InfoSettingsFragment.ClickActionsEnum.AutoDeleteOn -> {}
-                        InfoSettingsFragment.ClickActionsEnum.AutoDeleteOff -> {}
-                    }
+            getChannelSettingsFragment(channel) { actionsEnum ->
+                when (actionsEnum) {
+                    InfoSettingsFragment.ClickActionsEnum.Mute -> onMuteUnMuteClick(channel, true)
+                    InfoSettingsFragment.ClickActionsEnum.UnMute -> onMuteUnMuteClick(channel, false)
+                    InfoSettingsFragment.ClickActionsEnum.AutoDeleteOn -> {}
+                    InfoSettingsFragment.ClickActionsEnum.AutoDeleteOff -> {}
                 }
             }
         }
@@ -637,11 +628,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     open fun setChannelInfo(channel: SceytChannel) {
         initOrUpdateFragmentChannel(binding?.frameLayoutInfo ?: return) {
-            getChannelInfoFragment(channel).also {
-                it.setClickActionsListener { actionsEnum ->
-                    when (actionsEnum) {
-                        InfoDetailsFragment.ClickActionsEnum.Avatar -> onAvatarClick(channel)
-                    }
+            getChannelDetailsFragment(channel) { actionsEnum ->
+                when (actionsEnum) {
+                    InfoDetailsFragment.ClickActionsEnum.Avatar -> onAvatarClick(channel)
                 }
             }
         }
@@ -661,36 +650,37 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
-    open fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberTypeEnum) =
+    open fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberTypeEnum): Fragment =
             ChannelMembersFragment.newInstance(channel, memberType)
 
-    open fun getChannelMediaFragment(channel: SceytChannel) = ChannelMediaFragment.newInstance(channel)
+    open fun getChannelMediaFragment(channel: SceytChannel): Fragment = ChannelMediaFragment.newInstance(channel)
 
-    open fun getChannelFilesFragment(channel: SceytChannel) = ChannelFilesFragment.newInstance(channel)
+    open fun getChannelFilesFragment(channel: SceytChannel): Fragment = ChannelFilesFragment.newInstance(channel)
 
-    open fun getChannelLinksFragment(channel: SceytChannel) = ChannelLinksFragment.newInstance(channel)
+    open fun getChannelLinksFragment(channel: SceytChannel): Fragment = ChannelLinksFragment.newInstance(channel)
 
-    open fun getChannelVoiceFragment(channel: SceytChannel) = ChannelVoiceFragment.newInstance(channel)
+    open fun getChannelVoiceFragment(channel: SceytChannel): Fragment = ChannelVoiceFragment.newInstance(channel)
 
-    open fun getEditChannelFragment(channel: SceytChannel) = EditChannelFragment.newInstance(channel)
-
-
-    //Buttons
-    open fun getInfoButtonsDirectChatFragment(channel: SceytChannel, showOpenChatButton: Boolean) = InfoButtonsDirectChatFragment.newInstance(channel, showOpenChatButton)
-
-    open fun getInfoButtonsPrivateChatFragment(channel: SceytChannel) = InfoButtonsPrivateChatFragment.newInstance(channel)
-
-    open fun getInfoButtonsPublicChannelFragment(channel: SceytChannel) = InfoButtonsPublicChannelFragment.newInstance(channel)
+    open fun getEditChannelFragment(channel: SceytChannel): Fragment = EditChannelFragment.newInstance(channel)
 
     //Description
-    open fun getChannelDescriptionFragment(channel: SceytChannel) = InfoDescriptionFragment.newInstance(channel)
+    open fun getChannelDescriptionFragment(channel: SceytChannel): Fragment = InfoDescriptionFragment.newInstance(channel)
 
-    open fun getChannelInfoFragment(channel: SceytChannel) = InfoDetailsFragment.newInstance(channel)
+    open fun getChannelDetailsFragment(channel: SceytChannel,
+                                       listener: (InfoDetailsFragment.ClickActionsEnum) -> Unit): Fragment {
+        return InfoDetailsFragment.newInstance(channel, listener)
+    }
 
-    open fun getChannelSettingsFragment(channel: SceytChannel) = InfoSettingsFragment.newInstance(channel)
+    open fun getChannelSettingsFragment(channel: SceytChannel,
+                                        listener: (InfoSettingsFragment.ClickActionsEnum) -> Unit): Fragment {
+        return InfoSettingsFragment.newInstance(channel, listener)
+    }
 
     //Members by role buttons
-    open fun getChannelMembersByRoleFragment(channel: SceytChannel) = InfoMembersByRoleButtonsFragment.newInstance(channel)
+    open fun getChannelMembersByRoleFragment(channel: SceytChannel,
+                                             listener: (InfoMembersByRoleButtonsFragment.ClickActionsEnum) -> Unit): Fragment {
+        return InfoMembersByRoleButtonsFragment.newInstance(channel, listener)
+    }
 
     //Additional info
     open fun getChannelAdditionalInfoFragment(channel: SceytChannel): Fragment? = null
