@@ -229,15 +229,17 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     open fun onSaveClick() {
         val newSubject = binding?.tvSubject?.text?.trim().toString()
         val newDescription = binding?.tvDescription?.text?.trim().toString()
+        val newUrl = binding?.inputUri?.text?.trim().toString()
         val isEditedAvatar = avatarUrl != channel.avatarUrl
         val oldDesc = channel.metadata.jsonToObject(ChannelDescriptionData::class.java)?.description?.trim()
         val isEditedSubjectOrDesc = newSubject != channel.channelSubject.trim() || newDescription != oldDesc
-        if (isEditedAvatar || isEditedSubjectOrDesc) {
+        val isEditedUrd = newUrl != channel.uri
+        if (isEditedAvatar || isEditedSubjectOrDesc || isEditedUrd) {
             showLoading(requireContext())
             val data = EditChannelData(newSubject = newSubject,
                 metadata = Gson().toJson(ChannelDescriptionData(newDescription)),
                 avatarUrl = avatarUrl,
-                channelUri = channel.uri,
+                channelUri = newUrl,
                 channelType = channel.type,
                 avatarEdited = isEditedAvatar)
             viewModel.editChannelChanges(channel.id, data)

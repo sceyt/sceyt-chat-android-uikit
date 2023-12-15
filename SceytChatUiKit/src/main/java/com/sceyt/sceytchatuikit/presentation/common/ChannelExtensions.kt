@@ -34,7 +34,8 @@ fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
         peerBlockedChanged = peerBlockedChanged,
         typingStateChanged = typingData != other.typingData,
         membersChanged = membersCountChanged || members != other.members,
-        metadataUpdated = metadata != other.metadata)
+        metadataUpdated = metadata != other.metadata,
+        urlUpdated = uri != other.uri)
 }
 
 fun SceytChannel.checkIsMemberInChannel(): Boolean {

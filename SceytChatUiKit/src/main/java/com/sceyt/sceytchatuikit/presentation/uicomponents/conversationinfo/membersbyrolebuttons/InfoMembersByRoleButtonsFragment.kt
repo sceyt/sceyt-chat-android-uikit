@@ -77,11 +77,12 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(channel: SceytChannel): InfoMembersByRoleButtonsFragment {
+        fun newInstance(channel: SceytChannel,listener: (ClickActionsEnum) -> Unit): InfoMembersByRoleButtonsFragment {
             val fragment = InfoMembersByRoleButtonsFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)
             }
+            fragment.setClickActionsListener(listener)
             return fragment
         }
     }

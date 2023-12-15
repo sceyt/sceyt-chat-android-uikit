@@ -140,11 +140,12 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(channel: SceytChannel): InfoDetailsFragment {
+        fun newInstance(channel: SceytChannel, listener: (ClickActionsEnum) -> Unit): InfoDetailsFragment {
             val fragment = InfoDetailsFragment()
             fragment.arguments = Bundle().apply {
                 putParcelable(CHANNEL, channel)
             }
+            fragment.setClickActionsListener(listener)
             return fragment
         }
     }
