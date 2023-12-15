@@ -5,8 +5,8 @@ import android.content.Context
 import android.content.Intent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.demo.presentation.addmembers.AddMembersActivity
+import com.sceyt.chat.models.role.Role
 import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -24,11 +24,6 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
 
     override fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberTypeEnum): ChannelMembersFragment {
         return CustomMembersFragment.newInstance(channel, memberType)
-    }
-
-    override fun onAddSubscribersClick(channel: SceytChannel) {
-        addMembersActivityLauncher.launch(AddMembersActivity.newInstance(this, MemberTypeEnum.Subscriber))
-        overrideTransitions(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold, true)
     }
 
     class CustomMembersFragment : ChannelMembersFragment() {
@@ -67,14 +62,6 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
                         addMembersToChannel(users)
                     }
                 }
-            }
-        }
-    }
-
-    private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.parcelableArrayList<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { users ->
-                addMembers(users)
             }
         }
     }
