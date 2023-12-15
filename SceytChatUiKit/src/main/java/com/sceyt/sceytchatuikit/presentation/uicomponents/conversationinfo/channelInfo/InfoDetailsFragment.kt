@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytstyles.ConversationInfoMediaStyle
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import java.util.Date
@@ -44,6 +45,7 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
         getBundleArguments()
         initViews()
         setChannelDetails(channel)
+        binding.setupStyle()
     }
 
     private fun getBundleArguments() {
@@ -135,6 +137,10 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
 
     override fun onChannelUpdated(channel: SceytChannel) {
         setChannelDetails(channel)
+    }
+
+    private fun SceytFragmentInfoDetailsBinding.setupStyle() {
+        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
     }
 
     companion object {

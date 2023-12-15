@@ -13,6 +13,7 @@ import com.sceyt.sceytchatuikit.extensions.setOnlyClickable
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
+import com.sceyt.sceytchatuikit.sceytstyles.ConversationInfoMediaStyle
 
 open class InfoSettingsFragment : Fragment(), ChannelUpdateListener {
     protected lateinit var binding: SceytFragmentInfoSettingsBinding
@@ -33,6 +34,7 @@ open class InfoSettingsFragment : Fragment(), ChannelUpdateListener {
 
         getBundleArguments()
         binding.initViews()
+        binding.setupStyle()
         setChannelDetails(channel)
     }
 
@@ -75,6 +77,10 @@ open class InfoSettingsFragment : Fragment(), ChannelUpdateListener {
     override fun onChannelUpdated(channel: SceytChannel) {
         this.channel = channel
         binding.notification.isChecked = channel.muted
+    }
+
+    private fun SceytFragmentInfoSettingsBinding.setupStyle() {
+        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
     }
 
     companion object {
