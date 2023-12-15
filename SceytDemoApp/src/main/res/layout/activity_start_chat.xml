@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".presentation.newchannel.NewChannelActivity">
+    tools:context=".presentation.newchannel.StartChatActivity">
 
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytSearchableToolbar
         android:id="@+id/toolbar"
@@ -22,13 +22,29 @@
         android:drawablePadding="12dp"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
-        android:paddingVertical="20dp"
+        android:paddingVertical="16dp"
         android:text="@string/new_group"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="@dimen/mediumTextSize"
-        app:drawableLeftCompat="@drawable/channel_create"
+        app:drawableLeftCompat="@drawable/ic_create_group"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvNewChannel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:drawablePadding="12dp"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="16dp"
+        android:text="@string/new_channel"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/mediumTextSize"
+        app:drawableLeftCompat="@drawable/ic_create_channel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvNewGroup" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvUsers"
@@ -41,8 +57,8 @@
         android:text="@string/users"
         android:textColor="@color/sceyt_color_gray_secondary"
         android:textSize="@dimen/mediumTextSize"
-        app:layout_constraintStart_toStartOf="@+id/tvNewGroup"
-        app:layout_constraintTop_toBottomOf="@+id/tvNewGroup" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvNewChannel" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvUsers"

@@ -15,7 +15,7 @@ import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.FragmentChannelsBinding
 import com.sceyt.chat.demo.presentation.conversation.ConversationActivity
-import com.sceyt.chat.demo.presentation.newchannel.NewChannelActivity
+import com.sceyt.chat.demo.presentation.newchannel.StartChatActivity
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
@@ -82,7 +82,7 @@ class ChannelsFragment : Fragment() {
         }
 
         binding.fabNewChannel.setOnClickListener {
-            NewChannelActivity.launch(requireContext())
+            StartChatActivity.launch(requireContext())
         }
     }
 
