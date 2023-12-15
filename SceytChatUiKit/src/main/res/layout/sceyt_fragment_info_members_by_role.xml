@@ -46,7 +46,7 @@
         app:layout_constraintTop_toBottomOf="@+id/divider1" />
 
     <View
-        android:id="@+id/divider4"
+        android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="16dp"
         android:background="@color/sceyt_color_input"
@@ -56,6 +56,6 @@
         android:id="@+id/group_channel_members"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="divider4,members" />
+        app:constraint_referenced_ids="divider,members" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

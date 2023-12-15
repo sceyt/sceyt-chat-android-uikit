@@ -18,6 +18,7 @@ import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytstyles.ConversationInfoMediaStyle
 
 open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener {
     protected lateinit var binding: SceytFragmentInfoDescriptionBinding
@@ -36,6 +37,7 @@ open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener {
 
         getBundleArguments()
         setChannelDescription(channel)
+        binding.setupStyle()
     }
 
     private fun getBundleArguments() {
@@ -56,6 +58,10 @@ open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener {
 
     override fun onChannelUpdated(channel: SceytChannel) {
         setChannelDescription(channel)
+    }
+
+    private fun SceytFragmentInfoDescriptionBinding.setupStyle() {
+        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
     }
 
     companion object {

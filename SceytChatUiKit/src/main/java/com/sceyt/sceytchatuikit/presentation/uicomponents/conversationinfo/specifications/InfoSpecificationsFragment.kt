@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.extensions.setClipboard
 import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
+import com.sceyt.sceytchatuikit.sceytstyles.ConversationInfoMediaStyle
 
 open class InfoSpecificationsFragment : Fragment(), ChannelUpdateListener {
     protected lateinit var binding: SceytFragmentInfoSpecificationsBinding
@@ -35,6 +36,7 @@ open class InfoSpecificationsFragment : Fragment(), ChannelUpdateListener {
 
         getBundleArguments()
         setChannelSpecification(channel)
+        binding.setupStyle()
         binding.initViews()
     }
 
@@ -65,6 +67,10 @@ open class InfoSpecificationsFragment : Fragment(), ChannelUpdateListener {
 
     override fun onChannelUpdated(channel: SceytChannel) {
         setChannelSpecification(channel)
+    }
+
+    private fun SceytFragmentInfoSpecificationsBinding.setupStyle() {
+       divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
     }
 
     companion object {

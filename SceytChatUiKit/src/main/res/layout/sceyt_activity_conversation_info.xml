@@ -45,18 +45,11 @@
                         app:layout_constraintTop_toTopOf="parent"
                         tools:layout="@layout/sceyt_fragment_info_details" />
 
-                    <View
-                        android:id="@+id/divider1"
-                        android:layout_width="match_parent"
-                        android:layout_height="16dp"
-                        android:background="@color/sceyt_color_input"
-                        app:layout_constraintTop_toBottomOf="@+id/frame_layout_info" />
-
                     <androidx.fragment.app.FragmentContainerView
                         android:id="@+id/frame_layout_description"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:layout_constraintTop_toBottomOf="@+id/divider1"
+                        app:layout_constraintTop_toBottomOf="@+id/frame_layout_info"
                         tools:layout="@layout/sceyt_fragment_info_description" />
 
                     <androidx.fragment.app.FragmentContainerView

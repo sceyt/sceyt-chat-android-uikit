@@ -17,6 +17,7 @@ import com.sceyt.sceytchatuikit.presentation.common.isPrivate
 import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
+import com.sceyt.sceytchatuikit.sceytstyles.ConversationInfoMediaStyle
 
 open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener {
     protected lateinit var binding: SceytFragmentInfoMembersByRoleBinding
@@ -37,6 +38,7 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
         getBundleArguments()
         initViews()
         setDetails(channel)
+        binding.setupStyle()
     }
 
     private fun getBundleArguments() {
@@ -72,6 +74,10 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
 
     enum class ClickActionsEnum {
         Members, Admins
+    }
+
+    private fun SceytFragmentInfoMembersByRoleBinding.setupStyle() {
+        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
     }
 
     companion object {
