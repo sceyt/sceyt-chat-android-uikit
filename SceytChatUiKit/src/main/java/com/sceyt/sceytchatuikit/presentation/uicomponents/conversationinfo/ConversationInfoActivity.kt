@@ -537,6 +537,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         val to = if (showDetails) 1f else 0f
         if (showDetails) toolbarLayout.isVisible = true
         binding?.tvToolbarInfo?.isVisible = !showDetails
+        binding?.viewTopTabLayout?.isVisible = showDetails
         toolbarLayout.changeAlphaWithAnimation(toolbarLayout.alpha, to, 100) {
             if (showDetails.not()) {
                 toolbarLayout.isInvisible = true
