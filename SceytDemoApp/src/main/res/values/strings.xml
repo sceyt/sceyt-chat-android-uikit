@@ -34,5 +34,6 @@
     <string name="sign_out_title">Sign out?</string>
     <string name="sign_out_desc">Are you sure you want to sign out?</string>
     <string name="new_group">New group</string>
+    <string name="start_chat">Start chat</string>
 
 </resources>
