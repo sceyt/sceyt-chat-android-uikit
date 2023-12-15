@@ -11,7 +11,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 
 class ViewPagerAdapter(private val activity: AppCompatActivity,
-                       private val fragments: ArrayList<Fragment>) : FragmentStateAdapter(activity) {
+                       private val fragments: List<Fragment>) : FragmentStateAdapter(activity) {
 
     override fun getItemCount(): Int {
         return fragments.size

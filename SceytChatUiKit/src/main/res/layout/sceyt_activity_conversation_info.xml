@@ -97,128 +97,13 @@
                     app:contentInsetStart="0dp"
                     app:layout_collapseMode="pin">
 
-                    <androidx.constraintlayout.widget.ConstraintLayout
+                    <androidx.fragment.app.FragmentContainerView
+                        android:id="@+id/frame_layout_toolbar"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         app:layout_collapseMode="pin"
-                        app:layout_constraintTop_toTopOf="parent">
-
-                        <androidx.appcompat.widget.AppCompatImageView
-                            android:id="@+id/icBack"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_marginStart="12dp"
-                            android:background="?selectableItemBackgroundBorderless"
-                            android:padding="4dp"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:srcCompat="@drawable/sceyt_ic_arrow_back" />
-
-                        <androidx.constraintlayout.widget.ConstraintLayout
-                            android:id="@+id/layoutToolbar"
-                            android:layout_width="0dp"
-                            android:layout_height="0dp"
-                            android:layout_marginStart="16dp"
-                            android:layout_marginEnd="12dp"
-                            android:visibility="invisible"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@id/icMore"
-                            app:layout_constraintStart_toEndOf="@+id/icBack"
-                            app:layout_constraintTop_toTopOf="parent">
-
-                            <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
-                                android:id="@+id/toolbarAvatar"
-                                android:layout_width="0dp"
-                                android:layout_height="0dp"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintDimensionRatio="1:1"
-                                app:layout_constraintHeight_percent=".75"
-                                app:layout_constraintStart_toStartOf="parent"
-                                app:layout_constraintTop_toTopOf="parent" />
-
-                            <androidx.appcompat.widget.AppCompatTextView
-                                android:id="@+id/titleToolbar"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginHorizontal="12dp"
-                                android:fontFamily="@font/roboto_medium"
-                                android:gravity="start"
-                                android:singleLine="true"
-                                android:textColor="@color/sceyt_color_text_themed"
-                                android:textSize="16sp"
-                                app:layout_constrainedWidth="true"
-                                app:layout_constraintBottom_toTopOf="@+id/subTitleToolbar"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintHorizontal_bias="0"
-                                app:layout_constraintStart_toEndOf="@+id/toolbarAvatar"
-                                app:layout_constraintTop_toTopOf="parent"
-                                app:layout_constraintVertical_chainStyle="packed"
-                                tools:text="Title" />
-
-                            <androidx.appcompat.widget.AppCompatTextView
-                                android:id="@+id/subTitleToolbar"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginHorizontal="12dp"
-                                android:ellipsize="marquee"
-                                android:freezesText="true"
-                                android:gravity="start"
-                                android:marqueeRepeatLimit="marquee_forever"
-                                android:singleLine="true"
-                                android:textColor="@color/sceyt_color_gray_400"
-                                android:textSize="13sp"
-                                app:layout_constrainedWidth="true"
-                                app:layout_constraintBottom_toBottomOf="parent"
-                                app:layout_constraintEnd_toEndOf="parent"
-                                app:layout_constraintHorizontal_bias="0"
-                                app:layout_constraintStart_toEndOf="@+id/toolbarAvatar"
-                                app:layout_constraintTop_toBottomOf="@+id/titleToolbar"
-                                tools:text="78 subscribers" />
-
-                        </androidx.constraintlayout.widget.ConstraintLayout>
-
-                        <androidx.appcompat.widget.AppCompatTextView
-                            android:id="@+id/tvToolbarInfo"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"
-                            android:text="@string/sceyt_info"
-                            android:textColor="@color/sceyt_color_text_themed"
-                            android:textSize="@dimen/largeTextSize"
-                            app:fontFamily="@font/roboto_medium"
-                            app:layout_constrainedWidth="true"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintHorizontal_bias="0"
-                            app:layout_constraintStart_toEndOf="@+id/icBack"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <androidx.appcompat.widget.AppCompatImageView
-                            android:id="@+id/icEdit"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_marginEnd="12dp"
-                            android:background="?selectableItemBackgroundBorderless"
-                            android:padding="4dp"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@+id/icMore"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:srcCompat="@drawable/sceyt_ic_edit_stroked" />
-
-                        <androidx.appcompat.widget.AppCompatImageView
-                            android:id="@+id/icMore"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_marginEnd="12dp"
-                            android:background="?selectableItemBackgroundBorderless"
-                            android:padding="4dp"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:srcCompat="@drawable/sceyt_ic_more_24" />
-
-                    </androidx.constraintlayout.widget.ConstraintLayout>
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:layout="@layout/sceyt_fragment_info_toolbar" />
 
                 </androidx.appcompat.widget.Toolbar>
 
