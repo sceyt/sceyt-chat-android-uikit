@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytSearchableToolbarTitle="@string/new_channel" />
+        app:sceytSearchableToolbarTitle="@string/start_chat" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvNewGroup"
@@ -37,9 +37,9 @@
         android:background="@color/sceyt_color_input"
         android:gravity="center"
         android:includeFontPadding="false"
-        android:paddingVertical="3dp"
+        android:paddingVertical="4dp"
         android:text="@string/users"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_gray_secondary"
         android:textSize="@dimen/mediumTextSize"
         app:layout_constraintStart_toStartOf="@+id/tvNewGroup"
         app:layout_constraintTop_toBottomOf="@+id/tvNewGroup" />

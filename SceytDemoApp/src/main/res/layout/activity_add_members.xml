@@ -27,10 +27,15 @@
         tools:itemCount="20"
         tools:listitem="@layout/item_selected_user" />
 
-    <View
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/divider"
-        android:layout_width="wrap_content"
-        android:layout_height=".5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/sceyt_color_gray_secondary"
+        android:text="@string/users"
+        android:textSize="@dimen/_12sdp"
+        android:paddingVertical="4dp"
+        android:gravity="center"
         android:background="@color/sceyt_color_divider"
         app:layout_constraintStart_toStartOf="@+id/rvSelectedUsers"
         app:layout_constraintTop_toBottomOf="@+id/rvSelectedUsers" />
