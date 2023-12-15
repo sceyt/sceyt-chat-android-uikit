@@ -32,6 +32,7 @@
     <color name="sceyt_color_gray_400">#7C7E8E</color>
     <color name="sceyt_color_gray_500">#676A7C</color>
     <color name="sceyt_color_gray_800">#757D8B</color>
+    <color name="sceyt_color_gray_secondary">#707388</color>
     <color name="sceyt_gallery_item_default_color">#F3F5F7</color>
     <color name="sceyt_progress_bg_color">#6617191C</color>
     <color name="sceyt_color_admin_role">#7A6EF6</color>
