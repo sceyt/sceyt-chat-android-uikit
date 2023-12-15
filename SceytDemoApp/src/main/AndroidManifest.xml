@@ -71,7 +71,7 @@
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity
-            android:name="com.sceyt.chat.demo.presentation.newchannel.NewChannelActivity"
+            android:name="com.sceyt.chat.demo.presentation.newchannel.StartChatActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity

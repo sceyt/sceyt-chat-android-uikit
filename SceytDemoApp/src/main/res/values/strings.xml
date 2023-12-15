@@ -10,7 +10,7 @@
     <string name="profile">Profile</string>
     <string name="my_profile">My Profile</string>
     <string name="sign_out">Sign Out</string>
-    <string name="new_channel">New Channel</string>
+    <string name="new_channel">New channel</string>
     <string name="make_channel_private">Make channel private</string>
     <string name="make_channel_private_info">By making channel private, only selected members have acess to read or connect to chis channel</string>
     <string name="label">Label</string>
