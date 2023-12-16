@@ -54,15 +54,15 @@
         tools:itemCount="20"
         tools:listitem="@layout/item_select_user" />
 
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCustomFloatingActonButton
         android:id="@+id/fabNext"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:backgroundTint="@color/sceyt_color_accent"
-        app:icon="@drawable/ic_arrow_forward"
-        app:iconTint="@color/sceyt_color_white"
+        android:clickable="false"
+        android:src="@drawable/ic_arrow_forward"
+        android:tint="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"  />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo
 import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Bundle
+import androidx.activity.viewModels
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -78,7 +79,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     private lateinit var channel: SceytChannel
     private lateinit var pagerAdapter: ViewPagerAdapter
     private var binding: SceytActivityConversationInfoBinding? = null
-    protected val viewModel: ConversationInfoViewModel by viewModel()
+    protected val viewModel: ConversationInfoViewModel by viewModels()
     private var showStartChatIcon: Boolean = false
 
     @CallSuper
@@ -110,8 +111,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
 
         viewModel.channelUpdatedLiveData.observe(this) {
-            channel = it.channel
-            onChannel(it.channel)
+            channel = it
+            onChannel(it)
         }
 
         viewModel.userPresenceUpdateLiveData.observe(this, ::onUserPresenceUpdated)
@@ -505,8 +506,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 (it as? InfoToolbarFragment)?.setClickActionsListener { actionsEnum ->
                     when (actionsEnum) {
                         Back -> finish()
-                        Edit -> onEditClick(channel)
-                        More -> onMoreClick(channel)
+                        Edit -> onEditClick(this.channel)
+                        More -> onMoreClick(this.channel)
                     }
                 }
             }
@@ -552,7 +553,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             getChannelDetailsFragment(channel).also {
                 (it as? InfoDetailsFragment)?.setClickActionsListener { actionsEnum ->
                     when (actionsEnum) {
-                        InfoDetailsFragment.ClickActionsEnum.Avatar -> onAvatarClick(channel)
+                        InfoDetailsFragment.ClickActionsEnum.Avatar -> onAvatarClick(this.channel)
                     }
                 }
             }

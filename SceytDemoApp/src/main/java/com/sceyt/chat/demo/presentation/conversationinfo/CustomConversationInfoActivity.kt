@@ -30,7 +30,7 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
         private lateinit var addMembersActivityLauncher: ActivityResultLauncher<Intent>
 
         override fun onAddMembersClick(memberType: MemberTypeEnum) {
-            addMembersActivityLauncher.launch(AddMembersActivity.newInstance(requireContext(), memberType))
+            addMembersActivityLauncher.launch(AddMembersActivity.newInstance(requireContext(), memberType, true))
             requireContext().asActivity().overrideTransitions(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold, true)
         }
 
