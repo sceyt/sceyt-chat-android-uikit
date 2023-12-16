@@ -48,7 +48,7 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
                 report.isVisible = false
             }
 
-            ChannelTypeEnum.Public -> {
+            ChannelTypeEnum.Public, ChannelTypeEnum.Broadcast -> {
                 leaveChat.text = context.getString(R.string.sceyt_leave_channel)
                 delete.text = context.getString(R.string.sceyt_delete_channel)
                 // todo report.isVisible = true
