@@ -35,5 +35,9 @@
     <string name="sign_out_desc">Are you sure you want to sign out?</string>
     <string name="new_group">New group</string>
     <string name="start_chat">Start chat</string>
+    <string name="group_name">Group name</string>
+    <string name="move_and_scale">Move and Scale</string>
+    <string name="wrong_image">Wrong image</string>
+    <string name="channel_name">Channel name</string>
 
 </resources>

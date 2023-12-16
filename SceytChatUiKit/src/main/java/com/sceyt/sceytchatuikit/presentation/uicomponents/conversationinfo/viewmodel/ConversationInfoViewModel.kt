@@ -14,7 +14,6 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
-import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelUpdateData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
@@ -61,7 +60,7 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val _userPresenceUpdatedLiveData = MutableLiveData<SceytPresenceChecker.PresenceUser>()
     val userPresenceUpdateLiveData = _userPresenceUpdatedLiveData.asLiveData()
 
-    private val _channelUpdatedLiveData = MutableLiveData<ChannelUpdateData>()
+    private val _channelUpdatedLiveData = MutableLiveData<SceytChannel>()
     val channelUpdatedLiveData = _channelUpdatedLiveData.asLiveData()
 
     fun observeUserPresenceUpdate(channel: SceytChannel) {
@@ -77,7 +76,7 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
         ChannelsCache.channelUpdatedFlow
             .filter { it.channel.id == channelId }
             .onEach {
-                _channelUpdatedLiveData.postValue(it)
+                _channelUpdatedLiveData.postValue(it.channel)
             }
             .launchIn(viewModelScope)
     }
@@ -165,16 +164,6 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
                     eventType = ChannelMembersEventEnum.Added
                 ))
             }
-
-            notifyPageStateWithResponse(response)
-        }
-    }
-
-    fun findOrCreateChat(user: User) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.findOrCreateDirectChannel(user)
-            if (response is SceytResponse.Success)
-                _findOrCreateChatLiveData.postValue(response.data ?: return@launch)
 
             notifyPageStateWithResponse(response)
         }

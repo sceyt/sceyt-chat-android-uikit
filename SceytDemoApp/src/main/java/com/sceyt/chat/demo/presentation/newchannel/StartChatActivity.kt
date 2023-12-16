@@ -2,6 +2,7 @@ package com.sceyt.chat.demo.presentation.newchannel
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,7 +14,8 @@ import com.sceyt.chat.demo.presentation.addmembers.AddMembersActivity
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.demo.presentation.addmembers.viewmodel.UsersViewModel
 import com.sceyt.chat.demo.presentation.conversation.ConversationActivity
-import com.sceyt.chat.demo.presentation.creategroup.CreateGroupActivity
+import com.sceyt.chat.demo.presentation.createconversation.createchannel.CreateChannelActivity
+import com.sceyt.chat.demo.presentation.createconversation.newgroup.CreateGroupActivity
 import com.sceyt.chat.demo.presentation.newchannel.adapters.UserViewHolderFactory
 import com.sceyt.chat.demo.presentation.newchannel.adapters.UsersAdapter
 import com.sceyt.sceytchatuikit.R.anim
@@ -97,7 +99,7 @@ class StartChatActivity : AppCompatActivity() {
         }
 
         binding.tvNewChannel.setOnClickListener {
-            addMembersActivityLauncher.launch(AddMembersActivity.newInstance(this))
+            createConversationLauncher.launch(Intent(this, CreateChannelActivity::class.java))
             overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
         }
     }
@@ -124,7 +126,14 @@ class StartChatActivity : AppCompatActivity() {
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.parcelableArrayList<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { members ->
                 createGroupLauncher.launch(CreateGroupActivity.newIntent(this, members))
+                overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
             }
+        }
+    }
+
+    private val createConversationLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            finish()
         }
     }
 
