@@ -71,7 +71,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:background="@drawable/sceyt_bg_underline"
-                android:hint="@string/sceyt_description"
+                android:hint="@string/sceyt_about"
                 android:paddingVertical="15dp"
                 android:textColor="@color/sceyt_color_text_themed"
                 android:textColorHint="@color/sceyt_color_hint"
