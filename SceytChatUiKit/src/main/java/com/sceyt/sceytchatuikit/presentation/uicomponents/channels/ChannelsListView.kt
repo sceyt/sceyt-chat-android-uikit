@@ -259,6 +259,11 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
      */
     fun getChannelsRv() = channelsRV
 
+    /**
+     * @return The inner [PageStateView] .
+     */
+    fun getPageStateView() = pageStateView
+
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
         // Need open your conversation page
