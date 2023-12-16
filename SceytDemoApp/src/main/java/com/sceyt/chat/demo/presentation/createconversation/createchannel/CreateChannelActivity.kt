@@ -7,10 +7,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.safarifone.waafi_v2.presentation.createconversation.createchannel.WaafiRolesEnum
 import com.sceyt.chat.demo.databinding.ActivityCreateChannelBinding
 import com.sceyt.chat.demo.presentation.addmembers.AddMembersActivity
 import com.sceyt.chat.demo.presentation.conversation.ConversationActivity
+import com.sceyt.chat.demo.presentation.createconversation.viewmodel.CreateChatViewModel
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R.anim
@@ -25,7 +25,6 @@ import com.sceyt.sceytchatuikit.presentation.common.SceytLoader.hideLoading
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader.showLoading
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
-import com.sceyt.chat.demo.presentation.createconversation.viewmodel.CreateChatViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.launch
 
@@ -91,7 +90,9 @@ class CreateChannelActivity : AppCompatActivity() {
     private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.parcelableArrayList<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { members ->
-                viewModel.addMembers(createdChannel.id, members.map { SceytMember(Role(WaafiRolesEnum.Subscriber.value()), User(it.id)) })
+                viewModel.addMembers(createdChannel.id, members.map {
+                    SceytMember(Role(MemberTypeEnum.Subscriber.toString()), User(it.id))
+                })
             }
         } else startConversationPageAndFinish(createdChannel)
     }
