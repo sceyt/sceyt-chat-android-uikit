@@ -351,7 +351,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 descId = R.string.sceyt_leave_group_desc
             }
 
-            Public -> {
+            Public, Broadcast -> {
                 titleId = R.string.sceyt_leave_channel_title
                 descId = R.string.sceyt_leave_channel_desc
             }

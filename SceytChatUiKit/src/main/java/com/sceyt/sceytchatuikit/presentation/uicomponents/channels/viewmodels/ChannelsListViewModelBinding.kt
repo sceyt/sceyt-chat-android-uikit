@@ -117,7 +117,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             }
             needToUpdateChannelsAfterResume.remove(channelId)
             lifecycleOwner.withResumed {
-                channelsListView.deleteChannel(channelId)
+                channelsListView.deleteChannel(channelId, searchQuery)
             }
         }
     }.launchIn(viewModelScope)
