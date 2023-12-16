@@ -12,7 +12,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
-        app:title="@string/new_group" />
+        app:title="@string/new_group"
+        app:titleTextColor="@color/sceyt_color_text_themed" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"

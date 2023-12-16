@@ -96,13 +96,16 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
             is PaginationResponse.DBResponse -> {
                 if (!checkIgnoreDatabasePagingResponse(response)) {
                     _loadChannelsFlow.value = response
-                    notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
+                    notifyPageStateWithResponse(SceytResponse.Success(null),
+                        wasLoadingMore = response.offset > 0,
+                        isEmpty = response.data.isEmpty(), searchQuery = response.query)
                 }
             }
 
             is PaginationResponse.ServerResponse -> {
                 _loadChannelsFlow.value = response
-                notifyPageStateWithResponse(response.data, response.offset > 0, response.cacheData.isEmpty())
+                notifyPageStateWithResponse(response.data, wasLoadingMore = response.offset > 0,
+                    isEmpty = response.cacheData.isEmpty(), searchQuery = response.query)
             }
 
             else -> return

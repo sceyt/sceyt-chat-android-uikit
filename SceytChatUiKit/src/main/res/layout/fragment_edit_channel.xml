@@ -11,6 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
         app:layout_constraintTop_toTopOf="parent"
+        app:titleTextColor="@color/sceyt_color_text_themed"
         tools:title="Edit channel" />
 
     <androidx.core.widget.NestedScrollView
@@ -41,7 +42,7 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:background="@drawable/sceyt_bg_circle"
-                android:backgroundTint="#4D000000"
+                android:backgroundTint="#66111539"
                 android:padding="25dp"
                 android:tint="@color/sceyt_color_white"
                 app:layout_constraintBottom_toBottomOf="@+id/avatar"

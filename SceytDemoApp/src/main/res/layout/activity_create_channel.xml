@@ -11,6 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
+        app:titleTextColor="@color/sceyt_color_text_themed"
         app:title="@string/new_channel" />
 
     <androidx.fragment.app.FragmentContainerView
