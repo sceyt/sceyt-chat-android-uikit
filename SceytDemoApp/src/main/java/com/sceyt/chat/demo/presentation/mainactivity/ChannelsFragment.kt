@@ -11,14 +11,15 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.connectivity_change.NetworkMonitor
-import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.FragmentChannelsBinding
 import com.sceyt.chat.demo.presentation.conversation.ConversationActivity
 import com.sceyt.chat.demo.presentation.newchannel.StartChatActivity
+import com.sceyt.chat.models.ConnectionState
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
+import com.sceyt.sceytchatuikit.extensions.setMargins
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
@@ -52,6 +53,10 @@ class ChannelsFragment : Fragment() {
 
         mViewModel.bind(binding.channelListView, viewLifecycleOwner)
         mViewModel.bind(binding.searchView)
+
+        binding.searchView.post {
+            binding.channelListView.getPageStateView()?.setMargins(bottom = binding.searchView.height)
+        }
 
         binding.channelListView.setCustomChannelClickListeners(object : ChannelClickListenersImpl(binding.channelListView) {
             override fun onChannelClick(item: ChannelListItem.ChannelItem) {
@@ -134,6 +139,7 @@ class ChannelsFragment : Fragment() {
             ConnectionState.Disconnected -> getString(R.string.connecting_title)
             ConnectionState.Reconnecting,
             ConnectionState.Connecting -> getString(R.string.connecting_title)
+
             ConnectionState.Connected -> getString(R.string.channels)
         }
         binding.title.text = title

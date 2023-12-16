@@ -42,7 +42,8 @@
     <string name="sceyt_replies">Replies</string>
     <string name="sceyt_thread_reply">Thread reply</string>
     <string name="sceyt_with">with %s</string>
-    <string name="sceyt_ui_channel_list_empty">No results found</string>
+    <string name="sceyt_ui_channel_list_empty">No results</string>
+    <string name="sceyt_ui_channel_list_empty_desc">There were no results found.</string>
     <string name="sceyt_messages_list_empty">No messages yet</string>
     <string name="sceyt_no_proper_app_to_open_file">You may not have a proper app for viewing this content</string>
     <string name="sceyt_mark_as_read">Mark as read</string>
