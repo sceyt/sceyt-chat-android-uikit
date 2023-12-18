@@ -19,7 +19,6 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     private lateinit var binding: SceytDialogDirectChannelActionsBinding
     private var listener: ((ActionsEnum) -> Unit)? = null
     private lateinit var channel: SceytChannel
-    private var showMuteIcon: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,9 +37,8 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
         }
     }
 
-    private fun setData(channel: SceytChannel, showStartChatIcon: Boolean) {
+    private fun setData(channel: SceytChannel) {
         this.channel = channel
-        this.showMuteIcon = showStartChatIcon
     }
 
     fun setChooseTypeCb(cb: (ActionsEnum) -> Unit) {
@@ -83,9 +81,9 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     }
 
     companion object {
-        fun newInstance(context: Context, channel: SceytChannel, showMuteIcon: Boolean): DirectChatActionsDialog {
+        fun newInstance(context: Context, channel: SceytChannel): DirectChatActionsDialog {
             val dialog = DirectChatActionsDialog(context)
-            dialog.setData(channel, showMuteIcon)
+            dialog.setData(channel)
             return dialog
         }
     }

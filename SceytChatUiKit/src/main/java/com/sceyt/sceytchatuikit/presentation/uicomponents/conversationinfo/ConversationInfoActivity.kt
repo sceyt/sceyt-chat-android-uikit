@@ -10,7 +10,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
-import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.CollapsingToolbarLayout
@@ -71,8 +70,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewm
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
-import kotlinx.coroutines.launch
-import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.concurrent.TimeUnit
 
 open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
@@ -80,7 +77,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     private lateinit var pagerAdapter: ViewPagerAdapter
     private var binding: SceytActivityConversationInfoBinding? = null
     protected val viewModel: ConversationInfoViewModel by viewModels()
-    private var showStartChatIcon: Boolean = false
 
     @CallSuper
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,7 +97,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     private fun getBundleArguments() {
         channel = requireNotNull(intent.parcelable(CHANNEL))
-        showStartChatIcon = intent.getBooleanExtra(SHOW_OPEN_CHAT_BUTTON, false)
     }
 
     private fun initViewModel() {
@@ -136,8 +131,6 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
 
         viewModel.channelAddMemberLiveData.observe(this, ::onAddedMember)
-
-        viewModel.findOrCreateChatLiveData.observe(this, ::onFindOrCreateChat)
 
         viewModel.pageStateLiveData.observe(this, ::onPageStateChanged)
     }
@@ -400,16 +393,13 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     open fun onAddedMember(data: ChannelMembersEventData) {
     }
 
-    open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
-    }
-
     open fun onMoreClick(channel: SceytChannel) {
         if (channel.isGroup) {
             GroupChatActionsDialog.newInstance(this, channel).apply {
                 setChooseTypeCb(::onGroupChatMoreActionClick)
             }.show()
         } else
-            DirectChatActionsDialog.newInstance(this, channel, showStartChatIcon).apply {
+            DirectChatActionsDialog.newInstance(this, channel).apply {
                 setChooseTypeCb(::onDirectChatMoreActionClick)
             }.show()
     }
@@ -435,12 +425,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onChannel(channel: SceytChannel) {
-        lifecycleScope.launch {
-            setChannelDetails(channel)
-            pagerAdapter.getFragment().find { fragment -> fragment is ChannelMembersFragment }?.let { membersFragment ->
-                (membersFragment as ChannelMembersFragment).updateChannel(channel)
-            }
-        }
+        setChannelDetails(channel)
     }
 
     open fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
@@ -604,7 +589,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     open fun getChannelAdditionalInfoFragment(channel: SceytChannel): Fragment? = null
 
     //Specifications
-    open fun getChannelSpecificationsFragment(channel: SceytChannel) = InfoSpecificationsFragment.newInstance(channel)
+    open fun getChannelSpecificationsFragment(channel: SceytChannel): Fragment? = InfoSpecificationsFragment.newInstance(channel)
 
     open fun onPageStateChanged(pageState: PageState) {
         if (pageState is PageState.StateError) {
@@ -627,12 +612,10 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     companion object {
         const val CHANNEL = "CHANNEL"
-        const val SHOW_OPEN_CHAT_BUTTON = "SHOW_OPEN_CHAT_BUTTON"
 
-        fun newInstance(context: Context, channel: SceytChannel, showOpenChatButton: Boolean = false) {
+        fun newInstance(context: Context, channel: SceytChannel) {
             context.launchActivity<ConversationInfoActivity> {
                 putExtra(CHANNEL, channel)
-                putExtra(SHOW_OPEN_CHAT_BUTTON, showOpenChatButton)
             }
             context.asActivity().overrideTransitions(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold, true)
         }

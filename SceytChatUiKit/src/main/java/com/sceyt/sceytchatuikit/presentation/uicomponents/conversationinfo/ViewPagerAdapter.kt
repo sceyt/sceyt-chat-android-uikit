@@ -24,7 +24,6 @@ class ViewPagerAdapter(private val activity: AppCompatActivity,
     fun getTagByPosition(position: Int): String {
         return fragments.getOrNull(position)?.let {
             when (it) {
-                is ChannelMembersFragment -> activity.getString(R.string.sceyt_members)
                 is ChannelMediaFragment -> activity.getString(R.string.sceyt_media)
                 is ChannelFilesFragment -> activity.getString(R.string.sceyt_files)
                 is ChannelLinksFragment -> activity.getString(R.string.sceyt_links)
