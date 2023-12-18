@@ -6,7 +6,7 @@
     <string name="username">Username</string>
     <string name="connect">connect</string>
     <string name="connection_failed">Connection failed</string>
-    <string name="channels">Channels</string>
+    <string name="chats">Chats</string>
     <string name="profile">Profile</string>
     <string name="my_profile">My Profile</string>
     <string name="sign_out">Sign Out</string>

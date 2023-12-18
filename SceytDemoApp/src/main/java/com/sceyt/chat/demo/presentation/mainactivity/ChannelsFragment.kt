@@ -140,7 +140,7 @@ class ChannelsFragment : Fragment() {
             ConnectionState.Reconnecting,
             ConnectionState.Connecting -> getString(R.string.connecting_title)
 
-            ConnectionState.Connected -> getString(R.string.channels)
+            ConnectionState.Connected -> getString(R.string.chats)
         }
         binding.title.text = title
     }
