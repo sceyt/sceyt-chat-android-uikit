@@ -288,6 +288,16 @@ class ChannelsCache {
         }
     }
 
+    fun onChannelMarkedAsReadOrUnread(channel: SceytChannel) {
+        synchronized(lock) {
+            cachedData[channel.id]?.let {
+                it.unread = channel.unread
+                it.newMessageCount = channel.newMessageCount
+                channelUpdated(it, false, ChannelUpdatedType.Updated)
+            }
+        }
+    }
+
     private fun putAndCheckHasDiff(list: List<SceytChannel>): Boolean {
         var detectedDiff = false
         list.forEach {
