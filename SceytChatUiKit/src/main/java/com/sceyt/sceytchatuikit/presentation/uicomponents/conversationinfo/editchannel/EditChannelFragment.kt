@@ -15,7 +15,7 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.databinding.FragmentEditChannelBinding
+import com.sceyt.sceytchatuikit.databinding.SceytFragmentEditChannelBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
@@ -37,7 +37,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 open class EditChannelFragment : Fragment(), SceytKoinComponent {
-    protected var binding: FragmentEditChannelBinding? = null
+    protected var binding: SceytFragmentEditChannelBinding? = null
     protected val viewModel: EditChannelViewModel by viewModels()
     protected val chooseAttachmentHelper = ChooseAttachmentHelper(this)
     protected var avatarUrl: String? = null
@@ -47,7 +47,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return FragmentEditChannelBinding.inflate(inflater, container, false)
+        return SceytFragmentEditChannelBinding.inflate(inflater, container, false)
             .also { binding = it }
             .root
     }
@@ -98,7 +98,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    private fun FragmentEditChannelBinding.initViews() {
+    private fun SceytFragmentEditChannelBinding.initViews() {
         tvSubject.doAfterTextChanged { checkSaveEnabled(false) }
 
         inputUri.doAfterTextChanged {
@@ -246,7 +246,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         } else requireActivity().onBackPressedDispatcher.onBackPressed()
     }
 
-    private fun FragmentEditChannelBinding.setupStyle() {
+    private fun SceytFragmentEditChannelBinding.setupStyle() {
         layoutToolbar.setIconsTint(SceytKitConfig.sceytColorAccent)
     }
 

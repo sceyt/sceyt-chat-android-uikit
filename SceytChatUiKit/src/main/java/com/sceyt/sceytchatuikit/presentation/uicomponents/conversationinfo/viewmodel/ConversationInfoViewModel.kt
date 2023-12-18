@@ -54,9 +54,6 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val _channelAddMemberLiveData = MutableLiveData<ChannelMembersEventData>()
     val channelAddMemberLiveData: LiveData<ChannelMembersEventData> = _channelAddMemberLiveData
 
-    private val _findOrCreateChatLiveData = MutableLiveData<SceytChannel>()
-    val findOrCreateChatLiveData = _findOrCreateChatLiveData.asLiveData()
-
     private val _userPresenceUpdatedLiveData = MutableLiveData<SceytPresenceChecker.PresenceUser>()
     val userPresenceUpdateLiveData = _userPresenceUpdatedLiveData.asLiveData()
 

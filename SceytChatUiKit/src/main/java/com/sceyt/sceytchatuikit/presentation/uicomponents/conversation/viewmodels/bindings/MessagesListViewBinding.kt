@@ -536,7 +536,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     val response = persistenceChanelMiddleWare.findOrCreateDirectChannel(user)
                     if (response is SceytResponse.Success)
                         response.data?.let {
-                            ConversationInfoActivity.newInstance(event.view.context, response.data, true)
+                            ConversationInfoActivity.newInstance(event.view.context, response.data)
                         }
                 }
             }
