@@ -23,7 +23,7 @@
                 themedTextColor="@{R.color.sceyt_color_black_themed}"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/channels"
+                android:text="@string/chats"
                 android:textColor="@color/sceyt_color_text_themed"
                 android:textSize="20sp"
                 android:textStyle="bold"
