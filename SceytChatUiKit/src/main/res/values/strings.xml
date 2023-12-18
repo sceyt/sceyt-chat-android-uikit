@@ -42,7 +42,8 @@
     <string name="sceyt_replies">Replies</string>
     <string name="sceyt_thread_reply">Thread reply</string>
     <string name="sceyt_with">with %s</string>
-    <string name="sceyt_ui_channel_list_empty">No results found</string>
+    <string name="sceyt_ui_channel_list_empty">No results</string>
+    <string name="sceyt_ui_channel_list_empty_desc">There were no results found.</string>
     <string name="sceyt_messages_list_empty">No messages yet</string>
     <string name="sceyt_no_proper_app_to_open_file">You may not have a proper app for viewing this content</string>
     <string name="sceyt_mark_as_read">Mark as read</string>
@@ -175,5 +176,18 @@
     <string name="sceyt_monospace">Monospace</string>
     <string name="sceyt_underline">Underline</string>
     <string name="sceyt_clear_formatting">Clear formatting</string>
+    <string name="sceyt_info">Info</string>
+    <string name="sceyt_notifications">Notifications</string>
+    <string name="auto_delete_messages_off">Auto-Delete messages (off)</string>
+    <string name="sceyt_pin_chat">Pin chat</string>
+    <string name="sceyt_un_pin_chat">Unpin chat</string>
+    <string name="channel_uri_copied">Channel Uri copied</string>
+    <string name="report_channel">Report channel</string>
+    <string name="the_url_exist_title">Channel name is already taken</string>
+    <string name="url_length_validation_text">The name should be 5–50 characters long.</string>
+    <string name="url_characters_validation_text">he name is invalid. Please provide a name from the allowed range of characters.</string>
+    <string name="valid_url_title">Success! This URL is free to use.</string>
+    <string name="camera">Camera</string>
+    <string name="select_photo">Select photo</string>
 
 </resources>

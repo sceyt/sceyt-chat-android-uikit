@@ -11,12 +11,15 @@ import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 class SceytCustomFloatingActonButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FloatingActionButton(context, attrs, defStyleAttr) {
 
+    private var isEnabledClick: Boolean = isClickable
+    private var localClickListener: OnClickListener? = null
+
     init {
-        setEnabledOrNot(enabled = isClickable)
+        setEnabledOrNot(enabled = isEnabledClick)
     }
 
     fun setEnabledOrNot(enabled: Boolean) {
-        isClickable = enabled
+        isEnabledClick = enabled
         backgroundTintList = if (enabled) {
             ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
         } else {
@@ -24,9 +27,18 @@ class SceytCustomFloatingActonButton @JvmOverloads constructor(context: Context,
         }
     }
 
+    private fun initClickListener() {
+        if (localClickListener != null) return
+        val clickListener = OnClickListener {
+            if (!isEnabledClick) return@OnClickListener
+            else localClickListener?.onClick(it)
+        }
+        super.setOnClickListener(clickListener)
+    }
+
     override fun setOnClickListener(l: OnClickListener?) {
-        val oldState = isClickable
-        super.setOnClickListener(l)
-        isClickable = oldState
+        localClickListener = null
+        initClickListener()
+        localClickListener = l
     }
 }

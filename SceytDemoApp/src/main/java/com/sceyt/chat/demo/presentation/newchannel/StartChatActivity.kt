@@ -2,18 +2,20 @@ package com.sceyt.chat.demo.presentation.newchannel
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.demo.databinding.ActivityNewChannelBinding
+import com.sceyt.chat.demo.databinding.ActivityStartChatBinding
 import com.sceyt.chat.demo.presentation.addmembers.AddMembersActivity
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.demo.presentation.addmembers.viewmodel.UsersViewModel
 import com.sceyt.chat.demo.presentation.conversation.ConversationActivity
-import com.sceyt.chat.demo.presentation.creategroup.CreateGroupActivity
+import com.sceyt.chat.demo.presentation.createconversation.createchannel.CreateChannelActivity
+import com.sceyt.chat.demo.presentation.createconversation.newgroup.CreateGroupActivity
 import com.sceyt.chat.demo.presentation.newchannel.adapters.UserViewHolderFactory
 import com.sceyt.chat.demo.presentation.newchannel.adapters.UsersAdapter
 import com.sceyt.sceytchatuikit.R.anim
@@ -29,8 +31,8 @@ import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class NewChannelActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityNewChannelBinding
+class StartChatActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityStartChatBinding
     private val viewModel: UsersViewModel by viewModels()
     private lateinit var usersAdapter: UsersAdapter
     private var creatingChannel = false
@@ -38,7 +40,7 @@ class NewChannelActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(ActivityNewChannelBinding.inflate(layoutInflater)
+        setContentView(ActivityStartChatBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
@@ -95,6 +97,11 @@ class NewChannelActivity : AppCompatActivity() {
             addMembersActivityLauncher.launch(AddMembersActivity.newInstance(this))
             overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
         }
+
+        binding.tvNewChannel.setOnClickListener {
+            createConversationLauncher.launch(Intent(this, CreateChannelActivity::class.java))
+            overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
+        }
     }
 
     private fun setupUsersList(list: List<UserItem>) {
@@ -119,7 +126,14 @@ class NewChannelActivity : AppCompatActivity() {
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.parcelableArrayList<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { members ->
                 createGroupLauncher.launch(CreateGroupActivity.newIntent(this, members))
+                overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
             }
+        }
+    }
+
+    private val createConversationLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            finish()
         }
     }
 
@@ -137,7 +151,7 @@ class NewChannelActivity : AppCompatActivity() {
     companion object {
 
         fun launch(context: Context) {
-            context.launchActivity<NewChannelActivity>()
+            context.launchActivity<StartChatActivity>()
             context.asActivity().overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
         }
     }
