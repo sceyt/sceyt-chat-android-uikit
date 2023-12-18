@@ -149,7 +149,7 @@ internal class PersistenceChannelsLogicImpl(
                 }
             }
 
-            MarkedUsUnread -> updateChannelDbAndCache(data.channel?.toSceytUiChannel())
+            MarkedUsUnread -> onChannelMarkedAsReadOrUnread(data.channel?.toSceytUiChannel())
             Blocked -> deleteChannelDb(data.channelId ?: return)
             Hidden -> data.channelId?.let { deleteChannelDb(it) }
             UnHidden -> onChanelAdded(data.channel)
@@ -255,6 +255,12 @@ internal class PersistenceChannelsLogicImpl(
         channelDao.updateChannel(channel.toChannelEntity())
         fillChannelsNeededInfo(channel)
         channelsCache.upsertChannel(channel)
+    }
+
+    private suspend fun onChannelMarkedAsReadOrUnread(channel: SceytChannel?) {
+        channel ?: return
+        channelDao.updateChannel(channel.toChannelEntity())
+        channelsCache.onChannelMarkedAsReadOrUnread(channel)
     }
 
     private suspend fun insertChannel(channel: SceytChannel, vararg members: SceytMember) {
@@ -531,7 +537,7 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let {
                 messageDao.updateAllMessagesStatusAsRead(channelId)
-                updateChannelDbAndCache(it)
+                onChannelMarkedAsReadOrUnread(it)
             }
         }
 
@@ -542,9 +548,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.markChannelAsUnRead(channelId)
 
         if (response is SceytResponse.Success)
-            response.data?.let {
-                updateChannelDbAndCache(it)
-            }
+            onChannelMarkedAsReadOrUnread(response.data)
 
         return response
     }
