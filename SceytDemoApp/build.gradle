@@ -83,4 +83,5 @@ dependencies {
     implementation supportDependencies.sdp
     implementation supportDependencies.ssp
     implementation supportDependencies.retrofitConverterGason
+    implementation "com.github.yalantis:ucrop:2.2.8"
 }

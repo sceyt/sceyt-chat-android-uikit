@@ -140,10 +140,10 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun deleteChannel(channelId: Long?) {
+    internal fun deleteChannel(channelId: Long?, searchQuery: String) {
         channelsRV.deleteChannel(channelId ?: return)
         if (channelsRV.getData().isNullOrEmpty())
-            pageStateView?.updateState(PageState.StateEmpty())
+            pageStateView?.updateState(PageState.StateEmpty(searchQuery))
     }
 
     internal fun userBlocked(data: List<User>?) {
@@ -258,6 +258,11 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
      * @return The inner [RecyclerView] with channels.
      */
     fun getChannelsRv() = channelsRV
+
+    /**
+     * @return The inner [PageStateView] .
+     */
+    fun getPageStateView() = pageStateView
 
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {

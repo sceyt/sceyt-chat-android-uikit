@@ -117,14 +117,16 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             }
             needToUpdateChannelsAfterResume.remove(channelId)
             lifecycleOwner.withResumed {
-                channelsListView.deleteChannel(channelId)
+                channelsListView.deleteChannel(channelId, searchQuery)
             }
         }
     }.launchIn(viewModelScope)
 
     ChannelsCache.channelUpdatedFlow.onEach { data ->
-        if (!lifecycleOwner.isResumed())
+        if (!lifecycleOwner.isResumed()) {
             needToUpdateChannelsAfterResume[data.channel.id] = data
+            return@onEach
+        }
 
         lifecycleOwner.lifecycleScope.launch {
             val isCanceled = channelsListView.cancelLastSort()

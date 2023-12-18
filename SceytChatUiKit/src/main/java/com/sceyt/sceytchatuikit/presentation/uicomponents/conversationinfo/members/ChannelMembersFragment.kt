@@ -41,6 +41,7 @@ import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.root.PageState
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.ChannelMembersAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
@@ -54,7 +55,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
+open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoinComponent {
     protected val viewModel by viewModel<ChannelMembersViewModel>()
     protected var membersAdapter: ChannelMembersAdapter? = null
     protected var binding: SceytFragmentChannelMembersBinding? = null
@@ -416,7 +417,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
     }
 
     protected open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
-        ConversationInfoActivity.newInstance(requireContext(), sceytChannel, true)
+        ConversationInfoActivity.newInstance(requireContext(), sceytChannel)
     }
 
     protected open fun onPageStateChange(pageState: PageState) {
@@ -424,7 +425,7 @@ open class ChannelMembersFragment : Fragment(), SceytKoinComponent {
             customToastSnackBar(pageState.errorMessage.toString())
     }
 
-    fun updateChannel(channel: SceytChannel) {
+    override fun onChannelUpdated(channel: SceytChannel) {
         this.channel = channel
         getCurrentUserRole()
     }

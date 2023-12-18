@@ -10,8 +10,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="?android:attr/actionBarSize">
+        android:layout_height="match_parent">
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/appCompatImageView2"
@@ -27,7 +26,7 @@
             app:layout_constraintWidth_percent=".5"
             app:srcCompat="@drawable/sceyt_ic_channels_empty_state" />
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/textView2"
             themedTextColor="@{R.color.sceyt_color_black_themed}"
             android:layout_width="wrap_content"

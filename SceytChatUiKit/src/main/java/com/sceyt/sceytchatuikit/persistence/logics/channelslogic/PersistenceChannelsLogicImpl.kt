@@ -280,7 +280,7 @@ internal class PersistenceChannelsLogicImpl(
             var hasNext = dbChannels.size == CHANNELS_LOAD_SIZE
 
             trySend(PaginationResponse.DBResponse(data = dbChannels, loadKey = loadKey, offset = offset,
-                hasNext = hasNext, hasPrev = false))
+                hasNext = hasNext, hasPrev = false, query = searchQuery))
 
             channelsCache.addAll(dbChannels.map { it.clone() }, false)
             ChatReactionMessagesCache.getNeededMessages(dbChannels)
@@ -299,7 +299,7 @@ internal class PersistenceChannelsLogicImpl(
 
                 trySend(PaginationResponse.ServerResponse(data = response, cacheData = channelsCache.getSorted(),
                     loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext, hasPrev = false,
-                    loadType = LoadNext, ignoredDb = ignoreDb))
+                    loadType = LoadNext, ignoredDb = ignoreDb, query = searchQuery))
 
                 ChatReactionMessagesCache.getNeededMessages(response.data ?: arrayListOf())
 
@@ -328,7 +328,7 @@ internal class PersistenceChannelsLogicImpl(
 
             channelsCache.addAll(dbChannels.map { it.clone() }, false)
             trySend(PaginationResponse.DBResponse(data = dbChannels, loadKey = loadKey, offset = offset,
-                hasNext = hasNext, hasPrev = false))
+                hasNext = hasNext, hasPrev = false, query = searchQuery))
 
             awaitToConnectSceyt()
 
@@ -344,7 +344,7 @@ internal class PersistenceChannelsLogicImpl(
 
                 trySend(PaginationResponse.ServerResponse(data = response, cacheData = channelsCache.getSorted(),
                     loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext, hasPrev = false,
-                    loadType = LoadNext, ignoredDb = ignoreDb))
+                    loadType = LoadNext, ignoredDb = ignoreDb, query = searchQuery))
             }
 
             channel.close()
