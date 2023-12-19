@@ -55,7 +55,7 @@ ext {
     lottie_version = '6.2.0'
     light_compressor_version = '1.0.1'
 
-    vanniktech_google_emoji_version = '0.18.0'
+    vanniktech_google_emoji_version = '0.17.0'
 
     ok_http_version = '5.0.0-alpha.8'
 
