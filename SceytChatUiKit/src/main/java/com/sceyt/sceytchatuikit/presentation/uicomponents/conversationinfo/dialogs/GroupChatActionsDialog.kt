@@ -12,7 +12,10 @@ import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytDialogGroupChannelActionsBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogGroupChannelActionsBinding
@@ -26,6 +29,7 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
         }.root)
 
         binding.initView()
+        binding.setupStyle()
         window?.let {
             it.setWindowAnimations(R.style.SceytDialogFromBottomAnimation)
             val wlp: WindowManager.LayoutParams = it.attributes
@@ -85,6 +89,11 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
 
     enum class ActionsEnum {
         ClearHistory, Leave, Delete
+    }
+
+    private fun SceytDialogGroupChannelActionsBinding.setupStyle() {
+        setTextViewsDrawableColor(listOf(pin, unPin, clearHistory, report),
+            context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
     companion object {

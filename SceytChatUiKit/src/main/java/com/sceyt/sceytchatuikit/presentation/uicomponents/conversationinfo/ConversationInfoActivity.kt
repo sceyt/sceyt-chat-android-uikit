@@ -36,6 +36,7 @@ import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.overrideTransitions
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.sceytchatuikit.presentation.common.ChannelActionConfirmationWithDialog
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
@@ -50,8 +51,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialo
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog.ActionsEnum.Delete
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog.ActionsEnum.UnBlockUser
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.GroupChatActionsDialog
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.editchannel.EditChannelFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.files.ChannelFilesFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
@@ -70,7 +69,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewm
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
-import java.util.concurrent.TimeUnit
 
 open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     private lateinit var channel: SceytChannel
@@ -325,35 +323,15 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onClearHistoryClick(channel: SceytChannel) {
-        val descId: Int = when (channel.getChannelType()) {
-            Direct -> R.string.sceyt_clear_direct_history_desc
-            Private, Group -> R.string.sceyt_clear_private_chat_history_desc
-            Public, Broadcast -> R.string.sceyt_clear_public_chat_history_desc
-        }
-        showSceytDialog(this, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear, positiveCb = {
+        ChannelActionConfirmationWithDialog.confirmClearHistoryAction(this, channel) {
             clearHistory(channel.isPublic())
-        })
+        }
     }
 
     open fun onLeaveChatClick(channel: SceytChannel) {
-        val titleId: Int
-        val descId: Int
-        when (channel.getChannelType()) {
-            Private -> {
-                titleId = R.string.sceyt_leave_group_title
-                descId = R.string.sceyt_leave_group_desc
-            }
-
-            Public, Broadcast -> {
-                titleId = R.string.sceyt_leave_channel_title
-                descId = R.string.sceyt_leave_channel_desc
-            }
-
-            else -> return
-        }
-        showSceytDialog(this, titleId, descId, R.string.sceyt_leave, positiveCb = {
+        ChannelActionConfirmationWithDialog.confirmLeaveAction(this, channel) {
             leaveChannel()
-        })
+        }
     }
 
     open fun onBlockUnBlockUserClick(channel: SceytChannel, block: Boolean) {
@@ -367,27 +345,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onDeleteChatClick(channel: SceytChannel) {
-        val titleId: Int
-        val descId: Int
-        when (channel.getChannelType()) {
-            Private, Group -> {
-                titleId = R.string.sceyt_delete_group_title
-                descId = R.string.sceyt_delete_group_desc
-            }
-
-            Public, Broadcast -> {
-                titleId = R.string.sceyt_delete_channel_title
-                descId = R.string.sceyt_delete_channel_desc
-            }
-
-            Direct -> {
-                titleId = R.string.sceyt_delete_p2p_title
-                descId = R.string.sceyt_delete_p2p_desc
-            }
-        }
-        showSceytDialog(this, titleId, descId, R.string.sceyt_delete, positiveCb = {
+        ChannelActionConfirmationWithDialog.confirmDeleteChatAction(this, channel) {
             deleteChannel()
-        })
+        }
     }
 
     open fun onAddedMember(data: ChannelMembersEventData) {
@@ -465,14 +425,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         if (mute.not()) {
             unMuteChannel()
         } else {
-            MuteNotificationDialog(this@ConversationInfoActivity) {
-                val until = when (it) {
-                    MuteTypeEnum.Mute1Hour -> TimeUnit.HOURS.toMillis(1)
-                    MuteTypeEnum.Mute8Hour -> TimeUnit.HOURS.toMillis(8)
-                    MuteTypeEnum.MuteForever -> 0L
-                }
-                muteChannel(until)
-            }.show()
+            ChannelActionConfirmationWithDialog.confirmMuteUntilAction(this) {
+                muteChannel(it)
+            }
         }
     }
 

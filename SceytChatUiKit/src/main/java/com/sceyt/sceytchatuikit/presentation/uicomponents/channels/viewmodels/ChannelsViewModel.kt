@@ -234,6 +234,12 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
                 if (event.channel.isDirect())
                     unBlockUser((event.channel.getFirstMember() ?: return).id)
             }
+
+            is ChannelEvent.DeleteChannel -> deleteChannel(event.channel.id)
+            is ChannelEvent.Mute -> muteChannel(event.channel.id, 0)
+            is ChannelEvent.UnMute -> unMuteChannel(event.channel.id)
+            is ChannelEvent.Pin -> {}
+            is ChannelEvent.UnPin -> {}
         }
     }
 }

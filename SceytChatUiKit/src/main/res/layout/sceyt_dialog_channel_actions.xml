@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingVertical="15dp">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/pin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:drawableStart="@drawable/sceyt_ic_pin"
+        android:drawablePadding="15dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="23dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_pin_chat"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/_12ssp"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/unPin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:drawableStart="@drawable/sceyt_ic_un_pin"
+        android:drawablePadding="15dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="23dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_un_pin_chat"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/_12ssp"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/markAsRead"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:drawableStart="@drawable/sceyt_ic_mark_as_read"
+        android:drawablePadding="15dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="23dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_mark_as_read"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/_12ssp"
+        tools:visibility="visible" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/markAsUnRead"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:drawableStart="@drawable/sceyt_ic_mark_as_unread"
+        android:drawablePadding="15dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="23dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_mark_as_unread"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/_12ssp"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/mute"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:drawableStart="@drawable/sceyt_ic_mute"
+        android:drawablePadding="15dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="23dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_mute_"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/_12ssp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/unMute"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:drawableStart="@drawable/sceyt_ic_un_mute"
+        android:drawablePadding="15dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="23dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_un_mute_"
+        android:textColor="@color/sceyt_color_text_themed"
+        android:textSize="@dimen/_12ssp"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3"
+        tools:visibility="visible" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/leave"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:drawableStart="@drawable/sceyt_ic_leave"
+        android:drawablePadding="15dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="23dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_leave"
+        android:textColor="@color/sceyt_color_red"
+        android:textSize="@dimen/_12ssp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/delete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:drawableStart="@drawable/sceyt_ic_trash"
+        android:drawablePadding="15dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="23dp"
+        android:paddingVertical="10dp"
+        android:text="@string/sceyt_delete"
+        android:textColor="@color/sceyt_color_red"
+        android:textSize="@dimen/_12ssp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />
+
+</androidx.appcompat.widget.LinearLayoutCompat>
