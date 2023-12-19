@@ -237,7 +237,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             messagesRV.getChildAt(i)?.let {
                 val holder = messagesRV.getChildViewHolder(it)
                 (holder as? BaseMsgViewHolder)?.setSelectableState()
-
             }
         }
     }
