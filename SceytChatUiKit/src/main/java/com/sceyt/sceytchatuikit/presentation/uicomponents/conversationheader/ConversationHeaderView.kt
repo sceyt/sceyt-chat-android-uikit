@@ -470,10 +470,12 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     override fun onInitToolbarActionsMenu(vararg messages: SceytMessage, menu: Menu) {
         val isSingleMessage = messages.size == 1
-        val firstMessage = messages.getOrNull(0)
+        val newSelectedMessage = messages.getOrNull(0)
 
-        firstMessage?.let { message ->
-            menu.findItem(R.id.sceyt_reply).isVisible = isSingleMessage && message.deliveryStatus != DeliveryStatus.Pending
+        newSelectedMessage?.let { message ->
+            val isPending = message.deliveryStatus == DeliveryStatus.Pending
+            menu.findItem(R.id.sceyt_reply).isVisible = isSingleMessage && !isPending
+            menu.findItem(R.id.sceyt_forward).isVisible = !isPending
             menu.findItem(R.id.sceyt_edit_message).isVisible = isSingleMessage && !message.incoming && message.body.isNotNullOrBlank()
             menu.findItem(R.id.sceyt_copy_message).isVisible = messages.any { it.body.isNotNullOrBlank() }
         }

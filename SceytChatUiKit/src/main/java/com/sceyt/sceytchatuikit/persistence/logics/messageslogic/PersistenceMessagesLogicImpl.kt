@@ -490,6 +490,11 @@ internal class PersistenceMessagesLogicImpl(
             it.value.forEach values@{ stateDb ->
                 when (stateDb.entity.state) {
                     MessageState.Edited -> {
+                        val message = stateDb.message?.toSceytMessage()
+                        if (message == null) {
+                            pendingMessageStateDao.deleteByMessageId(stateDb.entity.messageId)
+                            return@values
+                        }
                         editMessageImpl(channelId, stateDb.message.toSceytMessage())
                     }
 
@@ -512,15 +517,20 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> {
-        suspend fun doOnSuccess(message: SceytMessage) {
+        suspend fun updateMessage(message: SceytMessage) {
             messageDao.upsertMessage(message.toMessageDb(false))
             messagesCache.messageUpdated(channelId, message)
             persistenceChannelsLogic.onMessageEditedOrDeleted(message)
         }
 
-        doOnSuccess(message.clone().apply { state = MessageState.Edited })
+        val isPending = message.deliveryStatus == DeliveryStatus.Pending
 
-        if (message.deliveryStatus == DeliveryStatus.Pending)
+        updateMessage(message.clone().apply {
+            if (!isPending)
+                state = MessageState.Edited
+        })
+
+        if (isPending)
             return SceytResponse.Success(message)
 
         // Insert pending message state
@@ -532,16 +542,18 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage> {
         if (message.deliveryStatus == DeliveryStatus.Pending) {
-            message.state = MessageState.Deleted
+            val clonedMessage = message.clone().apply {
+                state = MessageState.Deleted
+            }
             messageDao.deleteMessageByTid(message.tid)
             messagesCache.deleteMessage(channelId, message.tid)
-            persistenceChannelsLogic.onMessageEditedOrDeleted(message)
+            persistenceChannelsLogic.onMessageEditedOrDeleted(clonedMessage)
             SendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString())
             message.attachments?.firstOrNull()?.let {
                 fileTransferService.pause(it.messageTid, it, it.transferState
                         ?: TransferState.Uploading)
             }
-            return SceytResponse.Success(message.apply { state = MessageState.Deleted })
+            return SceytResponse.Success(clonedMessage)
         }
 
         // Insert pending message state

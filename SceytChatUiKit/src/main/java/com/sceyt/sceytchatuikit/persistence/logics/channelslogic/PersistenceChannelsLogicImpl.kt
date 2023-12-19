@@ -74,7 +74,6 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
-import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
@@ -225,25 +224,25 @@ internal class PersistenceChannelsLogicImpl(
         channelsCache.upsertChannel(channel)
     }
 
-    override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
-        if (data.state == MessageState.Deleted) {
-            chatUsersReactionDao.deleteChannelMessageUserReaction(data.channelId, data.id)
-            channelsCache.removeChannelMessageReactions(data.channelId, data.id)
+    override suspend fun onMessageEditedOrDeleted(message: SceytMessage) {
+        if (message.state == MessageState.Deleted) {
+            chatUsersReactionDao.deleteChannelMessageUserReaction(message.channelId, message.id)
+            channelsCache.removeChannelMessageReactions(message.channelId, message.id)
         }
 
-        channelDao.getChannelById(data.channelId)?.toChannel()?.let { channel ->
+        channelDao.getChannelById(message.channelId)?.toChannel()?.let { channel ->
             channel.lastMessage?.let { lastMessage ->
-                if (lastMessage.tid == data.tid) {
-                    if (data.deliveryStatus == DeliveryStatus.Pending && data.state == MessageState.Deleted) {
-                        channelsCache.updateLastMessage(data.channelId, null)
+                if (lastMessage.tid == message.tid) {
+                    if (message.deliveryStatus == DeliveryStatus.Pending && message.state == MessageState.Deleted) {
+                        channelsCache.updateLastMessage(message.channelId, null)
                     } else
-                        channelsCache.updateLastMessage(data.channelId, data)
+                        channelsCache.updateLastMessage(message.channelId, message)
                 }
             } ?: run {
-                if (data.deliveryStatus == DeliveryStatus.Pending && data.state == MessageState.Deleted)
-                    deleteMessage(data.channelId, data)
+                if (message.deliveryStatus == DeliveryStatus.Pending && message.state == MessageState.Deleted)
+                    deleteMessage(message.channelId, message)
                 else {
-                    channel.lastMessage = data
+                    channel.lastMessage = message
                     channelsCache.upsertChannel(channel)
                 }
             }

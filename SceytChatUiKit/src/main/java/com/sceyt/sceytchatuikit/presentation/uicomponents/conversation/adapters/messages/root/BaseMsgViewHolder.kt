@@ -475,7 +475,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     open fun cancelSelectableState() {
-        selectableAnimHelper.cancelSelectableState(selectMessageView, messageListItem)
+        selectableAnimHelper.cancelSelectableState(selectMessageView)
     }
 
     open fun highlight() {

@@ -347,7 +347,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     })
 
-    messageForceDeleteLiveData.observe(lifecycleOwner) {
+    checkMessageForceDeleteLiveData.observe(lifecycleOwner) {
         if (it is SceytResponse.Success) {
             if (it.data?.deliveryStatus == DeliveryStatus.Pending && it.data.state == MessageState.Deleted)
                 messagesListView.forceDeleteMessageByTid(it.data.tid)
@@ -478,7 +478,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             is MessageCommandEvent.OnMultiselectEvent -> {
-                if (event.message.deliveryStatus == DeliveryStatus.Pending) return@setMessageCommandEventListener
                 val wasSelected = selectedMessagesMap.containsKey(event.message.tid)
 
                 if (!wasSelected && selectedMessagesMap.size >= MAX_MULTISELECT_MESSAGES_COUNT) {
