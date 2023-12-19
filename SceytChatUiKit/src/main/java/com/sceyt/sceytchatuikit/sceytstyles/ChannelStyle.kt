@@ -65,6 +65,7 @@ object ChannelStyle {
 
     var channelDateFormat = ChannelDateFormatter()
 
+    var showChannelActionAsPopup = false
 
     internal fun updateWithAttributes(typedArray: TypedArray): ChannelStyle {
         backgroundColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiChannelListBackgroundColor, backgroundColor)

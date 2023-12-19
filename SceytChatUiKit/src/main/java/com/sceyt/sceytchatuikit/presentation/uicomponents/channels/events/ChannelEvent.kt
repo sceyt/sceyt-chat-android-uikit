@@ -3,6 +3,22 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 
 sealed class ChannelEvent {
+    data class Pin(
+            val channel: SceytChannel
+    ) : ChannelEvent()
+
+    data class UnPin(
+            val channel: SceytChannel
+    ) : ChannelEvent()
+
+    data class Mute(
+            val channel: SceytChannel
+    ) : ChannelEvent()
+
+    data class UnMute(
+            val channel: SceytChannel
+    ) : ChannelEvent()
+
     data class MarkAsRead(
             val channel: SceytChannel
     ) : ChannelEvent()
@@ -12,6 +28,10 @@ sealed class ChannelEvent {
     ) : ChannelEvent()
 
     data class ClearHistory(
+            val channel: SceytChannel
+    ) : ChannelEvent()
+
+    data class DeleteChannel(
             val channel: SceytChannel
     ) : ChannelEvent()
 

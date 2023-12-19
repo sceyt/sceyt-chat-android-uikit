@@ -1,13 +1,18 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners
 
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
 
 open class ChannelPopupClickListenersImpl(view: ChannelsListView) : ChannelPopupClickListeners.PopupClickListeners {
     private var defaultListeners: ChannelPopupClickListeners.PopupClickListeners = view
     private var markAsReadListener: ChannelPopupClickListeners.MarkAsRead? = null
+    private var pinListener: ChannelPopupClickListeners.Pin? = null
+    private var unPinListener: ChannelPopupClickListeners.UnPin? = null
+    private var muteListener: ChannelPopupClickListeners.Mute? = null
+    private var unMuteListener: ChannelPopupClickListeners.UnMute? = null
     private var markAsUnReadListener: ChannelPopupClickListeners.MarkAsUnRead? = null
     private var leaveChannelListener: ChannelPopupClickListeners.LeaveChannel? = null
+    private var deleteChannelListener: ChannelPopupClickListeners.DeleteChannel? = null
     private var clearHistoryListener: ChannelPopupClickListeners.ClearHistory? = null
     private var blockChannelListener: ChannelPopupClickListeners.BlockChannel? = null
     private var blockUserListener: ChannelPopupClickListeners.BlockUser? = null
@@ -23,9 +28,34 @@ open class ChannelPopupClickListenersImpl(view: ChannelsListView) : ChannelPopup
         markAsUnReadListener?.onMarkAsUnReadClick(channel)
     }
 
+    override fun onPinClick(channel: SceytChannel) {
+        defaultListeners.onPinClick(channel)
+        pinListener?.onPinClick(channel)
+    }
+
+    override fun onUnPinClick(channel: SceytChannel) {
+        defaultListeners.onUnPinClick(channel)
+        unPinListener?.onUnPinClick(channel)
+    }
+
+    override fun onMuteClick(channel: SceytChannel) {
+        defaultListeners.onMuteClick(channel)
+        muteListener?.onMuteClick(channel)
+    }
+
+    override fun onUnMuteClick(channel: SceytChannel) {
+        defaultListeners.onUnMuteClick(channel)
+        unMuteListener?.onUnMuteClick(channel)
+    }
+
     override fun onLeaveChannelClick(channel: SceytChannel) {
         defaultListeners.onLeaveChannelClick(channel)
         leaveChannelListener?.onLeaveChannelClick(channel)
+    }
+
+    override fun onDeleteChannelClick(channel: SceytChannel) {
+        defaultListeners.onDeleteChannelClick(channel)
+        deleteChannelListener?.onDeleteChannelClick(channel)
     }
 
     override fun onClearHistoryClick(channel: SceytChannel) {
@@ -51,6 +81,11 @@ open class ChannelPopupClickListenersImpl(view: ChannelsListView) : ChannelPopup
     fun setListener(listener: ChannelPopupClickListeners) {
         when (listener) {
             is ChannelPopupClickListeners.PopupClickListeners -> {
+                pinListener = listener
+                unPinListener = listener
+                muteListener = listener
+                unMuteListener = listener
+                deleteChannelListener = listener
                 markAsReadListener = listener
                 markAsUnReadListener = listener
                 leaveChannelListener = listener
@@ -59,24 +94,51 @@ open class ChannelPopupClickListenersImpl(view: ChannelsListView) : ChannelPopup
                 blockUserListener = listener
                 unBlockUserListener = listener
             }
+
+            is ChannelPopupClickListeners.Pin -> {
+                pinListener = listener
+            }
+
+            is ChannelPopupClickListeners.UnPin -> {
+                unPinListener = listener
+            }
+
+            is ChannelPopupClickListeners.Mute -> {
+                muteListener = listener
+            }
+
+            is ChannelPopupClickListeners.UnMute -> {
+                unMuteListener = listener
+            }
+
             is ChannelPopupClickListeners.MarkAsRead -> {
                 markAsReadListener = listener
             }
+
             is ChannelPopupClickListeners.MarkAsUnRead -> {
                 markAsUnReadListener = listener
             }
+
             is ChannelPopupClickListeners.LeaveChannel -> {
                 leaveChannelListener = listener
             }
+
+            is ChannelPopupClickListeners.DeleteChannel -> {
+                deleteChannelListener = listener
+            }
+
             is ChannelPopupClickListeners.ClearHistory -> {
                 clearHistoryListener = listener
             }
+
             is ChannelPopupClickListeners.BlockChannel -> {
                 blockChannelListener = listener
             }
+
             is ChannelPopupClickListeners.BlockUser -> {
                 blockUserListener = listener
             }
+
             is ChannelPopupClickListeners.UnBlockUser -> {
                 unBlockUserListener = listener
             }
