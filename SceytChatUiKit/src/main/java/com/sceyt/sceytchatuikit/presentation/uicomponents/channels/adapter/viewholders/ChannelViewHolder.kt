@@ -21,6 +21,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
+import com.sceyt.sceytchatuikit.presentation.common.getAttachmentIconAsString
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
@@ -137,8 +138,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             textView.setTypeface(null, Typeface.ITALIC)
             binding.dateStatus.setStatusIcon(null)
         } else {
-            val body = if (message.body.isBlank() && !message.attachments.isNullOrEmpty())
-                context.getString(R.string.sceyt_attachment) else message.body
+            val body = message.getShowBody(context)
 
             val fromText = if (message.incoming) {
                 val from = channel.lastMessage?.user
@@ -148,12 +148,14 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 if (channel.isGroup && !userFirstName.isNullOrBlank()) {
                     "${userFirstName}: "
                 } else ""
-            } else
-                "${context.getString(R.string.sceyt_your_last_message)}: "
+            } else "${context.getString(R.string.sceyt_your_last_message)}: "
 
+            val showBody = MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(
+                body, message.mentionedUsers, message.bodyAttributes)
             (textView as SceytColorSpannableTextView).buildSpannable()
-                .setSpannableString(MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(body, message.mentionedUsers, message.bodyAttributes))
                 .append(fromText)
+                .append(message.getAttachmentIconAsString(context))
+                .append(showBody)
                 .setForegroundColorId(R.color.sceyt_color_last_message_from)
                 .setIndexSpan(0, fromText.length)
                 .build()

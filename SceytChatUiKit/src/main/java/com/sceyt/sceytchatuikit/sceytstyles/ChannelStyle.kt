@@ -47,6 +47,18 @@ object ChannelStyle {
     @DrawableRes
     var statusIndicatorReadIcon: Int = R.drawable.sceyt_ic_status_read
 
+    @DrawableRes
+    var bodyFileAttachmentIcon: Int = R.drawable.sceyt_ic_body_file_attachment
+
+    @DrawableRes
+    var bodyImageAttachmentIcon: Int = R.drawable.sceyt_ic_body_image_attachment
+
+    @DrawableRes
+    var bodyVideoAttachmentIcon: Int = R.drawable.sceyt_ic_body_video_attachment
+
+    @DrawableRes
+    var bodyVoiceAttachmentIcon: Int = R.drawable.sceyt_ic_body_voice_attachment
+
     var statusIconSize: Int = pxToDp(16f).toInt()
 
     @LayoutRes

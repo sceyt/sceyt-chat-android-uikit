@@ -1,7 +1,10 @@
 package com.sceyt.sceytchatuikit.presentation.common
 
 import android.content.Context
+import android.text.Spannable
 import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.style.ImageSpan
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
@@ -84,6 +87,25 @@ fun SceytAttachment?.getShowName(context: Context, body: String): String {
         AttachmentTypeEnum.Voice.value() -> context.getString(R.string.sceyt_voice)
         AttachmentTypeEnum.File.value() -> context.getString(R.string.sceyt_file)
         else -> name
+    }
+}
+
+fun SceytMessage.getAttachmentIconAsString(context: Context): CharSequence {
+    val icRes = getAttachmentIconId() ?: return ""
+    val builder = SpannableStringBuilder(". ")
+    builder.setSpan(ImageSpan(context, icRes), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    return builder
+}
+
+fun SceytMessage.getAttachmentIconId(): Int? {
+    return attachments?.getOrNull(0)?.let {
+        when (it.type) {
+            AttachmentTypeEnum.Video.value() -> ChannelStyle.bodyVideoAttachmentIcon
+            AttachmentTypeEnum.Image.value() -> ChannelStyle.bodyImageAttachmentIcon
+            AttachmentTypeEnum.Voice.value() -> ChannelStyle.bodyVoiceAttachmentIcon
+            AttachmentTypeEnum.File.value() -> ChannelStyle.bodyFileAttachmentIcon
+            else -> null
+        }
     }
 }
 
