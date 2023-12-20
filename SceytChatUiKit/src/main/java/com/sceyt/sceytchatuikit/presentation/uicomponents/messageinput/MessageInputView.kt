@@ -51,7 +51,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
-import com.sceyt.sceytchatuikit.presentation.common.getShowBody
+import com.sceyt.sceytchatuikit.presentation.common.getFormattedBody
 import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.AudioMetadata
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.RecordingListener
@@ -516,7 +516,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 tvName.text = getString(R.string.sceyt_edit_message)
                 tvMessageBody.text = if (message.isTextMessage())
                     MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message)
-                else message.getShowBody(context)
+                else message.getFormattedBody(context)
             }
             if (!initWithDraft)
                 updateDraftMessage()
@@ -546,7 +546,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
                 tvMessageBody.text = if (message.isTextMessage())
                     MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message)
-                else message.getShowBody(context)
+                else message.getFormattedBody(context)
             }
 
             if (!initWithDraft) {

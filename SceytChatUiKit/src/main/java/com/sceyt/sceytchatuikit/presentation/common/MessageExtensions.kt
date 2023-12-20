@@ -65,14 +65,34 @@ private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
     return deliveryStatus == DeliveryStatus.Displayed
 }
 
-fun SceytMessage.getShowBody(context: Context): SpannableString {
+fun SceytMessage.getFormattedBody(context: Context): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() || attachments?.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
             MessageBodyStyleHelper.buildWithMentionsAndAttributes(context, this)
         }
 
-        attachments?.size == 1 -> attachments?.getOrNull(0).getShowName(context, body)
+        attachments?.size == 1 -> {
+            attachments?.getOrNull(0)?.getShowName(context, body)
+        }
+
+        else -> context.getString(R.string.sceyt_file)
+    }
+    return SpannableString(body)
+}
+
+fun SceytMessage.getFormattedBodyForLastMessage(context: Context): SpannableString {
+    val body = when {
+        state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
+        attachments.isNullOrEmpty() || attachments?.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
+            MessageBodyStyleHelper.buildOnlyStylesWithAttributes(body, bodyAttributes)
+        }
+
+        attachments?.size == 1 -> {
+            val attachmentName = attachments?.getOrNull(0)?.getShowName(context, body)
+            getAttachmentIconAsString(context).append(attachmentName)
+        }
+
         else -> context.getString(R.string.sceyt_file)
     }
     return SpannableString(body)
@@ -90,8 +110,8 @@ fun SceytAttachment?.getShowName(context: Context, body: String): String {
     }
 }
 
-fun SceytMessage.getAttachmentIconAsString(context: Context): CharSequence {
-    val icRes = getAttachmentIconId() ?: return ""
+fun SceytMessage.getAttachmentIconAsString(context: Context): SpannableStringBuilder {
+    val icRes = getAttachmentIconId() ?: return SpannableStringBuilder()
     val builder = SpannableStringBuilder(". ")
     builder.setSpan(ImageSpan(context, icRes), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     return builder

@@ -21,9 +21,8 @@ import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
-import com.sceyt.sceytchatuikit.presentation.common.getAttachmentIconAsString
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
-import com.sceyt.sceytchatuikit.presentation.common.getShowBody
+import com.sceyt.sceytchatuikit.presentation.common.getFormattedBodyForLastMessage
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.common.setChannelMessageDateAndStatusIcon
@@ -138,7 +137,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             textView.setTypeface(null, Typeface.ITALIC)
             binding.dateStatus.setStatusIcon(null)
         } else {
-            val body = message.getShowBody(context)
+            val body = message.getFormattedBodyForLastMessage(context)
 
             val fromText = if (message.incoming) {
                 val from = channel.lastMessage?.user
@@ -154,7 +153,6 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 body, message.mentionedUsers, message.bodyAttributes)
             (textView as SceytColorSpannableTextView).buildSpannable()
                 .append(fromText)
-                .append(message.getAttachmentIconAsString(context))
                 .append(showBody)
                 .setForegroundColorId(R.color.sceyt_color_last_message_from)
                 .setIndexSpan(0, fromText.length)
@@ -179,7 +177,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 ?: return false
 
         if (lastReaction.id > (channel.lastMessage?.id ?: 0) || lastReaction.pending) {
-            val toMessage = "\"${message.getShowBody(context)}\""
+            val toMessage = SpannableStringBuilder(message.getFormattedBodyForLastMessage(context))
             val reactedWord = itemView.getString(R.string.sceyt_reacted)
 
             val reactUserName = when {
@@ -189,12 +187,17 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                     "$name ${reactedWord.lowercase()}"
                 }
 
-                lastReaction.user?.id == SceytKitClient.myId -> "${itemView.getString(R.string.sceyt_you)} ${reactedWord.lowercase()}"
-                else -> reactedWord
+                lastReaction.user?.id == SceytKitClient.myId -> "${itemView.getString(R.string.sceyt_you)} ${itemView.getString(R.string.sceyt_reacted).lowercase()}"
+                else -> itemView.getString(R.string.sceyt_reacted)
             }
 
-            val text = "$reactUserName ${lastReaction.key} ${itemView.getString(R.string.sceyt_to)} $toMessage"
-            textView.text = text
+            val text = "$reactUserName ${lastReaction.key} ${itemView.getString(R.string.sceyt_to)}"
+            val title = SpannableStringBuilder("$text ")
+            title.append("\"")
+            title.append(toMessage)
+            title.append("\"")
+
+            textView.setText(title, TextView.BufferType.SPANNABLE)
             textView.setTypeface(null, Typeface.NORMAL)
             return true
         }
