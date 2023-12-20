@@ -317,10 +317,16 @@ internal class PersistenceMessagesLogicImpl(
             MessageEventsObserver.emitOutgoingMessage(tmpMessage)
             insertTmpMessageToDb(tmpMessage)
             it.attachments?.forEach { attachment ->
-                if (attachment.type != AttachmentTypeEnum.Link.value())
+                if (attachment.type != AttachmentTypeEnum.Link.value()) {
+                    var state = TransferState.PendingDownload
+                    var progressPercent = 0f
+                    if (attachment.filePath.isNotNullOrBlank()) {
+                        state = TransferState.Uploaded
+                        progressPercent = 100f
+                    }
                     persistenceAttachmentLogic.updateAttachmentWithTransferData(
-                        TransferData(tmpMessage.tid, 100f,
-                            TransferState.Uploaded, attachment.filePath, attachment.url))
+                        TransferData(tmpMessage.tid, progressPercent, state, attachment.filePath, attachment.url))
+                }
             }
             messagesCache.add(channelId, tmpMessage)
         }
