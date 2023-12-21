@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.copy
 import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -86,7 +87,7 @@ class ChannelsCache {
 
     fun addPendingChannel(channel: SceytChannel) {
         synchronized(lock) {
-            pendingChannelsData[channel.id] = channel
+            pendingChannelsData[channel.id] = channel.clone()
             if (channel.lastMessage != null)
                 channelAdded(channel)
         }
@@ -220,7 +221,7 @@ class ChannelsCache {
             // Adding pending channel id with real channel id for future getting real channel id by pending channel id
             fromPendingToRealChannelsData[pendingChannelId] = newChannel.id
             // Emitting to flow
-            pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel))
+            pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel.clone()))
         }
     }
 
@@ -260,7 +261,7 @@ class ChannelsCache {
                 channel.members?.find { member -> member.user.id == user.id }?.let {
                     val oldUser = it.user
                     if (oldUser.presence?.hasDiff(user.presence) == true) {
-                        it.user = user
+                        it.user = user.copy()
                         channelUpdated(channel, false, ChannelUpdatedType.Presence)
                     }
                 }
@@ -283,7 +284,7 @@ class ChannelsCache {
     fun channelLastReactionLoaded(channelId: Long) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
-                channelReactionMsgLoadedFlow_.tryEmit(channel)
+                channelReactionMsgLoadedFlow_.tryEmit(channel.clone())
             }
         }
     }

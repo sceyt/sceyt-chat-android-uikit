@@ -14,6 +14,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.isResumed
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelUpdateData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
@@ -132,8 +133,13 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             if (diff != null) {
                 if (diff.lastMessageChanged || data.needSorting || isCanceled)
                     channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
-            } else
+                SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body} draft:${data.channel.draftMessage?.message}  unreadCount ${data.channel.newMessageCount}" +
+                        " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${diff.hasDifference()} lastMessageChanged: ${diff.lastMessageChanged} needSorting: ${data.needSorting}")
+            } else {
+                SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body}  unreadCount ${data.channel.newMessageCount}" +
+                        " isResumed ${lifecycleOwner.isResumed()} but started getChannels ")
                 getChannels(0, query = searchQuery)
+            }
         }
     }.launchIn(viewModelScope)
 
