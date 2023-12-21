@@ -6,7 +6,6 @@ import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
@@ -227,7 +226,6 @@ class ChannelsCache {
     }
 
     private fun channelUpdated(channel: SceytChannel, needSort: Boolean, type: ChannelUpdatedType) {
-        SceytLog.i("ChannelsCache", "before: id: ${channel.id}  body: ${channel.lastMessage?.body}  unreadCount ${channel.newMessageCount} ")
         channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel.clone(), needSort, type))
     }
 
