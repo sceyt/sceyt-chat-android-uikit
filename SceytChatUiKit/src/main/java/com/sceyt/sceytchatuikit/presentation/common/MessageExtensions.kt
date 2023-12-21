@@ -81,23 +81,6 @@ fun SceytMessage.getFormattedBody(context: Context): SpannableString {
     return SpannableString(body)
 }
 
-fun SceytMessage.getFormattedBodyForLastMessage(context: Context): SpannableString {
-    val body = when {
-        state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
-        attachments.isNullOrEmpty() || attachments?.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
-            MessageBodyStyleHelper.buildOnlyStylesWithAttributes(body, bodyAttributes)
-        }
-
-        attachments?.size == 1 -> {
-            val attachmentName = attachments?.getOrNull(0)?.getShowName(context, body)
-            getAttachmentIconAsString(context).append(attachmentName)
-        }
-
-        else -> context.getString(R.string.sceyt_file)
-    }
-    return SpannableString(body)
-}
-
 fun SceytAttachment?.getShowName(context: Context, body: String): String {
     this ?: return ""
     if (body.isNotNullOrBlank()) return body
