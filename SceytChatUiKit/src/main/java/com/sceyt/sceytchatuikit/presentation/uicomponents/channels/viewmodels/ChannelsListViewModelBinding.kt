@@ -133,8 +133,8 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             if (diff != null) {
                 if (diff.lastMessageChanged || data.needSorting || isCanceled)
                     channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
-                SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body}  unreadCount ${data.channel.newMessageCount}" +
-                        " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${diff.hasDifference()}")
+                SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body} draft:${data.channel.draftMessage?.message}  unreadCount ${data.channel.newMessageCount}" +
+                        " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${diff.hasDifference()} lastMessageChanged: ${diff.lastMessageChanged} needSorting: ${data.needSorting}")
             } else {
                 SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body}  unreadCount ${data.channel.newMessageCount}" +
                         " isResumed ${lifecycleOwner.isResumed()} but started getChannels ")
