@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -15,6 +14,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.isResumed
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelUpdateData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
@@ -124,8 +124,6 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }.launchIn(viewModelScope)
 
     ChannelsCache.channelUpdatedFlow.onEach { data ->
-        Log.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body}  unreadCount ${data.channel.newMessageCount} isResumed ${lifecycleOwner.isResumed()}")
-
         if (!lifecycleOwner.isResumed())
             needToUpdateChannelsAfterResume[data.channel.id] = data
 
@@ -135,8 +133,13 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             if (diff != null) {
                 if (diff.lastMessageChanged || data.needSorting || isCanceled)
                     channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
-            } else
+                SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body}  unreadCount ${data.channel.newMessageCount}" +
+                        " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${diff.hasDifference()}")
+            } else {
+                SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body}  unreadCount ${data.channel.newMessageCount}" +
+                        " isResumed ${lifecycleOwner.isResumed()} but started getChannels ")
                 getChannels(0, query = searchQuery)
+            }
         }
     }.launchIn(viewModelScope)
 
