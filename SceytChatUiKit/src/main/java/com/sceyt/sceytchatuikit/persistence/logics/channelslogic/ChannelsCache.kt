@@ -1,10 +1,12 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.copy
 import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
@@ -86,7 +88,7 @@ class ChannelsCache {
 
     fun addPendingChannel(channel: SceytChannel) {
         synchronized(lock) {
-            pendingChannelsData[channel.id] = channel
+            pendingChannelsData[channel.id] = channel.clone()
             if (channel.lastMessage != null)
                 channelAdded(channel)
         }
@@ -220,11 +222,12 @@ class ChannelsCache {
             // Adding pending channel id with real channel id for future getting real channel id by pending channel id
             fromPendingToRealChannelsData[pendingChannelId] = newChannel.id
             // Emitting to flow
-            pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel))
+            pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel.clone()))
         }
     }
 
     private fun channelUpdated(channel: SceytChannel, needSort: Boolean, type: ChannelUpdatedType) {
+        SceytLog.i("ChannelsCache", "before: id: ${channel.id}  body: ${channel.lastMessage?.body}  unreadCount ${channel.newMessageCount} ")
         channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel.clone(), needSort, type))
     }
 
@@ -260,7 +263,7 @@ class ChannelsCache {
                 channel.members?.find { member -> member.user.id == user.id }?.let {
                     val oldUser = it.user
                     if (oldUser.presence?.hasDiff(user.presence) == true) {
-                        it.user = user
+                        it.user = user.copy()
                         channelUpdated(channel, false, ChannelUpdatedType.Presence)
                     }
                 }
@@ -283,7 +286,7 @@ class ChannelsCache {
     fun channelLastReactionLoaded(channelId: Long) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
-                channelReactionMsgLoadedFlow_.tryEmit(channel)
+                channelReactionMsgLoadedFlow_.tryEmit(channel.clone())
             }
         }
     }
