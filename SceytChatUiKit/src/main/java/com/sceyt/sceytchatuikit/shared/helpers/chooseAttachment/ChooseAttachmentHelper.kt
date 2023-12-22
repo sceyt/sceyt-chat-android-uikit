@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.asFragmentActivity
 import com.sceyt.sceytchatuikit.extensions.checkAndAskPermissions
+import com.sceyt.sceytchatuikit.extensions.copyFile
 import com.sceyt.sceytchatuikit.extensions.getFileUriWithProvider
 import com.sceyt.sceytchatuikit.extensions.getPermissionsForMangeStorage
 import com.sceyt.sceytchatuikit.extensions.initAttachmentLauncher
@@ -34,7 +35,6 @@ import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.shared.utils.FileUtil
-import com.sceyt.sceytchatuikit.shared.utils.ImageUriPathUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -239,7 +239,7 @@ class ChooseAttachmentHelper {
                     } else {
                         val name = DocumentFile.fromSingleUri(context, uri)?.name
                         if (name != null) {
-                            val copiedFile = ImageUriPathUtil.copyFile(context, uri.toString(), name)
+                            val copiedFile = copyFile(context, uri.toString(), name)
                             paths.add(copiedFile.path)
                         }
                     }
