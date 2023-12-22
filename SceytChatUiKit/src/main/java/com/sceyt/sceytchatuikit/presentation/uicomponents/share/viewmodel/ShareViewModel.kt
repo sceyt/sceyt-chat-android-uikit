@@ -12,13 +12,13 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.copyFile
 import com.sceyt.sceytchatuikit.extensions.extractLinks
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.shared.utils.FileUtil
-import com.sceyt.sceytchatuikit.shared.utils.ImageUriPathUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -128,7 +128,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
                     } else {
                         val name = DocumentFile.fromSingleUri(application, uri)?.name
                         if (name != null) {
-                            val copiedFile = ImageUriPathUtil.copyFile(application, uri.toString(), name)
+                            val copiedFile = copyFile(application, uri.toString(), name)
                             paths.add(copiedFile.path)
                         }
                     }
