@@ -420,15 +420,16 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }.launchIn(viewModelScope)
 
     onChannelEventFlow.onEach {
-        when (it.eventType) {
-            ClearedHistory -> messagesListView.clearData()
-            Left -> {
-                val leftUser = it.channel?.members?.getOrNull(0)?.id
-                if (leftUser == myId && !channel.isPublic())
-                    messagesListView.context.asActivity().finish()
+        when (val event = it.eventType) {
+            is ClearedHistory -> messagesListView.clearData()
+            is Left -> {
+                event.leftMembers.forEach { member ->
+                    if (member.id == myId && !channel.isPublic())
+                        messagesListView.context.asActivity().finish()
+                }
             }
 
-            Deleted -> messagesListView.context.asActivity().finish()
+            is Deleted -> messagesListView.context.asActivity().finish()
             else -> return@onEach
         }
     }.launchIn(viewModelScope)

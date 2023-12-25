@@ -4,6 +4,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.SceytKitClient
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
@@ -60,6 +64,12 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val _channelUpdatedLiveData = MutableLiveData<SceytChannel>()
     val channelUpdatedLiveData = _channelUpdatedLiveData.asLiveData()
 
+    private val _onChannelLeftLiveData = MutableLiveData<ChannelEventData>()
+    val onChannelLeftLiveData = _onChannelLeftLiveData.asLiveData()
+
+    private val _onChannelDeletedLiveData = MutableLiveData<ChannelEventData>()
+    val onChannelDeletedLiveData = _onChannelDeletedLiveData.asLiveData()
+
     fun observeUserPresenceUpdate(channel: SceytChannel) {
         SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged()
             .onEach {
@@ -76,6 +86,25 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
                 _channelUpdatedLiveData.postValue(it.channel)
             }
             .launchIn(viewModelScope)
+    }
+
+    fun onChannelEvent(channelId: Long) {
+        ChannelEventsObserver.onChannelEventFlow
+            .filter { it.channelId == channelId }
+            .onEach {
+                when (val event = it.eventType) {
+                    is ChannelEventEnum.Left -> {
+                        if (event.leftMembers.any { member -> member.id == SceytKitClient.myId })
+                            _onChannelLeftLiveData.postValue(it)
+                    }
+
+                    is ChannelEventEnum.Deleted -> _onChannelDeletedLiveData.postValue(it)
+                    is ChannelEventEnum.Joined -> _joinLiveData.postValue(it.channel
+                            ?: return@onEach)
+
+                    else -> return@onEach
+                }
+            }.launchIn(viewModelScope)
     }
 
     fun getChannelFromServer(id: Long) {

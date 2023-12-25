@@ -76,7 +76,7 @@ open class InfoSettingsFragment : Fragment(), ChannelUpdateListener {
 
     override fun onChannelUpdated(channel: SceytChannel) {
         this.channel = channel
-        binding.notification.isChecked = channel.muted
+        setChannelDetails(channel)
     }
 
     private fun SceytFragmentInfoSettingsBinding.setupStyle() {
