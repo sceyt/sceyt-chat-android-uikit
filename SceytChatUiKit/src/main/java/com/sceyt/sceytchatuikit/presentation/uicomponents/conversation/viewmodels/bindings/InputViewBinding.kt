@@ -116,20 +116,22 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     }
 
     onChannelEventFlow.onEach {
-        when (it.eventType) {
-            ChannelEventEnum.Left -> {
+        when (val event = it.eventType) {
+            is ChannelEventEnum.Left -> {
                 if (channel.isPublic()) {
-                    val leftUser = channel.members?.getOrNull(0)?.id
-                    if (leftUser == SceytKitClient.myId)
-                        messageInputView.onChannelLeft()
+                    event.leftMembers.forEach { member ->
+                        if (member.id == SceytKitClient.myId)
+                            messageInputView.onChannelLeft()
+                    }
                 }
             }
 
-            ChannelEventEnum.Joined -> {
+            is ChannelEventEnum.Joined -> {
                 if (channel.isPublic()) {
-                    val leftUser = channel.members?.getOrNull(0)?.id
-                    if (leftUser == SceytKitClient.myId)
-                        messageInputView.joinSuccess()
+                    event.joinedMembers.forEach { member ->
+                        if (member.id == SceytKitClient.myId)
+                            messageInputView.joinSuccess()
+                    }
                 }
             }
 

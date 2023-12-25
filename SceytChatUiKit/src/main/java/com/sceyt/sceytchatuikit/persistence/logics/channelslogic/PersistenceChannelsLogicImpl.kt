@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
 import android.content.Context
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.role.Role
@@ -11,19 +10,13 @@ import com.sceyt.chat.models.user.UserState
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventData
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Blocked
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.ClearedHistory
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Created
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Deleted
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Hidden
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Invited
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Joined
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Left
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.MarkedUsUnread
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Muted
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.UnBlocked
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.UnHidden
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.UnMuted
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Updated
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelUnreadCountUpdatedEventData
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver.awaitToConnectSceyt
@@ -43,7 +36,6 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
 import com.sceyt.sceytchatuikit.data.toDraftMessage
 import com.sceyt.sceytchatuikit.data.toMember
-import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.toSha256
 import com.sceyt.sceytchatuikit.logger.SceytLog
@@ -98,24 +90,26 @@ internal class PersistenceChannelsLogicImpl(
     private val messageLogic: PersistenceMessagesLogic by inject()
 
     override suspend fun onChannelEvent(data: ChannelEventData) {
-        when (data.eventType) {
-            Created -> onChanelAdded(data.channel)
-            Joined -> onChanelJoined(data.channel)
-            Deleted -> data.channelId?.let { channelId -> deleteChannelDb(channelId) }
-            Left -> {
-                val leftUser = data.channel?.members?.getOrNull(0)?.id
-                        ?: return
-                data.channelId?.let { channelId ->
-                    if (leftUser == myId) {
-                        deleteChannelDb(channelId)
-                    } else {
-                        channelDao.deleteUserChatLinks(channelId, leftUser)
-                        updateMembersCount(data.channel.id, data.channel.memberCount.toInt())
+        when (val event = data.eventType) {
+            is Created -> onChanelAdded(data.channel)
+            is Joined -> onChanelJoined(data.channel)
+            is Deleted -> data.channelId?.let { deleteChannelDb(it) }
+            is Left -> {
+                val leftUsers = event.leftMembers
+                leftUsers.forEach { leftUser ->
+                    data.channelId?.let { channelId ->
+                        if (leftUser.id == myId) {
+                            deleteChannelDb(channelId)
+                            return
+                        } else {
+                            channelDao.deleteUserChatLinks(channelId, leftUser.id)
+                            updateMembersCount(channelId, data.channel?.memberCount?.toInt() ?: 0)
+                        }
                     }
                 }
             }
 
-            ClearedHistory -> {
+            is ClearedHistory -> {
                 data.channelId?.let { channelId ->
                     channelDao.updateLastMessage(channelId, null, null)
                     messageDao.deleteAllMessages(channelId)
@@ -123,9 +117,8 @@ internal class PersistenceChannelsLogicImpl(
                 }
             }
 
-            Updated, UnBlocked -> {
-                data.channel?.let { channel ->
-                    val sceytChannel = channel.toSceytUiChannel()
+            is Updated -> {
+                data.channel?.let { sceytChannel ->
                     initPendingLastMessageBeforeInsert(sceytChannel)
                     channelDao.insertChannel(sceytChannel.toChannelEntity())
                     fillChannelsNeededInfo(sceytChannel)
@@ -133,30 +126,36 @@ internal class PersistenceChannelsLogicImpl(
                 }
             }
 
-            Muted -> {
+            is ChannelEventEnum.Mute -> {
                 data.channelId?.let { channelId ->
-                    val time = data.channel?.mutedTill ?: 0
-                    channelDao.updateMuteState(channelId, true, time)
-                    channelsCache.updateMuteState(channelId, true, time)
+                    if (event.muted) {
+                        val time = data.channel?.mutedTill ?: 0
+                        channelDao.updateMuteState(channelId, true, time)
+                        channelsCache.updateMuteState(channelId, true, time)
+                    } else {
+                        channelDao.updateMuteState(channelId, false)
+                        channelsCache.updateMuteState(channelId, false)
+                    }
                 }
             }
 
-            UnMuted -> {
-                data.channelId?.let { channelId ->
-                    channelDao.updateMuteState(channelId, false)
-                    channelsCache.updateMuteState(channelId, false)
-                }
+            is ChannelEventEnum.MarkedUs -> onChannelMarkedAsReadOrUnread(data.channel)
+            is ChannelEventEnum.Block -> {
+                if (event.blocked)
+                    data.channelId?.let { deleteChannelDb(it) }
             }
 
-            MarkedUsUnread -> onChannelMarkedAsReadOrUnread(data.channel?.toSceytUiChannel())
-            Blocked -> deleteChannelDb(data.channelId ?: return)
-            Hidden -> data.channelId?.let { deleteChannelDb(it) }
-            UnHidden -> onChanelAdded(data.channel)
-            Invited -> onChanelJoined(data.channel)
+            is ChannelEventEnum.Hide -> {
+                if (event.hidden)
+                    data.channelId?.let { deleteChannelDb(it) }
+                else onChanelAdded(data.channel)
+            }
+
+            is Invited -> onChanelJoined(data.channel)
         }
     }
 
-    private suspend fun onChanelJoined(channel: Channel?) {
+    private suspend fun onChanelJoined(channel: SceytChannel?) {
         val joinedMember = channel?.members?.getOrNull(0)?.id ?: return
         if (joinedMember == myId) {
             onChanelAdded(channel)
@@ -172,12 +171,11 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
-    private suspend fun onChanelAdded(channel: Channel?) {
+    private suspend fun onChanelAdded(channel: SceytChannel?) {
         channel?.let {
             val members = it.members ?: return
-            val sceytChannel = channel.toSceytUiChannel()
-            insertChannel(sceytChannel, *members.map { member -> member.toSceytMember() }.toTypedArray())
-            channelsCache.add(sceytChannel)
+            insertChannel(channel, *members.toTypedArray())
+            channelsCache.add(channel)
         }
     }
 

@@ -92,6 +92,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         setupPagerAdapter(binding?.viewPager, binding?.tabLayout)
         addAppBarOffsetChangeListener(binding?.appbar)
         viewModel.observeToChannelUpdate(channel.id)
+        viewModel.onChannelEvent(channel.id)
         observeUserUpdateIfNeeded()
     }
 
@@ -108,6 +109,19 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         viewModel.channelUpdatedLiveData.observe(this) {
             channel = it
             onChannel(it)
+        }
+
+        viewModel.onChannelDeletedLiveData.observe(this) {
+            finish()
+        }
+
+        viewModel.onChannelLeftLiveData.observe(this) { data ->
+            data.channel?.let {
+                channel = it
+                setChannelDetails(it)
+            }
+            if (!channel.isPublic())
+                finish()
         }
 
         viewModel.userPresenceUpdateLiveData.observe(this, ::onUserPresenceUpdated)
@@ -444,9 +458,11 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onMutedOrUnMutedChannel(sceytChannel: SceytChannel) {
+        setChannelSettings(sceytChannel)
     }
 
     open fun onJoinedChannel(sceytChannel: SceytChannel) {
+        setChannelDetails(sceytChannel)
     }
 
     open fun onClearedHistory(channelId: Long) {

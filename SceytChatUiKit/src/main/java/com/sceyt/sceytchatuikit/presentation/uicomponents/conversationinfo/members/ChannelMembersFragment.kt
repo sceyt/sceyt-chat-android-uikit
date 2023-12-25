@@ -371,14 +371,15 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     }
 
     protected open fun onChannelEvent(eventData: ChannelEventData) {
-        when (eventData.eventType) {
-            Left -> {
-                channel.members?.forEach {
+        when (val event = eventData.eventType) {
+            is Left -> {
+                event.leftMembers.forEach {
                     removeMember(it.id)
                 }
             }
 
-            Joined, Invited -> addMembers(channel.members)
+            is Joined -> addMembers(event.joinedMembers)
+            is Invited -> {}
             else -> return
         }
     }
