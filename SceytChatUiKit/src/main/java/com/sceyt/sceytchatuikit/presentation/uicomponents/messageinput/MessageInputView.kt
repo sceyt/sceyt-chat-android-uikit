@@ -11,12 +11,11 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
-import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
-import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.Glide
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.commit
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
@@ -27,32 +26,26 @@ import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.getString
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
 import com.sceyt.sceytchatuikit.extensions.runOnMainThread
-import com.sceyt.sceytchatuikit.extensions.setBoldSpan
 import com.sceyt.sceytchatuikit.extensions.setTextAndMoveSelectionEnd
 import com.sceyt.sceytchatuikit.extensions.showSoftInput
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
-import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
-import com.sceyt.sceytchatuikit.presentation.common.getShowBody
-import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.AudioMetadata
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.RecordingListener
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.SceytRecordedVoicePresenter
@@ -63,6 +56,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.InputStat
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentsViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.fragments.EditOrReplyMessageFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListenersImpl
@@ -81,10 +75,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.Bod
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytstyles.MessageInputViewStyle
-import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.AttachmentChooseType
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
-import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
 import com.vanniktech.ui.animateToGone
 import com.vanniktech.ui.animateToVisible
 import kotlinx.coroutines.Job
@@ -115,6 +107,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var inputTextWatcher: TextWatcher? = null
     private var messageInputActionCallback: MessageInputActionCallback? = null
     private val messageToSendHelper by lazy { MessageToSendHelper(context) }
+    private var ediOrReplyMessageFragment = EditOrReplyMessageFragment()
 
     var isInputHidden = false
         private set
@@ -153,12 +146,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         with(binding) {
             setUpStyle()
             setOnClickListeners()
+            if (!isInEditMode)
+                editOrReplyMessageFragment.setClickListener(clickListeners)
             addInoutListeners()
             determineInputState()
             addInputTextWatcher()
             post { onStateChanged(inputState) }
         }
     }
+
+    private val editOrReplyMessageFragment
+        get() = binding.layoutReplyOrEditMessage.getFragment<EditOrReplyMessageFragment>()
 
     private fun addInputTextWatcher() {
         inputTextWatcher = binding.messageInput.doAfterTextChanged { text ->
@@ -207,10 +205,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         icAddAttachments.setOnClickListener {
             clickListeners.onAddAttachmentClick(it)
-        }
-
-        layoutReplyOrEditMessage.icCancelReply.setOnClickListener {
-            clickListeners.onCancelReplyMessageViewClick(it)
         }
 
         btnJoin.setOnClickListener {
@@ -349,10 +343,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageInput.setHintTextColor(context.getCompatColor(MessageInputViewStyle.inputHintTextColor))
         btnJoin.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
         btnClearChat.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        with(layoutReplyOrEditMessage) {
-            icReplyOrEdit.setColorFilter(context.getCompatColorByTheme(SceytKitConfig.sceytColorAccent))
-            tvName.setTextColor(context.getCompatColorByTheme(MessageInputViewStyle.userNameTextColor))
-        }
     }
 
     private fun determineInputState() {
@@ -407,32 +397,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun cancelReply(readyCb: (() -> Unit?)? = null) {
         if (replyMessage == null && editMessage == null)
             readyCb?.invoke()
-        else {
-            ViewUtil.collapseHeight(binding.layoutReplyOrEditMessage.root, to = 1, duration = 200) {
-                binding.layoutReplyOrEditMessage.root.isVisible = false
-                context.asComponentActivity().lifecycleScope.launch { readyCb?.invoke() }
-            }
-        }
-    }
-
-    private fun loadReplyMessageImage(attachment: SceytAttachment?) {
-        attachment ?: return
-        when {
-            attachment.type.isEqualsVideoOrImage() -> {
-                val placeHolder = getThumbFromMetadata(attachment.metadata)?.toDrawable(context.resources)?.mutate()
-                Glide.with(context)
-                    .load(attachment.filePath)
-                    .placeholder(placeHolder)
-                    .override(100)
-                    .error(placeHolder)
-                    .into(binding.layoutReplyOrEditMessage.imageAttachment)
-            }
-
-            attachment.type == AttachmentTypeEnum.Voice.value() || attachment.type == AttachmentTypeEnum.Link.value() -> {
-                binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
-            }
-
-            else -> binding.layoutReplyOrEditMessage.imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
+        else editOrReplyMessageFragment.cancelReply {
+            binding.layoutReplyOrEditMessage.isVisible = false
+            readyCb?.invoke()
         }
     }
 
@@ -508,16 +475,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             determineInputState()
             if (!initWithDraft)
                 initInputWithEditMessage(message)
-            with(binding.layoutReplyOrEditMessage) {
-                isVisible = true
-                ViewUtil.expandHeight(root, 1, 200)
-                icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_edit)
-                layoutImage.isVisible = false
-                tvName.text = getString(R.string.sceyt_edit_message)
-                tvMessageBody.text = if (message.isTextMessage())
-                    MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message)
-                else message.getShowBody(context)
-            }
+            binding.layoutReplyOrEditMessage.isVisible = true
+            editOrReplyMessageFragment.editMessage(message)
             if (!initWithDraft)
                 updateDraftMessage()
         }
@@ -527,27 +486,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         checkIfRecordingAndConfirm {
             editMessage = null
             replyMessage = message.clone()
-            with(binding.layoutReplyOrEditMessage) {
-                isVisible = true
-                if (!root.isVisible || root.height <= 1)
-                    ViewUtil.expandHeight(root, 1, 200)
-                val name = message.user?.let { userNameBuilder?.invoke(it) }
-                        ?: message.user?.getPresentableName() ?: ""
-                val text = "${getString(R.string.sceyt_reply)} $name".run {
-                    setBoldSpan(length - name.length, length)
-                }
-                tvName.text = text
-                icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_input_reply)
-
-                if (!message.attachments.isNullOrEmpty()) {
-                    binding.layoutReplyOrEditMessage.layoutImage.isVisible = true
-                    loadReplyMessageImage(message.attachments?.getOrNull(0))
-                } else binding.layoutReplyOrEditMessage.layoutImage.isVisible = false
-
-                tvMessageBody.text = if (message.isTextMessage())
-                    MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message)
-                else message.getShowBody(context)
-            }
+            binding.layoutReplyOrEditMessage.isVisible = true
+            editOrReplyMessageFragment.replyMessage(message)
 
             if (!initWithDraft) {
                 context.showSoftInput(binding.messageInput)
@@ -597,7 +537,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 with(binding) {
                     if (isBlockedPeer) {
                         rvAttachments.isVisible = false
-                        layoutReplyOrEditMessage.root.isVisible = false
+                        layoutReplyOrEditMessage.isVisible = false
                     }
                     isInputHidden = if (isBlockedPeer) {
                         hideInputWithMessage(getString(R.string.sceyt_you_blocked_this_user), R.drawable.sceyt_ic_warning)
@@ -755,6 +695,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (data.isEmpty() && mentionUserContainer == null) return
         initMentionUsersContainer()
         mentionUserContainer?.setMentionList(data.toSet().take(30))
+    }
+
+    fun setCustomEditOrReplyMessageFragment(fragment: EditOrReplyMessageFragment, fragmentManager: FragmentManager) {
+        ediOrReplyMessageFragment = fragment
+        fragment.setClickListener(clickListeners)
+        fragmentManager.commit {
+            replace(R.id.layoutReplyOrEditMessage, ediOrReplyMessageFragment)
+        }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
