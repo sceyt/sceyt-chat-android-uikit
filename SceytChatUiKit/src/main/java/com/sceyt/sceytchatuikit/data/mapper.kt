@@ -7,6 +7,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageDb
@@ -26,7 +27,8 @@ fun SceytMember.toMember(): Member {
     return Member(role, user)
 }
 
-fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState, progress: Float = 0f) = SceytAttachment(
+fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState, progress: Float = 0f,
+                                 linkPreviewDetails: LinkPreviewDetails? = null) = SceytAttachment(
     id = id,
     messageTid = messageTid,
     messageId = messageId,
@@ -40,7 +42,8 @@ fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState,
     filePath = filePath,
     transferState = transferState,
     progressPercent = progress,
-    originalFilePath = filePath
+    originalFilePath = filePath,
+    linkPreviewDetails = linkPreviewDetails
 )
 
 

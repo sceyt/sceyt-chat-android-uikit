@@ -6,59 +6,62 @@ import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.databinding.SceytMessageLinkPreviewContainerBinding
 import com.sceyt.sceytchatuikit.extensions.setTextAndVisibility
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
-abstract class BaseLinkMsgViewHolder(private val linkPreview: LinkPreviewHelper,
-                                     view: View,
-                                     messageListeners: MessageClickListeners.ClickListeners? = null,
-                                     displayListItem: ((MessageListItem) -> Unit)? = null,
-                                     userNameBuilder: ((User) -> String)? = null)
-    : BaseMsgViewHolder(view, messageListeners, displayListItem, userNameBuilder) {
+abstract class BaseLinkMsgViewHolder(
+        private val linkPreview: LinkPreviewHelper,
+        view: View,
+        messageListeners: MessageClickListeners.ClickListeners? = null,
+        displayedListener: ((MessageListItem) -> Unit)? = null,
+        userNameBuilder: ((User) -> String)? = null,
+) : BaseMsgViewHolder(view, messageListeners, displayedListener, userNameBuilder) {
 
-    fun loadLinkPreview(message: MessageListItem.MessageItem, layoutLinkPreview: SceytMessageLinkPreviewContainerBinding, messageBody: TextView) {
-        if (message.linkPreviewData == null) {
+    fun loadLinkPreview(message: SceytAttachment, layoutLinkPreview: SceytMessageLinkPreviewContainerBinding, messageBody: TextView) {
+        if (message.linkPreviewDetails == null) {
 
-            layoutLinkPreview.setLinPreview(null, messageBody, message.message)
+            layoutLinkPreview.setLinPreview(null, messageBody, message)
 
-            linkPreview.getPreview(message.message.id, message.message.body, successListener = {
-                message.linkPreviewData = it
-
-                layoutLinkPreview.setLinPreview(message.linkPreviewData, messageBody, message.message)
+            linkPreview.getPreview(message, successListener = {
+                message.linkPreviewDetails = it
+                layoutLinkPreview.setLinPreview(it, messageBody, message)
             })
-        } else layoutLinkPreview.setLinPreview(message.linkPreviewData, messageBody, message.message)
+        } else layoutLinkPreview.setLinPreview(message.linkPreviewDetails, messageBody, message)
     }
 
-    private fun SceytMessageLinkPreviewContainerBinding.setLinPreview(data: LinkPreviewHelper.PreviewMetaData?,
+    private fun SceytMessageLinkPreviewContainerBinding.setLinPreview(data: LinkPreviewDetails?,
                                                                       messageBody: TextView,
-                                                                      message: SceytMessage) {
+                                                                      message: SceytAttachment) {
         when {
             data == null -> {
                 root.isVisible = false
             }
-            data.messageId != message.id -> {
+
+            data.link != message.url -> {
                 return
             }
-            data.title.isNullOrBlank() && data.description.isNullOrBlank() && data.imageUrl.isNullOrBlank() -> {
+
+            data.description.isNullOrBlank() && data.description.isNullOrBlank() && data.imageUrl.isNullOrBlank() -> {
                 root.isVisible = false
             }
+
             else -> {
                 if (data.imageUrl.isNullOrBlank().not()) {
                     Glide.with(context)
                         .load(data.imageUrl)
-                        .override(previewImage.width)
                         .transition(DrawableTransitionOptions.withCrossFade(100))
                         .into(previewImage)
                     previewImage.isVisible = true
                 } else previewImage.isVisible = false
 
-                tvLinkTitle.setTextAndVisibility(data.title)
+                tvLinkTitle.setTextAndVisibility(data.description)
                 tvLinkDesc.setTextAndVisibility(data.description)
-                messageBody.text = message.body.trim()
+                // messageBody.text = message.body.trim()
                 root.isVisible = true
             }
         }

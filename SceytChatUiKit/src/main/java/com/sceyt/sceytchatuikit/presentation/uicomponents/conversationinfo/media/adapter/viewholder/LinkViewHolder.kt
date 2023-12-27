@@ -1,11 +1,12 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder
 
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
 import com.sceyt.sceytchatuikit.R
+import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
+import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelLinkBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
@@ -21,7 +22,6 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
                      private val linkPreview: LinkPreviewHelper?,
                      private val clickListener: AttachmentClickListenersImpl
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, {}) {
-
 
     init {
         binding.setupStyle()
@@ -40,36 +40,40 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
 
             tvLinkUrl.text = attachment.url
 
-            if ((fileItem as ChannelFileItem.Link).linkPreviewMetaData == null) {
-                setLinkInfo(null)
-                linkPreview?.getPreview(attachment.messageTid, attachment.url.toString(), successListener = {
-                    if (it.messageId == fileItem.file.messageTid) {
-                        (fileItem as ChannelFileItem.Link).linkPreviewMetaData = it
-                        setLinkInfo(it)
-                    }
+            if ((attachment).linkPreviewDetails == null) {
+                setLinkInfo(null, attachment)
+                linkPreview?.getPreview(attachment, successListener = {
+                    setLinkInfo(it, attachment)
                 })
-            } else setLinkInfo((fileItem as ChannelFileItem.Link).linkPreviewMetaData)
+            } else setLinkInfo(attachment.linkPreviewDetails, attachment)
         }
     }
 
-    private fun SceytItemChannelLinkBinding.setLinkInfo(data: LinkPreviewHelper.PreviewMetaData?) {
-        if (data == null || viewHolderHelper.isFileItemInitialized.not() || data.messageId != fileItem.file.messageTid) {
+    private fun SceytItemChannelLinkBinding.setLinkInfo(data: LinkPreviewDetails?, attachment: SceytAttachment) {
+        if (data == null || viewHolderHelper.isFileItemInitialized.not() || data.link != attachment.url) {
             tvLinkName.text = ""
             tvLinkName.isVisible = false
+            tvLinkDescription.isVisible = false
             setDefaultStateLinkImage()
         } else {
-            val title = if (data.siteName.isNullOrBlank()) data.title else data.siteName
-            tvLinkName.text = title
-            tvLinkName.isVisible = title.isNullOrBlank().not()
+            attachment.linkPreviewDetails = data
+            tvLinkName.apply {
+                text = data.siteName?.trim()
+                isVisible = data.siteName.isNullOrBlank().not()
+            }
+
+            tvLinkDescription.apply {
+                text = data.description?.trim()
+                isVisible = data.description.isNullOrBlank().not()
+            }
 
             Glide.with(root.context)
-                .load(if (data.favicon.isNullOrBlank().not()) data.favicon else data.imageUrl)
-                .placeholder(R.drawable.sceyt_ic_link_with_background)
+                .load(if (data.faviconUrl.isNullOrBlank().not()) data.faviconUrl else data.imageUrl)
+                .placeholder(defaultImage)
                 .listener(glideRequestListener { success ->
                     if (success) {
                         icLinkImage.background = ColorDrawable(Color.TRANSPARENT)
                     } else {
-                        icLinkImage.setImageResource(R.drawable.sceyt_ic_link_with_background)
                         setDefaultStateLinkImage()
                     }
                 })
@@ -78,13 +82,16 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
     }
 
     private fun setDefaultStateLinkImage() {
-        binding.icLinkImage.setImageResource(R.drawable.sceyt_ic_link_with_background)
-        binding.icLinkImage.background = context.getCompatDrawable(R.drawable.sceyt_bg_corners_8)?.apply {
-            setTint(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        binding.icLinkImage.setImageDrawable(defaultImage)
+    }
+
+    private val defaultImage by lazy {
+        binding.root.context.getCompatDrawable(R.drawable.sceyt_ic_link)?.apply {
+            setTint(binding.root.context.getCompatColor(SceytKitConfig.sceytColorAccent))
         }
     }
 
     private fun SceytItemChannelLinkBinding.setupStyle() {
-        icLinkImage.backgroundTintList = ColorStateList.valueOf(itemView.context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        tvLinkUrl.setTextColor(itemView.context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 }
