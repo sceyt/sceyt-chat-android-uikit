@@ -4,13 +4,10 @@ import androidx.room.Embedded
 import androidx.room.Relation
 import com.sceyt.sceytchatuikit.persistence.entity.link.LinkDetailsEntity
 
-data class AttachmentDb(
+data class AttachmentPayLoadDb(
         @Embedded
-        val attachmentEntity: AttachmentEntity,
-
-        @Relation(parentColumn = "messageTid", entityColumn = "messageTid")
-        val payLoad: AttachmentPayLoadEntity?,
+        val payLoadEntity: AttachmentPayLoadEntity,
 
         @Relation(parentColumn = "url", entityColumn = "link")
-        val linkDetails: LinkDetailsEntity?,
+        val linkPreviewDetails: LinkDetailsEntity?
 )

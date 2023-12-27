@@ -3,49 +3,69 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:paddingHorizontal="12dp">
+    android:layout_height="wrap_content">
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/previewImage"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:scaleType="centerCrop"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/tvLinkTitle"
+        app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize17" />
+        app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerTop17Bottom5"
+        tools:src="@tools:sample/backgrounds/scenic"
+        tools:visibility="visible" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvLinkUrl"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginTop="8dp"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:textColor="@color/colorAccent"
+        android:textSize="@dimen/mediumTextSize"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/previewImage"
+        tools:text="https://www.youtube.com/watch?v=sLxN" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvLinkTitle"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
         android:ellipsize="end"
+        android:fontFamily="@font/roboto_medium"
         android:singleLine="true"
         android:textColor="@color/sceyt_color_text_themed"
-        android:textSize="@dimen/mediumTextSize"
-        android:textStyle="bold"
+        android:textSize="14sp"
         app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toTopOf="@+id/tvLinkDesc"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/previewImage"
+        app:layout_constraintEnd_toEndOf="@+id/tvLinkUrl"
+        app:layout_constraintStart_toStartOf="@+id/tvLinkUrl"
+        app:layout_constraintTop_toBottomOf="@+id/tvLinkUrl"
         tools:text="Link preview info title" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvLinkDesc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="4dp"
         android:ellipsize="end"
         android:maxLines="3"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_gray_secondary"
         android:textSize="@dimen/smallTextSize"
         app:layout_constrainedWidth="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/tvLinkUrl"
+        app:layout_constraintStart_toStartOf="@+id/tvLinkUrl"
         app:layout_constraintTop_toBottomOf="@+id/tvLinkTitle"
-        tools:text="Link preview info descriptiondescriptiondescriptiondescriptiondescription" />
+        tools:text="Link preview info descriptiondescriptiond escriptiondescriptiondescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

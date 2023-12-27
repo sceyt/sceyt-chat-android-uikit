@@ -40,8 +40,7 @@ fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, channelId:
         fileSize = fileSize,
         url = url,
         filePath = filePath,
-        originalFilePath = originalFilePath), null
-)
+        originalFilePath = originalFilePath), null, null)
 
 fun AttachmentDb.toAttachment(): SceytAttachment {
     with(attachmentEntity) {
@@ -60,7 +59,8 @@ fun AttachmentDb.toAttachment(): SceytAttachment {
             filePath = if (isLink) null else payLoad?.filePath ?: filePath,
             transferState = if (isLink) TransferState.PendingDownload else payLoad?.transferState,
             progressPercent = if (isLink) 0f else payLoad?.progressPercent,
-            originalFilePath = if (isLink) null else originalFilePath)
+            originalFilePath = if (isLink) null else originalFilePath,
+            linkPreviewDetails = linkDetails?.toLinkDetails())
     }
 }
 

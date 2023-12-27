@@ -45,7 +45,7 @@ import com.sceyt.sceytchatuikit.persistence.dao.PendingMessageStateDao
 import com.sceyt.sceytchatuikit.persistence.dao.ReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.UserEntity
-import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.pendings.PendingMarkerEntity
@@ -60,6 +60,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChan
 import com.sceyt.sceytchatuikit.persistence.logics.reactionslogic.PersistenceReactionsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.addAttachmentMetadata
 import com.sceyt.sceytchatuikit.persistence.mappers.existThumb
+import com.sceyt.sceytchatuikit.persistence.mappers.toLinkDetails
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageEntity
@@ -769,20 +770,23 @@ internal class PersistenceMessagesLogicImpl(
             hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb, dbResultWasEmpty = dbResultWasEmpty)
     }
 
-    private fun findAndUpdateAttachmentPayLoads(message: SceytMessage, payloads: List<AttachmentPayLoadEntity>) {
-        payloads.filter { payLoad -> payLoad.messageTid == message.tid }.let { entity ->
+    private fun findAndUpdateAttachmentPayLoads(message: SceytMessage, payloads: List<AttachmentPayLoadDb>) {
+        payloads.filter { payLoad -> payLoad.payLoadEntity.messageTid == message.tid }.let { entity ->
             message.attachments?.forEach { attachment ->
-                val predicate: (AttachmentPayLoadEntity) -> Boolean = if (attachment.url.isNotNullOrBlank()) {
-                    { entity.any { it.url == attachment.url } }
+                val predicate: (AttachmentPayLoadDb) -> Boolean = if (attachment.url.isNotNullOrBlank()) {
+                    { entity.any { it.payLoadEntity.url == attachment.url } }
                 } else {
-                    { entity.any { it.filePath == attachment.filePath } }
+                    { entity.any { it.payLoadEntity.filePath == attachment.filePath } }
                 }
 
                 payloads.find(predicate)?.let {
-                    attachment.transferState = it.transferState
-                    attachment.progressPercent = it.progressPercent
-                    attachment.filePath = it.filePath
-                    attachment.url = it.url
+                    with(it.payLoadEntity) {
+                        attachment.transferState = transferState
+                        attachment.progressPercent = progressPercent
+                        attachment.filePath = filePath
+                        attachment.url = url
+                    }
+                    attachment.linkPreviewDetails = it.linkPreviewDetails?.toLinkDetails()
                 }
             }
         }

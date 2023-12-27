@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
+import com.sceyt.chat.models.link.LinkDetails
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentPayLoadData
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
@@ -22,6 +23,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoad
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
+import com.sceyt.sceytchatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.sceytchatuikit.presentation.common.diffContent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageComparator
 import kotlinx.coroutines.channels.BufferOverflow
@@ -294,6 +296,18 @@ class MessagesCache {
                             return@att
                         attachment.filePath = path
                         attachment.metadata = metadata
+                    }
+                }
+            }
+        }
+    }
+
+    fun updateAttachmentLinkDetails(link: String, messageTid: Long, data: LinkDetails) {
+        synchronized(lock) {
+            cachedMessages.values.forEach { messageHashMap ->
+                messageHashMap[messageTid]?.let { message ->
+                    message.attachments?.find { it.url == link }?.let { attachment ->
+                        attachment.linkPreviewDetails = data.toLinkPreviewDetails(link)
                     }
                 }
             }
