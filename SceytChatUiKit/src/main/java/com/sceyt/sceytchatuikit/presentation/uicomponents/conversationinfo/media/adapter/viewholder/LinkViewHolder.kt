@@ -67,31 +67,36 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
                 isVisible = data.description.isNullOrBlank().not()
             }
 
-            Glide.with(root.context)
-                .load(if (data.faviconUrl.isNullOrBlank().not()) data.faviconUrl else data.imageUrl)
-                .placeholder(defaultImage)
-                .listener(glideRequestListener { success ->
-                    if (success) {
-                        icLinkImage.background = ColorDrawable(Color.TRANSPARENT)
-                    } else {
-                        setDefaultStateLinkImage()
-                    }
-                })
-                .into(icLinkImage)
+            val linkUrl = if (data.faviconUrl.isNullOrBlank().not()) data.faviconUrl else data.imageUrl
+            if (linkUrl.isNullOrBlank()) {
+                setDefaultStateLinkImage()
+            } else
+                Glide.with(root.context)
+                    .load(linkUrl)
+                    .placeholder(defaultImage)
+                    .listener(glideRequestListener { success ->
+                        if (success) {
+                            icLinkImage.background = ColorDrawable(Color.TRANSPARENT)
+                        } else {
+                            setDefaultStateLinkImage()
+                        }
+                    })
+                    .into(icLinkImage)
         }
     }
 
     private fun setDefaultStateLinkImage() {
         binding.icLinkImage.setImageDrawable(defaultImage)
+        binding.icLinkImage.setBackgroundColor(context.getCompatColor(R.color.sceyt_color_gray))
     }
 
     private val defaultImage by lazy {
-        binding.root.context.getCompatDrawable(R.drawable.sceyt_ic_link)?.apply {
-            setTint(binding.root.context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        context.getCompatDrawable(R.drawable.sceyt_ic_link)?.apply {
+            setTint(context.getCompatColor(SceytKitConfig.sceytColorAccent))
         }
     }
 
     private fun SceytItemChannelLinkBinding.setupStyle() {
-        tvLinkUrl.setTextColor(itemView.context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        tvLinkUrl.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 }
