@@ -101,7 +101,7 @@ class MessageToSendHelper(private val context: Context) {
 
     private fun checkIsEditingMessage(body: CharSequence, editMessage: SceytMessage?): Boolean {
         editMessage?.let { message ->
-            val linkAttachment = getLinkAttachmentFromBody(body)?.toSceytAttachment(message.tid, TransferState.Uploaded)
+            val linkAttachment = getLinkAttachmentFromBody(body)?.toSceytAttachment(message.tid, TransferState.Uploaded, linkPreviewDetails = null)
             message.body = body.toString()
 
             if (linkAttachment != null)

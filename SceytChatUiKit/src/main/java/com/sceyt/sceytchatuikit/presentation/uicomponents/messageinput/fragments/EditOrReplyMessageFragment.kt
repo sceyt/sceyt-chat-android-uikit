@@ -21,7 +21,7 @@ import com.sceyt.sceytchatuikit.extensions.setBoldSpan
 import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.sceytchatuikit.presentation.common.getShowBody
 import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CancelReplyMessageViewClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytstyles.MessageInputViewStyle
@@ -30,7 +30,7 @@ import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
 
 open class EditOrReplyMessageFragment : Fragment() {
     protected var binding: SceytFragmentEditOrReplyMessageBinding? = null
-    protected var clickListeners: MessageInputClickListeners.CloseReplyMessageViewClickListener? = null
+    protected var clickListeners: CancelReplyMessageViewClickListener? = null
     protected var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -55,7 +55,8 @@ open class EditOrReplyMessageFragment : Fragment() {
     open fun editMessage(message: SceytMessage) {
         with(binding ?: return) {
             root.isVisible = true
-            ViewUtil.expandHeight(root, 1, 200)
+            if (!root.isVisible || root.height <= 1)
+                ViewUtil.expandHeight(root, 1, 200)
             icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_edit)
             layoutImage.isVisible = false
             tvName.text = getString(R.string.sceyt_edit_message)
@@ -98,7 +99,7 @@ open class EditOrReplyMessageFragment : Fragment() {
         }
     }
 
-    open fun setClickListener(clickListeners: MessageInputClickListeners.CloseReplyMessageViewClickListener) {
+    open fun setClickListener(clickListeners: CancelReplyMessageViewClickListener) {
         this.clickListeners = clickListeners
     }
 

@@ -16,6 +16,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
+import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
@@ -57,6 +58,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentsViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.fragments.EditOrReplyMessageFragment
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.fragments.LinkPreviewFragment
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.link.LinkDetailsProvider
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListenersImpl
@@ -107,7 +110,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var inputTextWatcher: TextWatcher? = null
     private var messageInputActionCallback: MessageInputActionCallback? = null
     private val messageToSendHelper by lazy { MessageToSendHelper(context) }
-    private var ediOrReplyMessageFragment = EditOrReplyMessageFragment()
+    private val linkDetailsProvider by lazy { LinkDetailsProvider(context.asComponentActivity().lifecycleScope) }
 
     var isInputHidden = false
         private set
@@ -146,8 +149,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         with(binding) {
             setUpStyle()
             setOnClickListeners()
-            if (!isInEditMode)
+            if (!isInEditMode) {
                 editOrReplyMessageFragment.setClickListener(clickListeners)
+                linkPreviewFragment.setClickListener(clickListeners)
+            }
             addInoutListeners()
             determineInputState()
             addInputTextWatcher()
@@ -157,6 +162,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private val editOrReplyMessageFragment
         get() = binding.layoutReplyOrEditMessage.getFragment<EditOrReplyMessageFragment>()
+
+    private val linkPreviewFragment
+        get() = binding.layoutLinkPreview.getFragment<LinkPreviewFragment>()
 
     private fun addInputTextWatcher() {
         inputTextWatcher = binding.messageInput.doAfterTextChanged { text ->
@@ -179,6 +187,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         typingDebounceHelper.submit {
             messageInputActionCallback?.typing(text.isNullOrBlank().not())
             updateDraftMessage()
+            tryToLoadLinkPreview(text)
+        }
+    }
+
+    private fun hideLinkPreview() {
+        linkPreviewFragment.hideLinkDetails {
+            binding.layoutLinkPreview.isVisible = false
+            return@hideLinkDetails Unit
         }
     }
 
@@ -188,6 +204,19 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         with(binding.messageInput) {
             messageInputActionCallback?.updateDraftMessage(text, mentions, styling, replyOrEditMessage, isReply)
         }
+    }
+
+    private fun tryToLoadLinkPreview(text: Editable?) {
+        if (text.isNullOrBlank()) {
+            hideLinkPreview()
+            linkDetailsProvider.cancel()
+        } else
+            linkDetailsProvider.loadLinkDetails(text.toString()) {
+                if (it != null) {
+                    binding.layoutLinkPreview.isVisible = true
+                    linkPreviewFragment.showLinkDetails(it)
+                } else hideLinkPreview()
+            }
     }
 
     private fun SceytMessageInputViewBinding.setOnClickListeners() {
@@ -698,10 +727,16 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun setCustomEditOrReplyMessageFragment(fragment: EditOrReplyMessageFragment, fragmentManager: FragmentManager) {
-        ediOrReplyMessageFragment = fragment
         fragment.setClickListener(clickListeners)
         fragmentManager.commit {
-            replace(R.id.layoutReplyOrEditMessage, ediOrReplyMessageFragment)
+            replace(R.id.layoutReplyOrEditMessage, fragment)
+        }
+    }
+
+    fun setCustomLinkPreviewFragment(fragment: LinkPreviewFragment, fragmentManager: FragmentManager) {
+        fragment.setClickListener(clickListeners)
+        fragmentManager.commit {
+            replace(R.id.layoutLinkPreview, linkPreviewFragment)
         }
     }
 
@@ -729,6 +764,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onCancelReplyMessageViewClick(view: View) {
         cancelReply()
         reset(replyMessage == null)
+    }
+
+    override fun onCancelLinkPreviewClick(view: View) {
+        //todo
     }
 
     override fun onRemoveAttachmentClick(item: AttachmentItem) {

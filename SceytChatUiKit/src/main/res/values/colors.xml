@@ -18,6 +18,8 @@
     <color name="sceyt_color_input">#F1F2F6</color>
     <color name="sceyt_color_dialog_bg_themed">#FFFFFF</color>
     <color name="sceyt_color_light_themed">#FFFFFFFF</color>
+    <color name="sceyt_color_gray_themed">#E8E9EE</color>
+    <color name="sceyt_color_image_bg_themed">#E8E9EE</color>
 
     // Not themed colors
     <color name="colorAccent">#5159F6</color>
