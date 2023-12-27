@@ -80,7 +80,7 @@ class AttachmentsRepositoryImpl : AttachmentsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "getLinkPreviewData error: ${e?.message}")
+                    SceytLog.e(TAG, "getLinkPreviewData error: ${e?.message}, for link: $link")
                 }
             })
         }
