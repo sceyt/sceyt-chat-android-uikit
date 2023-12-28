@@ -6,7 +6,8 @@
     android:layout_height="wrap_content"
     android:background="@color/sceyt_color_gray_themed"
     android:clipToPadding="false"
-    android:padding="8dp">
+    android:paddingVertical="10dp"
+    android:paddingHorizontal="16dp">
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/icLinkImage"
