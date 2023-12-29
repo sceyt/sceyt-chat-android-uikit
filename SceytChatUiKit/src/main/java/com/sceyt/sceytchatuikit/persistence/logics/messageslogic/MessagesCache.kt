@@ -1,9 +1,9 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
-import com.sceyt.chat.models.link.LinkDetails
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentPayLoadData
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
@@ -23,7 +23,6 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoad
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
-import com.sceyt.sceytchatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.sceytchatuikit.presentation.common.diffContent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageComparator
 import kotlinx.coroutines.channels.BufferOverflow
@@ -31,6 +30,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 
 class MessagesCache {
+    @Volatile
     private var cachedMessages = hashMapOf<Long, HashMap<Long, SceytMessage>>()
     private val lock = Any()
 
@@ -193,7 +193,8 @@ class MessagesCache {
         fun setPayloads(message: SceytMessage): SceytMessage? {
             val cashedMessage = getMessageByTid(channelId, message.tid)
             val attachmentPayLoadData = getAttachmentPayLoads(cashedMessage)
-            updateAttachmentsPayLoads(attachmentPayLoadData, message)
+            val attachmentsLinkDetails = getAttachmentLinkDetails(cashedMessage)
+            updateAttachmentsPayLoads(attachmentPayLoadData, attachmentsLinkDetails, message)
             return cashedMessage
         }
 
@@ -208,10 +209,16 @@ class MessagesCache {
         messageToUpdate.pendingReactions = pendingReactions.toList()
     }
 
-    private fun updateAttachmentsPayLoads(payloadData: List<AttachmentPayLoadData>?, message: SceytMessage) {
+    private fun updateAttachmentsPayLoads(payloadData: List<AttachmentPayLoadData>?,
+                                          attachmentsLinkDetails: List<LinkPreviewDetails>?, message: SceytMessage) {
         payloadData?.filter { payLoad -> payLoad.messageTid == message.tid }?.let { data ->
             message.attachments?.forEach { attachment ->
-                if (attachment.type == AttachmentTypeEnum.Link.value()) return@forEach
+                if (attachment.type == AttachmentTypeEnum.Link.value()) {
+                    attachmentsLinkDetails?.find { it.url == attachment.url }?.let {
+                        attachment.linkPreviewDetails = it
+                    }
+                    return@forEach
+                }
                 val predicate: (AttachmentPayLoadData) -> Boolean = if (attachment.url.isNotNullOrBlank()) {
                     { data.any { it.url == attachment.url } }
                 } else {
@@ -240,6 +247,13 @@ class MessagesCache {
         return payloads
     }
 
+    private fun getAttachmentLinkDetails(cashedMessage: SceytMessage?): List<LinkPreviewDetails>? {
+        val payloads = cashedMessage?.attachments?.filter { it.type == AttachmentTypeEnum.Link.value() }?.mapNotNull { attachment ->
+            attachment.linkPreviewDetails
+        }
+        return payloads
+    }
+
     private fun putAndCheckHasDiff(channelId: Long, includeNotExistToDiff: Boolean, vararg messages: SceytMessage): Boolean {
         var detectedDiff = false
         messages.forEach {
@@ -251,6 +265,14 @@ class MessagesCache {
             updateMessage(channelId, it, false)
         }
         return detectedDiff
+    }
+
+    private fun getAllAttachmentsWithLink(link: String): List<SceytAttachment> {
+        return cachedMessages.values.flatMap { messageHashMap ->
+            messageHashMap.values.flatMap {
+                it.attachments?.filter { attachment -> attachment.url == link } ?: emptyList()
+            }
+        }
     }
 
     fun updateAttachmentTransferData(updateDate: TransferData) {
@@ -302,14 +324,27 @@ class MessagesCache {
         }
     }
 
-    fun updateAttachmentLinkDetails(link: String, messageTid: Long, data: LinkDetails) {
+    fun updateAttachmentLinkDetails(data: LinkPreviewDetails) {
         synchronized(lock) {
-            cachedMessages.values.forEach { messageHashMap ->
-                messageHashMap[messageTid]?.let { message ->
-                    message.attachments?.find { it.url == link }?.let { attachment ->
-                        attachment.linkPreviewDetails = data.toLinkPreviewDetails(link)
-                    }
-                }
+            getAllAttachmentsWithLink(data.link).forEach { attachment ->
+                attachment.linkPreviewDetails = data
+            }
+        }
+    }
+
+    fun updateLinkDetailsSize(link: String, width: Int, height: Int) {
+        synchronized(lock) {
+            getAllAttachmentsWithLink(link).forEach { attachment ->
+                attachment.linkPreviewDetails?.imageWidth = width
+                attachment.linkPreviewDetails?.imageHeight = height
+            }
+        }
+    }
+
+    fun updateThumb(link: String, thumb: String) {
+        synchronized(lock) {
+            getAllAttachmentsWithLink(link).forEach { attachment ->
+                attachment.linkPreviewDetails?.thumb = thumb
             }
         }
     }

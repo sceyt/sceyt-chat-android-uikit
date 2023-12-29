@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.persistence
 
-import com.sceyt.chat.models.link.LinkDetails
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
@@ -28,6 +27,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.sceytchatuikit.data.models.messages.FileChecksumData
+import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -410,8 +410,12 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return attachmentsLogic.getFileChecksumData(filePath)
     }
 
-    override suspend fun getLinkPreviewData(link: String?, messageTid: Long): SceytResponse<LinkDetails> {
-        return attachmentsLogic.getLinkPreviewData(link, messageTid)
+    override suspend fun getLinkPreviewData(link: String?): SceytResponse<LinkPreviewDetails> {
+        return attachmentsLogic.getLinkPreviewData(link)
+    }
+
+    override suspend fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails) {
+        attachmentsLogic.upsertLinkPreviewData(linkDetails)
     }
 
     override suspend fun loadUsers(query: String): SceytResponse<List<User>> {

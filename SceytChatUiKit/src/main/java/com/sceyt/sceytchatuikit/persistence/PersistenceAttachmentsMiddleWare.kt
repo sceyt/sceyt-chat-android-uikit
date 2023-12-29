@@ -1,11 +1,11 @@
 package com.sceyt.sceytchatuikit.persistence
 
-import com.sceyt.chat.models.link.LinkDetails
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.sceytchatuikit.data.models.messages.FileChecksumData
+import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadDb
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -27,5 +27,6 @@ interface PersistenceAttachmentsMiddleWare {
     suspend fun updateAttachmentWithTransferData(data: TransferData)
     suspend fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?)
     suspend fun getFileChecksumData(filePath: String?): FileChecksumData?
-    suspend fun getLinkPreviewData(link: String?, messageTid: Long): SceytResponse<LinkDetails>
+    suspend fun getLinkPreviewData(link: String?): SceytResponse<LinkPreviewDetails>
+    suspend fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails)
 }

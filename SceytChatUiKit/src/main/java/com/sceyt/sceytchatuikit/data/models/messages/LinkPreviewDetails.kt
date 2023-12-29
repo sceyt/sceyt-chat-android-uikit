@@ -6,11 +6,13 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class LinkPreviewDetails(
         val link: String,
+        val title: String?,
         val url: String?,
         val description: String?,
-        var siteName: String?,
-        var faviconUrl: String?,
+        val siteName: String?,
+        val faviconUrl: String?,
         val imageUrl: String?,
-        val imageWidth: Int?,
-        val imageHeight: Int?,
+        var imageWidth: Int?,
+        var imageHeight: Int?,
+        var thumb: String?
 ) : Parcelable

@@ -27,9 +27,9 @@ import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytMessageInputViewBinding
-import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
@@ -59,7 +59,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentsViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.fragments.EditOrReplyMessageFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.fragments.LinkPreviewFragment
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.link.LinkDetailsProvider
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.link.SingleLinkDetailsProvider
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.AttachmentClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListenersImpl
@@ -90,7 +90,7 @@ import java.io.File
 
 class MessageInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners,
-        SelectFileTypePopupClickListeners.ClickListeners, InputEventsListener.InputEventListeners, SceytKoinComponent {
+        SelectFileTypePopupClickListeners.ClickListeners, InputEventsListener.InputEventListeners {
 
     private lateinit var attachmentsAdapter: AttachmentsAdapter
     private var allAttachments = mutableListOf<Attachment>()
@@ -110,7 +110,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var inputTextWatcher: TextWatcher? = null
     private var messageInputActionCallback: MessageInputActionCallback? = null
     private val messageToSendHelper by lazy { MessageToSendHelper(context) }
-    private val linkDetailsProvider by lazy { LinkDetailsProvider(context.asComponentActivity().lifecycleScope) }
+    private val linkDetailsProvider by lazy { SingleLinkDetailsProvider(context, context.asComponentActivity().lifecycleScope) }
 
     var isInputHidden = false
         private set
@@ -119,6 +119,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     var replyMessage: SceytMessage? = null
         private set
     var replyThreadMessageId: Long? = null
+        private set
+    var linkDetails: LinkPreviewDetails? = null
         private set
 
     init {
@@ -192,6 +194,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun hideLinkPreview() {
+        linkDetails = null
         linkPreviewFragment.hideLinkDetails {
             binding.layoutLinkPreview.isVisible = false
             return@hideLinkDetails Unit
@@ -211,12 +214,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             hideLinkPreview()
             linkDetailsProvider.cancel()
         } else
-            linkDetailsProvider.loadLinkDetails(text.toString()) {
+            linkDetailsProvider.loadLinkDetails(text.toString(), detailsCallback = {
                 if (it != null) {
                     binding.layoutLinkPreview.isVisible = true
                     linkPreviewFragment.showLinkDetails(it)
+                    linkDetails = it
                 } else hideLinkPreview()
-            }
+            }, imageSizeCallback = { size ->
+                linkDetails = linkDetails?.copy(imageWidth = size.width, imageHeight = size.height)
+            }, thumbCallback = {
+                linkDetails = linkDetails?.copy(thumb = it)
+            })
     }
 
     private fun SceytMessageInputViewBinding.setOnClickListeners() {
@@ -270,9 +278,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             return
         }
 
-        cancelReply {
-            messageToSendHelper.sendMessage(allAttachments, body, editMessage, replyMessage, replyThreadMessageId)
-            reset()
+        closeReplyOrEditView {
+            messageToSendHelper.sendMessage(allAttachments, body, editMessage, replyMessage,
+                replyThreadMessageId, linkDetails)
+            reset(clearInput = true, closeLinkPreview = true)
         }
     }
 
@@ -423,11 +432,20 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         return allAttachments.map { it.filePath }.contains(path)
     }
 
-    private fun cancelReply(readyCb: (() -> Unit?)? = null) {
+    private fun closeReplyOrEditView(readyCb: (() -> Unit?)? = null) {
         if (replyMessage == null && editMessage == null)
             readyCb?.invoke()
-        else editOrReplyMessageFragment.cancelReply {
+        else editOrReplyMessageFragment.close {
             binding.layoutReplyOrEditMessage.isVisible = false
+            readyCb?.invoke()
+        }
+    }
+
+    private fun closeLinkDetailsView(readyCb: (() -> Unit?)? = null) {
+        if (linkDetails == null)
+            readyCb?.invoke()
+        else linkPreviewFragment.hideLinkDetails {
+            binding.layoutLinkPreview.isVisible = false
             readyCb?.invoke()
         }
     }
@@ -631,10 +649,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     @SuppressWarnings("WeakerAccess")
-    fun reset(clearInput: Boolean = true) {
+    fun reset(clearInput: Boolean, closeLinkPreview: Boolean) {
         if (clearInput)
             binding.messageInput.text = null
-        cancelReply()
+        closeReplyOrEditView()
+        if (closeLinkPreview)
+            closeLinkDetailsView()
         editMessage = null
         replyMessage = null
         allAttachments.clear()
@@ -678,9 +698,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun getComposedMessage() = binding.messageInput.text
 
     interface MessageInputActionCallback {
-        fun sendMessage(message: Message)
-        fun sendMessages(message: List<Message>)
-        fun sendEditMessage(message: SceytMessage)
+        fun sendMessage(message: Message, linkDetails: LinkPreviewDetails?)
+        fun sendMessages(message: List<Message>, linkDetails: LinkPreviewDetails?)
+        fun sendEditMessage(message: SceytMessage, linkDetails: LinkPreviewDetails?)
         fun typing(typing: Boolean)
         fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, styling: List<BodyStyleRange>?,
                                replyOrEditMessage: SceytMessage?, isReply: Boolean)
@@ -762,12 +782,12 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onCancelReplyMessageViewClick(view: View) {
-        cancelReply()
-        reset(replyMessage == null)
+        closeReplyOrEditView()
+        reset(replyMessage == null, false)
     }
 
     override fun onCancelLinkPreviewClick(view: View) {
-        //todo
+        closeLinkDetailsView()
     }
 
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
@@ -845,12 +865,15 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             rvAttachments.isVisible = !isMultiselectMode && allAttachments.isNotEmpty()
             if (isMultiselectMode) {
                 hideAndStopVoiceRecorder()
-                cancelReply()
+                closeReplyOrEditView()
+                closeLinkDetailsView()
                 btnClearChat.animateToVisible(150)
             } else {
-                when {
-                    replyMessage != null -> replyMessage(replyMessage!!, initWithDraft = true)
-                    editMessage != null -> editMessage(editMessage!!, initWithDraft = true)
+                replyMessage?.let { replyMessage(it, initWithDraft = true) }
+                editMessage?.let { editMessage(it, initWithDraft = true) }
+                linkDetails?.let {
+                    binding.layoutLinkPreview.isVisible = true
+                    linkPreviewFragment.showLinkDetails(it)
                 }
                 btnClearChat.animateToGone(150)
             }

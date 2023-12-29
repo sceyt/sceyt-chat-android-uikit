@@ -98,7 +98,7 @@ class MessageListViewModel(
     private val persistenceMessageMiddleWare: PersistenceMessagesMiddleWare by inject()
     internal val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
     private val persistenceReactionsMiddleWare: PersistenceReactionsMiddleWare by inject()
-    private val persistenceAttachmentMiddleWare: PersistenceAttachmentsMiddleWare by inject()
+    internal val persistenceAttachmentMiddleWare: PersistenceAttachmentsMiddleWare by inject()
     internal val persistenceMembersMiddleWare: PersistenceMembersMiddleWare by inject()
     internal val persistenceUsersMiddleWare: PersistenceUsersMiddleWare by inject()
     private val messagesRepository: MessagesRepository by inject()

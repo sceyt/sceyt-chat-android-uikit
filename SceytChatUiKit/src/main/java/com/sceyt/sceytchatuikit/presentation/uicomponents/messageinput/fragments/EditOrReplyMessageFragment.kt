@@ -55,8 +55,8 @@ open class EditOrReplyMessageFragment : Fragment() {
     open fun editMessage(message: SceytMessage) {
         with(binding ?: return) {
             root.isVisible = true
-            if (!root.isVisible || root.height <= 1)
-                ViewUtil.expandHeight(root, 1, 200)
+            if (!root.isVisible || root.height != root.measuredHeight)
+                ViewUtil.expandHeight(root, root.height, 200)
             icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_edit)
             layoutImage.isVisible = false
             tvName.text = getString(R.string.sceyt_edit_message)
@@ -68,9 +68,10 @@ open class EditOrReplyMessageFragment : Fragment() {
 
     open fun replyMessage(message: SceytMessage) {
         with(binding ?: return) {
-            root.isVisible = true
-            if (!root.isVisible || root.height <= 1)
-                ViewUtil.expandHeight(root, 1, 200)
+            if (!root.isVisible || root.height != root.measuredHeight) {
+                root.isVisible = true
+                ViewUtil.expandHeight(root, root.height, 200)
+            }
             val name = message.user?.let { userNameBuilder?.invoke(it) }
                     ?: message.user?.getPresentableName() ?: ""
             val text = "${getString(R.string.sceyt_reply)} $name".run {
@@ -90,9 +91,9 @@ open class EditOrReplyMessageFragment : Fragment() {
         }
     }
 
-    open fun cancelReply(readyCb: (() -> Unit?)? = null) {
+    open fun close(readyCb: (() -> Unit?)? = null) {
         with(binding ?: return) {
-            ViewUtil.collapseHeight(root, to = 1, duration = 200) {
+            ViewUtil.collapseHeight(root, to = 0, duration = 200) {
                 root.isVisible = false
                 readyCb?.invoke()
             }
