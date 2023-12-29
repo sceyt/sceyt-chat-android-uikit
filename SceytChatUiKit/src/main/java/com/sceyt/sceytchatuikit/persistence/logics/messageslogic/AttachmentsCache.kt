@@ -111,12 +111,15 @@ class AttachmentsCache {
                         return
 
                     when (updateDate.state) {
-                        TransferState.PendingUpload, TransferState.Uploading, TransferState.Uploaded, TransferState.ErrorUpload, TransferState.PauseUpload, TransferState.Preparing, TransferState.WaitingToUpload -> {
+                        TransferState.PendingUpload, TransferState.Uploading, TransferState.Uploaded,
+                        TransferState.ErrorUpload, TransferState.PauseUpload, TransferState.Preparing,
+                        TransferState.WaitingToUpload -> {
                             if (attachment.filePath == updateDate.filePath)
                                 update(attachment)
                         }
 
-                        TransferState.Downloading, TransferState.Downloaded, TransferState.PendingDownload, TransferState.ErrorDownload, TransferState.PauseDownload -> {
+                        TransferState.Downloading, TransferState.Downloaded, TransferState.PendingDownload,
+                        TransferState.ErrorDownload, TransferState.PauseDownload -> {
                             if (attachment.url == updateDate.url)
                                 update(attachment)
                         }
