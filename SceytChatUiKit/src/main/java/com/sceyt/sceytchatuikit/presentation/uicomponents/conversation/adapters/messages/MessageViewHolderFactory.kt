@@ -179,17 +179,20 @@ open class MessageViewHolderFactory(context: Context) {
 
     open fun getMessageType(message: SceytMessage): Int {
         val inc = message.incoming
+        val attachments = message.attachments
         val type = when {
             message.state == MessageState.Deleted -> if (inc) MessageViewTypeEnum.IncDeleted else MessageViewTypeEnum.OutDeleted
-            !message.attachments.isNullOrEmpty() -> {
-                if ((message.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.size
-                                ?: 0) > 1) {
-                    return if (inc) MessageViewTypeEnum.IncFiles.ordinal else MessageViewTypeEnum.OutFiles.ordinal
+            !attachments.isNullOrEmpty() -> {
+                if (attachments.size > 1) {
+                    //Check maybe all attachments are links
+                    return if (attachments.filter { it.type == AttachmentTypeEnum.Link.value() }.size == attachments.size) {
+                        if (inc) MessageViewTypeEnum.IncLink.ordinal else MessageViewTypeEnum.OutLink.ordinal
+                    } else {
+                        if (inc) MessageViewTypeEnum.IncFiles.ordinal else MessageViewTypeEnum.OutFiles.ordinal
+                    }
                 }
 
-                val attachment = if ((message.attachments?.size ?: 0) > 1) {
-                    message.attachments?.find { it.type != AttachmentTypeEnum.Link.value() }
-                } else message.attachments?.getOrNull(0)
+                val attachment = attachments.getOrNull(0)
                 when (attachment?.type) {
                     AttachmentTypeEnum.Link.value() -> if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink
                     AttachmentTypeEnum.Voice.value() -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice

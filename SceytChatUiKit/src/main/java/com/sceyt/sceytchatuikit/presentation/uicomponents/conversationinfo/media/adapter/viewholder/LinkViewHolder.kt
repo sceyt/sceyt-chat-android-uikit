@@ -39,10 +39,9 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
             root.layoutTransition?.setAnimateParentHierarchy(false)
 
             tvLinkUrl.text = attachment.url
-
-            if ((attachment).linkPreviewDetails == null) {
+            if (attachment.linkPreviewDetails == null) {
                 setLinkInfo(null, attachment)
-                linkPreview?.getPreview(attachment, successListener = {
+                linkPreview?.getPreview(attachment, true, successListener = {
                     setLinkInfo(it, attachment)
                 })
             } else setLinkInfo(attachment.linkPreviewDetails, attachment)
@@ -58,8 +57,8 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
         } else {
             attachment.linkPreviewDetails = data
             tvLinkName.apply {
-                text = data.siteName?.trim()
-                isVisible = data.siteName.isNullOrBlank().not()
+                text = data.title?.trim()
+                isVisible = data.title.isNullOrBlank().not()
             }
 
             tvLinkDescription.apply {
@@ -68,9 +67,8 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
             }
 
             val linkUrl = if (data.faviconUrl.isNullOrBlank().not()) data.faviconUrl else data.imageUrl
-            if (linkUrl.isNullOrBlank()) {
-                setDefaultStateLinkImage()
-            } else
+            setDefaultStateLinkImage()
+            if (!linkUrl.isNullOrBlank()) {
                 Glide.with(root.context)
                     .load(linkUrl)
                     .placeholder(defaultImage)
@@ -82,6 +80,7 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
                         }
                     })
                     .into(icLinkImage)
+            }
         }
     }
 

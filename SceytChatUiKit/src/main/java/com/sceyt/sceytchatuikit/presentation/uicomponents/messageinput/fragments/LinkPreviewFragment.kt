@@ -44,9 +44,9 @@ open class LinkPreviewFragment : Fragment() {
 
     open fun showLinkDetails(data: LinkPreviewDetails) {
         with(binding ?: return) {
-            if (!root.isVisible || root.height <= 1) {
+            if (!root.isVisible || root.height != root.measuredHeight) {
                 root.isVisible = true
-                ViewUtil.expandHeight(root, 1, 200)
+                ViewUtil.expandHeight(root, root.height, 200)
             }
             setLinkInfo(data)
         }
@@ -54,11 +54,11 @@ open class LinkPreviewFragment : Fragment() {
 
     open fun hideLinkDetails(readyCb: (() -> Unit?)? = null) {
         with(binding ?: return) {
-            if (!root.isVisible) {
+            if (!root.isVisible && root.height == 0) {
                 readyCb?.invoke()
                 return
             }
-            ViewUtil.collapseHeight(root, to = 1, duration = 200) {
+            ViewUtil.collapseHeight(root, to = 0, duration = 200) {
                 root.isVisible = false
                 readyCb?.invoke()
             }
@@ -111,13 +111,5 @@ open class LinkPreviewFragment : Fragment() {
     private fun SceytFragmentLinkPreviewBinding.setupStyle() {
         tvLinkUrl.setTextColor(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
         icLinkImage.setImageDrawable(defaultImage)
-    }
-
-    companion object {
-        fun newInstance(data: LinkPreviewDetails): LinkPreviewFragment {
-            return LinkPreviewFragment().apply {
-                setLinkInfo(data)
-            }
-        }
     }
 }

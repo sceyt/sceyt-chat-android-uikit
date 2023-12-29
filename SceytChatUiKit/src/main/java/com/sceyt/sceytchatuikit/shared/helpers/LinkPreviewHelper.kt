@@ -1,15 +1,20 @@
 package com.sceyt.sceytchatuikit.shared.helpers
 
 import android.content.Context
-import android.util.Log
+import android.graphics.Bitmap
+import android.util.Size
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
-import com.sceyt.sceytchatuikit.persistence.PersistenceAttachmentsMiddleWare
-import com.sceyt.sceytchatuikit.persistence.mappers.toLinkPreviewDetails
+import com.sceyt.sceytchatuikit.extensions.getImageBitmapWithGlideWithTimeout
+import com.sceyt.sceytchatuikit.extensions.toBase64
+import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
+import com.sceyt.sceytchatuikit.shared.utils.BitmapUtil
+import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
+import com.sceyt.sceytchatuikit.shared.utils.ThumbHash
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -19,46 +24,72 @@ import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 class LinkPreviewHelper : SceytKoinComponent {
-    private val attachmentMiddleWare: PersistenceAttachmentsMiddleWare by inject()
+    private val attachmentLogic: PersistenceAttachmentLogic by inject()
     private var scope: CoroutineScope
+    private val context: Context
 
     constructor(context: Context) {
+        this.context = context
         scope = (context as? AppCompatActivity)?.lifecycleScope ?: initDefaultScope()
     }
 
-    constructor(scope: CoroutineScope) {
+    constructor(context: Context, scope: CoroutineScope) {
+        this.context = context
         this.scope = scope
-    }
-
-    constructor() {
-        scope = initDefaultScope()
     }
 
     private fun initDefaultScope() = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     fun getPreview(attachment: SceytAttachment,
+                   requireFullData: Boolean,
                    successListener: PreviewCallback.Success? = null,
                    errorListener: PreviewCallback.Error? = null) {
-
-        Log.i("LinkPreviewHelper", "getPreview: attachment.url: ${attachment.url}")
 
         scope.launch(Dispatchers.IO) {
             val link = attachment.url ?: return@launch withContext(Dispatchers.Main) {
                 errorListener?.error(null)
+                return@withContext
             }
-            val response = attachmentMiddleWare.getLinkPreviewData(link, attachment.messageTid)
-
-            withContext(Dispatchers.Main) {
-                when (response) {
-                    is SceytResponse.Error -> errorListener?.error(response.message)
-                    is SceytResponse.Success -> {
-                        response.data?.let {
-                            successListener?.success(it.toLinkPreviewDetails(link))
-                        } ?: errorListener?.error(null)
+            when (val response = attachmentLogic.getLinkPreviewData(link)) {
+                is SceytResponse.Error -> errorListener?.error(response.message)
+                is SceytResponse.Success -> {
+                    val details = response.data ?: run {
+                        errorListener?.error(null)
+                        return@launch
+                    }
+                    if (requireFullData && details.imageUrl != null && details.imageWidth == null) {
+                        val bitmap = getImageBitmapWithGlideWithTimeout(context, details.imageUrl, )
+                        if (bitmap != null) {
+                            details.imageWidth = bitmap.width
+                            details.imageHeight = bitmap.height
+                            // update link image size
+                            attachmentLogic.updateLinkDetailsSize(link, Size(bitmap.width, bitmap.height))
+                            val thumb = getImageThumb(bitmap)
+                            thumb?.let {
+                                details.thumb = it
+                                // update link thumb
+                                attachmentLogic.updateLinkDetailsThumb(link, it)
+                            }
+                            withContext(Dispatchers.Main) {
+                                successListener?.success(details)
+                            }
+                        } else withContext(Dispatchers.Main) {
+                            successListener?.success(details)
+                        }
+                    } else withContext(Dispatchers.Main) {
+                        successListener?.success(response.data)
                     }
                 }
             }
         }
+    }
+
+    private fun getImageThumb(bitmap: Bitmap): String? {
+        FileResizeUtil.resizeAndCompressImageAsByteArray(bitmap, 100)?.let { bm ->
+            val bytes = ThumbHash.rgbaToThumbHash(bm.width, bm.height, BitmapUtil.bitmapToRgba(bm))
+            return bytes.toBase64()
+        }
+        return null
     }
 
     /** Be careful, after closing scope, you can't launch any other coroutines.*/

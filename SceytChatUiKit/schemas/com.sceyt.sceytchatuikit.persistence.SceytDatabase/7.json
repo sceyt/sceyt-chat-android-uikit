@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 7,
-    "identityHash": "a482e4c5f157560e959e8d304ba6d040",
+    "identityHash": "e48d67efc58b89c9d5ab6c4127087030",
     "entities": [
       {
         "tableName": "channels",
@@ -1642,8 +1642,8 @@
         "foreignKeys": []
       },
       {
-        "tableName": "LinkDetailsEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`link` TEXT NOT NULL, `messageTid` INTEGER NOT NULL, `url` TEXT, `description` TEXT, `siteName` TEXT, `faviconUrl` TEXT, `imageUrl` TEXT, `imageWidth` INTEGER, `imageHeight` INTEGER, PRIMARY KEY(`link`))",
+        "tableName": "LinkDetails",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`link` TEXT NOT NULL, `title` TEXT, `url` TEXT, `description` TEXT, `siteName` TEXT, `faviconUrl` TEXT, `imageUrl` TEXT, `imageWidth` INTEGER, `imageHeight` INTEGER, `thumb` TEXT, PRIMARY KEY(`link`))",
         "fields": [
           {
             "fieldPath": "link",
@@ -1652,10 +1652,10 @@
             "notNull": true
           },
           {
-            "fieldPath": "messageTid",
-            "columnName": "messageTid",
-            "affinity": "INTEGER",
-            "notNull": true
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": false
           },
           {
             "fieldPath": "url",
@@ -1698,6 +1698,12 @@
             "columnName": "imageHeight",
             "affinity": "INTEGER",
             "notNull": false
+          },
+          {
+            "fieldPath": "thumb",
+            "columnName": "thumb",
+            "affinity": "TEXT",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -1713,7 +1719,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a482e4c5f157560e959e8d304ba6d040')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e48d67efc58b89c9d5ab6c4127087030')"
     ]
   }
 }

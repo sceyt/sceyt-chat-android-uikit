@@ -1,14 +1,19 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root
 
 import android.view.View
-import android.widget.TextView
+import android.view.ViewGroup
+import android.view.ViewStub
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.databinding.SceytMessageLinkPreviewContainerBinding
+import com.sceyt.sceytchatuikit.extensions.calculateScaleWidthHeight
+import com.sceyt.sceytchatuikit.extensions.dpToPx
+import com.sceyt.sceytchatuikit.extensions.glideRequestListener
 import com.sceyt.sceytchatuikit.extensions.setTextAndVisibility
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -21,49 +26,71 @@ abstract class BaseLinkMsgViewHolder(
         displayedListener: ((MessageListItem) -> Unit)? = null,
         userNameBuilder: ((User) -> String)? = null,
 ) : BaseMsgViewHolder(view, messageListeners, displayedListener, userNameBuilder) {
+    private var linkPreviewContainerBinding: SceytMessageLinkPreviewContainerBinding? = null
+    private val maxSize by lazy {
+        bubbleMaxWidth - dpToPx(4f) //4f is margins
+    }
+    private val minSize = maxSize / 3
 
-    fun loadLinkPreview(message: SceytAttachment, layoutLinkPreview: SceytMessageLinkPreviewContainerBinding, messageBody: TextView) {
-        if (message.linkPreviewDetails == null) {
 
-            layoutLinkPreview.setLinPreview(null, messageBody, message)
+    fun loadLinkPreview(attachment: SceytAttachment?, viewStub: ViewStub) {
+        attachment ?: return
+        val previewDetails = attachment.linkPreviewDetails
 
-            linkPreview.getPreview(message, successListener = {
-                message.linkPreviewDetails = it
-                layoutLinkPreview.setLinPreview(it, messageBody, message)
+        if (previewDetails == null) {
+            setLinkInfo(null, attachment, viewStub)
+            linkPreview.getPreview(attachment, true, successListener = {
+                attachment.linkPreviewDetails = it
+                setLinkInfo(it, attachment, viewStub)
             })
-        } else layoutLinkPreview.setLinPreview(message.linkPreviewDetails, messageBody, message)
+        } else
+            setLinkInfo(previewDetails, attachment, viewStub)
     }
 
-    private fun SceytMessageLinkPreviewContainerBinding.setLinPreview(data: LinkPreviewDetails?,
-                                                                      messageBody: TextView,
-                                                                      message: SceytAttachment) {
-        when {
-            data == null -> {
-                root.isVisible = false
+    private fun setLinkInfo(data: LinkPreviewDetails?, attachment: SceytAttachment, viewStub: ViewStub) {
+        if (data == null || data.link != attachment.url) {
+            viewStub.isVisible = false
+            return
+        }
+
+        if (viewStub.parent != null)
+            SceytMessageLinkPreviewContainerBinding.bind(viewStub.inflate()).also {
+                linkPreviewContainerBinding = it
+                it.root.isVisible = true
             }
 
-            data.link != message.url -> {
-                return
+        with(linkPreviewContainerBinding ?: return) {
+            previewImage.isVisible = false
+
+            if (data.imageUrl.isNullOrBlank().not()) {
+                setImageSize(previewImage, data)
+                Glide.with(context)
+                    .load(data.imageUrl)
+                    .listener(glideRequestListener(onResourceReady = {
+                        previewImage.isVisible = true
+                    }, onLoadFailed = {
+                        previewImage.isVisible = false
+                    }))
+                    .transition(DrawableTransitionOptions.withCrossFade(100))
+                    .into(previewImage)
             }
 
-            data.description.isNullOrBlank() && data.description.isNullOrBlank() && data.imageUrl.isNullOrBlank() -> {
-                root.isVisible = false
-            }
+            tvLinkTitle.setTextAndVisibility(data.title)
+            tvLinkDesc.setTextAndVisibility(data.description)
+            root.isVisible = true
+        }
+    }
 
-            else -> {
-                if (data.imageUrl.isNullOrBlank().not()) {
-                    Glide.with(context)
-                        .load(data.imageUrl)
-                        .transition(DrawableTransitionOptions.withCrossFade(100))
-                        .into(previewImage)
-                    previewImage.isVisible = true
-                } else previewImage.isVisible = false
+    private fun setImageSize(image: View, details: LinkPreviewDetails?) {
+        if (details?.imageWidth == null || details.imageHeight == null) return
+        val size = calculateScaleWidthHeight(maxSize, minSize, imageWidth = details.imageWidth
+                ?: maxSize,
+            imageHeight = details.imageHeight ?: maxSize)
 
-                tvLinkTitle.setTextAndVisibility(data.description)
-                tvLinkDesc.setTextAndVisibility(data.description)
-                // messageBody.text = message.body.trim()
-                root.isVisible = true
-            }
+
+        image.updateLayoutParams<ViewGroup.LayoutParams> {
+            width = size.width
+            height = size.height
         }
     }
 }

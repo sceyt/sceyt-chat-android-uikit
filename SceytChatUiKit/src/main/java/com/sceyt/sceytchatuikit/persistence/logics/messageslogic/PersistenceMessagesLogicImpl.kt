@@ -60,7 +60,9 @@ import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.PersistenceChan
 import com.sceyt.sceytchatuikit.persistence.logics.reactionslogic.PersistenceReactionsLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.addAttachmentMetadata
 import com.sceyt.sceytchatuikit.persistence.mappers.existThumb
-import com.sceyt.sceytchatuikit.persistence.mappers.toLinkDetails
+import com.sceyt.sceytchatuikit.persistence.mappers.getLinkPreviewDetails
+import com.sceyt.sceytchatuikit.persistence.mappers.isLink
+import com.sceyt.sceytchatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageEntity
@@ -397,8 +399,11 @@ internal class PersistenceMessagesLogicImpl(
             attachments?.map {
                 it.transferState = TransferState.WaitingToUpload
                 it.progressPercent = 0f
-                if (!it.existThumb())
+                val isLink = it.isLink()
+                if (!it.existThumb() && !isLink)
                     it.addAttachmentMetadata(context)
+                else if (isLink)
+                    it.linkPreviewDetails = it.getLinkPreviewDetails()
             }
         }
         return tmpMessage
@@ -786,7 +791,7 @@ internal class PersistenceMessagesLogicImpl(
                         attachment.filePath = filePath
                         attachment.url = url
                     }
-                    attachment.linkPreviewDetails = it.linkPreviewDetails?.toLinkDetails()
+                    attachment.linkPreviewDetails = it.linkPreviewDetails?.toLinkPreviewDetails()
                 }
             }
         }
