@@ -156,7 +156,8 @@ object DateTimeUtil {
         cal.timeInMillis = time
 
         val formatter = when {
-            (now.get(Calendar.DAY_OF_YEAR) - cal.get(Calendar.DAY_OF_YEAR) < 1) -> {
+            now.get(Calendar.YEAR) == cal.get(Calendar.YEAR) &&
+                    now.get(Calendar.DAY_OF_YEAR) == cal.get(Calendar.DAY_OF_YEAR) -> {
                 dateFormatter.today(context)
             }
 
