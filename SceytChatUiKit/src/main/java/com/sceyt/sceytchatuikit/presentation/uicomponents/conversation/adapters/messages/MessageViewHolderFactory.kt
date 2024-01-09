@@ -183,22 +183,19 @@ open class MessageViewHolderFactory(context: Context) {
         val type = when {
             message.state == MessageState.Deleted -> if (inc) MessageViewTypeEnum.IncDeleted else MessageViewTypeEnum.OutDeleted
             !attachments.isNullOrEmpty() -> {
-                if (attachments.size > 1) {
+                val (links, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value() }
+                if (others.size > 1) {
                     //Check maybe all attachments are links
-                    return if (attachments.filter { it.type == AttachmentTypeEnum.Link.value() }.size == attachments.size) {
-                        if (inc) MessageViewTypeEnum.IncLink.ordinal else MessageViewTypeEnum.OutLink.ordinal
-                    } else {
-                        if (inc) MessageViewTypeEnum.IncFiles.ordinal else MessageViewTypeEnum.OutFiles.ordinal
-                    }
+                    if (links.size == others.size)
+                        return if (inc) MessageViewTypeEnum.IncLink.ordinal else MessageViewTypeEnum.OutLink.ordinal
                 }
-
-                val attachment = attachments.getOrNull(0)
+                val attachment = others.getOrNull(0)
                 when (attachment?.type) {
-                    AttachmentTypeEnum.Link.value() -> if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink
-                    AttachmentTypeEnum.Voice.value() -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice
                     AttachmentTypeEnum.Image.value() -> if (inc) MessageViewTypeEnum.IncImage else MessageViewTypeEnum.OutImage
                     AttachmentTypeEnum.Video.value() -> if (inc) MessageViewTypeEnum.IncVideo else MessageViewTypeEnum.OutVideo
                     AttachmentTypeEnum.File.value() -> if (inc) MessageViewTypeEnum.IncFile else MessageViewTypeEnum.OutFile
+                    AttachmentTypeEnum.Voice.value() -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice
+                    AttachmentTypeEnum.Link.value() -> if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink
                     else -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
                 }
             }
