@@ -184,9 +184,9 @@ open class MessageViewHolderFactory(context: Context) {
             message.state == MessageState.Deleted -> if (inc) MessageViewTypeEnum.IncDeleted else MessageViewTypeEnum.OutDeleted
             !attachments.isNullOrEmpty() -> {
                 val (links, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value() }
-                if (others.size > 1) {
+                if (links.size > 1) {
                     //Check maybe all attachments are links
-                    if (links.size == others.size)
+                    if (links.size == attachments.size)
                         return if (inc) MessageViewTypeEnum.IncLink.ordinal else MessageViewTypeEnum.OutLink.ordinal
                 }
                 val attachment = others.getOrNull(0)
