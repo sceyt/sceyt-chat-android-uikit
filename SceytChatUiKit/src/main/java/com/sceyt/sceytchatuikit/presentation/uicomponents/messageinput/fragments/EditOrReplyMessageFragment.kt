@@ -142,7 +142,7 @@ open class EditOrReplyMessageFragment : Fragment() {
             .load(path)
             .placeholder(placeHolder)
             .override(100)
-            .error(placeHolder)
+            .error(MessagesStyle.linkAttachmentIcon)
             .into(imageAttachment)
     }
 
