@@ -193,7 +193,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun hideLinkPreview() {
+    private fun hideAndReleaseLinkPreview() {
         linkDetails = null
         linkPreviewFragment.hideLinkDetails {
             binding.layoutLinkPreview.isVisible = false
@@ -211,20 +211,23 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun tryToLoadLinkPreview(text: Editable?) {
         if (text.isNullOrBlank()) {
-            hideLinkPreview()
+            hideAndReleaseLinkPreview()
             linkDetailsProvider.cancel()
-        } else
+        } else {
+            linkDetails = null
+            linkPreviewFragment.hideLinkDetailsWithTimeout()
             linkDetailsProvider.loadLinkDetails(text.toString(), detailsCallback = {
                 if (it != null) {
                     binding.layoutLinkPreview.isVisible = true
                     linkPreviewFragment.showLinkDetails(it)
                     linkDetails = it
-                } else hideLinkPreview()
+                } else hideAndReleaseLinkPreview()
             }, imageSizeCallback = { size ->
                 linkDetails = linkDetails?.copy(imageWidth = size.width, imageHeight = size.height)
             }, thumbCallback = {
                 linkDetails = linkDetails?.copy(thumb = it)
             })
+        }
     }
 
     private fun SceytMessageInputViewBinding.setOnClickListeners() {

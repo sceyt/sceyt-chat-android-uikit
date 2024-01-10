@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.fragments
 
+import android.animation.ValueAnimator
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -8,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
@@ -16,12 +18,15 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.glideRequestListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CancelLinkPreviewClickListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
 
 open class LinkPreviewFragment : Fragment() {
     protected var binding: SceytFragmentLinkPreviewBinding? = null
     protected var clickListeners: CancelLinkPreviewClickListener? = null
+    protected val debounceHelper by lazy { DebounceHelper(300, lifecycleScope) }
+    protected var showHideAnimator: ValueAnimator? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentLinkPreviewBinding.inflate(inflater, container, false).also {
@@ -43,22 +48,32 @@ open class LinkPreviewFragment : Fragment() {
     }
 
     open fun showLinkDetails(data: LinkPreviewDetails) {
+        debounceHelper.cancelLastDebounce()
+        showHideAnimator?.cancel()
         with(binding ?: return) {
             if (!root.isVisible || root.height != root.measuredHeight) {
                 root.isVisible = true
-                ViewUtil.expandHeight(root, root.height, 200)
+                showHideAnimator = ViewUtil.expandHeight(root, root.height, 200)
             }
             setLinkInfo(data)
         }
     }
 
+    open fun hideLinkDetailsWithTimeout() {
+        debounceHelper.submit {
+            hideLinkDetails()
+        }
+    }
+
     open fun hideLinkDetails(readyCb: (() -> Unit?)? = null) {
+        debounceHelper.cancelLastDebounce()
+        showHideAnimator?.cancel()
         with(binding ?: return) {
             if (!root.isVisible && root.height == 0) {
                 readyCb?.invoke()
                 return
             }
-            ViewUtil.collapseHeight(root, to = 0, duration = 200) {
+            showHideAnimator = ViewUtil.collapseHeight(root, to = 0, duration = 200) {
                 root.isVisible = false
                 readyCb?.invoke()
             }
