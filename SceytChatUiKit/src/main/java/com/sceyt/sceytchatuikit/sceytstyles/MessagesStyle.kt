@@ -16,6 +16,12 @@ object MessagesStyle {
     @ColorRes
     var outBubbleColor: Int = R.color.sceyt_color_bg_out_message
 
+    @ColorRes
+    var incLinkPreviewBackgroundColor: Int = R.color.sceyt_color_bg_inc_link_preview
+
+    @ColorRes
+    var outLinkPreviewBackgroundColor: Int = R.color.sceyt_color_bg_out_link_preview
+
     @DrawableRes
     var messageStatusPendingIcon: Int = R.drawable.sceyt_ic_status_not_sent
 
@@ -41,7 +47,7 @@ object MessagesStyle {
     var dateSeparatorItemTextColor = R.color.sceyt_color_gray_400
 
     @ColorRes
-    var autoLinkTextColor = R.color.sceyt_auto_link_color
+    var autoLinkTextColor = SceytKitConfig.sceytColorAccent
 
     @LayoutRes
     var emptyState: Int = R.layout.sceyt_messages_empty_state

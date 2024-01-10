@@ -68,8 +68,15 @@
     <style name="SceytShapeAppearanceOverlay.CornerTop17Bottom5" parent="@style/SceytShapeAppearanceOverlayRounded">
         <item name="cornerSizeTopLeft">17dp</item>
         <item name="cornerSizeTopRight">17dp</item>
-        <item name="cornerSizeBottomLeft">4dp</item>
-        <item name="cornerSizeBottomRight">4dp</item>
+        <item name="cornerSizeBottomLeft">5dp</item>
+        <item name="cornerSizeBottomRight">5dp</item>
+    </style>
+
+    <style name="SceytShapeAppearanceOverlay.CornerTop8Bottom4" parent="@style/SceytShapeAppearanceOverlayRounded">
+        <item name="cornerSizeTopLeft">9dp</item>
+        <item name="cornerSizeTopRight">9dp</item>
+        <item name="cornerSizeBottomLeft">5dp</item>
+        <item name="cornerSizeBottomRight">5dp</item>
     </style>
 
     <style name="SceytPopupMenuStyle" parent="@style/Widget.AppCompat.ListView.DropDown">

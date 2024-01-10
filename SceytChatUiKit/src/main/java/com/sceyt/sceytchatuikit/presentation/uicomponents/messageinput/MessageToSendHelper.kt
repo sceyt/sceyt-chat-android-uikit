@@ -105,7 +105,7 @@ class MessageToSendHelper(private val context: Context) {
                                       linkDetails: LinkPreviewDetails?): Boolean {
         if (message == null) return false
         val linkAttachment = getLinkAttachmentFromBody(body, linkDetails)
-            ?.toSceytAttachment(message.tid, TransferState.Uploaded, linkPreviewDetails = null)
+            ?.toSceytAttachment(message.tid, TransferState.Uploaded, linkPreviewDetails = linkDetails)
 
         message.body = body.toString()
 

@@ -40,7 +40,7 @@ fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, channelId:
         fileSize = fileSize,
         url = url,
         filePath = filePath,
-        originalFilePath = originalFilePath), null, null)
+        originalFilePath = originalFilePath), null, linkPreviewDetails?.toLinkDetailsEntity())
 
 fun AttachmentDb.toAttachment(): SceytAttachment {
     with(attachmentEntity) {
