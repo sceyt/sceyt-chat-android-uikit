@@ -60,9 +60,8 @@ abstract class BaseLinkMsgViewHolder(
             }
 
         with(linkPreviewContainerBinding ?: return) {
-            previewImage.isVisible = false
-
-            if (data.imageUrl.isNullOrBlank().not()) {
+            val hasImageUrl = !data.imageUrl.isNullOrBlank()
+            if (hasImageUrl) {
                 setImageSize(previewImage, data)
                 Glide.with(context)
                     .load(data.imageUrl)
@@ -74,6 +73,8 @@ abstract class BaseLinkMsgViewHolder(
                     .transition(DrawableTransitionOptions.withCrossFade(100))
                     .into(previewImage)
             }
+            previewImage.isVisible = hasImageUrl
+
 
             tvLinkTitle.setTextAndVisibility(data.title)
             tvLinkDesc.setTextAndVisibility(data.description)
