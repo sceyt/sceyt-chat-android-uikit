@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -15,6 +16,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentEditOrReplyMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.sceytchatuikit.extensions.setBoldSpan
@@ -82,7 +84,7 @@ open class EditOrReplyMessageFragment : Fragment() {
 
             if (!message.attachments.isNullOrEmpty()) {
                 layoutImage.isVisible = true
-                loadReplyMessageImage(message.attachments?.getOrNull(0))
+                loadReplyMessageImage(message.attachments)
             } else layoutImage.isVisible = false
 
             tvMessageBody.text = if (message.isTextMessage())
@@ -104,25 +106,38 @@ open class EditOrReplyMessageFragment : Fragment() {
         this.clickListeners = clickListeners
     }
 
-    protected open fun loadReplyMessageImage(attachment: SceytAttachment?) {
-        attachment ?: return
+    protected open fun loadReplyMessageImage(attachments: Array<SceytAttachment>?) {
+        if (attachments.isNullOrEmpty()) {
+            binding?.layoutImage?.isVisible = false
+            return
+        }
         with(binding ?: return) {
-            when {
-                attachment.type.isEqualsVideoOrImage() -> {
-                    val placeHolder = getThumbFromMetadata(attachment.metadata)?.toDrawable(requireContext().resources)?.mutate()
-                    Glide.with(requireContext())
-                        .load(attachment.filePath)
-                        .placeholder(placeHolder)
-                        .override(100)
-                        .error(placeHolder)
-                        .into(imageAttachment)
-                }
+            val (_, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value() }
+            if (others.isNotEmpty()) {
+                val attachment = others[0]
+                imageAttachment.scaleType = ImageView.ScaleType.CENTER_CROP
+                imageAttachment.background = null
+                when {
+                    attachment.type.isEqualsVideoOrImage() -> {
+                        val placeHolder = getThumbFromMetadata(attachment.metadata)?.toDrawable(requireContext().resources)?.mutate()
+                        Glide.with(requireContext())
+                            .load(attachment.filePath)
+                            .placeholder(placeHolder)
+                            .override(100)
+                            .error(placeHolder)
+                            .into(imageAttachment)
+                    }
 
-                attachment.type == AttachmentTypeEnum.Voice.value() || attachment.type == AttachmentTypeEnum.Link.value() -> {
-                    layoutImage.isVisible = false
-                }
+                    attachment.type == AttachmentTypeEnum.Voice.value() -> {
+                        layoutImage.isVisible = false
+                    }
 
-                else -> imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
+                    else -> imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
+                }
+            } else {
+                imageAttachment.scaleType = ImageView.ScaleType.CENTER
+                imageAttachment.setImageResource(R.drawable.sceyt_ic_link)
+                imageAttachment.background = requireContext().getCompatDrawable(R.drawable.sceyt_bg_link)
             }
         }
     }

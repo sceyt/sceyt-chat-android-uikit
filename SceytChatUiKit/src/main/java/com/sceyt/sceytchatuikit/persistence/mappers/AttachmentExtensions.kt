@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.util.Size
+import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
@@ -135,6 +136,31 @@ fun SceytAttachment.existThumb(): Boolean {
 
 
 fun SceytAttachment.getLinkPreviewDetails(): LinkPreviewDetails? {
+    try {
+        val jsonObject = JSONObject(metadata ?: return null)
+        val thumb = jsonObject.getStringOrNull(SceytConstants.Thumb)
+        val width = jsonObject.getStringOrNull(SceytConstants.Width)
+        val height = jsonObject.getStringOrNull(SceytConstants.Height)
+        val description = jsonObject.getStringOrNull(SceytConstants.Description)
+        val imageUrl = jsonObject.getStringOrNull(SceytConstants.ImageUrl)
+        val thumbnailUrl = jsonObject.getStringOrNull(SceytConstants.ThumbnailUrl)
+        return LinkPreviewDetails(
+            link = url.toString(),
+            url = url,
+            title = name,
+            description = description,
+            siteName = "",
+            faviconUrl = thumbnailUrl,
+            imageUrl = imageUrl,
+            imageWidth = width?.toIntOrNull(),
+            imageHeight = height?.toIntOrNull(),
+            thumb = thumb)
+    } catch (ex: Exception) {
+        return null
+    }
+}
+
+fun Attachment.getLinkPreviewDetails(): LinkPreviewDetails? {
     try {
         val jsonObject = JSONObject(metadata ?: return null)
         val thumb = jsonObject.getStringOrNull(SceytConstants.Thumb)

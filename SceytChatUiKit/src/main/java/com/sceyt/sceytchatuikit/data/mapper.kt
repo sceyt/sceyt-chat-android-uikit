@@ -13,6 +13,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
+import com.sceyt.sceytchatuikit.persistence.mappers.getLinkPreviewDetails
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -27,8 +28,8 @@ fun SceytMember.toMember(): Member {
     return Member(role, user)
 }
 
-fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState, progress: Float = 0f,
-                                 linkPreviewDetails: LinkPreviewDetails? = null) = SceytAttachment(
+fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState,
+                                 progress: Float = 0f, linkPreviewDetails: LinkPreviewDetails? = null) = SceytAttachment(
     id = id,
     messageTid = messageTid,
     messageId = messageId,
@@ -43,7 +44,7 @@ fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState,
     transferState = transferState,
     progressPercent = progress,
     originalFilePath = filePath,
-    linkPreviewDetails = linkPreviewDetails
+    linkPreviewDetails = linkPreviewDetails ?: getLinkPreviewDetails()
 )
 
 

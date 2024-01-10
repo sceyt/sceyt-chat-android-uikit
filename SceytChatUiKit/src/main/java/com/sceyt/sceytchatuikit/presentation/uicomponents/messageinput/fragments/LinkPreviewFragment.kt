@@ -93,7 +93,7 @@ open class LinkPreviewFragment : Fragment() {
                 isVisible = data.description.isNullOrBlank().not()
             }
             setDefaultStateLinkImage()
-            val linkUrl = if (data.faviconUrl.isNullOrBlank().not()) data.faviconUrl else data.imageUrl
+            val linkUrl = data.imageUrl
             if (!linkUrl.isNullOrBlank()) {
                 Glide.with(root.context)
                     .load(linkUrl)
