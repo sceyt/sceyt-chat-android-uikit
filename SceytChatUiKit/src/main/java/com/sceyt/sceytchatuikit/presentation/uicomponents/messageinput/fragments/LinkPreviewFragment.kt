@@ -53,7 +53,7 @@ open class LinkPreviewFragment : Fragment() {
         with(binding ?: return) {
             if (!root.isVisible || root.height != root.measuredHeight) {
                 root.isVisible = true
-                showHideAnimator = ViewUtil.expandHeight(root, root.height, 200)
+                showHideAnimator = ViewUtil.expandHeight(root, 0, 200)
             }
             setLinkInfo(data)
         }
