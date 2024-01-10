@@ -27,7 +27,7 @@ data class SceytAttachment(
 
     public override fun clone(): SceytAttachment {
         return SceytAttachment(id, messageId, messageTid, userId, name, type, metadata, fileSize,
-            createdAt, url, filePath, transferState, progressPercent, originalFilePath, linkPreviewDetails)
+            createdAt, url, filePath, transferState, progressPercent, originalFilePath, linkPreviewDetails?.copy())
     }
 
     override fun equals(other: Any?): Boolean {
