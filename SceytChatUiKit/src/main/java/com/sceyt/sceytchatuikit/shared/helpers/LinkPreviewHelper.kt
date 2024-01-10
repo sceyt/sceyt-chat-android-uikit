@@ -58,7 +58,7 @@ class LinkPreviewHelper : SceytKoinComponent {
                         return@launch
                     }
                     if (requireFullData && details.imageUrl != null && details.imageWidth == null) {
-                        val bitmap = getImageBitmapWithGlideWithTimeout(context, details.imageUrl, )
+                        val bitmap = getImageBitmapWithGlideWithTimeout(context, details.imageUrl)
                         if (bitmap != null) {
                             details.imageWidth = bitmap.width
                             details.imageHeight = bitmap.height
@@ -78,6 +78,30 @@ class LinkPreviewHelper : SceytKoinComponent {
                         }
                     } else withContext(Dispatchers.Main) {
                         successListener?.success(response.data)
+                    }
+                }
+            }
+        }
+    }
+
+    fun checkMissedData(details: LinkPreviewDetails, successListener: PreviewCallback.Success? = null) {
+        scope.launch(Dispatchers.IO) {
+            if (details.imageUrl != null && details.imageWidth == null) {
+                val bitmap = getImageBitmapWithGlideWithTimeout(context, details.imageUrl)
+                if (bitmap != null) {
+                    details.imageWidth = bitmap.width
+                    details.imageHeight = bitmap.height
+                    // update link image size
+                    attachmentLogic.updateLinkDetailsSize(details.link, Size(bitmap.width, bitmap.height))
+                    val thumb = getImageThumb(bitmap)
+                    thumb?.let {
+                        details.thumb = it
+                        // update link thumb
+                        attachmentLogic.updateLinkDetailsThumb(details.link, it)
+                    }
+
+                    withContext(Dispatchers.Main) {
+                        successListener?.success(details)
                     }
                 }
             }

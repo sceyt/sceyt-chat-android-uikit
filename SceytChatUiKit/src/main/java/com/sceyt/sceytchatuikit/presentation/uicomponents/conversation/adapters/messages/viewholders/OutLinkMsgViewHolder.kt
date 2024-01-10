@@ -74,7 +74,7 @@ class OutLinkMsgViewHolder(
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, viewReply)
 
-                loadLinkPreview(linkAttachment, layoutLinkPreview)
+                loadLinkPreview(message, linkAttachment, layoutLinkPreview)
             }
         }
     }

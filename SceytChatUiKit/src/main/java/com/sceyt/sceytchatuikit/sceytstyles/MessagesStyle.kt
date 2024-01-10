@@ -47,7 +47,7 @@ object MessagesStyle {
     var dateSeparatorItemTextColor = R.color.sceyt_color_gray_400
 
     @ColorRes
-    var autoLinkTextColor = SceytKitConfig.sceytColorAccent
+    var autoLinkTextColor = R.color.sceyt_auto_link_color
 
     @LayoutRes
     var emptyState: Int = R.layout.sceyt_messages_empty_state
@@ -81,6 +81,9 @@ object MessagesStyle {
 
     @DrawableRes
     var fileAttachmentIcon: Int = R.drawable.sceyt_ic_file_with_bg
+
+    @DrawableRes
+    var linkAttachmentIcon: Int = R.drawable.sceyt_ic_link_with_background
 
     @ColorRes
     var selfReactionBackgroundColor = R.color.sceyt_self_reaction_color

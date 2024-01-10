@@ -54,7 +54,7 @@ fun createMetadata(currentMetadata: String?, base64String: String?, size: Size?,
 
 fun LinkPreviewDetails.toMetadata(): String? {
     val size = if (imageWidth != null && imageHeight != null) Size(imageWidth!!, imageHeight!!) else null
-    return createMetadata(null, null, size, null, description, imageUrl, faviconUrl)
+    return createMetadata(null, thumb, size, null, description, imageUrl, faviconUrl)
 }
 
 fun SceytAttachment.upsertSizeMetadata(size: Size?) {
