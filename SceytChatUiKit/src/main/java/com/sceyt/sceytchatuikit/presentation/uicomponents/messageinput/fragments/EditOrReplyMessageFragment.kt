@@ -16,7 +16,6 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentEditOrReplyMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
-import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.sceytchatuikit.extensions.setBoldSpan
@@ -58,7 +57,7 @@ open class EditOrReplyMessageFragment : Fragment() {
         with(binding ?: return) {
             root.isVisible = true
             if (!root.isVisible || root.height != root.measuredHeight)
-                ViewUtil.expandHeight(root, root.height, 200)
+                ViewUtil.expandHeight(root, 0, 200)
             icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_edit)
             layoutImage.isVisible = false
             tvName.text = getString(R.string.sceyt_edit_message)
@@ -72,7 +71,7 @@ open class EditOrReplyMessageFragment : Fragment() {
         with(binding ?: return) {
             if (!root.isVisible || root.height != root.measuredHeight) {
                 root.isVisible = true
-                ViewUtil.expandHeight(root, root.height, 200)
+                ViewUtil.expandHeight(root, 0, 200)
             }
             val name = message.user?.let { userNameBuilder?.invoke(it) }
                     ?: message.user?.getPresentableName() ?: ""
@@ -112,20 +111,12 @@ open class EditOrReplyMessageFragment : Fragment() {
             return
         }
         with(binding ?: return) {
-            val (_, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value() }
+            val (links, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value() }
             if (others.isNotEmpty()) {
                 val attachment = others[0]
-                imageAttachment.scaleType = ImageView.ScaleType.CENTER_CROP
-                imageAttachment.background = null
                 when {
                     attachment.type.isEqualsVideoOrImage() -> {
-                        val placeHolder = getThumbFromMetadata(attachment.metadata)?.toDrawable(requireContext().resources)?.mutate()
-                        Glide.with(requireContext())
-                            .load(attachment.filePath)
-                            .placeholder(placeHolder)
-                            .override(100)
-                            .error(placeHolder)
-                            .into(imageAttachment)
+                        loadImage(imageAttachment, attachment.metadata, attachment.filePath)
                     }
 
                     attachment.type == AttachmentTypeEnum.Voice.value() -> {
@@ -135,11 +126,24 @@ open class EditOrReplyMessageFragment : Fragment() {
                     else -> imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
                 }
             } else {
-                imageAttachment.scaleType = ImageView.ScaleType.CENTER
-                imageAttachment.setImageResource(R.drawable.sceyt_ic_link)
-                imageAttachment.background = requireContext().getCompatDrawable(R.drawable.sceyt_bg_link)
+                val attachment = links[0]
+                if (attachment.linkPreviewDetails != null && attachment.linkPreviewDetails?.imageUrl != null) {
+                    loadImage(imageAttachment, attachment.metadata, attachment.linkPreviewDetails?.imageUrl)
+                } else
+                    imageAttachment.setImageResource(MessagesStyle.linkAttachmentIcon)
             }
         }
+    }
+
+
+    private fun loadImage(imageAttachment: ImageView, metadata: String?, path: String?) {
+        val placeHolder = getThumbFromMetadata(metadata)?.toDrawable(requireContext().resources)?.mutate()
+        Glide.with(requireContext())
+            .load(path)
+            .placeholder(placeHolder)
+            .override(100)
+            .error(placeHolder)
+            .into(imageAttachment)
     }
 
     private fun SceytFragmentEditOrReplyMessageBinding.setupStyle() {

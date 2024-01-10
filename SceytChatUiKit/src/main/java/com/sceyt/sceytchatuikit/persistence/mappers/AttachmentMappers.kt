@@ -133,11 +133,11 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
     try {
         val jsonObject = JSONObject(metadata ?: return AttachmentDataFromJson())
         when (type) {
-            AttachmentTypeEnum.File.value(), AttachmentTypeEnum.Link.value() -> {
+            AttachmentTypeEnum.File.value() -> {
                 return AttachmentDataFromJson()
             }
 
-            AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value() -> {
+            AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value(), AttachmentTypeEnum.Link.value() -> {
                 blurredThumbBitmap = getThumbFromMetadata(metadata)
 
                 val width = jsonObject.getFromJsonObject(SceytConstants.Width)?.toIntOrNull()

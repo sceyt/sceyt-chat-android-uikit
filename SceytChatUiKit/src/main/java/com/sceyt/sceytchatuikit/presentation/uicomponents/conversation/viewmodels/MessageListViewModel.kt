@@ -538,7 +538,7 @@ class MessageListViewModel(
                                      initNameAndAvatar: Boolean = false): SceytMessage {
         return sceytMessage.apply {
             isGroup = this@MessageListViewModel.isGroup
-            files = attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(this) }
+            files = attachments?.map { it.toFileListItem(this) }
             if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
                 shouldShowAvatarAndName = shouldShowAvatarAndName(this, prevMessage)
             disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded

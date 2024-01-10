@@ -83,7 +83,7 @@ class IncLinkMsgViewHolder(
                         messageListeners?.onAvatarClick(it, item)
                     }
 
-                loadLinkPreview(linkAttachment, layoutLinkPreview)
+                loadLinkPreview(message, linkAttachment, layoutLinkPreview)
             }
         }
     }

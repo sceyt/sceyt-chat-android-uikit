@@ -66,18 +66,18 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
                 isVisible = data.description.isNullOrBlank().not()
             }
 
-            val linkUrl = if (data.faviconUrl.isNullOrBlank().not()) data.faviconUrl else data.imageUrl
+            val linkUrl = data.imageUrl
             setDefaultStateLinkImage()
             if (!linkUrl.isNullOrBlank()) {
                 Glide.with(root.context)
                     .load(linkUrl)
+                    .override(icLinkImage.width)
                     .placeholder(defaultImage)
                     .listener(glideRequestListener { success ->
                         if (success) {
                             icLinkImage.background = ColorDrawable(Color.TRANSPARENT)
-                        } else {
+                        } else
                             setDefaultStateLinkImage()
-                        }
                     })
                     .into(icLinkImage)
             }
