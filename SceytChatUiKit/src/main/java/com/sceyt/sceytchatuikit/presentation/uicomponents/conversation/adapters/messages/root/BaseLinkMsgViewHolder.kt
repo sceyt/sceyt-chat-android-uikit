@@ -52,7 +52,7 @@ abstract class BaseLinkMsgViewHolder(
             })
         } else {
             setLinkInfo(previewDetails, message, attachment, viewStub)
-            linkPreview.checkMissedData(previewDetails){
+            linkPreview.checkMissedData(previewDetails) {
                 attachment.linkPreviewDetails = it
                 setLinkInfo(it, message, attachment, viewStub)
             }
@@ -93,7 +93,7 @@ abstract class BaseLinkMsgViewHolder(
                     }))
                     .transition(DrawableTransitionOptions.withCrossFade(100))
                     .into(previewImage)
-            }
+            } else previewImage.isVisible = false
 
             tvLinkTitle.setTextAndVisibility(data.title)
             tvLinkDesc.setTextAndVisibility(data.description)
