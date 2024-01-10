@@ -175,13 +175,13 @@ class MessagesCache {
             if (initPayloads)
                 initMessagePayLoads(channelId, message)
             it[message.tid] = message
+        } ?: run {
+            cachedMessages[channelId] = hashMapOf(message.tid to message)
         }
     }
 
     private fun getMessageByTid(channelId: Long, tid: Long): SceytMessage? {
-        return cachedMessages[channelId]?.let {
-            it[tid]
-        }
+        return cachedMessages[channelId]?.get(tid)
     }
 
     /** Set message attachments and pending reactions from cash, which saved in local db.*/
@@ -190,7 +190,7 @@ class MessagesCache {
     }
 
     private fun setPayloads(channelId: Long, messageToUpdate: SceytMessage) {
-        fun setPayloads(message: SceytMessage): SceytMessage? {
+        fun setPayloadsImpl(message: SceytMessage): SceytMessage? {
             val cashedMessage = getMessageByTid(channelId, message.tid)
             val attachmentPayLoadData = getAttachmentPayLoads(cashedMessage)
             val attachmentsLinkDetails = getAttachmentLinkDetails(cashedMessage)
@@ -198,9 +198,12 @@ class MessagesCache {
             return cashedMessage
         }
 
-        val cashedMessage = setPayloads(messageToUpdate)
+        val cashedMessage = setPayloadsImpl(messageToUpdate)
         // Set payloads for parent message
-        messageToUpdate.parentMessage?.let { setPayloads(it) }
+        messageToUpdate.parentMessage?.let {
+            if (it.id != 0L)
+                setPayloadsImpl(it)
+        }
 
         val pendingReactions = cashedMessage?.pendingReactions?.toMutableSet() ?: mutableSetOf()
         val needToAddReactions = messageToUpdate.pendingReactions?.toSet() ?: emptySet()
@@ -210,12 +213,15 @@ class MessagesCache {
     }
 
     private fun updateAttachmentsPayLoads(payloadData: List<AttachmentPayLoadData>?,
-                                          attachmentsLinkDetails: List<LinkPreviewDetails>?, message: SceytMessage) {
+                                          attachmentsLinkDetails: List<LinkPreviewDetails>?,
+                                          message: SceytMessage) {
+        val updateLinkDetails = attachmentsLinkDetails?.run { ArrayList(this) }
         payloadData?.filter { payLoad -> payLoad.messageTid == message.tid }?.let { data ->
             message.attachments?.forEach { attachment ->
                 if (attachment.type == AttachmentTypeEnum.Link.value()) {
-                    attachmentsLinkDetails?.find { it.url == attachment.url }?.let {
+                    updateLinkDetails?.find { it.url == attachment.url }?.let {
                         attachment.linkPreviewDetails = it
+                        updateLinkDetails.remove(it)
                     }
                     return@forEach
                 }
@@ -230,6 +236,11 @@ class MessagesCache {
                     attachment.filePath = it.filePath
                     attachment.url = it.url
                 }
+            }
+        }
+        updateLinkDetails?.forEach { linkDetails ->
+            message.attachments?.find { it.url == linkDetails.link }?.let {
+                it.linkPreviewDetails = linkDetails
             }
         }
     }
