@@ -25,8 +25,8 @@ ext {
     exo_player_media_version = '1.2.0'
     emoji_bundled_version = '1.4.0'
 
-    jsoup_version = '1.17.1'
-    material_version = '1.12.0-alpha02'
+    jsoup_version = '1.17.2'
+    material_version = '1.12.0-alpha03'
     moshi_converter_version = '2.9.0'
 
     fragment_ktx_version = '1.6.2'
@@ -37,27 +37,27 @@ ext {
     flex_box_version = "3.0.0"
 
     live_event_version = '1.2.0'
-    live_data_ktx_version = '2.6.2'
+    live_data_ktx_version = '2.7.0'
 
     glide_version = '4.16.0'
     glide_compiler_version = '4.12.0'
     gson_version = '2.8.9'
     glide_transformations_version = '4.3.0'
-    google_code_lib_phone_version = '8.13.27'
+    google_code_lib_phone_version = '8.13.28'
 
     ion_version = "3.1.0"
 
     kotlin_version = '1.6.10'
-    koin_version = '3.4.3'
+    koin_version = '3.5.3'
 
     legacy_version = '1.0.0'
-    lifecycle_version = '2.6.2'
-    lottie_version = '6.2.0'
+    lifecycle_version = '2.7.0'
+    lottie_version = '6.3.0'
     light_compressor_version = '1.0.1'
 
-    vanniktech_google_emoji_version = '0.17.0'
+    vanniktech_google_emoji_version = '0.18.0'
 
-    ok_http_version = '5.0.0-alpha.8'
+    ok_http_version = '5.0.0-alpha.12'
 
     recycler_view_version = '1.3.2'
     retrofit_version = '2.9.0'
