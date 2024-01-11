@@ -435,7 +435,7 @@ internal class PersistenceMessagesLogicImpl(
                 SceytLog.i(TAG, "Send message success, channel id $channelId, tid:${message.tid}, id:${message.id}")
                 response.data?.let { responseMsg ->
                     messagesCache.messageUpdated(channelId, responseMsg)
-                    messageDao.updateMessage(responseMsg.toMessageEntity(false))
+                    messageDao.upsertMessage(responseMsg.toMessageDb(false))
                     persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, responseMsg)
                 }
             }
