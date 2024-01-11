@@ -18,7 +18,7 @@ dependencyResolutionManagement {
         mavenLocal()
     }
 }
-rootProject.name = "SceytDemoApp"
+rootProject.name = "SceytUiKit"
 
 include ':SceytDemoApp'
 include ':SceytChatUiKit'

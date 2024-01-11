@@ -57,9 +57,9 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
-import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
+import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import com.sceyt.sceytchatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
@@ -281,9 +281,9 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     protected fun setMessageUserAvatarAndName(avatarView: SceytAvatarView, tvName: TextView, message: SceytMessage) {
-        if (!message.isGroup) return
+        if (!message.isGroup || message.disabledShowAvatarAndName) return
 
-        if (message.canShowAvatarAndName) {
+        if (message.shouldShowAvatarAndName) {
             val user = message.user
             val displayName = getSenderName(user)
             if (isDeletedUser(user)) {
@@ -395,7 +395,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                 if (it.type == AttachmentTypeEnum.File.value()) {
                     setPadding(ViewUtil.dpToPx(8f))
                 } else {
-                    if (message.isForwarded || message.isReplied || message.canShowAvatarAndName || message.body.isNotNullOrBlank())
+                    if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName || message.body.isNotNullOrBlank())
                         setPadding(0, ViewUtil.dpToPx(4f), 0, 0)
                     else setPadding(0)
                 }
@@ -475,7 +475,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     open fun cancelSelectableState() {
-        selectableAnimHelper.cancelSelectableState(selectMessageView, messageListItem)
+        selectableAnimHelper.cancelSelectableState(selectMessageView)
     }
 
     open fun highlight() {

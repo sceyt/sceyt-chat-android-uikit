@@ -71,9 +71,7 @@ import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.awaitClose
@@ -84,11 +82,10 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
-import kotlin.coroutines.CoroutineContext
 
 internal class PersistenceMessagesLogicImpl(
         private val context: Context,
@@ -103,15 +100,12 @@ internal class PersistenceMessagesLogicImpl(
         private val preference: SceytSharedPreference,
         private val messagesCache: MessagesCache,
         private val channelCache: ChannelsCache
-) : PersistenceMessagesLogic, SceytKoinComponent, CoroutineScope {
+) : PersistenceMessagesLogic, SceytKoinComponent {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
     private val persistenceAttachmentLogic: PersistenceAttachmentLogic by inject()
     private val persistenceReactionLogic: PersistenceReactionsLogic by inject()
     private val createChannelAndSendMessageMutex = Mutex()
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
 
     private val onMessageFlow: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> = MutableSharedFlow(
         extraBufferCapacity = 10,
@@ -129,30 +123,28 @@ internal class PersistenceMessagesLogicImpl(
             markMessagesAs(data.first.id, Received, message.id)
     }
 
-    override fun onFcmMessage(data: RemoteMessageData) {
-        launch {
-            val message = data.message
-            if (message?.id == 0L) return@launch
-            val channelDb = persistenceChannelsLogic.getChannelFromDb(data.channel?.id
-                    ?: return@launch)
-            if (channelDb != null && (message?.createdAt ?: 0) <= channelDb.messagesClearedAt)
-                return@launch
+    override suspend fun onFcmMessage(data: RemoteMessageData) {
+        val message = data.message
+        if (message?.id == 0L) return
+        val channelDb = persistenceChannelsLogic.getChannelFromDb(data.channel?.id
+                ?: return)
+        if (channelDb != null && (message?.createdAt ?: 0) <= channelDb.messagesClearedAt)
+            return
 
-            val messageDb = messageDao.getMessageById(message?.id ?: return@launch)
+        val messageDb = messageDao.getMessageById(message?.id ?: return)
 
-            val isReaction = data.reaction != null
+        val isReaction = data.reaction != null
 
-            if (messageDb == null && !isReaction) {
-                saveMessagesToDb(arrayListOf(message), false)
-                messagesCache.add(data.channel.id, message)
-                onMessageFlow.tryEmit(Pair(data.channel, message))
-                persistenceChannelsLogic.onFcmMessage(data)
-            }
-
-            if (messageDb != null && isReaction)
-                persistenceReactionLogic.onMessageReactionUpdated(ReactionUpdateEventData(
-                    messageDb.toSceytMessage(), data.reaction!!, ReactionUpdateEventEnum.Add))
+        if (messageDb == null && !isReaction) {
+            saveMessagesToDb(arrayListOf(message), false)
+            messagesCache.add(data.channel.id, message)
+            onMessageFlow.tryEmit(Pair(data.channel, message))
+            persistenceChannelsLogic.onFcmMessage(data)
         }
+
+        if (messageDb != null && isReaction)
+            persistenceReactionLogic.onMessageReactionUpdated(ReactionUpdateEventData(
+                messageDb.toSceytMessage(), data.reaction!!, ReactionUpdateEventEnum.Add))
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
@@ -325,10 +317,16 @@ internal class PersistenceMessagesLogicImpl(
             MessageEventsObserver.emitOutgoingMessage(tmpMessage)
             insertTmpMessageToDb(tmpMessage)
             it.attachments?.forEach { attachment ->
-                if (attachment.type != AttachmentTypeEnum.Link.value())
+                if (attachment.type != AttachmentTypeEnum.Link.value()) {
+                    var state = TransferState.PendingDownload
+                    var progressPercent = 0f
+                    if (attachment.filePath.isNotNullOrBlank()) {
+                        state = TransferState.Uploaded
+                        progressPercent = 100f
+                    }
                     persistenceAttachmentLogic.updateAttachmentWithTransferData(
-                        TransferData(tmpMessage.tid, 100f,
-                            TransferState.Uploaded, attachment.filePath, attachment.url))
+                        TransferData(tmpMessage.tid, progressPercent, state, attachment.filePath, attachment.url))
+                }
             }
             messagesCache.add(channelId, tmpMessage)
         }
@@ -428,12 +426,10 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun onMessageSentResponse(channelId: Long, response: SceytResponse<SceytMessage>?, message: Message) {
         when (response ?: return) {
             is SceytResponse.Success -> {
+                SceytLog.i(TAG, "Send message success, channel id $channelId, tid:${message.tid}, id:${message.id}")
                 response.data?.let { responseMsg ->
-                    messageDao.updateMessageByParams(
-                        tid = responseMsg.tid, serverId = responseMsg.id,
-                        date = responseMsg.createdAt, status = DeliveryStatus.Sent)
-
                     messagesCache.messageUpdated(channelId, responseMsg)
+                    messageDao.updateMessage(responseMsg.toMessageEntity(false))
                     persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, responseMsg)
                 }
             }
@@ -442,8 +438,9 @@ internal class PersistenceMessagesLogicImpl(
                 if ((response as? SceytResponse.Error)?.exception?.type == SDKErrorTypeEnum.BadParam.toString()) {
                     messageDao.deleteMessageByTid(message.tid)
                     SceytLog.e(TAG, "Received BadParam error: ${response.exception?.message}, " +
-                            "deleting message from db tid:${message.tid} id:${message.id}")
-                }
+                            "deleting message from db channel id $channelId, tid:${message.tid} id:${message.id}")
+                } else
+                    SceytLog.e(TAG, "Send message error: ${response.message}, channel id $channelId, tid:${message.tid} id:${message.id}")
             }
         }
     }
@@ -499,6 +496,11 @@ internal class PersistenceMessagesLogicImpl(
             it.value.forEach values@{ stateDb ->
                 when (stateDb.entity.state) {
                     MessageState.Edited -> {
+                        val message = stateDb.message?.toSceytMessage()
+                        if (message == null) {
+                            pendingMessageStateDao.deleteByMessageId(stateDb.entity.messageId)
+                            return@values
+                        }
                         editMessageImpl(channelId, stateDb.message.toSceytMessage())
                     }
 
@@ -521,15 +523,20 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> {
-        suspend fun doOnSuccess(message: SceytMessage) {
+        suspend fun updateMessage(message: SceytMessage) {
             messageDao.upsertMessage(message.toMessageDb(false))
             messagesCache.messageUpdated(channelId, message)
             persistenceChannelsLogic.onMessageEditedOrDeleted(message)
         }
 
-        doOnSuccess(message.clone().apply { state = MessageState.Edited })
+        val isPending = message.deliveryStatus == DeliveryStatus.Pending
 
-        if (message.deliveryStatus == DeliveryStatus.Pending)
+        updateMessage(message.clone().apply {
+            if (!isPending)
+                state = MessageState.Edited
+        })
+
+        if (isPending)
             return SceytResponse.Success(message)
 
         // Insert pending message state
@@ -541,16 +548,18 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage> {
         if (message.deliveryStatus == DeliveryStatus.Pending) {
-            message.state = MessageState.Deleted
+            val clonedMessage = message.clone().apply {
+                state = MessageState.Deleted
+            }
             messageDao.deleteMessageByTid(message.tid)
             messagesCache.deleteMessage(channelId, message.tid)
-            persistenceChannelsLogic.onMessageEditedOrDeleted(message)
+            persistenceChannelsLogic.onMessageEditedOrDeleted(clonedMessage)
             SendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString())
             message.attachments?.firstOrNull()?.let {
                 fileTransferService.pause(it.messageTid, it, it.transferState
                         ?: TransferState.Uploading)
             }
-            return SceytResponse.Success(message.apply { state = MessageState.Deleted })
+            return SceytResponse.Success(clonedMessage)
         }
 
         // Insert pending message state
@@ -642,9 +651,9 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    private fun markMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
+    private suspend fun markMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
         // Mark messages as received
-        launch(Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             checkAndMarkChannelMessagesAsDelivered(channelId, messages)
         }
     }

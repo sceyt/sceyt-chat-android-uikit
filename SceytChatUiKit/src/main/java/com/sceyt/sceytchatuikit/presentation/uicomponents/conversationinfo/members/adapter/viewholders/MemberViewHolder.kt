@@ -17,7 +17,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membe
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListenersImpl
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
+import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import java.util.*
 

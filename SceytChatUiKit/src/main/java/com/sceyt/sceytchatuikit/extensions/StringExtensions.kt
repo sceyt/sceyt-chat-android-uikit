@@ -13,6 +13,7 @@ import android.widget.TextView
 import androidx.core.text.isDigitsOnly
 import androidx.emoji2.text.EmojiCompat
 import androidx.emoji2.text.EmojiSpan
+import com.google.gson.Gson
 import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT
 import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING
 import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE
@@ -169,6 +170,10 @@ fun String.autoCorrectable(): String {
     return replace("\u2068".toRegex(), "")
 }
 
+fun CharSequence.removeSpaces(): CharSequence {
+    return replace(" ".toRegex(), "")
+}
+
 fun String.toSha256(): Long {
     val bytes = toByteArray(StandardCharsets.UTF_8)
     val md = MessageDigest.getInstance("SHA-256")
@@ -183,4 +188,12 @@ fun Char.isVisuallyEmpty(): Boolean {
         '\u2007',  // figure space
         '\u200B',  // zero-width space
         '\u2800').contains(this) // braille blank
+}
+
+fun <T> String?.jsonToObject(clazz: Class<T>): T? {
+    return try {
+        Gson().fromJson(this, clazz)
+    } catch (e: Exception) {
+        null
+    }
 }

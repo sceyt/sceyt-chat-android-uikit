@@ -12,13 +12,13 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
+import com.sceyt.sceytchatuikit.extensions.copyFile
 import com.sceyt.sceytchatuikit.extensions.extractLinks
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.shared.utils.FileUtil
-import com.sceyt.sceytchatuikit.shared.utils.ImageUriPathUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -48,11 +48,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
                     .setType(MessageTypeEnum.Text.value())
                     .apply {
                         if (isContainsLink)
-                            setAttachments(arrayOf(Attachment.Builder("", links[0], AttachmentTypeEnum.Link.value())
-                                .withTid(ClientWrapper.generateTid())
-                                .setName("")
-                                .setMetadata("")
-                                .build()))
+                            setAttachments(arrayOf(buildAttachment("", links[0], AttachmentTypeEnum.Link, "", 0)))
                     }
                     .build()
 
@@ -83,23 +79,15 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
             channelIds.forEach { channelId ->
                 val attachments = paths.map { path ->
                     val fileName = File(path).name
-                    Attachment.Builder(path, "", getAttachmentType(path).value())
-                        .setName(fileName)
-                        .withTid(ClientWrapper.generateTid())
-                        .setFileSize(getFileSize(path))
-                        .setUpload(false)
-                        .build()
+                    buildAttachment(path, "", getAttachmentType(path), fileName, getFileSize(path))
                 }
                 attachments.mapIndexed { index, attachment ->
                     val message = MessageBuilder(channelId)
                         .setBody(if (index == 0) messageBody else "")
                         .apply {
                             if (index == 0 && isContainsLink) {
-                                setAttachments(arrayOf(attachment, Attachment.Builder("", links[0], AttachmentTypeEnum.Link.value())
-                                    .withTid(ClientWrapper.generateTid())
-                                    .setName("")
-                                    .setMetadata("")
-                                    .build()))
+                                val link = buildAttachment("", links[0], AttachmentTypeEnum.Link, "", 0)
+                                setAttachments(arrayOf(attachment, link))
                             } else setAttachments(arrayOf(attachment))
                         }
                         .setTid(ClientWrapper.generateTid())
@@ -114,6 +102,14 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
         trySend(State.Finish)
         awaitClose()
     }
+
+    private fun buildAttachment(path: String, url: String, typeEnum: AttachmentTypeEnum, fileName: String, fileSize: Long) =
+            Attachment.Builder(path, url, typeEnum.value())
+                .setName(fileName)
+                .withTid(ClientWrapper.generateTid())
+                .setFileSize(fileSize)
+                .setUpload(false)
+                .build()
 
     private fun getPathFromFile(vararg uris: Uri): List<String> {
         val paths = mutableListOf<String>()
@@ -132,7 +128,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
                     } else {
                         val name = DocumentFile.fromSingleUri(application, uri)?.name
                         if (name != null) {
-                            val copiedFile = ImageUriPathUtil.copyFile(application, uri.toString(), name)
+                            val copiedFile = copyFile(application, uri.toString(), name)
                             paths.add(copiedFile.path)
                         }
                     }

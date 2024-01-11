@@ -1,10 +1,10 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
 import com.sceyt.chat.models.user.User
+import com.sceyt.sceytchatuikit.data.copy
 import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.diff
@@ -87,7 +87,7 @@ class ChannelsCache {
 
     fun addPendingChannel(channel: SceytChannel) {
         synchronized(lock) {
-            pendingChannelsData[channel.id] = channel
+            pendingChannelsData[channel.id] = channel.clone()
             if (channel.lastMessage != null)
                 channelAdded(channel)
         }
@@ -126,11 +126,12 @@ class ChannelsCache {
     fun upsertChannel(vararg channels: SceytChannel) {
         synchronized(lock) {
             channels.forEach {
-                if (cachedData[it.id] == null) {
+                val cachedChannel = cachedData[it.id]
+                if (cachedChannel == null) {
                     cachedData[it.id] = it.clone()
                     channelAdded(it)
                 } else {
-                    val oldMsg = cachedData[it.id]?.lastMessage
+                    val oldMsg = cachedChannel.lastMessage
                     if (putAndCheckHasDiff(it).hasDifference()) {
                         val needSort = checkNeedSortByLastMessage(oldMsg, it.lastMessage)
                         channelUpdated(it, needSort, ChannelUpdatedType.Updated)
@@ -188,17 +189,6 @@ class ChannelsCache {
         }
     }
 
-    fun addedMembers(channelId: Long, sceytMember: SceytMember) {
-        synchronized(lock) {
-            cachedData[channelId]?.let { channel ->
-                channel.members = channel.members?.toArrayList()?.apply {
-                    add(sceytMember.copy())
-                }
-                channelUpdated(channel, false, ChannelUpdatedType.Members)
-            }
-        }
-    }
-
     fun updateUnreadCount(channelId: Long, count: Int) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
@@ -231,7 +221,7 @@ class ChannelsCache {
             // Adding pending channel id with real channel id for future getting real channel id by pending channel id
             fromPendingToRealChannelsData[pendingChannelId] = newChannel.id
             // Emitting to flow
-            pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel))
+            pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel.clone()))
         }
     }
 
@@ -271,7 +261,7 @@ class ChannelsCache {
                 channel.members?.find { member -> member.user.id == user.id }?.let {
                     val oldUser = it.user
                     if (oldUser.presence?.hasDiff(user.presence) == true) {
-                        it.user = user
+                        it.user = user.copy()
                         channelUpdated(channel, false, ChannelUpdatedType.Presence)
                     }
                 }
@@ -294,7 +284,17 @@ class ChannelsCache {
     fun channelLastReactionLoaded(channelId: Long) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
-                channelReactionMsgLoadedFlow_.tryEmit(channel)
+                channelReactionMsgLoadedFlow_.tryEmit(channel.clone())
+            }
+        }
+    }
+
+    fun onChannelMarkedAsReadOrUnread(channel: SceytChannel) {
+        synchronized(lock) {
+            cachedData[channel.id]?.let {
+                it.unread = channel.unread
+                it.newMessageCount = channel.newMessageCount
+                channelUpdated(it, false, ChannelUpdatedType.Updated)
             }
         }
     }

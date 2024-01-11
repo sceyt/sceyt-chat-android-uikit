@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic
 
+import androidx.lifecycle.asFlow
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
@@ -26,6 +27,7 @@ import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageIdAndTid
+import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.AttachmentsCache
@@ -53,6 +55,12 @@ internal class PersistenceAttachmentLogicImpl(
         private val attachmentsRepository: AttachmentsRepository) : PersistenceAttachmentLogic, SceytKoinComponent {
 
     private val messagesLogic: PersistenceMessagesLogic by inject()
+
+    override suspend fun setupFileTransferUpdateObserver() {
+        FileTransferHelper.onTransferUpdatedLiveData.asFlow().collect {
+            attachmentsCache.updateAttachmentTransferData(it)
+        }
+    }
 
     override suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoadEntity> {
         return attachmentDao.getAllAttachmentPayLoadsByMsgTid(tid)

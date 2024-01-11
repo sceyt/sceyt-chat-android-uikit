@@ -52,7 +52,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     fun getChannels(offset: Int, query: String = searchQuery, loadKey: LoadKeyData? = null, ignoreDb: Boolean = false) {
         //Reset search if any
         searchQuery = query
-        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
+        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDb = ignoreDb)
 
         notifyPageLoadingState(false)
 
@@ -69,7 +69,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
                                   notifyFlow: NotifyFlow, onlyMine: Boolean, ignoreDb: Boolean = false,
                                   loadKey: LoadKeyData? = null) {
         if (notifyFlow == NotifyFlow.LOAD) {
-            setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext)
+            setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDb = ignoreDb)
 
             notifyPageLoadingState(false)
         }
@@ -96,13 +96,16 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
             is PaginationResponse.DBResponse -> {
                 if (!checkIgnoreDatabasePagingResponse(response)) {
                     _loadChannelsFlow.value = response
-                    notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
+                    notifyPageStateWithResponse(SceytResponse.Success(null),
+                        wasLoadingMore = response.offset > 0,
+                        isEmpty = response.data.isEmpty(), searchQuery = response.query)
                 }
             }
 
             is PaginationResponse.ServerResponse -> {
                 _loadChannelsFlow.value = response
-                notifyPageStateWithResponse(response.data, response.offset > 0, response.cacheData.isEmpty())
+                notifyPageStateWithResponse(response.data, wasLoadingMore = response.offset > 0,
+                    isEmpty = response.cacheData.isEmpty(), searchQuery = response.query)
             }
 
             else -> return
@@ -131,19 +134,25 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.markChannelAsRead(channelId)
+            val response = channelMiddleWare.markChannelAsRead(channelId)
+            if (response is SceytResponse.Error)
+                notifyPageStateWithResponse(response)
         }
     }
 
     fun markChannelAsUnRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.markChannelAsUnRead(channelId)
+            val response = channelMiddleWare.markChannelAsUnRead(channelId)
+            if (response is SceytResponse.Error)
+                notifyPageStateWithResponse(response)
         }
     }
 
     fun blockAndLeaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.blockAndLeaveChannel(channelId)
+            val response = channelMiddleWare.blockAndLeaveChannel(channelId)
+            if (response is SceytResponse.Error)
+                notifyPageStateWithResponse(response)
         }
     }
 
@@ -163,37 +172,49 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun clearHistory(channelId: Long, forEveryone: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.clearHistory(channelId, forEveryone)
+            val response = channelMiddleWare.clearHistory(channelId, forEveryone)
+            if (response is SceytResponse.Error)
+                notifyPageStateWithResponse(response)
         }
     }
 
     fun deleteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.deleteChannel(channelId)
+            val response = channelMiddleWare.deleteChannel(channelId)
+            if (response is SceytResponse.Error)
+                notifyPageStateWithResponse(response)
         }
     }
 
     fun leaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.leaveChannel(channelId)
+            val response = channelMiddleWare.leaveChannel(channelId)
+            if (response is SceytResponse.Error)
+                notifyPageStateWithResponse(response)
         }
     }
 
     fun muteChannel(channelId: Long, muteUntil: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.muteChannel(channelId, muteUntil)
+            val response = channelMiddleWare.muteChannel(channelId, muteUntil)
+            if (response is SceytResponse.Error)
+                notifyPageStateWithResponse(response)
         }
     }
 
     fun unMuteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.unMuteChannel(channelId)
+            val response = channelMiddleWare.unMuteChannel(channelId)
+            if (response is SceytResponse.Error)
+                notifyPageStateWithResponse(response)
         }
     }
 
     fun hideChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.hideChannel(channelId)
+            val response = channelMiddleWare.hideChannel(channelId)
+            if (response is SceytResponse.Error)
+                notifyPageStateWithResponse(response)
         }
     }
 

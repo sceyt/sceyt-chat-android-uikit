@@ -16,7 +16,7 @@ import com.sceyt.sceytchatuikit.extensions.setPlayButtonIcon
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayer
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
-import com.sceyt.sceytchatuikit.sceytconfigs.MessageInputViewStyle
+import com.sceyt.sceytchatuikit.sceytstyles.MessageInputViewStyle
 import java.io.File
 
 class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)

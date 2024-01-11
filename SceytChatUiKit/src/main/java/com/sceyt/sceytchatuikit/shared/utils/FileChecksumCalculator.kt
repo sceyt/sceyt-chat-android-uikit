@@ -20,16 +20,14 @@ object FileChecksumCalculator {
             fis = FileInputStream(File(filePath))
             val crc32 = CRC32()
             if (length < mb3) {
-                calculateChecksumFor1Mb(fis, crc32, 0)
-                crc32.value
+                calculateChecksumForFile(fis, crc32)
             } else {
                 calculateChecksumFor1Mb(fis, crc32, 0)
                 calculateChecksumFor1Mb(fis, crc32, length / 3)
                 calculateChecksumFor1Mb(fis, crc32, length - mb1)
-
-                val result = crc32.value
-                if (result == 0L) null else result
             }
+            val result = crc32.value
+            if (result == 0L) null else result
         } catch (e: Throwable) {
             e.printStackTrace()
             null
@@ -50,6 +48,19 @@ object FileChecksumCalculator {
             val buffer = ByteArray(loopBufferSize)
             while (loadedBufferSize < maxBufferSize && fis.read(buffer).also { bytesRead = it } != -1) {
                 loadedBufferSize += loopBufferSize
+                crc32.update(buffer, 0, bytesRead)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun calculateChecksumForFile(fis: FileInputStream, crc32: CRC32) {
+        try {
+            val loopBufferSize = 8192 * 4 //32 kb
+            var bytesRead: Int
+            val buffer = ByteArray(loopBufferSize)
+            while (fis.read(buffer).also { bytesRead = it } != -1) {
                 crc32.update(buffer, 0, bytesRead)
             }
         } catch (e: Exception) {

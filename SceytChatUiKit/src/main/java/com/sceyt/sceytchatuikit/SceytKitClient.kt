@@ -27,7 +27,6 @@ import com.sceyt.sceytchatuikit.pushes.SceytFirebaseMessagingDelegate
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -37,9 +36,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 import kotlin.collections.set
-import kotlin.coroutines.CoroutineContext
 
-object SceytKitClient : SceytKoinComponent, CoroutineScope {
+object SceytKitClient : SceytKoinComponent {
     private val context: Context by inject()
     private val preferences: SceytSharedPreference by inject()
     private val connectionStateService: ConnectionStateService by inject()
@@ -110,14 +108,14 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
             when (it.state) {
                 ConnectionState.Connected -> {
                     notifyState(true, null)
-                    launch {
+                    globalScope.launch {
                         ProcessLifecycleOwner.get().repeatOnLifecycle(Lifecycle.State.RESUMED) {
                             if (ConnectionEventsObserver.isConnected)
                                 persistenceUsersMiddleWare.setPresenceState(PresenceState.Online)
                         }
                     }
                     SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
-                    launch(Dispatchers.IO) {
+                    globalScope.launch(Dispatchers.IO) {
                         persistenceMessagesMiddleWare.sendAllPendingMarkers()
                         persistenceMessagesMiddleWare.sendAllPendingMessages()
                         persistenceMessagesMiddleWare.sendAllPendingMessageStateUpdates()
@@ -138,15 +136,15 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
 
                 else -> {}
             }
-        }.launchIn(this)
+        }.launchIn(globalScope)
 
         ConnectionEventsObserver.onTokenExpired.onEach {
             onTokenExpired_.tryEmit(Unit)
-        }.launchIn(this)
+        }.launchIn(globalScope)
 
         ConnectionEventsObserver.onTokenWillExpire.onEach {
             onTokenWillExpire_.tryEmit(Unit)
-        }.launchIn(this)
+        }.launchIn(globalScope)
     }
 
     private fun notifyState(success: Boolean, errorMessage: String?) {
@@ -212,7 +210,4 @@ object SceytKitClient : SceytKoinComponent, CoroutineScope {
             }
         })
     }
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
 }

@@ -13,6 +13,7 @@ import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.util.Predicate
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
@@ -70,9 +71,9 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.Po
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.popups.PopupReactionsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.forward.SceytForwardActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
-import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MAX_SELF_REACTIONS_SIZE
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -236,7 +237,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             messagesRV.getChildAt(i)?.let {
                 val holder = messagesRV.getChildViewHolder(it)
                 (holder as? BaseMsgViewHolder)?.setSelectableState()
-
             }
         }
     }
@@ -489,7 +489,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateProgress(data: TransferData, updateRecycler: Boolean) {
         val messages = messagesRV.getData() ?: return
-        ArrayList(messages).findIndexed {item -> item is MessageItem && item.message.tid == data.messageTid }?.let { (index, it) ->
+        ArrayList(messages).findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let { (index, it) ->
             val predicate: (SceytAttachment) -> Boolean = when (data.state) {
                 Uploading, PendingUpload, PauseUpload, Uploaded, Preparing, WaitingToUpload -> { attachment ->
                     attachment.messageTid == data.messageTid
@@ -623,7 +623,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == msgId }?.let {
                     if (highlight)
                         it.second.highlighted = true
-                    messagesRV.scrollToPosition(it.first)
+                    (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(it.first, 200)
                 }
             }
         }
@@ -632,7 +632,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun scrollToPositionAndHighlight(position: Int, highlight: Boolean) {
         MessagesAdapter.awaitUpdating {
             messagesRV.awaitAnimationEnd {
-                messagesRV.scrollToPosition(position)
+                (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, 200)
                 if (highlight) {
                     messagesRV.awaitToScrollFinish(position, callback = {
                         (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
@@ -646,7 +646,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         MessagesAdapter.awaitUpdating {
             messagesRV.awaitAnimationEnd {
                 messagesRV.getData()?.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
-                    messagesRV.scrollToPosition(it.first)
+                    (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(it.first, 0)
                 }
             }
         }
@@ -663,7 +663,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun cancelMultiSelectMode() {
         (messagesRV.getMessagesAdapter())?.setMultiSelectableMode(false)
-        messagesRV.enableDisableSwipeToReply(true)
+        messagesRV.enableDisableSwipeToReply(enabledActions)
         for (i in 0 until messagesRV.childCount) {
             messagesRV.getChildAt(i)?.let {
                 val holder = messagesRV.getChildViewHolder(it)
@@ -678,6 +678,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setMultiselectDestination(map: Map<Long, SceytMessage>) {
         multiselectDestination = map
+    }
+
+    fun removeUnreadMessagesSeparator() {
+        messagesRV.removeUnreadMessagesSeparator()
     }
 
     fun getData() = messagesRV.getData()

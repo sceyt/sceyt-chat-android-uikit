@@ -14,6 +14,8 @@ import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.mappers.isDeleted
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
@@ -27,6 +29,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.M
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -113,26 +116,38 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     }
 
     onChannelEventFlow.onEach {
-        when (it.eventType) {
-            ChannelEventEnum.Left -> {
+        when (val event = it.eventType) {
+            is ChannelEventEnum.Left -> {
                 if (channel.isPublic()) {
-                    val leftUser = channel.members?.getOrNull(0)?.id
-                    if (leftUser == SceytKitClient.myId)
-                        messageInputView.onChannelLeft()
+                    event.leftMembers.forEach { member ->
+                        if (member.id == SceytKitClient.myId)
+                            messageInputView.onChannelLeft()
+                    }
                 }
             }
 
-            ChannelEventEnum.Joined -> {
+            is ChannelEventEnum.Joined -> {
                 if (channel.isPublic()) {
-                    val leftUser = channel.members?.getOrNull(0)?.id
-                    if (leftUser == SceytKitClient.myId)
-                        messageInputView.joinSuccess()
+                    event.joinedMembers.forEach { member ->
+                        if (member.id == SceytKitClient.myId)
+                            messageInputView.joinSuccess()
+                    }
                 }
             }
 
             else -> return@onEach
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
+
+    ChannelsCache.channelUpdatedFlow
+        .filter { it.channel.id == channel.id }
+        .onEach {
+            channel = it.channel.clone()
+            if (channel.userRole.isNotNullOrBlank())
+                messageInputView.joinSuccess()
+            else messageInputView.onChannelLeft()
+        }
+        .launchIn(lifecycleOwner.lifecycleScope)
 
     var mentionJob: Job? = null
 

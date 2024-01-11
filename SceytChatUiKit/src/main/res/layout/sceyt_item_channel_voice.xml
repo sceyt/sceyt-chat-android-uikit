@@ -53,11 +53,30 @@
         android:id="@+id/tvDuration"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
         android:textColor="@color/sceyt_color_text_themed"
         android:textSize="13sp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/loadProgress"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginEnd="0dp"
+        tools:text="02:34" />
+
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
+        android:id="@+id/loadProgress"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:padding="1dp"
+        android:visibility="gone"
+        app:iconSizeInPercent="65"
+        app:iconTint="@color/sceyt_color_accent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="02:34" />
+        app:minProgress="2"
+        app:progressColor="@color/sceyt_color_accent"
+        app:trackColor="@android:color/transparent"
+        app:trackThickness="2.5dp"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

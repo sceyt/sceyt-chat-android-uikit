@@ -54,7 +54,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
-import com.sceyt.sceytchatuikit.presentation.uicomponents.creategroup.viewmodel.CreateChatViewModel
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateServiceImpl
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -118,7 +117,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     factory<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get()) }
     factory<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
-    factory<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get()) }
+    factory<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get()) }
 
     single<FileTransferLogic> { FileTransferLogicImpl(get()) }
 }
@@ -142,11 +141,7 @@ internal val viewModelModule = module {
     viewModel { params ->
         MessageListViewModel(params.get(), params.get(), params.get())
     }
-    viewModel { ChannelAttachmentsViewModel() }
     viewModel { ChannelMembersViewModel(get(), get()) }
-    viewModel { CreateChatViewModel() }
-    viewModel { ConversationInfoViewModel() }
-    viewModel { ChannelsViewModel() }
     viewModel { ReactionsInfoViewModel() }
 }
 

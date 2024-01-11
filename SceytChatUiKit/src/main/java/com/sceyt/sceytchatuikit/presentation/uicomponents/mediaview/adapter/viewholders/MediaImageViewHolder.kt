@@ -2,8 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter.vie
 
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.databinding.SceytMediaItemImageBinding
-import com.sceyt.sceytchatuikit.extensions.asComponentActivity
-import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -34,23 +32,8 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
         }
     }
 
-    override fun bind(item: MediaItem) {
-        super.bind(item)
-        setListener()
-
-        viewHolderHelper.transferData?.let {
-            updateState(it, true)
-            binding.progress.release(it.progressPercent)
-
-            if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
-        }
-    }
-
-    private fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
-
-        binding.progress.isVisible = data.state == Downloading
+    override fun updateState(data: TransferData, isOnBind: Boolean) {
+        binding.progress.isVisible = data.state == Downloading || data.state == PendingDownload
 
         when (data.state) {
             PendingUpload, ErrorUpload, PauseUpload -> {
@@ -96,10 +79,6 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
 
             ThumbLoaded, Preparing, WaitingToUpload -> Unit
         }
-    }
-
-    private fun setListener() {
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
     }
 
     override fun needThumbFor() = ThumbFor.MediaPreview

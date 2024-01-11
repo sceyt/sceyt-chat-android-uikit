@@ -8,6 +8,7 @@ import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.extensions.roundUp
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.mappers.toAttachmentPayLoad
 import kotlin.math.max
 
@@ -162,19 +163,36 @@ abstract class MessageDao {
     abstract suspend fun getNewestThenMessage(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
+    @Query("select * from messages where channelId =:channelId and message_id >=:messageId and not unList " +
+            "and deliveryStatus != $msgPendingStatus order by createdAt, tid limit :limit")
+    abstract suspend fun getNewestThenMessageInclude(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
+
+    @Transaction
     open suspend fun getNearMessages(channelId: Long, messageId: Long, limit: Int): LoadNearData<MessageDb> {
-        val newest = getNewestThenMessage(channelId, messageId, limit)
+        var newest = getNewestThenMessageInclude(channelId, messageId, limit)
+        val includesInNewest = newest.firstOrNull()?.messageEntity?.id == messageId
 
-        if (newest.isEmpty() || (newest.size == 1 && newest[0].messageEntity.id == messageId))
+        newest = if (includesInNewest) { // Remove first message because because it will include in oldest
+            newest.toArrayList().apply { removeAt(0) }
+        } else emptyList()
+
+        var oldest = getOldestThenMessagesInclude(channelId, messageId, limit).reversed()
+        val includesInOldest = oldest.lastOrNull()?.messageEntity?.id == messageId
+
+        if (!includesInOldest)
+            oldest = emptyList()
+
+        if (!includesInOldest && !includesInNewest)
             return LoadNearData(emptyList(), hasNext = false, hasPrev = false)
-
-        val oldest = getOldestThenMessagesInclude(channelId, messageId, limit).reversed()
 
         val newestDiff = max(limit / 2 - newest.size, 0)
         val oldestDiff = max((limit.toDouble() / 2).roundUp() - oldest.size, 0)
 
-        val newMessages = newest.take(limit / 2 + oldestDiff)
-        val oldMessages = oldest.takeLast(limit / 2 + 1 + newestDiff)
+        var newMessages = newest.take(limit / 2 + oldestDiff)
+        val oldMessages = oldest.takeLast(limit / 2 + newestDiff)
+
+        if (oldMessages.size < limit && newMessages.size > limit / 2)
+            newMessages = newest.take(limit - oldMessages.size)
 
         val hasPrev = oldest.size > limit / 2
         val hasNext = newest.size > limit / 2
@@ -227,12 +245,6 @@ abstract class MessageDao {
 
     @Query("select exists(select * from messages where message_id =:messageId)")
     abstract suspend fun existsMessageById(messageId: Long): Boolean
-
-    @Query("update messages set message_id =:serverId, createdAt =:date where tid= :tid")
-    abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long): Int
-
-    @Query("update messages set message_id =:serverId, createdAt =:date, deliveryStatus =:status where tid= :tid")
-    abstract suspend fun updateMessageByParams(tid: Long, serverId: Long, date: Long, status: DeliveryStatus): Int
 
     @Query("update messages set deliveryStatus =:status where message_id in (:ids)")
     abstract suspend fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
