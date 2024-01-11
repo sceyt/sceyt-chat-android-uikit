@@ -6,7 +6,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@drawable/sceyt_bg_corners_8"
-    android:paddingBottom="8dp"
+    android:padding="6dp"
     tools:background="#E3E7FF">
 
     <com.google.android.material.imageview.ShapeableImageView
@@ -48,7 +48,6 @@
         android:id="@+id/tvLinkTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="8dp"
         android:layout_marginTop="8dp"
         android:ellipsize="end"
         android:fontFamily="@font/roboto_medium"
@@ -66,7 +65,6 @@
         android:id="@+id/tvLinkDesc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="8dp"
         android:layout_marginTop="4dp"
         android:ellipsize="end"
         android:maxLines="3"
