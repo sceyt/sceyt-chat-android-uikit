@@ -45,11 +45,12 @@ fun LinkDetails.toLinkPreviewDetails(link: String): LinkPreviewDetails {
         imageUrl = image?.url,
         imageWidth = image?.width?.toIntOrNull(),
         imageHeight = image?.height?.toIntOrNull(),
-        thumb = null
+        thumb = null,
+        hideDetails = false
     )
 }
 
-fun LinkDetailsEntity.toLinkPreviewDetails(): LinkPreviewDetails = LinkPreviewDetails(
+fun LinkDetailsEntity.toLinkPreviewDetails(hideDetails: Boolean): LinkPreviewDetails = LinkPreviewDetails(
     link = link,
     url = url,
     title = title,
@@ -59,5 +60,6 @@ fun LinkDetailsEntity.toLinkPreviewDetails(): LinkPreviewDetails = LinkPreviewDe
     imageUrl = imageUrl,
     imageWidth = imageWidth,
     imageHeight = imageHeight,
-    thumb = thumb
+    thumb = thumb,
+    hideDetails = hideDetails
 )
