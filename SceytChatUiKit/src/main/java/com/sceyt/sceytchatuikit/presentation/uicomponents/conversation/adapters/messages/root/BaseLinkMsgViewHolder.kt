@@ -35,7 +35,7 @@ abstract class BaseLinkMsgViewHolder(
 ) : BaseMsgViewHolder(view, messageListeners, displayedListener, userNameBuilder) {
     private var linkPreviewContainerBinding: SceytMessageLinkPreviewContainerBinding? = null
     private val maxSize by lazy {
-        bubbleMaxWidth - dpToPx(16f) //4f is margins
+        bubbleMaxWidth - dpToPx(28f) //(2*8 preview container + 2*6 root paddings ) is margins
     }
     private val minSize = maxSize / 3
 
@@ -105,7 +105,8 @@ abstract class BaseLinkMsgViewHolder(
     }
 
     private fun setImageSize(image: View, details: LinkPreviewDetails?) {
-        if (details?.imageWidth == null || details.imageHeight == null) {
+        if (details?.imageWidth == null || details.imageHeight == null
+                || details.imageWidth == 0 || details.imageHeight == 0) {
             image.isVisible = false
             return
         }
