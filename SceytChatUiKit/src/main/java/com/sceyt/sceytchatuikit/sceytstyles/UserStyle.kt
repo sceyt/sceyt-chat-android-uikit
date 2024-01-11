@@ -6,11 +6,14 @@ import com.sceyt.sceytchatuikit.sceytconfigs.dateformaters.UserPresenceDateForma
 
 object UserStyle {
 
+    @JvmField
     @DrawableRes
     var userDefaultAvatar: Int = R.drawable.sceyt_ic_default_avatar
 
+    @JvmField
     @DrawableRes
     var deletedUserAvatar: Int = R.drawable.sceyt_ic_deleted_user
 
+    @JvmField
     var userPresenceDateFormat = UserPresenceDateFormatter()
 }
