@@ -80,12 +80,15 @@ abstract class BaseLinkMsgViewHolder(
         with(linkPreviewContainerBinding ?: return) {
             setupStyle()
             if (!data.imageUrl.isNullOrBlank()) {
-                val thumb = message.files?.firstOrNull { it.file.type == AttachmentTypeEnum.Link.value() }?.blurredThumb
                 setImageSize(previewImage, data)
+                val thumb = message.files?.firstOrNull {
+                    it.file.type == AttachmentTypeEnum.Link.value()
+                }?.blurredThumb?.toDrawable(context.resources)
+
                 Glide.with(context)
                     .load(data.imageUrl)
                     .override(data.imageWidth ?: maxSize, data.imageHeight ?: maxSize)
-                    .placeholder(thumb?.toDrawable(context.resources))
+                    .placeholder(thumb)
                     .listener(glideRequestListener(onResourceReady = {
                         previewImage.isVisible = true
                     }, onLoadFailed = {
