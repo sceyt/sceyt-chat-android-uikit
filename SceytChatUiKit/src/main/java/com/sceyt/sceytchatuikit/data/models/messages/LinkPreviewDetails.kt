@@ -14,5 +14,6 @@ data class LinkPreviewDetails(
         val imageUrl: String?,
         var imageWidth: Int?,
         var imageHeight: Int?,
-        var thumb: String?
+        var thumb: String?,
+        val hideDetails: Boolean,
 ) : Parcelable

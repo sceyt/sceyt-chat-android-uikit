@@ -8,4 +8,5 @@ object SceytConstants {
     const val Description = "dsc"
     const val ImageUrl = "iur"
     const val ThumbnailUrl = "tur"
+    const val HideLinkDetails = "hld"
 }

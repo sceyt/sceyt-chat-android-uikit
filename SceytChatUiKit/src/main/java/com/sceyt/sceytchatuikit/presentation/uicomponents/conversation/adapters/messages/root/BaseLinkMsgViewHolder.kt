@@ -66,7 +66,7 @@ abstract class BaseLinkMsgViewHolder(
         }
         val hasImageUrl = !data.imageUrl.isNullOrBlank()
 
-        if (!hasImageUrl && data.title.isNullOrBlank() && data.description.isNullOrBlank()) {
+        if (data.hideDetails || (!hasImageUrl && data.title.isNullOrBlank() && data.description.isNullOrBlank())) {
             viewStub.isVisible = false
             return
         }

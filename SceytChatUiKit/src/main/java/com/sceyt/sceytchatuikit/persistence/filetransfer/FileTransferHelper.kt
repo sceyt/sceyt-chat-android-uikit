@@ -1,8 +1,11 @@
 package com.sceyt.sceytchatuikit.persistence.filetransfer
 
+import android.net.Uri
+import android.util.Size
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
@@ -17,9 +20,9 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ErrorUplo
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
-import com.sceyt.sceytchatuikit.persistence.mappers.getDimensions
 import com.sceyt.sceytchatuikit.persistence.mappers.upsertSizeMetadata
 import com.sceyt.sceytchatuikit.shared.utils.FileChecksumCalculator
+import com.sceyt.sceytchatuikit.shared.utils.FileResizeUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -182,5 +185,19 @@ object FileTransferHelper : SceytKoinComponent {
         val fileTotalSize = fileSize.toPrettySize()
         val fileLoadedSize = (fileSize * progressPercent / 100).toPrettySize(format)
         return Pair(fileLoadedSize, fileTotalSize)
+    }
+
+    private fun getDimensions(type: String, path: String): Size? {
+        return when (type) {
+            AttachmentTypeEnum.Image.value() -> {
+                FileResizeUtil.getImageDimensionsSize(Uri.parse(path))
+            }
+
+            AttachmentTypeEnum.Video.value() -> {
+                FileResizeUtil.getVideoSize(path)
+            }
+
+            else -> return null
+        }
     }
 }

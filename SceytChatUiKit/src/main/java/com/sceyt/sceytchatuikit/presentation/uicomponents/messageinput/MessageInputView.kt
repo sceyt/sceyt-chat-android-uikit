@@ -791,6 +791,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onCancelLinkPreviewClick(view: View) {
         closeLinkDetailsView()
+        linkDetails = linkDetails?.copy(hideDetails = true)
     }
 
     override fun onRemoveAttachmentClick(item: AttachmentItem) {

@@ -49,7 +49,7 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
     }
 
     private fun SceytItemChannelLinkBinding.setLinkInfo(data: LinkPreviewDetails?, attachment: SceytAttachment) {
-        if (data == null || viewHolderHelper.isFileItemInitialized.not() || data.link != attachment.url) {
+        if (data == null || viewHolderHelper.isFileItemInitialized.not() || data.link != attachment.url || data.hideDetails) {
             tvLinkName.text = ""
             tvLinkName.isVisible = false
             tvLinkDescription.isVisible = false

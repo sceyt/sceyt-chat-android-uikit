@@ -60,7 +60,7 @@ fun AttachmentDb.toAttachment(): SceytAttachment {
             transferState = if (isLink) TransferState.PendingDownload else payLoad?.transferState,
             progressPercent = if (isLink) 0f else payLoad?.progressPercent,
             originalFilePath = if (isLink) null else originalFilePath,
-            linkPreviewDetails = linkDetails?.toLinkPreviewDetails())
+            linkPreviewDetails = linkDetails?.toLinkPreviewDetails(isHiddenLinkDetails()))
     }
 }
 

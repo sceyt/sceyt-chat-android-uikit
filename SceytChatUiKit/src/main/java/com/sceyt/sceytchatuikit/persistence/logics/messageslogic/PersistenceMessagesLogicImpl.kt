@@ -61,6 +61,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.reactionslogic.PersistenceRea
 import com.sceyt.sceytchatuikit.persistence.mappers.addAttachmentMetadata
 import com.sceyt.sceytchatuikit.persistence.mappers.existThumb
 import com.sceyt.sceytchatuikit.persistence.mappers.getLinkPreviewDetails
+import com.sceyt.sceytchatuikit.persistence.mappers.isHiddenLinkDetails
 import com.sceyt.sceytchatuikit.persistence.mappers.isLink
 import com.sceyt.sceytchatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
@@ -791,7 +792,7 @@ internal class PersistenceMessagesLogicImpl(
                         attachment.filePath = filePath
                         attachment.url = url
                     }
-                    attachment.linkPreviewDetails = it.linkPreviewDetails?.toLinkPreviewDetails()
+                    attachment.linkPreviewDetails = it.linkPreviewDetails?.toLinkPreviewDetails(attachment.isHiddenLinkDetails())
                 }
             }
         }

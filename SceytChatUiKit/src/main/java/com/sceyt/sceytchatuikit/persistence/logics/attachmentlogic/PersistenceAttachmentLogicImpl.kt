@@ -38,6 +38,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.AttachmentsCach
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.getTid
+import com.sceyt.sceytchatuikit.persistence.mappers.isHiddenLinkDetails
 import com.sceyt.sceytchatuikit.persistence.mappers.toAttachment
 import com.sceyt.sceytchatuikit.persistence.mappers.toFileChecksumData
 import com.sceyt.sceytchatuikit.persistence.mappers.toLinkDetailsEntity
@@ -120,7 +121,7 @@ internal class PersistenceAttachmentLogicImpl(
         if (link.isNullOrBlank()) return@withContext SceytResponse.Error(SceytException(0, "Link is null or blank: link -> $link"))
 
         linkDao.getLinkDetailsEntity(link)?.let {
-            return@withContext SceytResponse.Success(it.toLinkPreviewDetails())
+            return@withContext SceytResponse.Success(it.toLinkPreviewDetails(false))
         }
 
         return@withContext when (val response = attachmentsRepository.getLinkPreviewData(link)) {
@@ -348,7 +349,7 @@ internal class PersistenceAttachmentLogicImpl(
                     progress = this.progressPercent ?: 0f
                     filePath = this.filePath
                 }
-                linkPreviewDetails = it.linkPreviewDetails?.toLinkPreviewDetails()
+                linkPreviewDetails = it.linkPreviewDetails?.toLinkPreviewDetails(attachment.isHiddenLinkDetails())
             }
 
             sceytAttachments.add(attachment.toSceytAttachment(messageTid, transferState, progress, linkPreviewDetails).apply {
