@@ -5,6 +5,7 @@ object SceytLog {
     private var logLevel = SceytLogLevel.ALL
     private var logger: SceytLogger = SceytLoggerImpl()
 
+    @JvmStatic
     fun setLogger(logLevel: SceytLogLevel, logger: SceytLogger) {
         this.logLevel = logLevel
         this.logger = logger

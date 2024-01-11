@@ -60,7 +60,7 @@
             android:name=".presentation.conversationinfo.CustomConversationInfoActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme"
-            android:windowSoftInputMode="adjustNothing" />
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".presentation.conversation.ConversationActivity"
             android:exported="false"
@@ -71,12 +71,17 @@
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity
-            android:name="com.sceyt.chat.demo.presentation.newchannel.NewChannelActivity"
+            android:name="com.sceyt.chat.demo.presentation.newchannel.StartChatActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity
-            android:name="com.sceyt.chat.demo.presentation.creategroup.CreateGroupActivity"
+            android:name="com.sceyt.chat.demo.presentation.createconversation.newgroup.CreateGroupActivity"
             android:exported="false"
+            android:theme="@style/DefaultFontTheme" />
+        <activity
+            android:name=".presentation.createconversation.createchannel.CreateChannelActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/DefaultFontTheme" />
         <activity
             android:name=".presentation.mainactivity.MainActivity"
@@ -85,6 +90,8 @@
             android:launchMode="singleTask"
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustNothing" />
+
+        <activity android:name="com.yalantis.ucrop.UCropActivity" />
 
         <service
             android:name="com.sceyt.sceytchatuikit.services.SceytFirebaseMessageReceiver"

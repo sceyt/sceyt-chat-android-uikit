@@ -15,9 +15,11 @@ import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPrivate
 import com.sceyt.sceytchatuikit.presentation.common.isPublic
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
+import com.sceyt.sceytchatuikit.sceytstyles.ConversationInfoMediaStyle
 
-open class InfoMembersByRoleButtonsFragment : Fragment() {
+open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener {
     protected lateinit var binding: SceytFragmentInfoMembersByRoleBinding
         private set
     protected lateinit var channel: SceytChannel
@@ -36,6 +38,7 @@ open class InfoMembersByRoleButtonsFragment : Fragment() {
         getBundleArguments()
         initViews()
         setDetails(channel)
+        binding.setupStyle()
     }
 
     private fun getBundleArguments() {
@@ -73,6 +76,10 @@ open class InfoMembersByRoleButtonsFragment : Fragment() {
         Members, Admins
     }
 
+    private fun SceytFragmentInfoMembersByRoleBinding.setupStyle() {
+        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
+    }
+
     companion object {
         const val CHANNEL = "CHANNEL"
 
@@ -83,5 +90,9 @@ open class InfoMembersByRoleButtonsFragment : Fragment() {
             }
             return fragment
         }
+    }
+
+    override fun onChannelUpdated(channel: SceytChannel) {
+        setDetails(channel)
     }
 }

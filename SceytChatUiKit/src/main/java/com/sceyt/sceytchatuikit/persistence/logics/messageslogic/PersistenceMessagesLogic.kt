@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.SharedFlow
 
 interface PersistenceMessagesLogic {
     suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>, sendDeliveryMarker: Boolean = true)
-    fun onFcmMessage(data: RemoteMessageData)
+    suspend fun onFcmMessage(data: RemoteMessageData)
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
     suspend fun onMessageEditedOrDeleted(data: SceytMessage)
     suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,

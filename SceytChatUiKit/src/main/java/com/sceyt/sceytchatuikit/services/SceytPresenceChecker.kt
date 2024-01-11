@@ -8,22 +8,17 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.isAppOnForeground
 import com.sceyt.sceytchatuikit.persistence.PersistenceUsersMiddleWare
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.koin.core.component.inject
 import java.util.Collections
 import java.util.Timer
-import java.util.TimerTask
-import kotlin.coroutines.CoroutineContext
+import kotlin.concurrent.timer
 
-object SceytPresenceChecker : SceytKoinComponent, CoroutineScope {
-
+object SceytPresenceChecker : SceytKoinComponent {
     private val persistenceUsersMiddleWare: PersistenceUsersMiddleWare by inject()
 
     private val onPresenceCheckUsersFlow_: MutableSharedFlow<List<PresenceUser>> = MutableSharedFlow(
@@ -45,26 +40,21 @@ object SceytPresenceChecker : SceytKoinComponent, CoroutineScope {
     @Synchronized
     fun startPresenceCheck() {
         if (presenceCheckTimer == null) {
-            presenceCheckTimer = Timer("presence")
-            presenceCheckTimer?.schedule(object : TimerTask() {
-                override fun run() {
-                    getUsers()
-                }
-            }, 4000, 4000)
+            presenceCheckTimer = timer(name = "presence", initialDelay = 4000, period = 4000) {
+                runBlocking { getUsers() }
+            }
         }
     }
 
-    private fun getUsers() {
+    private suspend fun getUsers() {
         if (presenceCheckUsers.keys.isEmpty() || !isAppOnForeground() || !ConnectionEventsObserver.isConnected) return
-        workJob = launch {
-            val result = persistenceUsersMiddleWare.getUsersByIds(presenceCheckUsers.keys.toList())
-            if (result is SceytResponse.Success) {
-                result.data?.let { users ->
-                    users.forEach {
-                        updateUserPresence(it)
-                    }
-                    onPresenceCheckUsersFlow_.tryEmit(users.map { PresenceUser(it) })
+        val result = persistenceUsersMiddleWare.getUsersByIds(presenceCheckUsers.keys.toList())
+        if (result is SceytResponse.Success) {
+            result.data?.let { users ->
+                users.forEach {
+                    updateUserPresence(it)
                 }
+                onPresenceCheckUsersFlow_.tryEmit(users.map { PresenceUser(it) })
             }
         }
     }
@@ -96,9 +86,6 @@ object SceytPresenceChecker : SceytKoinComponent, CoroutineScope {
             presenceCheckTimer = null
         }
     }
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
 
     data class PresenceUser(val user: User) {
 

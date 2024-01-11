@@ -18,12 +18,15 @@ import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 object SceytFirebaseMessagingDelegate : SceytKoinComponent {
     private val context: Context by inject()
     private val messagesLogic: PersistenceMessagesLogic by inject()
     private val preferences: SceytSharedPreference by inject()
+    private val globalScope: CoroutineScope by inject()
     private val firebaseMessaging: FirebaseMessaging by lazy { FirebaseMessaging.getInstance() }
 
     fun registerFirebaseToken(token: String) {
@@ -55,7 +58,7 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
 
     private fun registerClientPushToken(fcmToken: String?) {
         fcmToken ?: return
-        ChatClient.getClient().registerPushToken(fcmToken, object : ActionCallback {
+        ChatClient.getClient().registerPushToken(fcmToken, PushServiceType.Fcm.stingValue(), object : ActionCallback {
             override fun onSuccess() {
                 preferences.setString(KEY_FCM_TOKEN, fcmToken)
                 preferences.setBoolean(KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION, true)
@@ -79,7 +82,7 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
         val message = data.message
 
         if (channel != null && message != null)
-            messagesLogic.onFcmMessage(data)
+            globalScope.launch { messagesLogic.onFcmMessage(data) }
         return true
     }
 
@@ -93,7 +96,7 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
         val channel = data.channel
         val message = data.message
         if (channel != null && message != null)
-            messagesLogic.onFcmMessage(data)
+            globalScope.launch { messagesLogic.onFcmMessage(data) }
         return data
     }
 

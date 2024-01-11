@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class ChatClientConnectionInterceptor(private val connectionRepo: ConnectionRepo,
                                       private val preference: AppSharedPreference) {
-    @Volatile
+
     private var processing = AtomicBoolean(false)
 
     suspend fun getChatToken(userId: String): String? {

@@ -417,6 +417,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return usersLogic.getUserDbById(id)
     }
 
+    override suspend fun getUsersDbByIds(id: List<String>): List<User> {
+        return usersLogic.getUsersDbByIds(id)
+    }
+
     override suspend fun getCurrentUser(): User? {
         return usersLogic.getCurrentUser()
     }

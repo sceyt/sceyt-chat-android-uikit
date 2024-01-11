@@ -31,6 +31,7 @@ class AddMembersActivity : AppCompatActivity() {
     private lateinit var selectedUsersAdapter: SelectedUsersAdapter
     private var selectedUsers = arrayListOf<SceytMember>()
     private var memberType: MemberTypeEnum = MemberTypeEnum.Member
+    private var buttonAlwaysEnable = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +60,16 @@ class AddMembersActivity : AppCompatActivity() {
     private fun getIntentExtra() {
         intent?.getIntExtra(MEMBER_TYPE, memberType.ordinal)?.let { ordinal ->
             memberType = MemberTypeEnum.values().getOrNull(ordinal) ?: memberType
+        }
+
+        intent?.getBooleanExtra(BUTTON_ALWAYS_ENABLE, false)?.let {
+            buttonAlwaysEnable = it
+            binding.fabNext.setEnabledOrNot(it)
+        }
+
+        intent?.getBooleanExtra(BUTTON_ICON_TYPE_NEXT, false)?.let {
+            if (it)
+                binding.fabNext.setImageResource(R.drawable.sceyt_ic_arrow_next)
         }
     }
 
@@ -157,6 +168,7 @@ class AddMembersActivity : AppCompatActivity() {
             val member = selectedUsers.find { it.user.id == userItem.user.id }
             selectedUsers.remove(member)
         }
+        binding.fabNext.setEnabledOrNot(selectedUsers.isNotEmpty() || buttonAlwaysEnable)
     }
 
     private fun initSelectedItems(data: List<UserItem>) {
@@ -176,11 +188,20 @@ class AddMembersActivity : AppCompatActivity() {
     }
 
     companion object {
+        private const val BUTTON_ALWAYS_ENABLE = "BUTTON_ALWAYS_ENABLE"
+        private const val BUTTON_ICON_TYPE_NEXT = "BUTTON_ICON_TYPE_NEXT"
         const val SELECTED_USERS = "selectedUsers"
         const val MEMBER_TYPE = "memberType"
 
-        fun newInstance(context: Context, memberType: MemberTypeEnum = MemberTypeEnum.Member): Intent {
+        fun newInstance(context: Context,
+                        memberType: MemberTypeEnum = MemberTypeEnum.Member,
+                        buttonAlwaysEnable: Boolean? = null,
+                        iconTypeNext: Boolean? = null
+        ): Intent {
+
             return Intent(context, AddMembersActivity::class.java).apply {
+                buttonAlwaysEnable?.let { putExtra(BUTTON_ALWAYS_ENABLE, it) }
+                iconTypeNext?.let { putExtra(BUTTON_ICON_TYPE_NEXT, it) }
                 putExtra(MEMBER_TYPE, memberType.ordinal)
             }
         }

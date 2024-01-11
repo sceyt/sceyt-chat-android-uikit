@@ -11,8 +11,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.DefaultTimeBar
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytMediaItemVideoBinding
-import com.sceyt.sceytchatuikit.extensions.asComponentActivity
-import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -31,12 +29,16 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
     : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback) {
     private var playerHelper: ExoPlayerHelper? = null
     private var videoController: ConstraintLayout? = null
-    private var isAttachedToWindow = false
     private val mediaAdapter by lazy { bindingAdapter as? MediaAdapter }
 
     init {
         binding.root.setOnClickListener {
             clickListeners.invoke(fileItem)
+        }
+
+        binding.videoView.setOnClickListener {
+            videoController?.isVisible = !(videoController?.isVisible ?: false)
+            (context as? OnMediaClickCallback)?.onMediaClick()
         }
     }
 
@@ -44,20 +46,6 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
         super.bind(item)
 
         initVideoController()
-        setListener()
-
-        viewHolderHelper.transferData?.let {
-            updateState(it, true)
-            binding.progress.release(it.progressPercent)
-
-            if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
-        }
-
-        binding.videoView.setOnClickListener {
-            videoController?.isVisible = !(videoController?.isVisible ?: false)
-            (context as? OnMediaClickCallback)?.onMediaClick()
-        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -127,20 +115,16 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
 
     override fun onViewAttachedToWindow() {
         super.onViewAttachedToWindow()
-        isAttachedToWindow = true
         setPlayingState()
     }
 
     override fun onViewDetachedFromWindow() {
         super.onViewDetachedFromWindow()
-        isAttachedToWindow = false
         playerHelper?.pausePlayer()
     }
 
-    private fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
-
-        binding.progress.isVisible = data.state == Downloading
+    override fun updateState(data: TransferData, isOnBind: Boolean) {
+        binding.progress.isVisible = data.state == Downloading || data.state == PendingDownload
 
         when (data.state) {
             PendingUpload, ErrorUpload, PauseUpload -> {
@@ -196,10 +180,6 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
 
     private fun shouldPlayVideo(): Boolean {
         return mediaAdapter?.shouldPlayVideoPath == fileItem.file.filePath
-    }
-
-    private fun setListener() {
-        FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
     }
 
     override fun needThumbFor() = ThumbFor.MediaPreview

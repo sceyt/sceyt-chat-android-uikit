@@ -110,6 +110,7 @@ class MessageListViewModel(
     internal val messageActionBridge by lazy { MessageActionBridge() }
     internal val placeToSavePathsList = mutableSetOf<String>()
     internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
+    private var showSenderAvatarAndNameIfNeeded = true
 
     private val isGroup = channel.isGroup
 
@@ -117,7 +118,7 @@ class MessageListViewModel(
     val loadMessagesFlow: StateFlow<PaginationResponse<SceytMessage>> = _loadMessagesFlow
 
     private val _messageForceDeleteLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
-    val messageForceDeleteLiveData: LiveData<SceytResponse<SceytMessage>> = _messageForceDeleteLiveData
+    val checkMessageForceDeleteLiveData: LiveData<SceytResponse<SceytMessage>> = _messageForceDeleteLiveData
 
     private val _joinLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
     val joinLiveData: LiveData<SceytResponse<SceytChannel>> = _joinLiveData
@@ -241,7 +242,7 @@ class MessageListViewModel(
     }
 
     fun loadNearMessages(messageId: Long, loadKey: LoadKeyData, ignoreServer: Boolean) {
-        setPagingLoadingStarted(LoadNear)
+        setPagingLoadingStarted(LoadNear, ignoreServer = ignoreServer)
 
         viewModelScope.launch(Dispatchers.IO) {
             val limit = min(50, MESSAGES_LOAD_SIZE * 2)
@@ -484,6 +485,10 @@ class MessageListViewModel(
         }
     }
 
+    fun showSenderAvatarAndNameIfNeeded(show: Boolean) {
+        showSenderAvatarAndNameIfNeeded = show
+    }
+
     internal suspend fun mapToMessageListItem(
             data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
             compareMessage: SceytMessage? = null,
@@ -506,6 +511,10 @@ class MessageListViewModel(
                 val messageItem = MessageListItem.MessageItem(initMessageInfoData(sceytMessage, prevMessage, true))
 
                 if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
+                    messageItem.message.apply {
+                        shouldShowAvatarAndName = incoming && isGroup && showSenderAvatarAndNameIfNeeded
+                        disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
+                    }
                     messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
                         unreadLineMessage = it
                     })
@@ -530,8 +539,9 @@ class MessageListViewModel(
         return sceytMessage.apply {
             isGroup = this@MessageListViewModel.isGroup
             files = attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { it.toFileListItem(this) }
-            if (initNameAndAvatar)
-                canShowAvatarAndName = shouldShowAvatarAndName(this, prevMessage)
+            if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
+                shouldShowAvatarAndName = shouldShowAvatarAndName(this, prevMessage)
+            disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
             messageReactions = initReactionsItems(this)
         }
     }

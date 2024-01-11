@@ -16,8 +16,8 @@ import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
-import com.sceyt.sceytchatuikit.sceytconfigs.ChannelStyle
-import com.sceyt.sceytchatuikit.sceytconfigs.MessagesStyle
+import com.sceyt.sceytchatuikit.sceytstyles.ChannelStyle
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import java.io.File
 
 fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView, dateText: String, edited: Boolean, shouldShowStatus: Boolean) {
@@ -112,7 +112,8 @@ internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
                 || parentMessage?.state != other.parentMessage?.state,
         reactionsChanged = messageReactions?.equalsIgnoreNull(other.messageReactions)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
-        showAvatarAndNameChanged = canShowAvatarAndName != other.canShowAvatarAndName,
+        showAvatarAndNameChanged = shouldShowAvatarAndName != other.shouldShowAvatarAndName
+                || disabledShowAvatarAndName != other.disabledShowAvatarAndName,
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected
     )

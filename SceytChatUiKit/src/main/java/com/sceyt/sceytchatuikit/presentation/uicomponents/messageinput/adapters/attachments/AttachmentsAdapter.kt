@@ -6,8 +6,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 
 class AttachmentsAdapter(private val attachments: ArrayList<AttachmentItem>,
-                         private val factory: AttachmentsViewHolderFactory) :
-        RecyclerView.Adapter<BaseViewHolder<AttachmentItem>>() {
+                         private val factory: AttachmentsViewHolderFactory
+) : RecyclerView.Adapter<BaseViewHolder<AttachmentItem>>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<AttachmentItem> {
         return factory.createViewHolder(parent, viewType)

@@ -11,6 +11,7 @@ interface PersistenceUsersMiddleWare {
     suspend fun loadMoreUsers(): SceytResponse<List<User>>
     suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<User>>
     suspend fun getUserDbById(id: String): User?
+    suspend fun getUsersDbByIds(id: List<String>): List<User>
     suspend fun getCurrentUser(): User?
     fun getCurrentUserAsFlow(): Flow<User>
     suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String>

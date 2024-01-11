@@ -7,7 +7,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytItemMemberBinding
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
-import com.sceyt.sceytchatuikit.sceytconfigs.UserStyle
+import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 
 class MentionUserViewHolder(private val binding: SceytItemMemberBinding,
                             private val itemClickListener: UsersAdapter.ClickListener) : BaseViewHolder<SceytMember>(binding.root) {

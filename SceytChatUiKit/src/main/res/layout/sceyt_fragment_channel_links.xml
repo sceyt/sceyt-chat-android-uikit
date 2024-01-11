@@ -10,10 +10,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingTop="15dp"
-        android:paddingHorizontal="16dp"
+        android:paddingTop="7dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:spanCount="3"
         tools:itemCount="9"
         tools:listitem="@layout/sceyt_item_channel_link" />
 

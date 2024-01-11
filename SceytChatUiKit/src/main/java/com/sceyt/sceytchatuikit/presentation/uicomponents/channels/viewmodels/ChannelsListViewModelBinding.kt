@@ -14,9 +14,11 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.isResumed
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelUpdateData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
@@ -24,9 +26,11 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.Typ
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import org.koin.core.component.inject
 import java.util.concurrent.ConcurrentHashMap
 
 fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
@@ -56,6 +60,22 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
                 }
             }
         }
+    }
+
+    viewModelScope.launch {
+        val channelsCache by inject<ChannelsCache>()
+        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach {
+            launch(Dispatchers.IO) {
+                it.forEach { presenceUser ->
+                    channelsCache.getData().forEach { channel ->
+                        val user = presenceUser.user
+                        val peer = channel.getFirstMember()
+                        if (channel.isDirect() && peer?.id == user.id)
+                            channelsCache.updateChannelPeer(channel.id, user)
+                    }
+                }
+            }
+        }.launchIn(this)
     }
 
     fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytChannel>) {
@@ -98,7 +118,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             }
             needToUpdateChannelsAfterResume.remove(channelId)
             lifecycleOwner.withResumed {
-                channelsListView.deleteChannel(channelId)
+                channelsListView.deleteChannel(channelId, searchQuery)
             }
         }
     }.launchIn(viewModelScope)
@@ -113,8 +133,13 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
             if (diff != null) {
                 if (diff.lastMessageChanged || data.needSorting || isCanceled)
                     channelsListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
-            } else
+                SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body} draft:${data.channel.draftMessage?.message}  unreadCount ${data.channel.newMessageCount}" +
+                        " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${diff.hasDifference()} lastMessageChanged: ${diff.lastMessageChanged} needSorting: ${data.needSorting}")
+            } else {
+                SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body}  unreadCount ${data.channel.newMessageCount}" +
+                        " isResumed ${lifecycleOwner.isResumed()} but started getChannels ")
                 getChannels(0, query = searchQuery)
+            }
         }
     }.launchIn(viewModelScope)
 
