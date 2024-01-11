@@ -5,6 +5,9 @@
         <attr name="sceytUiMessageIncBubbleColor" format="reference" />
         <attr name="sceytUiMessageOutBubbleColor" format="reference" />
 
+        <attr name="sceytUiMessageIncLinkPreviewBackgroundColor" format="reference" />
+        <attr name="sceytUiMessageOutLinkPreviewBackgroundColor" format="reference" />
+
         <!-- Drawable of the message sent state indicator -->
         <attr name="sceytUiMessageSentIcon" format="reference" />
         <!-- Drawable of the message read state indicator -->
@@ -46,6 +49,7 @@
 
         <attr name="sceytUiMediaLoaderColor" format="reference" />
         <attr name="sceytUiFileAttachmentIcon" format="reference" />
+        <attr name="sceytUiLinkAttachmentIcon" format="reference" />
 
         <attr name="sceytUiSelfReactionBackgroundColor" format="reference" />
         <attr name="sceytUiSelfReactionBorderColor" format="reference" />

@@ -121,24 +121,28 @@
             android:textColor="@color/sceyt_color_text_themed"
             android:textSize="@dimen/mediumTextSize"
             app:layout_constrainedWidth="true"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="@+id/layoutDetails"
             app:layout_constraintTop_toBottomOf="@+id/viewReply"
-            tools:text="Lore ipsum  is the correct text which" />
+            app:layout_constraintVertical_bias="0"
+            tools:text="https://www.sceyt.com" />
 
-        <include
+        <ViewStub
             android:id="@+id/layoutLinkPreview"
-            layout="@layout/sceyt_message_link_preview_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="12dp"
-            android:layout_marginBottom="4dp"
+            android:layout_margin="8dp"
+            android:layout="@layout/sceyt_message_link_preview_container"
             android:visibility="gone"
+            app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toTopOf="@+id/messageDate"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/messageBody"
+            app:layout_goneMarginTop="0dp"
             tools:visibility="visible" />
 
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
