@@ -12,20 +12,42 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.target.Target
 import com.bumptech.glide.request.transition.Transition
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
+import kotlin.time.Duration.Companion.seconds
 
-fun getImageBitmapWithGlide(context: Context, url: String?, size: Int, callback: (bitmap: Bitmap?) -> Unit) {
+fun getImageBitmapWithGlide(context: Context, url: String?,
+                            successCb: (bitmap: Bitmap) -> Unit,
+                            errorCb: () -> Unit = {}) {
     Glide.with(context)
         .asBitmap()
-        .apply {
-            if (size > 0)
-                override(size)
-        }
         .load(url)
         .into(glideCustomTarget(onResourceReady = { resource, _ ->
-            callback.invoke(resource)
+            successCb.invoke(resource)
+        }, onLoadCleared = {
+            errorCb.invoke()
         }))
+}
 
+suspend fun getImageBitmapWithGlideWithTimeout(context: Context, url: String?,
+                                               timeout: Long = 4.seconds.inWholeMilliseconds): Bitmap? {
+    return withContext(Dispatchers.IO) {
+        withTimeoutOrNull(timeout) {
+            try {
+                withContext(Dispatchers.IO) {
+                    Glide.with(context)
+                        .asBitmap()
+                        .load(url)
+                        .submit()
+                        .get()
+                }
+            } catch (e: Exception) {
+                null // Handle the exception as needed
+            }
+        }
+    }
 }
 
 fun Context.downloadOnlyWithGlide(url: String?, endListener: (() -> Unit)? = null): FutureTarget<File> {

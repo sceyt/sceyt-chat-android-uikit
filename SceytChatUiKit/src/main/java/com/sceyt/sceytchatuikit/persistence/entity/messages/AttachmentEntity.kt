@@ -35,6 +35,7 @@ data class AttachmentEntity(
         val fileSize: Long,
         @ColumnInfo(index = true)
         val createdAt: Long,
+        @ColumnInfo(index = true)
         val url: String?,
         val filePath: String?,
         val originalFilePath: String?

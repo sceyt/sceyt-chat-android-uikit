@@ -11,6 +11,7 @@ import androidx.core.view.marginLeft
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.extensions.calculateScaleWidthHeight
 import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.setMargins
@@ -149,42 +150,6 @@ abstract class BaseMediaMessageViewHolder(
         FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity()) {
             if (viewHolderHelper.updateTransferData(it, fileItem, ::isValidThumb))
                 updateState(it)
-        }
-    }
-
-    private fun calculateScaleWidthHeight(defaultSize: Int, minSize: Int, imageWidth: Int, imageHeight: Int): Size {
-        val coefficient = imageWidth.toDouble() / imageHeight.toDouble()
-        var scaleWidth = defaultSize
-        var scaleHeight = defaultSize
-
-        if (coefficient.isNaN()) {
-            return Size(scaleWidth, scaleHeight)
-        } else {
-            if (coefficient != 1.0) {
-                if (imageWidth > imageHeight) {
-                    val h = (defaultSize / coefficient).toInt()
-                    scaleHeight = if (h >= minSize)
-                        h
-                    else minSize
-                } else {
-                    val futureW = (defaultSize * coefficient).toInt()
-                    val coefficientWidth = futureW.toDouble() / defaultSize.toDouble()
-                    var newDefaultSize = defaultSize
-
-                    // If the width of the image is less than 80% of the default size, then we can increase the default size by 20%
-                    if (coefficientWidth <= 0.8)
-                        newDefaultSize = (defaultSize * 1.2).toInt()
-
-                    val w = (newDefaultSize * coefficient).toInt()
-
-                    scaleWidth = if (w >= minSize)
-                        w
-                    else minSize
-
-                    scaleHeight = newDefaultSize
-                }
-            }
-            return Size(scaleWidth, scaleHeight)
         }
     }
 }

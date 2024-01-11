@@ -41,7 +41,7 @@ fun TextView.setTextAndVisibility(title: String?) {
     if (title.isNullOrBlank()) {
         isVisible = false
     } else {
-        text = title
+        text = title.trim()
         isVisible = true
     }
 }

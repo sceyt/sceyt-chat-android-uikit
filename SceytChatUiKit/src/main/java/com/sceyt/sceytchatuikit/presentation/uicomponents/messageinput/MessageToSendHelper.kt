@@ -8,6 +8,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.toSceytAttachment
 import com.sceyt.sceytchatuikit.extensions.extractLinks
@@ -20,6 +21,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.createEmptyUser
 import com.sceyt.sceytchatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.sceytchatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessage
+import com.sceyt.sceytchatuikit.persistence.mappers.toMetadata
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionAnnotation
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
@@ -31,11 +33,11 @@ class MessageToSendHelper(private val context: Context) {
     private var messageInputActionCallback: MessageInputView.MessageInputActionCallback? = null
 
     fun sendMessage(allAttachments: List<Attachment>, body: CharSequence?, editMessage: SceytMessage?,
-                    replyMessage: SceytMessage?, replyThreadMessageId: Long?) {
+                    replyMessage: SceytMessage?, replyThreadMessageId: Long?, linkDetails: LinkPreviewDetails?) {
         val replacedBody = replaceBodyMentions(body)
 
-        if (!checkIsEditingMessage(replacedBody, editMessage)) {
-            val link = getLinkAttachmentFromBody(body)
+        if (!checkIsEditingMessage(replacedBody, editMessage, linkDetails)) {
+            val link = getLinkAttachmentFromBody(body, linkDetails)
             if (allAttachments.isNotEmpty()) {
                 val messages = arrayListOf<Message>()
                 allAttachments.forEachIndexed { index, attachment ->
@@ -48,11 +50,11 @@ class MessageToSendHelper(private val context: Context) {
 
                     messages.add(message)
                 }
-                messageInputActionCallback?.sendMessages(messages)
+                messageInputActionCallback?.sendMessages(messages, linkDetails)
             } else {
                 val attachment = if (link != null) arrayOf(link) else arrayOf()
                 messageInputActionCallback?.sendMessage(buildMessage(replacedBody, attachment, true,
-                    replyMessage, replyThreadMessageId))
+                    replyMessage, replyThreadMessageId), linkDetails)
             }
         }
     }
@@ -99,24 +101,38 @@ class MessageToSendHelper(private val context: Context) {
         return attributes
     }
 
-    private fun checkIsEditingMessage(body: CharSequence, editMessage: SceytMessage?): Boolean {
-        editMessage?.let { message ->
-            val linkAttachment = getLinkAttachmentFromBody(body)?.toSceytAttachment(message.tid, TransferState.Uploaded)
-            message.body = body.toString()
+    private fun checkIsEditingMessage(body: CharSequence, message: SceytMessage?,
+                                      linkDetails: LinkPreviewDetails?): Boolean {
+        if (message == null) return false
+        val linkAttachment = getLinkAttachmentFromBody(body, linkDetails)
+            ?.toSceytAttachment(message.tid, TransferState.Uploaded, linkPreviewDetails = linkDetails)
 
-            if (linkAttachment != null)
-                if (message.attachments.isNullOrEmpty())
-                    message.attachments = arrayOf(linkAttachment)
-                else message.attachments = (message.attachments ?: arrayOf()).plus(linkAttachment)
+        message.body = body.toString()
 
-            val data = getMentionUsersAndAttributes(body)
-            message.mentionedUsers = data.second
-            message.bodyAttributes = data.first
+        if (linkAttachment != null) {
+            if (message.attachments.isNullOrEmpty())
+                message.attachments = arrayOf(linkAttachment)
+            else {
+                val existLinkIndex = message.attachments?.indexOfFirst {
+                    it.type == AttachmentTypeEnum.Link.value()
+                }
 
-            messageInputActionCallback?.sendEditMessage(message)
-            return true
-        }
-        return false
+                if (existLinkIndex == -1 || existLinkIndex == null) {
+                    message.attachments = (message.attachments ?: arrayOf()).plus(linkAttachment)
+                } else
+                    message.attachments?.set(existLinkIndex, linkAttachment)
+            }
+        } else // remove link attachment if exist
+            message.attachments = message.attachments?.filter {
+                it.type != AttachmentTypeEnum.Link.value()
+            }?.toTypedArray()
+
+        val data = getMentionUsersAndAttributes(body)
+        message.mentionedUsers = data.second
+        message.bodyAttributes = data.first
+
+        messageInputActionCallback?.sendEditMessage(message, linkDetails)
+        return true
     }
 
     private fun getMentionUsersAndAttributes(body: CharSequence): Pair<List<BodyAttribute>, Array<User>> {
@@ -132,14 +148,15 @@ class MessageToSendHelper(private val context: Context) {
         return Pair(bodyAttributes, mentionUsers)
     }
 
-    private fun getLinkAttachmentFromBody(body: CharSequence?): Attachment? {
-        val links = body.extractLinks()
-        val isContainsLink = links.isNotEmpty() && links[0].isValidUrl(context)
-        if (isContainsLink) {
-            return Attachment.Builder("", links[0], AttachmentTypeEnum.Link.value())
+    private fun getLinkAttachmentFromBody(body: CharSequence?, linkDetails: LinkPreviewDetails?): Attachment? {
+        val validLink = linkDetails?.link
+                ?: body.extractLinks().firstOrNull { it.isValidUrl(context) }
+        if (validLink != null) {
+            val metadata = linkDetails?.toMetadata() ?: ""
+            return Attachment.Builder("", validLink, AttachmentTypeEnum.Link.value())
                 .withTid(ClientWrapper.generateTid())
-                .setName("")
-                .setMetadata("")
+                .setName(linkDetails?.title ?: "")
+                .setMetadata(metadata)
                 .setCreatedAt(System.currentTimeMillis())
                 .setUpload(false)
                 .build()

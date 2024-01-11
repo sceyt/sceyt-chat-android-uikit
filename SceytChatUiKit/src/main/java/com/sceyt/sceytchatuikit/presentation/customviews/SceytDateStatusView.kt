@@ -2,10 +2,17 @@ package com.sceyt.sceytchatuikit.presentation.customviews
 
 import android.content.Context
 import android.content.res.TypedArray
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.os.Build
-import android.text.*
+import android.text.Layout
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.StaticLayout
+import android.text.TextPaint
 import android.text.style.StyleSpan
 import android.util.AttributeSet
 import android.view.View
@@ -244,7 +251,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         return if (isEdited) {
             val editedText = context.getString(MessagesStyle.messageEditedText)
             val str = SpannableStringBuilder("$editedText  $text")
-            str.setSpan(StyleSpan(Typeface.ITALIC), 0, editedText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            str.setSpan(StyleSpan(MessagesStyle.messageEditedTextStyle), 0, editedText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             stringBuilder = str
             str.toString()
         } else {
