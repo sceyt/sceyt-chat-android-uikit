@@ -15,4 +15,6 @@
     <color name="sceyt_color_last_message_from">#B1B4C2</color>
     <color name="sceyt_color_dialog_bg_themed">#1A1B2A</color>
     <color name="sceyt_color_light_themed">#1A1B2A</color>
+    <color name="sceyt_color_gray_themed">#303032</color>
+
 </resources>

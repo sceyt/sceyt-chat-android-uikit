@@ -93,7 +93,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                 if (attachment.type == AttachmentTypeEnum.Link.value())
                     continue
 
-                val payload = payloads.find { it.messageTid == attachment.messageTid }
+                val payload = payloads.find { it.payLoadEntity.messageTid == attachment.messageTid }?.payLoadEntity
                 if (payload?.transferState == TransferState.Uploaded && payload.url.isNotNullOrBlank()) {
                     val transferData = payload.toTransferData(TransferState.Uploaded)
                     attachmentLogic.updateAttachmentWithTransferData(transferData)

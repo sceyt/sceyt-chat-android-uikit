@@ -8,18 +8,23 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 object MessageInputViewStyle {
+    @JvmField
     @DrawableRes
     var attachmentIcon: Int = R.drawable.sceyt_ic_upload_file
 
+    @JvmField
     @DrawableRes
     var sendMessageIcon: Int = R.drawable.sceyt_ic_send_message
 
+    @JvmField
     @ColorRes
     var inputTextColor: Int = R.color.sceyt_color_black_themed
 
+    @JvmField
     @ColorRes
     var inputHintTextColor: Int = R.color.sceyt_color_hint
 
+    @JvmField
     @ColorRes
     var userNameTextColor: Int = SceytKitConfig.sceytColorAccent
 
