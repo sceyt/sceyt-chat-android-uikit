@@ -29,7 +29,7 @@ import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 abstract class BaseLinkMsgViewHolder(
         private val linkPreview: LinkPreviewHelper,
         view: View,
-        messageListeners: MessageClickListeners.ClickListeners? = null,
+        private val messageListeners: MessageClickListeners.ClickListeners? = null,
         displayedListener: ((MessageListItem) -> Unit)? = null,
         userNameBuilder: ((User) -> String)? = null,
 ) : BaseMsgViewHolder(view, messageListeners, displayedListener, userNameBuilder) {
@@ -101,6 +101,10 @@ abstract class BaseLinkMsgViewHolder(
             tvLinkTitle.setTextAndVisibility(data.title)
             tvLinkDesc.setTextAndVisibility(data.description)
             root.isVisible = true
+
+            root.setOnClickListener {
+                messageListeners?.onLinkDetailsClick(it, messageListItem as MessageListItem.MessageItem)
+            }
         }
     }
 
