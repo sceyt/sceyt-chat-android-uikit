@@ -46,7 +46,7 @@ import com.sceyt.sceytchatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.isPeerBlocked
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.AudioMetadata
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.RecordingListener
 import com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder.SceytRecordedVoicePresenter
@@ -583,7 +583,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
 
             ChannelTypeEnum.Direct -> {
-                val isBlockedPeer = channel.getFirstMember()?.user?.blocked == true
+                val isBlockedPeer = channel.isPeerBlocked()
                 with(binding) {
                     if (isBlockedPeer) {
                         rvAttachments.isVisible = false
