@@ -119,7 +119,7 @@ abstract class BaseLinkMsgViewHolder(
             imageHeight = details.imageHeight ?: maxSize)
 
         image.updateLayoutParams<ViewGroup.LayoutParams> {
-            width = size.width
+            width = maxSize
             height = size.height
         }
         image.isVisible = true
