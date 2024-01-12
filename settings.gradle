@@ -22,4 +22,3 @@ rootProject.name = "SceytUiKit"
 
 include ':SceytDemoApp'
 include ':SceytChatUiKit'
-include ':SceytSimpleChatApp'
