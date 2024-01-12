@@ -60,6 +60,21 @@ object ChannelStyle {
     @DrawableRes
     var statusIndicatorReadIcon: Int = R.drawable.sceyt_ic_status_read
 
+    @DrawableRes
+    var bodyFileAttachmentIcon: Int = R.drawable.sceyt_ic_body_file_attachment
+
+    @JvmField
+    @DrawableRes
+    var bodyImageAttachmentIcon: Int = R.drawable.sceyt_ic_body_image_attachment
+
+    @JvmField
+    @DrawableRes
+    var bodyVideoAttachmentIcon: Int = R.drawable.sceyt_ic_body_video_attachment
+
+    @JvmField
+    @DrawableRes
+    var bodyVoiceAttachmentIcon: Int = R.drawable.sceyt_ic_body_voice_attachment
+
     @JvmField
     var statusIconSize: Int = pxToDp(16f).toInt()
 
@@ -85,6 +100,8 @@ object ChannelStyle {
     @JvmField
     var channelDateFormat = ChannelDateFormatter()
 
+    @JvmField
+    var showChannelActionAsPopup = false
 
     internal fun updateWithAttributes(typedArray: TypedArray): ChannelStyle {
         backgroundColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiChannelListBackgroundColor, backgroundColor)

@@ -10,7 +10,8 @@ import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytDialogDirectChannelActionsBinding
-import com.sceyt.sceytchatuikit.extensions.setTextViewDrawableColor
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -77,7 +78,8 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     }
 
     private fun SceytDialogDirectChannelActionsBinding.setupStyle() {
-        unBlockUser.setTextViewDrawableColor(SceytKitConfig.sceytColorAccent)
+        setTextViewsDrawableColor(listOf(pin, unPin, blockUser, unBlockUser, clearHistory),
+            context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
     companion object {

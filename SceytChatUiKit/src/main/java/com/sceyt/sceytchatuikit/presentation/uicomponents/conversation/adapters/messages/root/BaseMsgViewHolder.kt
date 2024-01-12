@@ -43,7 +43,7 @@ import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
-import com.sceyt.sceytchatuikit.presentation.common.getShowBody
+import com.sceyt.sceytchatuikit.presentation.common.getFormattedBody
 import com.sceyt.sceytchatuikit.presentation.common.setConversationMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
@@ -199,7 +199,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                 tvMessageBody.setTextColor(itemView.context.getCompatColor(R.color.sceyt_color_black_themed))
             }
 
-            tvMessageBody.text = parent?.getShowBody(itemView.context)
+            tvMessageBody.text = parent?.getFormattedBody(itemView.context)
             imageAttachment.isVisible = if (parent?.attachments.isNullOrEmpty()) {
                 false
             } else {

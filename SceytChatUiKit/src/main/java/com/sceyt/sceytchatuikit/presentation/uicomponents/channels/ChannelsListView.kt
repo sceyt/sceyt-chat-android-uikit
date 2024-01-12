@@ -2,16 +2,17 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.channels
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.ContextThemeWrapper
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.appcompat.view.ContextThemeWrapper
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.presentation.common.ChannelActionConfirmationWithDialog
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
@@ -21,6 +22,7 @@ import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.dialogs.ChatActionsDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.events.ChannelEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
@@ -28,8 +30,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.Cha
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.popups.PopupMenuChannel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.sceytchatuikit.sceytstyles.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytstyles.ChannelStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 
 class ChannelsListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -161,20 +163,35 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showChannelActionsPopup(view: View, item: ChannelListItem.ChannelItem) {
-        val popup = PopupMenuChannel(ContextThemeWrapper(context, ChannelStyle.popupStyle), view, channel = item.channel)
-        popup.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.sceyt_mark_as_read -> popupClickListeners.onMarkAsReadClick(item.channel)
-                R.id.sceyt_mark_as_unread -> popupClickListeners.onMarkAsUnReadClick(item.channel)
-                R.id.sceyt_clear_history -> popupClickListeners.onClearHistoryClick(item.channel)
-                R.id.sceyt_leave_channel -> popupClickListeners.onLeaveChannelClick(item.channel)
-                R.id.sceyt_block_channel -> popupClickListeners.onBlockChannelClick(item.channel)
-                R.id.sceyt_block_user -> popupClickListeners.onBlockUserClick(item.channel)
-                R.id.sceyt_un_block_user -> popupClickListeners.onUnBlockUserClick(item.channel)
+        if (ChannelStyle.showChannelActionAsPopup) {
+            val popup = PopupMenuChannel(ContextThemeWrapper(context, ChannelStyle.popupStyle), view, channel = item.channel)
+            popup.setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.sceyt_mark_as_read -> popupClickListeners.onMarkAsReadClick(item.channel)
+                    R.id.sceyt_mark_as_unread -> popupClickListeners.onMarkAsUnReadClick(item.channel)
+                    R.id.sceyt_clear_history -> popupClickListeners.onClearHistoryClick(item.channel)
+                    R.id.sceyt_leave_channel -> popupClickListeners.onLeaveChannelClick(item.channel)
+                    R.id.sceyt_block_channel -> popupClickListeners.onBlockChannelClick(item.channel)
+                    R.id.sceyt_block_user -> popupClickListeners.onBlockUserClick(item.channel)
+                    R.id.sceyt_un_block_user -> popupClickListeners.onUnBlockUserClick(item.channel)
+                }
+                false
             }
-            false
-        }
-        popup.show()
+        } else
+            ChatActionsDialog.newInstance(context, item.channel).also {
+                it.setChooseTypeCb { action ->
+                    when (action) {
+                        ChatActionsDialog.ActionsEnum.Pin -> popupClickListeners.onPinClick(item.channel)
+                        ChatActionsDialog.ActionsEnum.UnPin -> popupClickListeners.onUnPinClick(item.channel)
+                        ChatActionsDialog.ActionsEnum.MarkAsRead -> popupClickListeners.onMarkAsReadClick(item.channel)
+                        ChatActionsDialog.ActionsEnum.MarkAsUnRead -> popupClickListeners.onMarkAsUnReadClick(item.channel)
+                        ChatActionsDialog.ActionsEnum.Mute -> popupClickListeners.onMuteClick(item.channel)
+                        ChatActionsDialog.ActionsEnum.UnMute -> popupClickListeners.onUnMuteClick(item.channel)
+                        ChatActionsDialog.ActionsEnum.Leave -> popupClickListeners.onLeaveChannelClick(item.channel)
+                        ChatActionsDialog.ActionsEnum.Delete -> popupClickListeners.onDeleteChannelClick(item.channel)
+                    }
+                }
+            }.show()
     }
 
     /**
@@ -288,12 +305,40 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         channelCommandEventListener?.invoke(ChannelEvent.MarkAsUnRead(channel))
     }
 
+    override fun onPinClick(channel: SceytChannel) {
+        channelCommandEventListener?.invoke(ChannelEvent.Pin(channel))
+    }
+
+    override fun onUnPinClick(channel: SceytChannel) {
+        channelCommandEventListener?.invoke(ChannelEvent.UnPin(channel))
+    }
+
+    override fun onMuteClick(channel: SceytChannel) {
+        ChannelActionConfirmationWithDialog.confirmMuteUntilAction(context) {
+            channelCommandEventListener?.invoke(ChannelEvent.Mute(channel))
+        }
+    }
+
+    override fun onUnMuteClick(channel: SceytChannel) {
+        channelCommandEventListener?.invoke(ChannelEvent.UnMute(channel))
+    }
+
     override fun onLeaveChannelClick(channel: SceytChannel) {
-        channelCommandEventListener?.invoke(ChannelEvent.LeaveChannel(channel))
+        ChannelActionConfirmationWithDialog.confirmLeaveAction(context, channel) {
+            channelCommandEventListener?.invoke(ChannelEvent.LeaveChannel(channel))
+        }
+    }
+
+    override fun onDeleteChannelClick(channel: SceytChannel) {
+        ChannelActionConfirmationWithDialog.confirmDeleteChatAction(context, channel) {
+            channelCommandEventListener?.invoke(ChannelEvent.DeleteChannel(channel))
+        }
     }
 
     override fun onClearHistoryClick(channel: SceytChannel) {
-        channelCommandEventListener?.invoke(ChannelEvent.ClearHistory(channel))
+        ChannelActionConfirmationWithDialog.confirmClearHistoryAction(context, channel) {
+            channelCommandEventListener?.invoke(ChannelEvent.ClearHistory(channel))
+        }
     }
 
     override fun onBlockChannelClick(channel: SceytChannel) {
