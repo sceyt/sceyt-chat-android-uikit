@@ -42,14 +42,27 @@
         <item name="android:background">@drawable/sceyt_bg_bottom_sheet_dialog</item>
     </style>
 
-    <style name="SceytShapeAppearanceOverlay.CornerSize17" parent="">
+    <style name="SceytShapeAppearanceOverlayRounded" parent="">
         <item name="cornerFamily">rounded</item>
+    </style>
+
+    <style name="SceytShapeAppearanceOverlay.CornerSize17" parent="@style/SceytShapeAppearanceOverlayRounded">
         <item name="cornerSize">17dp</item>
     </style>
 
-    <style name="SceytShapeAppearanceOverlay.CornerSize5" parent="">
-        <item name="cornerFamily">rounded</item>
+    <style name="SceytShapeAppearanceOverlay.CornerSize5" parent="@style/SceytShapeAppearanceOverlayRounded">
         <item name="cornerSize">5dp</item>
+    </style>
+
+    <style name="SceytShapeAppearanceOverlay.CornerSize8" parent="@style/SceytShapeAppearanceOverlayRounded">
+        <item name="cornerSize">8dp</item>
+    </style>
+
+    <style name="SceytShapeAppearanceOverlay.CornerTop8Bottom4" parent="@style/SceytShapeAppearanceOverlayRounded">
+        <item name="cornerSizeTopLeft">8dp</item>
+        <item name="cornerSizeTopRight">8dp</item>
+        <item name="cornerSizeBottomLeft">4dp</item>
+        <item name="cornerSizeBottomRight">4dp</item>
     </style>
 
     <style name="SceytPopupMenuStyle" parent="@style/Widget.AppCompat.ListView.DropDown">

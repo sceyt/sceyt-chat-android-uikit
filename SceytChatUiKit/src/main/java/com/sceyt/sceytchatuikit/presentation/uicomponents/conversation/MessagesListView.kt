@@ -215,6 +215,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
 
+            override fun onLinkDetailsClick(view: View, item: MessageItem) {
+                checkMaybeInMultiSelectMode(view, item.message) {
+                    clickListeners.onLinkDetailsClick(view, item)
+                }
+            }
+
             override fun onMultiSelectClick(view: View, message: SceytMessage) {
                 clickListeners.onMultiSelectClick(view, message)
             }
@@ -807,6 +813,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onLinkClick(view: View, item: MessageItem) {
+        item.message.attachments?.firstOrNull()?.let {
+            context.openLink(it.url)
+        }
+    }
+
+    override fun onLinkDetailsClick(view: View, item: MessageItem) {
         item.message.attachments?.firstOrNull()?.let {
             context.openLink(it.url)
         }

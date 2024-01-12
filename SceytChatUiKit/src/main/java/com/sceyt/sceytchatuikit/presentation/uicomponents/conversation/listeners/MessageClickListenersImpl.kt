@@ -23,9 +23,9 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var mentionUserClickListener: MessageClickListeners.MentionClickListener? = null
     private var attachmentLoaderClickListener: MessageClickListeners.AttachmentLoaderClickListener? = null
     private var linkClickListener: MessageClickListeners.LinkClickListener? = null
+    private var linkDetailsClickListener: MessageClickListeners.LinkDetailsClickListener? = null
     private var scrollToDownClickListener: MessageClickListeners.ScrollToDownClickListener? = null
     private var multiSelectClickListener: MessageClickListeners.MultiSelectClickListener? = null
-
 
     internal constructor()
 
@@ -98,6 +98,11 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         linkClickListener?.onLinkClick(view, item)
     }
 
+    override fun onLinkDetailsClick(view: View, item: MessageListItem.MessageItem) {
+        defaultListeners?.onLinkDetailsClick(view, item)
+        linkDetailsClickListener?.onLinkDetailsClick(view, item)
+    }
+
     override fun onScrollToDownClick(view: ScrollToDownView) {
         defaultListeners?.onScrollToDownClick(view)
         scrollToDownClickListener?.onScrollToDownClick(view)
@@ -123,6 +128,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 attachmentLongClickListener = listener
                 mentionUserClickListener = listener
                 linkClickListener = listener
+                linkDetailsClickListener = listener
                 scrollToDownClickListener = listener
                 attachmentLoaderClickListener = listener
                 multiSelectClickListener = listener
@@ -178,6 +184,10 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
 
             is MessageClickListeners.LinkClickListener -> {
                 linkClickListener = listener
+            }
+
+            is MessageClickListeners.LinkDetailsClickListener -> {
+                linkDetailsClickListener = listener
             }
 
             is MessageClickListeners.ScrollToDownClickListener -> {

@@ -1,6 +1,8 @@
 package com.sceyt.sceytchatuikit.persistence.logics.attachmentlogic
 
+import android.util.Size
 import androidx.lifecycle.asFlow
+import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
@@ -13,6 +15,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.sceytchatuikit.data.models.messages.FileChecksumData
+import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.AttachmentsRepository
@@ -22,10 +25,11 @@ import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
 import com.sceyt.sceytchatuikit.persistence.dao.FileChecksumDao
+import com.sceyt.sceytchatuikit.persistence.dao.LinkDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentDb
-import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
+import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageIdAndTid
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -34,15 +38,20 @@ import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.AttachmentsCach
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.getTid
+import com.sceyt.sceytchatuikit.persistence.mappers.isHiddenLinkDetails
 import com.sceyt.sceytchatuikit.persistence.mappers.toAttachment
 import com.sceyt.sceytchatuikit.persistence.mappers.toFileChecksumData
+import com.sceyt.sceytchatuikit.persistence.mappers.toLinkDetailsEntity
+import com.sceyt.sceytchatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.sceytchatuikit.persistence.mappers.toMessageDb
 import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.utils.FileChecksumCalculator
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 internal class PersistenceAttachmentLogicImpl(
@@ -50,6 +59,7 @@ internal class PersistenceAttachmentLogicImpl(
         private val attachmentDao: AttachmentDao,
         private val userDao: UserDao,
         private val fileChecksumDao: FileChecksumDao,
+        private val linkDao: LinkDao,
         private val messagesCache: MessagesCache,
         private val attachmentsCache: AttachmentsCache,
         private val attachmentsRepository: AttachmentsRepository) : PersistenceAttachmentLogic, SceytKoinComponent {
@@ -62,7 +72,7 @@ internal class PersistenceAttachmentLogicImpl(
         }
     }
 
-    override suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoadEntity> {
+    override suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoadDb> {
         return attachmentDao.getAllAttachmentPayLoadsByMsgTid(tid)
     }
 
@@ -107,11 +117,52 @@ internal class PersistenceAttachmentLogicImpl(
         return fileChecksumDao.getChecksum(checksum ?: return null)?.toFileChecksumData()
     }
 
+    override suspend fun getLinkPreviewData(link: String?): SceytResponse<LinkPreviewDetails> = withContext(Dispatchers.IO) {
+        if (link.isNullOrBlank()) return@withContext SceytResponse.Error(SceytException(0, "Link is null or blank: link -> $link"))
+
+        linkDao.getLinkDetailsEntity(link)?.let {
+            return@withContext SceytResponse.Success(it.toLinkPreviewDetails(false))
+        }
+
+        return@withContext when (val response = attachmentsRepository.getLinkPreviewData(link)) {
+            is SceytResponse.Success -> {
+                if (response.data != null) {
+                    val details = response.data.toLinkPreviewDetails(link)
+                    messagesCache.updateAttachmentLinkDetails(details)
+                    attachmentsCache.updateAttachmentLinkDetails(details)
+                    linkDao.insert(response.data.toLinkDetailsEntity(link, null))
+                    SceytResponse.Success(details)
+                } else
+                    SceytResponse.Error(SceytException(0, "Link is null or blank: link -> $link"))
+            }
+
+            is SceytResponse.Error -> SceytResponse.Error(response.exception, null)
+        }
+    }
+
+    override suspend fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails) = withContext(Dispatchers.IO) {
+        linkDao.upsert(linkDetails.toLinkDetailsEntity())
+        messagesCache.updateAttachmentLinkDetails(linkDetails)
+        attachmentsCache.updateAttachmentLinkDetails(linkDetails)
+    }
+
+    override suspend fun updateLinkDetailsSize(link: String, size: Size) = withContext(Dispatchers.IO) {
+        linkDao.updateSizes(link, size.width, size.height)
+        messagesCache.updateLinkDetailsSize(link, size.width, size.height)
+        attachmentsCache.updateLinkDetailsSize(link, size.width, size.height)
+    }
+
+    override suspend fun updateLinkDetailsThumb(link: String, thumb: String) = withContext(Dispatchers.IO) {
+        linkDao.updateThumb(link, thumb)
+        messagesCache.updateThumb(link, thumb)
+        attachmentsCache.updateThumb(link, thumb)
+    }
+
     private fun loadAttachments(loadType: PaginationResponse.LoadType, conversationId: Long, attachmentId: Long,
                                 types: List<String>, loadKey: LoadKeyData = LoadKeyData(value = attachmentId),
                                 offset: Int, ignoreDb: Boolean): Flow<PaginationResponse<AttachmentWithUserData>> {
         return callbackFlow {
-            if (offset == 0) attachmentsCache.clear()
+            if (offset == 0) attachmentsCache.clear(types)
 
             // Load from database
             if (!ignoreDb)
@@ -232,7 +283,7 @@ internal class PersistenceAttachmentLogicImpl(
                 hasDiff = attachmentsCache.addAll(it.map { data -> data.attachment }, true)
             }
 
-        val cacheData = attachmentsCache.getSorted().map {
+        val cacheData = attachmentsCache.getSorted(types).map {
             AttachmentWithUserData(it, response.data?.second?.get(it.userId))
         }.reversed()
 
@@ -242,7 +293,8 @@ internal class PersistenceAttachmentLogicImpl(
             hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb)
     }
 
-    private suspend fun handelServerResponse(conversationId: Long, response: SceytResponse<Pair<List<Attachment>, Map<String, User>>>): SceytResponse<List<AttachmentWithUserData>> {
+    private suspend fun handelServerResponse(conversationId: Long,
+                                             response: SceytResponse<Pair<List<Attachment>, Map<String, User>>>): SceytResponse<List<AttachmentWithUserData>> {
         when (response) {
             is SceytResponse.Success -> {
                 if (response.data?.first.isNullOrEmpty()) return SceytResponse.Success(emptyList())
@@ -289,14 +341,18 @@ internal class PersistenceAttachmentLogicImpl(
             var transferState = TransferState.PendingDownload
             var progress = 0f
             var filePath: String? = null
+            var linkPreviewDetails: LinkPreviewDetails? = null
 
-            transferData.find { it.messageTid == messageTid }?.let {
-                transferState = it.transferState ?: TransferState.PendingDownload
-                progress = it.progressPercent ?: 0f
-                filePath = it.filePath
-            } ?: TransferState.PendingDownload
+            transferData.find { it.payLoadEntity.messageTid == messageTid }?.let {
+                with(it.payLoadEntity) {
+                    transferState = this.transferState ?: TransferState.PendingDownload
+                    progress = this.progressPercent ?: 0f
+                    filePath = this.filePath
+                }
+                linkPreviewDetails = it.linkPreviewDetails?.toLinkPreviewDetails(attachment.isHiddenLinkDetails())
+            }
 
-            sceytAttachments.add(attachment.toSceytAttachment(messageTid, transferState, progress).apply {
+            sceytAttachments.add(attachment.toSceytAttachment(messageTid, transferState, progress, linkPreviewDetails).apply {
                 this.filePath = filePath
             })
         }

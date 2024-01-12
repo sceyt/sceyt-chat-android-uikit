@@ -155,15 +155,13 @@ object DateTimeUtil {
         val cal = Calendar.getInstance()
         cal.timeInMillis = time
 
+        val isThisYear = now.get(Calendar.YEAR) == cal.get(Calendar.YEAR)
         val formatter = when {
-            (now.get(Calendar.DAY_OF_YEAR) - cal.get(Calendar.DAY_OF_YEAR) < 1) -> {
+            isThisYear && now.get(Calendar.DAY_OF_YEAR) == cal.get(Calendar.DAY_OF_YEAR) -> {
                 dateFormatter.today(context)
             }
 
-            (now.get(Calendar.YEAR) - cal.get(Calendar.YEAR) <= 1) -> {
-                dateFormatter.thisYear(context)
-            }
-
+            isThisYear -> dateFormatter.thisYear(context)
             else -> dateFormatter.olderThisYear(context)
         }
 

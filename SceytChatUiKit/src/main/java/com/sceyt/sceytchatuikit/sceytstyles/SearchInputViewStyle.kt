@@ -7,23 +7,29 @@ import androidx.annotation.DrawableRes
 import com.sceyt.sceytchatuikit.R
 
 object SearchInputViewStyle {
+    @JvmField
     @DrawableRes
     var searchIcon: Int = R.drawable.sceyt_ic_search
 
+    @JvmField
     @DrawableRes
     var clearIcon: Int = R.drawable.sceyt_ic_cancel
 
+    @JvmField
     @ColorRes
     var textColor: Int = R.color.sceyt_color_black_themed
 
+    @JvmField
     @ColorRes
     var hintTextColor: Int = R.color.sceyt_color_hint
 
+    @JvmField
     @ColorRes
     var backgroundColor: Int = R.color.sceyt_color_input
 
     lateinit var hintText: String
 
+    @JvmField
     var disableDebouncedSearch: Boolean = false
 
 
