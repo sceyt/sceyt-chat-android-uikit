@@ -255,10 +255,9 @@ object CustomCompressor : CoroutineScope {
                 val mediaMuxer = MediaMuxer(cacheFile.toString(), MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
                 mediaMuxer.setOrientationHint(rotation)
 
-                var audioIndex = -5
                 var muxerTrackIndex = -5
 
-                audioIndex = findTrack(extractor, isVideo = false)
+                val audioIndex = findTrack(extractor, isVideo = false)
                 if (audioIndex >= 0) {
                     extractor.selectTrack(audioIndex)
                     val audioFormat = extractor.getTrackFormat(audioIndex)
@@ -283,12 +282,12 @@ object CustomCompressor : CoroutineScope {
                     frameRate
                 )
 
-                val decoder: MediaCodec
-                /*
+                /* val decoder: MediaCodec
+
                                 val hasQTI = hasQTI()
                                 val hasOMX = hasOMX()
 
-                                val encoder = prepareEncoder(outputFormat, hasQTI, hasOMX)*/
+                                val encoder = prepareEncoder(outputFormat, hasQTI, hasOMX)
 
                 val inputSurface: InputSurface
                 val outputSurface: OutputSurface
@@ -296,7 +295,7 @@ object CustomCompressor : CoroutineScope {
                 var inputBufferIndex: Int
                 var inputBuffer: ByteBuffer?
                 var chunkSize: Int
-                var frameIndex: Long = 0
+                var frameIndex: Long = 0*/
 
                 try {
 

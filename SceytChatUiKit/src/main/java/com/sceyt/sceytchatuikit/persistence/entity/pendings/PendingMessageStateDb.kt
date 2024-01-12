@@ -10,5 +10,5 @@ data class PendingMessageStateDb(
         val entity: PendingMessageStateEntity,
 
         @Relation(parentColumn = "messageId", entityColumn = "message_id", entity = MessageEntity::class)
-        val message: MessageDb
+        val message: MessageDb?
 )

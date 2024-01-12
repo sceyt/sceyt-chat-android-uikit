@@ -347,7 +347,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     })
 
-    messageForceDeleteLiveData.observe(lifecycleOwner) {
+    checkMessageForceDeleteLiveData.observe(lifecycleOwner) {
         if (it is SceytResponse.Success) {
             if (it.data?.deliveryStatus == DeliveryStatus.Pending && it.data.state == MessageState.Deleted)
                 messagesListView.forceDeleteMessageByTid(it.data.tid)
@@ -420,15 +420,16 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }.launchIn(viewModelScope)
 
     onChannelEventFlow.onEach {
-        when (it.eventType) {
-            ClearedHistory -> messagesListView.clearData()
-            Left -> {
-                val leftUser = it.channel?.members?.getOrNull(0)?.id
-                if (leftUser == myId && !channel.isPublic())
-                    messagesListView.context.asActivity().finish()
+        when (val event = it.eventType) {
+            is ClearedHistory -> messagesListView.clearData()
+            is Left -> {
+                event.leftMembers.forEach { member ->
+                    if (member.id == myId && !channel.isPublic())
+                        messagesListView.context.asActivity().finish()
+                }
             }
 
-            Deleted -> messagesListView.context.asActivity().finish()
+            is Deleted -> messagesListView.context.asActivity().finish()
             else -> return@onEach
         }
     }.launchIn(viewModelScope)
@@ -478,7 +479,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             is MessageCommandEvent.OnMultiselectEvent -> {
-                if (event.message.deliveryStatus == DeliveryStatus.Pending) return@setMessageCommandEventListener
                 val wasSelected = selectedMessagesMap.containsKey(event.message.tid)
 
                 if (!wasSelected && selectedMessagesMap.size >= MAX_MULTISELECT_MESSAGES_COUNT) {
@@ -536,7 +536,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     val response = persistenceChanelMiddleWare.findOrCreateDirectChannel(user)
                     if (response is SceytResponse.Success)
                         response.data?.let {
-                            ConversationInfoActivity.newInstance(event.view.context, response.data, true)
+                            ConversationInfoActivity.newInstance(event.view.context, response.data)
                         }
                 }
             }

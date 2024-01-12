@@ -43,7 +43,7 @@ import com.sceyt.sceytchatuikit.extensions.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
-import com.sceyt.sceytchatuikit.presentation.common.getShowBody
+import com.sceyt.sceytchatuikit.presentation.common.getFormattedBody
 import com.sceyt.sceytchatuikit.presentation.common.setConversationMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
@@ -199,7 +199,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                 tvMessageBody.setTextColor(itemView.context.getCompatColor(R.color.sceyt_color_black_themed))
             }
 
-            tvMessageBody.text = parent?.getShowBody(itemView.context)
+            tvMessageBody.text = parent?.getFormattedBody(itemView.context)
             imageAttachment.isVisible = if (parent?.attachments.isNullOrEmpty()) {
                 false
             } else {
@@ -220,7 +220,11 @@ abstract class BaseMsgViewHolder(private val view: View,
                         false
                     }
 
-                    attachment?.type == AttachmentTypeEnum.Link.value() -> false
+                    attachment?.type == AttachmentTypeEnum.Link.value() -> {
+                        loadLinkImage(attachment, imageAttachment)
+                        true
+                    }
+
                     else -> {
                         imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
                         true
@@ -278,6 +282,19 @@ abstract class BaseMsgViewHolder(private val view: View,
                 }
             }
         } else loadImage(path)
+    }
+
+    private fun loadLinkImage(attachment: SceytAttachment?, imageAttachment: ImageView) {
+        attachment ?: return
+        val url = attachment.linkPreviewDetails?.imageUrl
+        if (!url.isNullOrBlank()) {
+            Glide.with(itemView.context)
+                .load(url)
+                .placeholder(MessagesStyle.linkAttachmentIcon)
+                .error(MessagesStyle.linkAttachmentIcon)
+                .override(imageAttachment.width, imageAttachment.height)
+                .into(imageAttachment)
+        } else imageAttachment.setImageResource(MessagesStyle.linkAttachmentIcon)
     }
 
     protected fun setMessageUserAvatarAndName(avatarView: SceytAvatarView, tvName: TextView, message: SceytMessage) {
@@ -475,7 +492,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     open fun cancelSelectableState() {
-        selectableAnimHelper.cancelSelectableState(selectMessageView, messageListItem)
+        selectableAnimHelper.cancelSelectableState(selectMessageView)
     }
 
     open fun highlight() {

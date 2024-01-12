@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:id="@+id/channelsFragment"
-        android:title="@string/channels"
+        android:title="@string/chats"
         android:icon="@drawable/sceyt_ic_bottom_nav_channels"
         app:showAsAction="ifRoom" />
 

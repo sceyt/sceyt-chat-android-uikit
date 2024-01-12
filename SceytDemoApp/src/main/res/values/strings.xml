@@ -6,11 +6,11 @@
     <string name="username">Username</string>
     <string name="connect">connect</string>
     <string name="connection_failed">Connection failed</string>
-    <string name="channels">Channels</string>
+    <string name="chats">Chats</string>
     <string name="profile">Profile</string>
     <string name="my_profile">My Profile</string>
     <string name="sign_out">Sign Out</string>
-    <string name="new_channel">New Channel</string>
+    <string name="new_channel">New channel</string>
     <string name="make_channel_private">Make channel private</string>
     <string name="make_channel_private_info">By making channel private, only selected members have acess to read or connect to chis channel</string>
     <string name="label">Label</string>
@@ -18,7 +18,7 @@
     <string name="uri">URI</string>
     <string name="enter_channel_uri">Enter channel URI</string>
     <string name="metadata">Metadata</string>
-    <string name="enter_a_metadata">Enter a metadata</string>
+    <string name="enter_a_description">Enter a descriotion</string>
     <string name="users">Users</string>
     <string name="change_role">Change role</string>
     <string name="something_went_wrong">Something went wrong</string>
@@ -34,5 +34,10 @@
     <string name="sign_out_title">Sign out?</string>
     <string name="sign_out_desc">Are you sure you want to sign out?</string>
     <string name="new_group">New group</string>
+    <string name="start_chat">Start chat</string>
+    <string name="group_name">Group name</string>
+    <string name="move_and_scale">Move and Scale</string>
+    <string name="wrong_image">Wrong image</string>
+    <string name="channel_name">Channel name</string>
 
 </resources>

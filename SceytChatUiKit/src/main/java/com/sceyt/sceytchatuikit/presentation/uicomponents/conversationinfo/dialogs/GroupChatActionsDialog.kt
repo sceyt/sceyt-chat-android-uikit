@@ -12,7 +12,10 @@ import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytDialogGroupChannelActionsBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogGroupChannelActionsBinding
@@ -26,6 +29,7 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
         }.root)
 
         binding.initView()
+        binding.setupStyle()
         window?.let {
             it.setWindowAnimations(R.style.SceytDialogFromBottomAnimation)
             val wlp: WindowManager.LayoutParams = it.attributes
@@ -43,13 +47,17 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
     private fun SceytDialogGroupChannelActionsBinding.initView() {
         when (channel.getChannelType()) {
             ChannelTypeEnum.Private -> {
-                binding.leaveChat.text = context.getString(R.string.sceyt_leave_group)
-                binding.delete.text = context.getString(R.string.sceyt_delete_group)
+                leaveChat.text = context.getString(R.string.sceyt_leave_group)
+                delete.text = context.getString(R.string.sceyt_delete_group)
+                report.isVisible = false
             }
-            ChannelTypeEnum.Public -> {
-                binding.leaveChat.text = context.getString(R.string.sceyt_leave_channel)
-                binding.delete.text = context.getString(R.string.sceyt_delete_channel)
+
+            ChannelTypeEnum.Public, ChannelTypeEnum.Broadcast -> {
+                leaveChat.text = context.getString(R.string.sceyt_leave_channel)
+                delete.text = context.getString(R.string.sceyt_delete_channel)
+                // todo report.isVisible = true
             }
+
             else -> {}
         }
 
@@ -81,6 +89,11 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
 
     enum class ActionsEnum {
         ClearHistory, Leave, Delete
+    }
+
+    private fun SceytDialogGroupChannelActionsBinding.setupStyle() {
+        setTextViewsDrawableColor(listOf(pin, unPin, clearHistory, report),
+            context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
     companion object {

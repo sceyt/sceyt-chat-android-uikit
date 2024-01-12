@@ -1,8 +1,7 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
-task androidSourcesJar(type: Jar) {
-    archiveClassifier.set('sources')
+tasks.register('androidSourcesJar', Jar) {
     if (project.plugins.findPlugin("com.android.library")) {
         // For Android libraries
         from android.sourceSets.main.java.srcDirs
@@ -14,15 +13,15 @@ task androidSourcesJar(type: Jar) {
     }
 }
 
-// Dummy javadoc
-task androidJavadocsJar(type: Jar) {
-    archiveClassifier.set('javadoc')
-    from "build/generated/source/buildConfig/release/com/sceyt/sceytchatuikit/"
+tasks.register('androidJavadocs', Javadoc) {
+    source = android.sourceSets.main.java.source
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    excludes = ['**/*.kt']
 }
 
-artifacts {
-    archives androidSourcesJar
-    archives androidJavadocsJar
+tasks.register('androidJavadocsJar', Jar) {
+    archiveClassifier.set('javadoc')
+    from androidJavadocs.destinationDir
 }
 
 afterEvaluate {

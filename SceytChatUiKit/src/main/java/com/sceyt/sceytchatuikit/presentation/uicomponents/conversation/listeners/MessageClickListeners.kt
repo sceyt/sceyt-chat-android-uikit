@@ -61,6 +61,10 @@ sealed interface MessageClickListeners {
         fun onLinkClick(view: View, item: MessageListItem.MessageItem)
     }
 
+    fun interface LinkDetailsClickListener : MessageClickListeners {
+        fun onLinkDetailsClick(view: View, item: MessageListItem.MessageItem)
+    }
+
     fun interface ScrollToDownClickListener : MessageClickListeners {
         fun onScrollToDownClick(view: ScrollToDownView)
     }
@@ -74,6 +78,7 @@ sealed interface MessageClickListeners {
             MessageClickListener,
             MessageLongClickListener,
             LinkClickListener,
+            LinkDetailsClickListener,
             AvatarClickListener,
             ReplyMessageContainerClickListener,
             ReplyCountClickListener,

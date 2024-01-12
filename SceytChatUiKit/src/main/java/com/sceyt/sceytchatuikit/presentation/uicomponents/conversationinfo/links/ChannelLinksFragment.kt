@@ -98,7 +98,8 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     open fun onInitialLinksList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
-            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(requireContext(), LinkPreviewHelper(lifecycleScope)).also {
+            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(requireContext(),
+                LinkPreviewHelper(requireContext(), lifecycleScope)).also {
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                     onLinkClick(item.file.url)
                 })
