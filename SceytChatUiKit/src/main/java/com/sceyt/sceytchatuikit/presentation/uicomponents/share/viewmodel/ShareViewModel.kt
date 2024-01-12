@@ -108,6 +108,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
                 .setName(fileName)
                 .withTid(ClientWrapper.generateTid())
                 .setFileSize(fileSize)
+                .setMetadata("")
                 .setUpload(false)
                 .build()
 
