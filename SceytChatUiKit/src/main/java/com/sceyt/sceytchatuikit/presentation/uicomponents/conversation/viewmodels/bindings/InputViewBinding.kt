@@ -143,10 +143,12 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     ChannelsCache.channelUpdatedFlow
         .filter { it.channel.id == channel.id }
         .onEach {
+            val wasJoined = channel.userRole.isNotNullOrBlank()
             channel = it.channel.clone()
-            if (channel.userRole.isNotNullOrBlank())
-                messageInputView.joinSuccess()
-            else messageInputView.onChannelLeft()
+            if (channel.userRole.isNotNullOrBlank()) {
+                if (!wasJoined)
+                    messageInputView.joinSuccess()
+            } else messageInputView.onChannelLeft()
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 
