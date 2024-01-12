@@ -73,14 +73,18 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
             val title: String = when (channel.getChannelType()) {
                 ChannelTypeEnum.Direct -> {
                     val member = channel.getFirstMember() ?: return
-                    if (member.user.presence?.state == PresenceState.Online) {
-                        getString(R.string.sceyt_online)
+                    if (member.user.blocked) {
+                        ""
                     } else {
-                        member.user.presence?.lastActiveAt?.let {
-                            if (it != 0L)
-                                DateTimeUtil.getPresenceDateFormatData(requireContext(), Date(it))
-                            else ""
-                        } ?: ""
+                        if (member.user.presence?.state == PresenceState.Online) {
+                            getString(R.string.sceyt_online)
+                        } else {
+                            member.user.presence?.lastActiveAt?.let {
+                                if (it != 0L)
+                                    DateTimeUtil.getPresenceDateFormatData(requireContext(), Date(it))
+                                else ""
+                            } ?: ""
+                        }
                     }
                 }
 

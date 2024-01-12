@@ -48,8 +48,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiu
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.sceytchatuikit.sceytstyles.ConversationHeaderViewStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytstyles.ConversationHeaderViewStyle
 import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
@@ -167,15 +167,17 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 val title = when (channel.getChannelType()) {
                     ChannelTypeEnum.Direct -> {
                         val member = channel.getFirstMember() ?: return@post
-                        if (member.user.presence?.state == PresenceState.Online) {
-                            getString(R.string.sceyt_online)
+                        if (member.user.blocked) {
+                            ""
                         } else {
-                            member.user.presence?.lastActiveAt?.let {
-                                if (it != 0L) {
-                                    val text = DateTimeUtil.getPresenceDateFormatData(context, Date(it))
-                                    if (subjectTextView.text.equals(text)) return@post
-                                    else text
-                                } else null
+                            if (member.user.presence?.state == PresenceState.Online) {
+                                getString(R.string.sceyt_online)
+                            } else {
+                                member.user.presence?.lastActiveAt?.let {
+                                    if (it != 0L) {
+                                        DateTimeUtil.getPresenceDateFormatData(context, Date(it))
+                                    } else null
+                                }
                             }
                         }
                     }
@@ -208,7 +210,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             textView.isVisible = false
             return
         }
-        if (textView.text.equals(title))
+        if (textView.text.equals(title) && textView.isVisible)
             return
 
         textView.text = title

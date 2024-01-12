@@ -20,7 +20,7 @@ import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.sceytchatuikit.extensions.setBoldSpan
 import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
-import com.sceyt.sceytchatuikit.presentation.common.getShowBody
+import com.sceyt.sceytchatuikit.presentation.common.getFormattedBody
 import com.sceyt.sceytchatuikit.presentation.common.isTextMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CancelReplyMessageViewClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
@@ -63,7 +63,7 @@ open class EditOrReplyMessageFragment : Fragment() {
             tvName.text = getString(R.string.sceyt_edit_message)
             tvMessageBody.text = if (message.isTextMessage())
                 MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message)
-            else message.getShowBody(root.context)
+            else message.getFormattedBody(root.context)
         }
     }
 
@@ -88,7 +88,7 @@ open class EditOrReplyMessageFragment : Fragment() {
 
             tvMessageBody.text = if (message.isTextMessage())
                 MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message)
-            else message.getShowBody(root.context)
+            else message.getFormattedBody(root.context)
         }
     }
 
