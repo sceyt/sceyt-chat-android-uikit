@@ -32,7 +32,6 @@ import android.os.Message;
 import android.util.Log;
 import android.view.Surface;
 
-import com.abedelazizshe.lightcompressorlibrary.video.MP4Builder;
 import com.abedelazizshe.lightcompressorlibrary.video.Mp4Movie;
 
 import java.io.File;
