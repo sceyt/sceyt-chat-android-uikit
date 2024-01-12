@@ -10,24 +10,25 @@
 
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
         android:id="@+id/avatar"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:layout_marginTop="11dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:sceytAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar" />
 
     <FrameLayout
         android:id="@+id/layoutRemoveIcon"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginBottom="32dp"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginTop="-4dp"
+        android:layout_marginEnd="-18dp"
         android:background="@drawable/sceyt_bg_circle"
         android:backgroundTint="@color/sceyt_color_bg"
-        android:padding="1dp"
-        app:layout_constraintBottom_toBottomOf="@+id/avatar"
-        app:layout_constraintStart_toStartOf="@+id/avatar">
+        android:padding="2dp"
+        app:layout_constraintEnd_toStartOf="@+id/avatar"
+        app:layout_constraintTop_toTopOf="@+id/avatar">
 
         <androidx.appcompat.widget.AppCompatImageView
             android:layout_width="match_parent"
@@ -42,11 +43,11 @@
         android:layout_height="12dp"
         android:layout_margin="1dp"
         android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@id/avatar"
+        app:layout_constraintEnd_toEndOf="@id/avatar"
         app:sceytOnlineViewIndicatorColor="@color/sceyt_color_green"
         app:sceytOnlineViewStrokeColor="@color/sceyt_color_bg"
-        app:sceytOnlineViewStrokeWidth="1dp"
-        app:layout_constraintBottom_toBottomOf="@id/avatar"
-        app:layout_constraintEnd_toEndOf="@id/avatar" />
+        app:sceytOnlineViewStrokeWidth="1dp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/userName"

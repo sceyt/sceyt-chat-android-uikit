@@ -8,6 +8,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.channels.stringToEnum
 import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
+import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 
 fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
     val firstMember = getFirstMember()
@@ -33,7 +34,8 @@ fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
         peerBlockedChanged = peerBlockedChanged,
         typingStateChanged = typingData != other.typingData,
         membersChanged = membersCountChanged || members != other.members,
-        metadataUpdated = metadata != other.metadata)
+        metadataUpdated = metadata != other.metadata,
+        urlUpdated = uri != other.uri)
 }
 
 fun SceytChannel.checkIsMemberInChannel(): Boolean {
@@ -44,6 +46,13 @@ fun SceytChannel.checkIsMemberInChannel(): Boolean {
 
 fun SceytChannel.isPeerDeleted(): Boolean {
     return isDirect() && getFirstMember()?.user?.activityState == UserState.Deleted
+}
+
+fun SceytChannel.getDefaultAvatar(): Int {
+    return if (isDirect()) {
+        if (isPeerDeleted()) UserStyle.deletedUserAvatar
+        else UserStyle.userDefaultAvatar
+    } else 0
 }
 
 fun SceytChannel.isPeerBlocked(): Boolean {

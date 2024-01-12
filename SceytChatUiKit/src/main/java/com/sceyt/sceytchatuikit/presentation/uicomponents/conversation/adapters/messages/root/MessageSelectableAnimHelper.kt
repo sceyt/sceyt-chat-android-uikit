@@ -45,10 +45,6 @@ class MessageSelectableAnimHelper(private var viewHolder: RecyclerView.ViewHolde
     fun setSelectableState(view: View?, item: MessageListItem) {
         view ?: return
         val message = (item as? MessageListItem.MessageItem)?.message ?: return
-        if (message.isPending()) {
-            view.isVisible = false
-            return
-        }
         val isSelected = message.isSelected
         if (view is CheckBox) {
             view.isChecked = isSelected
@@ -70,14 +66,8 @@ class MessageSelectableAnimHelper(private var viewHolder: RecyclerView.ViewHolde
         animation?.start()
     }
 
-    fun cancelSelectableState(view: View?, item: MessageListItem) {
-        view ?: return
-        val message = (item as? MessageListItem.MessageItem)?.message ?: return
-        if (message.isPending()) {
-            view.isVisible = false
-            return
-        }
-        view.isVisible = true
+    fun cancelSelectableState(view: View?) {
+        (view ?: return).isVisible = true
         animation?.cancel()
         animation = ObjectAnimator.ofFloat(view.marginStart.toFloat(), -checkBoxSize.toFloat())
         animation?.addUpdateListener {

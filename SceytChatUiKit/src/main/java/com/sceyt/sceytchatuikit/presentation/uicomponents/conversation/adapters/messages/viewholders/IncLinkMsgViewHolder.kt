@@ -11,8 +11,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseLinkMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
 class IncLinkMsgViewHolder(
@@ -56,6 +56,7 @@ class IncLinkMsgViewHolder(
             with(binding) {
                 val message = item.message
                 tvForwarded.isVisible = message.isForwarded
+                val linkAttachment = message.attachments?.getOrNull(0)
 
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
@@ -82,7 +83,7 @@ class IncLinkMsgViewHolder(
                         messageListeners?.onAvatarClick(it, item)
                     }
 
-                //loadLinkPreview(item, layoutLinkPreview, messageBody)
+                loadLinkPreview(message, linkAttachment, layoutLinkPreview)
             }
         }
     }

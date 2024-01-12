@@ -6,16 +6,21 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentInfoDescriptionBinding
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.extensions.jsonToObject
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytstyles.ConversationInfoMediaStyle
 
-open class InfoDescriptionFragment : Fragment() {
+open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener {
     protected lateinit var binding: SceytFragmentInfoDescriptionBinding
         private set
     protected lateinit var channel: SceytChannel
@@ -32,6 +37,7 @@ open class InfoDescriptionFragment : Fragment() {
 
         getBundleArguments()
         setChannelDescription(channel)
+        binding.setupStyle()
     }
 
     private fun getBundleArguments() {
@@ -40,22 +46,22 @@ open class InfoDescriptionFragment : Fragment() {
 
     open fun setChannelDescription(channel: SceytChannel) {
         with(binding) {
-            if (channel.isDirect()) {
-                val status = channel.getFirstMember()?.user?.presence?.status
-                        ?: com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.presenceStatusText
-                if (status.isNotNullOrBlank()) {
-                    tvTitle.text = getString(com.sceyt.sceytchatuikit.R.string.sceyt_about)
-                    tvDescription.text = status
-                } else binding.root.isVisible = false
-            } else {
-                /*todo need to set channel description
-                if (channel.label.isNotNullOrBlank()) {
-                     tvTitle.text = getString(R.string.sceyt_description)
-                     tvDescription.text = channel.label
-                     groupChannelDescription.isVisible = true
-                 } else*/ binding.root.isVisible = false
-            }
+            val about = if (channel.isDirect()) {
+                channel.getFirstMember()?.user?.presence?.status
+                        ?: SceytKitConfig.presenceStatusText
+            } else channel.metadata?.jsonToObject(ChannelDescriptionData::class.java)?.description
+
+            tvDescription.text = about
+            binding.root.isVisible = about.isNotNullOrBlank()
         }
+    }
+
+    override fun onChannelUpdated(channel: SceytChannel) {
+        setChannelDescription(channel)
+    }
+
+    private fun SceytFragmentInfoDescriptionBinding.setupStyle() {
+        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
     }
 
     companion object {
