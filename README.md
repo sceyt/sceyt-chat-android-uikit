@@ -48,7 +48,7 @@ This will enable your project to use libraries from Maven Central.
 
 ```python
 dependencies {
-    implementation 'com.sceyt:sceyt-chat-android-uikit:1.5.3'
+    implementation 'com.sceyt:sceyt-chat-android-uikit:1.5.5'
 }
 ```
 
