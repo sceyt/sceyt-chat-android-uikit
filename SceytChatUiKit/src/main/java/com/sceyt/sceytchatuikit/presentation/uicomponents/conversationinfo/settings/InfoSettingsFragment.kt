@@ -56,7 +56,7 @@ open class InfoSettingsFragment : Fragment(), ChannelUpdateListener {
 
     private fun setChannelDetails(channel: SceytChannel) {
         binding.root.isVisible = channel.checkIsMemberInChannel()
-        binding.notification.isChecked = channel.muted
+        binding.notification.isChecked = !channel.muted
     }
 
     open fun onAutoDeleteClick(channel: SceytChannel) {
