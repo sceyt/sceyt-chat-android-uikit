@@ -475,8 +475,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             getChannelSettingsFragment(channel).also {
                 (it as? InfoSettingsFragment)?.setClickActionsListener { actionsEnum ->
                     when (actionsEnum) {
-                        InfoSettingsFragment.ClickActionsEnum.Mute -> onMuteUnMuteClick(channel, true)
-                        InfoSettingsFragment.ClickActionsEnum.UnMute -> onMuteUnMuteClick(channel, false)
+                        InfoSettingsFragment.ClickActionsEnum.Mute -> onMuteUnMuteClick(this.channel, true)
+                        InfoSettingsFragment.ClickActionsEnum.UnMute -> onMuteUnMuteClick(this.channel, false)
                         InfoSettingsFragment.ClickActionsEnum.AutoDeleteOn -> {}
                         InfoSettingsFragment.ClickActionsEnum.AutoDeleteOff -> {}
                     }
@@ -490,8 +490,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             getChannelMembersByRoleFragment(channel).also {
                 (it as? InfoMembersByRoleButtonsFragment)?.setClickActionsListener { actionsEnum ->
                     when (actionsEnum) {
-                        InfoMembersByRoleButtonsFragment.ClickActionsEnum.Admins -> onAdminsClick(channel)
-                        InfoMembersByRoleButtonsFragment.ClickActionsEnum.Members -> onMembersClick(channel)
+                        InfoMembersByRoleButtonsFragment.ClickActionsEnum.Admins -> onAdminsClick(this.channel)
+                        InfoMembersByRoleButtonsFragment.ClickActionsEnum.Members -> onMembersClick(this.channel)
                     }
                 }
             }
