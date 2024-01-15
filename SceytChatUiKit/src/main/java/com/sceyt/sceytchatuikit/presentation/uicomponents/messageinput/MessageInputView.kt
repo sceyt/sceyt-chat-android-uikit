@@ -759,7 +759,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun setCustomLinkPreviewFragment(fragment: LinkPreviewFragment, fragmentManager: FragmentManager) {
         fragment.setClickListener(clickListeners)
         fragmentManager.commit {
-            replace(R.id.layoutLinkPreview, linkPreviewFragment)
+            replace(R.id.layoutLinkPreview, fragment)
         }
     }
 
