@@ -86,8 +86,8 @@ class ProfileFragment : Fragment() {
         }
 
         viewModel.settingsLiveData.observe(viewLifecycleOwner) {
-            binding.switchNotifications.isChecked = it.muted
-            binding.switchNotifications.jumpDrawablesToCurrentState()
+            muted = it.mute.isMuted
+            binding.switchNotifications.isChecked = it.mute.isMuted
         }
 
         viewModel.muteUnMuteLiveData.observe(viewLifecycleOwner) {

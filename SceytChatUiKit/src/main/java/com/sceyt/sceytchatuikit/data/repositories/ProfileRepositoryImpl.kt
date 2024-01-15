@@ -70,13 +70,14 @@ internal class ProfileRepositoryImpl : ProfileRepository {
 
     override suspend fun getSettings(): SceytResponse<UserSettings> {
         return suspendCancellableCoroutine { continuation ->
-            ChatClient.getClient().getSettings(object : SettingsCallback {
+            ChatClient.getClient().getUserSettings(object : SettingsCallback {
                 override fun onResult(settings: UserSettings) {
                     continuation.safeResume(SceytResponse.Success(settings))
                 }
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error())
+                    SceytLog.e(TAG, "getSettings error: ${e?.message}")
                 }
             })
         }

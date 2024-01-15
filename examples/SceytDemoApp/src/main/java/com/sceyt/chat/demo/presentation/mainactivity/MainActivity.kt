@@ -85,6 +85,7 @@ class MainActivity : AppCompatActivity() {
         val adapter = MainViewPagerAdapter(this, arrayListOf(ChannelsFragment(), ProfileFragment()))
         binding.viewPager.adapter = adapter
         binding.viewPager.isUserInputEnabled = false
+        binding.viewPager.offscreenPageLimit = 2
     }
 
     private fun loginIfNeeded() {
