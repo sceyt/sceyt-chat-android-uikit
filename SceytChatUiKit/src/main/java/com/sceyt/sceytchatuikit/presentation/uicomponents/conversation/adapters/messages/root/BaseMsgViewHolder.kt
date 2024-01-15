@@ -409,7 +409,7 @@ abstract class BaseMsgViewHolder(private val view: View,
             }
 
             message.attachments?.firstOrNull()?.let {
-                if (it.type == AttachmentTypeEnum.File.value()) {
+                if (!it.type.isEqualsVideoOrImage()) {
                     setPadding(ViewUtil.dpToPx(8f))
                 } else {
                     if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName || message.body.isNotNullOrBlank())
