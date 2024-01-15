@@ -1,37 +1,32 @@
-# SceytChat Android UIKit
+# Sceyt Chat UIKit for Android
+The Sceyt Chat UIKit is a comprehensive toolkit designed for chat integration.
+With prebuilt and customizable UI components, it allows for quick integration of a fully-featured
+chat into your Android application with minimal coding.
 
-Sceyt Chat UIKit is a collection of customizable UI components that allows developers to quickly and easily create beautiful and functional chat interfaces for their messaging applications. The UIKit includes a wide range of components, such as message bubbles, avatars, message input fields, and more.
+![Sceyt Chat UIKit](https://us-ohio-api.sceyt.com/user/api/v1/files/8lwox2ge93/bc039a600a2717188892c9c2e35438b981be7e3ca36f6ece23c5db8f169fff4de828ee9ba29267e57252f07d6d48/android.webp)
 
-With Sceyt Chat UIKit, developers can customize the look and feel of their chat interface to match the branding and design of their messaging application. The components are built to be easy to use and integrate seamlessly with the Sceyt Chat SDK for Android.
 
-In addition to the UI components, the Sceyt Chat UIKit also includes pre-built functionality such as typing indicators, read receipts, message reactions and many more. This helps to streamline the development process, allowing developers to focus on building a great user experience rather than on implementing basic chat functionality.
-
-## Repository Overview
-
-- **SceytChatUiKit:** Inside this folder, you'll find a collection of open-source components ready for building and customizing your future applications.
-
-- **SceytSimpleChatApp:** Explore this directory to experience a straightforward app that utilizes SceytChatUiKit. It serves as a basic example application, demonstrating how to get started with SceytUIKIt. It includes code for initiating one-on-one chats and sending your very first message. For in-depth information, please refer to our [simple chat app creation guide](https://docs.sceyt.com/chat/).
-
-- **SceytDemoApp:** Inside the SceytDemoApp folder, you'll discover a fully functional chat application with a range of additional features and components. Similar to SceytSimpleChatApp, this app also harnesses the power of SceytChatUiKit for extended functionality and customization options.
-
-## Table of contents
-
+## Table of Contents
+* [Features](#features)
 * [Requirements](#requirements)
 * [Installation](#installation)
 * [Usage](#usage)
+* [Customization](#customization)
+* [Examples](#customization)
 * [Proguard](#proguard)
 * [License](#license)
 
+## Features
+- **Offline Support:** Automatically stores messages and new chats when offline, and synchronizes them upon reconnection.
+- **Photo & Video resizer:** On-device Photo and Video resizer for faster delivery with adjustable quality parameters.
+- **Voice Messages:** Built-in support for voice message recording and play back.
+- **Light, Dark Mode:**  Supports both themes, adapting to user preferences for a consistent experience.
+
 ## Requirements
-
-Before using the SceytChat Android SDK, you will need the following:
-
-- Android SDK 21 or later
-- Java version 8 or later
-- Android Studio 4.1 or later
+Minimal Android SDK version:
+-  API 19 ("KitKat"; Android 4.4) or later.
 
 ## Installation
-
 1. Add the following line to the `build.gradle` file for your project:
 
 ```scss
@@ -48,48 +43,81 @@ This will enable your project to use libraries from Maven Central.
 
 ```python
 dependencies {
-    implementation 'com.sceyt:sceyt-chat-android-uikit:1.5.0'
+    implementation 'com.sceyt:sceyt-chat-android-uikit:1.5.5'
+}
+```
+## Usage
+
+Before starting the integration, it is highly recommended to explore our [example apps](https://github.com/sceyt/sceyt-chat-android-uikit/tree/dev/examples) to observe how Sceyt Chat UIKit is initialized and utilized in real applications. These examples provide valuable insights into the integration process.
+
+1. To initialize the UI Kit, add the following code in your Application class with the following parameters:
+
+- `clientId` - a unique identifier for your client
+- `appId` - your application id
+- `host` - your application API URL
+- `enableDatabase` - specifies whether to enable the local database for caching data
+
+```kotlin
+import android.app.Application
+import com.sceyt.sceytchatuikit.SceytUIKitInitializer
+import java.util.UUID
+
+class MyApplication : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+
+        SceytUIKitInitializer(this).initialize(
+            clientId = UUID.randomUUID().toString(),
+            appId = "8lwox2ge93",
+            host = "https://us-ohio-api.sceyt.com",
+            enableDatabase = true)
+    }
+}
+```
+> **Note:** If you're utilizing the [Koin](https://insert-koin.io/) dependency injection, ensure you initialize Sceyt after the Koin initialization. Incorrect sequencing can lead to unexpected behavior or runtime errors.
+
+Make sure that your application class defined in your AndroidManifest.xml:
+
+```xml
+<application
+    ...
+    android:name=".MyApplication"
+    ...
+    >
+</application>
+```
+2. After initializing the Sceyt Chat UIKit and setting up the configuration, the next step is to establish a connection to Sceyt Chat API.
+
+```kotlin
+fun connectToChatClient(){
+    val token = "Your token"
+    SceytKitClient.connect(token)
 }
 ```
 
-3. Sync your project.
+## Customization
 
-4. Add the following permissions to your app's AndroidManifest.xml file:
+### Basic
+Customizing the appearance of the Sceyt Chat UIKit is easy and allows you to tailor it to your application's design. You can customize fonts, colors, icons, and any component, including channel and message cells, message input text box, and many more.
 
-```php
- <uses-permission android:name="android.permission.INTERNET" />
- <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
- <uses-permission android:name="android.permission.CAMERA" />
- <uses-permission android:name="android.permission.RECORD_AUDIO" />
- <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-```
+These following customizations can be applied during the Sceyt Chat UIKit initialization.
 
-## Usage
-
-1. To use the SceytChat Android UIKit, you will need to initialize it with your Sceyt application credentials. The initialization requires the following parameters:
-
-    `host:` The base URL of the Sceyt chat API.
-
-    `appId:` The ID of your Sceyt chat application.
-
-    `clientId:` The ID of current device.
-   
-    `enableDatabase:` Enables UIKit database persistence.
+Here's how you can customize various aspects:
 
 ```kotlin
-    class MyApplication : Application() {
-    
-        override fun onCreate() {
-           super.onCreate()
-           
-           chatClient = SceytUIKitInitializer(this).initialize(
-                   clientId = UUID.randomUUID().toString(),
-                   appId = "8lwox2ge93",
-                   host = "https://us-ohio-api.sceyt.com",
-                   enableDatabase = true)
-        }
-    }
+// Set the primary accent color for the SceytKit UI elements to enhance visual appeal.
+SceytKitConfig.sceytColorAccent = R.color.colorAccent
+
+// Set avatar colors in SceytKit to assign a color array for default user avatars and channel icons.
+SceytKitConfig.avatarColors = arrayOf("#FFC107", "#FF9800", "#FF5722", "#795548")
+
+// Set incoming and outgoing message bubble colors in SceytKit.
+MessagesStyle.incBubbleColor = R.color.colorAccent
+MessagesStyle.outBubbleColor = R.color.colorAccent
 ```
+
+To get more about customization, you check our [Sceyt Demo application](https://github.com/sceyt/sceyt-chat-android-uikit/tree/dev/examples/SceytDemoApp).
 
 ## Proguard
 
@@ -98,9 +126,7 @@ If you are using Proguard with this library, make sure to add the following rule
 ```python
 # Keep all necessary classes in 'com.sceyt.chat' package and its subpackages
 
--keep class com.sceyt.chat.models.** { *; }
--keep class com.sceyt.chat.wrapper.** { *; }
--keep class com.sceyt.chat.callback.** { *; }
+-keep class com.sceyt.sceytchatuikit.** { *; }
 ```
 
 These rules will ensure that all classes in the specified packages and their sub-packages are not obfuscated by Proguard.
