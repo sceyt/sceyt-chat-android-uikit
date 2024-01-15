@@ -1,15 +1,12 @@
 package com.sceyt.sceytchatuikit.presentation.root
 
-import com.sceyt.sceytchatuikit.data.models.SceytResponse
 
 sealed class PageState {
-    data class StateError(val response: SceytResponse<*>?,
-                          val query: String?,
-                          val wasLoadingMore: Boolean,
+    data class StateError(val code: Int?,
+                          val errorMessage: String?,
+                          val wasLoadingMore: Boolean = false,
+                          val query: String? = null,
                           val showMessage: Boolean = true) : PageState() {
-
-        val errorMessage = response?.message
-        val code = response?.code
     }
 
     data class StateEmpty(val query: String? = null,

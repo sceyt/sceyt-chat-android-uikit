@@ -4,27 +4,26 @@ import android.app.Application
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.sceyt.chat.models.ConnectionState
+import com.sceyt.chat.ChatClient
 import com.sceyt.chat.demo.data.AppSharedPreference
+import com.sceyt.chat.models.ConnectionState
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.extensions.isAppOnForeground
 import com.sceyt.sceytchatuikit.logger.SceytLog
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.coroutines.CoroutineContext
 
-@OptIn(DelicateCoroutinesApi::class)
 class SceytConnectionProvider(
         private val application: Application,
         private val preference: AppSharedPreference,
         private val chatClientConnectionInterceptor: ChatClientConnectionInterceptor
-) {
+) : CoroutineScope {
     private var initialized = false
-    private val scope = GlobalScope
-
-    @Volatile
     private var isConnecting = AtomicBoolean(false)
 
     companion object {
@@ -36,7 +35,7 @@ class SceytConnectionProvider(
         observeToAppLifecycle()
         observeToConnectionState()
 
-        scope.launch {
+        launch {
             SceytKitClient.onTokenExpired.collect {
                 SceytLog.i(Tag, "onTokenExpired")
                 launch {
@@ -52,7 +51,7 @@ class SceytConnectionProvider(
             }
         }
 
-        scope.launch {
+        launch {
             SceytKitClient.onTokenWillExpire.collect {
                 launch {
                     SceytLog.i(Tag, "onTokenWillExpire")
@@ -77,14 +76,12 @@ class SceytConnectionProvider(
         initialized = true
     }
 
-    fun connectChatClient() {
-        scope.launch {
-            val userId = preference.getUserId()
-            val isLoggedIn = !userId.isNullOrBlank()
-
-            if (!isLoggedIn) {
-                SceytLog.i(Tag, "$Tag connectChatClient ignore login because user is not logged in.")
-                return@launch
+    fun connectChatClient(userId: String = preference.getUserId() ?: "") {
+        launch {
+            val savedUserId = preference.getUserId()
+            if (userId.isNotBlank() && !savedUserId.isNullOrBlank() && userId != preference.getUserId()) {
+                ChatClient.getClient().disconnect()
+                preference.setToken("")
             }
 
             if (ConnectionEventsObserver.connectionState == ConnectionState.Connecting) {
@@ -102,16 +99,21 @@ class SceytConnectionProvider(
                 return@launch
             }
 
-            isConnecting.set(true)
-
             val sceytToken = preference.getToken()
+
+            if (userId.isBlank() && sceytToken.isNullOrBlank()) {
+                SceytLog.i(Tag, "$Tag connectChatClient ignore login because has not userId and token.")
+                return@launch
+            }
+
+            isConnecting.set(true)
 
             if (!sceytToken.isNullOrBlank()) {
                 SceytLog.i(Tag, "$Tag saved ChatClient token is exist, trying connect with that token: ${sceytToken}.")
                 SceytKitClient.connect(sceytToken)
             } else {
-                SceytLog.i(Tag, "$Tag saved ChatClient token is empty, trying to get Cat client token.")
-                chatClientConnectionInterceptor.getChatToken(userId.toString())?.let { token ->
+                SceytLog.i(Tag, "$Tag saved ChatClient token is empty, trying to get Cat client token, userId: $userId.")
+                chatClientConnectionInterceptor.getChatToken(userId)?.let { token ->
                     SceytLog.i(Tag, "$Tag connectChatClient will connect with new token: ${token.take(8)}")
                     SceytKitClient.connect(token)
                 } ?: run {
@@ -139,7 +141,7 @@ class SceytConnectionProvider(
     }
 
     private fun observeToConnectionState() {
-        scope.launch {
+        launch {
             ConnectionEventsObserver.onChangedConnectStatusFlow.collect {
                 when (it.state) {
                     ConnectionState.Failed -> SceytLog.e(Tag, "${it.exception?.message}")
@@ -156,4 +158,7 @@ class SceytConnectionProvider(
             }
         }
     }
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.IO + SupervisorJob()
 }

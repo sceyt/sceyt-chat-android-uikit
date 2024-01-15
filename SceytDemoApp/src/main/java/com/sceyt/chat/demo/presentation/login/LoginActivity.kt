@@ -2,34 +2,21 @@ package com.sceyt.chat.demo.presentation.login
 
 import android.content.Context
 import android.os.Bundle
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
-import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.models.ConnectionState.Connected
-import com.sceyt.chat.models.ConnectionState.Disconnected
-import com.sceyt.chat.models.ConnectionState.Failed
 import com.sceyt.chat.demo.R
-import com.sceyt.chat.demo.SceytChatDemoApp
-import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.databinding.ActivityLoginBinding
 import com.sceyt.chat.demo.presentation.mainactivity.MainActivity
-import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.hideSoftInput
 import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.root.PageState
-import com.sceyt.sceytchatuikit.presentation.uicomponents.profile.viewmodel.ProfileViewModel
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class LoginActivity : AppCompatActivity() {
-    private val viewModel: ProfileViewModel by viewModels()
-    private val preference by inject<AppSharedPreference>()
+    private val viewModel: LoginViewModel by viewModel()
     private lateinit var binding: ActivityLoginBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +28,7 @@ class LoginActivity : AppCompatActivity() {
 
         statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
 
-        if (preference.getUserId().isNullOrBlank().not()) {
+        if (viewModel.isLoggedIn()) {
             launchActivity<MainActivity>()
             finish()
         }
@@ -52,13 +39,21 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun initViewModel() {
-        viewModel.pageStateLiveData.observe(this) {
-            binding.loading = it is PageState.StateLoading
+        viewModel.pageStateLiveData.observe(this) { pageState ->
+            when (pageState) {
+                is PageState.StateLoading -> binding.loading = pageState.isLoading
+                is PageState.StateError -> customToastSnackBar(pageState.errorMessage
+                        ?: return@observe)
+
+                else -> return@observe
+            }
         }
 
-        viewModel.editProfileLiveData.observe(this) {
-            launchActivity<MainActivity>()
-            finish()
+        viewModel.logInLiveData.observe(this) {
+            if (it) {
+                launchActivity<MainActivity>()
+                finish()
+            }
         }
     }
 
@@ -82,41 +77,10 @@ class LoginActivity : AppCompatActivity() {
 
         submitButton.setOnClickListener {
             hideSoftInput()
-            loginUser(
+            viewModel.loginUser(
                 userNameTextField.editText?.text?.trim().toString(),
                 displayNameTextField.editText?.text?.trim().toString()
             )
-        }
-    }
-
-    private fun loginUser(userId: String, displayName: String) {
-        binding.loading = true
-        var job: Job? = null
-
-        lifecycleScope.launch {
-            preference.setUserId(userId)
-            job = ConnectionEventsObserver.onChangedConnectStatusFlow.onEach {
-                when (it.state) {
-                    Connected -> {
-                        viewModel.saveProfile(displayName, null, null, false)
-                        job?.cancel()
-                    }
-
-                    Disconnected -> {
-                        binding.userNameTextField.error = it.exception?.message ?: "Disconnected"
-                        job?.cancel()
-                    }
-
-                    Failed -> {
-                        binding.userNameTextField.error = getString(R.string.connection_failed)
-                        job?.cancel()
-                    }
-
-                    else -> {}
-                }
-            }.launchIn(this)
-
-            (application as SceytChatDemoApp).connectChatClient()
         }
     }
 

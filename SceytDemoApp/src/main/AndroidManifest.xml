@@ -43,9 +43,16 @@
         </activity>
         <activity
             android:name=".presentation.login.LoginActivity"
-            android:exported="true"
+            android:exported="false"
             android:theme="@style/DefaultFontTheme"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".presentation.mainactivity.MainActivity"
+            android:configChanges="uiMode"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/DefaultFontTheme"
+            android:windowSoftInputMode="adjustNothing">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -81,15 +88,8 @@
         <activity
             android:name=".presentation.createconversation.createchannel.CreateChannelActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize"
-            android:theme="@style/DefaultFontTheme" />
-        <activity
-            android:name=".presentation.mainactivity.MainActivity"
-            android:configChanges="uiMode"
-            android:exported="false"
-            android:launchMode="singleTask"
             android:theme="@style/DefaultFontTheme"
-            android:windowSoftInputMode="adjustNothing" />
+            android:windowSoftInputMode="adjustResize" />
 
         <activity android:name="com.yalantis.ucrop.UCropActivity" />
 
