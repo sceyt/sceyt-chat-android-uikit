@@ -23,7 +23,6 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
@@ -136,10 +135,10 @@ class MessageVideoViewHolder(
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
 
-    private fun initializePlayer(mediaPath: String?) {
-        /* binding.videoViewController.setPlayerViewAndPath(binding.videoView, mediaPath)
-         (bindingAdapter as? MessageFilesAdapter)?.videoControllersList?.add(binding.videoViewController)*/
-    }
+   /* private fun initializePlayer(mediaPath: String?) {
+         binding.videoViewController.setPlayerViewAndPath(binding.videoView, mediaPath)
+         (bindingAdapter as? MessageFilesAdapter)?.videoControllersList?.add(binding.videoViewController)
+    }*/
 
     private fun SceytMessageVideoItemBinding.setupStyle() {
         loadProgress.setProgressColor(context.getCompatColor(MessagesStyle.mediaLoaderColor))

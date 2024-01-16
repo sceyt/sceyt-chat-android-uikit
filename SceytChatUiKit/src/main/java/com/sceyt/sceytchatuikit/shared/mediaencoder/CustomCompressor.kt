@@ -215,7 +215,6 @@ object CustomCompressor : CoroutineScope {
 
         return start(
             context,
-            srcUri,
             newWidth,
             newHeight,
             destination,
@@ -228,7 +227,6 @@ object CustomCompressor : CoroutineScope {
 
     private fun start(
             context: Context?,
-            srcUri: Uri?,
             newWidth: Int,
             newHeight: Int,
             destination: String,
