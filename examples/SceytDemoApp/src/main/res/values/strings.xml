@@ -39,5 +39,6 @@
     <string name="move_and_scale">Move and Scale</string>
     <string name="wrong_image">Wrong image</string>
     <string name="channel_name">Channel name</string>
+    <string name="display_name_is_empty">Display name is empty!</string>
 
 </resources>

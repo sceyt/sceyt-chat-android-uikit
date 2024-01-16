@@ -22,7 +22,6 @@ import java.util.UUID
 
 class SceytChatDemoApp : Application() {
     private val connectionProvider by inject<SceytConnectionProvider>()
-
     private lateinit var chatClient: ChatClient
 
     override fun onCreate() {
@@ -57,9 +56,5 @@ class SceytChatDemoApp : Application() {
                 Log.ERROR, Log.ASSERT -> Log.e(TAG, "$s $s1")
             }
         }
-    }
-
-    fun connectChatClient() {
-        connectionProvider.connectChatClient()
     }
 }

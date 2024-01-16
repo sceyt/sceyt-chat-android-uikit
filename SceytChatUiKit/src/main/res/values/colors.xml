@@ -10,6 +10,7 @@
     <color name="sceyt_color_black_themed">#FF000000</color>
 
     <color name="sceyt_color_bg">#FFFFFF</color>
+    <color name="sceyt_color_bg_secondary_themed">#F4F5F8</color>
     <color name="sceyt_color_bg_out_message">#E3E7FF</color>
     <color name="sceyt_color_bg_out_link_preview">#C9D1FF</color>
     <color name="sceyt_color_bg_inc_message">#F1F2F6</color>
