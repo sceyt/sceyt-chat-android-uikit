@@ -111,7 +111,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
 
     single<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single <PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get()) }
     single<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
@@ -154,24 +154,20 @@ internal val coroutineModule = module {
     }
     single<CoroutineScope> { GlobalScope }
     single(qualifier = named(CoroutineContextType.Ui)) { providesUiContext(get()) }
-    single(qualifier = named(CoroutineContextType.Disk)) { providesDiskContext(get()) }
-    single(qualifier = named(CoroutineContextType.Network)) { providesNetworkContext(get()) }
+    single(qualifier = named(CoroutineContextType.IO)) { providesIOContext(get()) }
     single(qualifier = named(CoroutineContextType.Computation)) { providesComputationContext(get()) }
-    single(qualifier = named(CoroutineContextType.Database)) { providesDatabaseContext(get()) }
+    single(qualifier = named(CoroutineContextType.SingleThreaded)) { providesSingleThreadedContext(get()) }
 }
 
-private fun providesUiContext(exceptionHandler: CoroutineExceptionHandler) =
+fun providesUiContext(exceptionHandler: CoroutineExceptionHandler) =
         Dispatchers.Main + exceptionHandler
 
-private fun providesDiskContext(exceptionHandler: CoroutineExceptionHandler) =
-        Executors.newSingleThreadExecutor().asCoroutineDispatcher().plus(exceptionHandler)
-
-fun providesNetworkContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
+fun providesIOContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
         Dispatchers.IO + exceptionHandler
 
 fun providesComputationContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
         Executors.newCachedThreadPool().asCoroutineDispatcher().plus(exceptionHandler)
 
-fun providesDatabaseContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
+fun providesSingleThreadedContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
         Executors.newSingleThreadExecutor().asCoroutineDispatcher().plus(exceptionHandler)
 
