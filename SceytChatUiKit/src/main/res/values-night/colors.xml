@@ -5,6 +5,7 @@
 
     <color name="sceyt_color_black_themed">#FFFFFF</color>
     <color name="sceyt_color_bg">#010212</color>
+    <color name="sceyt_color_bg_secondary_themed">#010212</color>
     <color name="sceyt_color_bg_out_message">#182159</color>
     <color name="sceyt_color_bg_inc_message">#383B51</color>
     <color name="sceyt_color_divider">#383B51</color>

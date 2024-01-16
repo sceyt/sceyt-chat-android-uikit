@@ -7,7 +7,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -135,6 +137,10 @@ class ProfileFragment : Fragment() {
 
         tvEditOrSave.setOnClickListener {
             val newDisplayName = binding.displayName.text?.trim().toString()
+            if (newDisplayName.isBlank()) {
+                Toast.makeText(requireContext(), getString(R.string.display_name_is_empty), Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             val isEditedAvatar = avatarUrl != currentUser?.avatarURL
             val isEditedDisplayName = newDisplayName != currentUser?.fullName?.trim()
             if (isEditMode) {
@@ -194,15 +200,20 @@ class ProfileFragment : Fragment() {
         avatarUrl = user?.avatarURL
         user?.apply {
             binding.avatar.setNameAndImageUrl(fullName.trim(), avatarURL)
-            binding.displayName.setText(fullName.trim())
+            var displayName = fullName.trim()
+            if (displayName.isBlank())
+                displayName = "@${user.id}"
+            binding.displayName.setText(displayName)
         }
     }
 
     private fun FragmentProfileBinding.setEditMode(isEditMode: Boolean) {
         displayName.isEnabled = isEditMode
         icEditPhoto.isVisible = isEditMode
+        tvStatus.isInvisible = isEditMode
 
         if (isEditMode) {
+            displayName.setText(currentUser?.fullName?.trim())
             displayName.background = displayNameDefaultBg
             displayName.setSelection(displayName.text?.length ?: 0)
             displayName.setHint(R.string.display_name)
