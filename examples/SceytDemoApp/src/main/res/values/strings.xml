@@ -40,5 +40,6 @@
     <string name="wrong_image">Wrong image</string>
     <string name="channel_name">Channel name</string>
     <string name="display_name_is_empty">Display name is empty!</string>
+    <string name="mute_notifications">Mute notifications:</string>
 
 </resources>
