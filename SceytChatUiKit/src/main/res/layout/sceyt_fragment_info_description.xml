@@ -10,10 +10,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="10dp"
         android:fontFamily="@font/roboto_medium"
         android:includeFontPadding="false"
-        android:text="@string/sceyt_description"
+        android:text="@string/sceyt_about"
         android:textColor="@color/sceyt_color_gray_800"
         android:textSize="13sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -37,8 +37,8 @@
     <View
         android:id="@+id/divider"
         android:layout_width="match_parent"
-        android:layout_height="8dp"
-        android:layout_marginTop="16dp"
+        android:layout_height="16dp"
+        android:layout_marginTop="10dp"
         android:background="@color/sceyt_color_input"
         app:layout_constraintTop_toBottomOf="@+id/tvDescription" />
 

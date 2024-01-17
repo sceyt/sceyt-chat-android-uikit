@@ -6,18 +6,23 @@ import androidx.annotation.DrawableRes
 import com.sceyt.sceytchatuikit.R
 
 object ConversationHeaderViewStyle {
+    @JvmField
     @DrawableRes
     var backIcon: Int = R.drawable.sceyt_ic_arrow_back
 
+    @JvmField
     @ColorRes
     var titleColor: Int = R.color.sceyt_color_text_themed
 
+    @JvmField
     @ColorRes
     var subTitleColor: Int = R.color.sceyt_color_gray_400
 
+    @JvmField
     @ColorRes
     var underlineColor: Int = R.color.sceyt_color_divider
 
+    @JvmField
     var enableUnderline: Boolean = true
 
 

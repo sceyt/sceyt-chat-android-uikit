@@ -109,7 +109,7 @@ data class SceytChannel(
             pendingReactions = pendingReactions,
             pending = pending
         ).also {
-            it.draftMessage = draftMessage
+            it.draftMessage = draftMessage?.copy()
         }
     }
 }

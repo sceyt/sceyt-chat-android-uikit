@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentPayLoadData
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 
 class MessagesCache {
+    @Volatile
     private var cachedMessages = hashMapOf<Long, HashMap<Long, SceytMessage>>()
     private val lock = Any()
 
@@ -173,13 +175,13 @@ class MessagesCache {
             if (initPayloads)
                 initMessagePayLoads(channelId, message)
             it[message.tid] = message
+        } ?: run {
+            cachedMessages[channelId] = hashMapOf(message.tid to message)
         }
     }
 
     private fun getMessageByTid(channelId: Long, tid: Long): SceytMessage? {
-        return cachedMessages[channelId]?.let {
-            it[tid]
-        }
+        return cachedMessages[channelId]?.get(tid)
     }
 
     /** Set message attachments and pending reactions from cash, which saved in local db.*/
@@ -188,16 +190,20 @@ class MessagesCache {
     }
 
     private fun setPayloads(channelId: Long, messageToUpdate: SceytMessage) {
-        fun setPayloads(message: SceytMessage): SceytMessage? {
+        fun setPayloadsImpl(message: SceytMessage): SceytMessage? {
             val cashedMessage = getMessageByTid(channelId, message.tid)
             val attachmentPayLoadData = getAttachmentPayLoads(cashedMessage)
-            updateAttachmentsPayLoads(attachmentPayLoadData, message)
+            val attachmentsLinkDetails = getAttachmentLinkDetails(cashedMessage)
+            updateAttachmentsPayLoads(attachmentPayLoadData, attachmentsLinkDetails, message)
             return cashedMessage
         }
 
-        val cashedMessage = setPayloads(messageToUpdate)
+        val cashedMessage = setPayloadsImpl(messageToUpdate)
         // Set payloads for parent message
-        messageToUpdate.parentMessage?.let { setPayloads(it) }
+        messageToUpdate.parentMessage?.let {
+            if (it.id != 0L)
+                setPayloadsImpl(it)
+        }
 
         val pendingReactions = cashedMessage?.pendingReactions?.toMutableSet() ?: mutableSetOf()
         val needToAddReactions = messageToUpdate.pendingReactions?.toSet() ?: emptySet()
@@ -206,10 +212,19 @@ class MessagesCache {
         messageToUpdate.pendingReactions = pendingReactions.toList()
     }
 
-    private fun updateAttachmentsPayLoads(payloadData: List<AttachmentPayLoadData>?, message: SceytMessage) {
+    private fun updateAttachmentsPayLoads(payloadData: List<AttachmentPayLoadData>?,
+                                          attachmentsLinkDetails: List<LinkPreviewDetails>?,
+                                          message: SceytMessage) {
+        val updateLinkDetails = attachmentsLinkDetails?.run { ArrayList(this) }
         payloadData?.filter { payLoad -> payLoad.messageTid == message.tid }?.let { data ->
             message.attachments?.forEach { attachment ->
-                if (attachment.type == AttachmentTypeEnum.Link.value()) return@forEach
+                if (attachment.type == AttachmentTypeEnum.Link.value()) {
+                    updateLinkDetails?.find { it.url == attachment.url }?.let {
+                        attachment.linkPreviewDetails = it
+                        updateLinkDetails.remove(it)
+                    }
+                    return@forEach
+                }
                 val predicate: (AttachmentPayLoadData) -> Boolean = if (attachment.url.isNotNullOrBlank()) {
                     { data.any { it.url == attachment.url } }
                 } else {
@@ -221,6 +236,11 @@ class MessagesCache {
                     attachment.filePath = it.filePath
                     attachment.url = it.url
                 }
+            }
+        }
+        updateLinkDetails?.forEach { linkDetails ->
+            message.attachments?.find { it.url == linkDetails.link }?.let {
+                it.linkPreviewDetails = linkDetails
             }
         }
     }
@@ -238,6 +258,13 @@ class MessagesCache {
         return payloads
     }
 
+    private fun getAttachmentLinkDetails(cashedMessage: SceytMessage?): List<LinkPreviewDetails>? {
+        val payloads = cashedMessage?.attachments?.filter { it.type == AttachmentTypeEnum.Link.value() }?.mapNotNull { attachment ->
+            attachment.linkPreviewDetails
+        }
+        return payloads
+    }
+
     private fun putAndCheckHasDiff(channelId: Long, includeNotExistToDiff: Boolean, vararg messages: SceytMessage): Boolean {
         var detectedDiff = false
         messages.forEach {
@@ -249,6 +276,14 @@ class MessagesCache {
             updateMessage(channelId, it, false)
         }
         return detectedDiff
+    }
+
+    private fun getAllAttachmentsWithLink(link: String): List<SceytAttachment> {
+        return cachedMessages.values.flatMap { messageHashMap ->
+            messageHashMap.values.flatMap {
+                it.attachments?.filter { attachment -> attachment.url == link } ?: emptyList()
+            }
+        }
     }
 
     fun updateAttachmentTransferData(updateDate: TransferData) {
@@ -296,6 +331,31 @@ class MessagesCache {
                         attachment.metadata = metadata
                     }
                 }
+            }
+        }
+    }
+
+    fun updateAttachmentLinkDetails(data: LinkPreviewDetails) {
+        synchronized(lock) {
+            getAllAttachmentsWithLink(data.link).forEach { attachment ->
+                attachment.linkPreviewDetails = data
+            }
+        }
+    }
+
+    fun updateLinkDetailsSize(link: String, width: Int, height: Int) {
+        synchronized(lock) {
+            getAllAttachmentsWithLink(link).forEach { attachment ->
+                attachment.linkPreviewDetails?.imageWidth = width
+                attachment.linkPreviewDetails?.imageHeight = height
+            }
+        }
+    }
+
+    fun updateThumb(link: String, thumb: String) {
+        synchronized(lock) {
+            getAllAttachmentsWithLink(link).forEach { attachment ->
+                attachment.linkPreviewDetails?.thumb = thumb
             }
         }
     }

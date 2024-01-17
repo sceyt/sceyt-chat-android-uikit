@@ -12,6 +12,7 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
@@ -116,20 +117,22 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     }
 
     onChannelEventFlow.onEach {
-        when (it.eventType) {
-            ChannelEventEnum.Left -> {
+        when (val event = it.eventType) {
+            is ChannelEventEnum.Left -> {
                 if (channel.isPublic()) {
-                    val leftUser = channel.members?.getOrNull(0)?.id
-                    if (leftUser == SceytKitClient.myId)
-                        messageInputView.onChannelLeft()
+                    event.leftMembers.forEach { member ->
+                        if (member.id == SceytKitClient.myId)
+                            messageInputView.onChannelLeft()
+                    }
                 }
             }
 
-            ChannelEventEnum.Joined -> {
+            is ChannelEventEnum.Joined -> {
                 if (channel.isPublic()) {
-                    val leftUser = channel.members?.getOrNull(0)?.id
-                    if (leftUser == SceytKitClient.myId)
-                        messageInputView.joinSuccess()
+                    event.joinedMembers.forEach { member ->
+                        if (member.id == SceytKitClient.myId)
+                            messageInputView.joinSuccess()
+                    }
                 }
             }
 
@@ -140,27 +143,40 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     ChannelsCache.channelUpdatedFlow
         .filter { it.channel.id == channel.id }
         .onEach {
+            val wasJoined = channel.userRole.isNotNullOrBlank()
             channel = it.channel.clone()
-            if (channel.userRole.isNotNullOrBlank())
-                messageInputView.joinSuccess()
-            else messageInputView.onChannelLeft()
+            if (channel.userRole.isNotNullOrBlank()) {
+                if (!wasJoined)
+                    messageInputView.joinSuccess()
+            } else messageInputView.onChannelLeft()
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 
     var mentionJob: Job? = null
 
+    fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails?) {
+        if (linkDetails != null) {
+            viewModelScope.launch {
+                persistenceAttachmentMiddleWare.upsertLinkPreviewData(linkDetails)
+            }
+        }
+    }
+
     messageInputView.setInputActionCallback(object : MessageInputView.MessageInputActionCallback {
-        override fun sendMessage(message: Message) {
+        override fun sendMessage(message: Message, linkDetails: LinkPreviewDetails?) {
             this@bind.sendMessage(message)
+            upsertLinkPreviewData(linkDetails)
         }
 
-        override fun sendMessages(message: List<Message>) {
+        override fun sendMessages(message: List<Message>, linkDetails: LinkPreviewDetails?) {
             placeToSavePathsList.clear()
             this@bind.sendMessages(message)
+            upsertLinkPreviewData(linkDetails)
         }
 
-        override fun sendEditMessage(message: SceytMessage) {
+        override fun sendEditMessage(message: SceytMessage, linkDetails: LinkPreviewDetails?) {
             this@bind.editMessage(message)
+            upsertLinkPreviewData(linkDetails)
         }
 
         override fun typing(typing: Boolean) {

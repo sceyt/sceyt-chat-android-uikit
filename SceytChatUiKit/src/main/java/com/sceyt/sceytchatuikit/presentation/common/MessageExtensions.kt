@@ -1,7 +1,10 @@
 package com.sceyt.sceytchatuikit.presentation.common
 
 import android.content.Context
+import android.text.Spannable
 import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.style.ImageSpan
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
@@ -62,14 +65,17 @@ private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
     return deliveryStatus == DeliveryStatus.Displayed
 }
 
-fun SceytMessage.getShowBody(context: Context): SpannableString {
+fun SceytMessage.getFormattedBody(context: Context): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() || attachments?.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
             MessageBodyStyleHelper.buildWithMentionsAndAttributes(context, this)
         }
 
-        attachments?.size == 1 -> attachments?.getOrNull(0).getShowName(context, body)
+        attachments?.size == 1 -> {
+            attachments?.getOrNull(0)?.getShowName(context, body)
+        }
+
         else -> context.getString(R.string.sceyt_file)
     }
     return SpannableString(body)
@@ -84,6 +90,25 @@ fun SceytAttachment?.getShowName(context: Context, body: String): String {
         AttachmentTypeEnum.Voice.value() -> context.getString(R.string.sceyt_voice)
         AttachmentTypeEnum.File.value() -> context.getString(R.string.sceyt_file)
         else -> name
+    }
+}
+
+fun SceytMessage.getAttachmentIconAsString(context: Context): SpannableStringBuilder {
+    val icRes = getAttachmentIconId() ?: return SpannableStringBuilder()
+    val builder = SpannableStringBuilder(". ")
+    builder.setSpan(ImageSpan(context, icRes), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    return builder
+}
+
+fun SceytMessage.getAttachmentIconId(): Int? {
+    return attachments?.getOrNull(0)?.let {
+        when (it.type) {
+            AttachmentTypeEnum.Video.value() -> ChannelStyle.bodyVideoAttachmentIcon
+            AttachmentTypeEnum.Image.value() -> ChannelStyle.bodyImageAttachmentIcon
+            AttachmentTypeEnum.Voice.value() -> ChannelStyle.bodyVoiceAttachmentIcon
+            AttachmentTypeEnum.File.value() -> ChannelStyle.bodyFileAttachmentIcon
+            else -> null
+        }
     }
 }
 

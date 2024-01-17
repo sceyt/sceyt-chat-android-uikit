@@ -32,7 +32,8 @@ class DebounceHelper {
         job?.cancel()
         job = scope.launch {
             delay(debounceMs)
-            work()
+            if (isActive)
+                work()
         }
     }
 
@@ -44,7 +45,8 @@ class DebounceHelper {
         job?.cancel()
         job = scope.launch {
             delay(debounceMs)
-            work()
+            if (isActive)
+                work()
         }
     }
 

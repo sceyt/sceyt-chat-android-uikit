@@ -23,7 +23,6 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
@@ -50,65 +49,61 @@ class MessageVideoViewHolder(
         binding.loadProgress.setOnClickListener {
             messageListeners?.onAttachmentLoaderClick(it, fileItem)
         }
-
-        binding.videoViewController.getPlayPauseImageView().setOnClickListener {
-            messageListeners?.onAttachmentClick(it, fileItem)
-        }
     }
 
     override fun bind(item: FileListItem) {
         super.bind(item)
-        binding.parentLayout.clipToOutline = true
-        binding.videoView.isVisible = false
+       /* binding.parentLayout.clipToOutline = true
+        binding.videoView.isVisible = false*/
         setVideoDuration()
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
-        val imageView = binding.videoViewController.getImageView()
+        val imageView = binding.imageThumb
+
         when (data.state) {
+            Downloaded, Uploaded -> {
+                binding.playPauseItem.isVisible = true
+                viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
+            }
+
             PendingUpload, ErrorUpload, PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
-                binding.videoViewController.showPlayPauseButtons(false)
+                binding.playPauseItem.isVisible = false
             }
 
             PendingDownload -> {
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
-                binding.videoViewController.showPlayPauseButtons(false)
+                binding.playPauseItem.isVisible = false
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
             Downloading -> {
-                binding.videoViewController.showPlayPauseButtons(false)
+                binding.playPauseItem.isVisible = false
                 if (isOnBind)
                     viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
-            Uploading, Preparing, WaitingToUpload -> {
+            Uploading, Preparing -> {
+                binding.playPauseItem.isVisible = false
                 if (isOnBind)
                     viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
-                binding.videoViewController.showPlayPauseButtons(false)
             }
 
-            Downloaded -> {
-                binding.videoViewController.showPlayPauseButtons(true)
-                // initializePlayer(fileItem.file.filePath)
-                viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
-            }
-
-            Uploaded -> {
-                binding.videoViewController.showPlayPauseButtons(true)
-                //initializePlayer(fileItem.file.filePath)
-                viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
+            WaitingToUpload -> {
+                binding.playPauseItem.isVisible = false
+                if (isOnBind)
+                    viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }
 
             PauseDownload -> {
-                binding.videoViewController.showPlayPauseButtons(false)
+                binding.playPauseItem.isVisible = false
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
             ErrorDownload -> {
-                binding.videoViewController.showPlayPauseButtons(false)
+                binding.playPauseItem.isVisible = false
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
@@ -135,15 +130,15 @@ class MessageVideoViewHolder(
 
     override fun getThumbSize() = Size(1080, 1080)
 
-    override fun needThumbFor() = ThumbFor.ConversationInfo
+    override fun needThumbFor() = ThumbFor.MessagesLisView
 
-    override val loadingProgressView: SceytCircularProgressView?
+    override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
 
-    private fun initializePlayer(mediaPath: String?) {
-        binding.videoViewController.setPlayerViewAndPath(binding.videoView, mediaPath)
-        (bindingAdapter as? MessageFilesAdapter)?.videoControllersList?.add(binding.videoViewController)
-    }
+   /* private fun initializePlayer(mediaPath: String?) {
+         binding.videoViewController.setPlayerViewAndPath(binding.videoView, mediaPath)
+         (bindingAdapter as? MessageFilesAdapter)?.videoControllersList?.add(binding.videoViewController)
+    }*/
 
     private fun SceytMessageVideoItemBinding.setupStyle() {
         loadProgress.setProgressColor(context.getCompatColor(MessagesStyle.mediaLoaderColor))

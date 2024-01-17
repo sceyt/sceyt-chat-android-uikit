@@ -3,8 +3,11 @@ package com.sceyt.sceytchatuikit.data.repositories
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.attachment.AttachmentListQuery
+import com.sceyt.chat.models.link.LinkDetails
+import com.sceyt.chat.models.link.LoadLinkDetailsRequest
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_callbacks.AttachmentsCallback
+import com.sceyt.chat.sceyt_callbacks.LinkDetailsCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.logger.SceytLog
@@ -63,6 +66,21 @@ class AttachmentsRepositoryImpl : AttachmentsRepository {
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
                     SceytLog.e(TAG, "getNearAttachments error: ${e?.message}")
+                }
+            })
+        }
+    }
+
+    override suspend fun getLinkPreviewData(link: String): SceytResponse<LinkDetails> {
+        return suspendCancellableCoroutine { continuation ->
+            LoadLinkDetailsRequest(link).execute(object : LinkDetailsCallback {
+                override fun onResult(linkDetails: LinkDetails?) {
+                    continuation.safeResume(SceytResponse.Success(linkDetails))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                    SceytLog.e(TAG, "getLinkPreviewData error: ${e?.message}, for link: $link")
                 }
             })
         }

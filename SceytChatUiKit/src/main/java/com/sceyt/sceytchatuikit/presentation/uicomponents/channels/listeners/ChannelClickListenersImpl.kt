@@ -38,12 +38,15 @@ open class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
                 channelLongClickListener = listener
                 avatarClickListener = listener
             }
+
             is ChannelClickListeners.ChannelClickListener -> {
                 channelClickListener = listener
             }
+
             is ChannelClickListeners.ChannelLongClickListener -> {
                 channelLongClickListener = listener
             }
+
             is ChannelClickListeners.AvatarClickListener -> {
                 avatarClickListener = listener
             }

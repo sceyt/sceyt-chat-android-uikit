@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.extensions
 
 import android.content.res.Resources
 import android.util.DisplayMetrics
+import android.util.Size
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
@@ -95,4 +96,40 @@ fun Long.durationToMinSecShort(): String {
 
 fun Float.inNotNanOrZero(): Float {
     return if (isNaN()) 0f else this
+}
+
+fun calculateScaleWidthHeight(defaultSize: Int, minSize: Int, imageWidth: Int, imageHeight: Int): Size {
+    val coefficient = imageWidth.toDouble() / imageHeight.toDouble()
+    var scaleWidth = defaultSize
+    var scaleHeight = defaultSize
+
+    if (coefficient.isNaN()) {
+        return Size(scaleWidth, scaleHeight)
+    } else {
+        if (coefficient != 1.0) {
+            if (imageWidth > imageHeight) {
+                val h = (defaultSize / coefficient).toInt()
+                scaleHeight = if (h >= minSize)
+                    h
+                else minSize
+            } else {
+                val futureW = (defaultSize * coefficient).toInt()
+                val coefficientWidth = futureW.toDouble() / defaultSize.toDouble()
+                var newDefaultSize = defaultSize
+
+                // If the width of the image is less than 80% of the default size, then we can increase the default size by 20%
+                if (coefficientWidth <= 0.8)
+                    newDefaultSize = (defaultSize * 1.2).toInt()
+
+                val w = (newDefaultSize * coefficient).toInt()
+
+                scaleWidth = if (w >= minSize)
+                    w
+                else minSize
+
+                scaleHeight = newDefaultSize
+            }
+        }
+        return Size(scaleWidth, scaleHeight)
+    }
 }

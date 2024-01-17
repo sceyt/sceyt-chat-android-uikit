@@ -66,6 +66,22 @@ fun File.convertImageFileToBase64(): String {
     }
 }
 
+@Throws(IOException::class)
+fun copyFile(context: Context, uri: String, name: String): File {
+    val file = File(uri)
+    if (file.exists()) return file
+    return File(context.filesDir, name)
+        .apply {
+            if (!exists()) {
+                outputStream().use { cache ->
+                    context.contentResolver.openInputStream(Uri.parse(uri)).use { inputStream ->
+                        inputStream?.copyTo(cache)
+                    }
+                }
+            }
+        }
+}
+
 fun ByteArray.toBase64(): String = String(Base64.encode(this, Base64.NO_WRAP))
 
 fun Bitmap?.bitmapToByteArray(): ByteArray? {

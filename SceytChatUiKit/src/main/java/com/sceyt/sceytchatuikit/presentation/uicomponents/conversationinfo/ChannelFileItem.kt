@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo
 
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.AttachmentDataItem
-import com.sceyt.sceytchatuikit.shared.helpers.LinkPreviewHelper
 
 sealed class ChannelFileItem : AttachmentDataItem {
 
@@ -18,9 +17,7 @@ sealed class ChannelFileItem : AttachmentDataItem {
 
     data class Voice(val data: AttachmentWithUserData) : ChannelFileItem(data)
 
-    data class Link(val data: AttachmentWithUserData) : ChannelFileItem(data) {
-        var linkPreviewMetaData: LinkPreviewHelper.PreviewMetaData? = null
-    }
+    data class Link(val data: AttachmentWithUserData) : ChannelFileItem(data)
 
     data class MediaDate(val data: AttachmentWithUserData) : ChannelFileItem(data)
 

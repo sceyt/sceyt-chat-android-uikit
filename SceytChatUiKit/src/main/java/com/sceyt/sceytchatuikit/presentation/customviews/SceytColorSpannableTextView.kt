@@ -48,9 +48,9 @@ class SceytColorSpannableTextView @JvmOverloads constructor(context: Context, at
             return this
         }
 
-        fun append(text: String): BuildSpannable {
+        fun append(text: CharSequence): BuildSpannable {
             if (text.isEmpty()) return this
-            spanString = SpannableString(TextUtils.concat(text, spanString))
+            spanString = SpannableString(TextUtils.concat(spanString, text))
             return this
         }
 

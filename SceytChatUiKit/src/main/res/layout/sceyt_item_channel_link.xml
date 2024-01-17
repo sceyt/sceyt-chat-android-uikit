@@ -5,19 +5,23 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:animateLayoutChanges="true"
+    android:background="?selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
     android:padding="8dp">
 
-    <androidx.appcompat.widget.AppCompatImageView
+    <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/icLinkImage"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:background="@drawable/sceyt_bg_corners_8"
-        android:scaleType="centerCrop"
+        android:background="@color/sceyt_color_gray"
+        android:scaleType="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_ic_link_with_background" />
+        app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize8"
+        app:srcCompat="@drawable/sceyt_ic_link" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvLinkName"
@@ -48,14 +52,35 @@
         android:layout_marginTop="2dp"
         android:ellipsize="end"
         android:singleLine="true"
-        android:textColor="@color/sceyt_color_gray_800"
-        android:textSize="13sp"
+        android:textColor="@color/colorAccent"
+        android:textSize="14sp"
         app:layout_constrainedWidth="true"
-        app:layout_constraintBottom_toBottomOf="@+id/icLinkImage"
+        app:layout_constraintBottom_toTopOf="@+id/tvLinkDescription"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@+id/icLinkImage"
         app:layout_constraintTop_toBottomOf="@+id/tvLinkName"
+        app:layout_goneMarginTop="0dp"
         tools:text="https://www.youtube.com/watch?v=sLxN" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvLinkDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="2dp"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:textColor="@color/sceyt_color_gray_secondary"
+        android:textSize="13sp"
+        android:visibility="gone"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toEndOf="@+id/icLinkImage"
+        app:layout_constraintTop_toBottomOf="@+id/tvLinkUrl"
+        tools:text="Become a Partner &amp; get access to opportunities to grow your business."
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

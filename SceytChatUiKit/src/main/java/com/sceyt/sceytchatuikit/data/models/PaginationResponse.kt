@@ -6,6 +6,7 @@ sealed class PaginationResponse<T> {
      * @param data is items from database.
      * @param offset is the normalized offset, which has been set in in request.
      * @param hasNext shows, are items in database or not, to load next page.
+     * @param query is the search query, which has been set in request.
      * */
     data class DBResponse<T>(
             var data: List<T>,
@@ -13,7 +14,8 @@ sealed class PaginationResponse<T> {
             var offset: Int,
             var hasNext: Boolean = false,
             var hasPrev: Boolean = false,
-            var loadType: LoadType = LoadType.LoadNext
+            var loadType: LoadType = LoadType.LoadNext,
+            val query: String = "",
     ) : PaginationResponse<T>()
 
     /**
@@ -26,6 +28,8 @@ sealed class PaginationResponse<T> {
      * @param hasPrev shows, are items in server/database or not, to load prev page.
      * @param loadType is pointed which type of request is was current request.
      * @param ignoredDb shows was loaded items from database or not, before server request is received.
+     * @param query is the search query, which has been set in request.
+     *
      * */
     data class ServerResponse<T>(
             var data: SceytResponse<List<T>>,
@@ -37,7 +41,8 @@ sealed class PaginationResponse<T> {
             var hasPrev: Boolean,
             var loadType: LoadType,
             var ignoredDb: Boolean,
-            var dbResultWasEmpty: Boolean = false
+            var dbResultWasEmpty: Boolean = false,
+            val query: String = "",
     ) : PaginationResponse<T>()
 
 

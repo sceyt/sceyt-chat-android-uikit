@@ -3,9 +3,10 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listener
 import android.view.View
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CancelLinkPreviewClickListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CancelReplyMessageViewClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.ClearChatClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.ClickListeners
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CloseReplyMessageViewClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.JoinClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.RemoveAttachmentClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.SendAttachmentClickListener
@@ -19,7 +20,8 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
     private var addAttachmentClickListener: SendAttachmentClickListener? = null
     private var voiceClickListener: VoiceClickListener? = null
     private var voiceLongClickListener: VoiceLongClickListener? = null
-    private var closeReplyMessageViewClickListener: CloseReplyMessageViewClickListener? = null
+    private var cancelReplyMessageViewClickListener: CancelReplyMessageViewClickListener? = null
+    private var cancelLinkPreviewClickListener: CancelLinkPreviewClickListener? = null
     private var removeAttachmentClickListener: RemoveAttachmentClickListener? = null
     private var joinClickListener: JoinClickListener? = null
     private var clearChatClickListener: ClearChatClickListener? = null
@@ -46,7 +48,12 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
 
     override fun onCancelReplyMessageViewClick(view: View) {
         defaultListeners.onCancelReplyMessageViewClick(view)
-        closeReplyMessageViewClickListener?.onCancelReplyMessageViewClick(view)
+        cancelReplyMessageViewClickListener?.onCancelReplyMessageViewClick(view)
+    }
+
+    override fun onCancelLinkPreviewClick(view: View) {
+        defaultListeners.onCancelLinkPreviewClick(view)
+        cancelLinkPreviewClickListener?.onCancelLinkPreviewClick(view)
     }
 
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
@@ -71,32 +78,44 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
                 addAttachmentClickListener = listener
                 voiceClickListener = listener
                 voiceLongClickListener = listener
-                closeReplyMessageViewClickListener = listener
+                cancelReplyMessageViewClickListener = listener
                 removeAttachmentClickListener = listener
                 joinClickListener = listener
                 clearChatClickListener = listener
             }
+
             is SendMsgClickListener -> {
                 sendMsgClickListener = listener
             }
+
             is SendAttachmentClickListener -> {
                 addAttachmentClickListener = listener
             }
+
             is VoiceClickListener -> {
                 voiceClickListener = listener
             }
+
             is VoiceLongClickListener -> {
                 voiceLongClickListener = listener
             }
-            is CloseReplyMessageViewClickListener -> {
-                closeReplyMessageViewClickListener = listener
+
+            is CancelReplyMessageViewClickListener -> {
+                cancelReplyMessageViewClickListener = listener
             }
+
+            is CancelLinkPreviewClickListener -> {
+                cancelLinkPreviewClickListener = listener
+            }
+
             is RemoveAttachmentClickListener -> {
                 removeAttachmentClickListener = listener
             }
+
             is JoinClickListener -> {
                 joinClickListener = listener
             }
+
             is ClearChatClickListener -> {
                 clearChatClickListener = listener
             }

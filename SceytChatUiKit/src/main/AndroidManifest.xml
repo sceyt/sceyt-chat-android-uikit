@@ -24,7 +24,7 @@
             android:name="com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme"
-            android:windowSoftInputMode="adjustNothing" />
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".presentation.uicomponents.mediaview.SceytMediaActivity"
             android:theme="@style/SceytPreviewThemeDark" />

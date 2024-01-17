@@ -7,7 +7,7 @@
     android:layout_height="wrap_content"
     android:background="@drawable/sceyt_rounded_video_background">
 
-    <androidx.media3.ui.PlayerView
+<!--    <androidx.media3.ui.PlayerView
         android:id="@+id/videoView"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -18,18 +18,36 @@
         app:layout_constraintTop_toTopOf="parent"
         app:resize_mode="zoom"
         app:surface_type="texture_view"
-        app:use_controller="false" />
+        app:use_controller="false" />-->
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytVideoControllerView
-        android:id="@+id/videoViewController"
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/imageThumb"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:background="@drawable/sceyt_rounded_video_background"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="1:.8"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:sceytVideoControllerCornerSize="18dp"
         app:sceytVideoControllerEnablePlayPauseClick="false"
-        app:sceytVideoControllerPlayPauseSize="@dimen/messageProgressSize" />
+        app:sceytVideoControllerPlayPauseSize="@dimen/messageProgressSize"
+        app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize17"
+        tools:src="@tools:sample/backgrounds/scenic" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/playPauseItem"
+        android:layout_width="@dimen/messageProgressSize"
+        android:layout_height="@dimen/messageProgressSize"
+        android:background="@drawable/sceyt_bg_play_pause_button"
+        android:padding="10dp"
+        app:layout_constraintBottom_toBottomOf="@+id/imageThumb"
+        app:layout_constraintEnd_toEndOf="@+id/imageThumb"
+        app:layout_constraintStart_toStartOf="@+id/imageThumb"
+        app:layout_constraintTop_toTopOf="@+id/imageThumb"
+        app:srcCompat="@drawable/sceyt_ic_play" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvDuration"

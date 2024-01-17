@@ -7,6 +7,7 @@ import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.sceytchatuikit.data.models.LoadNearData
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.extensions.roundUp
+import com.sceyt.sceytchatuikit.persistence.entity.link.LinkDetailsEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.*
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.mappers.toAttachmentPayLoad
@@ -65,6 +66,7 @@ abstract class MessageDao {
                 pair.first.filter { it.attachmentEntity.type != AttachmentTypeEnum.Link.value() }
                     .map { it.toAttachmentPayLoad(pair.second.messageEntity) }
             })
+            insertLinkDetails(attachmentPairs.flatMap { it.first.mapNotNull { attachmentDb -> attachmentDb.linkDetails } })
         }
 
         //Insert user markers
@@ -120,6 +122,9 @@ abstract class MessageDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract suspend fun insertAttachmentPayLoads(payLoad: List<AttachmentPayLoadEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    abstract suspend fun insertLinkDetails(payLoad: List<LinkDetailsEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertUserMarkers(userMarkers: List<MarkerEntity>)

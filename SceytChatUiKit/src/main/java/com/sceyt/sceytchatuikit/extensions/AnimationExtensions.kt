@@ -129,15 +129,15 @@ fun View.scaleAndAlphaAnim(startScale: Float, endScale: Float, duration: Long = 
     return animationSet
 }
 
-fun View.visibleGoneWithScaleAnim(visible: Boolean) {
+fun View.visibleGoneWithScaleAnim(visible: Boolean): Boolean {
     if (hasNotAnimation()) {
         isClickable = false
         if (visible) {
             if (!isVisible) {
-                isVisible = true
                 scaleViewOut(0f, 1f) {
                     isClickable = true
                 }
+                isVisible = true
             } else isClickable = true
         } else {
             if (isVisible) {
@@ -146,7 +146,10 @@ fun View.visibleGoneWithScaleAnim(visible: Boolean) {
                 }
             }
         }
+        return true
     }
+
+    return false
 }
 
 fun View.visibleWithScaleAnim() {
