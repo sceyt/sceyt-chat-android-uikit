@@ -67,7 +67,7 @@ object ChannelActionConfirmationWithDialog {
     }
 
     fun confirmMuteUntilAction(context: Context, action: (Long) -> Unit) {
-        MuteNotificationDialog(context) {
+        MuteNotificationDialog(context).setChooseListener {
             val until = when (it) {
                 MuteTypeEnum.Mute1Hour -> TimeUnit.HOURS.toMillis(1)
                 MuteTypeEnum.Mute8Hour -> TimeUnit.HOURS.toMillis(8)

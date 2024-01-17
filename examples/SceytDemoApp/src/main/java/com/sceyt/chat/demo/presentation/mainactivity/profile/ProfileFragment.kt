@@ -89,12 +89,12 @@ class ProfileFragment : Fragment() {
 
         viewModel.settingsLiveData.observe(viewLifecycleOwner) {
             muted = it.mute.isMuted
-            binding.switchNotifications.isChecked = it.mute.isMuted
+            binding.switchNotifications.isChecked = !it.mute.isMuted
         }
 
         viewModel.muteUnMuteLiveData.observe(viewLifecycleOwner) {
             muted = it
-            binding.switchNotifications.isChecked = it
+            binding.switchNotifications.isChecked = !muted
         }
 
         viewModel.logOutLiveData.observe(viewLifecycleOwner) {
@@ -121,17 +121,20 @@ class ProfileFragment : Fragment() {
         switchNotifications.setOnClickListener {
             if (muted) {
                 viewModel.unMuteNotifications()
-                switchNotifications.isChecked = false
+                switchNotifications.isChecked = true
             } else {
-                MuteNotificationDialog(requireContext()) {
+                MuteNotificationDialog(requireContext()).setChooseListener {
                     val until = when (it) {
                         MuteTypeEnum.Mute1Hour -> TimeUnit.HOURS.toMillis(1)
                         MuteTypeEnum.Mute8Hour -> TimeUnit.HOURS.toMillis(8)
                         MuteTypeEnum.MuteForever -> 0L
                     }
                     viewModel.muteNotifications(until)
-                    switchNotifications.isChecked = true
-                }.show()
+                    switchNotifications.isChecked = false
+                }.also {
+                    it.show()
+                    it.setTitles(getString(R.string.mute_notifications))
+                }
             }
         }
 
