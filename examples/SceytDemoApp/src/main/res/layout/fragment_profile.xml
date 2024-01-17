@@ -130,14 +130,14 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
-                    android:ellipsize="end"
                     android:background="@drawable/bg_edit_text_small_bottom_padding"
-                    android:paddingVertical="5dp"
+                    android:ellipsize="end"
                     android:fontFamily="@font/roboto_medium"
                     android:hint="@string/display_name"
                     android:includeFontPadding="false"
                     android:inputType="textPersonName"
                     android:maxLines="2"
+                    android:paddingVertical="5dp"
                     android:textColor="@color/sceyt_color_text_themed"
                     android:textColorHint="@color/sceyt_color_hint"
                     android:textSize="@dimen/bigTextSize"
@@ -146,7 +146,7 @@
                     app:layout_constraintStart_toEndOf="@+id/avatar"
                     app:layout_constraintTop_toTopOf="@+id/avatar"
                     app:layout_constraintVertical_chainStyle="packed"
-                    android:text="sdfsdfsffdg"/>
+                    tools:text="John" />
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/tvStatus"
