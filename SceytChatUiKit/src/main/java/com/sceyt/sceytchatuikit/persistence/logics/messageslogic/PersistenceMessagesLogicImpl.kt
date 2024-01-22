@@ -934,13 +934,15 @@ internal class PersistenceMessagesLogicImpl(
         when (response) {
             is SceytResponse.Success -> {
                 response.data?.let { data ->
+                    SceytLog.i("onMarkerResponse","send $status, ${ids.toList()}, in response ${data.messageIds}")
                     val deliveryStatus = status.toDeliveryStatus()
-                    messageDao.updateMessagesStatus(channelId, data.messageIds, deliveryStatus)
-                    val tIds = messageDao.getMessageTIdsByIds(*ids)
+                    val responseIds = data.messageIds.toList()
+                    messageDao.updateMessagesStatus(channelId, responseIds, deliveryStatus)
+                    val tIds = messageDao.getMessageTIdsByIds(*responseIds.toLongArray())
                     messagesCache.updateMessagesStatus(channelId, deliveryStatus, *tIds.toLongArray())
 
-                    pendingMarkersDao.deleteMessagesMarkersByStatus(ids.toList(), status)
-                    val existMessageIds = messageDao.getExistMessageByIds(ids.toList())
+                    pendingMarkersDao.deleteMessagesMarkersByStatus(responseIds, status)
+                    val existMessageIds = messageDao.getExistMessageByIds(responseIds)
                     existMessageIds.forEach {
                         SceytKitClient.myId?.let { userId ->
                             val markerEntity = MarkerEntity(messageId = it, userId = userId, name = data.name)
