@@ -649,9 +649,14 @@ internal class PersistenceMessagesLogicImpl(
                 })
             }
             // Load from server
-            if (!ignoreServer)
-                trySend(getMessagesServerByLoadType(loadType, conversationId, messageId, offset,
-                    limit, replyInThread, loadKey, ignoreDb, dbResultWasEmpty))
+            if (!ignoreServer) {
+                val response = getMessagesServerByLoadType(loadType, conversationId, messageId, offset,
+                    limit, replyInThread, loadKey, ignoreDb, dbResultWasEmpty)
+
+                trySend(response)
+                // Mark messages as received
+                markMessagesAsDelivered(conversationId, response.data.data ?: emptyList())
+            }
 
             channel.close()
             awaitClose()
@@ -659,6 +664,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun markMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
+        if (messages.isEmpty()) return
         // Mark messages as received
         withContext(Dispatchers.IO) {
             checkAndMarkChannelMessagesAsDelivered(channelId, messages)
@@ -696,9 +702,6 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         messagesCache.addAll(channelId, messages, false)
-
-        // Mark messages as received
-        markMessagesAsDelivered(channelId, messages)
 
         return PaginationResponse.DBResponse(messages, loadKey, offset, hasNext, hasPrev, loadType)
     }
@@ -766,9 +769,6 @@ internal class PersistenceMessagesLogicImpl(
         hasDiff = messagesCache.addAll(channelId, updatedMessages, true)
 
         if (forceHasDiff) hasDiff = true
-
-        // Mark messages as received
-        markMessagesAsDelivered(channelId, messages)
 
         return PaginationResponse.ServerResponse(
             data = response, cacheData = messagesCache.getSorted(channelId),

@@ -111,10 +111,12 @@ class SceytConnectionProvider(
             if (!sceytToken.isNullOrBlank()) {
                 SceytLog.i(Tag, "$Tag saved ChatClient token is exist, trying connect with that token: ${sceytToken}.")
                 SceytKitClient.connect(sceytToken)
+                SceytKitClient.connect(sceytToken)
             } else {
                 SceytLog.i(Tag, "$Tag saved ChatClient token is empty, trying to get Cat client token, userId: $userId.")
                 chatClientConnectionInterceptor.getChatToken(userId)?.let { token ->
                     SceytLog.i(Tag, "$Tag connectChatClient will connect with new token: ${token.take(8)}")
+                    SceytKitClient.connect(token)
                     SceytKitClient.connect(token)
                 } ?: run {
                     SceytLog.i(Tag, "$Tag connectChatClient failed because ChatClient token is null. Called in connectChatClient")
