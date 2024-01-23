@@ -36,10 +36,14 @@ internal class PersistenceConnectionLogicImpl(
     }
 
     private suspend fun insertCurrentUser() {
-        (preference.getUserId() ?: ClientWrapper.currentUser?.id)?.let {
-            val response = usersRepository.getSceytUserById(it)
-            if (response is SceytResponse.Success)
-                response.data?.toUserEntity()?.let { entity -> usersDao.insertUser(entity) }
+        ClientWrapper.currentUser?.let {
+            usersDao.insertUser(it.toUserEntity())
+        } ?: run {
+            preference.getUserId()?.let {
+                val response = usersRepository.getSceytUserById(it)
+                if (response is SceytResponse.Success)
+                    response.data?.toUserEntity()?.let { entity -> usersDao.insertUser(entity) }
+            }
         }
     }
 }
