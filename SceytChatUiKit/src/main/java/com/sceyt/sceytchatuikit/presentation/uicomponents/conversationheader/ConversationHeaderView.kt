@@ -214,7 +214,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             return
 
         textView.text = title
-        textView.isVisible = true
+        textView.isVisible = !isTyping
     }
 
     private fun setAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
