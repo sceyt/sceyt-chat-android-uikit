@@ -107,7 +107,7 @@
                         app:layout_constraintTop_toTopOf="parent"
                         tools:text="SubTitle" />
 
-                    <TextView
+                    <androidx.appcompat.widget.AppCompatTextView
                         android:id="@+id/tvTyping"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
