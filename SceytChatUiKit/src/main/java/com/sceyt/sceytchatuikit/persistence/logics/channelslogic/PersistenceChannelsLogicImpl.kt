@@ -467,8 +467,11 @@ internal class PersistenceChannelsLogicImpl(
 
     override suspend fun findOrCreateDirectChannel(user: User): SceytResponse<SceytChannel> {
         val channelDb = channelDao.getDirectChannel(user.id)
-        if (channelDb != null)
+        if (channelDb != null) {
+            if (channelDb.channelEntity.pending)
+                channelsCache.addPendingChannel(channelDb.toChannel())
             return SceytResponse.Success(channelDb.toChannel())
+        }
 
         val fail = SceytResponse.Error<SceytChannel>(SceytException(0, "Failed to create direct channel"))
         val myId = myId ?: return fail
@@ -663,6 +666,11 @@ internal class PersistenceChannelsLogicImpl(
                     channelsCache.upsertChannel(channel)
                     messageLogic.onSyncedChannels(arrayListOf(channel))
                 }
+            }
+        } else {
+            getChannelFromDb(channelId)?.let {
+                if (it.pending)
+                    return SceytResponse.Success(it)
             }
         }
 
