@@ -1,6 +1,8 @@
 package com.sceyt.sceytchatuikit.data.repositories
 
 import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.models.user.BlockUserRequest
+import com.sceyt.chat.models.user.UnBlockUserRequest
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserListQuery
 import com.sceyt.chat.models.user.UserListQueryByIds
@@ -96,6 +98,36 @@ class UsersRepositoryImpl : UsersRepository {
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
                     SceytLog.e(TAG, "getSceytUserById error: ${e?.message}")
+                }
+            })
+        }
+    }
+
+    override suspend fun blockUser(userId: String): SceytResponse<List<User>> {
+        return suspendCancellableCoroutine { continuation ->
+            BlockUserRequest(userId).execute(object : UsersCallback {
+                override fun onResult(data: MutableList<User>?) {
+                    continuation.safeResume(SceytResponse.Success(data))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                    SceytLog.e(TAG, "blockUser error: ${e?.message}, code: ${e?.code}")
+                }
+            })
+        }
+    }
+
+    override suspend fun unblockUser(userId: String): SceytResponse<List<User>> {
+        return suspendCancellableCoroutine { continuation ->
+            UnBlockUserRequest(userId).execute(object : UsersCallback {
+                override fun onResult(data: MutableList<User>?) {
+                    continuation.safeResume(SceytResponse.Success(data))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                    SceytLog.e(TAG, "unblockUser error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }

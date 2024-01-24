@@ -126,10 +126,12 @@ class ChannelsCache {
     fun upsertChannel(vararg channels: SceytChannel) {
         synchronized(lock) {
             channels.forEach {
-                val cachedChannel = cachedData[it.id]
+                val cachedChannel = cachedData[it.id] ?: pendingChannelsData[it.id]
                 if (cachedChannel == null) {
-                    cachedData[it.id] = it.clone()
-                    channelAdded(it)
+                    if (!it.pending) {
+                        cachedData[it.id] = it.clone()
+                        channelAdded(it)
+                    }
                 } else {
                     val oldMsg = cachedChannel.lastMessage
                     if (putAndCheckHasDiff(it).hasDifference()) {
