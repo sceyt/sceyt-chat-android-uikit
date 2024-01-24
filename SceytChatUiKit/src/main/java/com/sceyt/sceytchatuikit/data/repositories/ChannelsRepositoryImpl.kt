@@ -10,8 +10,8 @@ import com.sceyt.chat.models.channel.CreateChannelRequest
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.member.MemberListQuery
 import com.sceyt.chat.models.role.Role
-import com.sceyt.chat.models.user.BlockUsersRequest
-import com.sceyt.chat.models.user.UnBlockUsersRequest
+import com.sceyt.chat.models.user.BlockUserRequest
+import com.sceyt.chat.models.user.UnBlockUserRequest
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.operators.ChannelOperator
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
@@ -317,7 +317,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     override suspend fun blockUser(userId: String): SceytResponse<List<User>> {
         return suspendCancellableCoroutine { continuation ->
-            BlockUsersRequest(userId).execute(object : UsersCallback {
+            BlockUserRequest(userId).execute(object : UsersCallback {
                 override fun onResult(data: MutableList<User>?) {
                     continuation.safeResume(SceytResponse.Success(data))
                 }
@@ -332,7 +332,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     override suspend fun unblockUser(userId: String): SceytResponse<List<User>> {
         return suspendCancellableCoroutine { continuation ->
-            UnBlockUsersRequest(userId).execute(object : UsersCallback {
+            UnBlockUserRequest(userId).execute(object : UsersCallback {
                 override fun onResult(data: MutableList<User>?) {
                     continuation.safeResume(SceytResponse.Success(data))
                 }
