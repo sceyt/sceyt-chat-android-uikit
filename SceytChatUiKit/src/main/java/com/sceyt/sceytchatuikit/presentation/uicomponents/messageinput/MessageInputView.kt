@@ -111,6 +111,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var messageInputActionCallback: MessageInputActionCallback? = null
     private val messageToSendHelper by lazy { MessageToSendHelper(context) }
     private val linkDetailsProvider by lazy { SingleLinkDetailsProvider(context, context.asComponentActivity().lifecycleScope) }
+    private val audioRecorderHelper: AudioRecorderHelper by lazy { AudioRecorderHelper(context) }
 
     var isInputHidden = false
         private set
@@ -290,7 +291,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun isEditingMessage() = editMessage != null
 
-    private fun tryToSendRecording(file: File, amplitudes: IntArray, duration: Int) {
+    private fun tryToSendRecording(file: File?, amplitudes: IntArray, duration: Int) {
+        file ?: run {
+            finishRecording()
+            return
+        }
         val metadata = Gson().toJson(AudioMetadata(amplitudes, duration))
         createAttachmentWithPaths(file.path, metadata = metadata, attachmentType = AttachmentTypeEnum.Voice.value()).getOrNull(0)?.let {
             allAttachments.add(it)
@@ -314,13 +319,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             override fun onRecordingStarted() {
                 val directoryToSaveRecording = context.filesDir.path + "/Audio"
                 AudioPlayerHelper.pauseAll()
-                AudioRecorderHelper.startRecording(directoryToSaveRecording) {}
+                audioRecorderHelper.startRecording(directoryToSaveRecording) {}
                 binding.layoutInput.isInvisible = true
                 voiceMessageRecorderView?.keepScreenOn = true
             }
 
             override fun onRecordingCompleted(shouldShowPreview: Boolean) {
-                AudioRecorderHelper.stopRecording { isTooShort, file, duration, amplitudes ->
+                audioRecorderHelper.stopRecording { isTooShort, file, duration, amplitudes ->
                     runOnMainThread {
                         if (isTooShort) {
                             finishRecording()
@@ -338,14 +343,15 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
 
             override fun onRecordingCanceled() {
-                AudioRecorderHelper.cancelRecording {}
+                audioRecorderHelper.cancelRecording()
                 finishRecording()
                 voiceMessageRecorderView?.keepScreenOn = false
             }
         })
     }
 
-    private fun showRecordPreview(file: File, amplitudes: Array<Int>, duration: Int) {
+    private fun showRecordPreview(file: File?, amplitudes: Array<Int>, duration: Int) {
+        file ?: return
         val metadata = AudioMetadata(amplitudes.toIntArray(), duration)
         binding.voiceRecordPresenter.init(file, metadata, object : SceytRecordedVoicePresenter.RecordedVoicePresentListeners {
             override fun onDeleteVoiceRecord() {

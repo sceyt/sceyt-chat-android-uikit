@@ -1,85 +1,74 @@
-package com.sceyt.sceytchatuikit.media.audio;
+package com.sceyt.sceytchatuikit.media.audio
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import android.content.Context
+import com.google.gson.GsonBuilder
+import java.io.File
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
-import java.io.File;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+class AudioRecorderHelper(private val context: Context) {
+    private val recorderExecutor: Executor = Executors.newSingleThreadScheduledExecutor()
+    private var audioFile: File? = null
+    private var currentRecorder: AudioRecorder? = null
+    private val serializer = GsonBuilder().create()
+    private val audioFocusHelper: AudioFocusHelper by lazy { AudioFocusHelper(context) }
 
-public class AudioRecorderHelper {
-
-    private final static Executor recorderExecutor = Executors.newSingleThreadScheduledExecutor();
-    private static File audioFile;
-    private static AudioRecorder currentRecorder;
-    private static final Gson serializer = new GsonBuilder().create();
-
-    public interface OnRecorderStart {
-        void onStart(boolean started);
-    }
-
-    public interface OnRecorderStop {
-        void onStop(boolean tooShort, File recordedFile, Integer duration, Integer[] amplitudes);
-    }
-
-    public interface OnRecorderCancel {
-        void onCancel();
-    }
-
-    public static void startRecording(String directoryToSaveFile, OnRecorderStart onRecorderStart) {
-        recorderExecutor.execute(() -> {
-            audioFile = FileManager.createFile(AudioRecorderImpl.AUDIO_FORMAT, directoryToSaveFile);
-            currentRecorder = new AudioRecorderImpl(audioFile);
-            boolean started = currentRecorder.startRecording(32000, null);
-            if (onRecorderStart != null) {
-                onRecorderStart.onStart(started);
+    fun startRecording(directoryToSaveFile: String, onRecorderStart: OnRecorderStart? = null) {
+        recorderExecutor.execute {
+            audioFocusHelper.requestAudioFocusCompat()
+            val audioFile = FileManager.createFile(AudioRecorderImpl.AUDIO_FORMAT, directoryToSaveFile).also {
+                this.audioFile = it
             }
-        });
+            val recorder = AudioRecorderImpl(context,audioFile).also { currentRecorder = it }
+            val started = recorder.startRecording(32000, null)
+            onRecorderStart?.onStart(started)
+        }
     }
 
-    public static void stopRecording(OnRecorderStop onRecorderStop) {
-        recorderExecutor.execute(() -> {
-            currentRecorder.stopRecording();
-
-            int duration = getCurrentDuration();
-            boolean isTooShort = false;
+    fun stopRecording(onRecorderStop: OnRecorderStop? = null) {
+        recorderExecutor.execute {
+            currentRecorder?.stopRecording()
+            val duration = currentDuration
+            var isTooShort = false
             if (duration < 1) {
-                audioFile.delete();
-                isTooShort = true;
+                audioFile?.delete()
+                isTooShort = true
             }
-
-            if (onRecorderStop != null) {
-                onRecorderStop.onStop(isTooShort, audioFile, duration, getCurrentAmplitudes());
-            }
-        });
+            audioFocusHelper.abandonCallAudioFocusCompat()
+            onRecorderStop?.onStop(isTooShort, audioFile, duration, currentAmplitudes)
+        }
     }
 
-    public static void cancelRecording(OnRecorderCancel onRecorderCancel) {
-        recorderExecutor.execute(() -> {
-            currentRecorder.stopRecording();
-            audioFile.delete();
-            if (onRecorderCancel != null)
-                onRecorderCancel.onCancel();
-        });
+    fun cancelRecording(onRecorderCancel: OnRecorderCancel? = null) {
+        recorderExecutor.execute {
+            currentRecorder?.stopRecording()
+            audioFile?.delete()
+            onRecorderCancel?.onCancel()
+            audioFocusHelper.abandonCallAudioFocusCompat()
+        }
     }
 
-    public static Integer[] getCurrentAmplitudes() {
-        if (currentRecorder != null)
-            return currentRecorder.getRecordingAmplitudes();
-        else
-            return new Integer[]{0};
+    val currentAmplitudes: Array<Int>
+        get() = currentRecorder?.getRecordingAmplitudes() ?: arrayOf(0)
+
+    val currentDuration: Int
+        get() = currentRecorder?.getRecordingDuration() ?: 0
+
+    val jsonAmplitudes: String
+        get() {
+            val amps = currentAmplitudes
+            return serializer.toJson(amps, Array<Int>::class.java)
+        }
+
+    fun interface OnRecorderStart {
+        fun onStart(started: Boolean)
     }
 
-    public static Integer getCurrentDuration() {
-        if (currentRecorder != null)
-            return currentRecorder.getRecordingDuration();
-        else
-            return 0;
+    fun interface OnRecorderStop {
+        fun onStop(tooShort: Boolean, recordedFile: File?, duration: Int, amplitudes: Array<Int>)
     }
 
-    public static String getJsonAmplitudes() {
-        Integer[] amps = getCurrentAmplitudes();
-        return serializer.toJson(amps, Integer[].class);
+    fun interface OnRecorderCancel {
+        fun onCancel()
     }
-
 }

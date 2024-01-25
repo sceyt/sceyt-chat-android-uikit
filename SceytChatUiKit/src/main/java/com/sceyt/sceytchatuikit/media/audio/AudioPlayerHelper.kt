@@ -1,160 +1,135 @@
-package com.sceyt.sceytchatuikit.media.audio;
+package com.sceyt.sceytchatuikit.media.audio
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+object AudioPlayerHelper {
+    private val playerExecutor: Executor = Executors.newSingleThreadScheduledExecutor()
+    private var currentPlayer: AudioPlayer? = null
+    private val playerToggleListeners = ConcurrentHashMap<String, OnToggleCallback>()
 
-public class AudioPlayerHelper {
-
-    private final static Executor playerExecutor = Executors.newSingleThreadScheduledExecutor();
-    private static AudioPlayer currentPlayer;
-    private static final ConcurrentHashMap<String, OnToggleCallback> playerToggleListeners = new ConcurrentHashMap<>();
-
-    public interface OnAudioPlayer {
-        void onInitialized(boolean alreadyInitialized, AudioPlayer currentPlayer, String filePath);
-
-        void onProgress(long position, long duration, String filePath);
-
-        default void onSeek(long position, String filePath) {
-        }
-
-        void onToggle(boolean playing, String filePath);
-
-        void onStop(String filePath);
-
-        void onPaused(String filePath);
-
-        void onSpeedChanged(float speed, String filePath);
-
-        default void onError(String filePath) {
-        }
-    }
-
-    public static void init(String filePath, OnAudioPlayer events, String tag) {
-        playerExecutor.execute(() -> {
-            if (currentPlayer != null) {
-                if (currentPlayer.getFilePath().equals(filePath)) {
-                    events.onInitialized(true, currentPlayer, filePath);
-                    currentPlayer.addEventListener(events, tag, filePath);
-                    return;
+    fun init(filePath: String, events: OnAudioPlayer, tag: String) {
+        playerExecutor.execute {
+            currentPlayer?.let {
+                if (it.getFilePath() == filePath) {
+                    events.onInitialized(true, it, filePath)
+                    currentPlayer?.addEventListener(events, tag, filePath)
+                    return@execute
                 }
-
-                currentPlayer.stop();
+                it.stop()
             }
-
-            currentPlayer = new AudioPlayerImpl(filePath, events, tag);
-            currentPlayer.initialize();
-
-            if (events != null) {
-                events.onInitialized(false, currentPlayer, filePath);
-            }
-        });
+            val player = AudioPlayerImpl(filePath)
+            player.addEventListener(events, tag, filePath)
+            player.initialize()
+            currentPlayer = player
+            events.onInitialized(false, player, filePath)
+        }
     }
 
-    public static void addEventListener(OnAudioPlayer events, String tag, String filePath) {
-        playerExecutor.execute(() -> {
+    fun addEventListener(events: OnAudioPlayer, tag: String, filePath: String) {
+        playerExecutor.execute {
+            currentPlayer?.addEventListener(events, tag, filePath)
+        }
+    }
+
+    fun seek(filePath: String?, position: Long) {
+        playerExecutor.execute {
+            if (currentPlayer?.getFilePath() == filePath)
+                currentPlayer?.seekToPosition(position)
+        }
+    }
+
+    fun play() {
+        playerExecutor.execute {
+            currentPlayer?.play()
+        }
+    }
+
+    fun stop(filePath: String) {
+        playerExecutor.execute {
+            if (currentPlayer?.getFilePath() == filePath) {
+                currentPlayer?.stop()
+                currentPlayer = null
+            }
+        }
+    }
+
+    fun stopAll() {
+        playerExecutor.execute {
             if (currentPlayer != null) {
-                currentPlayer.addEventListener(events, tag, filePath);
+                currentPlayer?.stop()
+                currentPlayer = null
             }
-        });
+        }
     }
 
-    public static void seek(String filePath, long position) {
-        playerExecutor.execute(() -> {
-            if (currentPlayer != null && currentPlayer.getFilePath().equals(filePath))
-                currentPlayer.seekToPosition(position);
-        });
+    fun pause(filePath: String) {
+        playerExecutor.execute {
+            if (currentPlayer?.getFilePath() == filePath)
+                currentPlayer?.pause()
+        }
     }
 
-    public static void play() {
-        playerExecutor.execute(() -> {
-            if (currentPlayer != null)
-                currentPlayer.play();
-        });
+    fun pauseAll() {
+        playerExecutor.execute {
+            currentPlayer?.pause()
+        }
     }
 
-
-    public static void stop(String filePath) {
-        playerExecutor.execute(() -> {
-            if (currentPlayer != null && currentPlayer.getFilePath().equals(filePath)) {
-                currentPlayer.stop();
-                currentPlayer = null;
-            }
-        });
-    }
-
-    public static void stopAll() {
-        playerExecutor.execute(() -> {
-            if (currentPlayer != null) {
-                currentPlayer.stop();
-                currentPlayer = null;
-            }
-        });
-    }
-
-    public static void pause(String filePath) {
-        playerExecutor.execute(() -> {
-            if (currentPlayer != null && currentPlayer.getFilePath().equals(filePath))
-                currentPlayer.pause();
-        });
-    }
-
-    public static void pauseAll() {
-        playerExecutor.execute(() -> {
-            if (currentPlayer != null)
-                currentPlayer.pause();
-        });
-    }
-
-    public static void toggle(String filePath) {
-        playerExecutor.execute(() -> {
-            if (currentPlayer != null && currentPlayer.getFilePath().equals(filePath)) {
-                currentPlayer.togglePlayPause();
-                for (OnToggleCallback callback : playerToggleListeners.values()) {
-                    callback.onToggle();
+    fun toggle(filePath: String) {
+        playerExecutor.execute {
+            if (currentPlayer?.getFilePath() == filePath) {
+                currentPlayer?.togglePlayPause()
+                for (callback in playerToggleListeners.values) {
+                    callback.onToggle()
                 }
             }
-        });
-    }
-
-    public static void setPlaybackSpeed(String filePath, float speed) {
-        playerExecutor.execute(() -> {
-            if (currentPlayer != null && currentPlayer.getFilePath().equals(filePath)) {
-                currentPlayer.setPlaybackSpeed(speed);
-            }
-        });
-    }
-
-    public static void addToggleCallback(String filePath, OnToggleCallback callback) {
-        playerToggleListeners.put(filePath, callback);
-    }
-
-    public static String getCurrentPlayingAudioPath() {
-        if (currentPlayer != null) {
-            return currentPlayer.getFilePath();
         }
-        return null;
     }
 
-    @Nullable
-    public static AudioPlayer getCurrentPlayer() {
-        return currentPlayer;
+    fun setPlaybackSpeed(filePath: String?, speed: Float) {
+        playerExecutor.execute {
+            if (currentPlayer?.getFilePath().equals(filePath)) {
+                currentPlayer?.setPlaybackSpeed(speed)
+            }
+        }
     }
 
-    public static boolean alreadyInitialized(@NotNull String path) {
-        if (currentPlayer == null) return false;
-        return currentPlayer.getFilePath().equals(path);
+    fun addToggleCallback(tag: String, callback: OnToggleCallback) {
+        playerToggleListeners[tag] = callback
     }
 
-    public static boolean isPlaying(@NotNull String path) {
-        if (currentPlayer == null) return false;
-        return currentPlayer.getFilePath().equals(path) && currentPlayer.isPlaying();
+    fun getCurrentPlayingAudioPath(): String? {
+        return currentPlayer?.getFilePath()
     }
 
-    public interface OnToggleCallback {
-        void onToggle();
+    fun getCurrentPlayer(): AudioPlayer? {
+        return currentPlayer
+    }
+
+    fun alreadyInitialized(path: String): Boolean {
+        currentPlayer ?: return false
+        return currentPlayer?.getFilePath().equals(path)
+    }
+
+    fun isPlaying(path: String): Boolean {
+        currentPlayer ?: return false
+        return currentPlayer?.getFilePath().equals(path) && currentPlayer?.isPlaying() == true
+    }
+
+    interface OnAudioPlayer {
+        fun onInitialized(alreadyInitialized: Boolean, player: AudioPlayer, filePath: String)
+        fun onProgress(position: Long, duration: Long, filePath: String)
+        fun onSeek(position: Long, filePath: String) {}
+        fun onToggle(playing: Boolean, filePath: String)
+        fun onStop(filePath: String)
+        fun onPaused(filePath: String)
+        fun onSpeedChanged(speed: Float, filePath: String)
+        fun onError(filePath: String) {}
+    }
+
+    fun interface OnToggleCallback {
+        fun onToggle()
     }
 }

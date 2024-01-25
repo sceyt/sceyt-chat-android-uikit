@@ -1,16 +1,11 @@
-package com.sceyt.sceytchatuikit.media.audio;
+package com.sceyt.sceytchatuikit.media.audio
 
+import com.sceyt.sceytchatuikit.media.DurationCallback
 
-import com.sceyt.sceytchatuikit.media.DurationCallback;
-
-public interface AudioRecorder {
+interface AudioRecorder {
     // Constructor accepts created File or file path
-
-    boolean startRecording(Integer bitrate, DurationCallback durationCallback);
-
-    void stopRecording();
-
-    Integer getRecordingDuration();
-
-    Integer[] getRecordingAmplitudes();
+    fun startRecording(bitrate: Int, durationCallback: DurationCallback?): Boolean
+    fun stopRecording()
+    fun getRecordingDuration(): Int
+    fun getRecordingAmplitudes(): Array<Int>
 }

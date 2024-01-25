@@ -81,7 +81,7 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
                                 }
                             }
 
-                            override fun onPaused(filePath: String?) {
+                            override fun onPaused(filePath: String) {
                                 root.post { setPlayButtonIcon(false, playVoiceRecord) }
                             }
 

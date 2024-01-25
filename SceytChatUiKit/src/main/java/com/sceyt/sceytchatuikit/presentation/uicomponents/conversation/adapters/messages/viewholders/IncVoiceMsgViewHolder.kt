@@ -45,8 +45,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.PlaybackSpeed
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 
 class IncVoiceMsgViewHolder(
         private val binding: SceytItemIncVoiceMessageBinding,
@@ -153,11 +153,11 @@ class IncVoiceMsgViewHolder(
 
     private fun checkIsPlayingAndSetState(): Boolean {
         return if (AudioPlayerHelper.getCurrentPlayingAudioPath() == fileItem.file.filePath) {
-            val playBackPos = AudioPlayerHelper.getCurrentPlayer()?.playbackPosition ?: 0
+            val playBackPos = AudioPlayerHelper.getCurrentPlayer()?.getPlaybackPosition() ?: 0
             binding.voiceDuration.text = playBackPos.durationToMinSecShort()
             binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(playBackPos, fileItem.duration?.times(1000L)
                     ?: 0)
-            currentPlaybackSpeed = PlaybackSpeed.fromValue(AudioPlayerHelper.getCurrentPlayer()?.playbackSpeed)
+            currentPlaybackSpeed = PlaybackSpeed.fromValue(AudioPlayerHelper.getCurrentPlayer()?.getPlaybackSpeed())
             true
         } else {
             binding.voiceDuration.text = fileItem.duration?.times(1000L) // convert to milliseconds
@@ -171,15 +171,16 @@ class IncVoiceMsgViewHolder(
     private fun onPlayPauseClick(attachment: SceytAttachment) {
         if (attachment.transferState != Uploaded && attachment.transferState != Downloaded)
             return
-        if (AudioPlayerHelper.alreadyInitialized(lastFilePath ?: return)) {
-            AudioPlayerHelper.getCurrentPlayer()?.addEventListener(playerListener, TAG_REF, lastFilePath)
-            AudioPlayerHelper.toggle(lastFilePath)
+        val path = attachment.filePath ?: return
+        if (AudioPlayerHelper.alreadyInitialized(path)) {
+            AudioPlayerHelper.getCurrentPlayer()?.addEventListener(playerListener, TAG_REF, path)
+            AudioPlayerHelper.toggle(path)
         } else
             initAudioPlayer()
     }
 
     private fun initAudioPlayer() {
-        AudioPlayerHelper.init(lastFilePath, playerListener, TAG_REF)
+        AudioPlayerHelper.init(lastFilePath ?: return, playerListener, TAG_REF)
     }
 
     private val playerListener: OnAudioPlayer by lazy {
@@ -224,7 +225,7 @@ class IncVoiceMsgViewHolder(
                 }
             }
 
-            override fun onPaused(filePath: String?) {
+            override fun onPaused(filePath: String) {
                 if (!checkIsValid(filePath)) return
                 runOnMainThread { setPlayButtonIcon(false, binding.playPauseButton) }
             }

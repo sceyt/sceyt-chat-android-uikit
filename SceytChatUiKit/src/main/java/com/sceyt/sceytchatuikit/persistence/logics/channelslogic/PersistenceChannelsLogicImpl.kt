@@ -678,7 +678,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun getChannelFromServerByUrl(url: String): SceytResponse<List<SceytChannel>> {
-        //Not use yet
+        //Don't use yet
         return channelsRepository.getChannelFromServerByUrl(url)
     }
 
