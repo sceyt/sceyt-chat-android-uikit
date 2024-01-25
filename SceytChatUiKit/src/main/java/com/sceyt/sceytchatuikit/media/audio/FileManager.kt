@@ -1,15 +1,15 @@
-package com.sceyt.sceytchatuikit.media.audio;
+package com.sceyt.sceytchatuikit.media.audio
 
-import java.io.File;
-import java.util.UUID;
+import java.io.File
+import java.util.UUID
 
-public class FileManager {
-    public static File createFile(String extension, String directory) {
-        File mediaDir = new File(directory);
+object FileManager {
+
+    fun createFile(extension: String, directory: String): File {
+        val mediaDir = File(directory)
         if (!mediaDir.exists()) {
-            mediaDir.mkdirs();
+            mediaDir.mkdirs()
         }
-
-        return new File(mediaDir, "Audio_" + UUID.randomUUID() + "." + extension);
+        return File(mediaDir, "Audio_" + UUID.randomUUID() + "." + extension)
     }
 }

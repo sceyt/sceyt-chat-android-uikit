@@ -1,31 +1,20 @@
-package com.sceyt.sceytchatuikit.media.audio;
+package com.sceyt.sceytchatuikit.media.audio
 
-public interface AudioPlayer {
+import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
+
+interface AudioPlayer {
     // Constructor accepts created File or file path
-
-    boolean initialize();
-
-    void play();
-
-    void pause();
-
-    void stop();
-
-    long getPlaybackPosition();
-
-    long getAudioDuration();
-
-    void seekToPosition(long position);
-
-    void togglePlayPause();
-
-    void setPlaybackSpeed(float speed);
-
-    float getPlaybackSpeed();
-
-    String getFilePath();
-
-    boolean isPlaying();
-
-    void addEventListener(AudioPlayerHelper.OnAudioPlayer event, String tag, String filePath);
+    fun initialize(): Boolean
+    fun play()
+    fun pause()
+    fun stop()
+    fun seekToPosition(position: Long)
+    fun togglePlayPause()
+    fun addEventListener(event: OnAudioPlayer, tag: String, filePath: String)
+    fun setPlaybackSpeed(speed: Float)
+    fun getPlaybackSpeed(): Float
+    fun getPlaybackPosition(): Long
+    fun getAudioDuration(): Long
+    fun getFilePath(): String?
+    fun isPlaying(): Boolean
 }
