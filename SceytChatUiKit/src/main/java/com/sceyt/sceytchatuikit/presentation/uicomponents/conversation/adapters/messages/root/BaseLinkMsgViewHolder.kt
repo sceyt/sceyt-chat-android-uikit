@@ -105,6 +105,11 @@ abstract class BaseLinkMsgViewHolder(
             root.setOnClickListener {
                 messageListeners?.onLinkDetailsClick(it, messageListItem as MessageListItem.MessageItem)
             }
+
+            root.setOnLongClickListener {
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+                return@setOnLongClickListener true
+            }
         }
     }
 
