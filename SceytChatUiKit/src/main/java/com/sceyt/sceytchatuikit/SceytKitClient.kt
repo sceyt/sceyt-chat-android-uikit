@@ -27,6 +27,7 @@ import com.sceyt.sceytchatuikit.pushes.SceytFirebaseMessagingDelegate
 import com.sceyt.sceytchatuikit.services.networkmonitor.ConnectionStateService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -50,7 +51,7 @@ object SceytKitClient : SceytKoinComponent {
     private val persistenceAttachmentsMiddleWare by inject<PersistenceAttachmentsMiddleWare>()
     private val sceytSyncManager by inject<SceytSyncManager>()
     private val filesTransferService by inject<FileTransferService>()
-    private val globalScope by inject<CoroutineScope>()
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val listenersMap = hashMapOf<String, (success: Boolean, errorMessage: String?) -> Unit>()
     private var clientUserId: String? = null
 
@@ -108,14 +109,14 @@ object SceytKitClient : SceytKoinComponent {
             when (it.state) {
                 ConnectionState.Connected -> {
                     notifyState(true, null)
-                    globalScope.launch {
+                    scope.launch {
                         ProcessLifecycleOwner.get().repeatOnLifecycle(Lifecycle.State.RESUMED) {
                             if (ConnectionEventsObserver.isConnected)
                                 persistenceUsersMiddleWare.setPresenceState(PresenceState.Online)
                         }
                     }
                     SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
-                    globalScope.launch(Dispatchers.IO) {
+                    scope.launch(Dispatchers.IO) {
                         persistenceMessagesMiddleWare.sendAllPendingMarkers()
                         persistenceMessagesMiddleWare.sendAllPendingMessages()
                         persistenceMessagesMiddleWare.sendAllPendingMessageStateUpdates()
@@ -136,15 +137,15 @@ object SceytKitClient : SceytKoinComponent {
 
                 else -> {}
             }
-        }.launchIn(globalScope)
+        }.launchIn(scope)
 
         ConnectionEventsObserver.onTokenExpired.onEach {
             onTokenExpired_.tryEmit(Unit)
-        }.launchIn(globalScope)
+        }.launchIn(scope)
 
         ConnectionEventsObserver.onTokenWillExpire.onEach {
             onTokenWillExpire_.tryEmit(Unit)
-        }.launchIn(globalScope)
+        }.launchIn(scope)
     }
 
     private fun notifyState(success: Boolean, errorMessage: String?) {
@@ -186,11 +187,9 @@ object SceytKitClient : SceytKoinComponent {
 
     @JvmStatic
     fun clearData() {
-        globalScope.launch(Dispatchers.IO) {
-            database.clearAllTables()
-            preferences.clear()
-            channelsCache.clear()
-        }
+        database.clearAllTables()
+        preferences.clear()
+        channelsCache.clear()
     }
 
     @JvmStatic
