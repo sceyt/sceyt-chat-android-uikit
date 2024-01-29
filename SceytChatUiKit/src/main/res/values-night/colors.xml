@@ -2,8 +2,8 @@
 <resources>
     <color name="sceyt_color_primary_dark">#010212</color>
     <color name="sceyt_color_primary">#FFFFFF</color>
-
     <color name="sceyt_color_black_themed">#FFFFFF</color>
+    <color name="sceyt_color_white_themed">#000000</color>
     <color name="sceyt_color_bg">#010212</color>
     <color name="sceyt_color_bg_secondary_themed">#010212</color>
     <color name="sceyt_color_bg_out_message">#182159</color>
