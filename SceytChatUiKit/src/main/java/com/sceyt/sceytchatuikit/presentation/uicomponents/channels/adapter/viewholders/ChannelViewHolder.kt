@@ -151,7 +151,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 .append(fromText)
                 .append(message.getAttachmentIconAsString(context))
                 .append(showBody)
-                .setForegroundColorId(R.color.sceyt_color_last_message_from)
+                .setForegroundColorId(R.color.sceyt_color_text_themed)
                 .setIndexSpan(0, fromText.length)
                 .build()
 

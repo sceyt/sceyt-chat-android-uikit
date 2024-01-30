@@ -109,7 +109,7 @@ object MessagesStyle {
 
     @JvmField
     @DrawableRes
-    var linkAttachmentIcon: Int = R.drawable.sceyt_ic_link_with_background
+    var linkAttachmentIcon: Int = R.drawable.sceyt_ic_link_attachment
 
     @JvmField
     @ColorRes

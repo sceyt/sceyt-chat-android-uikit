@@ -13,7 +13,6 @@ import com.sceyt.sceytchatuikit.databinding.SceytFragmentInfoMembersByRoleBindin
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
-import com.sceyt.sceytchatuikit.presentation.common.isPrivate
 import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
@@ -57,14 +56,19 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
 
     open fun setDetails(channel: SceytChannel) {
         with(binding) {
-            members.text = if (channel.isPublic())
-                getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
-
             val myRole = channel.userRole
             val isOwnerOrAdmin = myRole == RoleTypeEnum.Owner.toString() || myRole == RoleTypeEnum.Admin.toString()
 
-            admins.isVisible = !channel.isDirect() && isOwnerOrAdmin
-            groupChannelMembers.isVisible = !channel.isDirect() && (isOwnerOrAdmin || channel.isPrivate())
+            if (channel.isDirect() || (channel.isPublic() && !isOwnerOrAdmin)) {
+                root.isVisible = false
+                return
+            }
+
+            members.text = if (channel.isPublic())
+                getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
+
+            groupChannelAdmins.isVisible = isOwnerOrAdmin
+            root.isVisible = true
         }
     }
 

@@ -11,6 +11,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
         app:sceytSearchableToolbarTitle="@string/sceyt_add_members" />
 
@@ -31,12 +32,13 @@
         android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/sceyt_color_gray_secondary"
-        android:text="@string/users"
-        android:textSize="@dimen/_12sdp"
-        android:paddingVertical="4dp"
+        android:background="@color/sceyt_color_gray_themed"
+        android:fontFamily="@font/roboto_medium"
         android:gravity="center"
-        android:background="@color/sceyt_color_divider"
+        android:paddingVertical="4dp"
+        android:text="@string/users"
+        android:textColor="@color/sceyt_color_gray_secondary_themed"
+        android:textSize="@dimen/_12sdp"
         app:layout_constraintStart_toStartOf="@+id/rvSelectedUsers"
         app:layout_constraintTop_toBottomOf="@+id/rvSelectedUsers" />
 
@@ -63,6 +65,6 @@
         android:src="@drawable/ic_arrow_forward"
         android:tint="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"  />
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

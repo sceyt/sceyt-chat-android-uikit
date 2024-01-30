@@ -180,10 +180,10 @@ class ProfileFragment : Fragment() {
             }.show()
         }
 
-        signOut.setOnClickListener {
-            SceytDialog(requireContext()).setTitle(getString(R.string.sign_out_title))
-                .setDescription(getString(R.string.sign_out_desc))
-                .setPositiveButtonTitle(getString(R.string.sign_out))
+        logout.setOnClickListener {
+            SceytDialog(requireContext()).setTitle(getString(R.string.log_out_title))
+                .setDescription(getString(R.string.log_out_desc))
+                .setPositiveButtonTitle(getString(R.string.log_out))
                 .setPositiveButtonTextColor(requireContext().getCompatColor(SceytKitR.color.sceyt_color_red))
                 .setPositiveButtonClickListener {
                     viewModel.logout()
