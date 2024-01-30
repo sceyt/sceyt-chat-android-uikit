@@ -5,48 +5,56 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/notification"
+    <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:drawableStart="@drawable/sceyt_ic_notification"
-        android:drawablePadding="16dp"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="10dp"
-        android:text="@string/sceyt_notifications"
-        android:textColor="@color/sceyt_color_text_themed"
-        android:textSize="16sp"
-        android:theme="@style/SceytSwitchStyle" />
+        android:background="@color/sceyt_color_primary"
+        android:orientation="vertical">
 
-    <View
-        android:id="@+id/divider1"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/sceyt_color_input"
-        android:visibility="gone"
-        tools:visibility="visible" />
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/notification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/sceyt_ic_notification"
+            android:drawablePadding="16dp"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="10dp"
+            android:text="@string/sceyt_notifications"
+            android:textColor="@color/sceyt_color_text_themed"
+            android:textSize="16sp"
+            android:theme="@style/SceytSwitchStyle" />
 
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/autoDeleteMessages"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:drawableStart="@drawable/sceyt_ic_auto_delete_message"
-        android:drawablePadding="16dp"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="10dp"
-        android:text="@string/auto_delete_messages_off"
-        android:textColor="@color/sceyt_color_text_themed"
-        android:textSize="16sp"
-        android:theme="@style/SceytSwitchStyle"
-        android:visibility="gone"
-        tools:visibility="visible" />
+        <View
+            android:id="@+id/divider1"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/sceyt_color_divider"
+            android:visibility="gone"
+            tools:visibility="visible" />
 
-    <View
-        android:id="@+id/divider"
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/autoDeleteMessages"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/sceyt_ic_auto_delete_message"
+            android:drawablePadding="16dp"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="10dp"
+            android:text="@string/auto_delete_messages_off"
+            android:textColor="@color/sceyt_color_text_themed"
+            android:textSize="16sp"
+            android:theme="@style/SceytSwitchStyle"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <Space
+        android:id="@+id/space"
         android:layout_width="match_parent"
         android:layout_height="16dp"
-        android:background="@color/sceyt_color_input" />
+        android:background="@color/sceyt_color_bg" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

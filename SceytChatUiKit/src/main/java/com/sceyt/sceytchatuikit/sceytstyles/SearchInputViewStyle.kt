@@ -25,7 +25,7 @@ object SearchInputViewStyle {
 
     @JvmField
     @ColorRes
-    var backgroundColor: Int = R.color.sceyt_color_input
+    var backgroundColor: Int = R.color.sceyt_color_gray_themed
 
     lateinit var hintText: String
 

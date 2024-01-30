@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.fragments
 
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,6 +17,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentEditOrReplyMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.sceytchatuikit.extensions.setBoldSpan
@@ -128,7 +130,8 @@ open class EditOrReplyMessageFragment : Fragment() {
             } else {
                 val attachment = links[0]
                 if (attachment.linkPreviewDetails != null && attachment.linkPreviewDetails?.imageUrl != null) {
-                    loadImage(imageAttachment, attachment.metadata, attachment.linkPreviewDetails?.imageUrl)
+                    loadImage(imageAttachment, attachment.metadata,
+                        attachment.linkPreviewDetails?.imageUrl, getCompatDrawable(MessagesStyle.linkAttachmentIcon))
                 } else
                     imageAttachment.setImageResource(MessagesStyle.linkAttachmentIcon)
             }
@@ -136,8 +139,10 @@ open class EditOrReplyMessageFragment : Fragment() {
     }
 
 
-    private fun loadImage(imageAttachment: ImageView, metadata: String?, path: String?) {
-        val placeHolder = getThumbFromMetadata(metadata)?.toDrawable(requireContext().resources)?.mutate()
+    private fun loadImage(imageAttachment: ImageView, metadata: String?,
+                          path: String?, defaultPlaceHolder: Drawable? = null) {
+        val placeHolder = getThumbFromMetadata(metadata)?.toDrawable(requireContext().resources)
+            ?.mutate() ?: defaultPlaceHolder
         Glide.with(requireContext())
             .load(path)
             .placeholder(placeHolder)

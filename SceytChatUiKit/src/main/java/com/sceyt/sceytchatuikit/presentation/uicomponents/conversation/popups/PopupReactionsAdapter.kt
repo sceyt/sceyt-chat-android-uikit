@@ -43,7 +43,7 @@ class PopupReactionsAdapter(private var data: List<ReactionItem>,
             val reaction = (item as ReactionItem.Reaction).reaction
             binding.emojiView.setSmileText(reaction.key)
             if (item.reaction.containsSelf)
-                binding.emojiView.setReactionBackgroundColor(context.getCompatColor(R.color.sceyt_color_gray))
+                binding.emojiView.setReactionBackgroundColor(context.getCompatColor(R.color.sceyt_color_button))
             else
                 binding.emojiView.setReactionBackgroundColor(Color.TRANSPARENT)
 

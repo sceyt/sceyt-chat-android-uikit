@@ -8,8 +8,7 @@
     <string name="connection_failed">Connection failed</string>
     <string name="chats">Chats</string>
     <string name="profile">Profile</string>
-    <string name="my_profile">My Profile</string>
-    <string name="sign_out">Sign Out</string>
+    <string name="log_out">Log out</string>
     <string name="new_channel">New channel</string>
     <string name="make_channel_private">Make channel private</string>
     <string name="make_channel_private_info">By making channel private, only selected members have acess to read or connect to chis channel</string>
@@ -31,8 +30,8 @@
     <string name="save">Save</string>
     <string name="edit">Edit</string>
     <string name="dark_theme">Dark Theme</string>
-    <string name="sign_out_title">Sign out?</string>
-    <string name="sign_out_desc">Are you sure you want to sign out?</string>
+    <string name="log_out_title">Log out?</string>
+    <string name="log_out_desc">Are you sure you want to log out?</string>
     <string name="new_group">New group</string>
     <string name="start_chat">Start chat</string>
     <string name="group_name">Group name</string>

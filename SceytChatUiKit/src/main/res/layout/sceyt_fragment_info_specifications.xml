@@ -9,7 +9,8 @@
         android:id="@+id/link"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
+        android:background="@drawable/sceyt_bg_ripple"
+        android:backgroundTint="@color/sceyt_color_primary"
         android:drawableStart="@drawable/sceyt_ic_channel_link"
         android:drawablePadding="16dp"
         android:gravity="center_vertical"
@@ -22,11 +23,11 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="link" />
 
-    <View
-        android:id="@+id/divider"
+    <Space
+        android:id="@+id/space"
         android:layout_width="match_parent"
         android:layout_height="16dp"
-        android:background="@color/sceyt_color_input"
+        android:background="@color/sceyt_color_divider"
         app:layout_constraintTop_toBottomOf="@+id/link" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

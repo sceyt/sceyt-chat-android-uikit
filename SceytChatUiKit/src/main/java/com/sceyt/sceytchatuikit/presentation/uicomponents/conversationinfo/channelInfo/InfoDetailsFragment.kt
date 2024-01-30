@@ -144,7 +144,7 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
     }
 
     private fun SceytFragmentInfoDetailsBinding.setupStyle() {
-        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
+        space.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
     }
 
     companion object {

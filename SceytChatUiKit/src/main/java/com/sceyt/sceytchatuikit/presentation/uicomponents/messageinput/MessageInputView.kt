@@ -16,6 +16,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
@@ -37,7 +38,6 @@ import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.getString
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
-import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.extensions.setTextAndMoveSelectionEnd
 import com.sceyt.sceytchatuikit.extensions.showSoftInput
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
@@ -110,8 +110,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var inputTextWatcher: TextWatcher? = null
     private var messageInputActionCallback: MessageInputActionCallback? = null
     private val messageToSendHelper by lazy { MessageToSendHelper(context) }
-    private val linkDetailsProvider by lazy { SingleLinkDetailsProvider(context, context.asComponentActivity().lifecycleScope) }
-    private val audioRecorderHelper: AudioRecorderHelper by lazy { AudioRecorderHelper(context) }
+    private val linkDetailsProvider by lazy { SingleLinkDetailsProvider(context, getScope()) }
+    private val audioRecorderHelper: AudioRecorderHelper by lazy { AudioRecorderHelper(getScope(), context) }
 
     var isInputHidden = false
         private set
@@ -143,6 +143,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
                 setRecordingListener()
                 voiceMessageRecorderView = this
+                voiceMessageRecorderView?.setRecorderHeight(binding.layoutInput.height)
                 isVisible = canShowRecorderView()
             })
         }
@@ -161,6 +162,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             addInputTextWatcher()
             post { onStateChanged(inputState) }
         }
+    }
+
+    private fun getScope(): LifecycleCoroutineScope {
+        return context.asComponentActivity().lifecycleScope
     }
 
     private val editOrReplyMessageFragment
@@ -326,17 +331,15 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
             override fun onRecordingCompleted(shouldShowPreview: Boolean) {
                 audioRecorderHelper.stopRecording { isTooShort, file, duration, amplitudes ->
-                    runOnMainThread {
-                        if (isTooShort) {
-                            finishRecording()
-                            return@runOnMainThread
-                        }
-                        if (shouldShowPreview) {
-                            showRecordPreview(file, amplitudes, duration)
-                        } else {
-                            finishRecording()
-                            tryToSendRecording(file, amplitudes.toIntArray(), duration)
-                        }
+                    if (isTooShort) {
+                        finishRecording()
+                        return@stopRecording
+                    }
+                    if (shouldShowPreview) {
+                        showRecordPreview(file, amplitudes, duration)
+                    } else {
+                        finishRecording()
+                        tryToSendRecording(file, amplitudes.toIntArray(), duration)
                     }
                     voiceMessageRecorderView?.keepScreenOn = false
                 }
@@ -369,14 +372,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun handleAttachmentClick() {
-        ChooseFileTypeDialog(context) { chooseType ->
+        ChooseFileTypeDialog(context).setChooseListener { chooseType ->
             when (chooseType) {
                 AttachmentChooseType.Gallery -> selectFileTypePopupClickListeners.onGalleryClick()
-                AttachmentChooseType.Camera -> {
-                    //TODO custom camera impl
-                }
-
-                AttachmentChooseType.Image -> selectFileTypePopupClickListeners.onTakePhotoClick()
+                AttachmentChooseType.Photo -> selectFileTypePopupClickListeners.onTakePhotoClick()
                 AttachmentChooseType.Video -> selectFileTypePopupClickListeners.onTakeVideoClick()
                 AttachmentChooseType.File -> selectFileTypePopupClickListeners.onFileClick()
             }

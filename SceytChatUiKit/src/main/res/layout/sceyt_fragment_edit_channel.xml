@@ -4,15 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_bg">
+    android:background="@color/sceyt_color_bg"
+    tools:context=".presentation.uicomponents.conversationinfo.editchannel.EditChannelFragment">
 
     <com.sceyt.sceytchatuikit.presentation.customviews.SceytCustomToolbar
         android:id="@+id/layoutToolbar"
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
+        android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:titleTextColor="@color/sceyt_color_text_themed"
-        tools:title="Edit channel" />
+        app:title="@string/edit_channel"
+        app:titleTextColor="@color/sceyt_color_text_themed" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -29,27 +31,14 @@
 
             <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
                 android:id="@+id/avatar"
-                android:layout_width="90dp"
-                android:layout_height="90dp"
-                android:layout_marginTop="15dp"
+                android:layout_width="@dimen/_62sdp"
+                android:layout_height="@dimen/_62sdp"
+                android:layout_marginTop="24dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:sceytAvatarColor="#F3F5F7" />
-
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/icChangePhoto"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:background="@drawable/sceyt_bg_circle"
-                android:backgroundTint="#66111539"
-                android:padding="25dp"
-                android:tint="@color/sceyt_color_white"
-                app:layout_constraintBottom_toBottomOf="@+id/avatar"
-                app:layout_constraintEnd_toEndOf="@+id/avatar"
-                app:layout_constraintStart_toStartOf="@+id/avatar"
-                app:layout_constraintTop_toTopOf="@+id/avatar"
-                app:srcCompat="@drawable/sceyt_ic_camera" />
+                app:sceytAvatarColor="@color/sceyt_color_no_avatar_themed"
+                app:sceytAvatarDefaultIcon="@drawable/sceyt_ic_camera_72" />
 
             <androidx.appcompat.widget.AppCompatEditText
                 android:id="@+id/tvSubject"

@@ -11,7 +11,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytSearchableToolbarIconsTint="@color/colorAccent"
         app:sceytSearchableToolbarTitle="@string/sceyt_forward_message" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -33,7 +32,6 @@
         android:layout_marginHorizontal="24dp"
         android:layout_marginVertical="12dp"
         android:background="@drawable/sceyt_bg_corners_6"
-        android:backgroundTint="@color/colorAccent"
         android:text="@string/sceyt_forward"
         android:textAllCaps="false"
         android:textColor="@color/sceyt_color_white"

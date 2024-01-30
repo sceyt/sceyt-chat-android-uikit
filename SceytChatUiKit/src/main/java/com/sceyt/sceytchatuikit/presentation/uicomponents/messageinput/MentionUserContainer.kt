@@ -14,6 +14,7 @@ import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.screenHeightPx
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.common.MaxHeightLinearLayoutManager
@@ -38,7 +39,7 @@ class MentionUserContainer @JvmOverloads constructor(context: Context, attrs: At
                 gravity = Gravity.BOTTOM
                 setMargins(0, 0, 0, view.height)
             }
-            background = ContextCompat.getDrawable(context, R.drawable.sceyt_bg_mention_users)
+            background = context.getCompatDrawable(R.drawable.sceyt_bg_mention_users)
             layoutManager = MaxHeightLinearLayoutManager(context, (screenHeightPx() * 0.4f).toInt())
             recyclerView = this
             isVisible = false

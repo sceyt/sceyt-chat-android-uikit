@@ -1,31 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     //Themed colors
-    <color name="sceyt_color_primary_dark">#ffffff</color>
-    <color name="sceyt_color_primary">#5159F6</color>
-
+    <color name="sceyt_color_primary_dark">#FFFFFF</color>
+    <color name="sceyt_color_primary">#FFFFFF</color>
+    <color name="sceyt_color_accent">#5159F6</color>
     <color name="sceyt_color_status_bar">#33000000</color>
 
-    <color name="sceyt_color_white_themed">#FFFFFF</color>
+    <color name="sceyt_color_button">#F1F2F6</color>
+    <color name="sceyt_color_text_themed">#111539</color>
+    <color name="sceyt_color_divider">#E8E9EE</color>
     <color name="sceyt_color_black_themed">#FF000000</color>
+    <color name="sceyt_color_gray_themed">#F1F2F6</color>
+    <color name="sceyt_color_gray_secondary_themed">#707388</color>
 
     <color name="sceyt_color_bg">#FFFFFF</color>
     <color name="sceyt_color_bg_secondary_themed">#F4F5F8</color>
+
     <color name="sceyt_color_bg_out_message">#E3E7FF</color>
-    <color name="sceyt_color_bg_out_link_preview">#C9D1FF</color>
     <color name="sceyt_color_bg_inc_message">#F1F2F6</color>
+    <color name="sceyt_color_bg_out_link_preview">#C9D1FF</color>
     <color name="sceyt_color_bg_inc_link_preview">#DFE1EA</color>
-    <color name="sceyt_color_divider">#F0F2F5</color>
-    <color name="sceyt_color_text_themed">#060A26</color>
-    <color name="sceyt_color_last_message_from">#060A26</color>
-    <color name="sceyt_color_input">#F1F2F6</color>
-    <color name="sceyt_color_dialog_bg_themed">#FFFFFF</color>
-    <color name="sceyt_color_light_themed">#FFFFFFFF</color>
-    <color name="sceyt_color_gray_themed">#E8E9EE</color>
+
+    <color name="sceyt_color_no_avatar_themed">#66111539</color>
+
 
     // Not themed colors
-    <color name="colorAccent">#5159F6</color>
-    <color name="sceyt_color_accent">#5159F6</color>
     <color name="sceyt_color_black">#000000</color>
     <color name="sceyt_color_white">#FFFFFFFF</color>
     <color name="sceyt_color_hint">#9B9DA8</color>
