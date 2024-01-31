@@ -13,6 +13,7 @@
         android:layout_marginStart="15dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:sceytAvatarEnableRipple="false"
         app:sceytAvatarViewTextSize="16dp"
         tools:sceytAvatarViewFullName="Art d" />
 
