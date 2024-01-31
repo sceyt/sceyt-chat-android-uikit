@@ -52,11 +52,11 @@ object MessagesStyle {
 
     @JvmField
     @DrawableRes
-    var dateSeparatorItemBackground = R.drawable.sceyt_bg_message_day
+    var dateSeparatorItemBackground = R.drawable.sceyt_bg_date_separator
 
     @JvmField
     @ColorRes
-    var dateSeparatorItemTextColor = R.color.sceyt_color_gray_400
+    var dateSeparatorItemTextColor = R.color.sceyt_color_white
 
     @JvmField
     @ColorRes

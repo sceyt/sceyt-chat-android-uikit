@@ -12,6 +12,7 @@
     <color name="sceyt_color_black_themed">#FF000000</color>
     <color name="sceyt_color_gray_themed">#F1F2F6</color>
     <color name="sceyt_color_gray_secondary_themed">#707388</color>
+    <color name="sceyt_color_dark_blue_themed">#66111539</color>
 
     <color name="sceyt_color_bg">#FFFFFF</color>
     <color name="sceyt_color_bg_secondary_themed">#F4F5F8</color>
@@ -21,14 +22,13 @@
     <color name="sceyt_color_bg_out_link_preview">#C9D1FF</color>
     <color name="sceyt_color_bg_inc_link_preview">#DFE1EA</color>
 
-    <color name="sceyt_color_no_avatar_themed">#66111539</color>
-
 
     // Not themed colors
     <color name="sceyt_color_black">#000000</color>
     <color name="sceyt_color_white">#FFFFFFFF</color>
     <color name="sceyt_color_hint">#9B9DA8</color>
     <color name="sceyt_color_green">#4BB34B</color>
+    <color name="sceyt_color_dark_blue">#66111539</color>
     <color name="sceyt_color_red">#F23F51</color>
     <color name="sceyt_color_gray">#F1F2F6</color>
     <color name="sceyt_color_gray_200">#DDDFE5</color>
