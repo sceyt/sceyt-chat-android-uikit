@@ -15,6 +15,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
+import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.Flow
 
 interface PersistenceChannelsLogic {
@@ -58,4 +59,5 @@ interface PersistenceChannelsLogic {
 
     suspend fun getChannelsCountFromDb(): Int
     fun getTotalUnreadCount(): Flow<Int>
+    suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>)
 }

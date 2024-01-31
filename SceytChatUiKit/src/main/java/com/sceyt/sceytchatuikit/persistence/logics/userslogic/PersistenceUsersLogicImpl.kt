@@ -14,6 +14,7 @@ import com.sceyt.sceytchatuikit.persistence.extensions.safeResume
 import com.sceyt.sceytchatuikit.persistence.mappers.toUser
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -147,6 +148,10 @@ internal class PersistenceUsersLogicImpl(
 
     override suspend fun unMuteNotifications(): SceytResponse<Boolean> {
         return profileRepo.unMuteNotifications()
+    }
+
+    override suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>) {
+        userDao.updateUsers(users.map { it.user.toUserEntity() })
     }
 
     private suspend fun updateCurrentUser() {

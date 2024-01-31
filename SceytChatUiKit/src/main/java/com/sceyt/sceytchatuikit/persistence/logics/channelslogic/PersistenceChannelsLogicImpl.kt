@@ -66,10 +66,12 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
+import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -775,6 +777,16 @@ internal class PersistenceChannelsLogicImpl(
 
     override fun getTotalUnreadCount(): Flow<Int> {
         return channelDao.getTotalUnreadCountAsFlow().filterNotNull()
+    }
+
+    override suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>) {
+        users.forEach { presenceUser ->
+            ArrayList(channelsCache.getData()).forEach { channel ->
+                val user = presenceUser.user
+                if (channel.isDirect() && channel.getFirstMember()?.id == user.id)
+                    channelsCache.updateChannelPeer(channel.id, user)
+            }
+        }
     }
 
     private suspend fun initPendingLastMessageBeforeInsert(vararg channel: SceytChannel) {
