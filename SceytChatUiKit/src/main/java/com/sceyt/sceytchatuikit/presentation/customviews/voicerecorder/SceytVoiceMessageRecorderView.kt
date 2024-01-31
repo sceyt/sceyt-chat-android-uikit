@@ -434,6 +434,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private fun SceytRecordViewBinding.setupStyle() {
         imageViewLockArrow.setColorFilter(context.getCompatColor(SceytKitConfig.sceytColorAccent))
         lockViewStopButton.setColorFilter(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        btnCancel.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
     private fun showPermissionSettingsDialog() {
