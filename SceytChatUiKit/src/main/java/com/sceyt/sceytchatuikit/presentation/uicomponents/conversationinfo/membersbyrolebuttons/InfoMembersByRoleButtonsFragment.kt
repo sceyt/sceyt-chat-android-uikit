@@ -10,6 +10,7 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentInfoMembersByRoleBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
@@ -82,6 +83,7 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
 
     private fun SceytFragmentInfoMembersByRoleBinding.setupStyle() {
         divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
+        divider.setBackgroundColor(requireContext().getCompatColor(ConversationInfoMediaStyle.dividerColor))
     }
 
     companion object {
