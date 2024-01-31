@@ -1,12 +1,14 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.forward
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytActivityForwardBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
@@ -34,6 +36,7 @@ open class SceytForwardActivity : SceytShareableActivity() {
 
         getDataFromIntent()
         binding.initViews()
+        binding.setupStyle()
     }
 
     private fun getDataFromIntent() {
@@ -52,6 +55,11 @@ open class SceytForwardActivity : SceytShareableActivity() {
         btnForward.setOnClickListener {
             onForwardClick(true)
         }
+    }
+
+    private fun SceytActivityForwardBinding.setupStyle() {
+        btnForward.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
+        toolbar.setIconsTint(SceytKitConfig.sceytColorAccent)
     }
 
     protected fun sendForwardMessage(markOwnMessageAsForwarded: Boolean) {

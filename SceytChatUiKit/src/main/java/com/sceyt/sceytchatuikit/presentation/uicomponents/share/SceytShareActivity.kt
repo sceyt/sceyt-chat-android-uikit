@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.share
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
@@ -11,7 +12,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytActivityShareBinding
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.extensions.parcelable
+import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
+import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.share.viewmodel.ShareViewModel
@@ -39,6 +45,7 @@ open class SceytShareActivity : SceytShareableActivity() {
 
         getDataFromIntent()
         binding.initViews()
+        binding.setupStyle()
     }
 
     private fun getDataFromIntent() {
@@ -55,6 +62,7 @@ open class SceytShareActivity : SceytShareableActivity() {
                     body = intent.getCharSequenceExtra(Intent.EXTRA_TEXT) as String
                 } else finishSharingAction()
             }
+
             Intent.ACTION_SEND_MULTIPLE == intent.action -> {
                 val uris = intent.parcelableArrayList<Uri>(Intent.EXTRA_STREAM)
                 if (!uris.isNullOrEmpty()) {
@@ -66,6 +74,7 @@ open class SceytShareActivity : SceytShareableActivity() {
                     }
                 } else finishSharingAction()
             }
+
             else -> finishSharingAction()
         }
     }
@@ -82,6 +91,11 @@ open class SceytShareActivity : SceytShareableActivity() {
         btnShare.setOnClickListener {
             onShareClick()
         }
+    }
+
+    private fun SceytActivityShareBinding.setupStyle() {
+        btnShare.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
+        toolbar.setIconsTint(SceytKitConfig.sceytColorAccent)
     }
 
     protected fun sendTextMessage() {
@@ -140,9 +154,11 @@ open class SceytShareActivity : SceytShareableActivity() {
             body.isNotNullOrBlank() -> {
                 sendTextMessage()
             }
+
             sharedUris.isNotEmpty() -> {
                 sendFilesMessage()
             }
+
             else -> finishSharingAction()
         }
     }

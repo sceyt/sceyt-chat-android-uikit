@@ -7,11 +7,10 @@
     android:background="@drawable/sceyt_bg_underline"
     android:paddingHorizontal="17dp">
 
-    <androidx.appcompat.widget.AppCompatCheckBox
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircleCheckBox
         android:id="@+id/checkbox"
         android:layout_width="22dp"
         android:layout_height="22dp"
-        android:button="@drawable/sceyt_custom_radiobutton"
         android:clickable="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
