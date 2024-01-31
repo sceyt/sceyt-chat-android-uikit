@@ -41,7 +41,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:sceytAvatarColor="@color/sceyt_color_no_avatar_themed"
+                    app:sceytAvatarColor="@color/sceyt_color_dark_blue_themed"
                     app:sceytAvatarDefaultIcon="@drawable/sceyt_ic_camera_72" />
 
                 <androidx.appcompat.widget.AppCompatEditText
