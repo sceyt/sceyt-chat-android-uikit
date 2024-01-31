@@ -8,6 +8,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentInfoSettingsBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setOnlyClickable
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
@@ -80,7 +81,8 @@ open class InfoSettingsFragment : Fragment(), ChannelUpdateListener {
     }
 
     private fun SceytFragmentInfoSettingsBinding.setupStyle() {
-        space.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
+        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
+        divider.setBackgroundColor(requireContext().getCompatColor(ConversationInfoMediaStyle.dividerColor))
     }
 
     companion object {

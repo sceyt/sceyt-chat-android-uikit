@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentInfoSpecificationsBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.extensions.setClipboard
@@ -70,7 +71,8 @@ open class InfoSpecificationsFragment : Fragment(), ChannelUpdateListener {
     }
 
     private fun SceytFragmentInfoSpecificationsBinding.setupStyle() {
-        space.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
+        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
+        divider.setBackgroundColor(requireContext().getCompatColor(ConversationInfoMediaStyle.dividerColor))
     }
 
     companion object {

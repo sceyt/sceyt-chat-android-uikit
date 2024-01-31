@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentInfoDetailsBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
@@ -144,7 +145,8 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
     }
 
     private fun SceytFragmentInfoDetailsBinding.setupStyle() {
-        space.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
+        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
+        divider.setBackgroundColor(requireContext().getCompatColor(ConversationInfoMediaStyle.dividerColor))
     }
 
     companion object {
