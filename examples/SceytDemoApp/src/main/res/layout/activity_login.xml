@@ -115,7 +115,7 @@
                         android:paddingStart="0dp"
                         android:paddingEnd="0dp"
                         android:singleLine="true"
-                        android:textColor="@color/black" />
+                        android:textColor="@color/sceyt_color_text_themed" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
