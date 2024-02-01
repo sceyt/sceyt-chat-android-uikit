@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.customviews
 
 import android.content.Context
 import android.graphics.*
-import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
@@ -35,7 +34,6 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     private var avatarLoadCb: ((loading: Boolean) -> Unit?)? = null
     private var avatarBackgroundColor: Int = 0
     private var defaultAvatarResId: Int = 0
-    private var currentDefaultDrawable: Drawable? = null
 
     init {
         var enableRipple = true
@@ -158,9 +156,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     private fun drawDefaultImage(canvas: Canvas) {
-        val defaultImage = context.getCompatDrawable(defaultAvatarResId)
-        if (currentDefaultDrawable == defaultImage || defaultImage == null) return
-        currentDefaultDrawable = defaultImage
+        val defaultImage = context.getCompatDrawable(defaultAvatarResId) ?: return
         val bitmap = defaultImage.toBitmap()
         updateShader(bitmap)
         val circleCenter = (width) / 2f
