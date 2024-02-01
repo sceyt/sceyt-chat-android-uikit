@@ -9,6 +9,9 @@ import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytDialogEditAvatarTypeBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.setTextViewsDrawableColor
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class EditAvatarTypeDialog(
         context: Context,
@@ -21,7 +24,8 @@ class EditAvatarTypeDialog(
         super.onCreate(savedInstanceState)
         binding = SceytDialogEditAvatarTypeBinding.inflate(LayoutInflater.from(context))
         setContentView(binding.root)
-        initView()
+        binding.initView()
+        binding.setupStyle()
 
         window?.let {
             it.setWindowAnimations(R.style.SceytDialogFromBottomAnimation)
@@ -32,18 +36,20 @@ class EditAvatarTypeDialog(
         }
     }
 
-    private fun initView() {
-        binding.tvDelete.isVisible = enableDelete
+    private fun SceytDialogEditAvatarTypeBinding.initView() {
+        tvDelete.isVisible = enableDelete
 
-        binding.tvTakePhoto.setOnClickListener {
+        tvTakePhoto.setOnClickListener {
             chooseListener?.invoke(EditAvatarType.TakePhoto)
             dismiss()
         }
-        binding.tvGallery.setOnClickListener {
+
+        tvGallery.setOnClickListener {
             chooseListener?.invoke(EditAvatarType.ChooseFromGallery)
             dismiss()
         }
-        binding.tvDelete.setOnClickListener {
+
+        tvDelete.setOnClickListener {
             chooseListener?.invoke(EditAvatarType.Delete)
             dismiss()
         }
@@ -51,5 +57,10 @@ class EditAvatarTypeDialog(
 
     enum class EditAvatarType {
         ChooseFromGallery, TakePhoto, Delete
+    }
+
+    private fun SceytDialogEditAvatarTypeBinding.setupStyle() {
+        setTextViewsDrawableColor(listOf(tvTakePhoto, tvGallery),
+            context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 }
