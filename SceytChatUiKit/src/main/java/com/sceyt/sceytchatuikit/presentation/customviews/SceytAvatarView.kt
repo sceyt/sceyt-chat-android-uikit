@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.customviews
 
 import android.content.Context
 import android.graphics.*
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
@@ -9,6 +10,7 @@ import android.text.TextPaint
 import android.util.AttributeSet
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageView
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.toColorInt
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
@@ -27,10 +29,13 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     private var fullName: String? = null
     private var imageUrl: String? = null
     private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
+    private lateinit var imagePaint: Paint
+    private lateinit var backgroundPaint: Paint
     private var textSize = 0
     private var avatarLoadCb: ((loading: Boolean) -> Unit?)? = null
     private var avatarBackgroundColor: Int = 0
     private var defaultAvatarResId: Int = 0
+    private var currentDefaultDrawable: Drawable? = null
 
     init {
         var enableRipple = true
@@ -52,6 +57,14 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
                 foreground = ripple
             } else background = ripple
         }
+        initPaints()
+    }
+
+    private fun initPaints() {
+        imagePaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
+        backgroundPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+        }
     }
 
     override fun draw(canvas: Canvas) {
@@ -64,7 +77,8 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
             } else {
                 if (avatarBackgroundColor != 0)
                     drawBackgroundColor(canvas)
-                loadDefaultImage()
+
+                drawDefaultImage(canvas)
             }
         }
         super.draw(canvas)
@@ -84,8 +98,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     private fun drawBackgroundColor(canvas: Canvas) {
-        canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.FILL
+        canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), backgroundPaint.apply {
             color = if (avatarBackgroundColor == 0) getAvatarRandomColor() else avatarBackgroundColor
         })
     }
@@ -144,16 +157,25 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         }
     }
 
-    private fun loadDefaultImage() {
-        if (isInEditMode) {
-            if (defaultAvatarResId != 0)
-                setImageResource(defaultAvatarResId)
-        } else
-            Glide.with(context.applicationContext)
-                .load(defaultAvatarResId)
-                .override(width)
-                .circleCrop()
-                .into(this)
+    private fun drawDefaultImage(canvas: Canvas) {
+        val defaultImage = context.getCompatDrawable(defaultAvatarResId)
+        if (currentDefaultDrawable == defaultImage || defaultImage == null) return
+        currentDefaultDrawable = defaultImage
+        val bitmap = defaultImage.toBitmap()
+        updateShader(bitmap)
+        val circleCenter = (width) / 2f
+        canvas.drawCircle(circleCenter, circleCenter, circleCenter, imagePaint)
+    }
+
+    private fun updateShader(bitmap: Bitmap) {
+        // Create Shader
+        val shader = BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+        // Center Image in Shader
+        val matrix = Matrix()
+        matrix.setScale(width / bitmap.width.toFloat(), width / bitmap.height.toFloat())
+        shader.setLocalMatrix(matrix)
+        // Set Shader in Paint
+        imagePaint.shader = shader
     }
 
     fun setNameAndImageUrl(name: String?, url: String?, @DrawableRes defaultIcon: Int = defaultAvatarResId) {
