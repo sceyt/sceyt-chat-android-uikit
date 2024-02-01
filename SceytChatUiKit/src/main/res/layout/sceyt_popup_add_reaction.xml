@@ -10,7 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
-        app:cardBackgroundColor="@color/sceyt_color_light_themed"
+        app:cardBackgroundColor="@color/sceyt_color_primary"
         app:cardCornerRadius="22dp"
         app:cardElevation="2dp">
 

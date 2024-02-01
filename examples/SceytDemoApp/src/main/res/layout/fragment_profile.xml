@@ -18,8 +18,10 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutToolbar"
+            themedBackgroundColor="@{R.color.sceyt_color_primary}"
             android:layout_width="match_parent"
             android:layout_height="?android:attr/actionBarSize"
+            android:background="@color/sceyt_color_primary"
             android:paddingHorizontal="15dp"
             app:layout_constraintTop_toTopOf="parent">
 
@@ -28,7 +30,7 @@
                 themedTextColor="@{R.color.sceyt_color_black_themed}"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/my_profile"
+                android:text="@string/profile"
                 android:textColor="@color/sceyt_color_text_themed"
                 android:textSize="20sp"
                 android:textStyle="bold"
@@ -67,7 +69,7 @@
             android:id="@+id/underline"
             themedBackgroundColor="@{R.color.sceyt_color_divider}"
             android:layout_width="match_parent"
-            android:layout_height=".5dp"
+            android:layout_height="1dp"
             android:background="@color/sceyt_color_divider"
             app:layout_constraintTop_toBottomOf="@+id/layoutToolbar" />
 
@@ -82,10 +84,10 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/layoutUserDetails"
-                themedBackgroundColor="@{R.color.sceyt_color_bg}"
+                themedBackgroundColor="@{R.color.sceyt_color_primary}"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/sceyt_color_bg"
+                android:background="@color/sceyt_color_primary"
                 android:padding="16dp"
                 app:layout_constraintTop_toTopOf="parent">
 
@@ -166,12 +168,12 @@
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchNotifications"
-                themedBackgroundColor="@{R.color.sceyt_color_bg}"
+                themedBackgroundColor="@{R.color.sceyt_color_primary}"
                 themedTextColor="@{R.color.sceyt_color_text_themed}"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:background="@color/sceyt_color_bg"
+                android:background="@color/sceyt_color_primary"
                 android:drawableStart="@drawable/sceyt_ic_notification"
                 android:drawablePadding="12dp"
                 android:includeFontPadding="false"
@@ -195,12 +197,12 @@
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchTheme"
-                themedBackgroundColor="@{R.color.sceyt_color_bg}"
+                themedBackgroundColor="@{R.color.sceyt_color_primary}"
                 themedTextColor="@{R.color.sceyt_color_black_themed}"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:background="@color/sceyt_color_bg"
+                android:background="@color/sceyt_color_primary"
                 android:drawableStart="@drawable/ic_theme"
                 android:drawablePadding="12dp"
                 android:paddingHorizontal="16dp"
@@ -221,16 +223,16 @@
                 app:layout_constraintTop_toBottomOf="@+id/switchTheme" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/signOut"
-                themedBackgroundColor="@{R.color.sceyt_color_bg}"
+                android:id="@+id/logout"
+                themedBackgroundColor="@{R.color.sceyt_color_primary}"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:background="@color/sceyt_color_bg"
+                android:background="@color/sceyt_color_primary"
                 android:foreground="?android:selectableItemBackground"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="16dp"
-                android:text="@string/sign_out"
+                android:text="@string/log_out"
                 android:textColor="@color/sceyt_color_red"
                 android:textSize="@dimen/mediumTextSize"
                 app:layout_constraintEnd_toEndOf="parent"

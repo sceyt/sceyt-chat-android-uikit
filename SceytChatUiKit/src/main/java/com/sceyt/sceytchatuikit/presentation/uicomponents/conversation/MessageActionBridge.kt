@@ -61,9 +61,10 @@ class MessageActionBridge {
                 }
 
                 R.id.sceyt_delete_message -> {
-                    messageActionListener.onDeleteMessageClick(*selectedMessages, onlyForMe = selectedMessages.any { it.incoming }, actionFinish = {
-                        actionFinish.invoke()
-                    })
+                    messageActionListener.onDeleteMessageClick(*selectedMessages,
+                        requireForMe = selectedMessages.any { it.incoming }, actionFinish = {
+                            actionFinish.invoke()
+                        })
                 }
             }
         }

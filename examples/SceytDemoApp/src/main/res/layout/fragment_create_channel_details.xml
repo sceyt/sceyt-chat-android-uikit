@@ -25,13 +25,14 @@
 
             <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
                 android:id="@+id/avatar"
-                android:layout_width="@dimen/_60sdp"
-                android:layout_height="@dimen/_60sdp"
-                android:layout_marginTop="15dp"
+                android:layout_width="@dimen/_62sdp"
+                android:layout_height="@dimen/_62sdp"
+                android:layout_marginTop="24dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:sceytAvatarDefaultIcon="@drawable/ic_photo_with_bg" />
+                app:sceytAvatarColor="@color/sceyt_color_dark_blue_themed"
+                app:sceytAvatarDefaultIcon="@drawable/sceyt_ic_camera_72" />
 
             <androidx.appcompat.widget.AppCompatEditText
                 android:id="@+id/inputSubject"

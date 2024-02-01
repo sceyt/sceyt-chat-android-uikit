@@ -314,7 +314,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 R.id.sceyt_reply -> messageActionsViewClickListeners.onReplyMessageClick(message)
                 R.id.sceyt_reply_in_thread -> messageActionsViewClickListeners.onReplyMessageInThreadClick(message)
                 R.id.sceyt_copy_message -> messageActionsViewClickListeners.onCopyMessagesClick(message)
-                R.id.sceyt_delete_message -> messageActionsViewClickListeners.onDeleteMessageClick(message, onlyForMe = false, actionFinish = {})
+                R.id.sceyt_delete_message -> messageActionsViewClickListeners.onDeleteMessageClick(message, requireForMe = false, actionFinish = {})
             }
             false
         }
@@ -842,11 +842,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
     }
 
-    override fun onDeleteMessageClick(vararg messages: SceytMessage, onlyForMe: Boolean, actionFinish: () -> Unit) {
-        DeleteMessageDialog(context, positiveClickListener = {
-            actionFinish.invoke()
-            messageCommandEventListener?.invoke(MessageCommandEvent.DeleteMessage(messages.toList(), onlyForMe = onlyForMe))
-        }).show()
+    override fun onDeleteMessageClick(vararg messages: SceytMessage, requireForMe: Boolean, actionFinish: () -> Unit) {
+        DeleteMessageDialog(context)
+            .setDeleteMessagesCount(messages.size)
+            .setRequireForMe(requireForMe)
+            .setAcceptCallback { forMe ->
+                actionFinish()
+                messageCommandEventListener?.invoke(MessageCommandEvent.DeleteMessage(messages.toList(),
+                    onlyForMe = requireForMe || forMe))
+            }.show()
     }
 
     override fun onEditMessageClick(message: SceytMessage) {

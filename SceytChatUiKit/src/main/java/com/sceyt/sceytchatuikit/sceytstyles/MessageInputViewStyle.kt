@@ -17,6 +17,10 @@ object MessageInputViewStyle {
     var sendMessageIcon: Int = R.drawable.sceyt_ic_send_message
 
     @JvmField
+    @DrawableRes
+    var sendAudioMessageIcon: Int = R.drawable.sceyt_ic_arrow_up
+
+    @JvmField
     @ColorRes
     var inputTextColor: Int = R.color.sceyt_color_black_themed
 

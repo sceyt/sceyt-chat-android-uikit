@@ -2,31 +2,40 @@ package com.sceyt.sceytchatuikit.media.audio
 
 import android.content.Context
 import com.google.gson.GsonBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
-import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
-class AudioRecorderHelper(private val context: Context) {
-    private val recorderExecutor: Executor = Executors.newSingleThreadScheduledExecutor()
+class AudioRecorderHelper(
+        private val scope: CoroutineScope,
+        private val context: Context
+) {
+    private val recorderDispatcher = Executors.newSingleThreadScheduledExecutor().asCoroutineDispatcher()
     private var audioFile: File? = null
     private var currentRecorder: AudioRecorder? = null
     private val serializer = GsonBuilder().create()
     private val audioFocusHelper: AudioFocusHelper by lazy { AudioFocusHelper(context) }
 
     fun startRecording(directoryToSaveFile: String, onRecorderStart: OnRecorderStart? = null) {
-        recorderExecutor.execute {
+        scope.launch(recorderDispatcher) {
             audioFocusHelper.requestAudioFocusCompat()
             val audioFile = FileManager.createFile(AudioRecorderImpl.AUDIO_FORMAT, directoryToSaveFile).also {
-                this.audioFile = it
+                this@AudioRecorderHelper.audioFile = it
             }
-            val recorder = AudioRecorderImpl(context,audioFile).also { currentRecorder = it }
+            val recorder = AudioRecorderImpl(context, audioFile).also { currentRecorder = it }
             val started = recorder.startRecording(32000, null)
-            onRecorderStart?.onStart(started)
+            withContext(Dispatchers.Main) {
+                onRecorderStart?.onStart(started)
+            }
         }
     }
 
     fun stopRecording(onRecorderStop: OnRecorderStop? = null) {
-        recorderExecutor.execute {
+        scope.launch(recorderDispatcher) {
             currentRecorder?.stopRecording()
             val duration = currentDuration
             var isTooShort = false
@@ -35,16 +44,20 @@ class AudioRecorderHelper(private val context: Context) {
                 isTooShort = true
             }
             audioFocusHelper.abandonCallAudioFocusCompat()
-            onRecorderStop?.onStop(isTooShort, audioFile, duration, currentAmplitudes)
+            withContext(Dispatchers.Main) {
+                onRecorderStop?.onStop(isTooShort, audioFile, duration, currentAmplitudes)
+            }
         }
     }
 
     fun cancelRecording(onRecorderCancel: OnRecorderCancel? = null) {
-        recorderExecutor.execute {
+        scope.launch(recorderDispatcher) {
             currentRecorder?.stopRecording()
             audioFile?.delete()
-            onRecorderCancel?.onCancel()
             audioFocusHelper.abandonCallAudioFocusCompat()
+            withContext(Dispatchers.Main) {
+                onRecorderCancel?.onCancel()
+            }
         }
     }
 

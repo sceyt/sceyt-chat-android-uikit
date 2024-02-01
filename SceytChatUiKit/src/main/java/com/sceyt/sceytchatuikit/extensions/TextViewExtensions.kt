@@ -13,7 +13,7 @@ fun AppCompatTextView.setDrawableEnd(@DrawableRes id: Int, @ColorRes tint: Int =
     val drawables = compoundDrawables
     val drawableEnd = context.getCompatDrawable(id)
     if (tint != 0)
-        drawableEnd?.setTint(context.getCompatColor(tint))
+        drawableEnd?.mutate()?.setTint(context.getCompatColor(tint))
 
     setCompoundDrawablesWithIntrinsicBounds(drawables[0], drawables[2], drawableEnd, drawables[3])
 }
@@ -22,7 +22,7 @@ fun AppCompatTextView.setDrawableStart(@DrawableRes id: Int, @ColorRes tint: Int
     val drawables = compoundDrawables
     val drawableStart = context.getCompatDrawable(id)
     if (tint != 0)
-        drawableStart?.setTint(context.getCompatColor(tint))
+        drawableStart?.mutate()?.setTint(context.getCompatColor(tint))
 
     setCompoundDrawablesWithIntrinsicBounds(drawableStart, drawables[1], drawables[2], drawables[3])
 }
@@ -31,7 +31,7 @@ fun AppCompatTextView.setDrawableTop(@DrawableRes id: Int, @ColorRes tint: Int =
     val drawables = compoundDrawables
     val drawableTop = context.getCompatDrawable(id)
     if (tint != 0)
-        drawableTop?.setTint(context.getCompatColor(tint))
+        drawableTop?.mutate()?.setTint(context.getCompatColor(tint))
 
     setCompoundDrawablesWithIntrinsicBounds(drawables[0], drawableTop, drawables[2], drawables[3])
 }
@@ -56,23 +56,23 @@ fun TextView.setTextAndDrawableColor(@ColorRes colorId: Int) {
 fun TextView.setTextViewDrawableColor(@ColorRes color: Int) {
     for (drawable in compoundDrawables) {
         if (drawable != null)
-            drawable.colorFilter = PorterDuffColorFilter(context.getCompatColor(color), PorterDuff.Mode.SRC_IN)
+            drawable.mutate().colorFilter = PorterDuffColorFilter(context.getCompatColor(color), PorterDuff.Mode.SRC_IN)
     }
     for (drawable in compoundDrawablesRelative) {
         if (drawable != null)
-            drawable.colorFilter = PorterDuffColorFilter(context.getCompatColor(color), PorterDuff.Mode.SRC_IN)
+            drawable.mutate().colorFilter = PorterDuffColorFilter(context.getCompatColor(color), PorterDuff.Mode.SRC_IN)
     }
 }
 
 fun setTextViewsDrawableColor(texts: List<TextView>, @ColorInt color: Int) {
     texts.forEach {
         it.compoundDrawables.forEach { drawable ->
-            drawable?.let {
+            drawable?.mutate()?.let {
                 drawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
             }
         }
         it.compoundDrawablesRelative.forEach { drawable ->
-            drawable?.let {
+            drawable?.mutate()?.let {
                 drawable.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
             }
         }
