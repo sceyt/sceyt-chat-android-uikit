@@ -112,7 +112,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             requireActivity().onBackPressedDispatcher.onBackPressed()
         }
 
-        icChangePhoto.setOnClickListener {
+        avatar.setOnClickListener {
             onChangePhotoClick()
         }
 

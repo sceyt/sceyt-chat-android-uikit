@@ -8,7 +8,8 @@
         android:id="@+id/members"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
+        android:background="@drawable/sceyt_bg_ripple"
+        android:backgroundTint="@color/sceyt_color_primary"
         android:drawableStart="@drawable/sceyt_ic_members"
         android:drawablePadding="16dp"
         android:gravity="center_vertical"
@@ -25,14 +26,15 @@
         android:id="@+id/dividerBetweenMembersAndAdmins"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_input"
+        android:background="@color/sceyt_color_divider"
         app:layout_constraintTop_toBottomOf="@+id/members" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/admins"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
+        android:background="@drawable/sceyt_bg_ripple"
+        android:backgroundTint="@color/sceyt_color_primary"
         android:drawableStart="@drawable/sceyt_ic_admin"
         android:drawablePadding="16dp"
         android:gravity="center_vertical"
@@ -49,13 +51,12 @@
         android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="16dp"
-        android:background="@color/sceyt_color_input"
         app:layout_constraintTop_toBottomOf="@+id/admins" />
 
     <androidx.constraintlayout.widget.Group
-        android:id="@+id/group_channel_members"
+        android:id="@+id/group_channel_admins"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="divider,members" />
+        app:constraint_referenced_ids="dividerBetweenMembersAndAdmins,admins" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

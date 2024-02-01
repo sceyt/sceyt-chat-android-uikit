@@ -42,11 +42,13 @@ import com.sceyt.sceytchatuikit.persistence.logics.reactionslogic.PersistenceRea
 import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLogic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
+import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -81,6 +83,9 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
         // Connection events
         ConnectionEventsObserver.onChangedConnectStatusFlow.onEach(::onChangedConnectStatus).launchIn(this)
+
+        // Presence events
+        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach(::onPresenceChanged).launchIn(this)
     }
 
 
@@ -121,6 +126,11 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     private fun onChangedConnectStatus(data: ConnectionStateData) {
         launch(Dispatchers.IO) { connectionLogic.onChangedConnectStatus(data) }
+    }
+
+    private fun onPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>) {
+        launch(Dispatchers.IO) { usersLogic.onUserPresenceChanged(users) }
+        launch(Dispatchers.IO) { channelLogic.onUserPresenceChanged(users) }
     }
 
     override suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: LoadKeyData?,

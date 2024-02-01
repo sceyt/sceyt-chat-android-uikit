@@ -1,52 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingVertical="10dp">
+    android:paddingVertical="5dp">
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tvTakePhoto"
+        android:id="@+id/takePhoto"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
-        android:paddingHorizontal="18dp"
+        android:drawableStart="@drawable/sceyt_ic_camera"
+        android:drawablePadding="15dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
-        android:text="@string/sceyt_take_photo"
+        android:text="@string/sceyt_photo"
         android:textColor="@color/sceyt_color_text_themed"
-        android:textSize="@dimen/mediumTextSize" />
+        android:textSize="@dimen/_12ssp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tvTakeVideo"
+        android:id="@+id/takeVideo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
-        android:paddingHorizontal="18dp"
+        android:drawableStart="@drawable/sceyt_ic_video_outline"
+        android:drawablePadding="15dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
-        android:text="@string/sceyt_take_video"
+        android:text="@string/sceyt_video"
         android:textColor="@color/sceyt_color_text_themed"
-        android:textSize="@dimen/mediumTextSize" />
+        android:textSize="@dimen/_12ssp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tvUploadFromGallery"
+        android:id="@+id/gallery"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
-        android:paddingHorizontal="18dp"
+        android:drawableStart="@drawable/sceyt_ic_gallery"
+        android:drawablePadding="15dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
-        android:text="@string/sceyt_upload_from_gallery"
+        android:text="@string/sceyt_gallery"
         android:textColor="@color/sceyt_color_text_themed"
-        android:textSize="@dimen/mediumTextSize" />
+        android:textSize="@dimen/_12ssp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tvFile"
+        android:id="@+id/file"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
-        android:paddingHorizontal="18dp"
+        android:drawableStart="@drawable/sceyt_ic_file_outline"
+        android:drawablePadding="15dp"
+        android:gravity="center_vertical"
+        android:includeFontPadding="false"
+        android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_file"
         android:textColor="@color/sceyt_color_text_themed"
-        android:textSize="@dimen/mediumTextSize" />
+        android:textSize="@dimen/_12ssp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

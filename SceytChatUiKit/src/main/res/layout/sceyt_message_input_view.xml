@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@color/sceyt_color_dialog_bg_themed">
+    android:layout_height="wrap_content">
 
     <View
         android:id="@+id/viewTop"
@@ -33,20 +32,22 @@
         android:name="com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.fragments.EditOrReplyMessageFragment"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:background="@color/sceyt_color_primary"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/rvAttachments"/>
+        app:layout_constraintTop_toBottomOf="@+id/rvAttachments" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/layoutLinkPreview"
         android:name="com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.fragments.LinkPreviewFragment"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:background="@color/sceyt_color_primary"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/layoutReplyOrEditMessage"/>
+        app:layout_constraintTop_toBottomOf="@+id/layoutReplyOrEditMessage" />
 
     <View
         android:id="@+id/view3"
@@ -60,6 +61,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="1dp"
+        android:background="@color/sceyt_color_primary"
         android:paddingVertical="12dp"
         app:layout_constraintTop_toBottomOf="@+id/layoutLinkPreview">
 
@@ -117,7 +119,7 @@
         android:id="@+id/btnJoin"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/sceyt_gallery_item_default_color"
+        android:background="@color/sceyt_color_bg_secondary_themed"
         android:fontFamily="@font/roboto_medium"
         android:gravity="center"
         android:paddingVertical="15dp"

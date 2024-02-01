@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.copy
-import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
@@ -262,7 +261,7 @@ class ChannelsCache {
             cachedData[id]?.let { channel ->
                 channel.members?.find { member -> member.user.id == user.id }?.let {
                     val oldUser = it.user
-                    if (oldUser.presence?.hasDiff(user.presence) == true) {
+                    if (oldUser.diff(user).hasDifference()) {
                         it.user = user.copy()
                         channelUpdated(channel, false, ChannelUpdatedType.Presence)
                     }

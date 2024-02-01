@@ -56,7 +56,9 @@ open class ConversationActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode,
+            statusBarColor = R.color.sceyt_color_primary,
+            navigationBarColor = R.color.sceyt_color_primary_dark)
 
         getDataFromIntent()
 

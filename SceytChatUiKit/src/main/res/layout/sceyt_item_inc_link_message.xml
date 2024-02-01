@@ -5,11 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <View
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircleCheckBox
         android:id="@+id/selectView"
         android:layout_width="22dp"
         android:layout_height="22dp"
-        android:background="@drawable/sceyt_custom_radiobutton_view"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

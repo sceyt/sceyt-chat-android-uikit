@@ -84,7 +84,7 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
                     setTextColor(Color.WHITE)
                 } else {
                     background = GradientDrawable().apply {
-                        color = ColorStateList.valueOf(Color.WHITE)
+                        color = ColorStateList.valueOf(Color.TRANSPARENT)
                         cornerRadius = dpToPx(30f).toFloat()
                         setStroke(3, getCompatColor(R.color.sceyt_color_divider))
                     }

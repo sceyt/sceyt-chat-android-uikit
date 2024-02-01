@@ -189,16 +189,18 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         var isShow = false
         var scrollRange = -1
 
-        appBar?.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
-            if (scrollRange == -1) {
-                scrollRange = appBarLayout.totalScrollRange
-            }
-            if (scrollRange + verticalOffset == 0) {
-                isShow = true
-                toggleToolbarViews(true)
-            } else if (isShow) {
-                toggleToolbarViews(false)
-                isShow = false
+        appBar?.post {
+            appBar.addOnOffsetChangedListener { appBarLayout, verticalOffset ->
+                if (scrollRange == -1) {
+                    scrollRange = appBarLayout.totalScrollRange
+                }
+                if (scrollRange + verticalOffset == 0) {
+                    isShow = true
+                    toggleToolbarViews(true)
+                } else if (isShow) {
+                    toggleToolbarViews(false)
+                    isShow = false
+                }
             }
         }
     }

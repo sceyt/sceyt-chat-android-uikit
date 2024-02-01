@@ -30,7 +30,7 @@ class SelectedUsersAdapter(private val users: ArrayList<UserItem.User>,
             binding.avatar.setNameAndImageUrl(presentableName, item.user.avatarURL)
             binding.onlineStatus.isVisible = item.user.presence.state == PresenceState.Online
 
-            binding.layoutRemoveIcon.setOnClickListener {
+            binding.icRemove.setOnClickListener {
                 listener.onRemoveClick(item)
                 removeItem(item)
             }
