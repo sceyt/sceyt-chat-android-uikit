@@ -70,7 +70,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.Re
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
@@ -79,6 +78,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
@@ -468,8 +468,29 @@ class MessageListViewModel(
     fun loadChannelMembersIfNeeded() {
         viewModelScope.launch(Dispatchers.IO) {
             val count = persistenceMembersMiddleWare.getMembersCountDb(channel.id)
-            if (channel.memberCount > count && count < SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE)
+            if (channel.memberCount > count)
                 loadChannelMembers(0, null).collect()
+        }
+    }
+
+    fun loadChannelAllMembers() {
+        viewModelScope.launch(Dispatchers.IO) {
+
+            suspend fun loadMembers(offset: Int): PaginationResponse.ServerResponse<SceytMember>? {
+                return persistenceMembersMiddleWare.loadChannelMembers(channel.id, offset, null).firstOrNull {
+                    it is PaginationResponse.ServerResponse
+                } as? PaginationResponse.ServerResponse<SceytMember>
+            }
+
+            val count = persistenceMembersMiddleWare.getMembersCountDb(channel.id)
+            if (channel.memberCount > count) {
+                var offset = 0
+                var rest = loadMembers(0)
+                while (rest?.hasNext == true) {
+                    offset += rest.data.data?.size ?: return@launch
+                    rest = loadMembers(offset)
+                }
+            }
         }
     }
 
