@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
+import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import androidx.core.util.Predicate
 import androidx.lifecycle.lifecycleScope
@@ -24,7 +25,10 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.StickyHeaderListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.DateStickHeaderItemDecoration5
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.StycyDateView
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.MessageSwipeController
 import kotlinx.coroutines.delay
@@ -32,7 +36,7 @@ import kotlinx.coroutines.launch
 
 
 class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : RecyclerView(context, attrs, defStyleAttr) {
+    : RecyclerView(context, attrs, defStyleAttr), StickyHeaderListener {
 
     private lateinit var mAdapter: MessagesAdapter
     private var viewHolderFactory = MessageViewHolderFactory(context)
@@ -165,6 +169,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory)
                 .also { mAdapter = it }
             scheduleLayoutAnimation()
+            addItemDecoration(DateStickHeaderItemDecoration5(mAdapter))
 
             val swipeController = MessageSwipeController(context) { position ->
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -325,4 +330,27 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     fun getMessagesAdapter() = if (::mAdapter.isInitialized) mAdapter else null
+
+
+    override fun needShow() {
+        bind?.show()
+    }
+
+    override fun move(toFloat: Float) {
+       bind?.translationY = toFloat
+    }
+
+    private var bind: StycyDateView? = null
+
+
+    override fun getHeaderViewForItem(headerPosition: Int, parent: RecyclerView): StycyDateView {
+        val header = bind ?: StycyDateView(parent.context).apply {
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            bind = this
+            this@MessagesRV.addView(this)
+        }
+        if (::mAdapter.isInitialized)
+            mAdapter.bindHeaderData(header, headerPosition)
+        return header
+    }
 }

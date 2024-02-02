@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.ViewGroup
 import androidx.core.util.Predicate
 import androidx.lifecycle.lifecycleScope
@@ -12,7 +13,10 @@ import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageItemComparator
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.StickyHeaderInterface
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.StycyDateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,7 +25,7 @@ import kotlinx.coroutines.withContext
 
 class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                       private val viewHolderFactory: MessageViewHolderFactory) :
-        RecyclerView.Adapter<BaseMsgViewHolder>() {
+        RecyclerView.Adapter<BaseMsgViewHolder>(), StickyHeaderInterface {
     private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
     private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
     private val debounceHelper by lazy { DebounceHelper(300) }
@@ -246,5 +250,19 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                 updateJob?.invokeOnCompletion { cb.invoke() }
             }
         }
+    }
+
+    override fun bindHeaderData(header: StycyDateView, headerPosition: Int) {
+        Log.i("sdfsfsdf", "bindHeaderData: $headerPosition")
+        val date = DateTimeUtil.getDateTimeStringWithDateFormatter(
+            context = header.context,
+            time = messages.getOrNull(headerPosition)?.getMessageCreatedAt(),
+            dateFormatter = MessagesStyle.dateSeparatorDateFormat)
+
+        header.setDate(date)
+    }
+
+    override fun isHeader(itemPosition: Int): Boolean {
+        return messages.getOrNull(itemPosition) is MessageListItem.DateSeparatorItem
     }
 }
