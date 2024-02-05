@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -22,6 +23,7 @@ import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
+import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
 import com.sceyt.sceytchatuikit.extensions.awaitToScrollFinish
@@ -31,6 +33,7 @@ import com.sceyt.sceytchatuikit.extensions.isLastCompletelyItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.maybeComponentActivity
 import com.sceyt.sceytchatuikit.extensions.openLink
 import com.sceyt.sceytchatuikit.extensions.setClipboard
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -377,11 +380,17 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateMessage(message: SceytMessage) {
+        SceytLog.i(TAG, "Message updated: id ${message.id}, tid ${message.tid}," +
+                " body ${message.body}, deliveryStatus ${message.deliveryStatus}")
         for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
             if (item is MessageItem && item.message.tid == message.tid) {
                 val oldMessage = item.message.clone()
+                Log.i(TAG,"${oldMessage.deliveryStatus}  ${message.deliveryStatus}")
                 item.message.updateMessage(message)
-                updateItem(index, item, oldMessage.diff(item.message))
+                val diff = oldMessage.diff(item.message)
+                SceytLog.i(TAG, "Found to update: id ${item.message.id}, tid ${item.message.tid}," +
+                        " diff ${diff.statusChanged}, index $index, size ${messagesRV.getData()?.size}")
+                updateItem(index, item, diff)
                 break
             }
         }
