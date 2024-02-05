@@ -385,7 +385,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
             if (item is MessageItem && item.message.tid == message.tid) {
                 val oldMessage = item.message.clone()
-                Log.i(TAG,"${oldMessage.deliveryStatus}  ${message.deliveryStatus}")
+                Log.i(TAG, "${oldMessage.deliveryStatus}  ${message.deliveryStatus}")
                 item.message.updateMessage(message)
                 val diff = oldMessage.diff(item.message)
                 SceytLog.i(TAG, "Found to update: id ${item.message.id}, tid ${item.message.tid}," +
@@ -752,7 +752,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (enabledActions) {
             if (reactionsPopupWindow == null)
                 showModifyReactionsPopup(view, item.message)
-            else reactionsPopupWindow = null
         }
     }
 
