@@ -213,8 +213,10 @@ internal class PersistenceChannelsLogicImpl(
         val channelDb = channelDao.getChannelById(dataChannel.id)
         if (channelDb != null) {
             channel = channelDb.toChannel()
-            channel.lastMessage = dataMessage
-            channelDao.updateLastMessage(channelDb.channelEntity.id, dataMessage.id, dataMessage.createdAt)
+            if ((channel.lastMessage?.id ?: 0) < dataMessage.id) {
+                channel.lastMessage = dataMessage
+                channelDao.updateLastMessage(channelDb.channelEntity.id, dataMessage.id, dataMessage.createdAt)
+            }
         } else {
             // Insert channel from push data
             channelDao.insertChannel(dataChannel.toChannelEntity())
@@ -725,6 +727,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage) {
+        // Check if message delivery status is pending, that means message is started to send
         if (message.deliveryStatus == DeliveryStatus.Pending) {
             channelDao.updateLastMessage(channelId, message.tid, message.createdAt)
             channelsCache.updateLastMessage(channelId, message)

@@ -166,8 +166,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     @SuppressLint("NotifyDataSetChanged")
     fun setData(messages: List<MessageListItem>, force: Boolean = false) {
         if (::mAdapter.isInitialized.not()) {
-            adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory)
-                .also { mAdapter = it }
+            adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory).also {
+                it.setHasStableIds(true)
+                mAdapter = it
+            }
             scheduleLayoutAnimation()
             addItemDecoration(DateStickHeaderItemDecoration5(mAdapter))
 
