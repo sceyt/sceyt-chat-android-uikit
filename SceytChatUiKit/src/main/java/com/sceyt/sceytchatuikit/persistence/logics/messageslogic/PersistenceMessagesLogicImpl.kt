@@ -433,7 +433,8 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun onMessageSentResponse(channelId: Long, response: SceytResponse<SceytMessage>?, message: Message) {
         when (response ?: return) {
             is SceytResponse.Success -> {
-                SceytLog.i(TAG, "Send message success, channel id $channelId, tid:${message.tid}, id:${message.id}")
+                SceytLog.i(TAG, "Send message success, channel id $channelId, tid:${message.tid}," +
+                        "responseMsgTid ${response.data?.tid} id:${response.data?.id}")
                 response.data?.let { responseMsg ->
                     messagesCache.messageUpdated(channelId, responseMsg)
                     messageDao.upsertMessage(responseMsg.toMessageDb(false))
