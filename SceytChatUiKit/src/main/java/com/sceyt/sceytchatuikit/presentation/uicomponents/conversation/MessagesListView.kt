@@ -356,7 +356,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun updateItem(index: Int, message: MessageListItem, diff: MessageItemPayloadDiff) {
-        (messagesRV.findViewHolderForAdapterPosition(index) as? BaseMsgViewHolder)?.bind(message, diff)
+        (messagesRV.findViewHolderForItemId(message.getItemId()) as? BaseMsgViewHolder)?.bind(message, diff)
                 ?: run { messagesRV.adapter?.notifyItemChanged(index, diff) }
     }
 
