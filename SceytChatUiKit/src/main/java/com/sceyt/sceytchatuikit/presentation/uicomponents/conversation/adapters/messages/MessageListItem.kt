@@ -21,7 +21,7 @@ sealed class MessageListItem {
 
     fun getItemId(): Long {
         return when (this) {
-            is MessageItem -> message.id
+            is MessageItem -> message.tid
             is DateSeparatorItem -> hashCode().toLong()
             is UnreadMessagesSeparatorItem -> hashCode().toLong()
             is LoadingPrevItem -> hashCode().toLong()
