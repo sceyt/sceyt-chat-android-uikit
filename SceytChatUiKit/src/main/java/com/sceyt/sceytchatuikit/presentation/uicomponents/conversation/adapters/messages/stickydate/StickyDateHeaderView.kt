@@ -71,6 +71,10 @@ class StickyDateHeaderView @JvmOverloads constructor(context: Context, attrs: At
         else autoHideJob?.cancel()
     }
 
+    fun startAutoHide() {
+        startAutoHideTimer()
+    }
+
     private fun checkMaybeNeedToBeUpdated() {
         with(binding.messageDay) {
             val mesW = paint.measureText(currentDay) + paddingStart + paddingEnd
