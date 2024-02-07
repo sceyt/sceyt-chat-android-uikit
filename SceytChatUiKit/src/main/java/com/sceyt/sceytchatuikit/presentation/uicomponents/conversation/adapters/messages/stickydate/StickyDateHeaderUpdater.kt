@@ -5,24 +5,23 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.extensions.addRVScrollListener
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesRV
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.DateSeparatorViewHolder
 import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 
 class StickyDateHeaderUpdater(
-        messagesRV: MessagesRV,
+        recyclerView: RecyclerView,
         private var parentView: ViewGroup,
         private val listener: StickyHeaderInterface,
 ) {
     private val dateHeaderVerticalPadding = MessagesStyle.differentSenderMsgDistance
 
     init {
-        messagesRV.addRVScrollListener(onScrolled = { rv, _, _ ->
+        recyclerView.addRVScrollListener(onScrolled = { rv, _, _ ->
             drawHeader(rv)
         })
 
-        messagesRV.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            drawHeader(messagesRV)
+        recyclerView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            drawHeader(recyclerView)
         }
     }
 
@@ -44,24 +43,22 @@ class StickyDateHeaderUpdater(
         val contactPoint = headerView.bottom
         val childInContact = getChildInContact(rv, contactPoint)
 
-        val dateSeparatorViewHolder = (rv.getChildViewHolder(topChild) as? DateSeparatorViewHolder)
-        // ignoreShowingHeader is used to ignore showing header when the first item is a header
+        // Ignore showing header when the first item is a header
         var ignoreShowingHeader = false
+        if (topChildPosition == 0)
+            ignoreShowingHeader = true
+
+        val viewHolder = rv.getChildViewHolder(topChild)
+        val dateSeparatorViewHolder = (viewHolder as? DateSeparatorViewHolder)
         if (dateSeparatorViewHolder != null) {
             val diff = topChild.bottom - (headerView.bottom - headerView.paddingBottom)
             if (diff <= 0) {
                 dateSeparatorViewHolder.showHide(false)
-            } else {
-                if (topChildPosition == 0)
-                    ignoreShowingHeader = true
+                ignoreShowingHeader = false
+            } else dateSeparatorViewHolder.showHide(true)
 
-                dateSeparatorViewHolder.showHide(true)
-            }
             oldDateSeparatorViewHolder = dateSeparatorViewHolder
         } else {
-            if (topChildPosition == 0) {
-                ignoreShowingHeader = true
-            }
             oldDateSeparatorViewHolder?.showHide(true)
             oldDateSeparatorViewHolder = null
         }
@@ -78,7 +75,6 @@ class StickyDateHeaderUpdater(
                 return
             }
         }
-
         showHeader()
     }
 
@@ -86,7 +82,7 @@ class StickyDateHeaderUpdater(
         return StickyDateHeaderView(parentView.context).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             setPadding(paddingLeft, dateHeaderVerticalPadding, paddingRight, paddingBottom)
-            parentView.addView(this, parentView.childCount)
+            parentView.addView(this)
         }
     }
 
