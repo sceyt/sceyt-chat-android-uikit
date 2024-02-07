@@ -55,8 +55,7 @@ class StickyDateHeaderView @JvmOverloads constructor(context: Context, attrs: At
         if (hideAnimation?.isRunning == true)
             return
 
-        hideAnimation = binding.root.changeAlphaWithValueAnim(binding.root.alpha, 0f, 100)
-        hideAnimation?.duration = 100
+        hideAnimation = binding.root.changeAlphaWithValueAnim(binding.root.alpha, 0f, 200)
         hideAnimation?.start()
     }
 
@@ -65,7 +64,7 @@ class StickyDateHeaderView @JvmOverloads constructor(context: Context, attrs: At
         hideAnimation?.cancel()
 
         if (showAnimation?.isRunning != true)
-            showAnimation = binding.root.changeAlphaWithValueAnim(binding.root.alpha, 1f, 100)
+            showAnimation = binding.root.changeAlphaWithValueAnim(binding.root.alpha, 1f, 200)
 
         if (withAutoHide)
             startAutoHideTimer()
