@@ -5,9 +5,13 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import androidx.core.content.res.ResourcesCompat
 import com.sceyt.sceytchatuikit.databinding.SceytItemMessageDateSeparatorBinding
 import com.sceyt.sceytchatuikit.extensions.changeAlphaWithValueAnim
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.getLifecycleScope
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -22,24 +26,25 @@ class StickyDateHeaderView @JvmOverloads constructor(context: Context, attrs: At
     private var hideAnimation: ValueAnimator? = null
     private val lifecycleScope by lazy { getLifecycleScope() }
     private var autoHideJob: Job? = null
-    private var currentData: String? = null
+    private var currentDay: String? = null
 
     init {
         binding = SceytItemMessageDateSeparatorBinding.inflate(LayoutInflater.from(context), this, true)
+        binding.setMessageItemStyle()
     }
 
     fun setDate(date: String) {
-        if (currentData == date)
+        if (currentDay == date)
             return
 
         binding.messageDay.text = date
-        currentData = date
+        currentDay = date
     }
 
     private fun startAutoHideTimer() {
         autoHideJob?.cancel()
         autoHideJob = lifecycleScope?.launch(Dispatchers.Main) {
-            delay(2000)
+            delay(1000)
             if (isActive)
                 hideVide()
         }
@@ -65,5 +70,30 @@ class StickyDateHeaderView @JvmOverloads constructor(context: Context, attrs: At
         if (withAutoHide)
             startAutoHideTimer()
         else autoHideJob?.cancel()
+    }
+
+    private fun checkMaybeNeedToBeUpdated() {
+        with(binding.messageDay) {
+            val mesW = paint.measureText(currentDay) + paddingStart + paddingEnd
+            if (mesW.toInt() != width)
+                post { text = currentDay }
+        }
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        checkMaybeNeedToBeUpdated()
+    }
+
+    private fun SceytItemMessageDateSeparatorBinding.setMessageItemStyle() {
+        with(context) {
+            messageDay.apply {
+                background = getCompatDrawable(MessagesStyle.dateSeparatorItemBackground)
+                setTextColor(getCompatColor(MessagesStyle.dateSeparatorItemTextColor))
+                val dateTypeface = if (MessagesStyle.dateSeparatorTextFont != -1)
+                    ResourcesCompat.getFont(this@with, MessagesStyle.dateSeparatorTextFont) else typeface
+                setTypeface(dateTypeface, MessagesStyle.dateSeparatorTextStyle)
+            }
+        }
     }
 }
