@@ -17,11 +17,11 @@ class StickyDateHeaderUpdater(
 
     init {
         recyclerView.addRVScrollListener(onScrolled = { rv, _, _ ->
-            drawHeader(rv)
+            drawHeader(rv, true)
         })
 
         recyclerView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            drawHeader(recyclerView)
+            drawHeader(recyclerView, false)
         }
     }
 
@@ -29,7 +29,7 @@ class StickyDateHeaderUpdater(
     private var stickyHeaderHeight = 0
     private var oldDateSeparatorViewHolder: DateSeparatorViewHolder? = null
 
-    private fun drawHeader(rv: RecyclerView) {
+    private fun drawHeader(rv: RecyclerView, isScrolling: Boolean) {
         val topChild = rv.getChildAt(0) ?: return
         val topChildPosition = rv.getChildAdapterPosition(topChild)
         if (topChildPosition == RecyclerView.NO_POSITION)
@@ -37,7 +37,9 @@ class StickyDateHeaderUpdater(
 
         listener.bindHeaderData(headerView, topChildPosition)
 
-        headerView.showWithAnim(topChildPosition != 0)
+        if (isScrolling)
+            headerView.showWithAnim(topChildPosition != 0)
+        else headerView.startAutoHide()
 
         fixLayoutSize(rv, headerView)
         val contactPoint = headerView.bottom
