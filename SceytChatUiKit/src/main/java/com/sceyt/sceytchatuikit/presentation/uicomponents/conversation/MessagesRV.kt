@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
+import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import androidx.core.util.Predicate
 import androidx.lifecycle.lifecycleScope
@@ -24,6 +25,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.StickyDateHeaderUpdater
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.MessageSwipeController
@@ -167,6 +169,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 mAdapter = it
             }
             scheduleLayoutAnimation()
+            StickyDateHeaderUpdater(this, parent as ViewGroup, mAdapter)
 
             val swipeController = MessageSwipeController(context) { position ->
                 Handler(Looper.getMainLooper()).postDelayed({

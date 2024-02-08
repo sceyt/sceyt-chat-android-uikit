@@ -12,7 +12,10 @@ import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageItemComparator
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.StickyDateHeaderView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.StickyHeaderInterface
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,11 +24,12 @@ import kotlinx.coroutines.withContext
 
 class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                       private val viewHolderFactory: MessageViewHolderFactory) :
-        RecyclerView.Adapter<BaseMsgViewHolder>() {
+        RecyclerView.Adapter<BaseMsgViewHolder>(), StickyHeaderInterface {
     private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
     private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
     private val debounceHelper by lazy { DebounceHelper(300) }
     private var isMultiSelectableMode = false
+    private var lastHeaderPosition = -1
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
         return viewHolderFactory.createViewHolder(parent, viewType)
@@ -158,6 +162,7 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
 
     fun needTopOffset(position: Int): Boolean {
         try {
+            if (position == 0) return true
             val prev = (messages.getOrNull(position - 1) as? MessageItem)?.message
             val current = (messages.getOrNull(position) as? MessageItem)?.message
             if (prev != null && current != null)
@@ -246,5 +251,20 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                 updateJob?.invokeOnCompletion { cb.invoke() }
             }
         }
+    }
+
+    override fun bindHeaderData(header: StickyDateHeaderView, headerPosition: Int) {
+        if (lastHeaderPosition == headerPosition) return
+        val date = DateTimeUtil.getDateTimeStringWithDateFormatter(
+            context = header.context,
+            time = messages.getOrNull(headerPosition)?.getMessageCreatedAt(),
+            dateFormatter = MessagesStyle.dateSeparatorDateFormat)
+
+        header.setDate(date)
+        lastHeaderPosition = headerPosition
+    }
+
+    override fun isHeader(itemPosition: Int): Boolean {
+        return messages.getOrNull(itemPosition) is MessageListItem.DateSeparatorItem
     }
 }

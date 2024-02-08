@@ -3,23 +3,29 @@ package com.sceyt.sceytchatuikit.extensions
 import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import android.view.animation.ScaleAnimation
+import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
 import androidx.transition.Transition
 
-fun View.changeAlphaWithAnimation(fromAlpha: Float, toAlpha: Float, animDuration: Long, endListener: () -> Unit = {}) {
+fun View.changeAlphaWithAnimation(fromAlpha: Float, toAlpha: Float, animDuration: Long,
+                                  endListener: (() -> Unit)? = null): AlphaAnimation {
     animation?.cancel()
-    animation = AlphaAnimation(fromAlpha, toAlpha).apply {
+    val anim = AlphaAnimation(fromAlpha, toAlpha).apply {
         duration = animDuration
-        setAnimationListener(animationListener(onAnimationEnd = {
-            endListener.invoke()
-        }))
+        if (endListener != null)
+            setAnimationListener(animationListener(onAnimationEnd = {
+                endListener.invoke()
+            }))
         start()
     }
+    animation = anim
+    return anim
 }
 
 fun View.changeAlphaWithAnim(toAlpha: Float, animDuration: Long, endListener: () -> Unit = {}) {
@@ -31,6 +37,18 @@ fun View.changeAlphaWithAnim(toAlpha: Float, animDuration: Long, endListener: ()
         }))
         .setDuration(animDuration)
         .start()
+}
+
+fun View.changeAlphaWithValueAnim(fromAlpha: Float, toAlpha: Float, animDuration: Long,
+                                  endListener: (() -> Unit)? = null): ValueAnimator {
+    return ValueAnimator.ofFloat(fromAlpha, toAlpha).apply {
+        duration = animDuration
+        addUpdateListener {
+            alpha = it.animatedValue as Float
+        }
+        endListener?.let { doOnEnd { endListener.invoke() } }
+        start()
+    }
 }
 
 fun View.startScaleAnimOut(duration: Long, fromScaleX: Float = 0f, fromScaleY: Float = 0f, finishedListener: (() -> Unit)? = null) {

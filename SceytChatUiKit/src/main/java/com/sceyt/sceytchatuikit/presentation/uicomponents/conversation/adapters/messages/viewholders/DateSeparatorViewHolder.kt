@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.isInvisible
 import com.sceyt.sceytchatuikit.databinding.SceytItemMessageDateSeparatorBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
@@ -20,7 +21,7 @@ class DateSeparatorViewHolder(
 
     override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
         super.bind(item, diff)
-
+        itemView.isInvisible = false
         if (item is MessageListItem.DateSeparatorItem) {
             val createdAt = item.createdAt
             val dateText = DateTimeUtil.getDateTimeStringWithDateFormatter(
@@ -30,6 +31,10 @@ class DateSeparatorViewHolder(
             )
             binding.messageDay.text = dateText
         }
+    }
+
+    fun showHide(show: Boolean) {
+        binding.messageDay.alpha = if (show) 1f else 0f
     }
 
     override val enableReply = false
