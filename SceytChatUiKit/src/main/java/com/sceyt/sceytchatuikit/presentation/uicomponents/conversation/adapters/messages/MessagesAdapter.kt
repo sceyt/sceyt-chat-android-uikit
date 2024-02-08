@@ -257,7 +257,7 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         if (lastHeaderPosition == headerPosition) return
         val date = DateTimeUtil.getDateTimeStringWithDateFormatter(
             context = header.context,
-            time = messages.getOrNull(headerPosition)?.getMessageCreatedAt(),
+            time = messages.getOrNull(headerPosition)?.getMessageCreatedAtForDateHeader() ?: return,
             dateFormatter = MessagesStyle.dateSeparatorDateFormat)
 
         header.setDate(date)

@@ -39,7 +39,7 @@ class StickyDateHeaderUpdater(
 
         if (isScrolling)
             headerView.showWithAnim(topChildPosition != 0)
-        else headerView.startAutoHide()
+        else if (topChildPosition != 0) headerView.startAutoHide()
 
         fixLayoutSize(rv, headerView)
         val contactPoint = headerView.bottom
