@@ -75,17 +75,13 @@ class StickyDateHeaderView @JvmOverloads constructor(context: Context, attrs: At
         startAutoHideTimer()
     }
 
-    private fun checkMaybeNeedToBeUpdated() {
+    override fun onLayout(changed: Boolean, l: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, l, top, right, bottom)
         with(binding.messageDay) {
-            val mesW = paint.measureText(currentDay) + paddingStart + paddingEnd
-            if (mesW.toInt() != width)
-                post { text = currentDay }
+            val mesW = paint.measureText(text.toString()) + paddingStart + paddingEnd
+            val left = (this@StickyDateHeaderView.width - mesW) / 2
+            layout(left.toInt(), 0, (left + mesW).toInt(), height)
         }
-    }
-
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        super.onLayout(changed, left, top, right, bottom)
-        checkMaybeNeedToBeUpdated()
     }
 
     private fun SceytItemMessageDateSeparatorBinding.setMessageItemStyle() {
