@@ -26,7 +26,7 @@ class StickyDateHeaderView @JvmOverloads constructor(context: Context, attrs: At
     private var hideAnimation: ValueAnimator? = null
     private val lifecycleScope by lazy { getLifecycleScope() }
     private var autoHideJob: Job? = null
-    private var currentDay: String? = null
+    private var currentDay: String = ""
 
     init {
         binding = SceytItemMessageDateSeparatorBinding.inflate(LayoutInflater.from(context), this, true)
@@ -38,6 +38,11 @@ class StickyDateHeaderView @JvmOverloads constructor(context: Context, attrs: At
             return
 
         binding.messageDay.text = date
+        if (currentDay.length != date.length) {
+            binding.root.post {
+                checkMaybeNeedRequestLayout()
+            }
+        }
         currentDay = date
     }
 
@@ -81,6 +86,16 @@ class StickyDateHeaderView @JvmOverloads constructor(context: Context, attrs: At
             val mesW = paint.measureText(text.toString()) + paddingStart + paddingEnd
             val left = (this@StickyDateHeaderView.width - mesW) / 2
             layout(left.toInt(), 0, (left + mesW).toInt(), height)
+        }
+    }
+
+    private fun checkMaybeNeedRequestLayout() {
+        with(binding.messageDay) {
+            val mesW = paint.measureText(currentDay).toInt() + paddingStart + paddingEnd
+            if (mesW != width) {
+                requestLayout()
+                invalidate()
+            }
         }
     }
 

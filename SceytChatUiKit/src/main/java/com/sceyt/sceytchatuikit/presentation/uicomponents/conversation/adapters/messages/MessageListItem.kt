@@ -6,8 +6,8 @@ sealed class MessageListItem {
     data class MessageItem(val message: SceytMessage) : MessageListItem()
     data class DateSeparatorItem(val createdAt: Long, val msgTid: Long) : MessageListItem()
     data class UnreadMessagesSeparatorItem(val createdAt: Long, val msgId: Long) : MessageListItem()
-    object LoadingPrevItem : MessageListItem()
-    object LoadingNextItem : MessageListItem()
+    data object LoadingPrevItem : MessageListItem()
+    data object LoadingNextItem : MessageListItem()
 
     fun getMessageCreatedAt(): Long {
         return when (this) {
@@ -16,6 +16,16 @@ sealed class MessageListItem {
             is UnreadMessagesSeparatorItem -> createdAt
             is LoadingPrevItem -> 0
             is LoadingNextItem -> Long.MAX_VALUE
+        }
+    }
+
+    fun getMessageCreatedAtForDateHeader(): Long? {
+        return when (this) {
+            is MessageItem -> message.createdAt
+            is DateSeparatorItem -> createdAt
+            is UnreadMessagesSeparatorItem -> createdAt
+            is LoadingPrevItem -> null
+            is LoadingNextItem -> null
         }
     }
 
