@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.data.repositories
 
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.models.SearchQueryOperator
 import com.sceyt.chat.models.channel.Builder
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelListQuery
@@ -80,7 +81,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             val query = ChannelListQuery.Builder()
                 .limit(1)
                 .filterKey(ChannelListQuery.ChannelListFilterKey.ListQueryChannelFilterKeyURI)
-                .queryType(ChannelListQuery.SearchQueryOperator.SearchQueryOperatorEQ)
+                .queryType(SearchQueryOperator.SearchQueryOperatorEQ)
                 .query(url)
                 .build()
 
