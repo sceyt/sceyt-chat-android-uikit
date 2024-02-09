@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 
 import androidx.recyclerview.widget.DiffUtil
-import com.sceyt.sceytchatuikit.presentation.common.diff
+import com.sceyt.sceytchatuikit.persistence.differs.diff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 
 class AttachmentsDiffUtil(private var oldList: List<ChannelFileItem>,

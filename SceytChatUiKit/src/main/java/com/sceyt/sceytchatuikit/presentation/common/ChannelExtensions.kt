@@ -6,37 +6,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.channels.stringToEnum
-import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
-
-fun SceytChannel.diff(other: SceytChannel): ChannelItemPayloadDiff {
-    val firstMember = getFirstMember()
-    val otherFirstMember = other.getFirstMember()
-    val lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
-            || lastMessage?.state != other.lastMessage?.state || lastMessage?.bodyAttributes.equalsIgnoreNull(lastMessage?.bodyAttributes).not()
-    val pendingReactionChanged = pendingReactions != other.pendingReactions
-    val userReactionsChanged = pendingReactionChanged || newReactions?.maxOfOrNull { it.id } != other.newReactions?.maxOfOrNull { it.id }
-    val lastDraftMessageChanged = draftMessage != other.draftMessage
-    val membersCountChanged = memberCount != other.memberCount && userRole != other.userRole
-    val peerBlockedChanged = isDirect() && firstMember?.user?.blocked != otherFirstMember?.user?.blocked
-
-    return ChannelItemPayloadDiff(
-        subjectChanged = channelSubject.equalsIgnoreNull(other.channelSubject).not(),
-        avatarViewChanged = iconUrl.equalsIgnoreNull(other.iconUrl).not(),
-        lastMessageChanged = lastMessageChanged || userReactionsChanged || lastDraftMessageChanged,
-        lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus,
-        unreadCountChanged = newMessageCount != other.newMessageCount,
-        muteStateChanged = muted != other.muted,
-        onlineStateChanged = isDirect() && firstMember?.user?.presence?.state != otherFirstMember?.user?.presence?.state,
-        markedUsUnreadChanged = unread != other.unread,
-        lastReadMsdChanged = lastDisplayedMessageId != other.lastDisplayedMessageId,
-        peerBlockedChanged = peerBlockedChanged,
-        typingStateChanged = typingData != other.typingData,
-        membersChanged = membersCountChanged || members != other.members,
-        metadataUpdated = metadata != other.metadata,
-        urlUpdated = uri != other.uri)
-}
 
 fun SceytChannel.checkIsMemberInChannel(): Boolean {
     return if (isGroup) {

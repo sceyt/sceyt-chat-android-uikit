@@ -15,9 +15,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
-import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.sceytchatuikit.sceytstyles.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
@@ -124,40 +122,3 @@ fun SceytAttachment?.checkLoadedFileIsCorrect(loadedFile: File): File? {
 }
 
 fun SceytMessage.isPending() = deliveryStatus == DeliveryStatus.Pending
-
-internal fun SceytMessage.diff(other: SceytMessage): MessageItemPayloadDiff {
-    return MessageItemPayloadDiff(
-        edited = state != other.state,
-        bodyChanged = body != other.body || bodyAttributes != other.bodyAttributes,
-        statusChanged = !incoming && deliveryStatus != other.deliveryStatus,
-        avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
-        nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
-        replyCountChanged = replyCount != other.replyCount,
-        replyContainerChanged = parentMessage != other.parentMessage || parentMessage?.user != other.parentMessage?.user
-                || parentMessage?.state != other.parentMessage?.state,
-        reactionsChanged = messageReactions?.equalsIgnoreNull(other.messageReactions)?.not()
-                ?: other.reactionTotals.isNullOrEmpty().not(),
-        showAvatarAndNameChanged = shouldShowAvatarAndName != other.shouldShowAvatarAndName
-                || disabledShowAvatarAndName != other.disabledShowAvatarAndName,
-        filesChanged = attachments?.size != other.attachments?.size,
-        selectionChanged = isSelected != other.isSelected
-    )
-}
-
-internal fun SceytMessage.diffContent(other: SceytMessage): MessageItemPayloadDiff {
-    return MessageItemPayloadDiff(
-        edited = state != other.state,
-        bodyChanged = body != other.body || bodyAttributes != other.bodyAttributes,
-        statusChanged = !incoming && deliveryStatus != other.deliveryStatus,
-        avatarChanged = user?.avatarURL.equalsIgnoreNull(other.user?.avatarURL).not(),
-        nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
-        replyCountChanged = replyCount != other.replyCount,
-        replyContainerChanged = parentMessage != other.parentMessage || parentMessage?.user != other.parentMessage?.user
-                || parentMessage?.state != other.parentMessage?.state,
-        reactionsChanged = reactionTotals?.equalsIgnoreNull(other.reactionTotals)?.not()
-                ?: other.reactionTotals.isNullOrEmpty().not(),
-        showAvatarAndNameChanged = false,
-        filesChanged = attachments?.size != other.attachments?.size,
-        selectionChanged = isSelected != other.isSelected
-    )
-}

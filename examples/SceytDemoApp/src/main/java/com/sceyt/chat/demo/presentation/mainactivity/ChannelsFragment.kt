@@ -20,7 +20,7 @@ import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.setMargins
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
+import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolder
@@ -118,7 +118,7 @@ class ChannelsFragment : Fragment() {
     class CustomViewHolder(private val binding: SceytItemChannelBinding,
                            private val listener: ChannelClickListeners.ClickListeners) : BaseChannelViewHolder(binding.root) {
 
-        override fun bind(item: ChannelListItem, diff: ChannelItemPayloadDiff) {
+        override fun bind(item: ChannelListItem, diff: ChannelDiff) {
             super.bind(item, diff)
 
             binding.root.setOnClickListener {

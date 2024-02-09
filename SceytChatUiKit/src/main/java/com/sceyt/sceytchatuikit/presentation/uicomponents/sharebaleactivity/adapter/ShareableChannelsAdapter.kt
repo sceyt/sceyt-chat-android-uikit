@@ -5,12 +5,11 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
+import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsDiffUtil
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.sharebaleactivity.adapter.viewholders.ShareableChannelViewHolderFactory
-
 
 class ShareableChannelsAdapter(private var channels: MutableList<ChannelListItem>,
                                private var viewHolderFactory: ShareableChannelViewHolderFactory) :
@@ -24,12 +23,12 @@ class ShareableChannelsAdapter(private var channels: MutableList<ChannelListItem
     }
 
     override fun onBindViewHolder(holder: BaseChannelViewHolder, position: Int) {
-        holder.bind(item = channels[position], diff = ChannelItemPayloadDiff.DEFAULT)
+        holder.bind(item = channels[position], diff = ChannelDiff.DEFAULT)
     }
 
     override fun onBindViewHolder(holder: BaseChannelViewHolder, position: Int, payloads: MutableList<Any>) {
-        val diff = payloads.find { it is ChannelItemPayloadDiff } as? ChannelItemPayloadDiff
-                ?: ChannelItemPayloadDiff.DEFAULT
+        val diff = payloads.find { it is ChannelDiff } as? ChannelDiff
+                ?: ChannelDiff.DEFAULT
         holder.bind(item = channels[position], diff)
     }
 

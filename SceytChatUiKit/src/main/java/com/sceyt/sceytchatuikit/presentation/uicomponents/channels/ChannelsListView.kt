@@ -12,14 +12,14 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
+import com.sceyt.sceytchatuikit.persistence.differs.diff
 import com.sceyt.sceytchatuikit.presentation.common.ChannelActionConfirmationWithDialog
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
-import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.dialogs.ChatActionsDialog
@@ -105,7 +105,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         pageStateView?.updateState(PageState.Nothing)
     }
 
-    internal fun channelUpdated(channel: SceytChannel?): ChannelItemPayloadDiff? {
+    internal fun channelUpdated(channel: SceytChannel?): ChannelDiff? {
         channelsRV.getChannelIndexed(channel?.id ?: return null)?.let { pair ->
             val channelItem = pair.second
             val oldChannel = channelItem.channel.clone()
@@ -117,7 +117,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         return null
     }
 
-    internal fun channelUpdatedWithDiff(channel: SceytChannel, diff: ChannelItemPayloadDiff) {
+    internal fun channelUpdatedWithDiff(channel: SceytChannel, diff: ChannelDiff) {
         channelsRV.getChannelIndexed(channel.id)?.let { pair ->
             val channelItem = pair.second
             channelItem.channel = channel

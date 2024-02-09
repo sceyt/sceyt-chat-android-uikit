@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter
 
 import androidx.recyclerview.widget.DiffUtil
-import com.sceyt.sceytchatuikit.presentation.common.diff
+import com.sceyt.sceytchatuikit.persistence.differs.diff
 
 class ChannelsDiffUtil(private var oldList: List<ChannelListItem>,
                        private var newList: List<ChannelListItem>) : DiffUtil.Callback() {
