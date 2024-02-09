@@ -18,6 +18,7 @@ android {
                 arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
             }
         }
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
 
@@ -82,5 +83,14 @@ dependencies {
     api supportDependencies.emojiBundled
     api supportDependencies.vanniktechGoogleEmoji
     api supportDependencies.googleCodeLibPhone
+
+
+    // Instrumented Unit Tests
+    androidTestImplementation supportDependencies.junit
+    androidTestImplementation supportDependencies.coreTesting
+    androidTestImplementation supportDependencies.espresso
+    androidTestImplementation supportDependencies.mockito
+    androidTestImplementation supportDependencies.coroutinesTest
+    androidTestImplementation supportDependencies.truth
 }
 apply from: "${rootProject.projectDir}/maven-publish/publish-module.gradle"
