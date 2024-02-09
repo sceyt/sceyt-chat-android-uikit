@@ -5,9 +5,9 @@ import com.sceyt.sceytchatuikit.data.copy
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
-import com.sceyt.sceytchatuikit.presentation.common.diff
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
+import com.sceyt.sceytchatuikit.persistence.differs.diff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsComparatorBy
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -312,10 +312,10 @@ class ChannelsCache {
         return detectedDiff
     }
 
-    private fun putAndCheckHasDiff(channel: SceytChannel): ChannelItemPayloadDiff {
+    private fun putAndCheckHasDiff(channel: SceytChannel): ChannelDiff {
         val old = cachedData[channel.id]
         cachedData[channel.id] = channel.clone()
-        return old?.diff(channel) ?: ChannelItemPayloadDiff.DEFAULT
+        return old?.diff(channel) ?: ChannelDiff.DEFAULT
     }
 
     private fun putToCache(vararg channel: SceytChannel) {

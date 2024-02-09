@@ -13,11 +13,11 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemShareChannelBinding
 import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
@@ -27,7 +27,7 @@ open class ShareableChannelViewHolder(private val binding: SceytItemShareChannel
                                       private val clickListener: ChannelClickListeners.ChannelClickListener,
                                       private val userNameBuilder: ((User) -> String)?) : BaseChannelViewHolder(binding.root) {
 
-    override fun bind(item: ChannelListItem, diff: ChannelItemPayloadDiff) {
+    override fun bind(item: ChannelListItem, diff: ChannelDiff) {
         super.bind(item, diff)
 
         val channel = (item as? ChannelListItem.ChannelItem)?.channel ?: return

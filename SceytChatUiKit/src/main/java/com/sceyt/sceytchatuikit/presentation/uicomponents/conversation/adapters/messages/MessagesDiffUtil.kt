@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages
 
 import androidx.recyclerview.widget.DiffUtil
-import com.sceyt.sceytchatuikit.presentation.common.diff
+import com.sceyt.sceytchatuikit.persistence.differs.diff
 
 class MessagesDiffUtil(private var oldList: List<MessageListItem>,
                        private var newList: List<MessageListItem>) : DiffUtil.Callback() {

@@ -5,7 +5,7 @@ import androidx.core.view.isInvisible
 import com.sceyt.sceytchatuikit.databinding.SceytItemMessageDateSeparatorBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
+import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
@@ -19,7 +19,7 @@ class DateSeparatorViewHolder(
         binding.setMessageItemStyle()
     }
 
-    override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+    override fun bind(item: MessageListItem, diff: MessageDiff) {
         super.bind(item, diff)
         itemView.isInvisible = false
         if (item is MessageListItem.DateSeparatorItem) {

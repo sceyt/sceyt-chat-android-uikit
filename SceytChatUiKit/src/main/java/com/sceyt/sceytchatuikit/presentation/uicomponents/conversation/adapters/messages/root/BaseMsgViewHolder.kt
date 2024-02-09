@@ -49,7 +49,7 @@ import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytToReplyLineView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
+import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionsAdapter
@@ -83,7 +83,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     open val selectMessageView: View? = null
 
     @CallSuper
-    open fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+    open fun bind(item: MessageListItem, diff: MessageDiff) {
         messageListItem = item
         setMaxWidth()
         if (diff.selectionChanged || diff.statusChanged)
@@ -102,7 +102,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         (layoutBubble?.layoutParams as? ConstraintLayout.LayoutParams)?.matchConstraintMaxWidth = bubbleMaxWidth
     }
 
-    fun rebind(diff: MessageItemPayloadDiff = MessageItemPayloadDiff.DEFAULT): Boolean {
+    fun rebind(diff: MessageDiff = MessageDiff.DEFAULT): Boolean {
         return if (::messageListItem.isInitialized) {
             bind(messageListItem, diff)
             true

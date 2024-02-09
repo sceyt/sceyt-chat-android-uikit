@@ -7,7 +7,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.databinding.SceytItemOutLinkMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
+import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseLinkMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -46,7 +46,7 @@ class OutLinkMsgViewHolder(
         }
     }
 
-    override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+    override fun bind(item: MessageListItem, diff: MessageDiff) {
         super.bind(item, diff)
 
         if (!diff.hasDifference()) return

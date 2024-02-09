@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageItemComparator
@@ -36,12 +37,12 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
     }
 
     override fun onBindViewHolder(holder: BaseMsgViewHolder, position: Int) {
-        holder.bind(item = messages[position], diff = MessageItemPayloadDiff.DEFAULT)
+        holder.bind(item = messages[position], diff = MessageDiff.DEFAULT)
     }
 
     override fun onBindViewHolder(holder: BaseMsgViewHolder, position: Int, payloads: MutableList<Any>) {
-        val diff = payloads.find { it is MessageItemPayloadDiff } as? MessageItemPayloadDiff
-                ?: MessageItemPayloadDiff.DEFAULT
+        val diff = payloads.find { it is MessageDiff } as? MessageDiff
+                ?: MessageDiff.DEFAULT
         holder.bind(item = messages[position], diff)
     }
 

@@ -47,12 +47,12 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.common.KeyboardEventListener
-import com.sceyt.sceytchatuikit.presentation.common.diff
+import com.sceyt.sceytchatuikit.persistence.differs.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
+import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageViewHolderFactory
@@ -355,7 +355,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun updateItem(index: Int, message: MessageListItem, diff: MessageItemPayloadDiff) {
+    private fun updateItem(index: Int, message: MessageListItem, diff: MessageDiff) {
         (messagesRV.findViewHolderForItemId(message.getItemId()) as? BaseMsgViewHolder)?.bind(message, diff)
                 ?: run { messagesRV.adapter?.notifyItemChanged(index, diff) }
     }
@@ -400,7 +400,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
             if (item is MessageItem && item.message.tid == message.tid) {
                 item.message.isSelected = message.isSelected
-                updateItem(index, item, MessageItemPayloadDiff.DEFAULT_FALSE.copy(selectionChanged = true))
+                updateItem(index, item, MessageDiff.DEFAULT_FALSE.copy(selectionChanged = true))
                 break
             }
         }
@@ -532,7 +532,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
 
             if (updateRecycler)
-                updateItem(index, it, MessageItemPayloadDiff.DEFAULT_FALSE.copy(filesChanged = true))
+                updateItem(index, it, MessageDiff.DEFAULT_FALSE.copy(filesChanged = true))
         }
     }
 

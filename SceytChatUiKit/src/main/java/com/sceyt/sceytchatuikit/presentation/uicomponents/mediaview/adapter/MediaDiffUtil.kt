@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.mediaview.adapter
 
 import androidx.recyclerview.widget.DiffUtil
-import com.sceyt.sceytchatuikit.presentation.common.diff
+import com.sceyt.sceytchatuikit.persistence.differs.diff
 
 class MediaDiffUtil(private var oldList: List<MediaItem>,
                     private var newList: List<MediaItem>) : DiffUtil.Callback() {

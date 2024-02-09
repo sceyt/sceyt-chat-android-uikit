@@ -15,11 +15,11 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.isResumed
 import com.sceyt.sceytchatuikit.logger.SceytLog
+import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelUpdateData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.TypingCancelHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
@@ -126,7 +126,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     ChannelsCache.channelReactionMsgLoadedFlow.onEach { data ->
         lifecycleOwner.lifecycleScope.launch {
-            channelsListView.channelUpdatedWithDiff(data, ChannelItemPayloadDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))
+            channelsListView.channelUpdatedWithDiff(data, ChannelDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))
         }
     }.launchIn(viewModelScope)
 
@@ -159,7 +159,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }.launchIn(viewModelScope)
 
     ChannelsCache.channelDraftMessageChangesFlow.onEach { channel ->
-        channelsListView.channelUpdatedWithDiff(channel, ChannelItemPayloadDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))
+        channelsListView.channelUpdatedWithDiff(channel, ChannelDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))
         if (!lifecycleOwner.isResumed()) {
             val pendingUpdate = needToUpdateChannelsAfterResume[channel.id]
             if (pendingUpdate != null) {

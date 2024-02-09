@@ -1,18 +1,7 @@
-package com.sceyt.sceytchatuikit.presentation.common
+package com.sceyt.sceytchatuikit.persistence.differs
 
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
-
-fun User.diff(other: User): UserDiff {
-    return UserDiff(
-        firstNameChanged = firstName.equalsIgnoreNull(other.firstName).not(),
-        lastNameChanged = lastName.equalsIgnoreNull(other.lastName).not(),
-        avatarURLChanged = avatarURL.equalsIgnoreNull(other.avatarURL).not(),
-        presenceChanged = presence?.state != other.presence.state,
-        activityStatusChanged = activityState != other.activityState,
-        blockedChanged = blocked != other.blocked
-    )
-}
 
 data class UserDiff(
         val firstNameChanged: Boolean,
@@ -37,4 +26,15 @@ data class UserDiff(
             blockedChanged = true
         )
     }
+}
+
+fun User.diff(other: User): UserDiff {
+    return UserDiff(
+        firstNameChanged = firstName.equalsIgnoreNull(other.firstName).not(),
+        lastNameChanged = lastName.equalsIgnoreNull(other.lastName).not(),
+        avatarURLChanged = avatarURL.equalsIgnoreNull(other.avatarURL).not(),
+        presenceChanged = presence?.state != other.presence.state,
+        activityStatusChanged = activityState != other.activityState,
+        blockedChanged = blocked != other.blocked
+    )
 }
