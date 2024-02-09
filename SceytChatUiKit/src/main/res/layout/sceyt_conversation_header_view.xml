@@ -149,7 +149,7 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.MessageActionToolbar
+            <com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.MessageActionsToolbar
                 android:id="@+id/toolBarMessageActions"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
