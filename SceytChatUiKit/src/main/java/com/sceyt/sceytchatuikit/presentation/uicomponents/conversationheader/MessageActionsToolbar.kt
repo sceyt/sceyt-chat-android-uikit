@@ -19,7 +19,7 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListener.ToolbarActionsVisibilityListener
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
-class MessageActionToolbar @JvmOverloads constructor(context: Context, attributeSet: AttributeSet? = null, defStyleAttr: Int = 0)
+class MessageActionsToolbar @JvmOverloads constructor(context: Context, attributeSet: AttributeSet? = null, defStyleAttr: Int = 0)
     : Toolbar(context, attributeSet, defStyleAttr) {
 
     private var itemClickListener: ((MenuItem) -> Unit)? = null

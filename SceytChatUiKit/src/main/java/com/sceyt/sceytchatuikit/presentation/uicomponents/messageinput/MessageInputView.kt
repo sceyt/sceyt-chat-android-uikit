@@ -136,17 +136,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding = SceytMessageInputViewBinding.inflate(LayoutInflater.from(context), this, true)
 
         init()
-        setupAttachmentsList()
-        val voiceRecorderView = SceytVoiceMessageRecorderView(context)
-        post {
-            (parent as? ViewGroup)?.addView(voiceRecorderView.apply {
-                layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-                setRecordingListener()
-                voiceMessageRecorderView = this
-                voiceMessageRecorderView?.setRecorderHeight(binding.layoutInput.height)
-                isVisible = canShowRecorderView()
-            })
-        }
     }
 
     private fun init() {
@@ -160,7 +149,19 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             addInoutListeners()
             determineInputState()
             addInputTextWatcher()
-            post { onStateChanged(inputState) }
+            setupAttachmentsList()
+            // init outside of post to, because it's using permission launcher
+            val voiceRecorderView = SceytVoiceMessageRecorderView(context)
+            post {
+                onStateChanged(inputState)
+                (parent as? ViewGroup)?.addView(voiceRecorderView.apply {
+                    layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+                    setRecordingListener()
+                    voiceMessageRecorderView = this
+                    voiceMessageRecorderView?.setRecorderHeight(binding.layoutInput.height)
+                    isVisible = canShowRecorderView()
+                })
+            }
         }
     }
 
