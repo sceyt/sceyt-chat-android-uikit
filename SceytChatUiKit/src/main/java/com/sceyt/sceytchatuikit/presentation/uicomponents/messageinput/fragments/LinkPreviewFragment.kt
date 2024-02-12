@@ -48,7 +48,7 @@ open class LinkPreviewFragment : Fragment() {
     }
 
     open fun showLinkDetails(data: LinkPreviewDetails) {
-        if(!isAdded) return
+        if (!isAdded) return
         debounceHelper.cancelLastDebounce()
         showHideAnimator?.cancel()
         with(binding ?: return) {
@@ -61,14 +61,14 @@ open class LinkPreviewFragment : Fragment() {
     }
 
     open fun hideLinkDetailsWithTimeout() {
-        if(!isAdded) return
+        if (!isAdded) return
         debounceHelper.submit {
             hideLinkDetails()
         }
     }
 
     open fun hideLinkDetails(readyCb: (() -> Unit?)? = null) {
-        if(!isAdded) return
+        if (!isAdded) return
         debounceHelper.cancelLastDebounce()
         showHideAnimator?.cancel()
         with(binding ?: return) {
