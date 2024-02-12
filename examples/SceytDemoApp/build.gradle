@@ -69,22 +69,21 @@ android {
 dependencies {
     implementation project(':SceytChatUiKit')
 
-    implementation supportDependencies.coreKtx
-    implementation supportDependencies.firebaseMessaging
-    implementation supportDependencies.firebaseBom
-    implementation supportDependencies.appCompat
-    implementation supportDependencies.material
-    implementation supportDependencies.constraintlayout
-    implementation supportDependencies.recyclerView
-    implementation supportDependencies.fragmentKtx
-    implementation supportDependencies.lifecycleRuntime
-    implementation supportDependencies.glide
-    implementation supportDependencies.okHttp
-    implementation supportDependencies.koinAndroid
-    implementation supportDependencies.moshiConverter
-    implementation supportDependencies.jsoup
-    implementation supportDependencies.sdp
-    implementation supportDependencies.ssp
-    implementation supportDependencies.retrofitConverterGason
-    implementation "com.github.yalantis:ucrop:2.2.8"
+    implementation libs.appcompat
+    implementation libs.material
+    implementation libs.core.ktx
+    implementation libs.firebase.messaging.ktx
+    implementation libs.constraintlayout
+    implementation libs.recyclerview
+    implementation libs.fragment.ktx
+    implementation libs.lifecycle.runtime.ktx
+    implementation libs.glide
+    implementation libs.okhttp
+    implementation libs.koin.android
+    implementation libs.converter.moshi
+    implementation libs.jsoup
+    implementation libs.sdp.android
+    implementation libs.ssp.android
+    implementation libs.converter.gson
+    implementation libs.ucrop
 }
