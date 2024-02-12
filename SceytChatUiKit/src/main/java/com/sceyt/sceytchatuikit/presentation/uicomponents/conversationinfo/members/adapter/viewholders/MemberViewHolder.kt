@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.memb
 
 import android.content.res.ColorStateList
 import androidx.annotation.ColorRes
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.user.PresenceState
@@ -56,8 +57,13 @@ class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
             if (diff.onlineStateChanged)
                 tvStatus.text = if (member.user.presence?.state == PresenceState.Online)
                     itemView.getString(R.string.sceyt_online)
-                else DateTimeUtil.getPresenceDateFormatData(itemView.context, Date(member.user.presence?.lastActiveAt
-                        ?: 0))
+                else {
+                    member.user.presence?.lastActiveAt?.let {
+                        if (it != 0L)
+                            DateTimeUtil.getPresenceDateFormatData(itemView.context, Date(it))
+                        else ""
+                    } ?: ""
+                }
 
             if (diff.roleChanged)
                 setRole()
