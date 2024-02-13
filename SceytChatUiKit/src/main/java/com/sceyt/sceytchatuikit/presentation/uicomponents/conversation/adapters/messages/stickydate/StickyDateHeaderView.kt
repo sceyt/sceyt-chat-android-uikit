@@ -77,6 +77,7 @@ class StickyDateHeaderView @JvmOverloads constructor(context: Context, attrs: At
     }
 
     fun startAutoHide() {
+        if (autoHideJob?.isActive == true) return
         startAutoHideTimer()
     }
 
