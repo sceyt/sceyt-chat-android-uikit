@@ -35,6 +35,8 @@ import com.sceyt.sceytchatuikit.extensions.openLink
 import com.sceyt.sceytchatuikit.extensions.setClipboard
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
+import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
+import com.sceyt.sceytchatuikit.persistence.differs.diff
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
@@ -47,12 +49,10 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.common.KeyboardEventListener
-import com.sceyt.sceytchatuikit.persistence.differs.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
-import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageViewHolderFactory
@@ -355,9 +355,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun updateItem(index: Int, message: MessageListItem, diff: MessageDiff) {
-        (messagesRV.findViewHolderForItemId(message.getItemId()) as? BaseMsgViewHolder)?.bind(message, diff)
-                ?: run { messagesRV.adapter?.notifyItemChanged(index, diff) }
+    private fun updateItem(index: Int, item: MessageListItem, diff: MessageDiff) {
+        val message = (item as? MessageItem)?.message ?: return
+        (messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMsgViewHolder)?.let {
+            SceytLog.i(TAG, "updateItem: found by itemId: ${item.getItemId()}, msgId-> ${message.id}, diff ${diff.statusChanged}")
+            it.bind(item, diff)
+        } ?: run {
+            SceytLog.i(TAG, "updateItem: notifyItemChanged by index $index, diff ${diff.statusChanged}, msgId-> ${message.id}")
+            messagesRV.adapter?.notifyItemChanged(index, diff)
+        }
     }
 
     internal fun setMessagesList(data: List<MessageListItem>, force: Boolean = false) {
@@ -389,7 +395,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 item.message.updateMessage(message)
                 val diff = oldMessage.diff(item.message)
                 SceytLog.i(TAG, "Found to update: id ${item.message.id}, tid ${item.message.tid}," +
-                        " diff ${diff.statusChanged}, index $index, size ${messagesRV.getData()?.size}")
+                        " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${messagesRV.getData()?.size}")
                 updateItem(index, item, diff)
                 break
             }
@@ -471,32 +477,18 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
+        val data = messagesRV.getData() ?: return
         ids.forEach { id ->
-            for ((index: Int, item: MessageListItem) in (messagesRV.getData()
-                    ?: return).withIndex()) {
+            for ((index: Int, item: MessageListItem) in data.withIndex()) {
                 if (item is MessageItem) {
                     val oldMessage = item.message.clone()
                     if (item.message.id == id) {
-                        if (item.message.deliveryStatus < status)
+                        if (item.message.deliveryStatus < status) {
                             item.message.deliveryStatus = status
-                        updateItem(index, item, oldMessage.diff(item.message))
+                            updateItem(index, item, oldMessage.diff(item.message))
+                        }
                         break
                     }
-                }
-            }
-        }
-    }
-
-    internal fun updateMessagesStatusByTid(status: DeliveryStatus, tid: Long) {
-        for ((index: Int, item: MessageListItem) in (messagesRV.getData()
-                ?: return).withIndex()) {
-            if (item is MessageItem) {
-                val oldMessage = item.message.clone()
-                if (item.message.tid == tid) {
-                    if (item.message.deliveryStatus < status)
-                        item.message.deliveryStatus = status
-                    updateItem(index, item, oldMessage.diff(item.message))
-                    break
                 }
             }
         }
