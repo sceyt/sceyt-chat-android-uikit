@@ -358,10 +358,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun updateItem(index: Int, item: MessageListItem, diff: MessageDiff) {
         val message = (item as? MessageItem)?.message ?: return
         (messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMsgViewHolder)?.let {
-            SceytLog.i(TAG, "updateItem: found by itemId: ${item.getItemId()}, msgId-> ${message.id}, diff ${diff.statusChanged}")
+            SceytLog.i("StatusIssueTag", "updateItem: found by itemId: ${item.getItemId()}, msgId-> ${message.id}, diff ${diff.statusChanged}")
             it.bind(item, diff)
         } ?: run {
-            SceytLog.i(TAG, "updateItem: notifyItemChanged by index $index, diff ${diff.statusChanged}, msgId-> ${message.id}")
+            SceytLog.i("StatusIssueTag", "updateItem: notifyItemChanged by index $index, diff ${diff.statusChanged}, msgId-> ${message.id}")
             messagesRV.adapter?.notifyItemChanged(index, diff)
         }
     }
