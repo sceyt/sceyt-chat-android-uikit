@@ -143,7 +143,6 @@ class MessageListViewModel(
 
     //val onNewThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
     val onMessageStatusFlow: Flow<MessageStatusChangeData>
-    val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
 
     // val onOutGoingThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
     val onTransferUpdatedLiveData: LiveData<TransferData>
@@ -208,8 +207,6 @@ class MessageListViewModel(
                 conversationId = newChannelId
                 channel.pending = false
             }.launchIn(viewModelScope)
-
-        onOutGoingMessageStatusFlow = MessageEventsObserver.onOutGoingMessageStatusFlow
 
         onNewOutGoingMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id /*&& !it.replyInThread*/ }

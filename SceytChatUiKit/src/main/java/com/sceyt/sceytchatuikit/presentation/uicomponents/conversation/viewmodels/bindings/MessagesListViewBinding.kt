@@ -1,6 +1,12 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.bindings
 
-import androidx.lifecycle.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
+import androidx.lifecycle.asFlow
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Marker
@@ -10,11 +16,16 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.SceytKitClient.myId
 import com.sceyt.sceytchatuikit.SceytSyncManager
-import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.*
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.ClearedHistory
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Deleted
+import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventEnum.Left
 import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
-import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.*
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNear
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNewest
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
+import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.getLoadKey
@@ -45,6 +56,22 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Collections
+import kotlin.collections.any
+import kotlin.collections.arrayListOf
+import kotlin.collections.filterIsInstance
+import kotlin.collections.forEach
+import kotlin.collections.hashMapOf
+import kotlin.collections.isNotEmpty
+import kotlin.collections.isNullOrEmpty
+import kotlin.collections.map
+import kotlin.collections.minus
+import kotlin.collections.mutableSetOf
+import kotlin.collections.set
+import kotlin.collections.toList
+import kotlin.collections.toLongArray
+import kotlin.collections.toMutableSet
+import kotlin.collections.toSet
+import kotlin.collections.toTypedArray
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
@@ -430,12 +457,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
             is Deleted -> messagesListView.context.asActivity().finish()
             else -> return@onEach
-        }
-    }.launchIn(viewModelScope)
-
-    onOutGoingMessageStatusFlow.onEach {
-        viewModelScope.launch {
-            messagesListView.updateMessagesStatusByTid(DeliveryStatus.Sent, it.second.tid)
         }
     }.launchIn(viewModelScope)
 

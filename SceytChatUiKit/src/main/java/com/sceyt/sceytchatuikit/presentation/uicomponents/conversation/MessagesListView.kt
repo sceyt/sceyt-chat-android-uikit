@@ -35,6 +35,8 @@ import com.sceyt.sceytchatuikit.extensions.openLink
 import com.sceyt.sceytchatuikit.extensions.setClipboard
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
+import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
+import com.sceyt.sceytchatuikit.persistence.differs.diff
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
@@ -47,12 +49,10 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.common.KeyboardEventListener
-import com.sceyt.sceytchatuikit.persistence.differs.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
-import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageViewHolderFactory
@@ -477,9 +477,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
+        val data = messagesRV.getData() ?: return
         ids.forEach { id ->
-            for ((index: Int, item: MessageListItem) in (messagesRV.getData()
-                    ?: return).withIndex()) {
+            for ((index: Int, item: MessageListItem) in data.withIndex()) {
                 if (item is MessageItem) {
                     val oldMessage = item.message.clone()
                     if (item.message.id == id) {
@@ -489,22 +489,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                         }
                         break
                     }
-                }
-            }
-        }
-    }
-
-    internal fun updateMessagesStatusByTid(status: DeliveryStatus, tid: Long) {
-        for ((index: Int, item: MessageListItem) in (messagesRV.getData()
-                ?: return).withIndex()) {
-            if (item is MessageItem) {
-                val oldMessage = item.message.clone()
-                if (item.message.tid == tid) {
-                    if (item.message.deliveryStatus < status) {
-                        item.message.deliveryStatus = status
-                        updateItem(index, item, oldMessage.diff(item.message))
-                    }
-                    break
                 }
             }
         }
@@ -746,10 +730,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             enabledActions = enabled
 
         messagesRV.enableDisableSwipeToReply(enabledActions)
-    }
-
-    fun startSearchMessages() {
-        messageCommandEventListener?.invoke(MessageCommandEvent.SearchMessages(true))
     }
 
     override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
