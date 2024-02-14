@@ -17,6 +17,11 @@ sealed interface InputEventsListener {
         fun onMultiselectModeListener(isMultiselectMode: Boolean)
     }
 
+    fun interface SearchModeListener : InputEventsListener {
+        fun onSearchModeListener(inSearchMode: Boolean)
+    }
+
     /** Use this if you want to implement all callbacks */
-    interface InputEventListeners : InputStateListener, MentionUsersListener, MultiselectModeListener
+    interface InputEventListeners : InputStateListener, MentionUsersListener,
+            MultiselectModeListener, SearchModeListener
 }

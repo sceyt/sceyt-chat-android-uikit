@@ -310,19 +310,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    onScrollToReplyMessageLiveData.observe(lifecycleOwner) {
-        it.parentMessage?.id?.let { parentId ->
-            viewModelScope.launch(Dispatchers.Default) {
-                messagesListView.getMessageIndexedById(parentId)?.let {
-                    withContext(Dispatchers.Main) {
-                        it.second.highlighted = true
-                        messagesListView.scrollToPositionAndHighlight(it.first, true)
-                    }
-                } ?: run {
-                    loadNearMessages(parentId, LoadKeyData(
-                        key = LoadKeyType.ScrollToMessageById.longValue,
-                        value = parentId), true)
+    onScrollToMessageHighlightLiveData.observe(lifecycleOwner) {
+        val messageId = it.id
+        viewModelScope.launch(Dispatchers.Default) {
+            messagesListView.getMessageIndexedById(messageId)?.let {
+                withContext(Dispatchers.Main) {
+                    it.second.highlighted = true
+                    messagesListView.scrollToPositionAndHighlight(it.first, true)
                 }
+            } ?: run {
+                loadNearMessages(messageId, LoadKeyData(
+                    key = LoadKeyType.ScrollToMessageById.longValue,
+                    value = messageId), true)
             }
         }
     }
@@ -476,6 +475,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
             is MessageCommandEvent.ShowHideMessageActions -> {
                 prepareToShowMessageActions(event)
+            }
+
+            is MessageCommandEvent.SearchMessages -> {
+                prepareToShowSearchMessage(event)
             }
 
             is MessageCommandEvent.OnMultiselectEvent -> {

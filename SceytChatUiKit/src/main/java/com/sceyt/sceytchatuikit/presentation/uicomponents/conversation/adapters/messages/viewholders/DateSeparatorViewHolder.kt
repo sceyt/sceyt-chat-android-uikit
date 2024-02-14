@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.databinding.SceytItemMessageDateSeparatorBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
@@ -21,7 +21,7 @@ class DateSeparatorViewHolder(
 
     override fun bind(item: MessageListItem, diff: MessageDiff) {
         super.bind(item, diff)
-        itemView.isInvisible = false
+        itemView.isVisible = true
         if (item is MessageListItem.DateSeparatorItem) {
             val createdAt = item.createdAt
             val dateText = DateTimeUtil.getDateTimeStringWithDateFormatter(

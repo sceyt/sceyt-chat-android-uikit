@@ -371,7 +371,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
             background = null
             setPadding(paddingNormal.toInt())
             backgroundTintList = ColorStateList.valueOf(Color.RED)
-            setImageResource(R.drawable.sceyt_ic_voice)
+            setImageResource(MessageInputViewStyle.voiceRecordIcon)
             setColorFilter("#B2B6BE".toColorInt())
         }
     }
@@ -384,7 +384,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
             setPadding(paddingRecording.toInt())
             setBackgroundResource(R.drawable.sceyt_bg_circle)
             backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
-            setImageResource(R.drawable.sceyt_ic_voice)
+            setImageResource(MessageInputViewStyle.voiceRecordIcon)
             setColorFilter(getCompatColor(R.color.sceyt_color_white))
         }
     }
@@ -417,7 +417,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         imageViewAudio.translationZ = buttonZ
         imageViewAudio.cardElevation = buttonZ
         imageAudio.setPadding(paddingRecording.toInt())
-        imageAudio.setImageResource(R.drawable.sceyt_ic_voice)
+        imageAudio.setImageResource(MessageInputViewStyle.voiceRecordIcon)
         imageAudio.setColorFilter(context.getCompatColor(R.color.sceyt_color_white))
         animateColor(imageAudio, context.getCompatColor(R.color.sceyt_color_red), context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }

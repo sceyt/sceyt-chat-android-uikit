@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo
 
 import android.content.Context
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
 import androidx.activity.viewModels
@@ -315,6 +316,13 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
+    open fun onSearchMessagesClick(channel: SceytChannel) {
+        val intent = Intent()
+        intent.putExtra("Action", "SearchMessages")
+        setResult(RESULT_OK, intent)
+        finish()
+    }
+
     open fun onEditClick(channel: SceytChannel) {
         binding ?: return
         val fragment = getEditChannelFragment(channel) ?: return
@@ -494,6 +502,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
                     when (actionsEnum) {
                         InfoMembersByRoleButtonsFragment.ClickActionsEnum.Admins -> onAdminsClick(this.channel)
                         InfoMembersByRoleButtonsFragment.ClickActionsEnum.Members -> onMembersClick(this.channel)
+                        InfoMembersByRoleButtonsFragment.ClickActionsEnum.SearchMessages -> onSearchMessagesClick(this.channel)
                     }
                 }
             }

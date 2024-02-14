@@ -355,9 +355,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun updateItem(index: Int, message: MessageListItem, diff: MessageDiff) {
-        (messagesRV.findViewHolderForItemId(message.getItemId()) as? BaseMsgViewHolder)?.bind(message, diff)
-                ?: run { messagesRV.adapter?.notifyItemChanged(index, diff) }
+    private fun updateItem(index: Int, item: MessageListItem, diff: MessageDiff) {
+        val message = (item as? MessageItem)?.message ?: return
+        (messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMsgViewHolder)?.let {
+            SceytLog.i(TAG, "updateItem: found by itemId: ${item.getItemId()}, msgId-> ${message.id}, diff ${diff.statusChanged}")
+            it.bind(item, diff)
+        } ?: run {
+            SceytLog.i(TAG, "updateItem: notifyItemChanged by index $index, diff ${diff.statusChanged}, msgId-> ${message.id}")
+            messagesRV.adapter?.notifyItemChanged(index, diff)
+        }
     }
 
     internal fun setMessagesList(data: List<MessageListItem>, force: Boolean = false) {
@@ -389,7 +395,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 item.message.updateMessage(message)
                 val diff = oldMessage.diff(item.message)
                 SceytLog.i(TAG, "Found to update: id ${item.message.id}, tid ${item.message.tid}," +
-                        " diff ${diff.statusChanged}, index $index, size ${messagesRV.getData()?.size}")
+                        " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${messagesRV.getData()?.size}")
                 updateItem(index, item, diff)
                 break
             }
@@ -477,9 +483,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 if (item is MessageItem) {
                     val oldMessage = item.message.clone()
                     if (item.message.id == id) {
-                        if (item.message.deliveryStatus < status)
+                        if (item.message.deliveryStatus < status) {
                             item.message.deliveryStatus = status
-                        updateItem(index, item, oldMessage.diff(item.message))
+                            updateItem(index, item, oldMessage.diff(item.message))
+                        }
                         break
                     }
                 }
@@ -493,9 +500,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             if (item is MessageItem) {
                 val oldMessage = item.message.clone()
                 if (item.message.tid == tid) {
-                    if (item.message.deliveryStatus < status)
+                    if (item.message.deliveryStatus < status) {
                         item.message.deliveryStatus = status
-                    updateItem(index, item, oldMessage.diff(item.message))
+                        updateItem(index, item, oldMessage.diff(item.message))
+                    }
                     break
                 }
             }
@@ -738,6 +746,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             enabledActions = enabled
 
         messagesRV.enableDisableSwipeToReply(enabledActions)
+    }
+
+    fun startSearchMessages() {
+        messageCommandEventListener?.invoke(MessageCommandEvent.SearchMessages(true))
     }
 
     override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
