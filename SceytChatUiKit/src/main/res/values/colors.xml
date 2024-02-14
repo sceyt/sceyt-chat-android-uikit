@@ -8,7 +8,7 @@
 
     <color name="sceyt_color_button">#F1F2F6</color>
     <color name="sceyt_color_text_themed">#111539</color>
-    <color name="sceyt_color_divider">#E8E9EE</color>
+    <color name="sceyt_color_divider">#F1F2F6</color>
     <color name="sceyt_color_black_themed">#FF000000</color>
     <color name="sceyt_color_gray_themed">#F1F2F6</color>
     <color name="sceyt_color_gray_secondary_themed">#707388</color>

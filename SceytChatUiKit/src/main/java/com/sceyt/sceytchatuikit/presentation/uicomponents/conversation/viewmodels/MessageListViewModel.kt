@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmode
 
 import android.app.Application
 import android.text.Editable
+import android.util.Log
 import android.view.Menu
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -25,6 +26,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
+import com.sceyt.sceytchatuikit.data.models.SceytPagingResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
@@ -40,6 +42,7 @@ import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceReactionsMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceUsersMiddleWare
+import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -67,6 +70,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.SearchResult
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
@@ -86,6 +90,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 
 class MessageListViewModel(
@@ -154,10 +159,15 @@ class MessageListViewModel(
     internal val onEditMessageCommandLiveData: LiveData<SceytMessage> = _onEditMessageCommandLiveData
     private val _onReplyMessageCommandLiveData = MutableLiveData<SceytMessage>()
     internal val onReplyMessageCommandLiveData: LiveData<SceytMessage> = _onReplyMessageCommandLiveData
-    private val _onScrollToMessageLiveData = MutableLiveData<SceytMessage?>()
-    internal val onScrollToLastMessageLiveData: LiveData<SceytMessage?> = _onScrollToMessageLiveData
-    private val _onScrollToReplyMessageLiveData = MutableLiveData<SceytMessage>()
-    internal val onScrollToReplyMessageLiveData: LiveData<SceytMessage> = _onScrollToReplyMessageLiveData
+    private val _onScrollToLastMessageLiveData = MutableLiveData<SceytMessage?>()
+    internal val onScrollToLastMessageLiveData: LiveData<SceytMessage?> = _onScrollToLastMessageLiveData
+    private val _onScrollToMessageHighlightLiveData = MutableLiveData<SceytMessage>()
+    internal val onScrollToMessageHighlightLiveData: LiveData<SceytMessage> = _onScrollToMessageHighlightLiveData
+
+    // Search messages
+    private val isLoadingNextSearchMessages = AtomicBoolean(false)
+    private var _searchResult = MutableLiveData<SearchResult>()
+    var searchResult = _searchResult.asLiveData()
 
 
     init {
@@ -267,6 +277,36 @@ class MessageListViewModel(
         }
     }
 
+    fun searchMessages(query: String) {
+        viewModelScope.launch {
+            val resp = persistenceMessageMiddleWare.searchMessages(conversationId, replyInThread, query)
+            (resp as? SceytPagingResponse.Success)?.let {
+                it.data?.let { messages ->
+                    val reversed = messages.reversed()
+                    _searchResult.postValue(SearchResult(0, reversed, resp.hasNext))
+                    _onScrollToMessageHighlightLiveData.postValue(reversed.firstOrNull()
+                            ?: return@launch)
+                }
+            }
+        }
+    }
+
+    fun loadNextSearchedMessages() {
+        if (isLoadingNextSearchMessages.getAndSet(true)) return
+        viewModelScope.launch {
+            val resp = persistenceMessageMiddleWare.loadNextSearchMessages()
+            (resp as? SceytPagingResponse.Success)?.let {
+                it.data?.let { messages ->
+                    val oldValue = _searchResult.value ?: return@launch
+                    val loadedMessages = ArrayList(oldValue.messages)
+                    val newMessages: List<SceytMessage> = loadedMessages.plus(messages.reversed())
+                    _searchResult.postValue(oldValue.copy(messages = newMessages, hasNext = resp.hasNext))
+                }
+            }
+            isLoadingNextSearchMessages.set(false)
+        }
+    }
+
     fun sendPendingMessages() {
         viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.sendPendingMessages(conversationId)
@@ -308,16 +348,20 @@ class MessageListViewModel(
         return messageActionBridge.showMessageActions(event.message)
     }
 
+    fun prepareToShowSearchMessage(event: MessageCommandEvent.SearchMessages) {
+        messageActionBridge.showSearchMessage(event)
+    }
+
     fun prepareToReplyMessage(message: SceytMessage) {
         _onReplyMessageCommandLiveData.postValue(message)
     }
 
     fun prepareToScrollToNewMessage() {
-        _onScrollToMessageLiveData.postValue(channel.lastMessage)
+        _onScrollToLastMessageLiveData.postValue(channel.lastMessage)
     }
 
     fun prepareToScrollToReplyMessage(message: SceytMessage) {
-        _onScrollToReplyMessageLiveData.postValue(message)
+        _onScrollToMessageHighlightLiveData.postValue(message.parentMessage ?: return)
     }
 
     fun prepareToPauseOrResumeUpload(item: FileListItem) {
@@ -648,6 +692,22 @@ class MessageListViewModel(
 
     internal fun clearPreparingThumbs() {
         fileTransferService.clearPreparingThumbPaths()
+    }
+
+    internal fun scrollToSearchMessage(isPrev: Boolean) {
+        val searchResult = searchResult.value ?: return
+        val messages = searchResult.messages
+        val nextIndex = if (isPrev) {
+            searchResult.currentIndex + 1
+        } else searchResult.currentIndex - 1
+        if (nextIndex < 0 || nextIndex >= messages.size)
+            return
+        _searchResult.postValue(searchResult.copy(currentIndex = nextIndex))
+        _onScrollToMessageHighlightLiveData.postValue(messages[nextIndex])
+
+        if (searchResult.hasNext && messages.size - nextIndex < MESSAGES_LOAD_SIZE / 2) {
+            loadNextSearchedMessages()
+        }
     }
 
     private fun onChannelMemberEvent(eventData: ChannelMembersEventData) {

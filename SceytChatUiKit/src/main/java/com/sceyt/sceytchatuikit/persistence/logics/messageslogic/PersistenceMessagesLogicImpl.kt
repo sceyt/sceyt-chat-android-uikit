@@ -25,6 +25,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
+import com.sceyt.sceytchatuikit.data.models.SceytPagingResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -184,6 +185,14 @@ internal class PersistenceMessagesLogicImpl(
                                             loadKey: LoadKeyData,
                                             ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
         return loadMessages(LoadNewest, conversationId, 0, replyInThread, 0, limit, loadKey, ignoreDb)
+    }
+
+    override suspend fun searchMessages(conversationId: Long, replyInThread: Boolean, query: String): SceytPagingResponse<List<SceytMessage>> {
+        return messagesRepository.searchMessages(conversationId, replyInThread, query)
+    }
+
+    override suspend fun loadNextSearchMessages(): SceytPagingResponse<List<SceytMessage>> {
+        return messagesRepository.loadNextSearchMessages()
     }
 
     override suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>> {
@@ -935,7 +944,7 @@ internal class PersistenceMessagesLogicImpl(
         when (response) {
             is SceytResponse.Success -> {
                 response.data?.let { data ->
-                    SceytLog.i("onMarkerResponse","send $status, ${ids.toList()}, in response ${data.messageIds}")
+                    SceytLog.i("onMarkerResponse", "send $status, ${ids.toList()}, in response ${data.messageIds}")
                     val deliveryStatus = status.toDeliveryStatus()
                     val responseIds = data.messageIds.toList()
                     messageDao.updateMessagesStatus(channelId, responseIds, deliveryStatus)

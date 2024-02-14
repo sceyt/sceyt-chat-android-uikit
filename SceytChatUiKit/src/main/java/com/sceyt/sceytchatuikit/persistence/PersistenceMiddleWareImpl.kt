@@ -18,6 +18,7 @@ import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeDat
 import com.sceyt.sceytchatuikit.data.messageeventobserver.ReactionUpdateEventData
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
+import com.sceyt.sceytchatuikit.data.models.SceytPagingResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
@@ -291,6 +292,15 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     override suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int,
                                             loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadNewestMessages(conversationId, replyInThread, limit, loadKey, ignoreDb)
+    }
+
+    override suspend fun searchMessages(conversationId: Long, replyInThread: Boolean,
+                                        query: String): SceytPagingResponse<List<SceytMessage>> {
+        return messagesLogic.searchMessages(conversationId, replyInThread, query)
+    }
+
+    override suspend fun loadNextSearchMessages(): SceytPagingResponse<List<SceytMessage>> {
+        return messagesLogic.loadNextSearchMessages()
     }
 
     override suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>> {

@@ -9,6 +9,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.ClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.JoinClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.RemoveAttachmentClickListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.ScrollToNextMessageClickListener
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.ScrollToPreviousMessageClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.SendAttachmentClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.SendMsgClickListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.VoiceClickListener
@@ -25,6 +27,8 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
     private var removeAttachmentClickListener: RemoveAttachmentClickListener? = null
     private var joinClickListener: JoinClickListener? = null
     private var clearChatClickListener: ClearChatClickListener? = null
+    private var scrollToNextMessageClickListener: ScrollToNextMessageClickListener? = null
+    private var scrollToPreviousMessageClickListener: ScrollToPreviousMessageClickListener? = null
 
     override fun onSendMsgClick(view: View) {
         defaultListeners.onSendMsgClick(view)
@@ -71,6 +75,16 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
         clearChatClickListener?.onClearChatClick()
     }
 
+    override fun onScrollToNextMessageClick() {
+        defaultListeners.onScrollToNextMessageClick()
+        scrollToNextMessageClickListener?.onScrollToNextMessageClick()
+    }
+
+    override fun onScrollToPreviousMessageClick() {
+        defaultListeners.onScrollToPreviousMessageClick()
+        scrollToPreviousMessageClickListener?.onScrollToPreviousMessageClick()
+    }
+
     fun setListener(listener: MessageInputClickListeners) {
         when (listener) {
             is ClickListeners -> {
@@ -82,6 +96,8 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
                 removeAttachmentClickListener = listener
                 joinClickListener = listener
                 clearChatClickListener = listener
+                scrollToNextMessageClickListener = listener
+                scrollToPreviousMessageClickListener = listener
             }
 
             is SendMsgClickListener -> {
@@ -118,6 +134,13 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
 
             is ClearChatClickListener -> {
                 clearChatClickListener = listener
+            }
+
+            is ScrollToNextMessageClickListener -> {
+                scrollToNextMessageClickListener = listener
+            }
+            is ScrollToPreviousMessageClickListener -> {
+                scrollToPreviousMessageClickListener = listener
             }
         }
     }

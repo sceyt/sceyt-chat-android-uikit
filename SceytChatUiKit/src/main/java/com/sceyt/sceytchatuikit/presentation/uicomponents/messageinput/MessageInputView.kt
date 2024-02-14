@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.Toast
@@ -260,6 +261,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         btnClearChat.setOnClickListener {
             clickListeners.onClearChatClick()
+        }
+
+        layoutInputSearchResult.icDown.setOnClickListener {
+            clickListeners.onScrollToNextMessageClick()
+        }
+
+        layoutInputSearchResult.icUp.setOnClickListener {
+            clickListeners.onScrollToPreviousMessageClick()
         }
     }
 
@@ -620,7 +629,18 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun getEventListeners() = eventListeners
 
-    fun setInputActionCallback(callback: MessageInputActionCallback) {
+    internal fun onSearchMessagesResult(data: SearchResult) {
+        with(binding.layoutInputSearchResult) {
+            val hasResult = data.messages.isNotEmpty()
+            tvResult.text = if (hasResult)
+                "${data.currentIndex + 1} ${getString(R.string.of)} ${data.messages.size}"
+            else getString(R.string.sceyt_not_found)
+            icDown.isEnabled = hasResult && data.currentIndex > 0
+            icUp.isEnabled = hasResult && data.currentIndex < data.messages.size
+        }
+    }
+
+    fun setInputActionsCallback(callback: MessageInputActionCallback) {
         messageInputActionCallback = callback
         messageToSendHelper.setInputActionCallback(callback)
     }
@@ -706,6 +726,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun getComposedMessage() = binding.messageInput.text
 
+    val inputEditText: EditText get() = binding.messageInput
+
     interface MessageInputActionCallback {
         fun sendMessage(message: Message, linkDetails: LinkPreviewDetails?)
         fun sendMessages(message: List<Message>, linkDetails: LinkPreviewDetails?)
@@ -717,6 +739,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         fun mention(query: String)
         fun join()
         fun clearChat()
+        fun scrollToNext()
+        fun scrollToPrev()
     }
 
     fun setClickListener(listener: MessageInputClickListeners) {
@@ -856,7 +880,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onInputStateChanged(sendImage: ImageView, state: InputState) {
-        val iconResId = if (state == Voice) R.drawable.sceyt_ic_voice
+        val iconResId = if (state == Voice) MessageInputViewStyle.voiceRecordIcon
         else MessageInputViewStyle.sendMessageIcon
         binding.icSendMessage.setImageResource(iconResId)
     }
@@ -867,6 +891,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onClearChatClick() {
         messageInputActionCallback?.clearChat()
+    }
+
+    override fun onScrollToNextMessageClick() {
+        messageInputActionCallback?.scrollToNext()
+    }
+
+    override fun onScrollToPreviousMessageClick() {
+        messageInputActionCallback?.scrollToPrev()
     }
 
     override fun onMultiselectModeListener(isMultiselectMode: Boolean) {
@@ -886,6 +918,28 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     linkPreviewFragment.showLinkDetails(it)
                 }
                 btnClearChat.animateToGone(150)
+            }
+        }
+    }
+
+    override fun onSearchModeListener(inSearchMode: Boolean) {
+        with(binding) {
+            layoutInput.isInvisible = inSearchMode
+            rvAttachments.isVisible = !inSearchMode && allAttachments.isNotEmpty()
+            if (inSearchMode) {
+                hideAndStopVoiceRecorder()
+                closeReplyOrEditView()
+                closeLinkDetailsView()
+                onSearchMessagesResult(SearchResult( ))
+                layoutInputSearchResult.root.animateToVisible(150)
+            } else {
+                replyMessage?.let { replyMessage(it, initWithDraft = true) }
+                editMessage?.let { editMessage(it, initWithDraft = true) }
+                linkDetails?.let {
+                    binding.layoutLinkPreview.isVisible = true
+                    linkPreviewFragment.showLinkDetails(it)
+                }
+                layoutInputSearchResult.root.animateToGone(150)
             }
         }
     }

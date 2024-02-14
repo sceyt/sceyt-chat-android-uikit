@@ -78,7 +78,7 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
     }
 
     enum class ClickActionsEnum {
-        Members, Admins
+        Members, Admins, SearchMessages
     }
 
     private fun SceytFragmentInfoMembersByRoleBinding.setupStyle() {

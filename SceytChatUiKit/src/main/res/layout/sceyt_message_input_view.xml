@@ -151,14 +151,20 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <include
+        android:id="@+id/layoutInputSearchResult"
+        layout="@layout/sceyt_layout_input_search_result"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <include
         android:id="@+id/layoutCloseInput"
         layout="@layout/sceyt_disable_message_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

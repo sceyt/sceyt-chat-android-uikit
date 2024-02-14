@@ -7,6 +7,7 @@ import androidx.annotation.MenuRes
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 
 sealed interface HeaderUIElementsListener {
 
@@ -33,7 +34,12 @@ sealed interface HeaderUIElementsListener {
         fun onInitToolbarActionsMenu(vararg messages: SceytMessage, menu: Menu)
     }
 
+    fun interface ShowSearchMessage : HeaderUIElementsListener {
+        fun showSearchMessagesBar(event: MessageCommandEvent.SearchMessages)
+    }
+
+
     /** Use this if you want to implement all callbacks */
     interface ElementsListeners : TitleListener, SubTitleListener, AvatarListener,
-            ActionsMenuListener, ToolbarActionsVisibilityListener
+            ActionsMenuListener, ToolbarActionsVisibilityListener, ShowSearchMessage
 }

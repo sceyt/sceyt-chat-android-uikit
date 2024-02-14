@@ -23,6 +23,10 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
 
     messageActionBridge.setHeaderView(headerView)
 
+    headerView.setSearchQueryChangeListener {
+        searchMessages(it)
+    }
+
     if (replyInThread)
         headerView.setReplyMessage(channel, replyInThreadMessage)
     else
