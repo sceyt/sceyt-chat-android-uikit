@@ -47,12 +47,6 @@ object MessageEventsObserver : MessageEventManger.AllEventManagers {
     val onOutgoingMessageFlow = onOutGoingMessageFlow_.asSharedFlow()
 
 
-    private val onOutGoingMessageStatusFlow_: MutableSharedFlow<Pair<Long, SceytMessage>> = MutableSharedFlow(
-        extraBufferCapacity = 5,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val onOutGoingMessageStatusFlow = onOutGoingMessageStatusFlow_.asSharedFlow()
-
-
     init {
         ChatClient.getClient().addMessageListener(TAG, object : MessageListener {
 
@@ -124,9 +118,5 @@ object MessageEventsObserver : MessageEventManger.AllEventManagers {
 
     suspend fun emitOutgoingMessage(sceytMessage: SceytMessage) {
         onOutGoingMessageFlow_.emit(sceytMessage)
-    }
-
-    fun emitOutgoingMessageSent(channelId: Long, message: SceytMessage) {
-        onOutGoingMessageStatusFlow_.tryEmit(Pair(channelId, message))
     }
 }
