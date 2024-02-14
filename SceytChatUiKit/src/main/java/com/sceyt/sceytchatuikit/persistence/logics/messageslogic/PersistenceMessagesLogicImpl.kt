@@ -836,6 +836,11 @@ internal class PersistenceMessagesLogicImpl(
 
         return if (pendingMessage.isNotEmpty()) {
             list.addAll(pendingMessage)
+            SceytLog.i(TAG, "getPendingMessagesAndAddToList: pendingMessages ${
+                pendingMessage.map {
+                    "tid-> ${it.messageEntity.tid}, id-> ${it.messageEntity.id}, status-> ${it.messageEntity.deliveryStatus}, body-> ${it.messageEntity.body}"
+                }
+            }")
             list.sortedBy { it.messageEntity.createdAt }
         } else list
     }
@@ -865,7 +870,7 @@ internal class PersistenceMessagesLogicImpl(
             messageDao.insertMessagesIgnored(parentMessagesDb)
 
         // Update users
-        list.filter { it.incoming && it.user != null }.map { it.user!! }.toSet().let { users ->
+        list.filter { it.incoming && it.user != null }.mapNotNull { it.user }.toSet().let { users ->
             if (users.isNotEmpty())
                 usersDb.addAll(users.map { it.toUserEntity() })
         }
@@ -935,7 +940,7 @@ internal class PersistenceMessagesLogicImpl(
         when (response) {
             is SceytResponse.Success -> {
                 response.data?.let { data ->
-                    SceytLog.i("onMarkerResponse","send $status, ${ids.toList()}, in response ${data.messageIds}")
+                    SceytLog.i("onMarkerResponse", "send $status, ${ids.toList()}, in response ${data.messageIds}")
                     val deliveryStatus = status.toDeliveryStatus()
                     val responseIds = data.messageIds.toList()
                     messageDao.updateMessagesStatus(channelId, responseIds, deliveryStatus)
