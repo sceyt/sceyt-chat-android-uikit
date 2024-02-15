@@ -12,9 +12,11 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.sceytchatuikit.sceytstyles.ChannelStyle
@@ -51,7 +53,10 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: SceytD
         DeliveryStatus.Sent -> MessagesStyle.messageStatusSentIcon
         DeliveryStatus.Received -> MessagesStyle.messageStatusDeliveredIcon
         DeliveryStatus.Displayed -> MessagesStyle.messageStatusReadIcon
-        else -> null
+        else -> {
+            SceytLog.i(TAG, "Unknown delivery status: $deliveryStatus for message: $id, tid: $tid, body: $body")
+            null
+        }
     }
     iconResId?.let {
         dateStatusView.setDateAndStatusIcon(dateText, dateStatusView.context.getCompatDrawable(it), edited, checkIgnoreHighlight(deliveryStatus))
