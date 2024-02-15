@@ -743,6 +743,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.enableDisableSwipeToReply(enabledActions)
     }
 
+    fun startSearchMessages() {
+        messageCommandEventListener?.invoke(MessageCommandEvent.SearchMessages(true))
+    }
+
     override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
         super.onWindowFocusChanged(hasWindowFocus)
         onWindowFocusChangeListener?.invoke(hasWindowFocus)

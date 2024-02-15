@@ -3,7 +3,13 @@ package com.sceyt.sceytchatuikit.extensions
 import android.os.Handler
 import android.os.Looper
 import android.view.ViewTreeObserver
-import androidx.recyclerview.widget.*
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSmoothScroller
+import androidx.recyclerview.widget.PagerSnapHelper
+import androidx.recyclerview.widget.RecyclerView
+import kotlin.math.abs
+
 
 fun RecyclerView.isItemCompletelyDisplaying(position: Int): Boolean {
     if (adapter?.itemCount != 0) {
@@ -111,15 +117,36 @@ fun RecyclerView.lastVisibleItemPosition(): Int {
 }
 
 fun RecyclerView.centerVisibleItemPosition(): Int {
-    return if (adapter?.itemCount != 0) {
-        val firstPosition = (layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
-        val lastPosition = (layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
-        if (firstPosition == RecyclerView.NO_POSITION || lastPosition == RecyclerView.NO_POSITION)
-            return RecyclerView.NO_POSITION
+    val layoutManager = layoutManager as LinearLayoutManager
+    val recyclerViewCenterX = width / 2
+    val recyclerViewCenterY = height / 2
 
-        (firstPosition + lastPosition) / 2
-    } else
-        RecyclerView.NO_POSITION
+    var closestPosition = RecyclerView.NO_POSITION
+    var closestDistance = Int.MAX_VALUE
+
+    for (i in layoutManager.findFirstVisibleItemPosition()..layoutManager.findLastVisibleItemPosition()) {
+        val itemView = layoutManager.findViewByPosition(i)
+        if (itemView != null) {
+            val itemViewWidth = itemView.width
+            val itemViewHeight = itemView.height
+            val itemViewLeft = itemView.left
+            val itemViewTop = itemView.top
+
+            // Calculate the center points of the itemView
+            val itemViewCenterX = itemViewLeft + itemViewWidth / 2
+            val itemViewCenterY = itemViewTop + itemViewHeight / 2
+
+            // Calculate the distance of the itemView's center to the RecyclerView's center
+            val distance = (abs((recyclerViewCenterX - itemViewCenterX).toDouble()) + abs((recyclerViewCenterY - itemViewCenterY).toDouble())).toInt()
+
+            // Update the closest item if this item is closer
+            if (distance < closestDistance) {
+                closestDistance = distance
+                closestPosition = i
+            }
+        }
+    }
+    return closestPosition
 }
 
 fun RecyclerView.checkIsNotVisibleItem(position: Int): Boolean {

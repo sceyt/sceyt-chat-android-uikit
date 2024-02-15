@@ -469,12 +469,12 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     //Click listeners
     override fun onAvatarClick(view: View) {
         if (::channel.isInitialized)
-            ConversationInfoActivity.newInstance(context, channel)
+            ConversationInfoActivity.launch(context, channel)
     }
 
     override fun onToolbarClick(view: View) {
         if (::channel.isInitialized)
-            ConversationInfoActivity.newInstance(context, channel)
+            ConversationInfoActivity.launch(context, channel)
     }
 
     override fun onBackClick(view: View) {

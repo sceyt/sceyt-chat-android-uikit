@@ -1,9 +1,11 @@
 package com.sceyt.chat.demo.presentation.conversation
 
+import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -37,6 +39,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.Con
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eventlisteners.HeaderEventsListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity.Companion.ACTION_SEARCH_MESSAGES
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -167,13 +170,22 @@ open class ConversationActivity : AppCompatActivity() {
 
         setCustomClickListener(object : HeaderClickListenersImpl(this) {
             override fun onAvatarClick(view: View) {
-                CustomConversationInfoActivity.newInstance(this@ConversationActivity, channel)
+                CustomConversationInfoActivity.startWithLauncher(this@ConversationActivity, channel, conversationInfoLauncher)
             }
 
             override fun onToolbarClick(view: View) {
-                CustomConversationInfoActivity.newInstance(this@ConversationActivity, channel)
+                CustomConversationInfoActivity.startWithLauncher(this@ConversationActivity, channel, conversationInfoLauncher)
             }
         })
+    }
+
+    val conversationInfoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.getBooleanExtra(ACTION_SEARCH_MESSAGES, true)?.let { search ->
+                if (search)
+                    binding.messagesListView.startSearchMessages()
+            }
+        }
     }
 
     private fun MessagesListView.initConversationView() {

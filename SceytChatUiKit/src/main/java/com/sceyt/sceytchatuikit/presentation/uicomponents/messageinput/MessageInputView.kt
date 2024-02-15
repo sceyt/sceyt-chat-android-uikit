@@ -113,8 +113,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private val messageToSendHelper by lazy { MessageToSendHelper(context) }
     private val linkDetailsProvider by lazy { SingleLinkDetailsProvider(context, getScope()) }
     private val audioRecorderHelper: AudioRecorderHelper by lazy { AudioRecorderHelper(getScope(), context) }
-
     var isInputHidden = false
+        private set
+    var isInMultiSelectMode = false
+        private set
+    var isInSearchMode = false
         private set
     var editMessage: SceytMessage? = null
         private set
@@ -402,7 +405,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun determineInputState() {
-        if (!isEnabledInput())
+        if (!isEnabledInput() || isInMultiSelectMode || isInSearchMode)
             return
 
         val showVoiceIcon = binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
@@ -636,7 +639,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 "${data.currentIndex + 1} ${getString(R.string.of)} ${data.messages.size}"
             else getString(R.string.sceyt_not_found)
             icDown.isEnabled = hasResult && data.currentIndex > 0
-            icUp.isEnabled = hasResult && data.currentIndex < data.messages.size
+            icUp.isEnabled = hasResult && data.currentIndex < data.messages.lastIndex
         }
     }
 
@@ -903,6 +906,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onMultiselectModeListener(isMultiselectMode: Boolean) {
         with(binding) {
+            isInMultiSelectMode = isMultiselectMode
             layoutInput.isInvisible = isMultiselectMode
             rvAttachments.isVisible = !isMultiselectMode && allAttachments.isNotEmpty()
             if (isMultiselectMode) {
@@ -924,6 +928,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onSearchModeListener(inSearchMode: Boolean) {
         with(binding) {
+            isInSearchMode = inSearchMode
             layoutInput.isInvisible = inSearchMode
             rvAttachments.isVisible = !inSearchMode && allAttachments.isNotEmpty()
             if (inSearchMode) {
