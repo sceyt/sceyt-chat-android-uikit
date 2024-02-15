@@ -110,6 +110,18 @@ fun RecyclerView.lastVisibleItemPosition(): Int {
     return RecyclerView.NO_POSITION
 }
 
+fun RecyclerView.centerVisibleItemPosition(): Int {
+    return if (adapter?.itemCount != 0) {
+        val firstPosition = (layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
+        val lastPosition = (layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
+        if (firstPosition == RecyclerView.NO_POSITION || lastPosition == RecyclerView.NO_POSITION)
+            return RecyclerView.NO_POSITION
+
+        (firstPosition + lastPosition) / 2
+    } else
+        RecyclerView.NO_POSITION
+}
+
 fun RecyclerView.checkIsNotVisibleItem(position: Int): Boolean {
     return ((layoutManager as LinearLayoutManager).findFirstVisibleItemPosition() > position
             || (layoutManager as LinearLayoutManager).findLastVisibleItemPosition() < position)

@@ -7,6 +7,7 @@ import androidx.lifecycle.asFlow
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
+import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Marker
@@ -32,6 +33,7 @@ import com.sceyt.sceytchatuikit.data.models.getLoadKey
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
+import com.sceyt.sceytchatuikit.extensions.centerVisibleItemPosition
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.isResumed
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -50,28 +52,14 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MAX_MULTISELECT_MESSAGES_COUNT
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Collections
-import kotlin.collections.any
-import kotlin.collections.arrayListOf
-import kotlin.collections.filterIsInstance
-import kotlin.collections.forEach
-import kotlin.collections.hashMapOf
-import kotlin.collections.isNotEmpty
-import kotlin.collections.isNullOrEmpty
-import kotlin.collections.map
-import kotlin.collections.minus
-import kotlin.collections.mutableSetOf
 import kotlin.collections.set
-import kotlin.collections.toList
-import kotlin.collections.toLongArray
-import kotlin.collections.toMutableSet
-import kotlin.collections.toSet
-import kotlin.collections.toTypedArray
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
@@ -223,6 +211,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     checkToHildeLoadingMoreItemByLoadType(response.loadType)
 
                 checkToScrollAfterResponse(response)
+
+                loadPrevOffsetId = response.data.data?.firstOrNull()?.id ?: 0
+                loadNextOffsetId = response.data.data?.lastOrNull()?.id ?: 0
             }
 
             is SceytResponse.Error -> checkToHildeLoadingMoreItemByLoadType(response.loadType)
@@ -234,6 +225,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             is PaginationResponse.DBResponse -> initPaginationDbResponse(response)
             is PaginationResponse.ServerResponse -> initPaginationServerResponse(response)
             else -> return
+        }
+    }
+
+    fun syncNearCenterVisibleMessageIfNeeded() {
+        if (!needSyncMessagesWhenScrollStateIdle) return
+        val centerPosition = messagesListView.getMessagesRecyclerView().centerVisibleItemPosition()
+        if (centerPosition == RecyclerView.NO_POSITION) return
+        val item = messagesListView.getData()?.getOrNull(centerPosition)
+        if (item is MessageListItem.MessageItem && lastSyncCenterOffsetId != item.message.id) {
+            lastSyncCenterOffsetId = item.message.id
+            syncCenteredMessage(messageId = item.message.id)
         }
     }
 
@@ -288,17 +290,35 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             (message as? MessageListItem.MessageItem)?.let {
                 syncConversationMessagesAfter(it.message.id)
             }
+            // Sync messages near center visible message
+            syncNearCenterVisibleMessageIfNeeded()
+        } else {
+            lastSyncCenterOffsetId = 0L
+            needSyncMessagesWhenScrollStateIdle = true
         }
     }.launchIn(viewModelScope)
+
+    val pendingMessagesToAdd = mutableSetOf<SceytMessage>()
 
     MessagesCache.messageUpdatedFlow.onEach { data ->
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             data.second.forEach {
                 val message = initMessageInfoData(it)
                 withContext(Dispatchers.Main) {
-                    if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
+                    val found = if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
                         messagesListView.messageEditedOrDeleted(message)
                     else messagesListView.updateMessage(message)
+
+                    if (!found) {
+                        pendingMessagesToAdd.add(message)
+                        debounceMessagesToAdd.submit {
+                            val items = ArrayList(messagesListView.getData() ?: arrayListOf())
+                            items.addAll(pendingMessagesToAdd.map { sceytMessage -> MessageListItem.MessageItem(sceytMessage) })
+                            items.sortBy { item -> item.getMessageCreatedAt() }
+                            messagesListView.setMessagesList(items)
+                            pendingMessagesToAdd.clear()
+                        }
+                    }
                 }
             }
         }
@@ -328,6 +348,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 messagesListView.getMessageIndexedById(lastMsgId)?.let {
                     withContext(Dispatchers.Main) {
                         messagesListView.scrollToLastMessage()
+                        lifecycleOwner.lifecycleScope.launch {
+                            delay(200)
+                            syncNearCenterVisibleMessageIfNeeded()
+                        }
                     }
                 } ?: run {
                     loadNewestMessages(LoadKeyData(key = LoadKeyType.ScrollToLastMessage.longValue))
@@ -568,10 +592,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         onReactionEvent(it)
     }
 
+    messagesListView.setScrollStateChangeListener {
+        if (it == RecyclerView.SCROLL_STATE_IDLE)
+            syncNearCenterVisibleMessageIfNeeded()
+    }
+
     messagesListView.setNeedLoadPrevMessagesListener { offset, message ->
         if (canLoadPrev()) {
             val messageId = (message as? MessageListItem.MessageItem)?.message?.id ?: 0
             loadPrevMessages(messageId, offset)
+
+            if (messageId != loadPrevOffsetId)
+                needSyncMessagesWhenScrollStateIdle = true
         }
     }
 
@@ -579,6 +611,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         if (canLoadNext()) {
             val messageId = (message as? MessageListItem.MessageItem)?.message?.id ?: 0
             loadNextMessages(messageId, offset)
+
+            if (messageId != loadNextOffsetId)
+                needSyncMessagesWhenScrollStateIdle = true
         }
     }
 

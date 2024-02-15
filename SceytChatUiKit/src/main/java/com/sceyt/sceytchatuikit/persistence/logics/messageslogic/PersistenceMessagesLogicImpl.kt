@@ -211,6 +211,19 @@ internal class PersistenceMessagesLogicImpl(
         awaitClose()
     }
 
+    override suspend fun syncNearMessages(conversationId: Long, messageId: Long,
+                                          replyInThread: Boolean): SceytResponse<List<SceytMessage>> {
+
+        val response = messagesRepository.getNearMessages(conversationId,
+            messageId, replyInThread, 50)
+        if (response is SceytResponse.Success) {
+            val messages = response.data
+            val updatedMessages = saveMessagesToDb(messages)
+            messagesCache.addAll(conversationId, updatedMessages, checkDifference = true, checkDiffAndNotifyUpdate = true)
+        }
+        return response
+    }
+
     override suspend fun onSyncedChannels(channels: List<SceytChannel>) {
         channels.forEach {
             if (it.messagesClearedAt > 0) {
@@ -702,7 +715,7 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
 
-        messagesCache.addAll(channelId, messages, false)
+        messagesCache.addAll(channelId, messages, checkDifference = false, checkDiffAndNotifyUpdate = false)
 
         return PaginationResponse.DBResponse(messages, loadKey, offset, hasNext, hasPrev, loadType)
     }
@@ -767,7 +780,7 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         val updatedMessages = saveMessagesToDb(messages)
-        hasDiff = messagesCache.addAll(channelId, updatedMessages, true)
+        hasDiff = messagesCache.addAll(channelId, updatedMessages, checkDifference = true, checkDiffAndNotifyUpdate = false)
 
         if (forceHasDiff) hasDiff = true
 

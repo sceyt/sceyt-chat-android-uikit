@@ -106,10 +106,17 @@ class MessageListViewModel(
     private val fileTransferService: FileTransferService by inject()
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
+    internal val debounceMessagesToAdd by lazy { DebounceHelper(200, viewModelScope) }
     internal val messageActionBridge by lazy { MessageActionBridge() }
     internal val placeToSavePathsList = mutableSetOf<String>()
     internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
     private var showSenderAvatarAndNameIfNeeded = true
+
+    // Pagination sync
+    internal var needSyncMessagesWhenScrollStateIdle = false
+    internal var loadPrevOffsetId = 0L
+    internal var loadNextOffsetId = 0L
+    internal var lastSyncCenterOffsetId = 0L
 
     private val isGroup = channel.isGroup
 
@@ -261,6 +268,12 @@ class MessageListViewModel(
                     initPaginationResponse(response)
                 }
             }
+        }
+    }
+
+    fun syncCenteredMessage(messageId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            persistenceMessageMiddleWare.syncNearMessages(conversationId, messageId, replyInThread)
         }
     }
 
