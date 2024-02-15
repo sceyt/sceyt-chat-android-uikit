@@ -418,7 +418,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     }
 
     protected open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
-        ConversationInfoActivity.newInstance(requireContext(), sceytChannel)
+        ConversationInfoActivity.launch(requireContext(), sceytChannel)
     }
 
     protected open fun onPageStateChange(pageState: PageState) {

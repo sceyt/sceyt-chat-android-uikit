@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmode
 
 import android.app.Application
 import android.text.Editable
-import android.util.Log
 import android.view.Menu
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -167,10 +166,13 @@ class MessageListViewModel(
     internal val onReplyMessageCommandLiveData: LiveData<SceytMessage> = _onReplyMessageCommandLiveData
     private val _onScrollToLastMessageLiveData = MutableLiveData<SceytMessage?>()
     internal val onScrollToLastMessageLiveData: LiveData<SceytMessage?> = _onScrollToLastMessageLiveData
-    private val _onScrollToMessageHighlightLiveData = MutableLiveData<SceytMessage>()
-    internal val onScrollToMessageHighlightLiveData: LiveData<SceytMessage> = _onScrollToMessageHighlightLiveData
+    private val _onScrollToReplyMessageLiveData = MutableLiveData<SceytMessage>()
+    internal val onScrollToReplyMessageLiveData: LiveData<SceytMessage> = _onScrollToReplyMessageLiveData
+    private val _onScrollToSearchMessageLiveData = MutableLiveData<SceytMessage>()
+    internal val onScrollToSearchMessageLiveData: LiveData<SceytMessage> = _onScrollToSearchMessageLiveData
 
     // Search messages
+    internal val isSearchingMessageToScroll = AtomicBoolean(false)
     private val isLoadingNextSearchMessages = AtomicBoolean(false)
     private var _searchResult = MutableLiveData<SearchResult>()
     var searchResult = _searchResult.asLiveData()
@@ -294,7 +296,7 @@ class MessageListViewModel(
                 it.data?.let { messages ->
                     val reversed = messages.reversed()
                     _searchResult.postValue(SearchResult(0, reversed, resp.hasNext))
-                    _onScrollToMessageHighlightLiveData.postValue(reversed.firstOrNull()
+                    _onScrollToSearchMessageLiveData.postValue(reversed.firstOrNull()
                             ?: return@launch)
                 }
             }
@@ -371,7 +373,7 @@ class MessageListViewModel(
     }
 
     fun prepareToScrollToReplyMessage(message: SceytMessage) {
-        _onScrollToMessageHighlightLiveData.postValue(message.parentMessage ?: return)
+        _onScrollToReplyMessageLiveData.postValue(message.parentMessage ?: return)
     }
 
     fun prepareToPauseOrResumeUpload(item: FileListItem) {
@@ -705,6 +707,7 @@ class MessageListViewModel(
     }
 
     internal fun scrollToSearchMessage(isPrev: Boolean) {
+        if (isSearchingMessageToScroll.get()) return
         val searchResult = searchResult.value ?: return
         val messages = searchResult.messages
         val nextIndex = if (isPrev) {
@@ -712,8 +715,10 @@ class MessageListViewModel(
         } else searchResult.currentIndex - 1
         if (nextIndex < 0 || nextIndex >= messages.size)
             return
+
+        isSearchingMessageToScroll.set(true)
         _searchResult.postValue(searchResult.copy(currentIndex = nextIndex))
-        _onScrollToMessageHighlightLiveData.postValue(messages[nextIndex])
+        _onScrollToSearchMessageLiveData.postValue(messages[nextIndex])
 
         if (searchResult.hasNext && messages.size - nextIndex < MESSAGES_LOAD_SIZE / 2) {
             loadNextSearchedMessages()

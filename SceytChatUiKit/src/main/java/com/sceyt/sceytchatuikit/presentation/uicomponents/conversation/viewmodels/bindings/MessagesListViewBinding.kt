@@ -61,6 +61,7 @@ import kotlinx.coroutines.withContext
 import java.util.Collections
 import kotlin.collections.set
 
+
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
@@ -157,8 +158,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 messagesListView.scrollToLastMessage()
             }
 
-            LoadKeyType.ScrollToMessageById.longValue -> {
+            LoadKeyType.ScrollToReplyMessage.longValue -> {
                 messagesListView.scrollToMessage(loadKey.value, true)
+            }
+
+            LoadKeyType.ScrollToSearchMessageBy.longValue -> {
+                messagesListView.scrollToMessage(loadKey.value, true)
+                isSearchingMessageToScroll.set(false)
             }
         }
     }
@@ -202,9 +208,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         hasPrev = response.hasPrev)
 
                     if (response.dbResultWasEmpty) {
-                        if (response.loadType == LoadNext || response.loadType == LoadNewest)
-                            messagesListView.addNextPageMessages(newMessages)
-                        else messagesListView.addPrevPageMessages(newMessages)
+                        if (response.loadType == LoadNear)
+                            messagesListView.setMessagesList(newMessages, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
+                        else {
+                            if (response.loadType == LoadNext || response.loadType == LoadNewest)
+                                messagesListView.addNextPageMessages(newMessages)
+                            else messagesListView.addPrevPageMessages(newMessages)
+                        }
                     } else
                         messagesListView.setMessagesList(newMessages, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
                 } else
@@ -361,18 +371,37 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    onScrollToMessageHighlightLiveData.observe(lifecycleOwner) {
+    onScrollToReplyMessageLiveData.observe(lifecycleOwner) {
         val messageId = it.id
         viewModelScope.launch(Dispatchers.Default) {
             messagesListView.getMessageIndexedById(messageId)?.let {
                 withContext(Dispatchers.Main) {
                     it.second.highlighted = true
                     messagesListView.scrollToPositionAndHighlight(it.first, true)
+                    isSearchingMessageToScroll.set(false)
                 }
             } ?: run {
                 loadNearMessages(messageId, LoadKeyData(
-                    key = LoadKeyType.ScrollToMessageById.longValue,
+                    key = LoadKeyType.ScrollToReplyMessage.longValue,
                     value = messageId), true)
+            }
+        }
+    }
+
+    onScrollToSearchMessageLiveData.observe(lifecycleOwner) {
+        val messageId = it.id
+        viewModelScope.launch(Dispatchers.Default) {
+            messagesListView.getMessageIndexedById(messageId)?.let {
+                withContext(Dispatchers.Main) {
+                    it.second.highlighted = true
+                    messagesListView.scrollToPositionAndHighlight(it.first, true)
+                    delay(100) // await anim end
+                    isSearchingMessageToScroll.set(false)
+                }
+            } ?: run {
+                loadNearMessages(messageId, LoadKeyData(
+                    key = LoadKeyType.ScrollToSearchMessageBy.longValue,
+                    value = messageId), false)
             }
         }
     }
@@ -584,7 +613,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     val response = persistenceChanelMiddleWare.findOrCreateDirectChannel(user)
                     if (response is SceytResponse.Success)
                         response.data?.let {
-                            ConversationInfoActivity.newInstance(event.view.context, response.data)
+                            ConversationInfoActivity.launch(event.view.context, response.data)
                         }
                 }
             }

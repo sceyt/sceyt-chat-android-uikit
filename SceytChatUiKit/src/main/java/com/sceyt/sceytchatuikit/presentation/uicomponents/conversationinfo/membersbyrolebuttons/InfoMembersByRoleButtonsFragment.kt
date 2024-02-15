@@ -53,6 +53,10 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
         binding.admins.setOnClickListener {
             buttonsListener?.invoke(ClickActionsEnum.Admins)
         }
+
+        binding.searchMessages.setOnClickListener {
+            buttonsListener?.invoke(ClickActionsEnum.SearchMessages)
+        }
     }
 
     open fun setDetails(channel: SceytChannel) {
@@ -61,7 +65,8 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
             val isOwnerOrAdmin = myRole == RoleTypeEnum.Owner.toString() || myRole == RoleTypeEnum.Admin.toString()
 
             if (channel.isDirect() || (channel.isPublic() && !isOwnerOrAdmin)) {
-                root.isVisible = false
+                groupChannelAdmins.isVisible = false
+                groupChannelMembers.isVisible = false
                 return
             }
 
@@ -69,7 +74,6 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
                 getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
 
             groupChannelAdmins.isVisible = isOwnerOrAdmin
-            root.isVisible = true
         }
     }
 
