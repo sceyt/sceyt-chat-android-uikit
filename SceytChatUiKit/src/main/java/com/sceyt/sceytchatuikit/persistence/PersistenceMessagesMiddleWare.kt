@@ -33,6 +33,9 @@ interface PersistenceMessagesMiddleWare {
     suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                            messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
 
+    suspend fun syncNearMessages(conversationId: Long,  messageId: Long,
+                                 replyInThread: Boolean): SceytResponse<List<SceytMessage>>
+
     suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
     suspend fun sendMessage(channelId: Long, message: Message)
     suspend fun sendMessages(channelId: Long, messages: List<Message>)

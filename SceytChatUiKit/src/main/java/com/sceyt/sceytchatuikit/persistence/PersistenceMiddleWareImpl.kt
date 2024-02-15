@@ -302,6 +302,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.syncMessagesAfterMessageId(conversationId, replyInThread, messageId)
     }
 
+    override suspend fun syncNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean): SceytResponse<List<SceytMessage>> {
+        return messagesLogic.syncNearMessages(conversationId, messageId, replyInThread)
+    }
+
     override suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult> {
         return messagesLogic.sendMessageAsFlow(channelId, message)
     }

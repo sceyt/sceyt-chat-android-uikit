@@ -40,6 +40,8 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private var viewHolderFactory = MessageViewHolderFactory(context)
     private var messageSwipeController: MessageSwipeController? = null
 
+    private var scrollStateChangeListener: ((Int) -> Unit)? = null
+
     // Loading prev properties
     private var needLoadPrevMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
     private var richToStartInvoked = false
@@ -78,10 +80,12 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     private fun addOnScrollListener() {
-        addRVScrollListener { _: RecyclerView, _: Int, dy: Int ->
+        addRVScrollListener(onScrolled =  { _: RecyclerView, _: Int, dy: Int ->
             checkNeedLoadPrev(dy)
             checkNeedLoadNext(dy)
-        }
+        }, onScrollStateChanged = { _, newState ->
+            scrollStateChangeListener?.invoke(newState)
+        })
 
         addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@addOnLayoutChangeListener
@@ -245,6 +249,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             }
             checkScrollToEnd(items.size, outGoing)
         }
+    }
+
+    fun setScrollStateChangeListener(listener: (Int) -> Unit){
+        scrollStateChangeListener = listener
     }
 
     fun setNeedLoadPrevMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {

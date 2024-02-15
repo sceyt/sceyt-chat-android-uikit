@@ -385,10 +385,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun updateMessage(message: SceytMessage) {
+    internal fun updateMessage(message: SceytMessage): Boolean {
         SceytLog.i(TAG, "Message updated: id ${message.id}, tid ${message.tid}," +
                 " body ${message.body}, deliveryStatus ${message.deliveryStatus}")
-        for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
+        var found = false
+
+        for ((index, item) in messagesRV.getData()?.withIndex() ?: return false) {
             if (item is MessageItem && item.message.tid == message.tid) {
                 val oldMessage = item.message.clone()
                 Log.i(TAG, "${oldMessage.deliveryStatus}  ${message.deliveryStatus}")
@@ -397,9 +399,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 SceytLog.i(TAG, "Found to update: id ${item.message.id}, tid ${item.message.tid}," +
                         " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${messagesRV.getData()?.size}")
                 updateItem(index, item, diff)
+                found = true
                 break
             }
         }
+        return found
     }
 
     internal fun updateMessageSelection(message: SceytMessage) {
@@ -426,14 +430,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.sortMessages()
     }
 
-    internal fun messageEditedOrDeleted(updateMessage: SceytMessage) {
+    internal fun messageEditedOrDeleted(updateMessage: SceytMessage): Boolean {
+        var found = false
         if (updateMessage.deliveryStatus == DeliveryStatus.Pending && updateMessage.state == MessageState.Deleted) {
             messagesRV.deleteMessageByTid(updateMessage.tid)
             if (messagesRV.isEmpty())
                 pageStateView?.updateState(PageState.StateEmpty())
-            return
+            return true
         }
-        val data = messagesRV.getData() ?: return
+        val data = messagesRV.getData() ?: return false
         data.findIndexed { it is MessageItem && it.message.id == updateMessage.id }?.let {
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
@@ -442,6 +447,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 messagesRV.adapter?.notifyItemChanged(it.first)
             else
                 updateItem(it.first, it.second, oldMessage.diff(message))
+            found = true
         }
 
         // Check reply message to update
@@ -453,6 +459,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 updateItem(it.first, it.second, oldMessage.diff(message))
             }
         }
+        return found
     }
 
     internal fun forceDeleteMessageByTid(tid: Long) {
@@ -565,6 +572,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun setNeedLoadPrevMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setNeedLoadPrevMessagesListener(listener)
+    }
+
+    internal fun setScrollStateChangeListener(listener: (Int) -> Unit) {
+        messagesRV.setScrollStateChangeListener(listener)
     }
 
     internal fun setNeedLoadNextMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
