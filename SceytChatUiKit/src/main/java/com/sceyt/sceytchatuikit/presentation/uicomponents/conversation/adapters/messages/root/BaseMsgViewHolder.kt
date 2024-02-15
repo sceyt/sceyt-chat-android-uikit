@@ -30,7 +30,12 @@ import androidx.core.view.setPadding
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.google.android.flexbox.*
+import com.google.android.flexbox.AlignItems
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexWrap
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
@@ -39,7 +44,20 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplyContainerBinding
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.extensions.dpToPx
+import com.sceyt.sceytchatuikit.extensions.extractLinks
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
+import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
+import com.sceyt.sceytchatuikit.extensions.getStaticLayout
+import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.extensions.isRtl
+import com.sceyt.sceytchatuikit.extensions.isValidEmail
+import com.sceyt.sceytchatuikit.extensions.screenPortraitWidthPx
+import com.sceyt.sceytchatuikit.logger.SceytLog
+import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
@@ -49,7 +67,6 @@ import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytToReplyLineView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionsAdapter
@@ -84,6 +101,12 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     @CallSuper
     open fun bind(item: MessageListItem, diff: MessageDiff) {
+        if (item is MessageListItem.MessageItem) {
+            val m = item.message
+            if (!m.incoming && m.deliveryStatus == DeliveryStatus.Pending) {
+                SceytLog.i("StatusIssueTag", "bind pending: body-> ${m.body} id->${m.id} tid->${m.tid} deliveryStatus->${m.deliveryStatus}")
+            }
+        }
         messageListItem = item
         setMaxWidth()
         if (diff.selectionChanged || diff.statusChanged)

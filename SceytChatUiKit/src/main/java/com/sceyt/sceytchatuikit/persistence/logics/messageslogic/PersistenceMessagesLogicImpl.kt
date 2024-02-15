@@ -220,6 +220,19 @@ internal class PersistenceMessagesLogicImpl(
         awaitClose()
     }
 
+    override suspend fun syncNearMessages(conversationId: Long, messageId: Long,
+                                          replyInThread: Boolean): SceytResponse<List<SceytMessage>> {
+
+        val response = messagesRepository.getNearMessages(conversationId,
+            messageId, replyInThread, 50)
+        if (response is SceytResponse.Success) {
+            val messages = response.data
+            val updatedMessages = saveMessagesToDb(messages)
+            messagesCache.addAll(conversationId, updatedMessages, checkDifference = true, checkDiffAndNotifyUpdate = true)
+        }
+        return response
+    }
+
     override suspend fun onSyncedChannels(channels: List<SceytChannel>) {
         channels.forEach {
             if (it.messagesClearedAt > 0) {
@@ -711,7 +724,7 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
 
-        messagesCache.addAll(channelId, messages, false)
+        messagesCache.addAll(channelId, messages, checkDifference = false, checkDiffAndNotifyUpdate = false)
 
         return PaginationResponse.DBResponse(messages, loadKey, offset, hasNext, hasPrev, loadType)
     }
@@ -776,7 +789,7 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         val updatedMessages = saveMessagesToDb(messages)
-        hasDiff = messagesCache.addAll(channelId, updatedMessages, true)
+        hasDiff = messagesCache.addAll(channelId, updatedMessages, checkDifference = true, checkDiffAndNotifyUpdate = false)
 
         if (forceHasDiff) hasDiff = true
 
@@ -845,6 +858,11 @@ internal class PersistenceMessagesLogicImpl(
 
         return if (pendingMessage.isNotEmpty()) {
             list.addAll(pendingMessage)
+            SceytLog.i(TAG, "getPendingMessagesAndAddToList: pendingMessages ${
+                pendingMessage.map {
+                    "tid-> ${it.messageEntity.tid}, id-> ${it.messageEntity.id}, status-> ${it.messageEntity.deliveryStatus}, body-> ${it.messageEntity.body}"
+                }
+            }")
             list.sortedBy { it.messageEntity.createdAt }
         } else list
     }
@@ -874,7 +892,7 @@ internal class PersistenceMessagesLogicImpl(
             messageDao.insertMessagesIgnored(parentMessagesDb)
 
         // Update users
-        list.filter { it.incoming && it.user != null }.map { it.user!! }.toSet().let { users ->
+        list.filter { it.incoming && it.user != null }.mapNotNull { it.user }.toSet().let { users ->
             if (users.isNotEmpty())
                 usersDb.addAll(users.map { it.toUserEntity() })
         }
