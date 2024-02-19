@@ -56,22 +56,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Collections
-import kotlin.collections.any
-import kotlin.collections.arrayListOf
-import kotlin.collections.filterIsInstance
-import kotlin.collections.forEach
-import kotlin.collections.hashMapOf
-import kotlin.collections.isNotEmpty
-import kotlin.collections.isNullOrEmpty
-import kotlin.collections.map
-import kotlin.collections.minus
-import kotlin.collections.mutableSetOf
 import kotlin.collections.set
-import kotlin.collections.toList
-import kotlin.collections.toLongArray
-import kotlin.collections.toMutableSet
-import kotlin.collections.toSet
-import kotlin.collections.toTypedArray
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
@@ -298,7 +283,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 withContext(Dispatchers.Main) {
                     if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
                         messagesListView.messageEditedOrDeleted(message)
-                    else messagesListView.updateMessage(message)
+                    else {
+                        val foundToUpdate = messagesListView.updateMessage(message)
+                        if (!foundToUpdate)
+                            notFoundMessagesToUpdate[message.tid] = message
+                    }
                 }
             }
         }
@@ -381,17 +370,27 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    onNewOutGoingMessageFlow.onEach {
-        if (hasNext || hasNextDb) return@onEach
+    suspend fun onMessage(message: SceytMessage) {
+        if (hasNext || hasNextDb) return
         val initMessage = mapToMessageListItem(
-            data = arrayListOf(it),
+            data = arrayListOf(message),
             hasNext = false,
             hasPrev = false,
             compareMessage = messagesListView.getLastMessage()?.message)
 
         messagesListView.addNewMessages(*initMessage.toTypedArray())
         messagesListView.updateViewState(PageState.Nothing)
+    }
+
+    onNewOutGoingMessageFlow.onEach {
+        var message = it
+        if (notFoundMessagesToUpdate.containsKey(message.tid))
+            message = notFoundMessagesToUpdate.remove(message.tid) ?: it
+
+        onMessage(message)
     }.launchIn(viewModelScope)
+
+    onNewMessageFlow.onEach(::onMessage).launchIn(viewModelScope)
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
         checkEnableDisableActions(it)
@@ -411,17 +410,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         } else pendingDisplayMsgIds.add(message.id)
     }
 
-    onNewMessageFlow.onEach {
-        if (hasNext || hasNextDb) return@onEach
-        val initMessage = mapToMessageListItem(
-            data = arrayListOf(it),
-            hasNext = false,
-            hasPrev = false,
-            compareMessage = messagesListView.getLastMessage()?.message)
-
-        messagesListView.addNewMessages(*initMessage.toTypedArray())
-        messagesListView.updateViewState(PageState.Nothing)
-    }.launchIn(viewModelScope)
 
     // todo reply in thread
     /*

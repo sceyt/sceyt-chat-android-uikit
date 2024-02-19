@@ -370,10 +370,11 @@ internal class PersistenceMessagesLogicImpl(
     }
 
 
-    private fun sendMessageImpl(channelId: Long, message: Message, isSharing: Boolean, isPendingMessage: Boolean, isUploadedAttachments: Boolean) = callbackFlow {
+    private fun sendMessageImpl(channelId: Long, message: Message, isSharing: Boolean,
+                                isPendingMessage: Boolean, isUploadedAttachments: Boolean) = callbackFlow {
         // If message is pending, we don't need to insert it to db and emit it to UI as outgoing message
         if (!isPendingMessage && !isUploadedAttachments)
-            emitTmpMessageAndStore(channelId, message, this.channel)
+            emitTmpMessageAndStore(channelId, message, channel)
 
         if (checkHasFileAttachments(message) && !isUploadedAttachments) {
             SendAttachmentWorkManager.schedule(context, message.tid, channelId, isSharing = isSharing).await()

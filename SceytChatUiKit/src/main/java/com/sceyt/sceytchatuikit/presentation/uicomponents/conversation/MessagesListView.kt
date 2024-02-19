@@ -385,10 +385,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun updateMessage(message: SceytMessage) {
+    internal fun updateMessage(message: SceytMessage): Boolean {
+        var foundToUpdate = false
         SceytLog.i(TAG, "Message updated: id ${message.id}, tid ${message.tid}," +
                 " body ${message.body}, deliveryStatus ${message.deliveryStatus}")
-        for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
+        for ((index, item) in messagesRV.getData()?.withIndex() ?: return false) {
             if (item is MessageItem && item.message.tid == message.tid) {
                 val oldMessage = item.message.clone()
                 Log.i(TAG, "${oldMessage.deliveryStatus}  ${message.deliveryStatus}")
@@ -397,9 +398,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 SceytLog.i(TAG, "Found to update: id ${item.message.id}, tid ${item.message.tid}," +
                         " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${messagesRV.getData()?.size}")
                 updateItem(index, item, diff)
+                foundToUpdate = true
                 break
             }
         }
+        return foundToUpdate
     }
 
     internal fun updateMessageSelection(message: SceytMessage) {
