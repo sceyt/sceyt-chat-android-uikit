@@ -21,6 +21,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytPagingResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
+import com.sceyt.sceytchatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
@@ -312,7 +313,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.syncMessagesAfterMessageId(conversationId, replyInThread, messageId)
     }
 
-    override suspend fun syncNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean): SceytResponse<List<SceytMessage>> {
+    override suspend fun syncNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean): SyncNearMessagesResult {
         return messagesLogic.syncNearMessages(conversationId, messageId, replyInThread)
     }
 

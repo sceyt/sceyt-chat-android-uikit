@@ -631,22 +631,22 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.getViewHolderFactory().setNeedMediaDataCallback(callBack)
     }
 
-    fun scrollToMessage(msgId: Long, highlight: Boolean) {
+    fun scrollToMessage(msgId: Long, highlight: Boolean, offset: Int = 0) {
         MessagesAdapter.awaitUpdating {
             messagesRV.awaitAnimationEnd {
                 messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == msgId }?.let {
                     if (highlight)
                         it.second.highlighted = true
-                    (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(it.first, 200)
+                    (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(it.first, offset)
                 }
             }
         }
     }
 
-    fun scrollToPositionAndHighlight(position: Int, highlight: Boolean) {
+    fun scrollToPositionAndHighlight(position: Int, highlight: Boolean, offset: Int = 0) {
         MessagesAdapter.awaitUpdating {
             messagesRV.awaitAnimationEnd {
-                (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, 200)
+                (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
                 if (highlight) {
                     messagesRV.awaitToScrollFinish(position, callback = {
                         (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()

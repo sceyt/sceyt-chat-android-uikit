@@ -28,6 +28,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytPagingResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
+import com.sceyt.sceytchatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
@@ -227,18 +228,19 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun syncNearMessages(conversationId: Long, messageId: Long,
-                                          replyInThread: Boolean): SceytResponse<List<SceytMessage>> = withContext(dispatcherIO) {
+                                          replyInThread: Boolean): SyncNearMessagesResult = withContext(dispatcherIO) {
 
         val response = messagesRepository.getNearMessages(
             conversationId,
             messageId, replyInThread, 50
         )
+        var missingMessages = emptyList<SceytMessage>()
         if (response is SceytResponse.Success) {
             val messages = response.data
-            val updatedMessages = saveMessagesToDb(messages, unListAll = true)
-            messagesCache.addAll(conversationId, updatedMessages, checkDifference = true, checkDiffAndNotifyUpdate = true)
+            val updatedMessages = saveMessagesToDb(messages, unListAll = false)
+            missingMessages = messagesCache.updateAllSyncedMessagesAndGetMissing(conversationId, updatedMessages)
         }
-        return@withContext response
+        return@withContext SyncNearMessagesResult(messageId, response, missingMessages)
     }
 
     override suspend fun onSyncedChannels(channels: List<SceytChannel>) = withContext(dispatcherIO) {

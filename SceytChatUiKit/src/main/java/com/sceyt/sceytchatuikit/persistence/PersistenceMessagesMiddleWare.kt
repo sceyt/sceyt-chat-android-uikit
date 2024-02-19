@@ -7,6 +7,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.SceytPagingResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
+import com.sceyt.sceytchatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -39,7 +40,7 @@ interface PersistenceMessagesMiddleWare {
                                            messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
 
     suspend fun syncNearMessages(conversationId: Long,  messageId: Long,
-                                 replyInThread: Boolean): SceytResponse<List<SceytMessage>>
+                                 replyInThread: Boolean): SyncNearMessagesResult
 
     suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
     suspend fun sendMessage(channelId: Long, message: Message)

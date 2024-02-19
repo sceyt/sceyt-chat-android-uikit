@@ -35,7 +35,10 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.centerVisibleItemPosition
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
+import com.sceyt.sceytchatuikit.extensions.findIndexed
+import com.sceyt.sceytchatuikit.extensions.getChildTopByPosition
 import com.sceyt.sceytchatuikit.extensions.isResumed
+import com.sceyt.sceytchatuikit.extensions.isThePositionVisible
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
@@ -324,6 +327,41 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
         }
     }.launchIn(viewModelScope)
+
+    syncCenteredMessageLiveData.observe(lifecycleOwner) { data ->
+        viewModelScope.launch(Dispatchers.Default) {
+            if (data.missingMessages.isNotEmpty()) {
+                val items = ArrayList(messagesListView.getData() ?: arrayListOf())
+
+                items.findIndexed { it is MessageListItem.MessageItem && it.message.id == data.centerMessageId }?.let {
+                    val index = it.first
+
+                    val topOffset = messagesListView.getMessagesRecyclerView().getChildTopByPosition(index)
+
+                    val compareMessage = items.firstOrNull { item ->
+                        item is MessageListItem.MessageItem && item.message.id < data.missingMessages.first().id
+                    }
+
+                    items.addAll(mapToMessageListItem(data = data.missingMessages, hasNext = false, hasPrev = false,
+                        (compareMessage as? MessageListItem.MessageItem)?.message))
+
+                    items.sortBy { item -> item.getMessageCreatedAt() }
+                    val filtered = mutableSetOf(*items.toTypedArray())
+
+                    withContext(Dispatchers.Main) {
+                        messagesListView.setMessagesList(filtered.toList())
+
+                        val position = items.findIndexed { item ->
+                            item is MessageListItem.MessageItem && item.message.id == data.centerMessageId
+                        }?.first ?: return@withContext
+
+                        if (messagesListView.getMessagesRecyclerView().isThePositionVisible(position))
+                            messagesListView.scrollToMessage(data.centerMessageId, false, topOffset)
+                    }
+                }
+            }
+        }
+    }
 
     MessagesCache.messagesClearedFlow.filter { it.first == channel.id }.onEach { pair ->
         val date = pair.second

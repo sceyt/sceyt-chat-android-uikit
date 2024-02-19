@@ -262,3 +262,19 @@ fun DiffUtil.DiffResult.dispatchUpdatesToSafety(recyclerView: RecyclerView) {
         }
     }
 }
+
+fun RecyclerView.getChildTopByPosition( position: Int): Int {
+    val layoutManager = layoutManager
+            ?: return -1
+    val childView = layoutManager.findViewByPosition(position)
+            ?: return -1 // View for the position is not currently laid out or doesn't exist
+    return childView.top
+}
+
+fun RecyclerView.isThePositionVisible(position: Int): Boolean {
+    val layoutManager = layoutManager
+            ?: return false
+    val firstVisiblePosition = (layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
+    val lastVisiblePosition = layoutManager.findLastVisibleItemPosition()
+    return position in firstVisiblePosition..lastVisiblePosition
+}

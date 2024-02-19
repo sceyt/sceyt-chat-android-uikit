@@ -67,6 +67,26 @@ class MessagesCache {
         }
     }
 
+    fun updateAllSyncedMessagesAndGetMissing(channelId: Long, messages: List<SceytMessage>): List<SceytMessage> {
+        synchronized(lock) {
+            val missingMessages = mutableListOf<SceytMessage>()
+            messages.forEach {
+                initMessagePayLoads(channelId, it)
+                val old = getMessageByTid(channelId, it.tid)
+                val hasDiff = old?.diffContent(it)?.hasDifference() ?: false
+                if (hasDiff)
+                    emitMessageUpdated(channelId, it)
+
+                updateMessage(channelId, it, false)
+
+                if (old == null)
+                    missingMessages.add(it)
+            }
+
+            return missingMessages
+        }
+    }
+
     fun add(channelId: Long, message: SceytMessage) {
         synchronized(lock) {
             putAndCheckHasDiff(channelId, false, true, message)

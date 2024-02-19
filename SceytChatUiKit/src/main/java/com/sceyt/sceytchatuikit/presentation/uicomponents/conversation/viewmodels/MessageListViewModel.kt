@@ -27,6 +27,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytPagingResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
@@ -110,11 +111,10 @@ class MessageListViewModel(
     private val fileTransferService: FileTransferService by inject()
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
-    internal val debounceMessagesToAdd by lazy { DebounceHelper(200, viewModelScope) }
     internal val messageActionBridge by lazy { MessageActionBridge() }
     internal val placeToSavePathsList = mutableSetOf<String>()
     internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
-    internal val notFoundMessagesToUpdate  by lazy { mutableMapOf<Long, SceytMessage>() }
+    internal val notFoundMessagesToUpdate by lazy { mutableMapOf<Long, SceytMessage>() }
     private var showSenderAvatarAndNameIfNeeded = true
 
     // Pagination sync
@@ -142,6 +142,9 @@ class MessageListViewModel(
 
     private val _onChannelMemberAddedOrKickedLiveData = MutableLiveData<SceytChannel>()
     val onChannelMemberAddedOrKickedLiveData: LiveData<SceytChannel> = _onChannelMemberAddedOrKickedLiveData
+
+    private val _syncCenteredMessageLiveData = MutableLiveData<SyncNearMessagesResult>()
+    val syncCenteredMessageLiveData: LiveData<SyncNearMessagesResult> = _syncCenteredMessageLiveData
 
 
     // Message events
@@ -286,7 +289,8 @@ class MessageListViewModel(
 
     fun syncCenteredMessage(messageId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.syncNearMessages(conversationId, messageId, replyInThread)
+            val response = persistenceMessageMiddleWare.syncNearMessages(conversationId, messageId, replyInThread)
+            _syncCenteredMessageLiveData.postValue(response)
         }
     }
 
