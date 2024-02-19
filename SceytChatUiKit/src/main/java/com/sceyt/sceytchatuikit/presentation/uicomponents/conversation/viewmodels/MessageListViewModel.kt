@@ -114,6 +114,7 @@ class MessageListViewModel(
     internal val messageActionBridge by lazy { MessageActionBridge() }
     internal val placeToSavePathsList = mutableSetOf<String>()
     internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
+    internal val notFoundMessagesToUpdate  by lazy { mutableMapOf<Long, SceytMessage>() }
     private var showSenderAvatarAndNameIfNeeded = true
 
     // Pagination sync

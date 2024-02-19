@@ -35,7 +35,6 @@ import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexWrap
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
@@ -56,7 +55,6 @@ import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.isRtl
 import com.sceyt.sceytchatuikit.extensions.isValidEmail
 import com.sceyt.sceytchatuikit.extensions.screenPortraitWidthPx
-import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
@@ -82,7 +80,6 @@ import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
 import kotlin.math.min
 
-
 abstract class BaseMsgViewHolder(private val view: View,
                                  private val messageListeners: MessageClickListeners.ClickListeners? = null,
                                  private val displayedListener: ((MessageListItem) -> Unit)? = null,
@@ -101,12 +98,6 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     @CallSuper
     open fun bind(item: MessageListItem, diff: MessageDiff) {
-        if (item is MessageListItem.MessageItem) {
-            val m = item.message
-            if (!m.incoming && m.deliveryStatus == DeliveryStatus.Pending) {
-                SceytLog.i("StatusIssueTag", "bind pending: body-> ${m.body} id->${m.id} tid->${m.tid} deliveryStatus->${m.deliveryStatus}")
-            }
-        }
         messageListItem = item
         setMaxWidth()
         if (diff.selectionChanged || diff.statusChanged)

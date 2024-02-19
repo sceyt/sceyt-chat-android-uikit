@@ -12,9 +12,11 @@ import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.withContext
 
 object MessageEventsObserver : MessageEventManger.AllEventManagers {
     private var eventManager = MessageEventManagerImpl(this)
@@ -117,6 +119,8 @@ object MessageEventsObserver : MessageEventManger.AllEventManagers {
     }
 
     suspend fun emitOutgoingMessage(sceytMessage: SceytMessage) {
-        onOutGoingMessageFlow_.emit(sceytMessage)
+        withContext(Dispatchers.Main) {
+            onOutGoingMessageFlow_.emit(sceytMessage)
+        }
     }
 }
