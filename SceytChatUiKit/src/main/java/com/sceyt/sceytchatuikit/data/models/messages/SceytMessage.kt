@@ -13,7 +13,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
-import java.util.Date
 
 @Parcelize
 data class SceytMessage(var id: Long,
@@ -23,7 +22,7 @@ data class SceytMessage(var id: Long,
                         var type: String,
                         var metadata: String?,
                         var createdAt: Long,
-                        var updatedAt: Date,
+                        var updatedAt: Long,
                         var incoming: Boolean,
                         var isTransient: Boolean,
                         var silent: Boolean,

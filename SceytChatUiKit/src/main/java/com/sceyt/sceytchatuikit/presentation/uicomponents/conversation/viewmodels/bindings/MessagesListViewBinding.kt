@@ -308,26 +308,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(viewModelScope)
 
-    val pendingMessagesToAdd = mutableSetOf<SceytMessage>()
-
     MessagesCache.messageUpdatedFlow.onEach { data ->
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             data.second.forEach {
                 val message = initMessageInfoData(it)
                 withContext(Dispatchers.Main) {
-                    val found = if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
+                    if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
                         messagesListView.messageEditedOrDeleted(message)
-                    else messagesListView.updateMessage(message)
-
-                    if (!found) {
-                        pendingMessagesToAdd.add(message)
-                        debounceMessagesToAdd.submit {
-                            val items = ArrayList(messagesListView.getData() ?: arrayListOf())
-                            items.addAll(pendingMessagesToAdd.map { sceytMessage -> MessageListItem.MessageItem(sceytMessage) })
-                            items.sortBy { item -> item.getMessageCreatedAt() }
-                            messagesListView.setMessagesList(items)
-                            pendingMessagesToAdd.clear()
-                        }
+                    else {
+                        val foundToUpdate = messagesListView.updateMessage(message)
+                        if (!foundToUpdate)
+                            notFoundMessagesToUpdate[message.tid] = message
                     }
                 }
             }
@@ -433,17 +424,27 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    onNewOutGoingMessageFlow.onEach {
-        if (hasNext || hasNextDb) return@onEach
+    suspend fun onMessage(message: SceytMessage) {
+        if (hasNext || hasNextDb) return
         val initMessage = mapToMessageListItem(
-            data = arrayListOf(it),
+            data = arrayListOf(message),
             hasNext = false,
             hasPrev = false,
             compareMessage = messagesListView.getLastMessage()?.message)
 
         messagesListView.addNewMessages(*initMessage.toTypedArray())
         messagesListView.updateViewState(PageState.Nothing)
+    }
+
+    onNewOutGoingMessageFlow.onEach {
+        var message = it
+        if (notFoundMessagesToUpdate.containsKey(message.tid))
+            message = notFoundMessagesToUpdate.remove(message.tid) ?: it
+
+        onMessage(message)
     }.launchIn(viewModelScope)
+
+    onNewMessageFlow.onEach(::onMessage).launchIn(viewModelScope)
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
         checkEnableDisableActions(it)
@@ -463,17 +464,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         } else pendingDisplayMsgIds.add(message.id)
     }
 
-    onNewMessageFlow.onEach {
-        if (hasNext || hasNextDb) return@onEach
-        val initMessage = mapToMessageListItem(
-            data = arrayListOf(it),
-            hasNext = false,
-            hasPrev = false,
-            compareMessage = messagesListView.getLastMessage()?.message)
-
-        messagesListView.addNewMessages(*initMessage.toTypedArray())
-        messagesListView.updateViewState(PageState.Nothing)
-    }.launchIn(viewModelScope)
 
     // todo reply in thread
     /*
