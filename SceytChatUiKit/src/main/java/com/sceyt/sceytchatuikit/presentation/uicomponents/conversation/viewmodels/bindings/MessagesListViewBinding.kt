@@ -110,7 +110,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     if (channel.lastDisplayedMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
             || channel.lastDisplayedMessageId == channel.lastMessage?.id)
-        loadPrevMessages(0, 0)
+        loadPrevMessages(channel.lastMessage?.id ?: 0, 0)
     else {
         pinnedLastReadMessageId = channel.lastDisplayedMessageId
         loadNearMessages(pinnedLastReadMessageId, LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue), false)
@@ -185,11 +185,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 }
 
                 LoadNext -> {
+                    val hasNext = checkMaybeHesNext(response)
                     messagesListView.addNextPageMessages(mapToMessageListItem(data = response.data,
-                        hasNext = response.hasNext, hasPrev = response.hasPrev, compareMessage))
+                        hasNext = hasNext, hasPrev = response.hasPrev, compareMessage))
                 }
 
-                LoadNear, LoadNewest -> {
+                LoadNear -> {
+                    val hasNext = checkMaybeHesNext(response)
+                    messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = hasNext,
+                        hasPrev = response.hasPrev), true)
+                }
+
+                LoadNewest -> {
                     messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = response.hasNext,
                         hasPrev = response.hasPrev), true)
                 }
@@ -208,7 +215,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
                     val newMessages = mapToMessageListItem(data = dataToMap,
                         hasNext = response.hasNext,
-                        hasPrev = response.hasPrev)
+                        hasPrev = response.hasPrev,
+                        compareMessage = getCompareMessage(response.loadType, response.offset))
 
                     if (response.dbResultWasEmpty) {
                         if (response.loadType == LoadNear)
@@ -261,7 +269,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     ChannelsCache.pendingChannelCreatedFlow
         .filter { it.first == channel.id }
         .onEach {
-            loadPrevMessages(0, 0)
+            loadPrevMessages(channel.lastMessage?.id ?: 0, 0)
         }.launchIn(viewModelScope)
 
     SceytSyncManager.syncChannelMessagesFinished.observe(lifecycleOwner) {
@@ -393,7 +401,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         }
                     }
                 } ?: run {
-                    loadNewestMessages(LoadKeyData(key = LoadKeyType.ScrollToLastMessage.longValue))
+                    loadPrevMessages(lastMsgId, 0, LoadKeyData(key = LoadKeyType.ScrollToLastMessage.longValue))
                     markChannelAsRead(channel.id)
                 }
             }
@@ -412,7 +420,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             } ?: run {
                 loadNearMessages(messageId, LoadKeyData(
                     key = LoadKeyType.ScrollToReplyMessage.longValue,
-                    value = messageId), true)
+                    value = messageId), false)
             }
         }
     }

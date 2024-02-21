@@ -540,7 +540,7 @@ internal class PersistenceChannelsLogicImpl(
 
         if (response is SceytResponse.Success) {
             response.data?.let {
-                messageDao.updateAllMessagesStatusAsRead(channelId)
+                messageDao.updateAllIncomingMessagesStatusAsRead(channelId)
                 onChannelMarkedAsReadOrUnread(it)
             }
         }

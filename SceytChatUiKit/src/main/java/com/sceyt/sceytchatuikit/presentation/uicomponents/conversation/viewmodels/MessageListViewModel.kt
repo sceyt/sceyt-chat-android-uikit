@@ -77,6 +77,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHe
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -116,6 +117,9 @@ class MessageListViewModel(
     internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
     internal val notFoundMessagesToUpdate by lazy { mutableMapOf<Long, SceytMessage>() }
     private var showSenderAvatarAndNameIfNeeded = true
+    private var loadPrevJob: Job? = null
+    private val loadNextJob: Job? = null
+    private var loadNearJob: Job? = null
 
     // Pagination sync
     internal var needSyncMessagesWhenScrollStateIdle = false
@@ -236,7 +240,7 @@ class MessageListViewModel(
 
         notifyPageLoadingState(isLoadingMore)
 
-        viewModelScope.launch(Dispatchers.IO) {
+        loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, loadKey = loadKey).collect {
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(it)
@@ -251,7 +255,7 @@ class MessageListViewModel(
 
         notifyPageLoadingState(isLoadingMore)
 
-        viewModelScope.launch(Dispatchers.IO) {
+        loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.loadNextMessages(conversationId, lastMessageId, replyInThread, offset).collect {
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(it)
@@ -262,8 +266,9 @@ class MessageListViewModel(
 
     fun loadNearMessages(messageId: Long, loadKey: LoadKeyData, ignoreServer: Boolean) {
         setPagingLoadingStarted(LoadNear, ignoreServer = ignoreServer)
-
-        viewModelScope.launch(Dispatchers.IO) {
+        loadPrevJob?.cancel()
+        loadNextJob?.cancel()
+        loadNearJob = viewModelScope.launch(Dispatchers.IO) {
             val limit = min(50, MESSAGES_LOAD_SIZE * 2)
             persistenceMessageMiddleWare.loadNearMessages(conversationId, messageId, replyInThread,
                 limit, loadKey, ignoreServer = ignoreServer).collect { response ->
@@ -277,6 +282,7 @@ class MessageListViewModel(
     fun loadNewestMessages(loadKey: LoadKeyData) {
         setPagingLoadingStarted(LoadNewest)
 
+        loadNearJob?.cancel()
         viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.loadNewestMessages(conversationId, replyInThread,
                 loadKey = loadKey, ignoreDb = false).collect { response ->
@@ -289,8 +295,8 @@ class MessageListViewModel(
 
     fun syncCenteredMessage(messageId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.syncNearMessages(conversationId, messageId, replyInThread)
-            _syncCenteredMessageLiveData.postValue(response)
+             val response = persistenceMessageMiddleWare.syncNearMessages(conversationId, messageId, replyInThread)
+             _syncCenteredMessageLiveData.postValue(response)
         }
     }
 
@@ -625,6 +631,19 @@ class MessageListViewModel(
             disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
             messageReactions = initReactionsItems(this)
         }
+    }
+
+    internal fun checkMaybeHesNext(response: PaginationResponse.DBResponse<SceytMessage>): Boolean {
+        var hasNext = response.hasNext
+        if (!hasNext) {
+            response.data.lastOrNull()?.let { lastMsg ->
+                if (lastMsg.deliveryStatus != DeliveryStatus.Pending
+                        && lastMsg.id < (channel.lastMessage?.id ?: 0)) {
+                    hasNext = true
+                }
+            }
+        }
+        return hasNext
     }
 
     private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
