@@ -105,7 +105,8 @@ internal class PersistenceMessagesLogicImpl(
         private val messagesRepository: MessagesRepository,
         private val preference: SceytSharedPreference,
         private val messagesCache: MessagesCache,
-        private val channelCache: ChannelsCache
+        private val channelCache: ChannelsCache,
+        private val messageLoadRangeUpdater: MessageLoadRangeUpdater
 ) : PersistenceMessagesLogic, SceytKoinComponent {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
@@ -697,6 +698,8 @@ internal class PersistenceMessagesLogicImpl(
                     limit, replyInThread, loadKey, ignoreDb, dbResultWasEmpty)
 
                 trySend(response)
+                updateMessageLoadRange(messageId, conversationId, response)
+
                 // Mark messages as received
                 markMessagesAsDelivered(conversationId, response.data.data ?: emptyList())
             }
@@ -704,6 +707,12 @@ internal class PersistenceMessagesLogicImpl(
             channel.close()
             awaitClose()
         }
+    }
+
+    private suspend fun updateMessageLoadRange(messageId: Long, channelId: Long, response: PaginationResponse.ServerResponse<SceytMessage>) {
+        val data = (response.data as? SceytResponse.Success)?.data ?: return
+        if (data.isEmpty() || data.size == 1) return
+        messageLoadRangeUpdater.updateMessageLoadRange(messageId = messageId, start = data.first().id, end = data.last().id, channelId = channelId)
     }
 
     private suspend fun markMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
@@ -760,11 +769,16 @@ internal class PersistenceMessagesLogicImpl(
         var messages: List<SceytMessage> = emptyList()
         val response: SceytResponse<List<SceytMessage>>
 
-        ConnectionEventsObserver.awaitToConnectSceyt()
+        if (loadType != LoadNear)
+            ConnectionEventsObserver.awaitToConnectSceyt()
 
         when (loadType) {
             LoadPrev -> {
-                response = messagesRepository.getPrevMessages(channelId, lastMessageId, replyInThread, limit)
+                var msgId = lastMessageId
+                if (offset == 0)
+                    msgId = Long.MAX_VALUE
+
+                response = messagesRepository.getPrevMessages(channelId, msgId, replyInThread, limit)
                 if (response is SceytResponse.Success) {
                     messages = response.data ?: arrayListOf()
                     hasPrev = response.data?.size == MESSAGES_LOAD_SIZE
@@ -808,7 +822,7 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
 
-        val updatedMessages = saveMessagesToDb(messages, unListAll = loadType == LoadNear)
+        val updatedMessages = saveMessagesToDb(messages, unListAll = false)
         hasDiff = messagesCache.addAll(channelId, updatedMessages, checkDifference = true, checkDiffAndNotifyUpdate = false)
 
         if (forceHasDiff) hasDiff = true
@@ -842,11 +856,9 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun getPrevMessagesDb(channelId: Long, lastMessageId: Long, offset: Int, limit: Int): List<SceytMessage> {
-        var lastMsgId = lastMessageId
-        if (lastMessageId == 0L)
-            lastMsgId = Long.MAX_VALUE
-
-        var messages = messageDao.getOldestThenMessages(channelId, lastMsgId, limit).reversed()
+        var messages = (if (offset == 0)
+            messageDao.getOldestThenMessagesInclude(channelId, lastMessageId, limit)
+        else messageDao.getOldestThenMessages(channelId, lastMessageId, limit)).reversed()
 
         if (offset == 0)
             messages = getPendingMessagesAndAddToList(channelId, messages.toArrayList())
