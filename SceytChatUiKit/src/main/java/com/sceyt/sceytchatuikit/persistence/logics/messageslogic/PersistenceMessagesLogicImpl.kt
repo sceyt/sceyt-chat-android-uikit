@@ -887,12 +887,12 @@ internal class PersistenceMessagesLogicImpl(
         var messages = if (sentLastMessage == 0L) {
             emptyList()
         } else {
-            if (offset == 0)
+            (if (offset == 0)
                 messageDao.getOldestThenMessagesInclude(channelId, sentLastMessage, limit)
-            else messageDao.getOldestThenMessages(channelId, sentLastMessage, limit)
+            else messageDao.getOldestThenMessages(channelId, sentLastMessage, limit)).reversed()
         }
         if (offset == 0)
-            messages = getPendingMessagesAndAddToList(channelId, messages.reversed())
+            messages = getPendingMessagesAndAddToList(channelId, messages)
 
         return messages
     }
