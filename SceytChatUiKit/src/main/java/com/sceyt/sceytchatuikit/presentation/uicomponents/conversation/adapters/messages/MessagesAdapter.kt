@@ -125,8 +125,8 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         removeLoadingNext()
         if (items.isEmpty()) return
 
-        val filteredItems = items.toSet().minus(messages.toSet())
-        addNewMessages(filteredItems.toList())
+        messages.addAll(items)
+        notifyItemRangeInserted(messages.lastIndex, items.size)
     }
 
     fun addNewMessages(items: List<MessageListItem>) {
