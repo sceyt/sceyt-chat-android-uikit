@@ -102,7 +102,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         setMaxWidth()
         if (diff.selectionChanged || diff.statusChanged)
             selectableAnimHelper.doOnBind(selectMessageView, item)
-        if (messageListItem.highlighted)
+        if (messageListItem.highligh)
             highlight()
     }
 
@@ -129,7 +129,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (messageListItem is MessageListItem.MessageItem) {
             highlightAnim?.cancel()
             view.setBackgroundColor(Color.TRANSPARENT)
-            messageListItem.highlighted = false
+            messageListItem.highligh = false
         }
     }
 
@@ -519,7 +519,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         highlightAnim?.duration = 2000
         highlightAnim?.addUpdateListener { animator -> view.setBackgroundColor(animator.animatedValue as Int) }
         highlightAnim?.start()
-        highlightAnim?.doOnEnd { messageListItem.highlighted = false }
+        highlightAnim?.doOnEnd { messageListItem.highligh = false }
     }
 
     open val enableReply = true

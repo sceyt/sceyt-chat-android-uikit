@@ -120,6 +120,8 @@ class MessageListViewModel(
     private var loadPrevJob: Job? = null
     private val loadNextJob: Job? = null
     private var loadNearJob: Job? = null
+    internal var scrollToSearchMessageJob: Job? = null
+
 
     // Pagination sync
     internal var needSyncMessagesWhenScrollStateIdle = false
@@ -181,7 +183,7 @@ class MessageListViewModel(
 
     // Search messages
     internal val isSearchingMessageToScroll = AtomicBoolean(false)
-    private val isLoadingNextSearchMessages = AtomicBoolean(false)
+    private val isLoadingNearToSearchMessagesServer = AtomicBoolean(false)
     private var _searchResult = MutableLiveData<SearchResult>()
     var searchResult = _searchResult.asLiveData()
 
@@ -295,8 +297,8 @@ class MessageListViewModel(
 
     fun syncCenteredMessage(messageId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-             val response = persistenceMessageMiddleWare.syncNearMessages(conversationId, messageId, replyInThread)
-             _syncCenteredMessageLiveData.postValue(response)
+            val response = persistenceMessageMiddleWare.syncNearMessages(conversationId, messageId, replyInThread)
+            _syncCenteredMessageLiveData.postValue(response)
         }
     }
 
@@ -314,8 +316,8 @@ class MessageListViewModel(
         }
     }
 
-    fun loadNextSearchedMessages() {
-        if (isLoadingNextSearchMessages.getAndSet(true)) return
+    private fun loadNextSearchedMessages() {
+        if (isLoadingNearToSearchMessagesServer.getAndSet(true)) return
         viewModelScope.launch {
             val resp = persistenceMessageMiddleWare.loadNextSearchMessages()
             (resp as? SceytPagingResponse.Success)?.let {
@@ -326,13 +328,7 @@ class MessageListViewModel(
                     _searchResult.postValue(oldValue.copy(messages = newMessages, hasNext = resp.hasNext))
                 }
             }
-            isLoadingNextSearchMessages.set(false)
-        }
-    }
-
-    fun sendPendingMessages() {
-        viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.sendPendingMessages(conversationId)
+            isLoadingNearToSearchMessagesServer.set(false)
         }
     }
 
@@ -355,6 +351,12 @@ class MessageListViewModel(
             else -> return
         }
         pagingResponseReceived(response)
+    }
+
+    fun sendPendingMessages() {
+        viewModelScope.launch(Dispatchers.IO) {
+            persistenceMessageMiddleWare.sendPendingMessages(conversationId)
+        }
     }
 
     fun syncConversationMessagesAfter(messageId: Long) {
@@ -579,6 +581,7 @@ class MessageListViewModel(
     internal suspend fun mapToMessageListItem(
             data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
             compareMessage: SceytMessage? = null,
+            ignoreUnreadMessagesSeparator: Boolean = false
     ): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
@@ -602,9 +605,10 @@ class MessageListViewModel(
                         shouldShowAvatarAndName = incoming && isGroup && showSenderAvatarAndNameIfNeeded
                         disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
                     }
-                    messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
-                        unreadLineMessage = it
-                    })
+                    if (!ignoreUnreadMessagesSeparator)
+                        messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
+                            unreadLineMessage = it
+                        })
                 }
 
                 messageItems.add(messageItem)

@@ -22,7 +22,7 @@ interface MessagesRepository {
                                   type: String): SceytResponse<List<SceytMessage>>
 
     suspend fun loadAllMessagesAfter(conversationId: Long, replyInThread: Boolean,
-                                     messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
+                                     messageId: Long): Flow<Pair<Long, SceytResponse<List<SceytMessage>>>>
 
     suspend fun searchMessages(conversationId: Long, replyInThread: Boolean,
                                query: String): SceytPagingResponse<List<SceytMessage>>
