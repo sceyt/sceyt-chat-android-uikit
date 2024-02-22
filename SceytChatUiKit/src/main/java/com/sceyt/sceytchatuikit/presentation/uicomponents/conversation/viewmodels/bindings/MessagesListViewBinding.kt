@@ -135,14 +135,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         if (proportion.isEmpty()) return@withContext null
         val proportionFirstId = proportion.first().id
         return@withContext when (loadType) {
-            LoadNext, LoadNewest -> {
+            LoadNext, LoadNewest, LoadNear -> {
                 (messagesListView.getData().lastOrNull {
-                    it is MessageItem && it.message.id < proportionFirstId
-                } as? MessageItem)?.message
-            }
-
-            LoadNear -> {
-                (messagesListView.getData().firstOrNull {
                     it is MessageItem && it.message.id < proportionFirstId
                 } as? MessageItem)?.message
             }
