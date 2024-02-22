@@ -246,7 +246,7 @@ internal class PersistenceMessagesLogicImpl(
         var missingMessages = emptyList<SceytMessage>()
         if (response is SceytResponse.Success) {
             val messages = response.data
-            val updatedMessages = saveMessagesToDb(messages, unListAll = false)
+            val updatedMessages = saveMessagesToDb(messages)
             missingMessages = messagesCache.updateAllSyncedMessagesAndGetMissing(conversationId, updatedMessages)
             updateMessageLoadRange(messageId = messageId, channelId = conversationId, response = response)
         }
@@ -846,7 +846,7 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
 
-        val updatedMessages = saveMessagesToDb(messages, unListAll = false)
+        val updatedMessages = saveMessagesToDb(messages)
         hasDiff = messagesCache.addAll(channelId, updatedMessages, checkDifference = true, checkDiffAndNotifyUpdate = false)
 
         if (forceHasDiff) hasDiff = true

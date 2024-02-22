@@ -130,10 +130,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     checkEnableDisableActions(channel)
 
-    fun getCompareMessage(loadType: PaginationResponse.LoadType, proportion: List<SceytMessage>): SceytMessage? {
-        if (proportion.isEmpty()) return null
+    suspend fun getCompareMessage(loadType: PaginationResponse.LoadType,
+                                  proportion: List<SceytMessage>): SceytMessage? = withContext(Dispatchers.Default) {
+        if (proportion.isEmpty()) return@withContext null
         val proportionFirstId = proportion.first().id
-        return when (loadType) {
+        return@withContext when (loadType) {
             LoadNext, LoadNewest -> {
                 (messagesListView.getData().lastOrNull {
                     it is MessageItem && it.message.id < proportionFirstId
@@ -235,7 +236,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
                     if (response.dbResultWasEmpty) {
                         if (response.loadType == LoadNear)
-                            messagesListView.setMessagesList(newMessages, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
+                            messagesListView.setMessagesList(newMessages, true)
                         else {
                             if (response.loadType == LoadNext || response.loadType == LoadNewest)
                                 messagesListView.addNextPageMessages(newMessages)
@@ -394,7 +395,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(viewModelScope)
 
-    loadMessagesFlow.onEach(::initMessagesResponse).launchIn(viewModelScope)
+    loadMessagesFlow
+        .onEach(::initMessagesResponse)
+        .launchIn(viewModelScope)
 
     onChannelUpdatedEventFlow.onEach {
         channel = it
