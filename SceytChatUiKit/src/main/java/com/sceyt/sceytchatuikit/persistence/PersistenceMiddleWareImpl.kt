@@ -113,8 +113,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     private fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
-        launch(Dispatchers.IO) { messagesLogic.onMessage(data) }
-        launch(Dispatchers.IO) { channelLogic.onMessage(data) }
+        launch(Dispatchers.IO) {
+            messagesLogic.onMessage(data)
+            channelLogic.onMessage(data)
+        }
     }
 
     private fun onMessageReactionUpdated(data: ReactionUpdateEventData) {

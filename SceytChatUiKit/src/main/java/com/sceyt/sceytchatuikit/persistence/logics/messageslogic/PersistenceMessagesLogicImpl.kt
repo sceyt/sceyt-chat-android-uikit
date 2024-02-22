@@ -53,7 +53,6 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.pendings.PendingMarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.pendings.PendingMessageStateEntity
-import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
@@ -89,6 +88,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -125,13 +125,16 @@ internal class PersistenceMessagesLogicImpl(
                                    sendDeliveryMarker: Boolean) = withContext(dispatcherIO) {
         val message = data.second
         saveMessagesToDb(arrayListOf(message))
-        updateMessageLoadRangeOnMessageEvent(message, null)
 
         messagesCache.add(data.first.id, message)
         onMessageFlow.tryEmit(data)
+        updateMessageLoadRangeOnMessageEvent(message, null)
 
-        if (message.incoming && sendDeliveryMarker)
-            markMessagesAs(data.first.id, Received, message.id)
+        launch {
+            if (message.incoming && sendDeliveryMarker)
+                markMessagesAs(data.first.id, Received, message.id)
+        }
+        return@withContext
     }
 
     override suspend fun onFcmMessage(data: RemoteMessageData) = withContext(dispatcherIO) {
@@ -148,10 +151,10 @@ internal class PersistenceMessagesLogicImpl(
 
         if (messageDb == null && !isReaction) {
             saveMessagesToDb(arrayListOf(message), includeParents = false)
-            updateMessageLoadRangeOnMessageEvent(message, channelDb?.lastMessage?.id)
-
             messagesCache.add(data.channel.id, message)
             onMessageFlow.tryEmit(Pair(data.channel, message))
+
+            updateMessageLoadRangeOnMessageEvent(message, channelDb?.lastMessage?.id)
             persistenceChannelsLogic.onFcmMessage(data)
         }
 
@@ -480,6 +483,11 @@ internal class PersistenceMessagesLogicImpl(
                         "responseMsgTid ${response.data?.tid} id:${response.data?.id}")
                 response.data?.let { responseMsg ->
                     messagesCache.messageUpdated(channelId, responseMsg)
+
+                    val lastSentMessageId = messageDao.getLastSentMessageId(channelId)
+                    updateMessageLoadRangeOnMessageEvent(responseMsg, lastSentMessageId
+                            ?: responseMsg.id)
+
                     messageDao.upsertMessage(responseMsg.toMessageDb(false))
                     persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, responseMsg)
                 }
@@ -800,7 +808,7 @@ internal class PersistenceMessagesLogicImpl(
                     // Check maybe messages was cleared
                     if (offset == 0 && messages.isEmpty()) {
                         messageDao.deleteAllMessagesExceptPending(channelId)
-                        rangeDao.deleteLoadRanges()
+                        rangeDao.deleteChannelLoadRanges(channelId)
                         messagesCache.clearAllExceptPending(channelId)
                         forceHasDiff = true
                     }
@@ -872,12 +880,19 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun getPrevMessagesDb(channelId: Long, lastMessageId: Long, offset: Int, limit: Int): List<MessageDb> {
-        var messages = (if (offset == 0)
-            messageDao.getOldestThenMessagesInclude(channelId, lastMessageId, limit)
-        else messageDao.getOldestThenMessages(channelId, lastMessageId, limit)).reversed()
-
+        var sentLastMessage = lastMessageId
+        if (sentLastMessage == 0L) {
+            sentLastMessage = messageDao.getLastSentMessageId(channelId) ?: 0
+        }
+        var messages = if (sentLastMessage == 0L) {
+            emptyList()
+        } else {
+            if (offset == 0)
+                messageDao.getOldestThenMessagesInclude(channelId, sentLastMessage, limit)
+            else messageDao.getOldestThenMessages(channelId, sentLastMessage, limit)
+        }
         if (offset == 0)
-            messages = getPendingMessagesAndAddToList(channelId, messages.toArrayList())
+            messages = getPendingMessagesAndAddToList(channelId, messages.reversed())
 
         return messages
     }
@@ -886,7 +901,7 @@ internal class PersistenceMessagesLogicImpl(
         var messages = messageDao.getNewestThenMessage(channelId, lastMessageId, limit)
 
         if (offset == 0)
-            messages = getPendingMessagesAndAddToList(channelId, messages.toArrayList())
+            messages = getPendingMessagesAndAddToList(channelId, messages)
 
         return messages
     }
@@ -896,22 +911,19 @@ internal class PersistenceMessagesLogicImpl(
         val messages = data.data
 
         if (offset == 0)
-            data.data = getPendingMessagesAndAddToList(channelId, messages.toArrayList())
+            data.data = getPendingMessagesAndAddToList(channelId, messages)
 
         return data
     }
 
-    private suspend fun getPendingMessagesAndAddToList(channelId: Long, list: ArrayList<MessageDb>): List<MessageDb> {
+    private suspend fun getPendingMessagesAndAddToList(channelId: Long, list: List<MessageDb>): List<MessageDb> {
         val pendingMessage = messageDao.getPendingMessages(channelId)
 
         return if (pendingMessage.isNotEmpty()) {
-            list.addAll(pendingMessage)
-            SceytLog.i(TAG, "getPendingMessagesAndAddToList: pendingMessages ${
-                pendingMessage.map {
-                    "tid-> ${it.messageEntity.tid}, id-> ${it.messageEntity.id}, status-> ${it.messageEntity.deliveryStatus}, body-> ${it.messageEntity.body}"
-                }
-            }")
-            list.sortedBy { it.messageEntity.createdAt }
+            list.toMutableList().run {
+                addAll(pendingMessage)
+                sortedBy { it.messageEntity.createdAt }
+            }
         } else list
     }
 
