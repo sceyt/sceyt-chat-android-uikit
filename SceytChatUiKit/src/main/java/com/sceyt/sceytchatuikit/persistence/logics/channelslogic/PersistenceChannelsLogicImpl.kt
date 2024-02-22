@@ -808,14 +808,14 @@ internal class PersistenceChannelsLogicImpl(
     private suspend fun deleteChannelDb(channelId: Long) {
         channelDao.deleteChannelAndLinks(channelId)
         messageDao.deleteAllMessages(channelId)
-        rangeDao.deleteLoadRanges(channelId)
+        rangeDao.deleteChannelLoadRanges(channelId)
         channelsCache.deleteChannel(channelId)
     }
 
     private suspend fun clearHistory(channelId: Long) {
         channelDao.updateLastMessage(channelId, null, null)
         messageDao.deleteAllMessages(channelId)
-        rangeDao.deleteLoadRanges(channelId)
+        rangeDao.deleteChannelLoadRanges(channelId)
         channelsCache.clearedHistory(channelId)
     }
 

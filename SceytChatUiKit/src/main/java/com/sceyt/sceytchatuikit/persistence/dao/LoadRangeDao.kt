@@ -27,10 +27,10 @@ interface LoadRangeDao {
     suspend fun getAll(): List<LoadRangeEntity>
 
     @Query("delete from LoadRange where channelId =:channelId")
-    suspend fun deleteChannelLoadRanges( channelId: Long)
+    suspend fun deleteChannelLoadRanges(channelId: Long)
 
-    @Query("delete from LoadRange where rowId in (:id)")
-    suspend fun deleteLoadRanges(vararg id: Long)
+    @Query("delete from LoadRange where rowId in (:rowIds)")
+    suspend fun deleteLoadRanges(vararg rowIds: Long)
 
     @Transaction
     suspend fun updateLoadRanges(start: Long, end: Long, messageId: Long, channelId: Long) {
