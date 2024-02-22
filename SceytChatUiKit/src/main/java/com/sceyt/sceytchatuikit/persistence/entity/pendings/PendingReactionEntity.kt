@@ -21,14 +21,14 @@ data class PendingReactionEntity(
         @ColumnInfo(index = true)
         val messageId: Long,
         @ColumnInfo(name = "reaction_key", index = true)
-        var key: String,
-        var score: Int,
-        var count: Long,
+        val key: String,
+        val score: Int,
+        val count: Long,
         val channelId: Long,
-        var isAdd: Boolean,
-        var createdAt: Long,
+        val isAdd: Boolean,
+        val createdAt: Long,
         @ColumnInfo(defaultValue = "false")
-        var incomingMsg: Boolean,
+        val incomingMsg: Boolean,
         @PrimaryKey(autoGenerate = true)
         val id: Long = 0
 )

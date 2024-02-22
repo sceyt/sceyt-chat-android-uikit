@@ -11,10 +11,10 @@ import com.sceyt.chat.models.user.UserState
 data class UserEntity(
         @ColumnInfo(name = "user_id")
         @PrimaryKey
-        var id: String,
+        val id: String,
         val firstName: String?,
         val lastName: String?,
-        var avatarURL: String?,
+        val avatarURL: String?,
         val metadata: String?,
         @Embedded
         val presence: Presence? = null,

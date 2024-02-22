@@ -464,13 +464,11 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun insertTmpMessageToDb(message: SceytMessage) {
-        val tmpMessageDb = message.toMessageDb(false).also {
-            it.messageEntity.id = null
-            /*
+        val tmpMessageDb = message.copy(id = 0).toMessageDb(unList = false)/*.also {
             // todo reply in thread
             if (message.replyInThread)
-                 it.messageEntity.channelId = message.parentMessage?.id ?: 0*/
-        }
+                 it.messageEntity.channelId = message.parentMessage?.id ?: 0
+        }*/
         messageDao.upsertMessage(tmpMessageDb)
         persistenceChannelsLogic.updateLastMessageWithLastRead(message.channelId, message)
     }
@@ -743,7 +741,7 @@ internal class PersistenceMessagesLogicImpl(
                                                 offset: Int, limit: Int, loadKey: LoadKeyData): PaginationResponse.DBResponse<SceytMessage> {
         var hasNext = false
         var hasPrev = false
-        val messages: List<SceytMessage>
+        val messages: List<MessageDb>
 
         when (loadType) {
             LoadPrev -> {
@@ -758,7 +756,7 @@ internal class PersistenceMessagesLogicImpl(
 
             LoadNear -> {
                 val data = getNearMessagesDb(channelId, lastMessageId, offset, limit)
-                messages = data.data.map { it.toSceytMessage() }
+                messages = data.data
                 hasPrev = data.hasPrev
                 hasNext = data.hasNext
             }
@@ -769,9 +767,10 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
 
-        messagesCache.addAll(channelId, messages, checkDifference = false, checkDiffAndNotifyUpdate = false)
+        val sceytMessages = messages.map { it.toSceytMessage() }
+        messagesCache.addAll(channelId, sceytMessages, checkDifference = false, checkDiffAndNotifyUpdate = false)
 
-        return PaginationResponse.DBResponse(messages, loadKey, offset, hasNext, hasPrev, loadType)
+        return PaginationResponse.DBResponse(sceytMessages, loadKey, offset, hasNext, hasPrev, loadType)
     }
 
     private suspend fun getMessagesServerByLoadType(loadType: LoadType, channelId: Long, lastMessageId: Long,
@@ -872,7 +871,7 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    private suspend fun getPrevMessagesDb(channelId: Long, lastMessageId: Long, offset: Int, limit: Int): List<SceytMessage> {
+    private suspend fun getPrevMessagesDb(channelId: Long, lastMessageId: Long, offset: Int, limit: Int): List<MessageDb> {
         var messages = (if (offset == 0)
             messageDao.getOldestThenMessagesInclude(channelId, lastMessageId, limit)
         else messageDao.getOldestThenMessages(channelId, lastMessageId, limit)).reversed()
@@ -880,16 +879,16 @@ internal class PersistenceMessagesLogicImpl(
         if (offset == 0)
             messages = getPendingMessagesAndAddToList(channelId, messages.toArrayList())
 
-        return messages.map { messageDb -> messageDb.toSceytMessage() }
+        return messages
     }
 
-    private suspend fun getNextMessagesDb(channelId: Long, lastMessageId: Long, offset: Int, limit: Int): List<SceytMessage> {
+    private suspend fun getNextMessagesDb(channelId: Long, lastMessageId: Long, offset: Int, limit: Int): List<MessageDb> {
         var messages = messageDao.getNewestThenMessage(channelId, lastMessageId, limit)
 
         if (offset == 0)
             messages = getPendingMessagesAndAddToList(channelId, messages.toArrayList())
 
-        return messages.map { messageDb -> messageDb.toSceytMessage() }
+        return messages
     }
 
     private suspend fun getNearMessagesDb(channelId: Long, messageId: Long, offset: Int, limit: Int): LoadNearData<MessageDb> {
