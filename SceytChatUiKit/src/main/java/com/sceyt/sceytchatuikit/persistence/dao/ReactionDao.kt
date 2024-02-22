@@ -71,9 +71,9 @@ abstract class ReactionDao {
         val row = deleteReaction(messageId, key, fromId)
         if (row > 0)
             getReactionTotal(messageId, key)?.let {
-                if (it.score > 1) {
-                    it.score -= score
-                    updateReactionTotal(it)
+                if (it.score - score >= 1) {
+                    val newTotal = it.copy(score = it.score - score)
+                    updateReactionTotal(newTotal)
                 } else
                     deleteReactionTotalByTotalId(it.id)
             }

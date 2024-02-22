@@ -14,28 +14,28 @@ import com.sceyt.chat.models.message.MessageState
     indices = [Index(value = ["message_id"], unique = true)])
 data class MessageEntity(
         @PrimaryKey
-        var tid: Long,
+        val tid: Long,
         @ColumnInfo(name = "message_id")
-        var id: Long?,
+        val id: Long?,
         @ColumnInfo(index = true)
-        var channelId: Long,
-        var body: String,
-        var type: String,
-        var metadata: String?,
+        val channelId: Long,
+        val body: String,
+        val type: String,
+        val metadata: String?,
         @ColumnInfo(index = true)
-        var createdAt: Long,
-        var updatedAt: Long,
-        var incoming: Boolean,
-        var isTransient: Boolean,
-        var silent: Boolean,
+        val createdAt: Long,
+        val updatedAt: Long,
+        val incoming: Boolean,
+        val isTransient: Boolean,
+        val silent: Boolean,
         @ColumnInfo(index = true)
-        var deliveryStatus: DeliveryStatus,
-        var state: MessageState,
-        var fromId: String?,
+        val deliveryStatus: DeliveryStatus,
+        val state: MessageState,
+        val fromId: String?,
         val markerCount: List<MarkerTotal>?,
-        var mentionedUsersIds: List<String>?,
-        var parentId: Long?,
-        var replyCount: Long,
+        val mentionedUsersIds: List<String>?,
+        val parentId: Long?,
+        val replyCount: Long,
         val displayCount: Short,
         val autoDeleteAt: Long?,
         @Embedded
@@ -43,5 +43,5 @@ data class MessageEntity(
         val bodyAttribute: List<BodyAttribute>?,
         @ColumnInfo(index = true)
         // This flag is used to ignore getting this message, when querying get channel messages
-        var unList: Boolean
+        val unList: Boolean
 )

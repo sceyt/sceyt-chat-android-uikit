@@ -8,38 +8,38 @@ import androidx.room.PrimaryKey
 data class ChannelEntity(
         @PrimaryKey
         @ColumnInfo(name = "chat_id")
-        var id: Long,
+        val id: Long,
         val parentChannelId: Long?,
-        var uri: String?,
+        val uri: String?,
         @ColumnInfo(index = true)
-        var type: String,
+        val type: String,
         @ColumnInfo(index = true)
-        var subject: String?,
-        var avatarUrl: String?,
-        var metadata: String?,
+        val subject: String?,
+        val avatarUrl: String?,
+        val metadata: String?,
         @ColumnInfo(index = true)
-        var createdAt: Long,
-        var updatedAt: Long,
-        var messagesClearedAt: Long,
-        var memberCount: Long,
-        var createdById: String?,
+        val createdAt: Long,
+        val updatedAt: Long,
+        val messagesClearedAt: Long,
+        val memberCount: Long,
+        val createdById: String?,
         @ColumnInfo(index = true)
-        var userRole: String?,
-        var unread: Boolean,
-        var newMessageCount: Long,
-        var newMentionCount: Long,
-        var newReactedMessageCount: Long,
-        var hidden: Boolean,
-        var archived: Boolean,
-        var muted: Boolean,
-        var mutedTill: Long?,
-        var pinnedAt: Long?,
-        var lastReceivedMessageId: Long,
-        var lastDisplayedMessageId: Long,
-        var messageRetentionPeriod: Long,
-        var lastMessageTid: Long?,
+        val userRole: String?,
+        val unread: Boolean,
+        val newMessageCount: Long,
+        val newMentionCount: Long,
+        val newReactedMessageCount: Long,
+        val hidden: Boolean,
+        val archived: Boolean,
+        val muted: Boolean,
+        val mutedTill: Long?,
+        val pinnedAt: Long?,
+        val lastReceivedMessageId: Long,
+        val lastDisplayedMessageId: Long,
+        val messageRetentionPeriod: Long,
+        val lastMessageTid: Long?,
         @ColumnInfo(index = true)
-        var lastMessageAt: Long?,
+        val lastMessageAt: Long?,
         @ColumnInfo(index = true)
-        var pending: Boolean
+        val pending: Boolean
 )
