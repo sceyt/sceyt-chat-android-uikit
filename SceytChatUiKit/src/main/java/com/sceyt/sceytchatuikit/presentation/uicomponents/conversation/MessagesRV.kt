@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -80,7 +79,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     private fun addOnScrollListener() {
-        addRVScrollListener(onScrolled =  { _: RecyclerView, _: Int, dy: Int ->
+        addRVScrollListener(onScrolled = { _: RecyclerView, _: Int, dy: Int ->
             checkNeedLoadPrev(dy)
             checkNeedLoadNext(dy)
         }, onScrollStateChanged = { _, newState ->
@@ -165,7 +164,6 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         return scrollToEnd
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     fun setData(messages: List<MessageListItem>, force: Boolean = false) {
         if (::mAdapter.isInitialized.not()) {
             adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory).also {
@@ -218,10 +216,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         } else null
     }
 
-    fun getData(): ArrayList<MessageListItem>? {
+    fun getData(): List<MessageListItem> {
         return if (::mAdapter.isInitialized)
             mAdapter.getData()
-        else null
+        else emptyList()
     }
 
     fun addNextPageMessages(messages: List<MessageListItem>) {
@@ -251,7 +249,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         }
     }
 
-    fun setScrollStateChangeListener(listener: (Int) -> Unit){
+    fun setScrollStateChangeListener(listener: (Int) -> Unit) {
         scrollStateChangeListener = listener
     }
 

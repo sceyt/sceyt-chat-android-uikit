@@ -129,20 +129,22 @@ class MessagesRepositoryImpl : MessagesRepository {
     }
 
     override suspend fun loadAllMessagesAfter(conversationId: Long, replyInThread: Boolean,
-                                              messageId: Long): Flow<SceytResponse<List<SceytMessage>>> = callbackFlow {
+                                              messageId: Long): Flow<Pair<Long, SceytResponse<List<SceytMessage>>>> = callbackFlow {
         val query = getQuery(conversationId, replyInThread, MESSAGES_LOAD_SIZE, false)
 
-        query.loadNext(messageId, object : MessagesCallback {
+        var nextMessageId = messageId
+        query.loadNext(messageId - 1, object : MessagesCallback {
             override fun onResult(messages: MutableList<Message>?) {
                 val result: MutableList<Message> = messages?.toMutableList() ?: mutableListOf()
-                trySend(SceytResponse.Success(result.map { it.toSceytUiMessage() }))
+                trySend(nextMessageId to SceytResponse.Success(result.map { it.toSceytUiMessage() }))
                 if (result.size == MESSAGES_LOAD_SIZE) {
-                    query.loadNext(result.last().id, this)
+                    nextMessageId = result.last().id
+                    query.loadNext(nextMessageId, this)
                 } else channel.close()
             }
 
             override fun onError(e: SceytException?) {
-                trySend(SceytResponse.Error(e))
+                trySend(nextMessageId to SceytResponse.Error(e))
                 channel.close()
                 SceytLog.e(TAG, "loadAllMessagesAfter error: ${e?.message}")
             }

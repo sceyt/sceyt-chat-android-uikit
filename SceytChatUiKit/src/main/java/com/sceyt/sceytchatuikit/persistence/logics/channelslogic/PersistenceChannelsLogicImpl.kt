@@ -42,6 +42,7 @@ import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
 import com.sceyt.sceytchatuikit.persistence.dao.ChatUsersReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.DraftMessageDao
+import com.sceyt.sceytchatuikit.persistence.dao.LoadRangeDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.PendingReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
@@ -83,6 +84,7 @@ internal class PersistenceChannelsLogicImpl(
         private val channelDao: ChannelDao,
         private val usersDao: UserDao,
         private val messageDao: MessageDao,
+        private val rangeDao: LoadRangeDao,
         private val draftMessageDao: DraftMessageDao,
         private val chatUsersReactionDao: ChatUsersReactionDao,
         private val pendingReactionDao: PendingReactionDao,
@@ -113,9 +115,7 @@ internal class PersistenceChannelsLogicImpl(
 
             is ClearedHistory -> {
                 data.channelId?.let { channelId ->
-                    channelDao.updateLastMessage(channelId, null, null)
-                    messageDao.deleteAllMessages(channelId)
-                    channelsCache.clearedHistory(channelId)
+                    clearHistory(channelId)
                 }
             }
 
@@ -568,9 +568,7 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success) {
             SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
             SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
-            channelDao.updateLastMessage(channelId, null, null)
-            messageDao.deleteAllMessages(channelId)
-            channelsCache.clearedHistory(channelId)
+            clearHistory(channelId)
         }
 
         return response
@@ -810,7 +808,15 @@ internal class PersistenceChannelsLogicImpl(
     private suspend fun deleteChannelDb(channelId: Long) {
         channelDao.deleteChannelAndLinks(channelId)
         messageDao.deleteAllMessages(channelId)
+        rangeDao.deleteLoadRanges(channelId)
         channelsCache.deleteChannel(channelId)
+    }
+
+    private suspend fun clearHistory(channelId: Long) {
+        channelDao.updateLastMessage(channelId, null, null)
+        messageDao.deleteAllMessages(channelId)
+        rangeDao.deleteLoadRanges(channelId)
+        channelsCache.clearedHistory(channelId)
     }
 
     private fun upsertChannelsToCache(channels: List<SceytChannel>) {

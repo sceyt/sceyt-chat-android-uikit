@@ -141,10 +141,12 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
 
     fun notifyUpdate(messages: List<MessageListItem>, recyclerView: RecyclerView) {
         updateJob?.cancel()
-        updateJob = recyclerView.context.asComponentActivity().lifecycleScope.launch(Dispatchers.Default) {
-            val myDiffUtil = MessagesDiffUtil(ArrayList(this@MessagesAdapter.messages), messages)
-            val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-
+        updateJob = recyclerView.context.asComponentActivity().lifecycleScope.launch {
+            var productDiffResult: DiffUtil.DiffResult
+            withContext(Dispatchers.Default) {
+                val myDiffUtil = MessagesDiffUtil(ArrayList(this@MessagesAdapter.messages), messages)
+                productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
+            }
             withContext(Dispatchers.Main) {
                 productDiffResult.dispatchUpdatesToSafety(recyclerView)
                 this@MessagesAdapter.messages = SyncArrayList(messages)
@@ -159,7 +161,7 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         notifyDataSetChanged()
     }
 
-    fun getData() = messages
+    fun getData() = messages.toList()
 
     fun needTopOffset(position: Int): Boolean {
         try {
