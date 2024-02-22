@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
@@ -396,12 +397,15 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun SceytMessageInputViewBinding.setUpStyle() {
+        val colorAccent = context.getCompatColor(SceytKitConfig.sceytColorAccent)
         icAddAttachments.setImageResource(MessageInputViewStyle.attachmentIcon)
         messageInput.setTextColor(context.getCompatColor(MessageInputViewStyle.inputTextColor))
         messageInput.hint = MessageInputViewStyle.inputHintText
         messageInput.setHintTextColor(context.getCompatColor(MessageInputViewStyle.inputHintTextColor))
-        btnJoin.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        btnClearChat.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        btnJoin.setTextColor(colorAccent)
+        btnClearChat.setTextColor(colorAccent)
+        layoutInputSearchResult.icDown.imageTintList = ColorStateList.valueOf(colorAccent)
+        layoutInputSearchResult.icUp.imageTintList = ColorStateList.valueOf(colorAccent)
     }
 
     private fun determineInputState() {
@@ -935,7 +939,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 hideAndStopVoiceRecorder()
                 closeReplyOrEditView()
                 closeLinkDetailsView()
-                onSearchMessagesResult(SearchResult( ))
+                onSearchMessagesResult(SearchResult())
                 layoutInputSearchResult.root.animateToVisible(150)
             } else {
                 replyMessage?.let { replyMessage(it, initWithDraft = true) }
