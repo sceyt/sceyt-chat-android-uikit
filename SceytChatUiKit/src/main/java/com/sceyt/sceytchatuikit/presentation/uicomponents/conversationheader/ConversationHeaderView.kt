@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader
 
 import android.animation.LayoutTransition
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -19,6 +20,7 @@ import androidx.core.view.marginBottom
 import androidx.core.view.marginLeft
 import androidx.core.view.marginRight
 import androidx.core.view.marginTop
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.user.PresenceState
@@ -120,12 +122,20 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 clickListeners.onToolbarClick(it)
             }
 
+            icClear.setOnClickListener {
+                inputSearch.text?.clear()
+            }
+
             inputSearch.setOnEditorActionListener { _, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_SEARCH)
                     inputSearch.text?.let { text ->
                         onSearchQueryChangeListener?.invoke(text.toString())
                     }
                 return@setOnEditorActionListener false
+            }
+
+            inputSearch.doAfterTextChanged {
+                binding.icClear.isVisible = it?.isNotEmpty() == true
             }
         }
 
@@ -150,6 +160,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         subTitle.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.subTitleColor))
         toolbarUnderline.background = ColorDrawable(context.getCompatColor(ConversationHeaderViewStyle.underlineColor))
         toolbarUnderline.isVisible = ConversationHeaderViewStyle.enableUnderline
+        icSearch.imageTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
     @Suppress("UNUSED_PARAMETER")
