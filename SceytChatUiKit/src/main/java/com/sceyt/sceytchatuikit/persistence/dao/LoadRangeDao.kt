@@ -16,12 +16,12 @@ interface LoadRangeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(entities: List<LoadRangeEntity>)
 
-    @Query("select * from LoadRange where :messageId in (startId, endId)")
-    suspend fun getLoadRange(messageId: Long): List<LoadRangeEntity>
+    @Query("select * from LoadRange where channelId =:channelId and :messageId in (startId, endId)")
+    suspend fun getLoadRange(channelId: Long, messageId: Long): List<LoadRangeEntity>
 
-    @Query("select * from LoadRange where (startId >=:start and startId <=:end)" +
-            " or (endId >=:start and endId <= :end) or startId =:messageId or endId =:messageId")
-    suspend fun getLoadRanges(start: Long, end: Long, messageId: Long): List<LoadRangeEntity>
+    @Query("select * from LoadRange where channelId =:channelId and ((startId >=:start and startId <=:end)" +
+            " or (endId >=:start and endId <= :end) or startId =:messageId or endId =:messageId)")
+    suspend fun getLoadRanges(start: Long, end: Long, messageId: Long, channelId: Long): List<LoadRangeEntity>
 
     @Query("select * from LoadRange order by startId")
     suspend fun getAll(): List<LoadRangeEntity>
@@ -34,7 +34,7 @@ interface LoadRangeDao {
 
     @Transaction
     suspend fun updateLoadRanges(start: Long, end: Long, messageId: Long, channelId: Long) {
-        val ranges = getLoadRanges(start, end, messageId)
+        val ranges = getLoadRanges(start, end, messageId, channelId)
         val minDb = ranges.minByOrNull { it.startId }?.startId ?: start
         val maxDb = ranges.maxByOrNull { it.endId }?.endId ?: end
         val min = minOf(minDb, start)

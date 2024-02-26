@@ -48,9 +48,9 @@ class MessageLoadRangeUpdaterTest {
     @Test
     fun insertRange() = runTest {
         val messageId = 1L
-        updater.updateMessageLoadRange(messageId,1, 10, channelId)
+        updater.updateMessageLoadRange(messageId, 1, 10, channelId)
 
-        val ranges = updater.getMessageLoadRange(messageId)
+        val ranges = updater.getMessageLoadRange(channelId, messageId)
 
         print(ranges)
 
@@ -69,9 +69,9 @@ class MessageLoadRangeUpdaterTest {
 
         val start = 1L
         val end = 25L
-        updater.updateMessageLoadRange(start,start, end, channelId)
+        updater.updateMessageLoadRange(start, start, end, channelId)
 
-        val ranges = updater.getMessageLoadRange(start)
+        val ranges = updater.getMessageLoadRange(channelId, start)
 
         Log.d("ranges", "$ranges")
         Log.d("allRanges", "${rangeDao.getAll()}")
@@ -90,9 +90,9 @@ class MessageLoadRangeUpdaterTest {
 
         val start = 1L
         val end = 15L
-        updater.updateMessageLoadRange(start,start, end, channelId)
+        updater.updateMessageLoadRange(start, start, end, channelId)
 
-        val ranges = updater.getMessageLoadRange(start)
+        val ranges = updater.getMessageLoadRange(channelId, start)
 
         Log.d("ranges", "$ranges")
         Log.d("allRanges", "${rangeDao.getAll()}")
@@ -111,9 +111,9 @@ class MessageLoadRangeUpdaterTest {
 
         val start = 60L
         val end = 70L
-        updater.updateMessageLoadRange(start,start, end, channelId)
+        updater.updateMessageLoadRange(start, start, end, channelId)
 
-        val ranges = updater.getMessageLoadRange(start)
+        val ranges = updater.getMessageLoadRange(channelId, start)
 
         val allRanges = rangeDao.getAll()
         Log.d("ranges", "$ranges ")
@@ -133,9 +133,9 @@ class MessageLoadRangeUpdaterTest {
 
         val start = 1L
         val end = 10L
-        updater.updateMessageLoadRange(start,start, end, channelId)
+        updater.updateMessageLoadRange(start, start, end, channelId)
 
-        val ranges = updater.getMessageLoadRange(start)
+        val ranges = updater.getMessageLoadRange(channelId, start)
 
         val allRanges = rangeDao.getAll()
         Log.d("ranges", "$ranges ")
@@ -157,7 +157,7 @@ class MessageLoadRangeUpdaterTest {
         val end = 5L
         updater.updateMessageLoadRange(start, start, end, channelId)
 
-        val ranges = updater.getMessageLoadRange(start)
+        val ranges = updater.getMessageLoadRange(channelId, start)
 
         val allRanges = rangeDao.getAll()
         Log.d("ranges", "$ranges ")

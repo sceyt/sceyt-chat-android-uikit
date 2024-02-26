@@ -723,7 +723,7 @@ internal class PersistenceMessagesLogicImpl(
 
     private suspend fun updateMessageLoadRange(messageId: Long, channelId: Long, response: SceytResponse<List<SceytMessage>>) {
         val data = (response as? SceytResponse.Success)?.data ?: return
-        if (data.isEmpty() || data.size == 1) return
+        if (data.isEmpty()) return
         messageLoadRangeUpdater.updateMessageLoadRange(messageId = messageId, start = data.first().id, end = data.last().id, channelId = channelId)
     }
 
