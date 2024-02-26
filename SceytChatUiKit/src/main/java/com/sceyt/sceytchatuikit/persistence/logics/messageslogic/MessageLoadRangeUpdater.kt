@@ -11,7 +11,7 @@ class MessageLoadRangeUpdater(
         loadRangeDao.updateLoadRanges(start = start, end = end, messageId = messageId, channelId = channelId)
     }
 
-    suspend fun getMessageLoadRange(messageId: Long): List<LoadRangeEntity> {
-        return loadRangeDao.getLoadRange(messageId)
+    suspend fun getMessageLoadRange(channelId: Long, messageId: Long): List<LoadRangeEntity> {
+        return loadRangeDao.getLoadRange(channelId = channelId, messageId = messageId)
     }
 }

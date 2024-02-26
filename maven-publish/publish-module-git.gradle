@@ -9,6 +9,7 @@ def getArtifactId = { ->
 }
 
 tasks.register('sourceJar', Jar) {
+    from android.sourceSets.main.java.srcDirs
     archiveClassifier = "sources"
 }
 
