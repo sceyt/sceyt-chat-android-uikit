@@ -1,12 +1,15 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader
 
+import android.animation.LayoutTransition
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.annotation.MenuRes
@@ -17,6 +20,7 @@ import androidx.core.view.marginBottom
 import androidx.core.view.marginLeft
 import androidx.core.view.marginRight
 import androidx.core.view.marginTop
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.user.PresenceState
@@ -32,12 +36,15 @@ import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.hideKeyboard
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.maybeComponentActivity
+import com.sceyt.sceytchatuikit.extensions.showSoftInput
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eventlisteners.HeaderEventsListener
@@ -71,8 +78,12 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private var enablePresence: Boolean = true
     private val typingUsersHelper by lazy { initTypingUsersHelper() }
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
+    private var toolbarSearchHiddenCallback: (() -> Unit)? = null
     private var addedMenu: Menu? = null
+    private var onSearchQueryChangeListener: ((String) -> Unit)? = null
     var isShowingMessageActions = false
+        private set
+    var isShowingSearchBar = false
         private set
 
     init {
@@ -92,7 +103,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private fun init() {
         with(binding) {
             setUpStyle()
-            layoutToolbarRoot.layoutTransition?.setDuration(200)
+            layoutToolbarRoot.layoutTransition = LayoutTransition().apply {
+                disableTransitionType(LayoutTransition.DISAPPEARING)
+                setDuration(200)
+            }
 
             post { subTitle.isSelected = true }
 
@@ -106,6 +120,22 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
             layoutToolbarDetails.setOnClickListener {
                 clickListeners.onToolbarClick(it)
+            }
+
+            icClear.setOnClickListener {
+                inputSearch.text?.clear()
+            }
+
+            inputSearch.setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_SEARCH)
+                    inputSearch.text?.let { text ->
+                        onSearchQueryChangeListener?.invoke(text.toString())
+                    }
+                return@setOnEditorActionListener false
+            }
+
+            inputSearch.doAfterTextChanged {
+                binding.icClear.isVisible = it?.isNotEmpty() == true
             }
         }
 
@@ -130,6 +160,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         subTitle.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.subTitleColor))
         toolbarUnderline.background = ColorDrawable(context.getCompatColor(ConversationHeaderViewStyle.underlineColor))
         toolbarUnderline.isVisible = ConversationHeaderViewStyle.enableUnderline
+        icSearch.imageTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -237,7 +268,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
             toolBarMessageActions.setMenuItemClickListener {
                 listener?.invoke(it) {
-                    hideMessageActions()
+                    binding.hideMessageActions()
                     toolbarActionsHiddenCallback?.invoke()
                 }
             }
@@ -298,11 +329,23 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
     }
 
-    private fun hideMessageActions() {
-        binding.toolBarMessageActions.isVisible = false
-        binding.layoutToolbarDetails.isVisible = true
+    private fun SceytConversationHeaderViewBinding.hideMessageActions() {
+        toolBarMessageActions.isVisible = false
+        layoutToolbarDetails.isVisible = true
         isShowingMessageActions = false
         addedMenu?.forEach { item -> item.isVisible = true }
+    }
+
+    private fun SceytConversationHeaderViewBinding.toggleSearch(showSearch: Boolean) {
+        hideMessageActions()
+        layoutSearch.isVisible = showSearch
+        layoutToolbarDetails.isVisible = !showSearch
+        root.setBackgroundColor(if (showSearch) context.getCompatColor(R.color.sceyt_color_bg)
+        else context.getCompatColor(R.color.sceyt_color_primary))
+        isShowingSearchBar = showSearch
+        if (showSearch)
+            context.showSoftInput(inputSearch)
+        else context.hideKeyboard(inputSearch)
     }
 
     internal fun onTyping(data: ChannelTypingEventData) {
@@ -315,6 +358,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     internal fun setToolbarActionHiddenCallback(callback: () -> Unit) {
         toolbarActionsHiddenCallback = callback
+    }
+
+    internal fun setSearchBarHiddenCallback(callback: () -> Unit) {
+        toolbarSearchHiddenCallback = callback
     }
 
     fun isTyping() = typingUsersHelper.isTyping
@@ -345,6 +392,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     fun setCustomUiElementsListener(listener: HeaderUIElementsListenerImpl) {
         uiElementsListeners = listener
+    }
+
+    fun setSearchQueryChangeListener(listener: (String) -> Unit) {
+        onSearchQueryChangeListener = listener
     }
 
     fun setTypingTextBuilder(builder: (SceytMember) -> String) {
@@ -406,7 +457,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     override fun onHideMessageActionsMenu() {
-        hideMessageActions()
+        binding.hideMessageActions()
     }
 
     override fun onInitToolbarActionsMenu(vararg messages: SceytMessage, menu: Menu) {
@@ -422,22 +473,34 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
     }
 
+    override fun showSearchMessagesBar(event: MessageCommandEvent.SearchMessages) {
+        binding.toggleSearch(true)
+    }
+
     //Click listeners
     override fun onAvatarClick(view: View) {
         if (::channel.isInitialized)
-            ConversationInfoActivity.newInstance(context, channel)
+            ConversationInfoActivity.launch(context, channel)
     }
 
     override fun onToolbarClick(view: View) {
         if (::channel.isInitialized)
-            ConversationInfoActivity.newInstance(context, channel)
+            ConversationInfoActivity.launch(context, channel)
     }
 
     override fun onBackClick(view: View) {
-        if (isShowingMessageActions) {
-            hideMessageActions()
-            toolbarActionsHiddenCallback?.invoke()
-        } else
-            context.maybeComponentActivity()?.onBackPressedDispatcher?.onBackPressed()
+        when {
+            isShowingMessageActions -> {
+                binding.hideMessageActions()
+                toolbarActionsHiddenCallback?.invoke()
+            }
+
+            isShowingSearchBar -> {
+                binding.toggleSearch(false)
+                toolbarSearchHiddenCallback?.invoke()
+            }
+
+            else -> context.maybeComponentActivity()?.onBackPressedDispatcher?.onBackPressed()
+        }
     }
 }

@@ -18,6 +18,10 @@ object MessageInputViewStyle {
 
     @JvmField
     @DrawableRes
+    var voiceRecordIcon: Int = R.drawable.sceyt_ic_voice
+
+    @JvmField
+    @DrawableRes
     var sendAudioMessageIcon: Int = R.drawable.sceyt_ic_arrow_up
 
     @JvmField
@@ -38,6 +42,7 @@ object MessageInputViewStyle {
     internal fun updateWithAttributes(context: Context, typedArray: TypedArray): MessageInputViewStyle {
         attachmentIcon = typedArray.getResourceId(R.styleable.MessageInputView_sceytMessageInputAttachmentIcon, attachmentIcon)
         sendMessageIcon = typedArray.getResourceId(R.styleable.MessageInputView_sceytMessageInputSendIcon, sendMessageIcon)
+        voiceRecordIcon = typedArray.getResourceId(R.styleable.MessageInputView_sceytMessageInputVoiceRecordIcon, voiceRecordIcon)
         inputTextColor = typedArray.getResourceId(R.styleable.MessageInputView_sceytMessageInputTextColor, inputTextColor)
         inputHintTextColor = typedArray.getResourceId(R.styleable.MessageInputView_sceytMessageInputHintTextColor, inputHintTextColor)
         inputHintText = typedArray.getString(R.styleable.MessageInputView_sceytMessageInputHintText)

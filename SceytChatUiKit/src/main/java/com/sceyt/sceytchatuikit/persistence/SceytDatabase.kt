@@ -16,6 +16,7 @@ import com.sceyt.sceytchatuikit.persistence.dao.ChatUsersReactionDao
 import com.sceyt.sceytchatuikit.persistence.dao.DraftMessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.FileChecksumDao
 import com.sceyt.sceytchatuikit.persistence.dao.LinkDao
+import com.sceyt.sceytchatuikit.persistence.dao.LoadRangeDao
 import com.sceyt.sceytchatuikit.persistence.dao.MembersDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.PendingMarkersDao
@@ -34,6 +35,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.DraftMessageUserLink
+import com.sceyt.sceytchatuikit.persistence.entity.messages.LoadRangeEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MentionUserMessageLink
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
@@ -60,14 +62,17 @@ import com.sceyt.sceytchatuikit.persistence.entity.pendings.PendingMessageStateE
     PendingMessageStateEntity::class,
     AttachmentPayLoadEntity::class,
     FileChecksumEntity::class,
-    LinkDetailsEntity::class
-], version = 7, autoMigrations = [
+    LinkDetailsEntity::class,
+    LoadRangeEntity::class
+], version = 9, autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
     AutoMigration(from = 3, to = 4, spec = SceytDatabase.AutoMigrationSpec3to4::class),
     AutoMigration(from = 4, to = 5),
     AutoMigration(from = 5, to = 6, spec = SceytDatabase.AutoMigrationSpec5To6::class),
     AutoMigration(from = 6, to = 7),
+    AutoMigration(from = 7, to = 8),
+    AutoMigration(from = 8, to = 9)
 ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
@@ -85,6 +90,7 @@ internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun pendingMessageStateDao(): PendingMessageStateDao
     abstract fun fileChecksumDao(): FileChecksumDao
     abstract fun linkDao(): LinkDao
+    abstract fun loadRangeDao(): LoadRangeDao
 
     @RenameColumn(tableName = "messages", fromColumnName = "isParentMessage", toColumnName = "unList")
     class AutoMigrationSpec3to4 : AutoMigrationSpec

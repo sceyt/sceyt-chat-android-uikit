@@ -21,11 +21,15 @@ sealed class MessageCommandEvent {
             val show: Boolean
     ) : MessageCommandEvent()
 
+    data class SearchMessages(
+            val show: Boolean
+    ) : MessageCommandEvent()
+
     data class OnMultiselectEvent(
             val message: SceytMessage,
     ) : MessageCommandEvent()
 
-    object OnCancelMultiselectEvent : MessageCommandEvent()
+    data object OnCancelMultiselectEvent : MessageCommandEvent()
 
     data class Reply(
             val message: SceytMessage,

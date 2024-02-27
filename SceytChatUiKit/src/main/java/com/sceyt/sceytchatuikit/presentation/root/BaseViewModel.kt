@@ -45,6 +45,8 @@ open class BaseViewModel : ViewModel() {
         }
     }
 
+    val isLoadingFromServer get() = loadingNextItems.get() || loadingPrevItems.get()
+
     protected fun setPagingLoadingStarted(loadType: PaginationResponse.LoadType,
                                           ignoreDb: Boolean = false,
                                           ignoreServer: Boolean = false) {

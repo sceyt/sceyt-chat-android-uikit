@@ -4,8 +4,10 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
+import com.sceyt.sceytchatuikit.data.models.SceytPagingResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
+import com.sceyt.sceytchatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -28,10 +30,17 @@ interface PersistenceMessagesMiddleWare {
     suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int = SceytKitConfig.MESSAGES_LOAD_SIZE,
                                    loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
+    suspend fun searchMessages(conversationId: Long, replyInThread: Boolean,
+                               query: String): SceytPagingResponse<List<SceytMessage>>
+
+    suspend fun loadNextSearchMessages(): SceytPagingResponse<List<SceytMessage>>
     suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>>
 
     suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                            messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
+
+    suspend fun syncNearMessages(conversationId: Long,  messageId: Long,
+                                 replyInThread: Boolean): SyncNearMessagesResult
 
     suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
     suspend fun sendMessage(channelId: Long, message: Message)

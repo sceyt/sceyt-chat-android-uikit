@@ -118,7 +118,7 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
     }
 
     private suspend fun loadMessages(channel: SceytChannel) {
-        if (channel.lastDisplayedMessageId == channel.lastMessage?.id)
+        if (channel.lastMessage == null || channel.lastDisplayedMessageId == channel.lastMessage?.id)
             return
 
         syncMessagesAfter(channel, channel.lastDisplayedMessageId, false)

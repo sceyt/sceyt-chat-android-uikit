@@ -6,8 +6,7 @@ sealed class PageState {
                           val errorMessage: String?,
                           val wasLoadingMore: Boolean = false,
                           val query: String? = null,
-                          val showMessage: Boolean = true) : PageState() {
-    }
+                          val showMessage: Boolean = true) : PageState()
 
     data class StateEmpty(val query: String? = null,
                           val wasLoadingMore: Boolean = false) : PageState() {
@@ -16,5 +15,5 @@ sealed class PageState {
 
     data class StateLoading(val isLoading: Boolean = true) : PageState()
     data class StateLoadingMore(val isLoading: Boolean = true) : PageState()
-    object Nothing : PageState()
+    data object Nothing : PageState()
 }

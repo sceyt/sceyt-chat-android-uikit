@@ -13,9 +13,9 @@ import androidx.room.*
 ], indices = [Index(value = ["messageTid", "user_id"], unique = true, name = "uniqueMentionUserInMessage")])
 data class MentionUserMessageLink(
         @PrimaryKey(autoGenerate = true)
-        var id: Int = 0,
+        val id: Int = 0,
         @ColumnInfo(index = true)
-        var messageTid: Long,
+        val messageTid: Long,
         @ColumnInfo(name = "user_id", index = true)
-        var userId: String
+        val userId: String
 )

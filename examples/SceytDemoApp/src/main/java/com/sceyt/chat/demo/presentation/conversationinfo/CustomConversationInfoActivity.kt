@@ -13,6 +13,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.launchActivity
+import com.sceyt.sceytchatuikit.extensions.newIntent
 import com.sceyt.sceytchatuikit.extensions.overrideTransitions
 import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
@@ -67,10 +68,18 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
     }
 
     companion object {
-        fun newInstance(context: Context, channel: SceytChannel) {
+        fun launch(context: Context, channel: SceytChannel) {
             context.launchActivity<CustomConversationInfoActivity> {
                 putExtra(CHANNEL, channel)
             }
+            context.asActivity().overrideTransitions(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold, true)
+        }
+
+        fun startWithLauncher(context: Context, channel: SceytChannel, launcher: ActivityResultLauncher<Intent>) {
+            val intent = newIntent<CustomConversationInfoActivity>(context).apply {
+                putExtra(CHANNEL, channel)
+            }
+            launcher.launch(intent)
             context.asActivity().overrideTransitions(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold, true)
         }
     }

@@ -368,6 +368,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun setMessagesList(data: List<MessageListItem>, force: Boolean = false) {
         messagesRV.setData(data, force)
+        if (data.isNotEmpty())
+            pageStateView?.updateState(PageState.Nothing)
     }
 
     internal fun addNextPageMessages(data: List<MessageListItem>) {
@@ -389,14 +391,14 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         var foundToUpdate = false
         SceytLog.i(TAG, "Message updated: id ${message.id}, tid ${message.tid}," +
                 " body ${message.body}, deliveryStatus ${message.deliveryStatus}")
-        for ((index, item) in messagesRV.getData()?.withIndex() ?: return false) {
+        for ((index, item) in messagesRV.getData().withIndex()) {
             if (item is MessageItem && item.message.tid == message.tid) {
                 val oldMessage = item.message.clone()
                 Log.i(TAG, "${oldMessage.deliveryStatus}  ${message.deliveryStatus}")
                 item.message.updateMessage(message)
                 val diff = oldMessage.diff(item.message)
                 SceytLog.i(TAG, "Found to update: id ${item.message.id}, tid ${item.message.tid}," +
-                        " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${messagesRV.getData()?.size}")
+                        " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${messagesRV.getData().size}")
                 updateItem(index, item, diff)
                 foundToUpdate = true
                 break
@@ -406,7 +408,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateMessageSelection(message: SceytMessage) {
-        for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
+        for ((index, item) in messagesRV.getData().withIndex()) {
             if (item is MessageItem && item.message.tid == message.tid) {
                 item.message.isSelected = message.isSelected
                 updateItem(index, item, MessageDiff.DEFAULT_FALSE.copy(selectionChanged = true))
@@ -416,13 +418,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun getMessageById(messageId: Long): MessageItem? {
-        return messagesRV.getData()?.find { it is MessageItem && it.message.id == messageId }?.let {
+        return messagesRV.getData().find { it is MessageItem && it.message.id == messageId }?.let {
             (it as MessageItem)
         }
     }
 
     internal fun getMessageIndexedById(messageId: Long): Pair<Int, MessageListItem>? {
-        return messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == messageId }
+        return messagesRV.getData().findIndexed { it is MessageItem && it.message.id == messageId }
     }
 
     internal fun sortMessages() {
@@ -436,7 +438,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 pageStateView?.updateState(PageState.StateEmpty())
             return
         }
-        val data = messagesRV.getData() ?: return
+        val data = messagesRV.getData()
         data.findIndexed { it is MessageItem && it.message.id == updateMessage.id }?.let {
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
@@ -465,7 +467,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateReaction(data: SceytMessage) {
-        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == data.id }?.let {
+        messagesRV.getData().findIndexed { it is MessageItem && it.message.id == data.id }?.let {
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.reactionTotals = data.reactionTotals
@@ -480,7 +482,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
-        val data = messagesRV.getData() ?: return
+        val data = messagesRV.getData()
         ids.forEach { id ->
             for ((index: Int, item: MessageListItem) in data.withIndex()) {
                 if (item is MessageItem) {
@@ -498,7 +500,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateProgress(data: TransferData, updateRecycler: Boolean) {
-        val messages = messagesRV.getData() ?: return
+        val messages = messagesRV.getData()
         ArrayList(messages).findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let { (index, it) ->
             val predicate: (SceytAttachment) -> Boolean = when (data.state) {
                 Uploading, PendingUpload, PauseUpload, Uploaded, Preparing, WaitingToUpload -> { attachment ->
@@ -532,7 +534,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun messageSendFailed(tid: Long) {
-        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.tid == tid }?.let {
+        messagesRV.getData().findIndexed { it is MessageItem && it.message.tid == tid }?.let {
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.deliveryStatus = DeliveryStatus.Pending
@@ -541,7 +543,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateReplyCount(replyMessage: SceytMessage?) {
-        messagesRV.getData()?.findIndexed {
+        messagesRV.getData().findIndexed {
             it is MessageItem && it.message.id == replyMessage?.parentMessage?.id
         }?.let {
             val message = (it.second as MessageItem).message
@@ -552,7 +554,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun newReplyMessage(messageId: Long?) {
-        messagesRV.getData()?.findIndexed {
+        messagesRV.getData().findIndexed {
             it is MessageItem && it.message.id == messageId
         }?.let {
             val message = (it.second as MessageItem).message
@@ -568,6 +570,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun setNeedLoadPrevMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setNeedLoadPrevMessagesListener(listener)
+    }
+
+    internal fun setScrollStateChangeListener(listener: (Int) -> Unit) {
+        messagesRV.setScrollStateChangeListener(listener)
     }
 
     internal fun setNeedLoadNextMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
@@ -627,46 +633,55 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.getViewHolderFactory().setNeedMediaDataCallback(callBack)
     }
 
-    fun scrollToMessage(msgId: Long, highlight: Boolean) {
-        MessagesAdapter.awaitUpdating {
-            messagesRV.awaitAnimationEnd {
-                messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == msgId }?.let {
-                    if (highlight)
-                        it.second.highlighted = true
-                    (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(it.first, 200)
-                }
-            }
-        }
-    }
+    fun scrollToMessage(msgId: Long, highlight: Boolean, offset: Int = 0, awaitToScroll: (() -> Unit)? = null) {
+        safeScrollTo {
+            messagesRV.getData().findIndexed { it is MessageItem && it.message.id == msgId }?.let {
+                val (position, item) = it
+                item.highligh = highlight
+                (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
 
-    fun scrollToPositionAndHighlight(position: Int, highlight: Boolean) {
-        MessagesAdapter.awaitUpdating {
-            messagesRV.awaitAnimationEnd {
-                (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, 200)
-                if (highlight) {
+                if (highlight || awaitToScroll != null) {
                     messagesRV.awaitToScrollFinish(position, callback = {
                         (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                        awaitToScroll?.invoke()
                     })
                 }
             }
         }
     }
 
+    fun scrollToPosition(position: Int, highlight: Boolean, offset: Int = 0, awaitToScroll: (() -> Unit)? = null) {
+        safeScrollTo {
+            (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
+
+            if (highlight || awaitToScroll != null) {
+                messagesRV.awaitToScrollFinish(position, callback = {
+                    (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                })
+            }
+        }
+    }
+
     fun scrollToUnReadMessage() {
-        MessagesAdapter.awaitUpdating {
-            messagesRV.awaitAnimationEnd {
-                messagesRV.getData()?.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
-                    (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(it.first, 0)
-                }
+        safeScrollTo {
+            messagesRV.getData().findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
+                (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(it.first, 0)
             }
         }
     }
 
     fun scrollToLastMessage() {
+        safeScrollTo {
+            messagesRV.scrollToPosition(messagesRV.getData().size - 1)
+        }
+    }
+
+    private fun safeScrollTo(scrollTo: () -> Unit) {
         MessagesAdapter.awaitUpdating {
-            messagesRV.awaitAnimationEnd {
-                messagesRV.scrollToPosition((messagesRV.getData()
-                        ?: return@awaitAnimationEnd).size - 1)
+            try {
+                scrollTo()
+            } catch (e: Exception) {
+                messagesRV.awaitAnimationEnd { scrollTo() }
             }
         }
     }
@@ -680,7 +695,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 (holder as? BaseMsgViewHolder)?.cancelSelectableState()
             }
         }
-        ArrayList(messagesRV.getData() ?: return).forEach { item ->
+        messagesRV.getData().forEach { item ->
             if (item is MessageItem)
                 item.message.isSelected = false
         }
@@ -733,6 +748,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             enabledActions = enabled
 
         messagesRV.enableDisableSwipeToReply(enabledActions)
+    }
+
+    fun startSearchMessages() {
+        messageCommandEventListener?.invoke(MessageCommandEvent.SearchMessages(true))
     }
 
     override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
