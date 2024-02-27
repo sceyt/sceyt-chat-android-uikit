@@ -109,11 +109,11 @@ class OutFileMsgViewHolder(
                 initAttachment()
 
             if (diff.reactionsChanged)
-                setOrUpdateReactions(item, rvReactions, viewPoolReactions)
+                setOrUpdateReactions(item, rvReactions, viewPoolReactions, layoutDetails)
         }
     }
 
-    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
     private fun setFileDetails(file: SceytAttachment) {
         with(binding) {
@@ -163,9 +163,6 @@ class OutFileMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-    override fun setMaxWidth() {
-        binding.layoutDetails.layoutParams.width = bubbleMaxWidth
-    }
 
     private fun SceytItemOutFileMessageBinding.setMessageItemStyle() {
         with(context) {

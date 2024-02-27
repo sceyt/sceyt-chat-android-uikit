@@ -93,8 +93,10 @@
 
         <View
             android:id="@+id/viewHandleClick"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="@+id/icFile"
             app:layout_constraintTop_toTopOf="@+id/icFile" />
 
@@ -148,9 +150,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
+            android:layout_marginEnd="10dp"
             android:includeFontPadding="false"
+            app:layout_constraintHorizontal_bias="0"
             android:textColor="@color/sceyt_color_gray_400"
             android:textSize="@dimen/tinyTextSize"
+            app:layout_constraintEnd_toStartOf="@+id/messageDate"
             app:layout_constraintStart_toStartOf="@+id/tvFileName"
             app:layout_constraintTop_toBottomOf="@+id/tvFileName"
             tools:text="67 KB" />

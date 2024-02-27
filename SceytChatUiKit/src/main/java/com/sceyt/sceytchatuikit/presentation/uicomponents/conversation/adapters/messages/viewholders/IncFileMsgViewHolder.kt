@@ -111,7 +111,7 @@ class IncFileMsgViewHolder(
                 initAttachment()
 
             if (diff.reactionsChanged)
-                setOrUpdateReactions(item, rvReactions, viewPoolReactions)
+                setOrUpdateReactions(item, rvReactions, viewPoolReactions, layoutDetails)
 
             if (item.message.shouldShowAvatarAndName)
                 avatar.setOnClickListener {
@@ -122,7 +122,7 @@ class IncFileMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-    override val layoutBubbleConfig get() = Pair(binding.root, false)
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
     private fun setFileDetails(file: SceytAttachment) {
         with(binding) {
@@ -169,10 +169,6 @@ class IncFileMsgViewHolder(
 
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
-
-    override fun setMaxWidth() {
-        binding.layoutDetails.layoutParams.width = bubbleMaxWidth
-    }
 
     private fun SceytItemIncFileMessageBinding.setMessageItemStyle() {
         with(context) {
