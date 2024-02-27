@@ -1,7 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.entity.messages
 
 data class ForwardingDetailsDb(
-        var messageId: Long,
+        val messageId: Long,
         val userId: String?,
-        var hops: Int
+        val hops: Int
 )

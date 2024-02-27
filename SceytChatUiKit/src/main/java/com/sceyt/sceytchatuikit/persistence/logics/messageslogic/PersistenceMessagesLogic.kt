@@ -5,8 +5,10 @@ import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
+import com.sceyt.sceytchatuikit.data.models.SceytPagingResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
+import com.sceyt.sceytchatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
@@ -32,10 +34,16 @@ interface PersistenceMessagesLogic {
                                    loadKey: LoadKeyData,
                                    ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>>
+    suspend fun searchMessages(conversationId: Long, replyInThread: Boolean,
+                               query: String): SceytPagingResponse<List<SceytMessage>>
 
+    suspend fun loadNextSearchMessages(): SceytPagingResponse<List<SceytMessage>>
+    suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>>
     suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                            messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
+
+    suspend fun syncNearMessages(conversationId: Long, messageId: Long,
+                                 replyInThread: Boolean): SyncNearMessagesResult
 
     suspend fun onSyncedChannels(channels: List<SceytChannel>)
     suspend fun getMessagesByType(channelId: Long, lastMessageId: Long, type: String): SceytResponse<List<SceytMessage>>

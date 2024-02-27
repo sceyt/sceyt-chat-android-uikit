@@ -16,6 +16,7 @@ import com.sceyt.sceytchatuikit.data.repositories.UsersRepository
 import com.sceyt.sceytchatuikit.data.toMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
+import com.sceyt.sceytchatuikit.persistence.dao.LoadRangeDao
 import com.sceyt.sceytchatuikit.persistence.dao.MembersDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
@@ -38,6 +39,7 @@ internal class PersistenceMembersLogicImpl(
         private val channelsRepository: ChannelsRepository,
         private val usersRepository: UsersRepository,
         private val channelDao: ChannelDao,
+        private val rangeDao: LoadRangeDao,
         private val messageDao: MessageDao,
         private val membersDao: MembersDao,
         private val usersDao: UserDao,
@@ -171,6 +173,7 @@ internal class PersistenceMembersLogicImpl(
     private suspend fun deleteChannelDb(channelId: Long) {
         channelDao.deleteChannelAndLinks(channelId)
         messageDao.deleteAllMessages(channelId)
+        rangeDao.deleteChannelLoadRanges(channelId)
         channelsCache.deleteChannel(channelId)
     }
 

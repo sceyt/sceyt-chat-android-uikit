@@ -18,8 +18,10 @@ import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeDat
 import com.sceyt.sceytchatuikit.data.messageeventobserver.ReactionUpdateEventData
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
+import com.sceyt.sceytchatuikit.data.models.SceytPagingResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
+import com.sceyt.sceytchatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
@@ -111,8 +113,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     private fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
-        launch(Dispatchers.IO) { messagesLogic.onMessage(data) }
-        launch(Dispatchers.IO) { channelLogic.onMessage(data) }
+        launch(Dispatchers.IO) {
+            messagesLogic.onMessage(data)
+            channelLogic.onMessage(data)
+        }
     }
 
     private fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
@@ -293,6 +297,15 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.loadNewestMessages(conversationId, replyInThread, limit, loadKey, ignoreDb)
     }
 
+    override suspend fun searchMessages(conversationId: Long, replyInThread: Boolean,
+                                        query: String): SceytPagingResponse<List<SceytMessage>> {
+        return messagesLogic.searchMessages(conversationId, replyInThread, query)
+    }
+
+    override suspend fun loadNextSearchMessages(): SceytPagingResponse<List<SceytMessage>> {
+        return messagesLogic.loadNextSearchMessages()
+    }
+
     override suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>> {
         return messagesLogic.loadMessagesById(conversationId, ids)
     }
@@ -300,6 +313,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     override suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                                     messageId: Long): Flow<SceytResponse<List<SceytMessage>>> {
         return messagesLogic.syncMessagesAfterMessageId(conversationId, replyInThread, messageId)
+    }
+
+    override suspend fun syncNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean): SyncNearMessagesResult {
+        return messagesLogic.syncNearMessages(conversationId, messageId, replyInThread)
     }
 
     override suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult> {

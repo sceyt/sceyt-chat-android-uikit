@@ -9,7 +9,7 @@ data class DraftMessageEntity(
         @PrimaryKey
         val chatId: Long,
         val message: String?,
-        var createdAt: Long,
+        val createdAt: Long,
         val replyOrEditMessageId: Long?,
         val isReplyMessage: Boolean?,
         val styleRanges: List<BodyAttribute>?,

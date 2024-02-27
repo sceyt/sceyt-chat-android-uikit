@@ -23,7 +23,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="link" />
 
-    <Space
+    <View
         android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="16dp"
