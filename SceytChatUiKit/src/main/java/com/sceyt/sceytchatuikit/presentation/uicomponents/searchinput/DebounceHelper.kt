@@ -1,6 +1,18 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput
 
-import kotlinx.coroutines.*
+import android.view.View
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import com.sceyt.sceytchatuikit.extensions.maybeComponentActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 /**
  * Utility class for debouncing high frequency events.
@@ -18,6 +30,18 @@ class DebounceHelper {
     constructor(debounceMs: Long, scope: CoroutineScope) {
         this.debounceMs = debounceMs
         this.scope = scope
+    }
+
+    constructor(debounceMs: Long, fragment: Fragment) {
+        this.debounceMs = debounceMs
+        this.scope = fragment.lifecycleScope
+    }
+
+    constructor(debounceMs: Long, view: View) {
+        this.debounceMs = debounceMs
+        this.scope = (view.findViewTreeLifecycleOwner()
+                ?: view.context.maybeComponentActivity())?.lifecycleScope
+                ?: CoroutineScope(Dispatchers.Main + SupervisorJob())
     }
 
     private val debounceMs: Long
