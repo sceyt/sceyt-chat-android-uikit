@@ -37,7 +37,7 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private var binding: SceytSearchViewBinding
 
-    private val debounceInitDelegate = lazy { DebounceHelper(TYPING_DEBOUNCE_MS) }
+    private val debounceInitDelegate = lazy { DebounceHelper(TYPING_DEBOUNCE_MS, this) }
     private val debounceHelper by debounceInitDelegate
 
     private val clickListeners = SearchInputClickListenersImpl(this)

@@ -19,6 +19,7 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
@@ -101,7 +102,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var eventListeners = InputEventsListenerImpl(this)
     private var selectFileTypePopupClickListeners = SelectFileTypePopupClickListenersImpl(this)
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
-    private val typingDebounceHelper = DebounceHelper(100)
+    private val typingDebounceHelper by lazy { DebounceHelper(100, getScope()) }
     private var typingTimeoutJob: Job? = null
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var inputState = Voice
@@ -171,7 +172,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun getScope(): LifecycleCoroutineScope {
-        return context.asComponentActivity().lifecycleScope
+        return (findViewTreeLifecycleOwner() ?: context.asComponentActivity()).lifecycleScope
     }
 
     private val editOrReplyMessageFragment

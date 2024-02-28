@@ -26,7 +26,7 @@ class FragmentReactedUsers : Fragment(), SceytKoinComponent {
     private var clickListener: ((SceytReaction) -> Unit)? = null
     private lateinit var key: String
     private var messageId: Long = 0
-    private val loafMoreDebounce by lazy { DebounceHelper(100) }
+    private val loafMoreDebounce by lazy { DebounceHelper(100, this) }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentReactedUsersBinding.inflate(inflater, container, false).also {
