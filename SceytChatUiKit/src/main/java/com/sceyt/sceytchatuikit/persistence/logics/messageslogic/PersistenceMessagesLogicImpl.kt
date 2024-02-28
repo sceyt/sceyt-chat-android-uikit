@@ -682,8 +682,13 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun saveChannelLastMessagesToDb(list: List<SceytMessage>?) {
+        list ?: return
         withContext(dispatcherIO) {
             saveMessagesToDb(list)
+            // Create ranges for last message
+            list.forEach {
+                messageLoadRangeUpdater.updateLoadRange(messageId = it.id, start = it.id, end = it.id, channelId = it.channelId)
+            }
         }
     }
 
@@ -724,7 +729,7 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun updateMessageLoadRange(messageId: Long, channelId: Long, response: SceytResponse<List<SceytMessage>>) {
         val data = (response as? SceytResponse.Success)?.data ?: return
         if (data.isEmpty()) return
-        messageLoadRangeUpdater.updateMessageLoadRange(messageId = messageId, start = data.first().id, end = data.last().id, channelId = channelId)
+        messageLoadRangeUpdater.updateLoadRange(messageId = messageId, start = data.first().id, end = data.last().id, channelId = channelId)
     }
 
     private suspend fun updateMessageLoadRangeOnMessageEvent(message: SceytMessage,
@@ -733,7 +738,7 @@ internal class PersistenceMessagesLogicImpl(
         val oldLastMsgId = oldLastMessageId ?: channelCache.get(channelId)?.lastMessage?.id
         ?: persistenceChannelsLogic.getChannelFromDb(channelId)?.lastMessage?.id
         if (oldLastMsgId != null)
-            messageLoadRangeUpdater.updateMessageLoadRange(messageId = oldLastMsgId,
+            messageLoadRangeUpdater.updateLoadRange(messageId = oldLastMsgId,
                 start = oldLastMsgId, end = message.id, channelId = channelId)
     }
 

@@ -16,15 +16,12 @@ interface LoadRangeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(entities: List<LoadRangeEntity>)
 
-    @Query("select * from LoadRange where channelId =:channelId and :messageId in (startId, endId)")
-    suspend fun getLoadRange(channelId: Long, messageId: Long): List<LoadRangeEntity>
-
-    @Query("select * from LoadRange where channelId =:channelId and ((startId >=:start and startId <=:end)" +
-            " or (endId >=:start and endId <= :end) or startId =:messageId or endId =:messageId)")
+    @Query("select * from LoadRange where channelId =:channelId and ((startId >=:end and endId <=:start)" +
+            " or (endId >=:start and startId <= :end) or startId =:messageId or endId =:messageId)")
     suspend fun getLoadRanges(start: Long, end: Long, messageId: Long, channelId: Long): List<LoadRangeEntity>
 
-    @Query("select * from LoadRange order by startId")
-    suspend fun getAll(): List<LoadRangeEntity>
+    @Query("select * from LoadRange where channelId =:channelId order by startId")
+    suspend fun getAll(channelId: Long): List<LoadRangeEntity>
 
     @Query("delete from LoadRange where channelId =:channelId")
     suspend fun deleteChannelLoadRanges(channelId: Long)
