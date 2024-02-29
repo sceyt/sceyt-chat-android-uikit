@@ -73,7 +73,7 @@ class IncLinkMsgViewHolder(
                     setReplyCount(tvReplyCount, toReplyLine, item)
 
                 if (diff.reactionsChanged)
-                    setOrUpdateReactions(item, rvReactions, viewPoolReactions, layoutDetails)
+                    setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, binding.viewReply)

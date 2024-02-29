@@ -333,10 +333,11 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
-    /** @param layoutDetails when not null, that mean layout details will resize with reactions. */
     protected fun setOrUpdateReactions(item: MessageListItem.MessageItem, rvReactionsViewStub: ViewStub,
-                                       viewPool: RecyclerView.RecycledViewPool, layoutDetails: ViewGroup? = null) {
+                                       viewPool: RecyclerView.RecycledViewPool) {
         val reactions: List<ReactionItem.Reaction>? = item.message.messageReactions?.take(19)
+        val resizeWithDependReactions = layoutBubbleConfig?.second ?: false
+        val layoutDetails = if (resizeWithDependReactions) layoutBubble else null
 
         if (reactions.isNullOrEmpty()) {
             reactionsAdapter = null
