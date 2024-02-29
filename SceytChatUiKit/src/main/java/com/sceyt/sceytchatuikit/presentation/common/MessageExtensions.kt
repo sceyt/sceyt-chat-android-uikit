@@ -54,7 +54,7 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: SceytD
         DeliveryStatus.Received -> MessagesStyle.messageStatusDeliveredIcon
         DeliveryStatus.Displayed -> MessagesStyle.messageStatusReadIcon
         else -> {
-            SceytLog.i(TAG, "Unknown delivery status: $deliveryStatus for message: $id, tid: $tid, body: $body")
+            SceytLog.e(TAG, "Unknown delivery status: $deliveryStatus for message: $id, tid: $tid, body: $body")
             null
         }
     }

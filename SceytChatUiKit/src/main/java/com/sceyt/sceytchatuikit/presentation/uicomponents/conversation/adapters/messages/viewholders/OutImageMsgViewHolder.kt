@@ -92,7 +92,7 @@ class OutImageMsgViewHolder(
                 initAttachment()
 
             if (diff.reactionsChanged)
-                setOrUpdateReactions(item, rvReactions, viewPoolReactions, layoutDetails)
+                setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
             if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
                 initWidthsDependReactions(recyclerViewReactions, layoutDetails)
