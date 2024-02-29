@@ -646,7 +646,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                         awaitToScroll?.invoke()
                     })
                 }
-            }
+            } ?: run { awaitToScroll?.invoke() }
         }
     }
 
