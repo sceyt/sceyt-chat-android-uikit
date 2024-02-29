@@ -239,10 +239,7 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun syncNearMessages(conversationId: Long, messageId: Long,
                                           replyInThread: Boolean): SyncNearMessagesResult = withContext(dispatcherIO) {
 
-        val response = messagesRepository.getNearMessages(
-            conversationId,
-            messageId, replyInThread, 50
-        )
+        val response = messagesRepository.getNearMessages(conversationId, messageId, replyInThread, 30)
         var missingMessages = emptyList<SceytMessage>()
         if (response is SceytResponse.Success) {
             val messages = response.data
