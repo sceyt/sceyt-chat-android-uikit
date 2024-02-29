@@ -345,7 +345,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         isShowingSearchBar = showSearch
         if (showSearch)
             context.showSoftInput(inputSearch)
-        else context.hideKeyboard(inputSearch)
+        else {
+            inputSearch.text?.clear()
+            context.hideKeyboard(inputSearch)
+        }
     }
 
     internal fun onTyping(data: ChannelTypingEventData) {
