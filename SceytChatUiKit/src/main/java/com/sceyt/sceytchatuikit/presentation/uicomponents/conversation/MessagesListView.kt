@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -22,6 +23,7 @@ import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
+import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
 import com.sceyt.sceytchatuikit.extensions.awaitToScrollFinish
@@ -31,7 +33,10 @@ import com.sceyt.sceytchatuikit.extensions.isLastCompletelyItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.maybeComponentActivity
 import com.sceyt.sceytchatuikit.extensions.openLink
 import com.sceyt.sceytchatuikit.extensions.setClipboard
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
+import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
+import com.sceyt.sceytchatuikit.persistence.differs.diff
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
@@ -44,12 +49,10 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.common.KeyboardEventListener
-import com.sceyt.sceytchatuikit.presentation.common.diff
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.openFile
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageViewHolderFactory
@@ -314,7 +317,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 R.id.sceyt_reply -> messageActionsViewClickListeners.onReplyMessageClick(message)
                 R.id.sceyt_reply_in_thread -> messageActionsViewClickListeners.onReplyMessageInThreadClick(message)
                 R.id.sceyt_copy_message -> messageActionsViewClickListeners.onCopyMessagesClick(message)
-                R.id.sceyt_delete_message -> messageActionsViewClickListeners.onDeleteMessageClick(message, onlyForMe = false, actionFinish = {})
+                R.id.sceyt_delete_message -> messageActionsViewClickListeners.onDeleteMessageClick(message, requireForMe = false, actionFinish = {})
             }
             false
         }
@@ -352,13 +355,21 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun updateItem(index: Int, message: MessageListItem, diff: MessageItemPayloadDiff) {
-        (messagesRV.findViewHolderForAdapterPosition(index) as? BaseMsgViewHolder)?.bind(message, diff)
-                ?: run { messagesRV.adapter?.notifyItemChanged(index, diff) }
+    private fun updateItem(index: Int, item: MessageListItem, diff: MessageDiff) {
+        val message = (item as? MessageItem)?.message ?: return
+        (messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMsgViewHolder)?.let {
+            SceytLog.i("StatusIssueTag", "updateItem: found by itemId: ${item.getItemId()}, msgId-> ${message.id}, diff ${diff.statusChanged}")
+            it.bind(item, diff)
+        } ?: run {
+            SceytLog.i("StatusIssueTag", "updateItem: notifyItemChanged by index $index, diff ${diff.statusChanged}, msgId-> ${message.id}")
+            messagesRV.adapter?.notifyItemChanged(index, diff)
+        }
     }
 
     internal fun setMessagesList(data: List<MessageListItem>, force: Boolean = false) {
         messagesRV.setData(data, force)
+        if (data.isNotEmpty())
+            pageStateView?.updateState(PageState.Nothing)
     }
 
     internal fun addNextPageMessages(data: List<MessageListItem>) {
@@ -376,35 +387,44 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun updateMessage(message: SceytMessage) {
-        for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
+    internal fun updateMessage(message: SceytMessage): Boolean {
+        var foundToUpdate = false
+        SceytLog.i(TAG, "Message updated: id ${message.id}, tid ${message.tid}," +
+                " body ${message.body}, deliveryStatus ${message.deliveryStatus}")
+        for ((index, item) in messagesRV.getData().withIndex()) {
             if (item is MessageItem && item.message.tid == message.tid) {
                 val oldMessage = item.message.clone()
+                Log.i(TAG, "${oldMessage.deliveryStatus}  ${message.deliveryStatus}")
                 item.message.updateMessage(message)
-                updateItem(index, item, oldMessage.diff(item.message))
+                val diff = oldMessage.diff(item.message)
+                SceytLog.i(TAG, "Found to update: id ${item.message.id}, tid ${item.message.tid}," +
+                        " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${messagesRV.getData().size}")
+                updateItem(index, item, diff)
+                foundToUpdate = true
                 break
             }
         }
+        return foundToUpdate
     }
 
     internal fun updateMessageSelection(message: SceytMessage) {
-        for ((index, item) in messagesRV.getData()?.withIndex() ?: return) {
+        for ((index, item) in messagesRV.getData().withIndex()) {
             if (item is MessageItem && item.message.tid == message.tid) {
                 item.message.isSelected = message.isSelected
-                updateItem(index, item, MessageItemPayloadDiff.DEFAULT_FALSE.copy(selectionChanged = true))
+                updateItem(index, item, MessageDiff.DEFAULT_FALSE.copy(selectionChanged = true))
                 break
             }
         }
     }
 
     internal fun getMessageById(messageId: Long): MessageItem? {
-        return messagesRV.getData()?.find { it is MessageItem && it.message.id == messageId }?.let {
+        return messagesRV.getData().find { it is MessageItem && it.message.id == messageId }?.let {
             (it as MessageItem)
         }
     }
 
     internal fun getMessageIndexedById(messageId: Long): Pair<Int, MessageListItem>? {
-        return messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == messageId }
+        return messagesRV.getData().findIndexed { it is MessageItem && it.message.id == messageId }
     }
 
     internal fun sortMessages() {
@@ -418,7 +438,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 pageStateView?.updateState(PageState.StateEmpty())
             return
         }
-        val data = messagesRV.getData() ?: return
+        val data = messagesRV.getData()
         data.findIndexed { it is MessageItem && it.message.id == updateMessage.id }?.let {
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
@@ -447,7 +467,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateReaction(data: SceytMessage) {
-        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == data.id }?.let {
+        messagesRV.getData().findIndexed { it is MessageItem && it.message.id == data.id }?.let {
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.reactionTotals = data.reactionTotals
@@ -462,15 +482,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
+        val data = messagesRV.getData()
         ids.forEach { id ->
-            for ((index: Int, item: MessageListItem) in (messagesRV.getData()
-                    ?: return).withIndex()) {
+            for ((index: Int, item: MessageListItem) in data.withIndex()) {
                 if (item is MessageItem) {
                     val oldMessage = item.message.clone()
                     if (item.message.id == id) {
-                        if (item.message.deliveryStatus < status)
+                        if (item.message.deliveryStatus < status) {
                             item.message.deliveryStatus = status
-                        updateItem(index, item, oldMessage.diff(item.message))
+                            updateItem(index, item, oldMessage.diff(item.message))
+                        }
                         break
                     }
                 }
@@ -478,23 +499,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    internal fun updateMessagesStatusByTid(status: DeliveryStatus, tid: Long) {
-        for ((index: Int, item: MessageListItem) in (messagesRV.getData()
-                ?: return).withIndex()) {
-            if (item is MessageItem) {
-                val oldMessage = item.message.clone()
-                if (item.message.tid == tid) {
-                    if (item.message.deliveryStatus < status)
-                        item.message.deliveryStatus = status
-                    updateItem(index, item, oldMessage.diff(item.message))
-                    break
-                }
-            }
-        }
-    }
-
     internal fun updateProgress(data: TransferData, updateRecycler: Boolean) {
-        val messages = messagesRV.getData() ?: return
+        val messages = messagesRV.getData()
         ArrayList(messages).findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let { (index, it) ->
             val predicate: (SceytAttachment) -> Boolean = when (data.state) {
                 Uploading, PendingUpload, PauseUpload, Uploaded, Preparing, WaitingToUpload -> { attachment ->
@@ -523,12 +529,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
 
             if (updateRecycler)
-                updateItem(index, it, MessageItemPayloadDiff.DEFAULT_FALSE.copy(filesChanged = true))
+                updateItem(index, it, MessageDiff.DEFAULT_FALSE.copy(filesChanged = true))
         }
     }
 
     internal fun messageSendFailed(tid: Long) {
-        messagesRV.getData()?.findIndexed { it is MessageItem && it.message.tid == tid }?.let {
+        messagesRV.getData().findIndexed { it is MessageItem && it.message.tid == tid }?.let {
             val message = (it.second as MessageItem).message
             val oldMessage = message.clone()
             message.deliveryStatus = DeliveryStatus.Pending
@@ -537,7 +543,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateReplyCount(replyMessage: SceytMessage?) {
-        messagesRV.getData()?.findIndexed {
+        messagesRV.getData().findIndexed {
             it is MessageItem && it.message.id == replyMessage?.parentMessage?.id
         }?.let {
             val message = (it.second as MessageItem).message
@@ -548,7 +554,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun newReplyMessage(messageId: Long?) {
-        messagesRV.getData()?.findIndexed {
+        messagesRV.getData().findIndexed {
             it is MessageItem && it.message.id == messageId
         }?.let {
             val message = (it.second as MessageItem).message
@@ -564,6 +570,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun setNeedLoadPrevMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setNeedLoadPrevMessagesListener(listener)
+    }
+
+    internal fun setScrollStateChangeListener(listener: (Int) -> Unit) {
+        messagesRV.setScrollStateChangeListener(listener)
     }
 
     internal fun setNeedLoadNextMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
@@ -623,46 +633,55 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.getViewHolderFactory().setNeedMediaDataCallback(callBack)
     }
 
-    fun scrollToMessage(msgId: Long, highlight: Boolean) {
-        MessagesAdapter.awaitUpdating {
-            messagesRV.awaitAnimationEnd {
-                messagesRV.getData()?.findIndexed { it is MessageItem && it.message.id == msgId }?.let {
-                    if (highlight)
-                        it.second.highlighted = true
-                    (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(it.first, 200)
+    fun scrollToMessage(msgId: Long, highlight: Boolean, offset: Int = 0, awaitToScroll: (() -> Unit)? = null) {
+        safeScrollTo {
+            messagesRV.getData().findIndexed { it is MessageItem && it.message.id == msgId }?.let {
+                val (position, item) = it
+                item.highligh = highlight
+                (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
+
+                if (highlight || awaitToScroll != null) {
+                    messagesRV.awaitToScrollFinish(position, callback = {
+                        (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                        awaitToScroll?.invoke()
+                    })
                 }
-            }
+            } ?: run { awaitToScroll?.invoke() }
         }
     }
 
-    fun scrollToPositionAndHighlight(position: Int, highlight: Boolean) {
-        MessagesAdapter.awaitUpdating {
-            messagesRV.awaitAnimationEnd {
-                (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, 200)
-                if (highlight) {
-                    messagesRV.awaitToScrollFinish(position, callback = {
-                        (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
-                    })
-                }
+    fun scrollToPosition(position: Int, highlight: Boolean, offset: Int = 0, awaitToScroll: (() -> Unit)? = null) {
+        safeScrollTo {
+            (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
+
+            if (highlight || awaitToScroll != null) {
+                messagesRV.awaitToScrollFinish(position, callback = {
+                    (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                })
             }
         }
     }
 
     fun scrollToUnReadMessage() {
-        MessagesAdapter.awaitUpdating {
-            messagesRV.awaitAnimationEnd {
-                messagesRV.getData()?.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
-                    (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(it.first, 0)
-                }
+        safeScrollTo {
+            messagesRV.getData().findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
+                (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(it.first, 0)
             }
         }
     }
 
     fun scrollToLastMessage() {
+        safeScrollTo {
+            messagesRV.scrollToPosition(messagesRV.getData().size - 1)
+        }
+    }
+
+    private fun safeScrollTo(scrollTo: () -> Unit) {
         MessagesAdapter.awaitUpdating {
-            messagesRV.awaitAnimationEnd {
-                messagesRV.scrollToPosition((messagesRV.getData()
-                        ?: return@awaitAnimationEnd).size - 1)
+            try {
+                scrollTo()
+            } catch (e: Exception) {
+                messagesRV.awaitAnimationEnd { scrollTo() }
             }
         }
     }
@@ -676,7 +695,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 (holder as? BaseMsgViewHolder)?.cancelSelectableState()
             }
         }
-        ArrayList(messagesRV.getData() ?: return).forEach { item ->
+        messagesRV.getData().forEach { item ->
             if (item is MessageItem)
                 item.message.isSelected = false
         }
@@ -731,6 +750,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.enableDisableSwipeToReply(enabledActions)
     }
 
+    fun startSearchMessages() {
+        messageCommandEventListener?.invoke(MessageCommandEvent.SearchMessages(true))
+    }
+
     override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
         super.onWindowFocusChanged(hasWindowFocus)
         onWindowFocusChangeListener?.invoke(hasWindowFocus)
@@ -743,7 +766,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (enabledActions) {
             if (reactionsPopupWindow == null)
                 showModifyReactionsPopup(view, item.message)
-            else reactionsPopupWindow = null
         }
     }
 
@@ -842,11 +864,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show()
     }
 
-    override fun onDeleteMessageClick(vararg messages: SceytMessage, onlyForMe: Boolean, actionFinish: () -> Unit) {
-        DeleteMessageDialog(context, positiveClickListener = {
-            actionFinish.invoke()
-            messageCommandEventListener?.invoke(MessageCommandEvent.DeleteMessage(messages.toList(), onlyForMe = onlyForMe))
-        }).show()
+    override fun onDeleteMessageClick(vararg messages: SceytMessage, requireForMe: Boolean, actionFinish: () -> Unit) {
+        DeleteMessageDialog(context)
+            .setDeleteMessagesCount(messages.size)
+            .setRequireForMe(requireForMe)
+            .setAcceptCallback { forMe ->
+                actionFinish()
+                messageCommandEventListener?.invoke(MessageCommandEvent.DeleteMessage(messages.toList(),
+                    onlyForMe = requireForMe || forMe))
+            }.show()
     }
 
     override fun onEditMessageClick(message: SceytMessage) {

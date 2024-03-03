@@ -114,7 +114,7 @@ class MentionSupportEditText : AppCompatEditText {
     override fun onTextContextMenuItem(id: Int): Boolean {
         when (id) {
             android.R.id.paste -> {
-                // Replace underline spans to our UnderlineTextSpan
+                /** Replace underline spans to our [UnderlineTextSpan] */
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                 val clipData = clipboard?.primaryClip
                 if (clipData != null && clipData.itemCount > 0) {

@@ -81,6 +81,10 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         messageInputView.checkIsParticipant(it)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
+    searchResult.observe(lifecycleOwner) {
+        messageInputView.onSearchMessagesResult(it)
+    }
+
     pageStateLiveData.observe(lifecycleOwner) {
         if (it is PageState.StateError && it.showMessage)
             customToastSnackBar(messageInputView, it.errorMessage.toString())
@@ -162,7 +166,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         }
     }
 
-    messageInputView.setInputActionCallback(object : MessageInputView.MessageInputActionCallback {
+    messageInputView.setInputActionsCallback(object : MessageInputView.MessageInputActionCallback {
         override fun sendMessage(message: Message, linkDetails: LinkPreviewDetails?) {
             this@bind.sendMessage(message)
             upsertLinkPreviewData(linkDetails)
@@ -219,6 +223,14 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
                 messageActionBridge.cancelMultiSelectMode()
                 selectedMessagesMap.clear()
             })
+        }
+
+        override fun scrollToNext() {
+            scrollToSearchMessage(false)
+        }
+
+        override fun scrollToPrev() {
+            scrollToSearchMessage(true)
         }
     })
 }

@@ -27,7 +27,7 @@ object SceytKitConfig {
 
     @JvmField
     @IntRange(1, 50)
-    var MESSAGES_LOAD_SIZE = 30
+    var MESSAGES_LOAD_SIZE = 50
 
     @JvmField
     @IntRange(1, 50)

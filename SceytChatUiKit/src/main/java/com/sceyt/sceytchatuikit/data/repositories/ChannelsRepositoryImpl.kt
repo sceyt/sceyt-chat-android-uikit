@@ -2,6 +2,7 @@ package com.sceyt.sceytchatuikit.data.repositories
 
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.models.SearchQueryOperator
 import com.sceyt.chat.models.channel.Builder
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelListQuery
@@ -10,8 +11,6 @@ import com.sceyt.chat.models.channel.CreateChannelRequest
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.member.MemberListQuery
 import com.sceyt.chat.models.role.Role
-import com.sceyt.chat.models.user.BlockUserRequest
-import com.sceyt.chat.models.user.UnBlockUserRequest
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.operators.ChannelOperator
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
@@ -20,7 +19,6 @@ import com.sceyt.chat.sceyt_callbacks.ChannelsCallback
 import com.sceyt.chat.sceyt_callbacks.MembersCallback
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
-import com.sceyt.chat.sceyt_callbacks.UsersCallback
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
@@ -83,7 +81,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             val query = ChannelListQuery.Builder()
                 .limit(1)
                 .filterKey(ChannelListQuery.ChannelListFilterKey.ListQueryChannelFilterKeyURI)
-                .queryType(ChannelListQuery.SearchQueryOperator.SearchQueryOperatorEQ)
+                .queryType(SearchQueryOperator.SearchQueryOperatorEQ)
                 .query(url)
                 .build()
 
@@ -310,36 +308,6 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
                     SceytLog.e(TAG, "hideChannel error: ${e?.message}, code: ${e?.code}")
-                }
-            })
-        }
-    }
-
-    override suspend fun blockUser(userId: String): SceytResponse<List<User>> {
-        return suspendCancellableCoroutine { continuation ->
-            BlockUserRequest(userId).execute(object : UsersCallback {
-                override fun onResult(data: MutableList<User>?) {
-                    continuation.safeResume(SceytResponse.Success(data))
-                }
-
-                override fun onError(e: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "blockUser error: ${e?.message}, code: ${e?.code}")
-                }
-            })
-        }
-    }
-
-    override suspend fun unblockUser(userId: String): SceytResponse<List<User>> {
-        return suspendCancellableCoroutine { continuation ->
-            UnBlockUserRequest(userId).execute(object : UsersCallback {
-                override fun onResult(data: MutableList<User>?) {
-                    continuation.safeResume(SceytResponse.Success(data))
-                }
-
-                override fun onError(e: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "unblockUser error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }

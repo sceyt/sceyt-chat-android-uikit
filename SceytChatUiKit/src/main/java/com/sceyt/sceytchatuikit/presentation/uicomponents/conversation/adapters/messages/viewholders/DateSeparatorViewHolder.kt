@@ -1,10 +1,11 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.databinding.SceytItemMessageDateSeparatorBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
+import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
@@ -18,9 +19,9 @@ class DateSeparatorViewHolder(
         binding.setMessageItemStyle()
     }
 
-    override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+    override fun bind(item: MessageListItem, diff: MessageDiff) {
         super.bind(item, diff)
-
+        itemView.isVisible = true
         if (item is MessageListItem.DateSeparatorItem) {
             val createdAt = item.createdAt
             val dateText = DateTimeUtil.getDateTimeStringWithDateFormatter(
@@ -30,6 +31,10 @@ class DateSeparatorViewHolder(
             )
             binding.messageDay.text = dateText
         }
+    }
+
+    fun showHide(show: Boolean) {
+        binding.messageDay.alpha = if (show) 1f else 0f
     }
 
     override val enableReply = false

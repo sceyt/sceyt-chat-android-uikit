@@ -17,10 +17,10 @@ import androidx.room.PrimaryKey
 ], indices = [Index("messageId", "name", "userId", unique = true)])
 data class MarkerEntity(
         @ColumnInfo(index = true)
-        var messageId: Long,
-        var userId: String,
-        var name: String,
-        var createdAt: Long = 0,
+        val messageId: Long,
+        val userId: String,
+        val name: String,
+        val createdAt: Long = 0,
         @PrimaryKey(autoGenerate = true)
         val primaryKey: Long = 0
 )

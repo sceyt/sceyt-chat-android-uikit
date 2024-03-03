@@ -15,22 +15,19 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.isResumed
 import com.sceyt.sceytchatuikit.logger.SceytLog
+import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelUpdateData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
-import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.TypingCancelHelper
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import org.koin.core.component.inject
 import java.util.concurrent.ConcurrentHashMap
 
 fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: LifecycleOwner) {
@@ -60,22 +57,6 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
                 }
             }
         }
-    }
-
-    viewModelScope.launch {
-        val channelsCache by inject<ChannelsCache>()
-        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach {
-            launch(Dispatchers.IO) {
-                it.forEach { presenceUser ->
-                    channelsCache.getData().forEach { channel ->
-                        val user = presenceUser.user
-                        val peer = channel.getFirstMember()
-                        if (channel.isDirect() && peer?.id == user.id)
-                            channelsCache.updateChannelPeer(channel.id, user)
-                    }
-                }
-            }
-        }.launchIn(this)
     }
 
     fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytChannel>) {
@@ -145,7 +126,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
 
     ChannelsCache.channelReactionMsgLoadedFlow.onEach { data ->
         lifecycleOwner.lifecycleScope.launch {
-            channelsListView.channelUpdatedWithDiff(data, ChannelItemPayloadDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))
+            channelsListView.channelUpdatedWithDiff(data, ChannelDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))
         }
     }.launchIn(viewModelScope)
 
@@ -178,7 +159,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }.launchIn(viewModelScope)
 
     ChannelsCache.channelDraftMessageChangesFlow.onEach { channel ->
-        channelsListView.channelUpdatedWithDiff(channel, ChannelItemPayloadDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))
+        channelsListView.channelUpdatedWithDiff(channel, ChannelDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))
         if (!lifecycleOwner.isResumed()) {
             val pendingUpdate = needToUpdateChannelsAfterResume[channel.id]
             if (pendingUpdate != null) {

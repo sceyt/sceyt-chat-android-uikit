@@ -25,8 +25,10 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
+import com.sceyt.sceytchatuikit.data.models.SceytPagingResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
+import com.sceyt.sceytchatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
@@ -39,6 +41,7 @@ import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
+import com.sceyt.sceytchatuikit.persistence.dao.LoadRangeDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.PendingMarkersDao
 import com.sceyt.sceytchatuikit.persistence.dao.PendingMessageStateDao
@@ -50,7 +53,6 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.pendings.PendingMarkerEntity
 import com.sceyt.sceytchatuikit.persistence.entity.pendings.PendingMessageStateEntity
-import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
@@ -86,6 +88,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -94,6 +97,7 @@ import org.koin.core.component.inject
 internal class PersistenceMessagesLogicImpl(
         private val context: Context,
         private val messageDao: MessageDao,
+        private val rangeDao: LoadRangeDao,
         private val attachmentDao: AttachmentDao,
         private val pendingMarkersDao: PendingMarkersDao,
         private val reactionDao: ReactionDao,
@@ -103,46 +107,54 @@ internal class PersistenceMessagesLogicImpl(
         private val messagesRepository: MessagesRepository,
         private val preference: SceytSharedPreference,
         private val messagesCache: MessagesCache,
-        private val channelCache: ChannelsCache
+        private val channelCache: ChannelsCache,
+        private val messageLoadRangeUpdater: MessageLoadRangeUpdater
 ) : PersistenceMessagesLogic, SceytKoinComponent {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
     private val persistenceAttachmentLogic: PersistenceAttachmentLogic by inject()
     private val persistenceReactionLogic: PersistenceReactionsLogic by inject()
     private val createChannelAndSendMessageMutex = Mutex()
+    private val dispatcherIO = Dispatchers.IO
 
     private val onMessageFlow: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> = MutableSharedFlow(
         extraBufferCapacity = 10,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>, sendDeliveryMarker: Boolean) {
+    override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>,
+                                   sendDeliveryMarker: Boolean) = withContext(dispatcherIO) {
         val message = data.second
-
         saveMessagesToDb(arrayListOf(message))
 
         messagesCache.add(data.first.id, message)
         onMessageFlow.tryEmit(data)
+        updateMessageLoadRangeOnMessageEvent(message, null)
 
-        if (message.incoming && sendDeliveryMarker)
-            markMessagesAs(data.first.id, Received, message.id)
+        launch {
+            if (message.incoming && sendDeliveryMarker)
+                markMessagesAs(data.first.id, Received, message.id)
+        }
+        return@withContext
     }
 
-    override suspend fun onFcmMessage(data: RemoteMessageData) {
+    override suspend fun onFcmMessage(data: RemoteMessageData) = withContext(dispatcherIO) {
         val message = data.message
-        if (message?.id == 0L) return
+        if (message?.id == 0L) return@withContext
         val channelDb = persistenceChannelsLogic.getChannelFromDb(data.channel?.id
-                ?: return)
+                ?: return@withContext)
         if (channelDb != null && (message?.createdAt ?: 0) <= channelDb.messagesClearedAt)
-            return
+            return@withContext
 
-        val messageDb = messageDao.getMessageById(message?.id ?: return)
+        val messageDb = messageDao.getMessageById(message?.id ?: return@withContext)
 
         val isReaction = data.reaction != null
 
         if (messageDb == null && !isReaction) {
-            saveMessagesToDb(arrayListOf(message), false)
+            saveMessagesToDb(arrayListOf(message), includeParents = false)
             messagesCache.add(data.channel.id, message)
             onMessageFlow.tryEmit(Pair(data.channel, message))
+
+            updateMessageLoadRangeOnMessageEvent(message, channelDb?.lastMessage?.id)
             persistenceChannelsLogic.onFcmMessage(data)
         }
 
@@ -151,12 +163,12 @@ internal class PersistenceMessagesLogicImpl(
                 messageDb.toSceytMessage(), data.reaction!!, ReactionUpdateEventEnum.Add))
     }
 
-    override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
+    override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) = withContext(dispatcherIO) {
         val updatedMessages = messageDao.updateMessageStatusWithBefore(data.channel.id, data.status, data.messageIds.maxOf { it })
         messagesCache.updateMessagesStatus(data.channel.id, data.status, *updatedMessages.map { it.tid }.toLongArray())
     }
 
-    override suspend fun onMessageEditedOrDeleted(data: SceytMessage) {
+    override suspend fun onMessageEditedOrDeleted(data: SceytMessage) = withContext(dispatcherIO) {
         val selfReactions = reactionDao.getSelfReactionsByMessageId(data.id, SceytKitClient.myId.toString())
         data.userReactions = selfReactions.map { it.toSceytReaction() }.toTypedArray()
         messageDao.updateMessage(data.toMessageEntity(false))
@@ -166,31 +178,43 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
-                                          offset: Int, limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadPrev, conversationId, lastMessageId, replyInThread, offset, limit, loadKey, ignoreDb)
+                                          offset: Int, limit: Int, loadKey: LoadKeyData,
+                                          ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> = withContext(dispatcherIO) {
+        return@withContext loadMessages(LoadPrev, conversationId, lastMessageId, replyInThread, offset, limit, loadKey, ignoreDb)
     }
 
     override suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
-                                          offset: Int, limit: Int, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNext, conversationId, lastMessageId, replyInThread, offset, limit, ignoreDb = ignoreDb)
+                                          offset: Int, limit: Int,
+                                          ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> = withContext(dispatcherIO) {
+        return@withContext loadMessages(LoadNext, conversationId, lastMessageId, replyInThread, offset, limit, ignoreDb = ignoreDb)
     }
 
     override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
-                                          limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean, ignoreServer: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNear, conversationId, messageId, replyInThread, 0, limit, loadKey, ignoreDb, ignoreServer)
+                                          limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean,
+                                          ignoreServer: Boolean): Flow<PaginationResponse<SceytMessage>> = withContext(dispatcherIO) {
+        return@withContext loadMessages(LoadNear, conversationId, messageId, replyInThread, 0, limit, loadKey, ignoreDb, ignoreServer)
     }
 
     override suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int,
                                             loadKey: LoadKeyData,
-                                            ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
-        return loadMessages(LoadNewest, conversationId, 0, replyInThread, 0, limit, loadKey, ignoreDb)
+                                            ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> = withContext(dispatcherIO) {
+        return@withContext loadMessages(LoadNewest, conversationId, 0, replyInThread, 0, limit, loadKey, ignoreDb)
     }
 
-    override suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>> {
+    override suspend fun searchMessages(conversationId: Long, replyInThread: Boolean,
+                                        query: String): SceytPagingResponse<List<SceytMessage>> = withContext(dispatcherIO) {
+        return@withContext messagesRepository.searchMessages(conversationId, replyInThread, query)
+    }
+
+    override suspend fun loadNextSearchMessages(): SceytPagingResponse<List<SceytMessage>> = withContext(dispatcherIO) {
+        return@withContext messagesRepository.loadNextSearchMessages()
+    }
+
+    override suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>> = withContext(dispatcherIO) {
         val response = messagesRepository.loadMessagesById(conversationId, ids)
         if (response is SceytResponse.Success)
-            saveMessagesToDb(response.data)
-        return response
+            saveMessagesToDb(response.data, unListAll = true)
+        return@withContext response
     }
 
     override suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
@@ -198,20 +222,35 @@ internal class PersistenceMessagesLogicImpl(
         ConnectionEventsObserver.awaitToConnectSceyt()
         messagesRepository.loadAllMessagesAfter(conversationId, replyInThread, messageId)
             .onCompletion { channel.close() }
-            .collect {
-                if (it is SceytResponse.Success) {
-                    it.data?.let { messages ->
+            .collect { (nextMessageId, response) ->
+                if (response is SceytResponse.Success) {
+                    response.data?.let { messages ->
                         val updatedMessages = saveMessagesToDb(messages)
                         messagesCache.upsertMessages(conversationId, *updatedMessages.toTypedArray())
                         checkAndMarkChannelMessagesAsDelivered(conversationId, messages)
+                        updateMessageLoadRange(messageId = nextMessageId, channelId = conversationId, response)
                     }
                 }
-                trySend(it)
+                trySend(response)
             }
         awaitClose()
     }
 
-    override suspend fun onSyncedChannels(channels: List<SceytChannel>) {
+    override suspend fun syncNearMessages(conversationId: Long, messageId: Long,
+                                          replyInThread: Boolean): SyncNearMessagesResult = withContext(dispatcherIO) {
+
+        val response = messagesRepository.getNearMessages(conversationId, messageId, replyInThread, 30)
+        var missingMessages = emptyList<SceytMessage>()
+        if (response is SceytResponse.Success) {
+            val messages = response.data
+            val updatedMessages = saveMessagesToDb(messages)
+            missingMessages = messagesCache.updateAllSyncedMessagesAndGetMissing(conversationId, updatedMessages)
+            updateMessageLoadRange(messageId = messageId, channelId = conversationId, response = response)
+        }
+        return@withContext SyncNearMessagesResult(messageId, response, missingMessages)
+    }
+
+    override suspend fun onSyncedChannels(channels: List<SceytChannel>) = withContext(dispatcherIO) {
         channels.forEach {
             if (it.messagesClearedAt > 0) {
                 messageDao.deleteAllMessagesLowerThenDateIgnorePending(it.id, it.messagesClearedAt)
@@ -220,7 +259,8 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    override suspend fun getMessagesByType(channelId: Long, lastMessageId: Long, type: String): SceytResponse<List<SceytMessage>> {
+    override suspend fun getMessagesByType(channelId: Long, lastMessageId: Long,
+                                           type: String): SceytResponse<List<SceytMessage>> = withContext(dispatcherIO) {
         val response = messagesRepository.getMessagesByType(channelId, lastMessageId, type)
         if (response is SceytResponse.Success) {
             val tIds = getMessagesTid(response.data)
@@ -230,7 +270,7 @@ internal class PersistenceMessagesLogicImpl(
                 it.parentMessage?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
             }
         }
-        return response
+        return@withContext response
     }
 
     override suspend fun sendMessage(channelId: Long, message: Message) {
@@ -243,20 +283,24 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    override suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult> {
+    override suspend fun sendMessageAsFlow(channelId: Long,
+                                           message: Message): Flow<SendMessageResult> = withContext(dispatcherIO) {
         val channel = channelCache.get(channelId)
                 ?: persistenceChannelsLogic.getChannelFromDb(channelId)
         if (channel?.pending == true) {
-            return createChannelAndSendMessageWithLock(channel, message, isPendingMessage = false, isUploadedAttachments = false).also {
+            return@withContext createChannelAndSendMessageWithLock(channel, message,
+                isPendingMessage = false, isUploadedAttachments = false).also {
                 if (!createChannelAndSendMessageMutex.isLocked)
                     channelCache.removeFromPendingToRealChannelsData(channelId)
             }
         }
-        return sendMessageImpl(channelId, message, isSharing = false, isPendingMessage = false, isUploadedAttachments = false)
+        return@withContext sendMessageImpl(channelId, message, isSharing = false,
+            isPendingMessage = false, isUploadedAttachments = false)
     }
 
     private suspend fun createChannelAndSendMessageWithLock(channel: SceytChannel, message: Message,
-                                                            isPendingMessage: Boolean, isUploadedAttachments: Boolean): Flow<SendMessageResult> {
+                                                            isPendingMessage: Boolean,
+                                                            isUploadedAttachments: Boolean): Flow<SendMessageResult> {
         createChannelAndSendMessageMutex.withLock {
             val channelId = channel.id
             channel.lastMessage = message.toSceytUiMessage()
@@ -307,11 +351,11 @@ internal class PersistenceMessagesLogicImpl(
         return response
     }
 
-    override suspend fun sendSharedFileMessage(channelId: Long, message: Message) {
+    override suspend fun sendSharedFileMessage(channelId: Long, message: Message) = withContext(dispatcherIO) {
         sendMessageImpl(channelId, message, isSharing = true, isPendingMessage = false, false).collect()
     }
 
-    override suspend fun sendFrowardMessages(channelId: Long, vararg messageToSend: Message): SceytResponse<Boolean> {
+    override suspend fun sendFrowardMessages(channelId: Long, vararg messageToSend: Message): SceytResponse<Boolean> = withContext(dispatcherIO) {
         // At first save messages to db and emit them to UI as outgoing message
         messageToSend.forEach {
             val tmpMessage = it.toSceytUiMessage().apply {
@@ -337,10 +381,10 @@ internal class PersistenceMessagesLogicImpl(
 
         // Then send messages
         SendForwardMessagesWorkManager.schedule(context, channelId, *messageToSend.map { it.tid }.toLongArray())
-        return SceytResponse.Success(true)
+        return@withContext SceytResponse.Success(true)
     }
 
-    override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage> {
+    override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
         val channel = channelCache.get(channelId)
                 ?: persistenceChannelsLogic.getChannelFromDb(channelId)
         val response = if (channel?.pending == true) {
@@ -365,15 +409,16 @@ internal class PersistenceMessagesLogicImpl(
         if (response is SceytResponse.Success)
             response.data?.let { persistenceAttachmentLogic.updateAttachmentIdAndMessageId(it) }
 
-        return response
+        return@withContext response
                 ?: SceytResponse.Error(SceytException(0, "sendMessageWithUploadedAttachments: response is null"))
     }
 
 
-    private fun sendMessageImpl(channelId: Long, message: Message, isSharing: Boolean, isPendingMessage: Boolean, isUploadedAttachments: Boolean) = callbackFlow {
+    private fun sendMessageImpl(channelId: Long, message: Message, isSharing: Boolean,
+                                isPendingMessage: Boolean, isUploadedAttachments: Boolean) = callbackFlow {
         // If message is pending, we don't need to insert it to db and emit it to UI as outgoing message
         if (!isPendingMessage && !isUploadedAttachments)
-            emitTmpMessageAndStore(channelId, message, this.channel)
+            emitTmpMessageAndStore(channelId, message, channel)
 
         if (checkHasFileAttachments(message) && !isUploadedAttachments) {
             SendAttachmentWorkManager.schedule(context, message.tid, channelId, isSharing = isSharing).await()
@@ -419,13 +464,11 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun insertTmpMessageToDb(message: SceytMessage) {
-        val tmpMessageDb = message.toMessageDb(false).also {
-            it.messageEntity.id = null
-            /*
+        val tmpMessageDb = message.copy(id = 0).toMessageDb(unList = false)/*.also {
             // todo reply in thread
             if (message.replyInThread)
-                 it.messageEntity.channelId = message.parentMessage?.id ?: 0*/
-        }
+                 it.messageEntity.channelId = message.parentMessage?.id ?: 0
+        }*/
         messageDao.upsertMessage(tmpMessageDb)
         persistenceChannelsLogic.updateLastMessageWithLastRead(message.channelId, message)
     }
@@ -433,9 +476,15 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun onMessageSentResponse(channelId: Long, response: SceytResponse<SceytMessage>?, message: Message) {
         when (response ?: return) {
             is SceytResponse.Success -> {
-                SceytLog.i(TAG, "Send message success, channel id $channelId, tid:${message.tid}, id:${message.id}")
+                SceytLog.i(TAG, "Send message success, channel id $channelId, tid:${message.tid}," +
+                        "responseMsgTid ${response.data?.tid} id:${response.data?.id}")
                 response.data?.let { responseMsg ->
                     messagesCache.messageUpdated(channelId, responseMsg)
+
+                    val lastSentMessageId = messageDao.getLastSentMessageId(channelId)
+                    updateMessageLoadRangeOnMessageEvent(responseMsg, lastSentMessageId
+                            ?: responseMsg.id)
+
                     messageDao.upsertMessage(responseMsg.toMessageDb(false))
                     persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, responseMsg)
                 }
@@ -452,7 +501,7 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    override suspend fun sendPendingMessages(channelId: Long) {
+    override suspend fun sendPendingMessages(channelId: Long) = withContext(dispatcherIO) {
         val pendingMessages = messageDao.getPendingMessages(channelId)
         val channel = channelCache.get(channelId)
                 ?: persistenceChannelsLogic.getChannelFromDb(channelId)
@@ -475,7 +524,7 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    override suspend fun sendAllPendingMessages() {
+    override suspend fun sendAllPendingMessages() = withContext(dispatcherIO) {
         val pendingMessagesGroup = messageDao.getAllPendingMessages().groupBy { it.messageEntity.channelId }
         if (pendingMessagesGroup.isNotEmpty()) {
             pendingMessagesGroup.forEach {
@@ -485,7 +534,7 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    override suspend fun sendAllPendingMarkers() {
+    override suspend fun sendAllPendingMarkers() = withContext(dispatcherIO) {
         val pendingMarkers = pendingMarkersDao.getAllMarkers()
         if (pendingMarkers.isNotEmpty()) {
             val groupByChannel = pendingMarkers.groupBy { it.channelId }
@@ -497,7 +546,7 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    override suspend fun sendAllPendingMessageStateUpdates() {
+    override suspend fun sendAllPendingMessageStateUpdates() = withContext(dispatcherIO) {
         pendingMessageStateDao.getAllWithMessage().groupBy { it.entity.channelId }.forEach {
             val channelId = it.key
             it.value.forEach values@{ stateDb ->
@@ -529,7 +578,7 @@ internal class PersistenceMessagesLogicImpl(
         return markMessagesAs(channelId, Displayed, *ids)
     }
 
-    override suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> {
+    override suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
         suspend fun updateMessage(message: SceytMessage) {
             messageDao.upsertMessage(message.toMessageDb(false))
             messagesCache.messageUpdated(channelId, message)
@@ -544,16 +593,17 @@ internal class PersistenceMessagesLogicImpl(
         })
 
         if (isPending)
-            return SceytResponse.Success(message)
+            return@withContext SceytResponse.Success(message)
 
         // Insert pending message state
         pendingMessageStateDao.insert(PendingMessageStateEntity(message.id, channelId, MessageState.Edited,
             message.body, false))
 
-        return editMessageImpl(channelId, message)
+        return@withContext editMessageImpl(channelId, message)
     }
 
-    override suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage> {
+    override suspend fun deleteMessage(channelId: Long, message: SceytMessage,
+                                       onlyForMe: Boolean): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
         if (message.deliveryStatus == DeliveryStatus.Pending) {
             val clonedMessage = message.clone().apply {
                 state = MessageState.Deleted
@@ -566,7 +616,7 @@ internal class PersistenceMessagesLogicImpl(
                 fileTransferService.pause(it.messageTid, it, it.transferState
                         ?: TransferState.Uploading)
             }
-            return SceytResponse.Success(clonedMessage)
+            return@withContext SceytResponse.Success(clonedMessage)
         }
 
         // Insert pending message state
@@ -577,7 +627,7 @@ internal class PersistenceMessagesLogicImpl(
         onMessageEditedOrDeleted(deletedMessage)
         persistenceChannelsLogic.onMessageEditedOrDeleted(deletedMessage)
 
-        return deleteMessageImpl(channelId, message.id, onlyForMe)
+        return@withContext deleteMessageImpl(channelId, message.id, onlyForMe)
     }
 
     private suspend fun editMessageImpl(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> {
@@ -600,35 +650,43 @@ internal class PersistenceMessagesLogicImpl(
         return response
     }
 
-    override suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
+    override suspend fun getMessageFromServerById(channelId: Long,
+                                                  messageId: Long): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
         val result = messagesRepository.getMessageById(channelId, messageId)
         if (result is SceytResponse.Success) {
             result.data?.let { message ->
                 messageDao.insertMessageIgnored(message.toMessageDb(true))
             }
         }
-        return result
+        return@withContext result
     }
 
-    override suspend fun getMessageDbById(messageId: Long): SceytMessage? {
-        return messageDao.getMessageById(messageId)?.toSceytMessage()
+    override suspend fun getMessageDbById(messageId: Long): SceytMessage? = withContext(dispatcherIO) {
+        return@withContext messageDao.getMessageById(messageId)?.toSceytMessage()
     }
 
-    override suspend fun getMessageDbByTid(tid: Long): SceytMessage? {
-        return messageDao.getMessageByTid(tid)?.toSceytMessage()
+    override suspend fun getMessageDbByTid(tid: Long): SceytMessage? = withContext(dispatcherIO) {
+        return@withContext messageDao.getMessageByTid(tid)?.toSceytMessage()
     }
 
-    override suspend fun getMessagesDbByTid(tIds: List<Long>): List<SceytMessage> {
-        return messageDao.getMessagesByTid(tIds).map { it.toSceytMessage() }
+    override suspend fun getMessagesDbByTid(tIds: List<Long>): List<SceytMessage> = withContext(dispatcherIO) {
+        return@withContext messageDao.getMessagesByTid(tIds).map { it.toSceytMessage() }
     }
 
-    override suspend fun attachmentSuccessfullySent(message: SceytMessage) {
+    override suspend fun attachmentSuccessfullySent(message: SceytMessage) = withContext(dispatcherIO) {
         messageDao.upsertMessage(message.toMessageDb(false))
         messagesCache.upsertNotifyUpdateAnyway(message.channelId, message)
     }
 
     override suspend fun saveChannelLastMessagesToDb(list: List<SceytMessage>?) {
-        saveMessagesToDb(list)
+        list ?: return
+        withContext(dispatcherIO) {
+            saveMessagesToDb(list)
+            // Create ranges for last message
+            list.forEach {
+                messageLoadRangeUpdater.updateLoadRange(messageId = it.id, start = it.id, end = it.id, channelId = it.channelId)
+            }
+        }
     }
 
     override fun getOnMessageFlow() = onMessageFlow.asSharedFlow()
@@ -649,16 +707,40 @@ internal class PersistenceMessagesLogicImpl(
                 })
             }
             // Load from server
-            if (!ignoreServer)
-                trySend(getMessagesServerByLoadType(loadType, conversationId, messageId, offset,
-                    limit, replyInThread, loadKey, ignoreDb, dbResultWasEmpty))
+            if (!ignoreServer) {
+                val response = getMessagesServerByLoadType(loadType, conversationId, messageId, offset,
+                    limit, replyInThread, loadKey, ignoreDb, dbResultWasEmpty)
+
+                trySend(response)
+                updateMessageLoadRange(messageId, conversationId, response.data)
+
+                // Mark messages as received
+                markMessagesAsDelivered(conversationId, response.data.data ?: emptyList())
+            }
 
             channel.close()
             awaitClose()
         }
     }
 
+    private suspend fun updateMessageLoadRange(messageId: Long, channelId: Long, response: SceytResponse<List<SceytMessage>>) {
+        val data = (response as? SceytResponse.Success)?.data ?: return
+        if (data.isEmpty()) return
+        messageLoadRangeUpdater.updateLoadRange(messageId = messageId, start = data.first().id, end = data.last().id, channelId = channelId)
+    }
+
+    private suspend fun updateMessageLoadRangeOnMessageEvent(message: SceytMessage,
+                                                             oldLastMessageId: Long?) {
+        val channelId = message.channelId
+        val oldLastMsgId = oldLastMessageId ?: channelCache.get(channelId)?.lastMessage?.id
+        ?: persistenceChannelsLogic.getChannelFromDb(channelId)?.lastMessage?.id
+        if (oldLastMsgId != null)
+            messageLoadRangeUpdater.updateLoadRange(messageId = oldLastMsgId,
+                start = oldLastMsgId, end = message.id, channelId = channelId)
+    }
+
     private suspend fun markMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
+        if (messages.isEmpty()) return
         // Mark messages as received
         withContext(Dispatchers.IO) {
             checkAndMarkChannelMessagesAsDelivered(channelId, messages)
@@ -669,7 +751,7 @@ internal class PersistenceMessagesLogicImpl(
                                                 offset: Int, limit: Int, loadKey: LoadKeyData): PaginationResponse.DBResponse<SceytMessage> {
         var hasNext = false
         var hasPrev = false
-        val messages: List<SceytMessage>
+        val messages: List<MessageDb>
 
         when (loadType) {
             LoadPrev -> {
@@ -684,7 +766,7 @@ internal class PersistenceMessagesLogicImpl(
 
             LoadNear -> {
                 val data = getNearMessagesDb(channelId, lastMessageId, offset, limit)
-                messages = data.data.map { it.toSceytMessage() }
+                messages = data.data
                 hasPrev = data.hasPrev
                 hasNext = data.hasNext
             }
@@ -695,12 +777,10 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
 
-        messagesCache.addAll(channelId, messages, false)
+        val sceytMessages = messages.map { it.toSceytMessage() }
+        messagesCache.addAll(channelId, sceytMessages, checkDifference = false, checkDiffAndNotifyUpdate = false)
 
-        // Mark messages as received
-        markMessagesAsDelivered(channelId, messages)
-
-        return PaginationResponse.DBResponse(messages, loadKey, offset, hasNext, hasPrev, loadType)
+        return PaginationResponse.DBResponse(sceytMessages, loadKey, offset, hasNext, hasPrev, loadType)
     }
 
     private suspend fun getMessagesServerByLoadType(loadType: LoadType, channelId: Long, lastMessageId: Long,
@@ -714,17 +794,23 @@ internal class PersistenceMessagesLogicImpl(
         var messages: List<SceytMessage> = emptyList()
         val response: SceytResponse<List<SceytMessage>>
 
-        ConnectionEventsObserver.awaitToConnectSceyt()
+        if (loadType != LoadNear)
+            ConnectionEventsObserver.awaitToConnectSceyt()
 
         when (loadType) {
             LoadPrev -> {
-                response = messagesRepository.getPrevMessages(channelId, lastMessageId, replyInThread, limit)
+                var msgId = lastMessageId
+                if (offset == 0)
+                    msgId = Long.MAX_VALUE
+
+                response = messagesRepository.getPrevMessages(channelId, msgId, replyInThread, limit)
                 if (response is SceytResponse.Success) {
                     messages = response.data ?: arrayListOf()
                     hasPrev = response.data?.size == MESSAGES_LOAD_SIZE
                     // Check maybe messages was cleared
                     if (offset == 0 && messages.isEmpty()) {
                         messageDao.deleteAllMessagesExceptPending(channelId)
+                        rangeDao.deleteChannelLoadRanges(channelId)
                         messagesCache.clearAllExceptPending(channelId)
                         forceHasDiff = true
                     }
@@ -763,12 +849,9 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         val updatedMessages = saveMessagesToDb(messages)
-        hasDiff = messagesCache.addAll(channelId, updatedMessages, true)
+        hasDiff = messagesCache.addAll(channelId, updatedMessages, checkDifference = true, checkDiffAndNotifyUpdate = false)
 
         if (forceHasDiff) hasDiff = true
-
-        // Mark messages as received
-        markMessagesAsDelivered(channelId, messages)
 
         return PaginationResponse.ServerResponse(
             data = response, cacheData = messagesCache.getSorted(channelId),
@@ -798,26 +881,31 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    private suspend fun getPrevMessagesDb(channelId: Long, lastMessageId: Long, offset: Int, limit: Int): List<SceytMessage> {
-        var lastMsgId = lastMessageId
-        if (lastMessageId == 0L)
-            lastMsgId = Long.MAX_VALUE
-
-        var messages = messageDao.getOldestThenMessages(channelId, lastMsgId, limit).reversed()
-
+    private suspend fun getPrevMessagesDb(channelId: Long, lastMessageId: Long, offset: Int, limit: Int): List<MessageDb> {
+        var sentLastMessage = lastMessageId
+        if (sentLastMessage == 0L) {
+            sentLastMessage = messageDao.getLastSentMessageId(channelId) ?: 0
+        }
+        var messages = if (sentLastMessage == 0L) {
+            emptyList()
+        } else {
+            (if (offset == 0)
+                messageDao.getOldestThenMessagesInclude(channelId, sentLastMessage, limit)
+            else messageDao.getOldestThenMessages(channelId, sentLastMessage, limit)).reversed()
+        }
         if (offset == 0)
-            messages = getPendingMessagesAndAddToList(channelId, messages.toArrayList())
+            messages = getPendingMessagesAndAddToList(channelId, messages)
 
-        return messages.map { messageDb -> messageDb.toSceytMessage() }
+        return messages
     }
 
-    private suspend fun getNextMessagesDb(channelId: Long, lastMessageId: Long, offset: Int, limit: Int): List<SceytMessage> {
+    private suspend fun getNextMessagesDb(channelId: Long, lastMessageId: Long, offset: Int, limit: Int): List<MessageDb> {
         var messages = messageDao.getNewestThenMessage(channelId, lastMessageId, limit)
 
         if (offset == 0)
-            messages = getPendingMessagesAndAddToList(channelId, messages.toArrayList())
+            messages = getPendingMessagesAndAddToList(channelId, messages)
 
-        return messages.map { messageDb -> messageDb.toSceytMessage() }
+        return messages
     }
 
     private suspend fun getNearMessagesDb(channelId: Long, messageId: Long, offset: Int, limit: Int): LoadNearData<MessageDb> {
@@ -825,21 +913,25 @@ internal class PersistenceMessagesLogicImpl(
         val messages = data.data
 
         if (offset == 0)
-            data.data = getPendingMessagesAndAddToList(channelId, messages.toArrayList())
+            data.data = getPendingMessagesAndAddToList(channelId, messages)
 
         return data
     }
 
-    private suspend fun getPendingMessagesAndAddToList(channelId: Long, list: ArrayList<MessageDb>): List<MessageDb> {
+    private suspend fun getPendingMessagesAndAddToList(channelId: Long, list: List<MessageDb>): List<MessageDb> {
         val pendingMessage = messageDao.getPendingMessages(channelId)
 
         return if (pendingMessage.isNotEmpty()) {
-            list.addAll(pendingMessage)
-            list.sortedBy { it.messageEntity.createdAt }
+            list.toMutableList().run {
+                addAll(pendingMessage)
+                sortedBy { it.messageEntity.createdAt }
+            }
         } else list
     }
 
-    private suspend fun saveMessagesToDb(list: List<SceytMessage>?, includeParents: Boolean = true): List<SceytMessage> {
+    private suspend fun saveMessagesToDb(list: List<SceytMessage>?,
+                                         includeParents: Boolean = true,
+                                         unListAll: Boolean = false): List<SceytMessage> {
         if (list.isNullOrEmpty()) return emptyList()
         val pendingStates = pendingMessageStateDao.getAll()
         val usersDb = arrayListOf<UserEntity>()
@@ -848,7 +940,7 @@ internal class PersistenceMessagesLogicImpl(
 
         for (message in list) {
             updateMessageStatesWithPendingStates(message, pendingStates)
-            messagesDb.add(message.toMessageDb(false))
+            messagesDb.add(message.toMessageDb(unListAll))
             if (includeParents) {
                 message.parentMessage?.let { parent ->
                     if (parent.id != 0L) {
@@ -864,7 +956,7 @@ internal class PersistenceMessagesLogicImpl(
             messageDao.insertMessagesIgnored(parentMessagesDb)
 
         // Update users
-        list.filter { it.incoming && it.user != null }.map { it.user!! }.toSet().let { users ->
+        list.filter { it.incoming && it.user != null }.mapNotNull { it.user }.toSet().let { users ->
             if (users.isNotEmpty())
                 usersDb.addAll(users.map { it.toUserEntity() })
         }
@@ -905,7 +997,8 @@ internal class PersistenceMessagesLogicImpl(
             markMessageAsDelivered(channelId, *notDisplayedMessages.map { it.id }.toLongArray())
     }
 
-    private suspend fun markMessagesAs(channelId: Long, status: MarkerTypeEnum, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
+    private suspend fun markMessagesAs(channelId: Long, status: MarkerTypeEnum,
+                                       vararg ids: Long): List<SceytResponse<MessageListMarker>> = withContext(dispatcherIO) {
         val responseList = mutableListOf<SceytResponse<MessageListMarker>>()
         ids.toList().chunked(50).forEach {
             val typedArray = it.toLongArray()
@@ -919,7 +1012,7 @@ internal class PersistenceMessagesLogicImpl(
             responseList.add(response)
         }
 
-        return responseList
+        return@withContext responseList
     }
 
     private suspend fun addPendingMarkerToDb(channelId: Long, status: MarkerTypeEnum, vararg ids: Long) {
@@ -934,13 +1027,15 @@ internal class PersistenceMessagesLogicImpl(
         when (response) {
             is SceytResponse.Success -> {
                 response.data?.let { data ->
+                    SceytLog.i("onMarkerResponse", "send $status, ${ids.toList()}, in response ${data.messageIds}")
                     val deliveryStatus = status.toDeliveryStatus()
-                    messageDao.updateMessagesStatus(channelId, data.messageIds, deliveryStatus)
-                    val tIds = messageDao.getMessageTIdsByIds(*ids)
+                    val responseIds = data.messageIds.toList()
+                    messageDao.updateMessagesStatus(channelId, responseIds, deliveryStatus)
+                    val tIds = messageDao.getMessageTIdsByIds(*responseIds.toLongArray())
                     messagesCache.updateMessagesStatus(channelId, deliveryStatus, *tIds.toLongArray())
 
-                    pendingMarkersDao.deleteMessagesMarkersByStatus(ids.toList(), status)
-                    val existMessageIds = messageDao.getExistMessageByIds(ids.toList())
+                    pendingMarkersDao.deleteMessagesMarkersByStatus(responseIds, status)
+                    val existMessageIds = messageDao.getExistMessageByIds(responseIds)
                     existMessageIds.forEach {
                         SceytKitClient.myId?.let { userId ->
                             val markerEntity = MarkerEntity(messageId = it, userId = userId, name = data.name)

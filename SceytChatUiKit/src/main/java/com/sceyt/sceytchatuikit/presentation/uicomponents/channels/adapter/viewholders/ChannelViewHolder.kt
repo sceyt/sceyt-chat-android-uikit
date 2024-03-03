@@ -19,6 +19,7 @@ import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.presentation.common.getAttachmentIconAsString
@@ -30,7 +31,6 @@ import com.sceyt.sceytchatuikit.presentation.common.setChannelMessageDateAndStat
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytColorSpannableTextView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytOnlineView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
@@ -67,7 +67,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     @CallSuper
-    override fun bind(item: ChannelListItem, diff: ChannelItemPayloadDiff) {
+    override fun bind(item: ChannelListItem, diff: ChannelDiff) {
         super.bind(item, diff)
         when (item) {
             is ChannelListItem.ChannelItem -> {
@@ -151,7 +151,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 .append(fromText)
                 .append(message.getAttachmentIconAsString(context))
                 .append(showBody)
-                .setForegroundColorId(R.color.sceyt_color_last_message_from)
+                .setForegroundColorId(R.color.sceyt_color_text_themed)
                 .setIndexSpan(0, fromText.length)
                 .build()
 

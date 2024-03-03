@@ -4,6 +4,7 @@ import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.Flow
 
 interface PersistenceUsersLogic {
@@ -21,4 +22,5 @@ interface PersistenceUsersLogic {
     suspend fun getSettings(): SceytResponse<UserSettings>
     suspend fun muteNotifications(muteUntil: Long): SceytResponse<Boolean>
     suspend fun unMuteNotifications(): SceytResponse<Boolean>
+    suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>)
 }

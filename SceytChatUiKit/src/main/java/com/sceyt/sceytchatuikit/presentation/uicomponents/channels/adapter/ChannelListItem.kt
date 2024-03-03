@@ -5,5 +5,5 @@ import com.sceyt.sceytchatuikit.presentation.common.SelectableItem
 
 sealed class ChannelListItem : SelectableItem() {
     data class ChannelItem(var channel: SceytChannel) : ChannelListItem()
-    object LoadingMoreItem : ChannelListItem()
+    data object LoadingMoreItem : ChannelListItem()
 }

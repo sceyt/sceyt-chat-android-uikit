@@ -4,16 +4,17 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <TextView
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/messageDay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:background="@drawable/sceyt_bg_message_day"
+        android:background="@drawable/sceyt_bg_date_separator"
         android:includeFontPadding="false"
-        android:textColor="@color/sceyt_color_gray_400"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="3dp"
+        android:textColor="@color/sceyt_color_white"
         android:textSize="@dimen/extraSmallTextSize"
-        android:visibility="visible"
         tools:text="Feb 24" />
 
 </FrameLayout>

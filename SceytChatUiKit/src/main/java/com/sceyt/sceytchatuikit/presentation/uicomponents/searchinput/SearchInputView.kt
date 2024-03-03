@@ -21,7 +21,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputEventListenersImpl
 import com.sceyt.sceytchatuikit.sceytstyles.SearchInputViewStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
@@ -36,7 +37,7 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private var binding: SceytSearchViewBinding
 
-    private val debounceInitDelegate = lazy { DebounceHelper(TYPING_DEBOUNCE_MS) }
+    private val debounceInitDelegate = lazy { DebounceHelper(TYPING_DEBOUNCE_MS, this) }
     private val debounceHelper by debounceInitDelegate
 
     private val clickListeners = SearchInputClickListenersImpl(this)
@@ -84,7 +85,7 @@ class SearchInputView @JvmOverloads constructor(context: Context, attrs: Attribu
         }
 
         binding.root.setOnLongClickListener {
-            GlobalScope.launch {
+            CoroutineScope(Dispatchers.IO).launch {
                 val appDatabase: SceytDatabase by inject()
                 appDatabase.clearAllTables()
             }

@@ -6,6 +6,7 @@ import android.widget.TextView
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
 
 open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUIElementsListener.ElementsListeners {
@@ -15,6 +16,7 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
     private var avatarListener: HeaderUIElementsListener.AvatarListener? = null
     private var actionMenuListener: HeaderUIElementsListener.ActionsMenuListener? = null
     private var toolbarActionsVisibilityListener: HeaderUIElementsListener.ToolbarActionsVisibilityListener? = null
+    private var showSearchMessageListener: HeaderUIElementsListener.ShowSearchMessage? = null
 
     override fun onTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
         defaultListeners.onTitle(titleTextView, channel, replyMessage, replyInThread)
@@ -48,6 +50,11 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
         toolbarActionsVisibilityListener?.onInitToolbarActionsMenu(*messages, menu = menu)
     }
 
+    override fun showSearchMessagesBar(event: MessageCommandEvent.SearchMessages) {
+        defaultListeners.showSearchMessagesBar(event)
+        showSearchMessageListener?.showSearchMessagesBar(event)
+    }
+
     fun setListener(listener: HeaderUIElementsListener) {
         when (listener) {
             is HeaderUIElementsListener.ElementsListeners -> {
@@ -56,6 +63,7 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
                 avatarListener = listener
                 actionMenuListener = listener
                 toolbarActionsVisibilityListener = listener
+                showSearchMessageListener = listener
             }
 
             is HeaderUIElementsListener.TitleListener -> {
@@ -76,6 +84,10 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
 
             is HeaderUIElementsListener.ToolbarActionsVisibilityListener -> {
                 toolbarActionsVisibilityListener = listener
+            }
+
+            is HeaderUIElementsListener.ShowSearchMessage -> {
+                showSearchMessageListener = listener
             }
         }
     }

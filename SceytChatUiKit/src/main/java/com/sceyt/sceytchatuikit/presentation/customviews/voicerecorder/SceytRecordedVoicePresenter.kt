@@ -55,7 +55,7 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
                         }
 
                         AudioPlayerHelper.init(file.path, object : OnAudioPlayer {
-                            override fun onInitialized(alreadyInitialized: Boolean, currentPlayer: AudioPlayer, filePath: String) {
+                            override fun onInitialized(alreadyInitialized: Boolean, player: AudioPlayer, filePath: String) {
                                 AudioPlayerHelper.toggle(file.path)
                             }
 
@@ -81,7 +81,7 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
                                 }
                             }
 
-                            override fun onPaused(filePath: String?) {
+                            override fun onPaused(filePath: String) {
                                 root.post { setPlayButtonIcon(false, playVoiceRecord) }
                             }
 

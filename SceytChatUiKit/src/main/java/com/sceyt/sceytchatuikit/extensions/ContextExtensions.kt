@@ -28,6 +28,7 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import com.sceyt.sceytchatuikit.logger.SceytLog
@@ -74,6 +75,15 @@ fun Context.getStringByLocale(@StringRes colorId: Int, locale: Locale): String {
 fun Context.getCompatDrawable(@DrawableRes drawableId: Int): Drawable? {
     return try {
         ContextCompat.getDrawable(this, drawableId)
+    } catch (e: Exception) {
+        Log.i(TAG, e.message.toString())
+        null
+    }
+}
+
+fun Fragment.getCompatDrawable(@DrawableRes drawableId: Int): Drawable? {
+    return try {
+        ContextCompat.getDrawable(context ?: return null, drawableId)
     } catch (e: Exception) {
         Log.i(TAG, e.message.toString())
         null

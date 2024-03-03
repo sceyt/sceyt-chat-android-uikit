@@ -8,4 +8,6 @@ interface UsersRepository {
     suspend fun loadMoreUsers(): SceytResponse<List<User>>
     suspend fun getSceytUsersByIds(ids: List<String>): SceytResponse<List<User>>
     suspend fun getSceytUserById(id: String): SceytResponse<User>
+    suspend fun blockUser(userId: String): SceytResponse<List<User>>
+    suspend fun unblockUser(userId: String): SceytResponse<List<User>>
 }

@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoad
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
+import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
@@ -101,7 +102,10 @@ class MessageImageViewHolder(
 
     override fun getThumbSize() = Size(1080, 1080)
 
-    override fun needThumbFor() = ThumbFor.ConversationInfo
+    override val loadingProgressView: SceytCircularProgressView
+        get() = binding.loadProgress
+
+    override fun needThumbFor() = ThumbFor.MessagesLisView
 
     private fun SceytMessageImageItemBinding.setupStyle() {
         loadProgress.setProgressColor(context.getCompatColor(MessagesStyle.mediaLoaderColor))

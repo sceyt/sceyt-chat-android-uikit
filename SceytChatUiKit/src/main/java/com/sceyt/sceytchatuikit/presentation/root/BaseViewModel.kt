@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.root
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.hadilq.liveevent.LiveEvent
@@ -10,11 +9,12 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNewe
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class BaseViewModel : ViewModel() {
-    private val _pageStateLiveData = LiveEvent<PageState>()
-    val pageStateLiveData: LiveData<PageState> = _pageStateLiveData
+    protected val pageStateLiveDataInternal = LiveEvent<PageState>()
+    val pageStateLiveData = pageStateLiveDataInternal.asLiveData()
     var hasPrevDb: Boolean = false
     var hasPrev: Boolean = false
     var hasNextDb: Boolean = false
@@ -44,6 +44,8 @@ open class BaseViewModel : ViewModel() {
             else -> false
         }
     }
+
+    val isLoadingFromServer get() = loadingNextItems.get() || loadingPrevItems.get()
 
     protected fun setPagingLoadingStarted(loadType: PaginationResponse.LoadType,
                                           ignoreDb: Boolean = false,
@@ -142,9 +144,9 @@ open class BaseViewModel : ViewModel() {
 
     protected fun notifyPageLoadingState(isLoadingMore: Boolean) {
         if (isLoadingMore) {
-            _pageStateLiveData.postValue(PageState.StateLoadingMore())
+            pageStateLiveDataInternal.postValue(PageState.StateLoadingMore())
         } else
-            _pageStateLiveData.postValue(PageState.StateLoading())
+            pageStateLiveDataInternal.postValue(PageState.StateLoading())
     }
 
     fun <T> notifyPageStateWithResponse(response: SceytResponse<T>,
@@ -153,12 +155,14 @@ open class BaseViewModel : ViewModel() {
                                         searchQuery: String? = null,
                                         showError: Boolean = true) {
         val state = when {
-            response is SceytResponse.Error -> PageState.StateError(response, searchQuery, wasLoadingMore, showError)
+            response is SceytResponse.Error -> PageState.StateError(response.code, response.message,
+                wasLoadingMore, searchQuery, showError)
+
             isEmpty -> PageState.StateEmpty(searchQuery, wasLoadingMore)
             wasLoadingMore -> PageState.StateLoadingMore(false)
             else -> PageState.StateLoading(false)
         }
-        _pageStateLiveData.postValue(state)
+        pageStateLiveDataInternal.postValue(state)
     }
 
     fun <T> notifyResponseAndPageState(liveData: MutableLiveData<T>?,

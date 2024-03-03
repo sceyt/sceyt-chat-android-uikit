@@ -41,6 +41,14 @@ sealed interface MessageInputClickListeners {
         fun onClearChatClick()
     }
 
+    fun interface ScrollToNextMessageClickListener : MessageInputClickListeners {
+        fun onScrollToNextMessageClick()
+    }
+
+    fun interface ScrollToPreviousMessageClickListener : MessageInputClickListeners {
+        fun onScrollToPreviousMessageClick()
+    }
+
     /** Use this if you want to implement all callbacks */
     interface ClickListeners :
             SendMsgClickListener,
@@ -51,5 +59,7 @@ sealed interface MessageInputClickListeners {
             JoinClickListener,
             VoiceClickListener,
             VoiceLongClickListener,
-            ClearChatClickListener
+            ClearChatClickListener,
+            ScrollToNextMessageClickListener,
+            ScrollToPreviousMessageClickListener
 }

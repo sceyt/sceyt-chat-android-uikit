@@ -22,6 +22,10 @@ class MessageActionBridge {
             messagesListView?.getMessageCommandEventListener()?.invoke(MessageCommandEvent.OnCancelMultiselectEvent)
             inputView?.getEventListeners()?.onMultiselectModeListener(false)
         }
+
+        headerView.setSearchBarHiddenCallback {
+            inputView?.getEventListeners()?.onSearchModeListener(false)
+        }
     }
 
     fun setInputView(inputView: MessageInputView) {
@@ -61,9 +65,10 @@ class MessageActionBridge {
                 }
 
                 R.id.sceyt_delete_message -> {
-                    messageActionListener.onDeleteMessageClick(*selectedMessages, onlyForMe = selectedMessages.any { it.incoming }, actionFinish = {
-                        actionFinish.invoke()
-                    })
+                    messageActionListener.onDeleteMessageClick(*selectedMessages,
+                        requireForMe = selectedMessages.any { it.incoming }, actionFinish = {
+                            actionFinish.invoke()
+                        })
                 }
             }
         }
@@ -78,5 +83,10 @@ class MessageActionBridge {
         headerView?.uiElementsListeners?.onHideMessageActionsMenu()
         inputView?.getEventListeners()?.onMultiselectModeListener(false)
         messagesListView?.cancelMultiSelectMode()
+    }
+
+    fun showSearchMessage(event: MessageCommandEvent.SearchMessages){
+        headerView?.uiElementsListeners?.showSearchMessagesBar(event)
+        inputView?.getEventListeners()?.onSearchModeListener(true)
     }
 }

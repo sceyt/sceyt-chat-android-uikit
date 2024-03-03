@@ -43,8 +43,9 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
         }
 
         binding.icFile.setOnClickListener {
-            if (AudioPlayerHelper.alreadyInitialized(fileItem.file.filePath ?: "")) {
-                AudioPlayerHelper.toggle(lastFilePath)
+            val path = fileItem.file.filePath ?: return@setOnClickListener
+            if (AudioPlayerHelper.alreadyInitialized(path)) {
+                AudioPlayerHelper.toggle(path)
             } else initAudioPlayer()
         }
     }
@@ -71,12 +72,13 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
     }
 
     private fun initAudioPlayer() {
-        AudioPlayerHelper.init(lastFilePath, object : OnAudioPlayer {
+        val path = fileItem.file.filePath ?: return
+        AudioPlayerHelper.init(path, object : OnAudioPlayer {
             override fun onInitialized(alreadyInitialized: Boolean, player: AudioPlayer, filePath: String) {
                 if (!checkIsValid(filePath)) return
 
                 if (!alreadyInitialized)
-                    AudioPlayerHelper.toggle(lastFilePath)
+                    AudioPlayerHelper.toggle(path)
             }
 
             override fun onProgress(position: Long, duration: Long, filePath: String) {
@@ -101,7 +103,7 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
                 }
             }
 
-            override fun onPaused(filePath: String?) {
+            override fun onPaused(filePath: String) {
                 if (!checkIsValid(filePath)) return
                 binding.root.post {
                     setPlayingState(false)

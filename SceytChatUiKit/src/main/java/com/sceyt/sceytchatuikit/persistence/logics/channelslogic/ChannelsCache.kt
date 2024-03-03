@@ -2,13 +2,12 @@ package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.copy
-import com.sceyt.sceytchatuikit.data.hasDiff
 import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
-import com.sceyt.sceytchatuikit.presentation.common.diff
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
+import com.sceyt.sceytchatuikit.persistence.differs.diff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsComparatorBy
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -126,10 +125,12 @@ class ChannelsCache {
     fun upsertChannel(vararg channels: SceytChannel) {
         synchronized(lock) {
             channels.forEach {
-                val cachedChannel = cachedData[it.id]
+                val cachedChannel = cachedData[it.id] ?: pendingChannelsData[it.id]
                 if (cachedChannel == null) {
-                    cachedData[it.id] = it.clone()
-                    channelAdded(it)
+                    if (!it.pending) {
+                        cachedData[it.id] = it.clone()
+                        channelAdded(it)
+                    }
                 } else {
                     val oldMsg = cachedChannel.lastMessage
                     if (putAndCheckHasDiff(it).hasDifference()) {
@@ -260,7 +261,7 @@ class ChannelsCache {
             cachedData[id]?.let { channel ->
                 channel.members?.find { member -> member.user.id == user.id }?.let {
                     val oldUser = it.user
-                    if (oldUser.presence?.hasDiff(user.presence) == true) {
+                    if (oldUser.diff(user).hasDifference()) {
                         it.user = user.copy()
                         channelUpdated(channel, false, ChannelUpdatedType.Presence)
                     }
@@ -311,10 +312,10 @@ class ChannelsCache {
         return detectedDiff
     }
 
-    private fun putAndCheckHasDiff(channel: SceytChannel): ChannelItemPayloadDiff {
+    private fun putAndCheckHasDiff(channel: SceytChannel): ChannelDiff {
         val old = cachedData[channel.id]
         cachedData[channel.id] = channel.clone()
-        return old?.diff(channel) ?: ChannelItemPayloadDiff.DEFAULT
+        return old?.diff(channel) ?: ChannelDiff.DEFAULT
     }
 
     private fun putToCache(vararg channel: SceytChannel) {

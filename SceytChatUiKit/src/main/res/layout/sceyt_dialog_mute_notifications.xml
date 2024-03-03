@@ -6,6 +6,7 @@
     android:paddingVertical="10dp">
 
     <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="18dp"

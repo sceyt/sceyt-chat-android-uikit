@@ -33,7 +33,6 @@ class MediaStickHeaderItemDecoration(private val mListener: StickyHeaderInterfac
     }
 
     private fun getHeaderViewForItem(headerPosition: Int, parent: RecyclerView): SceytItemChannelMediaDateBinding {
-        SceytItemChannelMediaDateBinding.inflate(LayoutInflater.from(parent.context))
         val header = SceytItemChannelMediaDateBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         mListener.bindHeaderData(header, headerPosition)
         return header

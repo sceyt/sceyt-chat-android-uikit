@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.awaitAnimationEnd
 import com.sceyt.sceytchatuikit.extensions.dispatchUpdatesToSafety
+import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.presentation.common.ClickAvailableData
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
@@ -33,12 +34,12 @@ class ChannelsAdapter(private var channels: SyncArrayList<ChannelListItem>,
     }
 
     override fun onBindViewHolder(holder: BaseChannelViewHolder, position: Int) {
-        holder.bind(item = channels[position], diff = ChannelItemPayloadDiff.DEFAULT)
+        holder.bind(item = channels[position], diff = ChannelDiff.DEFAULT)
     }
 
     override fun onBindViewHolder(holder: BaseChannelViewHolder, position: Int, payloads: MutableList<Any>) {
-        val diff = payloads.find { it is ChannelItemPayloadDiff } as? ChannelItemPayloadDiff
-                ?: ChannelItemPayloadDiff.DEFAULT
+        val diff = payloads.find { it is ChannelDiff } as? ChannelDiff
+                ?: ChannelDiff.DEFAULT
         holder.bind(item = channels[position], diff)
     }
 
