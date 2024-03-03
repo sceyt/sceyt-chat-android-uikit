@@ -10,10 +10,10 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentInfoMembersByRoleBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
-import com.sceyt.sceytchatuikit.presentation.common.isPrivate
 import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
@@ -53,18 +53,27 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
         binding.admins.setOnClickListener {
             buttonsListener?.invoke(ClickActionsEnum.Admins)
         }
+
+        binding.searchMessages.setOnClickListener {
+            buttonsListener?.invoke(ClickActionsEnum.SearchMessages)
+        }
     }
 
     open fun setDetails(channel: SceytChannel) {
         with(binding) {
-            members.text = if (channel.isPublic())
-                getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
-
             val myRole = channel.userRole
             val isOwnerOrAdmin = myRole == RoleTypeEnum.Owner.toString() || myRole == RoleTypeEnum.Admin.toString()
 
-            admins.isVisible = !channel.isDirect() && isOwnerOrAdmin
-            groupChannelMembers.isVisible = !channel.isDirect() && (isOwnerOrAdmin || channel.isPrivate())
+            if (channel.isDirect() || (channel.isPublic() && !isOwnerOrAdmin)) {
+                groupChannelAdmins.isVisible = false
+                groupChannelMembers.isVisible = false
+                return
+            }
+
+            members.text = if (channel.isPublic())
+                getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
+
+            groupChannelAdmins.isVisible = isOwnerOrAdmin
         }
     }
 
@@ -73,11 +82,12 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
     }
 
     enum class ClickActionsEnum {
-        Members, Admins
+        Members, Admins, SearchMessages
     }
 
     private fun SceytFragmentInfoMembersByRoleBinding.setupStyle() {
         divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
+        divider.setBackgroundColor(requireContext().getCompatColor(ConversationInfoMediaStyle.dividerColor))
     }
 
     companion object {

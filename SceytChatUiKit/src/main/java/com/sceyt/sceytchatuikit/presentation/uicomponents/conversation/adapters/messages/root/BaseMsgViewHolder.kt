@@ -30,7 +30,11 @@ import androidx.core.view.setPadding
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.google.android.flexbox.*
+import com.google.android.flexbox.AlignItems
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexWrap
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
@@ -39,7 +43,19 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytRecyclerReplyContainerBinding
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.asComponentActivity
+import com.sceyt.sceytchatuikit.extensions.dpToPx
+import com.sceyt.sceytchatuikit.extensions.extractLinks
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
+import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
+import com.sceyt.sceytchatuikit.extensions.getStaticLayout
+import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
+import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.extensions.isRtl
+import com.sceyt.sceytchatuikit.extensions.isValidEmail
+import com.sceyt.sceytchatuikit.extensions.screenPortraitWidthPx
+import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
 import com.sceyt.sceytchatuikit.persistence.mappers.getThumbFromMetadata
@@ -49,7 +65,6 @@ import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytToReplyLineView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionsAdapter
@@ -64,7 +79,6 @@ import com.sceyt.sceytchatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.sceytchatuikit.shared.utils.ViewUtil
 import kotlin.math.min
-
 
 abstract class BaseMsgViewHolder(private val view: View,
                                  private val messageListeners: MessageClickListeners.ClickListeners? = null,
@@ -83,12 +97,12 @@ abstract class BaseMsgViewHolder(private val view: View,
     open val selectMessageView: View? = null
 
     @CallSuper
-    open fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+    open fun bind(item: MessageListItem, diff: MessageDiff) {
         messageListItem = item
         setMaxWidth()
         if (diff.selectionChanged || diff.statusChanged)
             selectableAnimHelper.doOnBind(selectMessageView, item)
-        if (messageListItem.highlighted)
+        if (messageListItem.highligh)
             highlight()
     }
 
@@ -102,7 +116,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         (layoutBubble?.layoutParams as? ConstraintLayout.LayoutParams)?.matchConstraintMaxWidth = bubbleMaxWidth
     }
 
-    fun rebind(diff: MessageItemPayloadDiff = MessageItemPayloadDiff.DEFAULT): Boolean {
+    fun rebind(diff: MessageDiff = MessageDiff.DEFAULT): Boolean {
         return if (::messageListItem.isInitialized) {
             bind(messageListItem, diff)
             true
@@ -115,7 +129,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (messageListItem is MessageListItem.MessageItem) {
             highlightAnim?.cancel()
             view.setBackgroundColor(Color.TRANSPARENT)
-            messageListItem.highlighted = false
+            messageListItem.highligh = false
         }
     }
 
@@ -319,10 +333,11 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
-    /** @param layoutDetails when not null, that mean layout details will resize with reactions. */
     protected fun setOrUpdateReactions(item: MessageListItem.MessageItem, rvReactionsViewStub: ViewStub,
-                                       viewPool: RecyclerView.RecycledViewPool, layoutDetails: ViewGroup? = null) {
+                                       viewPool: RecyclerView.RecycledViewPool) {
         val reactions: List<ReactionItem.Reaction>? = item.message.messageReactions?.take(19)
+        val resizeWithDependReactions = layoutBubbleConfig?.second ?: false
+        val layoutDetails = if (resizeWithDependReactions) layoutBubble else null
 
         if (reactions.isNullOrEmpty()) {
             reactionsAdapter = null
@@ -409,7 +424,7 @@ abstract class BaseMsgViewHolder(private val view: View,
             }
 
             message.attachments?.firstOrNull()?.let {
-                if (it.type == AttachmentTypeEnum.File.value()) {
+                if (!it.type.isEqualsVideoOrImage()) {
                     setPadding(ViewUtil.dpToPx(8f))
                 } else {
                     if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName || message.body.isNotNullOrBlank())
@@ -505,7 +520,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         highlightAnim?.duration = 2000
         highlightAnim?.addUpdateListener { animator -> view.setBackgroundColor(animator.animatedValue as Int) }
         highlightAnim?.start()
-        highlightAnim?.doOnEnd { messageListItem.highlighted = false }
+        highlightAnim?.doOnEnd { messageListItem.highligh = false }
     }
 
     open val enableReply = true

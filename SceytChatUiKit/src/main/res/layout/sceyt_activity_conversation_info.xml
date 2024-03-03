@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_bg"
+    android:background="@color/sceyt_color_bg_secondary_themed"
     tools:context=".presentation.uicomponents.conversationinfo.ConversationInfoActivity">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -57,7 +57,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:layout_constraintTop_toBottomOf="@+id/frame_layout_description"
-                        tools:layout="@layout/sceyt_fragment_info_description" />
+                        tools:layout="@layout/sceyt_fragment_info_specifications" />
 
                     <androidx.fragment.app.FragmentContainerView
                         android:id="@+id/frame_layout_settings"
@@ -119,7 +119,7 @@
                 android:id="@+id/tabLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/sceyt_color_bg"
+                android:background="@color/sceyt_color_primary"
                 app:layout_constraintTop_toTopOf="parent"
                 app:tabIndicator="@drawable/sceyt_bg_corners_6"
                 app:tabIndicatorAnimationMode="elastic"

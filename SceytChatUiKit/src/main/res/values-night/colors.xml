@@ -1,20 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="sceyt_color_primary_dark">#010212</color>
-    <color name="sceyt_color_primary">#FFFFFF</color>
+    <color name="sceyt_color_primary_dark">#19191B</color>
+    <color name="sceyt_color_primary">#232324</color>
+    <color name="sceyt_color_accent">#6B72FF</color>
+    <color name="sceyt_color_status_bar">#19191B</color>
 
+    <color name="sceyt_color_button">#303032</color>
+    <color name="sceyt_color_text_themed">#E1E3E6</color>
+    <color name="sceyt_color_divider">#303032</color>
     <color name="sceyt_color_black_themed">#FFFFFF</color>
-    <color name="sceyt_color_bg">#010212</color>
-    <color name="sceyt_color_bg_out_message">#182159</color>
-    <color name="sceyt_color_bg_inc_message">#383B51</color>
-    <color name="sceyt_color_divider">#383B51</color>
-    <color name="sceyt_color_input">#1A1B2A</color>
-    <color name="sceyt_color_status_bar">#010212</color>
-    <color name="sceyt_color_bottom_nav">#1A1B2A</color>
-    <color name="sceyt_color_text_themed">#ffffff</color>
-    <color name="sceyt_color_last_message_from">#B1B4C2</color>
-    <color name="sceyt_color_dialog_bg_themed">#1A1B2A</color>
-    <color name="sceyt_color_light_themed">#1A1B2A</color>
-    <color name="sceyt_color_gray_themed">#303032</color>
+    <color name="sceyt_color_gray_themed">#232324</color>
+    <color name="sceyt_color_gray_secondary_themed">#969A9F</color>
+    <color name="sceyt_color_dark_blue_themed">#303032</color>
+
+    <color name="sceyt_color_bg">@color/sceyt_color_primary_dark</color>
+    <color name="sceyt_color_bg_secondary_themed">@color/sceyt_color_primary_dark</color>
+
+
+    // Message bubble colors
+    <color name="sceyt_color_bg_out_message">#212239</color>
+    <color name="sceyt_color_bg_inc_message">#232324</color>
+    <color name="sceyt_color_bg_out_link_preview">#2E3052</color>
+    <color name="sceyt_color_bg_inc_link_preview">#303032</color>
+
 
 </resources>

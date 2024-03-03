@@ -13,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="60dp"
         android:layout_marginTop="10dp"
-        app:cardBackgroundColor="#F0F2F5"
+        app:cardBackgroundColor="@color/sceyt_color_gray_themed"
         app:cardCornerRadius="8dp"
         app:cardElevation="0dp"
         app:layout_constraintStart_toStartOf="parent"
@@ -70,13 +70,14 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/closeBtn"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginTop="-6.5dp"
-        android:backgroundTint="@color/sceyt_color_green"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginStart="47dp"
+        android:layout_marginTop="-9dp"
+        android:layout_marginBottom="47dp"
         app:layout_constraintEnd_toEndOf="@+id/imageCont"
         app:layout_constraintStart_toEndOf="@+id/imageCont"
         app:layout_constraintTop_toTopOf="@+id/imageCont"
-        app:srcCompat="@drawable/sceyt_close_btn" />
+        app:srcCompat="@drawable/sceyt_ic_remove" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -8,11 +8,15 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageItemComparator
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.StickyDateHeaderView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.StickyHeaderInterface
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,23 +25,24 @@ import kotlinx.coroutines.withContext
 
 class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                       private val viewHolderFactory: MessageViewHolderFactory) :
-        RecyclerView.Adapter<BaseMsgViewHolder>() {
+        RecyclerView.Adapter<BaseMsgViewHolder>(), StickyHeaderInterface {
     private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
     private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
     private val debounceHelper by lazy { DebounceHelper(300) }
     private var isMultiSelectableMode = false
+    private var lastHeaderPosition = -1
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
         return viewHolderFactory.createViewHolder(parent, viewType)
     }
 
     override fun onBindViewHolder(holder: BaseMsgViewHolder, position: Int) {
-        holder.bind(item = messages[position], diff = MessageItemPayloadDiff.DEFAULT)
+        holder.bind(item = messages[position], diff = MessageDiff.DEFAULT)
     }
 
     override fun onBindViewHolder(holder: BaseMsgViewHolder, position: Int, payloads: MutableList<Any>) {
-        val diff = payloads.find { it is MessageItemPayloadDiff } as? MessageItemPayloadDiff
-                ?: MessageItemPayloadDiff.DEFAULT
+        val diff = payloads.find { it is MessageDiff } as? MessageDiff
+                ?: MessageDiff.DEFAULT
         holder.bind(item = messages[position], diff)
     }
 
@@ -120,8 +125,8 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         removeLoadingNext()
         if (items.isEmpty()) return
 
-        val filteredItems = items.toSet().minus(messages.toSet())
-        addNewMessages(filteredItems.toList())
+        messages.addAll(items)
+        notifyItemRangeInserted(messages.lastIndex, items.size)
     }
 
     fun addNewMessages(items: List<MessageListItem>) {
@@ -136,10 +141,12 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
 
     fun notifyUpdate(messages: List<MessageListItem>, recyclerView: RecyclerView) {
         updateJob?.cancel()
-        updateJob = recyclerView.context.asComponentActivity().lifecycleScope.launch(Dispatchers.Default) {
-            val myDiffUtil = MessagesDiffUtil(ArrayList(this@MessagesAdapter.messages), messages)
-            val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
-
+        updateJob = recyclerView.context.asComponentActivity().lifecycleScope.launch {
+            var productDiffResult: DiffUtil.DiffResult
+            withContext(Dispatchers.Default) {
+                val myDiffUtil = MessagesDiffUtil(ArrayList(this@MessagesAdapter.messages), messages)
+                productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
+            }
             withContext(Dispatchers.Main) {
                 productDiffResult.dispatchUpdatesToSafety(recyclerView)
                 this@MessagesAdapter.messages = SyncArrayList(messages)
@@ -154,10 +161,11 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         notifyDataSetChanged()
     }
 
-    fun getData() = messages
+    fun getData() = messages.toList()
 
     fun needTopOffset(position: Int): Boolean {
         try {
+            if (position == 0) return true
             val prev = (messages.getOrNull(position - 1) as? MessageItem)?.message
             val current = (messages.getOrNull(position) as? MessageItem)?.message
             if (prev != null && current != null)
@@ -246,5 +254,20 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
                 updateJob?.invokeOnCompletion { cb.invoke() }
             }
         }
+    }
+
+    override fun bindHeaderData(header: StickyDateHeaderView, headerPosition: Int) {
+        if (lastHeaderPosition == headerPosition) return
+        val date = DateTimeUtil.getDateTimeStringWithDateFormatter(
+            context = header.context,
+            time = messages.getOrNull(headerPosition)?.getMessageCreatedAtForDateHeader() ?: return,
+            dateFormatter = MessagesStyle.dateSeparatorDateFormat)
+
+        header.setDate(date)
+        lastHeaderPosition = headerPosition
+    }
+
+    override fun isHeader(itemPosition: Int): Boolean {
+        return messages.getOrNull(itemPosition) is MessageListItem.DateSeparatorItem
     }
 }

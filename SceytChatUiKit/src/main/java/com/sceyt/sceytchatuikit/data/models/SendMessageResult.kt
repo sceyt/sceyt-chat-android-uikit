@@ -4,7 +4,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 
 sealed class SendMessageResult {
     data class TempMessage(val message: SceytMessage) : SendMessageResult()
-    object StartedSendingAttachment : SendMessageResult()
+    data object StartedSendingAttachment : SendMessageResult()
     data class Success(val response: SceytResponse.Success<SceytMessage>) : SendMessageResult()
     data class Error(val response: SceytResponse.Error<SceytMessage>) : SendMessageResult()
 

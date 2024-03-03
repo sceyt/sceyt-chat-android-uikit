@@ -12,9 +12,11 @@ import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.withContext
 
 object MessageEventsObserver : MessageEventManger.AllEventManagers {
     private var eventManager = MessageEventManagerImpl(this)
@@ -45,12 +47,6 @@ object MessageEventsObserver : MessageEventManger.AllEventManagers {
         extraBufferCapacity = 50,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onOutgoingMessageFlow = onOutGoingMessageFlow_.asSharedFlow()
-
-
-    private val onOutGoingMessageStatusFlow_: MutableSharedFlow<Pair<Long, SceytMessage>> = MutableSharedFlow(
-        extraBufferCapacity = 5,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val onOutGoingMessageStatusFlow = onOutGoingMessageStatusFlow_.asSharedFlow()
 
 
     init {
@@ -123,10 +119,8 @@ object MessageEventsObserver : MessageEventManger.AllEventManagers {
     }
 
     suspend fun emitOutgoingMessage(sceytMessage: SceytMessage) {
-        onOutGoingMessageFlow_.emit(sceytMessage)
-    }
-
-    fun emitOutgoingMessageSent(channelId: Long, message: SceytMessage) {
-        onOutGoingMessageStatusFlow_.tryEmit(Pair(channelId, message))
+        withContext(Dispatchers.Main) {
+            onOutGoingMessageFlow_.emit(sceytMessage)
+        }
     }
 }

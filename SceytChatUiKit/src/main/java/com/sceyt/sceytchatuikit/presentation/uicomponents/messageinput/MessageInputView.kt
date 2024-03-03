@@ -1,12 +1,14 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.Toast
@@ -16,6 +18,8 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
+import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
@@ -37,7 +41,6 @@ import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.getString
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
-import com.sceyt.sceytchatuikit.extensions.runOnMainThread
 import com.sceyt.sceytchatuikit.extensions.setTextAndMoveSelectionEnd
 import com.sceyt.sceytchatuikit.extensions.showSoftInput
 import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker
@@ -99,7 +102,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var eventListeners = InputEventsListenerImpl(this)
     private var selectFileTypePopupClickListeners = SelectFileTypePopupClickListenersImpl(this)
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
-    private val typingDebounceHelper = DebounceHelper(100)
+    private val typingDebounceHelper by lazy { DebounceHelper(100, getScope()) }
     private var typingTimeoutJob: Job? = null
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var inputState = Voice
@@ -110,9 +113,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var inputTextWatcher: TextWatcher? = null
     private var messageInputActionCallback: MessageInputActionCallback? = null
     private val messageToSendHelper by lazy { MessageToSendHelper(context) }
-    private val linkDetailsProvider by lazy { SingleLinkDetailsProvider(context, context.asComponentActivity().lifecycleScope) }
-
+    private val linkDetailsProvider by lazy { SingleLinkDetailsProvider(context, getScope()) }
+    private val audioRecorderHelper: AudioRecorderHelper by lazy { AudioRecorderHelper(getScope(), context) }
     var isInputHidden = false
+        private set
+    var isInMultiSelectMode = false
+        private set
+    var isInSearchMode = false
         private set
     var editMessage: SceytMessage? = null
         private set
@@ -135,16 +142,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding = SceytMessageInputViewBinding.inflate(LayoutInflater.from(context), this, true)
 
         init()
-        setupAttachmentsList()
-        val voiceRecorderView = SceytVoiceMessageRecorderView(context)
-        post {
-            (parent as? ViewGroup)?.addView(voiceRecorderView.apply {
-                layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-                setRecordingListener()
-                voiceMessageRecorderView = this
-                isVisible = canShowRecorderView()
-            })
-        }
     }
 
     private fun init() {
@@ -158,8 +155,24 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             addInoutListeners()
             determineInputState()
             addInputTextWatcher()
-            post { onStateChanged(inputState) }
+            setupAttachmentsList()
+            // init outside of post to, because it's using permission launcher
+            val voiceRecorderView = SceytVoiceMessageRecorderView(context)
+            post {
+                onStateChanged(inputState)
+                (parent as? ViewGroup)?.addView(voiceRecorderView.apply {
+                    layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+                    setRecordingListener()
+                    voiceMessageRecorderView = this
+                    voiceMessageRecorderView?.setRecorderHeight(binding.layoutInput.height)
+                    isVisible = canShowRecorderView()
+                })
+            }
         }
+    }
+
+    private fun getScope(): LifecycleCoroutineScope {
+        return (findViewTreeLifecycleOwner() ?: context.asComponentActivity()).lifecycleScope
     }
 
     private val editOrReplyMessageFragment
@@ -254,6 +267,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         btnClearChat.setOnClickListener {
             clickListeners.onClearChatClick()
         }
+
+        layoutInputSearchResult.icDown.setOnClickListener {
+            clickListeners.onScrollToNextMessageClick()
+        }
+
+        layoutInputSearchResult.icUp.setOnClickListener {
+            clickListeners.onScrollToPreviousMessageClick()
+        }
     }
 
     private fun addInoutListeners() {
@@ -290,7 +311,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun isEditingMessage() = editMessage != null
 
-    private fun tryToSendRecording(file: File, amplitudes: IntArray, duration: Int) {
+    private fun tryToSendRecording(file: File?, amplitudes: IntArray, duration: Int) {
+        file ?: run {
+            finishRecording()
+            return
+        }
         val metadata = Gson().toJson(AudioMetadata(amplitudes, duration))
         createAttachmentWithPaths(file.path, metadata = metadata, attachmentType = AttachmentTypeEnum.Voice.value()).getOrNull(0)?.let {
             allAttachments.add(it)
@@ -314,38 +339,37 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             override fun onRecordingStarted() {
                 val directoryToSaveRecording = context.filesDir.path + "/Audio"
                 AudioPlayerHelper.pauseAll()
-                AudioRecorderHelper.startRecording(directoryToSaveRecording) {}
+                audioRecorderHelper.startRecording(directoryToSaveRecording) {}
                 binding.layoutInput.isInvisible = true
                 voiceMessageRecorderView?.keepScreenOn = true
             }
 
             override fun onRecordingCompleted(shouldShowPreview: Boolean) {
-                AudioRecorderHelper.stopRecording { isTooShort, file, duration, amplitudes ->
-                    runOnMainThread {
-                        if (isTooShort) {
-                            finishRecording()
-                            return@runOnMainThread
-                        }
-                        if (shouldShowPreview) {
-                            showRecordPreview(file, amplitudes, duration)
-                        } else {
-                            finishRecording()
-                            tryToSendRecording(file, amplitudes.toIntArray(), duration)
-                        }
+                audioRecorderHelper.stopRecording { isTooShort, file, duration, amplitudes ->
+                    if (isTooShort) {
+                        finishRecording()
+                        return@stopRecording
+                    }
+                    if (shouldShowPreview) {
+                        showRecordPreview(file, amplitudes, duration)
+                    } else {
+                        finishRecording()
+                        tryToSendRecording(file, amplitudes.toIntArray(), duration)
                     }
                     voiceMessageRecorderView?.keepScreenOn = false
                 }
             }
 
             override fun onRecordingCanceled() {
-                AudioRecorderHelper.cancelRecording {}
+                audioRecorderHelper.cancelRecording()
                 finishRecording()
                 voiceMessageRecorderView?.keepScreenOn = false
             }
         })
     }
 
-    private fun showRecordPreview(file: File, amplitudes: Array<Int>, duration: Int) {
+    private fun showRecordPreview(file: File?, amplitudes: Array<Int>, duration: Int) {
+        file ?: return
         val metadata = AudioMetadata(amplitudes.toIntArray(), duration)
         binding.voiceRecordPresenter.init(file, metadata, object : SceytRecordedVoicePresenter.RecordedVoicePresentListeners {
             override fun onDeleteVoiceRecord() {
@@ -363,14 +387,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun handleAttachmentClick() {
-        ChooseFileTypeDialog(context) { chooseType ->
+        ChooseFileTypeDialog(context).setChooseListener { chooseType ->
             when (chooseType) {
                 AttachmentChooseType.Gallery -> selectFileTypePopupClickListeners.onGalleryClick()
-                AttachmentChooseType.Camera -> {
-                    //TODO custom camera impl
-                }
-
-                AttachmentChooseType.Image -> selectFileTypePopupClickListeners.onTakePhotoClick()
+                AttachmentChooseType.Photo -> selectFileTypePopupClickListeners.onTakePhotoClick()
                 AttachmentChooseType.Video -> selectFileTypePopupClickListeners.onTakeVideoClick()
                 AttachmentChooseType.File -> selectFileTypePopupClickListeners.onFileClick()
             }
@@ -378,16 +398,19 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun SceytMessageInputViewBinding.setUpStyle() {
+        val colorAccent = context.getCompatColor(SceytKitConfig.sceytColorAccent)
         icAddAttachments.setImageResource(MessageInputViewStyle.attachmentIcon)
         messageInput.setTextColor(context.getCompatColor(MessageInputViewStyle.inputTextColor))
         messageInput.hint = MessageInputViewStyle.inputHintText
         messageInput.setHintTextColor(context.getCompatColor(MessageInputViewStyle.inputHintTextColor))
-        btnJoin.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        btnClearChat.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        btnJoin.setTextColor(colorAccent)
+        btnClearChat.setTextColor(colorAccent)
+        layoutInputSearchResult.icDown.imageTintList = ColorStateList.valueOf(colorAccent)
+        layoutInputSearchResult.icUp.imageTintList = ColorStateList.valueOf(colorAccent)
     }
 
     private fun determineInputState() {
-        if (!isEnabledInput())
+        if (!isEnabledInput() || isInMultiSelectMode || isInSearchMode)
             return
 
         val showVoiceIcon = binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
@@ -614,7 +637,18 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun getEventListeners() = eventListeners
 
-    fun setInputActionCallback(callback: MessageInputActionCallback) {
+    internal fun onSearchMessagesResult(data: SearchResult) {
+        with(binding.layoutInputSearchResult) {
+            val hasResult = data.messages.isNotEmpty()
+            tvResult.text = if (hasResult)
+                "${data.currentIndex + 1} ${getString(R.string.of)} ${data.messages.size}"
+            else getString(R.string.sceyt_not_found)
+            icDown.isEnabled = hasResult && data.currentIndex > 0
+            icUp.isEnabled = hasResult && data.currentIndex < data.messages.lastIndex
+        }
+    }
+
+    fun setInputActionsCallback(callback: MessageInputActionCallback) {
         messageInputActionCallback = callback
         messageToSendHelper.setInputActionCallback(callback)
     }
@@ -700,6 +734,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun getComposedMessage() = binding.messageInput.text
 
+    val inputEditText: EditText get() = binding.messageInput
+
     interface MessageInputActionCallback {
         fun sendMessage(message: Message, linkDetails: LinkPreviewDetails?)
         fun sendMessages(message: List<Message>, linkDetails: LinkPreviewDetails?)
@@ -711,6 +747,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         fun mention(query: String)
         fun join()
         fun clearChat()
+        fun scrollToNext()
+        fun scrollToPrev()
     }
 
     fun setClickListener(listener: MessageInputClickListeners) {
@@ -759,7 +797,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun setCustomLinkPreviewFragment(fragment: LinkPreviewFragment, fragmentManager: FragmentManager) {
         fragment.setClickListener(clickListeners)
         fragmentManager.commit {
-            replace(R.id.layoutLinkPreview, linkPreviewFragment)
+            replace(R.id.layoutLinkPreview, fragment)
         }
     }
 
@@ -850,7 +888,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onInputStateChanged(sendImage: ImageView, state: InputState) {
-        val iconResId = if (state == Voice) R.drawable.sceyt_ic_voice
+        val iconResId = if (state == Voice) MessageInputViewStyle.voiceRecordIcon
         else MessageInputViewStyle.sendMessageIcon
         binding.icSendMessage.setImageResource(iconResId)
     }
@@ -863,8 +901,17 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageInputActionCallback?.clearChat()
     }
 
+    override fun onScrollToNextMessageClick() {
+        messageInputActionCallback?.scrollToNext()
+    }
+
+    override fun onScrollToPreviousMessageClick() {
+        messageInputActionCallback?.scrollToPrev()
+    }
+
     override fun onMultiselectModeListener(isMultiselectMode: Boolean) {
         with(binding) {
+            isInMultiSelectMode = isMultiselectMode
             layoutInput.isInvisible = isMultiselectMode
             rvAttachments.isVisible = !isMultiselectMode && allAttachments.isNotEmpty()
             if (isMultiselectMode) {
@@ -880,6 +927,29 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     linkPreviewFragment.showLinkDetails(it)
                 }
                 btnClearChat.animateToGone(150)
+            }
+        }
+    }
+
+    override fun onSearchModeListener(inSearchMode: Boolean) {
+        with(binding) {
+            isInSearchMode = inSearchMode
+            layoutInput.isInvisible = inSearchMode
+            rvAttachments.isVisible = !inSearchMode && allAttachments.isNotEmpty()
+            if (inSearchMode) {
+                hideAndStopVoiceRecorder()
+                closeReplyOrEditView()
+                closeLinkDetailsView()
+                onSearchMessagesResult(SearchResult())
+                layoutInputSearchResult.root.animateToVisible(150)
+            } else {
+                replyMessage?.let { replyMessage(it, initWithDraft = true) }
+                editMessage?.let { editMessage(it, initWithDraft = true) }
+                linkDetails?.let {
+                    binding.layoutLinkPreview.isVisible = true
+                    linkPreviewFragment.showLinkDetails(it)
+                }
+                layoutInputSearchResult.root.animateToGone(150)
             }
         }
     }

@@ -4,7 +4,7 @@ import android.content.res.ColorStateList
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncDeletedMessageBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageItemPayloadDiff
+import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -21,7 +21,7 @@ class IncDeletedMsgViewHolder(
         binding.setMessageItemStyle()
     }
 
-    override fun bind(item: MessageListItem, diff: MessageItemPayloadDiff) {
+    override fun bind(item: MessageListItem, diff: MessageDiff) {
         super.bind(item, diff)
 
         if (item is MessageListItem.MessageItem) {

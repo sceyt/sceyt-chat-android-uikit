@@ -31,12 +31,14 @@
         android:layout_marginHorizontal="12dp"
         android:ellipsize="end"
         android:singleLine="true"
-        android:textColor="@color/colorAccent"
+        android:textColor="@color/sceyt_color_accent"
         android:textSize="13sp"
+        app:layout_constraintBottom_toTopOf="@+id/tvLinkDescription"
         app:layout_constraintEnd_toStartOf="@+id/icClose"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@+id/icLinkImage"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
         app:layout_goneMarginTop="0dp"
         tools:text="https://www.youtube.com/watch?v=sLxN" />
 

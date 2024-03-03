@@ -1,12 +1,15 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader
 
+import android.animation.LayoutTransition
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.annotation.MenuRes
@@ -17,8 +20,8 @@ import androidx.core.view.marginBottom
 import androidx.core.view.marginLeft
 import androidx.core.view.marginRight
 import androidx.core.view.marginTop
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
@@ -31,15 +34,17 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytConversationHeaderViewBinding
 import com.sceyt.sceytchatuikit.extensions.asComponentActivity
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
 import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.hideKeyboard
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.maybeComponentActivity
+import com.sceyt.sceytchatuikit.extensions.showSoftInput
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eventlisteners.HeaderEventsListener
@@ -47,13 +52,11 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eve
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
-import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytstyles.ConversationHeaderViewStyle
 import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -69,19 +72,18 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     internal var uiElementsListeners = HeaderUIElementsListenerImpl(this)
     private lateinit var channel: SceytChannel
     private var replyMessage: SceytMessage? = null
-    private val typingUsers by lazy { mutableSetOf<SceytMember>() }
-    private var isTyping: Boolean = false
     private var isReplyInThread: Boolean = false
-    private var updateTypingJob: Job? = null
     private var isGroup = false
-    private var typingTextBuilder: ((SceytMember) -> String)? = null
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
-    private val debounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
-    private val typingCancelHelper by lazy { TypingCancelHelper() }
     private var enablePresence: Boolean = true
+    private val typingUsersHelper by lazy { initTypingUsersHelper() }
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
+    private var toolbarSearchHiddenCallback: (() -> Unit)? = null
     private var addedMenu: Menu? = null
+    private var onSearchQueryChangeListener: ((String) -> Unit)? = null
     var isShowingMessageActions = false
+        private set
+    var isShowingSearchBar = false
         private set
 
     init {
@@ -101,7 +103,10 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private fun init() {
         with(binding) {
             setUpStyle()
-            layoutToolbarRoot.layoutTransition?.setDuration(200)
+            layoutToolbarRoot.layoutTransition = LayoutTransition().apply {
+                disableTransitionType(LayoutTransition.DISAPPEARING)
+                setDuration(200)
+            }
 
             post { subTitle.isSelected = true }
 
@@ -116,10 +121,28 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             layoutToolbarDetails.setOnClickListener {
                 clickListeners.onToolbarClick(it)
             }
+
+            icClear.setOnClickListener {
+                inputSearch.text?.clear()
+            }
+
+            inputSearch.setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_SEARCH)
+                    inputSearch.text?.let { text ->
+                        onSearchQueryChangeListener?.invoke(text.toString())
+                    }
+                return@setOnEditorActionListener false
+            }
+
+            inputSearch.doAfterTextChanged {
+                binding.icClear.isVisible = it?.isNotEmpty() == true
+            }
         }
 
-        if (!isInEditMode)
+        if (!isInEditMode) {
             updatePresenceEveryOneMin()
+            initTypingUsersHelper()
+        }
     }
 
     private fun updatePresenceEveryOneMin() {
@@ -137,6 +160,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         subTitle.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.subTitleColor))
         toolbarUnderline.background = ColorDrawable(context.getCompatColor(ConversationHeaderViewStyle.underlineColor))
         toolbarUnderline.isVisible = ConversationHeaderViewStyle.enableUnderline
+        icSearch.imageTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -196,11 +220,11 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                         else getString(R.string.sceyt_subscriber_count, memberCount)
                     }
                 }
-                setSubTitleText(subjectTextView, title, !title.isNullOrBlank() && !isTyping)
+                setSubTitleText(subjectTextView, title, !title.isNullOrBlank() && !typingUsersHelper.isTyping)
             } else {
                 val fullName = replyMessage?.user?.fullName
                 val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
-                setSubTitleText(subjectTextView, subTitleText, !fullName.isNullOrBlank() && !isTyping)
+                setSubTitleText(subjectTextView, subTitleText, !fullName.isNullOrBlank() && !typingUsersHelper.isTyping)
             }
         }
     }
@@ -214,7 +238,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             return
 
         textView.text = title
-        textView.isVisible = true
+        textView.isVisible = !typingUsersHelper.isTyping
     }
 
     private fun setAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
@@ -244,7 +268,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
             toolBarMessageActions.setMenuItemClickListener {
                 listener?.invoke(it) {
-                    hideMessageActions()
+                    binding.hideMessageActions()
                     toolbarActionsHiddenCallback?.invoke()
                 }
             }
@@ -276,68 +300,16 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
     }
 
-    private fun updateTypingText() {
-        when {
-            typingUsers.isEmpty() -> {
-                updateTypingJob?.cancel()
-            }
-
-            typingUsers.size == 1 -> {
-                binding.tvTyping.text = initTypingTitle(typingUsers.last())
-                updateTypingJob?.cancel()
-            }
-
-            else -> {
-                if (updateTypingJob == null || updateTypingJob?.isActive?.not() == true)
-                    updateTypingTitleEveryTwoSecond()
-            }
-        }
-    }
-
-    private fun updateTypingTitleEveryTwoSecond() {
-        updateTypingJob?.cancel()
-        updateTypingJob = context.asComponentActivity().lifecycleScope.launch {
-            while (true) {
-                typingUsers.toList().forEach {
-                    binding.tvTyping.text = initTypingTitle(it)
-                    delay(2000)
-                }
-            }
-        }
-    }
-
-    private fun initTypingTitle(member: SceytMember): String {
-        return typingTextBuilder?.invoke(member) ?: if (isGroup)
-            buildString {
-                append(userNameBuilder?.invoke(member.user)
-                        ?: member.getPresentableFirstName().take(10))
-                append(" ${getString(R.string.sceyt_typing)}")
-            }
-        else getString(R.string.sceyt_typing)
-    }
-
-    private fun setTyping(data: ChannelTypingEventData) {
-        if (data.member.id == ChatClient.getClient().user?.id) return
-        debounceHelper.submit {
-            val typing = data.typing
-            isTyping = typing
-
-            if (isGroup) {
-                if (typing) {
-                    typingUsers.add(data.member)
-                } else
-                    typingUsers.remove(data.member)
-
-                updateTypingText()
-            } else
-                binding.tvTyping.text = initTypingTitle(data.member)
-
-            setTypingState(typing)
-        }
+    private fun initTypingUsersHelper(): HeaderTypingUsersHelper {
+        return HeaderTypingUsersHelper(context, isGroup, typingTextUpdatedListener = {
+            binding.tvTyping.text = it
+        }, typingStateUpdated = {
+            setTypingState(it)
+        })
     }
 
     private fun setTypingState(typing: Boolean) {
-        if ((typing && isGroup.not()) || (isGroup && typingUsers.isNotEmpty())) {
+        if ((typing && isGroup.not()) || (isGroup && typingUsersHelper.typingUsers.isNotEmpty())) {
             binding.subTitle.isVisible = false
             binding.groupTyping.isVisible = true
         } else {
@@ -351,17 +323,32 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         channel.getFirstMember()?.let { member ->
             if (member.user.id == user.id) {
                 member.user = user
-                if (!isTyping)
+                if (!typingUsersHelper.isTyping)
                     uiElementsListeners.onSubTitle(binding.subTitle, channel, replyMessage, isReplyInThread)
             }
         }
     }
 
-    private fun hideMessageActions() {
-        binding.toolBarMessageActions.isVisible = false
-        binding.layoutToolbarDetails.isVisible = true
+    private fun SceytConversationHeaderViewBinding.hideMessageActions() {
+        toolBarMessageActions.isVisible = false
+        layoutToolbarDetails.isVisible = true
         isShowingMessageActions = false
         addedMenu?.forEach { item -> item.isVisible = true }
+    }
+
+    private fun SceytConversationHeaderViewBinding.toggleSearch(showSearch: Boolean) {
+        hideMessageActions()
+        layoutSearch.isVisible = showSearch
+        layoutToolbarDetails.isVisible = !showSearch
+        root.setBackgroundColor(if (showSearch) context.getCompatColor(R.color.sceyt_color_bg)
+        else context.getCompatColor(R.color.sceyt_color_primary))
+        isShowingSearchBar = showSearch
+        if (showSearch)
+            context.showSoftInput(inputSearch)
+        else {
+            inputSearch.text?.clear()
+            context.hideKeyboard(inputSearch)
+        }
     }
 
     internal fun onTyping(data: ChannelTypingEventData) {
@@ -376,7 +363,11 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         toolbarActionsHiddenCallback = callback
     }
 
-    fun isTyping() = isTyping
+    internal fun setSearchBarHiddenCallback(callback: () -> Unit) {
+        toolbarSearchHiddenCallback = callback
+    }
+
+    fun isTyping() = typingUsersHelper.isTyping
 
     fun getChannel() = if (::channel.isInitialized) channel else null
 
@@ -406,12 +397,17 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         uiElementsListeners = listener
     }
 
+    fun setSearchQueryChangeListener(listener: (String) -> Unit) {
+        onSearchQueryChangeListener = listener
+    }
+
     fun setTypingTextBuilder(builder: (SceytMember) -> String) {
-        typingTextBuilder = builder
+        typingUsersHelper.setTypingTextBuilder(builder)
     }
 
     fun setUserNameBuilder(builder: (User) -> String) {
         userNameBuilder = builder
+        typingUsersHelper.setUserNameBuilder(builder)
     }
 
     fun invalidateUi() {
@@ -438,10 +434,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     //Event listeners
     override fun onTypingEvent(data: ChannelTypingEventData) {
-        typingCancelHelper.await(data) {
-            setTyping(it)
-        }
-        setTyping(data)
+        typingUsersHelper.onTypingEvent(data)
     }
 
     override fun onPresenceUpdateEvent(user: User) {
@@ -467,7 +460,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     override fun onHideMessageActionsMenu() {
-        hideMessageActions()
+        binding.hideMessageActions()
     }
 
     override fun onInitToolbarActionsMenu(vararg messages: SceytMessage, menu: Menu) {
@@ -483,22 +476,34 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
     }
 
+    override fun showSearchMessagesBar(event: MessageCommandEvent.SearchMessages) {
+        binding.toggleSearch(true)
+    }
+
     //Click listeners
     override fun onAvatarClick(view: View) {
         if (::channel.isInitialized)
-            ConversationInfoActivity.newInstance(context, channel)
+            ConversationInfoActivity.launch(context, channel)
     }
 
     override fun onToolbarClick(view: View) {
         if (::channel.isInitialized)
-            ConversationInfoActivity.newInstance(context, channel)
+            ConversationInfoActivity.launch(context, channel)
     }
 
     override fun onBackClick(view: View) {
-        if (isShowingMessageActions) {
-            hideMessageActions()
-            toolbarActionsHiddenCallback?.invoke()
-        } else
-            context.maybeComponentActivity()?.onBackPressedDispatcher?.onBackPressed()
+        when {
+            isShowingMessageActions -> {
+                binding.hideMessageActions()
+                toolbarActionsHiddenCallback?.invoke()
+            }
+
+            isShowingSearchBar -> {
+                binding.toggleSearch(false)
+                toolbarSearchHiddenCallback?.invoke()
+            }
+
+            else -> context.maybeComponentActivity()?.onBackPressedDispatcher?.onBackPressed()
+        }
     }
 }

@@ -1,10 +1,10 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
+import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import androidx.core.util.Predicate
 import androidx.lifecycle.lifecycleScope
@@ -24,6 +24,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageViewHolderFactory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.StickyDateHeaderUpdater
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.MessageSwipeController
@@ -37,6 +38,8 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private lateinit var mAdapter: MessagesAdapter
     private var viewHolderFactory = MessageViewHolderFactory(context)
     private var messageSwipeController: MessageSwipeController? = null
+
+    private var scrollStateChangeListener: ((Int) -> Unit)? = null
 
     // Loading prev properties
     private var needLoadPrevMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
@@ -76,10 +79,12 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     private fun addOnScrollListener() {
-        addRVScrollListener { _: RecyclerView, _: Int, dy: Int ->
+        addRVScrollListener(onScrolled = { _: RecyclerView, _: Int, dy: Int ->
             checkNeedLoadPrev(dy)
             checkNeedLoadNext(dy)
-        }
+        }, onScrollStateChanged = { _, newState ->
+            scrollStateChangeListener?.invoke(newState)
+        })
 
         addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             if (scrollState != SCROLL_STATE_IDLE || ::mAdapter.isInitialized.not()) return@addOnLayoutChangeListener
@@ -159,12 +164,14 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         return scrollToEnd
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     fun setData(messages: List<MessageListItem>, force: Boolean = false) {
         if (::mAdapter.isInitialized.not()) {
-            adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory)
-                .also { mAdapter = it }
+            adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory).also {
+                it.setHasStableIds(true)
+                mAdapter = it
+            }
             scheduleLayoutAnimation()
+            StickyDateHeaderUpdater(this, parent as ViewGroup, mAdapter)
 
             val swipeController = MessageSwipeController(context) { position ->
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -209,10 +216,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         } else null
     }
 
-    fun getData(): ArrayList<MessageListItem>? {
+    fun getData(): List<MessageListItem> {
         return if (::mAdapter.isInitialized)
             mAdapter.getData()
-        else null
+        else emptyList()
     }
 
     fun addNextPageMessages(messages: List<MessageListItem>) {
@@ -240,6 +247,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
             }
             checkScrollToEnd(items.size, outGoing)
         }
+    }
+
+    fun setScrollStateChangeListener(listener: (Int) -> Unit) {
+        scrollStateChangeListener = listener
     }
 
     fun setNeedLoadPrevMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {

@@ -9,30 +9,39 @@ import com.sceyt.sceytchatuikit.databinding.SceytDialogMuteNotificationsBinding
 
 class MuteNotificationDialog(
         context: Context,
-        private val chooseListener: ((MuteTypeEnum) -> Unit)? = null,
 ) : Dialog(context, R.style.SceytDialogNoTitle) {
-    private lateinit var mBinding: SceytDialogMuteNotificationsBinding
+    private lateinit var binding: SceytDialogMuteNotificationsBinding
+    private var chooseListener: ((MuteTypeEnum) -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mBinding = SceytDialogMuteNotificationsBinding.inflate(LayoutInflater.from(context))
-        setContentView(mBinding.root)
+        binding = SceytDialogMuteNotificationsBinding.inflate(LayoutInflater.from(context))
+        setContentView(binding.root)
         initView()
         window?.setWindowAnimations(R.style.SceytDialogWindowAnimation)
     }
 
     private fun initView() {
-        mBinding.muteOneHour.setOnClickListener {
+        binding.muteOneHour.setOnClickListener {
             chooseListener?.invoke(MuteTypeEnum.Mute1Hour)
             dismiss()
         }
-        mBinding.muteTwoHour.setOnClickListener {
+        binding.muteTwoHour.setOnClickListener {
             chooseListener?.invoke(MuteTypeEnum.Mute8Hour)
             dismiss()
         }
-        mBinding.muteForever.setOnClickListener {
+        binding.muteForever.setOnClickListener {
             chooseListener?.invoke(MuteTypeEnum.MuteForever)
             dismiss()
         }
+    }
+
+    fun setChooseListener(listener: (MuteTypeEnum) -> Unit): MuteNotificationDialog {
+        chooseListener = listener
+        return this
+    }
+
+    fun setTitles(title: String) {
+        binding.tvTitle.text = title
     }
 }

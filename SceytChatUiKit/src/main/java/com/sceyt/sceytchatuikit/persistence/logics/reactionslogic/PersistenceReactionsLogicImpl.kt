@@ -324,8 +324,8 @@ internal class PersistenceReactionsLogicImpl(
 
     private suspend fun increaseReactionTotal(messageId: Long, key: String, score: Int) {
         reactionDao.getReactionTotal(messageId, key)?.let {
-            it.score += score
-            reactionDao.insertReactionTotal(it)
+            val newTotal = it.copy(score = it.score + score)
+            reactionDao.insertReactionTotal(newTotal)
         } ?: run {
             reactionDao.insertReactionTotal(ReactionTotalEntity(messageId = messageId,
                 key = key, score = score, count = 1))

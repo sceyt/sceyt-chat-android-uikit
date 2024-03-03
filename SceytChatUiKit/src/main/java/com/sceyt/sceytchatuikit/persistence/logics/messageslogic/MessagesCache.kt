@@ -8,6 +8,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.removeAllIf
+import com.sceyt.sceytchatuikit.persistence.differs.diffContent
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloading
@@ -23,7 +24,6 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.ThumbLoad
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
-import com.sceyt.sceytchatuikit.presentation.common.diffContent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageComparator
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -50,11 +50,16 @@ class MessagesCache {
 
 
     /** Upsert messages to cash.
-     * @param checkDifference if true check differences and add payloads, otherwise only put to cash. */
-    fun addAll(channelId: Long, list: List<SceytMessage>, checkDifference: Boolean): Boolean {
+     * @param checkDifference if true check differences and add payloads, otherwise only put to cash.
+     * @param checkDiffAndNotifyUpdate if true then will emit message update event, when detected
+     * message change. */
+    fun addAll(channelId: Long, list: List<SceytMessage>,
+               checkDifference: Boolean,
+               checkDiffAndNotifyUpdate: Boolean): Boolean {
+
         synchronized(lock) {
             return if (checkDifference)
-                putAndCheckHasDiff(channelId, true, *list.toTypedArray())
+                putAndCheckHasDiff(channelId, true, checkDiffAndNotifyUpdate, *list.toTypedArray())
             else {
                 putAllMessages(channelId, list)
                 false
@@ -62,11 +67,29 @@ class MessagesCache {
         }
     }
 
+    fun updateAllSyncedMessagesAndGetMissing(channelId: Long, messages: List<SceytMessage>): List<SceytMessage> {
+        synchronized(lock) {
+            val missingMessages = mutableListOf<SceytMessage>()
+            messages.forEach {
+                initMessagePayLoads(channelId, it)
+                val old = getMessageByTid(channelId, it.tid)
+                val hasDiff = old?.diffContent(it)?.hasDifference() ?: false
+                if (hasDiff)
+                    emitMessageUpdated(channelId, it)
+
+                updateMessage(channelId, it, false)
+
+                if (old == null)
+                    missingMessages.add(it)
+            }
+
+            return missingMessages
+        }
+    }
+
     fun add(channelId: Long, message: SceytMessage) {
         synchronized(lock) {
-            val hasDiff = putAndCheckHasDiff(channelId, false, message)
-            if (hasDiff)
-                emitMessageUpdated(channelId, message)
+            putAndCheckHasDiff(channelId, false, true, message)
         }
     }
 
@@ -139,8 +162,7 @@ class MessagesCache {
     fun upsertMessages(channelId: Long, vararg message: SceytMessage) {
         synchronized(lock) {
             message.forEach {
-                if (putAndCheckHasDiff(channelId, false, it))
-                    emitMessageUpdated(channelId, it)
+                putAndCheckHasDiff(channelId, false, true, it)
             }
         }
     }
@@ -265,13 +287,20 @@ class MessagesCache {
         return payloads
     }
 
-    private fun putAndCheckHasDiff(channelId: Long, includeNotExistToDiff: Boolean, vararg messages: SceytMessage): Boolean {
+    private fun putAndCheckHasDiff(channelId: Long,
+                                   includeNotExistToDiff: Boolean,
+                                   checkDiffAndNotifyUpdate: Boolean,
+                                   vararg messages: SceytMessage): Boolean {
         var detectedDiff = false
         messages.forEach {
             initMessagePayLoads(channelId, it)
-            if (!detectedDiff) {
+            if (!detectedDiff || checkDiffAndNotifyUpdate) {
                 val old = getMessageByTid(channelId, it.tid)
-                detectedDiff = old?.diffContent(it)?.hasDifference() ?: includeNotExistToDiff
+                val hasDiff = old?.diffContent(it)?.hasDifference() ?: includeNotExistToDiff
+                if (!detectedDiff)
+                    detectedDiff = hasDiff
+                if (checkDiffAndNotifyUpdate && hasDiff)
+                    emitMessageUpdated(channelId, it)
             }
             updateMessage(channelId, it, false)
         }

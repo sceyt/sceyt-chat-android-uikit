@@ -23,33 +23,21 @@
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:scaleType="centerCrop"
-            app:srcCompat="@drawable/sceyt_ic_file"
+            app:srcCompat="@drawable/sceyt_ic_file_filled"
             tools:background="@color/sceyt_color_accent"
             tools:padding="15dp" />
 
     </androidx.cardview.widget.CardView>
 
-    <View
-        android:id="@+id/viewBgClose"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginStart="47dp"
-        android:layout_marginBottom="47dp"
-        android:background="@drawable/sceyt_bg_circle"
-        android:backgroundTint="@color/sceyt_color_bg"
-        app:layout_constraintBottom_toBottomOf="@id/imageCont"
-        app:layout_constraintStart_toStartOf="@id/imageCont" />
-
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/closeBtn"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:backgroundTint="@color/sceyt_color_green"
-        app:layout_constraintBottom_toBottomOf="@id/viewBgClose"
-        app:layout_constraintEnd_toEndOf="@+id/viewBgClose"
-        app:layout_constraintStart_toStartOf="@id/viewBgClose"
-        app:layout_constraintTop_toTopOf="@+id/viewBgClose"
-        app:srcCompat="@drawable/sceyt_close_btn" />
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginStart="47dp"
+        android:layout_marginBottom="47dp"
+        app:layout_constraintBottom_toBottomOf="@id/imageCont"
+        app:layout_constraintStart_toStartOf="@id/imageCont"
+        app:srcCompat="@drawable/sceyt_ic_remove" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvDuration"

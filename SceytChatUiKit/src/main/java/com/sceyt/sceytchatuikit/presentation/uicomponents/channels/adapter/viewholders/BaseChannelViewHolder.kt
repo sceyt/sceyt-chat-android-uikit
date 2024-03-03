@@ -4,7 +4,7 @@ import android.content.Context
 import android.view.View
 import androidx.annotation.CallSuper
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelItemPayloadDiff
+import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 
 abstract class BaseChannelViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -12,11 +12,11 @@ abstract class BaseChannelViewHolder(view: View) : RecyclerView.ViewHolder(view)
     protected val context: Context by lazy { view.context }
 
     @CallSuper
-    open fun bind(item: ChannelListItem, diff: ChannelItemPayloadDiff) {
+    open fun bind(item: ChannelListItem, diff: ChannelDiff) {
         channelItem = item
     }
 
-    fun rebind(diff: ChannelItemPayloadDiff = ChannelItemPayloadDiff.DEFAULT): Boolean {
+    fun rebind(diff: ChannelDiff = ChannelDiff.DEFAULT): Boolean {
         return if (::channelItem.isInitialized) {
             bind(channelItem, diff)
             true

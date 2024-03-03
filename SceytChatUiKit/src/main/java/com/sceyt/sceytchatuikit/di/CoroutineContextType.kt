@@ -2,8 +2,7 @@ package com.sceyt.sceytchatuikit.di
 
 enum class CoroutineContextType {
     Ui,
-    Disk,
-    Network,
+    IO,
     Computation,
-    Database
+    SingleThreaded
 }

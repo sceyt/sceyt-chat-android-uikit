@@ -1,16 +1,12 @@
 package com.sceyt.sceytchatuikit.presentation.root
 
-import com.sceyt.sceytchatuikit.data.models.SceytResponse
 
 sealed class PageState {
-    data class StateError(val response: SceytResponse<*>?,
-                          val query: String?,
-                          val wasLoadingMore: Boolean,
-                          val showMessage: Boolean = true) : PageState() {
-
-        val errorMessage = response?.message
-        val code = response?.code
-    }
+    data class StateError(val code: Int?,
+                          val errorMessage: String?,
+                          val wasLoadingMore: Boolean = false,
+                          val query: String? = null,
+                          val showMessage: Boolean = true) : PageState()
 
     data class StateEmpty(val query: String? = null,
                           val wasLoadingMore: Boolean = false) : PageState() {
@@ -19,5 +15,5 @@ sealed class PageState {
 
     data class StateLoading(val isLoading: Boolean = true) : PageState()
     data class StateLoadingMore(val isLoading: Boolean = true) : PageState()
-    object Nothing : PageState()
+    data object Nothing : PageState()
 }

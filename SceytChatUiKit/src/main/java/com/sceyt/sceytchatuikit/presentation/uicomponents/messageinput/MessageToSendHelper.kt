@@ -60,11 +60,12 @@ class MessageToSendHelper(private val context: Context) {
     }
 
     private fun buildMessage(body: CharSequence, attachments: Array<Attachment>,
-                             withMentionedUsers: Boolean, replyMessage: SceytMessage?, replyThreadMessageId: Long?): Message {
+                             withMentionedUsers: Boolean, replyMessage: SceytMessage?,
+                             replyThreadMessageId: Long?, type: String = "text"): Message {
         val message = Message.MessageBuilder()
             .setTid(ClientWrapper.generateTid())
             .setAttachments(attachments)
-            .setType("text")
+            .setType(type)
             .setBody(body.toString())
             .setCreatedAt(System.currentTimeMillis())
             .initRelyMessage(replyMessage, replyThreadMessageId)
@@ -122,7 +123,7 @@ class MessageToSendHelper(private val context: Context) {
                 } else
                     message.attachments?.set(existLinkIndex, linkAttachment)
             }
-        } else // remove link attachment if exist
+        } else // remove link attachment if exist, because message should contain only one link attachment
             message.attachments = message.attachments?.filter {
                 it.type != AttachmentTypeEnum.Link.value()
             }?.toTypedArray()
@@ -164,7 +165,8 @@ class MessageToSendHelper(private val context: Context) {
         return null
     }
 
-    private fun Message.MessageBuilder.initRelyMessage(replyMessage: SceytMessage?, replyThreadMessageId: Long?): Message.MessageBuilder {
+    private fun Message.MessageBuilder.initRelyMessage(replyMessage: SceytMessage?,
+                                                       replyThreadMessageId: Long?): Message.MessageBuilder {
         replyMessage?.let {
             setParentMessageId(it.id)
             setParentMessage(it.toMessage())

@@ -25,10 +25,11 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
+import com.sceyt.sceytchatuikit.data.models.SceytPagingResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
+import com.sceyt.sceytchatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
@@ -41,6 +42,7 @@ import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceReactionsMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceUsersMiddleWare
+import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.sceytchatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -68,18 +70,20 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.ReactionEvent
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.SearchResult
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
@@ -87,6 +91,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 
 class MessageListViewModel(
@@ -110,7 +115,19 @@ class MessageListViewModel(
     internal val messageActionBridge by lazy { MessageActionBridge() }
     internal val placeToSavePathsList = mutableSetOf<String>()
     internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
+    internal val notFoundMessagesToUpdate by lazy { mutableMapOf<Long, SceytMessage>() }
     private var showSenderAvatarAndNameIfNeeded = true
+    private var loadPrevJob: Job? = null
+    private val loadNextJob: Job? = null
+    private var loadNearJob: Job? = null
+    internal var scrollToSearchMessageJob: Job? = null
+
+
+    // Pagination sync
+    internal var needSyncMessagesWhenScrollStateIdle = false
+    internal var loadPrevOffsetId = 0L
+    internal var loadNextOffsetId = 0L
+    internal var lastSyncCenterOffsetId = 0L
 
     private val isGroup = channel.isGroup
 
@@ -132,6 +149,9 @@ class MessageListViewModel(
     private val _onChannelMemberAddedOrKickedLiveData = MutableLiveData<SceytChannel>()
     val onChannelMemberAddedOrKickedLiveData: LiveData<SceytChannel> = _onChannelMemberAddedOrKickedLiveData
 
+    private val _syncCenteredMessageLiveData = MutableLiveData<SyncNearMessagesResult>()
+    val syncCenteredMessageLiveData: LiveData<SyncNearMessagesResult> = _syncCenteredMessageLiveData
+
 
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
@@ -139,7 +159,6 @@ class MessageListViewModel(
 
     //val onNewThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
     val onMessageStatusFlow: Flow<MessageStatusChangeData>
-    val onOutGoingMessageStatusFlow: Flow<Pair<Long, SceytMessage>>
 
     // val onOutGoingThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
     val onTransferUpdatedLiveData: LiveData<TransferData>
@@ -155,10 +174,18 @@ class MessageListViewModel(
     internal val onEditMessageCommandLiveData: LiveData<SceytMessage> = _onEditMessageCommandLiveData
     private val _onReplyMessageCommandLiveData = MutableLiveData<SceytMessage>()
     internal val onReplyMessageCommandLiveData: LiveData<SceytMessage> = _onReplyMessageCommandLiveData
-    private val _onScrollToMessageLiveData = MutableLiveData<SceytMessage?>()
-    internal val onScrollToLastMessageLiveData: LiveData<SceytMessage?> = _onScrollToMessageLiveData
+    private val _onScrollToLastMessageLiveData = MutableLiveData<SceytMessage?>()
+    internal val onScrollToLastMessageLiveData: LiveData<SceytMessage?> = _onScrollToLastMessageLiveData
     private val _onScrollToReplyMessageLiveData = MutableLiveData<SceytMessage>()
     internal val onScrollToReplyMessageLiveData: LiveData<SceytMessage> = _onScrollToReplyMessageLiveData
+    private val _onScrollToSearchMessageLiveData = MutableLiveData<SceytMessage>()
+    internal val onScrollToSearchMessageLiveData: LiveData<SceytMessage> = _onScrollToSearchMessageLiveData
+
+    // Search messages
+    internal val isSearchingMessageToScroll = AtomicBoolean(false)
+    private val isLoadingNearToSearchMessagesServer = AtomicBoolean(false)
+    private var _searchResult = MutableLiveData<SearchResult>()
+    var searchResult = _searchResult.asLiveData()
 
 
     init {
@@ -200,8 +227,6 @@ class MessageListViewModel(
                 channel.pending = false
             }.launchIn(viewModelScope)
 
-        onOutGoingMessageStatusFlow = MessageEventsObserver.onOutGoingMessageStatusFlow
-
         onNewOutGoingMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id /*&& !it.replyInThread*/ }
 
@@ -217,7 +242,7 @@ class MessageListViewModel(
 
         notifyPageLoadingState(isLoadingMore)
 
-        viewModelScope.launch(Dispatchers.IO) {
+        loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, loadKey = loadKey).collect {
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(it)
@@ -232,7 +257,7 @@ class MessageListViewModel(
 
         notifyPageLoadingState(isLoadingMore)
 
-        viewModelScope.launch(Dispatchers.IO) {
+        loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.loadNextMessages(conversationId, lastMessageId, replyInThread, offset).collect {
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(it)
@@ -243,8 +268,9 @@ class MessageListViewModel(
 
     fun loadNearMessages(messageId: Long, loadKey: LoadKeyData, ignoreServer: Boolean) {
         setPagingLoadingStarted(LoadNear, ignoreServer = ignoreServer)
-
-        viewModelScope.launch(Dispatchers.IO) {
+        loadPrevJob?.cancel()
+        loadNextJob?.cancel()
+        loadNearJob = viewModelScope.launch(Dispatchers.IO) {
             val limit = min(50, MESSAGES_LOAD_SIZE * 2)
             persistenceMessageMiddleWare.loadNearMessages(conversationId, messageId, replyInThread,
                 limit, loadKey, ignoreServer = ignoreServer).collect { response ->
@@ -258,6 +284,7 @@ class MessageListViewModel(
     fun loadNewestMessages(loadKey: LoadKeyData) {
         setPagingLoadingStarted(LoadNewest)
 
+        loadNearJob?.cancel()
         viewModelScope.launch(Dispatchers.IO) {
             persistenceMessageMiddleWare.loadNewestMessages(conversationId, replyInThread,
                 loadKey = loadKey, ignoreDb = false).collect { response ->
@@ -268,9 +295,40 @@ class MessageListViewModel(
         }
     }
 
-    fun sendPendingMessages() {
+    fun syncCenteredMessage(messageId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.sendPendingMessages(conversationId)
+            val response = persistenceMessageMiddleWare.syncNearMessages(conversationId, messageId, replyInThread)
+            _syncCenteredMessageLiveData.postValue(response)
+        }
+    }
+
+    fun searchMessages(query: String) {
+        viewModelScope.launch {
+            val resp = persistenceMessageMiddleWare.searchMessages(conversationId, replyInThread, query)
+            (resp as? SceytPagingResponse.Success)?.let {
+                it.data?.let { messages ->
+                    val reversed = messages.reversed()
+                    _searchResult.postValue(SearchResult(0, reversed, resp.hasNext))
+                    _onScrollToSearchMessageLiveData.postValue(reversed.firstOrNull()
+                            ?: return@launch)
+                }
+            }
+        }
+    }
+
+    private fun loadNextSearchedMessages() {
+        if (isLoadingNearToSearchMessagesServer.getAndSet(true)) return
+        viewModelScope.launch {
+            val resp = persistenceMessageMiddleWare.loadNextSearchMessages()
+            (resp as? SceytPagingResponse.Success)?.let {
+                it.data?.let { messages ->
+                    val oldValue = _searchResult.value ?: return@launch
+                    val loadedMessages = ArrayList(oldValue.messages)
+                    val newMessages: List<SceytMessage> = loadedMessages.plus(messages.reversed())
+                    _searchResult.postValue(oldValue.copy(messages = newMessages, hasNext = resp.hasNext))
+                }
+            }
+            isLoadingNearToSearchMessagesServer.set(false)
         }
     }
 
@@ -295,6 +353,12 @@ class MessageListViewModel(
         pagingResponseReceived(response)
     }
 
+    fun sendPendingMessages() {
+        viewModelScope.launch(Dispatchers.IO) {
+            persistenceMessageMiddleWare.sendPendingMessages(conversationId)
+        }
+    }
+
     fun syncConversationMessagesAfter(messageId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             syncManager.syncConversationMessagesAfter(conversationId, messageId)
@@ -309,16 +373,20 @@ class MessageListViewModel(
         return messageActionBridge.showMessageActions(event.message)
     }
 
+    fun prepareToShowSearchMessage(event: MessageCommandEvent.SearchMessages) {
+        messageActionBridge.showSearchMessage(event)
+    }
+
     fun prepareToReplyMessage(message: SceytMessage) {
         _onReplyMessageCommandLiveData.postValue(message)
     }
 
     fun prepareToScrollToNewMessage() {
-        _onScrollToMessageLiveData.postValue(channel.lastMessage)
+        _onScrollToLastMessageLiveData.postValue(channel.lastMessage)
     }
 
     fun prepareToScrollToReplyMessage(message: SceytMessage) {
-        _onScrollToReplyMessageLiveData.postValue(message)
+        _onScrollToReplyMessageLiveData.postValue(message.parentMessage ?: return)
     }
 
     fun prepareToPauseOrResumeUpload(item: FileListItem) {
@@ -469,8 +537,29 @@ class MessageListViewModel(
     fun loadChannelMembersIfNeeded() {
         viewModelScope.launch(Dispatchers.IO) {
             val count = persistenceMembersMiddleWare.getMembersCountDb(channel.id)
-            if (channel.memberCount > count && count < SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE)
+            if (channel.memberCount > count)
                 loadChannelMembers(0, null).collect()
+        }
+    }
+
+    fun loadChannelAllMembers() {
+        viewModelScope.launch(Dispatchers.IO) {
+
+            suspend fun loadMembers(offset: Int): PaginationResponse.ServerResponse<SceytMember>? {
+                return persistenceMembersMiddleWare.loadChannelMembers(channel.id, offset, null).firstOrNull {
+                    it is PaginationResponse.ServerResponse
+                } as? PaginationResponse.ServerResponse<SceytMember>
+            }
+
+            val count = persistenceMembersMiddleWare.getMembersCountDb(channel.id)
+            if (channel.memberCount > count) {
+                var offset = 0
+                var rest = loadMembers(0)
+                while (rest?.hasNext == true) {
+                    offset += rest.data.data?.size ?: return@launch
+                    rest = loadMembers(offset)
+                }
+            }
         }
     }
 
@@ -492,6 +581,7 @@ class MessageListViewModel(
     internal suspend fun mapToMessageListItem(
             data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
             compareMessage: SceytMessage? = null,
+            ignoreUnreadMessagesSeparator: Boolean = false
     ): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
@@ -515,9 +605,10 @@ class MessageListViewModel(
                         shouldShowAvatarAndName = incoming && isGroup && showSenderAvatarAndNameIfNeeded
                         disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
                     }
-                    messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
-                        unreadLineMessage = it
-                    })
+                    if (!ignoreUnreadMessagesSeparator)
+                        messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
+                            unreadLineMessage = it
+                        })
                 }
 
                 messageItems.add(messageItem)
@@ -544,6 +635,19 @@ class MessageListViewModel(
             disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
             messageReactions = initReactionsItems(this)
         }
+    }
+
+    internal fun checkMaybeHesNext(response: PaginationResponse.DBResponse<SceytMessage>): Boolean {
+        var hasNext = response.hasNext
+        if (!hasNext) {
+            response.data.lastOrNull()?.let { lastMsg ->
+                if (lastMsg.deliveryStatus != DeliveryStatus.Pending
+                        && lastMsg.id < (channel.lastMessage?.id ?: 0)) {
+                    hasNext = true
+                }
+            }
+        }
+        return hasNext
     }
 
     private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
@@ -628,6 +732,25 @@ class MessageListViewModel(
 
     internal fun clearPreparingThumbs() {
         fileTransferService.clearPreparingThumbPaths()
+    }
+
+    internal fun scrollToSearchMessage(isPrev: Boolean) {
+        if (isSearchingMessageToScroll.get()) return
+        val searchResult = searchResult.value ?: return
+        val messages = searchResult.messages
+        val nextIndex = if (isPrev) {
+            searchResult.currentIndex + 1
+        } else searchResult.currentIndex - 1
+        if (nextIndex < 0 || nextIndex >= messages.size)
+            return
+
+        isSearchingMessageToScroll.set(true)
+        _searchResult.postValue(searchResult.copy(currentIndex = nextIndex))
+        _onScrollToSearchMessageLiveData.postValue(messages[nextIndex])
+
+        if (searchResult.hasNext && messages.size - nextIndex < MESSAGES_LOAD_SIZE / 2) {
+            loadNextSearchedMessages()
+        }
     }
 
     private fun onChannelMemberEvent(eventData: ChannelMembersEventData) {

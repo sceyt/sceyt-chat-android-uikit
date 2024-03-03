@@ -56,7 +56,7 @@
     <string name="sceyt_files">الملفات</string>
     <string name="sceyt_links">الروابط</string>
     <string name="sceyt_clear">مسح</string>
-    <string name="sceyt_delete_message_title">حذف رسالة؟</string>
+    <string name="sceyt_delete_message_title">حذف رسالة</string>
     <string name="sceyt_delete_message_body">هل أنت متأكد أنك تريد حذف هذه الرسالة؟</string>
     <string name="sceyt_clear_history_title">محو السجل</string>
     <string name="sceyt_clear_direct_history_desc">بمجرد مسح السجل ، ستتم إزالة الرسائل الموجودة في هذه الدردشة بشكل دائم من أجلك.</string>

@@ -19,8 +19,6 @@ interface ChannelsRepository {
     suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>
-    suspend fun blockUser(userId: String): SceytResponse<List<User>>
-    suspend fun unblockUser(userId: String): SceytResponse<List<User>>
     suspend fun blockChannel(channelId: Long): SceytResponse<Long>
     suspend fun unBlockChannel(channelId: Long): SceytResponse<Long>
     suspend fun uploadAvatar(avatarUri: String): SceytResponse<String>

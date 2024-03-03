@@ -19,7 +19,7 @@ class SceytSearchableToolbar @JvmOverloads constructor(context: Context, attrs: 
     : FrameLayout(context, attrs, defStyleAttr) {
     private val binding: SceytLayoutSearchableToolbarBinding
     private var isSearchMode: Boolean = false
-    private val debounceHelper by lazy { DebounceHelper(300) }
+    private val debounceHelper by lazy { DebounceHelper(300, this) }
     private var toolbarTitle: String? = null
     private var titleColor: Int
     private var enableSearch = true

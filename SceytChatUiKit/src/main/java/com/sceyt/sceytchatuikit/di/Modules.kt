@@ -41,6 +41,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.filetransferlogic.FileTransfe
 import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogic
 import com.sceyt.sceytchatuikit.persistence.logics.memberslogic.PersistenceMembersLogicImpl
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.AttachmentsCache
+import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessageLoadRangeUpdater
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogicImpl
@@ -70,6 +71,7 @@ internal val appModules = module {
     single<ConnectionStateService> { ConnectionStateServiceImpl(get()) }
     single { SceytSyncManager(get(), get(), get()) }
     single<FileTransferService> { FileTransferServiceImpl(get(), get()) }
+    single<MessageLoadRangeUpdater> { MessageLoadRangeUpdater(get()) }
 }
 
 internal fun databaseModule(enableDatabase: Boolean) = module {
@@ -100,6 +102,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single { get<SceytDatabase>().pendingMessageStateDao() }
     single { get<SceytDatabase>().fileChecksumDao() }
     single { get<SceytDatabase>().linkDao() }
+    single { get<SceytDatabase>().loadRangeDao() }
 
     single { PersistenceMiddleWareImpl(get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceChanelMiddleWare> { get<PersistenceMiddleWareImpl>() }
@@ -109,11 +112,11 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single<PersistenceMembersMiddleWare> { get<PersistenceMiddleWareImpl>() }
     single<PersistenceUsersMiddleWare> { get<PersistenceMiddleWareImpl>() }
 
-    single<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single <PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get()) }
+    single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get()) }
 
@@ -154,24 +157,20 @@ internal val coroutineModule = module {
     }
     single<CoroutineScope> { GlobalScope }
     single(qualifier = named(CoroutineContextType.Ui)) { providesUiContext(get()) }
-    single(qualifier = named(CoroutineContextType.Disk)) { providesDiskContext(get()) }
-    single(qualifier = named(CoroutineContextType.Network)) { providesNetworkContext(get()) }
+    single(qualifier = named(CoroutineContextType.IO)) { providesIOContext(get()) }
     single(qualifier = named(CoroutineContextType.Computation)) { providesComputationContext(get()) }
-    single(qualifier = named(CoroutineContextType.Database)) { providesDatabaseContext(get()) }
+    single(qualifier = named(CoroutineContextType.SingleThreaded)) { providesSingleThreadedContext(get()) }
 }
 
-private fun providesUiContext(exceptionHandler: CoroutineExceptionHandler) =
+fun providesUiContext(exceptionHandler: CoroutineExceptionHandler) =
         Dispatchers.Main + exceptionHandler
 
-private fun providesDiskContext(exceptionHandler: CoroutineExceptionHandler) =
-        Executors.newSingleThreadExecutor().asCoroutineDispatcher().plus(exceptionHandler)
-
-fun providesNetworkContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
+fun providesIOContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
         Dispatchers.IO + exceptionHandler
 
 fun providesComputationContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
         Executors.newCachedThreadPool().asCoroutineDispatcher().plus(exceptionHandler)
 
-fun providesDatabaseContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
+fun providesSingleThreadedContext(exceptionHandler: CoroutineExceptionHandler): CoroutineContext =
         Executors.newSingleThreadExecutor().asCoroutineDispatcher().plus(exceptionHandler)
 

@@ -17,7 +17,7 @@ data class ReactionTotalEntity(
         @ColumnInfo(index = true)
         val messageId: Long,
         @ColumnInfo(name = "reaction_key", index = true)
-        var key: String,
-        var score: Int,
-        var count: Long
+        val key: String,
+        val score: Int,
+        val count: Long
 )

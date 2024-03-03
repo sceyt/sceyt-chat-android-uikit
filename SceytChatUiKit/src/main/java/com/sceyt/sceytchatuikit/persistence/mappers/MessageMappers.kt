@@ -15,7 +15,6 @@ import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 import com.sceyt.sceytchatuikit.persistence.entity.messages.ParentMessageDb
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState
-import java.util.Date
 
 fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
     tid = getTid(id, tid, incoming),
@@ -26,7 +25,7 @@ fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
     type = type,
     metadata = metadata,
     createdAt = createdAt,
-    updatedAt = updatedAt.time,
+    updatedAt = updatedAt,
     incoming = incoming,
     isTransient = isTransient,
     silent = silent,
@@ -78,7 +77,7 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             type = type,
             metadata = metadata,
             createdAt = createdAt,
-            updatedAt = Date(updatedAt),
+            updatedAt = updatedAt,
             incoming = incoming,
             isTransient = isTransient,
             silent = silent,
@@ -135,7 +134,7 @@ private fun MessageEntity.parentMessageToSceytMessage(attachments: Array<SceytAt
     type = type,
     metadata = metadata,
     createdAt = createdAt,
-    updatedAt = Date(updatedAt),
+    updatedAt = updatedAt,
     incoming = incoming,
     isTransient = isTransient,
     silent = silent,
@@ -201,7 +200,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         type = type,
         metadata = metadata,
         createdAt = createdAt.time,
-        updatedAt = updatedAt,
+        updatedAt = updatedAt.time,
         incoming = incoming,
         isTransient = isTransient,
         silent = silent,
@@ -248,7 +247,7 @@ fun SceytMessage.toMessage(): Message {
         type,
         metadata,
         createdAt,
-        updatedAt.time,
+        updatedAt,
         incoming,
         isTransient,
         silent,

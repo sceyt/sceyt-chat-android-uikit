@@ -18,8 +18,10 @@ import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeDat
 import com.sceyt.sceytchatuikit.data.messageeventobserver.ReactionUpdateEventData
 import com.sceyt.sceytchatuikit.data.models.LoadKeyData
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
+import com.sceyt.sceytchatuikit.data.models.SceytPagingResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
+import com.sceyt.sceytchatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.EditChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
@@ -42,11 +44,13 @@ import com.sceyt.sceytchatuikit.persistence.logics.reactionslogic.PersistenceRea
 import com.sceyt.sceytchatuikit.persistence.logics.userslogic.PersistenceUsersLogic
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
+import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -81,6 +85,9 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
         // Connection events
         ConnectionEventsObserver.onChangedConnectStatusFlow.onEach(::onChangedConnectStatus).launchIn(this)
+
+        // Presence events
+        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach(::onPresenceChanged).launchIn(this)
     }
 
 
@@ -106,8 +113,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     private fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
-        launch(Dispatchers.IO) { messagesLogic.onMessage(data) }
-        launch(Dispatchers.IO) { channelLogic.onMessage(data) }
+        launch(Dispatchers.IO) {
+            messagesLogic.onMessage(data)
+            channelLogic.onMessage(data)
+        }
     }
 
     private fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
@@ -121,6 +130,11 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     private fun onChangedConnectStatus(data: ConnectionStateData) {
         launch(Dispatchers.IO) { connectionLogic.onChangedConnectStatus(data) }
+    }
+
+    private fun onPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>) {
+        launch(Dispatchers.IO) { usersLogic.onUserPresenceChanged(users) }
+        launch(Dispatchers.IO) { channelLogic.onUserPresenceChanged(users) }
     }
 
     override suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: LoadKeyData?,
@@ -283,6 +297,15 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.loadNewestMessages(conversationId, replyInThread, limit, loadKey, ignoreDb)
     }
 
+    override suspend fun searchMessages(conversationId: Long, replyInThread: Boolean,
+                                        query: String): SceytPagingResponse<List<SceytMessage>> {
+        return messagesLogic.searchMessages(conversationId, replyInThread, query)
+    }
+
+    override suspend fun loadNextSearchMessages(): SceytPagingResponse<List<SceytMessage>> {
+        return messagesLogic.loadNextSearchMessages()
+    }
+
     override suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>> {
         return messagesLogic.loadMessagesById(conversationId, ids)
     }
@@ -290,6 +313,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     override suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                                     messageId: Long): Flow<SceytResponse<List<SceytMessage>>> {
         return messagesLogic.syncMessagesAfterMessageId(conversationId, replyInThread, messageId)
+    }
+
+    override suspend fun syncNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean): SyncNearMessagesResult {
+        return messagesLogic.syncNearMessages(conversationId, messageId, replyInThread)
     }
 
     override suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult> {

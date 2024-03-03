@@ -3,7 +3,13 @@ package com.sceyt.sceytchatuikit.extensions
 import android.os.Handler
 import android.os.Looper
 import android.view.ViewTreeObserver
-import androidx.recyclerview.widget.*
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSmoothScroller
+import androidx.recyclerview.widget.PagerSnapHelper
+import androidx.recyclerview.widget.RecyclerView
+import kotlin.math.abs
+
 
 fun RecyclerView.isItemCompletelyDisplaying(position: Int): Boolean {
     if (adapter?.itemCount != 0) {
@@ -74,6 +80,15 @@ fun RecyclerView.getFirstVisibleItemPosition(): Int {
     return RecyclerView.NO_POSITION
 }
 
+fun RecyclerView.getFirstCompletelyVisibleItemPosition(): Int {
+    if (adapter?.itemCount != 0) {
+        val position = (layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
+        if (position != RecyclerView.NO_POSITION)
+            return position
+    }
+    return RecyclerView.NO_POSITION
+}
+
 fun RecyclerView.getLastVisibleItemPosition(): Int {
     if (adapter?.itemCount != 0) {
         val position = (layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
@@ -99,6 +114,39 @@ fun RecyclerView.lastVisibleItemPosition(): Int {
             return position
     }
     return RecyclerView.NO_POSITION
+}
+
+fun RecyclerView.centerVisibleItemPosition(): Int {
+    val layoutManager = layoutManager as LinearLayoutManager
+    val recyclerViewCenterX = width / 2
+    val recyclerViewCenterY = height / 2
+
+    var closestPosition = RecyclerView.NO_POSITION
+    var closestDistance = Int.MAX_VALUE
+
+    for (i in layoutManager.findFirstVisibleItemPosition()..layoutManager.findLastVisibleItemPosition()) {
+        val itemView = layoutManager.findViewByPosition(i)
+        if (itemView != null) {
+            val itemViewWidth = itemView.width
+            val itemViewHeight = itemView.height
+            val itemViewLeft = itemView.left
+            val itemViewTop = itemView.top
+
+            // Calculate the center points of the itemView
+            val itemViewCenterX = itemViewLeft + itemViewWidth / 2
+            val itemViewCenterY = itemViewTop + itemViewHeight / 2
+
+            // Calculate the distance of the itemView's center to the RecyclerView's center
+            val distance = (abs((recyclerViewCenterX - itemViewCenterX).toDouble()) + abs((recyclerViewCenterY - itemViewCenterY).toDouble())).toInt()
+
+            // Update the closest item if this item is closer
+            if (distance < closestDistance) {
+                closestDistance = distance
+                closestPosition = i
+            }
+        }
+    }
+    return closestPosition
 }
 
 fun RecyclerView.checkIsNotVisibleItem(position: Int): Boolean {
@@ -213,4 +261,20 @@ fun DiffUtil.DiffResult.dispatchUpdatesToSafety(recyclerView: RecyclerView) {
             dispatchUpdatesTo(adapter)
         }
     }
+}
+
+fun RecyclerView.getChildTopByPosition( position: Int): Int {
+    val layoutManager = layoutManager
+            ?: return -1
+    val childView = layoutManager.findViewByPosition(position)
+            ?: return -1 // View for the position is not currently laid out or doesn't exist
+    return childView.top
+}
+
+fun RecyclerView.isThePositionVisible(position: Int): Boolean {
+    val layoutManager = layoutManager
+            ?: return false
+    val firstVisiblePosition = (layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
+    val lastVisiblePosition = layoutManager.findLastVisibleItemPosition()
+    return position in firstVisiblePosition..lastVisiblePosition
 }

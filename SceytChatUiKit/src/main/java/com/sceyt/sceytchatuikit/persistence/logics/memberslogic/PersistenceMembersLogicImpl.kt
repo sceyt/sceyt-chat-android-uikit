@@ -12,9 +12,11 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
+import com.sceyt.sceytchatuikit.data.repositories.UsersRepository
 import com.sceyt.sceytchatuikit.data.toMember
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.dao.ChannelDao
+import com.sceyt.sceytchatuikit.persistence.dao.LoadRangeDao
 import com.sceyt.sceytchatuikit.persistence.dao.MembersDao
 import com.sceyt.sceytchatuikit.persistence.dao.MessageDao
 import com.sceyt.sceytchatuikit.persistence.dao.UserDao
@@ -35,7 +37,9 @@ import org.koin.core.component.inject
 
 internal class PersistenceMembersLogicImpl(
         private val channelsRepository: ChannelsRepository,
+        private val usersRepository: UsersRepository,
         private val channelDao: ChannelDao,
+        private val rangeDao: LoadRangeDao,
         private val messageDao: MessageDao,
         private val membersDao: MembersDao,
         private val usersDao: UserDao,
@@ -169,6 +173,7 @@ internal class PersistenceMembersLogicImpl(
     private suspend fun deleteChannelDb(channelId: Long) {
         channelDao.deleteChannelAndLinks(channelId)
         messageDao.deleteAllMessages(channelId)
+        rangeDao.deleteChannelLoadRanges(channelId)
         channelsCache.deleteChannel(channelId)
     }
 
@@ -240,9 +245,9 @@ internal class PersistenceMembersLogicImpl(
 
     override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>> {
         val response = if (block) {
-            channelsRepository.blockUser(userId)
+            usersRepository.blockUser(userId)
         } else
-            channelsRepository.unblockUser(userId)
+            usersRepository.unblockUser(userId)
 
         if (response is SceytResponse.Success) {
             usersDao.blockUnBlockUser(userId, block)
