@@ -6,8 +6,8 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Build
-import com.hadilq.liveevent.LiveEvent
 import com.sceyt.sceytchatuikit.extensions.checkActiveInternetConnection
+import com.sceyt.sceytchatuikit.persistence.shared.LiveEvent
 
 
 class ConnectionStateServiceImpl(private val context: Context) : ConnectionStateService {

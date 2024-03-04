@@ -1,7 +1,5 @@
 package com.sceyt.sceytchatuikit
 
-import androidx.lifecycle.LiveData
-import com.hadilq.liveevent.LiveEvent
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
@@ -11,7 +9,9 @@ import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMessagesMiddleWare
+import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
+import com.sceyt.sceytchatuikit.persistence.shared.LiveEvent
 import com.sceyt.sceytchatuikit.presentation.common.ConcurrentHashSet
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
 import kotlinx.coroutines.Dispatchers
@@ -33,9 +33,9 @@ class SceytSyncManager(private val channelsMiddleWare: PersistenceChanelMiddleWa
 
     companion object {
         private val syncChannelsFinished_ = LiveEvent<SyncChannelData>()
-        val syncChannelsFinished: LiveData<SyncChannelData> = syncChannelsFinished_
+        val syncChannelsFinished = syncChannelsFinished_.asLiveData()
         private val syncChannelMessagesFinished_ = LiveEvent<Pair<SceytChannel, List<SceytMessage>>>()
-        val syncChannelMessagesFinished: LiveData<Pair<SceytChannel, List<SceytMessage>>> = syncChannelMessagesFinished_
+        val syncChannelMessagesFinished = syncChannelMessagesFinished_.asLiveData()
     }
 
     suspend fun startSync(force: Boolean, resultCallback: ((Result<SyncResultData>) -> Unit)? = null) {

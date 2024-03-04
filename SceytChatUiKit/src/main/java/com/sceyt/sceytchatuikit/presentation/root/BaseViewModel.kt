@@ -2,7 +2,6 @@ package com.sceyt.sceytchatuikit.presentation.root
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.hadilq.liveevent.LiveEvent
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNewest
@@ -10,6 +9,7 @@ import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.sceytchatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
+import com.sceyt.sceytchatuikit.persistence.shared.LiveEvent
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class BaseViewModel : ViewModel() {
