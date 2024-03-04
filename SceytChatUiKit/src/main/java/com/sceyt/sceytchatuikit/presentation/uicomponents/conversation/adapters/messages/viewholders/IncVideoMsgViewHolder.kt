@@ -111,7 +111,7 @@ class IncVideoMsgViewHolder(
                 initAttachment()
 
             if (diff.reactionsChanged)
-                setOrUpdateReactions(item, rvReactions, viewPoolReactions, binding.layoutDetails)
+                setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
             if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
                 initWidthsDependReactions(recyclerViewReactions, layoutDetails)

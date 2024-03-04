@@ -45,7 +45,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var clickListeners = ChannelClickListenersImpl(this)
     private var popupClickListeners = ChannelPopupClickListenersImpl(this)
     private var channelCommandEventListener: ((ChannelEvent) -> Unit)? = null
-    private val debounceHelper by lazy { DebounceHelper(300) }
+    private val debounceHelper by lazy { DebounceHelper(300, this) }
 
     init {
 

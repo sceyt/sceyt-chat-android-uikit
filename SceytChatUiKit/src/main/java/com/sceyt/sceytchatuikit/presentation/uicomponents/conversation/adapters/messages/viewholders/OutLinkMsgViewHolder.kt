@@ -69,7 +69,7 @@ class OutLinkMsgViewHolder(
                     setReplyCount(tvReplyCount, toReplyLine, item)
 
                 if (diff.reactionsChanged)
-                    setOrUpdateReactions(item, rvReactions, viewPool, layoutDetails)
+                    setOrUpdateReactions(item, rvReactions, viewPool)
 
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, viewReply)

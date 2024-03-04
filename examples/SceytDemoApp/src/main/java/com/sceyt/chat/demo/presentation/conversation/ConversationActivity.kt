@@ -179,7 +179,7 @@ open class ConversationActivity : AppCompatActivity() {
         })
     }
 
-    val conversationInfoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+   private val conversationInfoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.getBooleanExtra(ACTION_SEARCH_MESSAGES, true)?.let { search ->
                 if (search)
