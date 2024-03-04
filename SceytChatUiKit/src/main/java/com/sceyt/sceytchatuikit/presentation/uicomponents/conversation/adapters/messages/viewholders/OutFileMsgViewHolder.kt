@@ -109,7 +109,7 @@ class OutFileMsgViewHolder(
                 initAttachment()
 
             if (diff.reactionsChanged)
-                setOrUpdateReactions(item, rvReactions, viewPoolReactions, layoutDetails)
+                setOrUpdateReactions(item, rvReactions, viewPoolReactions)
         }
     }
 

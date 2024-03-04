@@ -111,7 +111,7 @@ class IncFileMsgViewHolder(
                 initAttachment()
 
             if (diff.reactionsChanged)
-                setOrUpdateReactions(item, rvReactions, viewPoolReactions, layoutDetails)
+                setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
             if (item.message.shouldShowAvatarAndName)
                 avatar.setOnClickListener {
