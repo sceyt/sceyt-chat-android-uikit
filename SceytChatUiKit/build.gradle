@@ -72,7 +72,6 @@ dependencies {
     api libs.media3.ui
     api libs.lottie
     api libs.asynclayoutinflater.appcompat
-    api libs.converter.moshi
     api libs.jsoup
     api libs.flexbox
     api libs.sdp.android
@@ -84,6 +83,8 @@ dependencies {
     api libs.emoji2.bundled
     api libs.emoji.google
     api libs.libphonenumber
+    api libs.gson
+    api libs.okio
 
     // Instrumented Unit Tests
     androidTestImplementation libs.junit.ktx
