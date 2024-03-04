@@ -57,7 +57,6 @@ dependencies {
     api libs.sceyt.chat.android.sdk
     api libs.lifecycle.runtime.ktx
     api libs.lifecycle.livedata.ktx
-    api libs.liveevent
     api libs.glide
     api libs.glide.transformations
     api libs.ion
@@ -83,6 +82,8 @@ dependencies {
     api libs.emoji2.bundled
     api libs.emoji.google
     api libs.libphonenumber
+
+    // Overriding the version of the library
     api libs.gson
     api libs.okio
 
