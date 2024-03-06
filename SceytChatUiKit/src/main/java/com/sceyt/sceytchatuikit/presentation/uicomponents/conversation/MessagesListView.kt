@@ -721,6 +721,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun getMessagesRecyclerView() = messagesRV
 
+    fun getPageStateView() = pageStateView
+
     fun isLastCompletelyItemDisplaying() = messagesRV.isLastCompletelyItemDisplaying()
 
     // Click listeners

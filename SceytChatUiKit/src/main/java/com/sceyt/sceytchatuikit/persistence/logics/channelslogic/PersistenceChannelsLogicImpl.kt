@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.persistence.logics.channelslogic
 
 import android.content.Context
+import com.google.gson.Gson
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
@@ -31,6 +32,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.data.models.channels.SelfChannelMetadata
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
@@ -470,7 +472,11 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun findOrCreateDirectChannel(user: User): SceytResponse<SceytChannel> {
-        val channelDb = channelDao.getDirectChannel(user.id)
+        var metadata = ""
+        val channelDb = if (user.id == myId) {
+            metadata = Gson().toJson(SelfChannelMetadata())
+            channelDao.getSelfChannel(selfChannelMetadata = metadata)
+        } else channelDao.getDirectChannel(user.id)
         if (channelDb != null) {
             if (channelDb.channelEntity.pending)
                 channelsCache.addPendingChannel(channelDb.toChannel())
@@ -483,9 +489,10 @@ internal class PersistenceChannelsLogicImpl(
         ?: User(myId)
 
         val role = Role(RoleTypeEnum.Owner.toString())
-        val members = listOf(SceytMember(role, user), SceytMember(role, createdBy))
+        val members = setOf(SceytMember(role, user), SceytMember(role, createdBy)).toList()
         val channelId = members.map { it.id }.toSet().sorted().joinToString(separator = "$").toSha256()
-        val channel = createPendingDirectChannelData(channelId, createdBy, members, role.name)
+        val channel = createPendingDirectChannelData(channelId = channelId,
+            createdBy = createdBy, members = members, role = role.name, metadata = metadata)
 
         insertChannel(channel, *members.toTypedArray())
         channelsCache.addPendingChannel(channel)

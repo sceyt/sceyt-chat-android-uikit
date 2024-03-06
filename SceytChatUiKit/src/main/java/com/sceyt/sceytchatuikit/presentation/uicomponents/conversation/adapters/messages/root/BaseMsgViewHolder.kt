@@ -17,7 +17,6 @@ import android.widget.TextView
 import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.animation.doOnEnd
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.graphics.toColorInt
@@ -520,7 +519,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         highlightAnim?.duration = 2000
         highlightAnim?.addUpdateListener { animator -> view.setBackgroundColor(animator.animatedValue as Int) }
         highlightAnim?.start()
-        highlightAnim?.doOnEnd { messageListItem.highligh = false }
+        messageListItem.highligh = false
     }
 
     open val enableReply = true

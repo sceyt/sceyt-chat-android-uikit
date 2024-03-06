@@ -86,6 +86,13 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
                 _channelUpdatedLiveData.postValue(it.channel)
             }
             .launchIn(viewModelScope)
+
+        ChannelsCache.pendingChannelCreatedFlow
+            .filter { it.first == channelId }
+            .onEach {
+                _channelUpdatedLiveData.postValue(it.second)
+            }
+            .launchIn(viewModelScope)
     }
 
     fun onChannelEvent(channelId: Long) {
