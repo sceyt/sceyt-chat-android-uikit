@@ -19,7 +19,7 @@ import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
@@ -73,7 +73,7 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     fun observeUserPresenceUpdate(channel: SceytChannel) {
         SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged()
             .onEach {
-                it.find { user -> user.user.id == channel.getFirstMember()?.id }?.let { presenceUser ->
+                it.find { user -> user.user.id == channel.getPeer()?.id }?.let { presenceUser ->
                     _userPresenceUpdatedLiveData.postValue(presenceUser)
                 }
             }.launchIn(viewModelScope)

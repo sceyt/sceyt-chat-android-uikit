@@ -17,7 +17,7 @@ import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.persistence.differs.diff
 import com.sceyt.sceytchatuikit.presentation.common.ChannelActionConfirmationWithDialog
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.root.PageStateView
@@ -157,9 +157,9 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun userBlocked(data: List<User>?) {
         data?.forEach { user ->
             channelsRV.getChannels()?.find {
-                it.channel.isDirect() && it.channel.getFirstMember()?.id == user.id
+                it.channel.isDirect() && it.channel.getPeer()?.id == user.id
             }?.let {
-                it.channel.getFirstMember()?.user = user
+                it.channel.getPeer()?.user = user
             }
         }
     }

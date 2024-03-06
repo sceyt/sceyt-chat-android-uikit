@@ -18,7 +18,7 @@ fun SceytChannel.checkIsMemberInChannel(): Boolean {
 }
 
 fun SceytChannel.isPeerDeleted(): Boolean {
-    return isDirect() && getFirstMember()?.user?.activityState == UserState.Deleted
+    return isDirect() && getPeer()?.user?.activityState == UserState.Deleted
 }
 
 fun SceytChannel.getDefaultAvatar(): Int {
@@ -29,14 +29,14 @@ fun SceytChannel.getDefaultAvatar(): Int {
 }
 
 fun SceytChannel.isPeerBlocked(): Boolean {
-    return isDirect() && getFirstMember()?.user?.blocked == true
+    return isDirect() && getPeer()?.user?.blocked == true
 }
 
 fun SceytChannel.getChannelType(): ChannelTypeEnum {
     return stringToEnum(type)
 }
 
-fun SceytChannel.getFirstMember(): SceytMember? {
+fun SceytChannel.getPeer(): SceytMember? {
     return members?.firstOrNull { it.id != myId } ?: run {
         if (isSelf()) members?.firstOrNull() else null
     }

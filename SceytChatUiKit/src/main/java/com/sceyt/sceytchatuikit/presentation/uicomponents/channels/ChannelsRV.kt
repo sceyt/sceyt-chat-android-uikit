@@ -15,7 +15,7 @@ import com.sceyt.sceytchatuikit.extensions.isFirstItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.maybeComponentActivity
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
@@ -122,7 +122,7 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         return if (::mAdapter.isInitialized)
             mAdapter.getData().findIndexed {
                 it is ChannelListItem.ChannelItem && it.channel.isDirect()
-                        && it.channel.getFirstMember()?.id == userId
+                        && it.channel.getPeer()?.id == userId
             }?.let {
                 return@let Pair(it.first, it.second as ChannelListItem.ChannelItem)
             }

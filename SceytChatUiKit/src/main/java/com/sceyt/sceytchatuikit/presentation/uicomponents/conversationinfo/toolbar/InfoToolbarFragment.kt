@@ -23,7 +23,7 @@ import com.sceyt.sceytchatuikit.extensions.setOnClickListenerDisableClickViewFor
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getDefaultAvatar
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
@@ -117,7 +117,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
         }
         val title: String = when (channel.getChannelType()) {
             ChannelTypeEnum.Direct -> {
-                val member = channel.getFirstMember() ?: return
+                val member = channel.getPeer() ?: return
                 if (member.user.presence?.state == PresenceState.Online) {
                     getString(R.string.sceyt_online)
                 } else {

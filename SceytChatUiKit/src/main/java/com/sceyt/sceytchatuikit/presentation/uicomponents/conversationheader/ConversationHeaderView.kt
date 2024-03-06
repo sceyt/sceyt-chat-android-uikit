@@ -41,7 +41,7 @@ import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.maybeComponentActivity
 import com.sceyt.sceytchatuikit.extensions.showSoftInput
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
@@ -172,7 +172,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             }
         } else {
             val title = if (isGroup) channel.channelSubject else {
-                val member = channel.getFirstMember() ?: return
+                val member = channel.getPeer() ?: return
                 userNameBuilder?.invoke(member.user)
                         ?: member.user.getPresentableNameCheckDeleted(context)
             }
@@ -190,7 +190,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             if (!replyInThread) {
                 val title = when (channel.getChannelType()) {
                     ChannelTypeEnum.Direct -> {
-                        val member = channel.getFirstMember() ?: return@post
+                        val member = channel.getPeer() ?: return@post
                         if (member.user.blocked) {
                             ""
                         } else {
@@ -320,7 +320,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     private fun setPresenceUpdated(user: User) {
         if (::channel.isInitialized.not() || channel.isGroup || enablePresence.not()) return
-        channel.getFirstMember()?.let { member ->
+        channel.getPeer()?.let { member ->
             if (member.user.id == user.id) {
                 member.user = user
                 if (!typingUsersHelper.isTyping)

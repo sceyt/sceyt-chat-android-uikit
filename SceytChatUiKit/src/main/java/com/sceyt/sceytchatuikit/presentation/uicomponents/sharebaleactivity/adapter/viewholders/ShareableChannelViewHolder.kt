@@ -15,7 +15,7 @@ import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.sceytchatuikit.extensions.getString
 import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
@@ -71,7 +71,7 @@ open class ShareableChannelViewHolder(private val binding: SceytItemShareChannel
     open fun setSubject(channel: SceytChannel, textView: TextView) {
         textView.text = if (channel.isGroup) channel.channelSubject
         else {
-            channel.getFirstMember()?.user?.let { from ->
+            channel.getPeer()?.user?.let { from ->
                 userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
             }
         }

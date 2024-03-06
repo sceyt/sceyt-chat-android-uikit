@@ -43,7 +43,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.root.PageState
@@ -125,7 +125,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     fun checkEnableDisableActions(channel: SceytChannel) {
         messagesListView.enableDisableActions(
             enabled = !replyInThread && channel.checkIsMemberInChannel() && !channel.isPeerDeleted()
-                    && (channel.isGroup || channel.getFirstMember()?.user?.blocked != true), false)
+                    && (channel.isGroup || channel.getPeer()?.user?.blocked != true), false)
     }
 
     checkEnableDisableActions(channel)

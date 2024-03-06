@@ -14,7 +14,7 @@ import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
 import com.sceyt.sceytchatuikit.extensions.jsonToObject
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
@@ -48,7 +48,7 @@ open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener {
     open fun setChannelDescription(channel: SceytChannel) {
         with(binding) {
             val about = if (channel.isDirect()) {
-                channel.getFirstMember()?.user?.presence?.status
+                channel.getPeer()?.user?.presence?.status
                         ?: SceytKitConfig.presenceStatusText
             } else channel.metadata?.jsonToObject(ChannelDescriptionData::class.java)?.description
 

@@ -68,7 +68,7 @@ import com.sceyt.sceytchatuikit.persistence.mappers.toUserEntity
 import com.sceyt.sceytchatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.sceytchatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.sceytchatuikit.persistence.workers.SendForwardMessagesWorkManager
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
@@ -447,7 +447,7 @@ internal class PersistenceChannelsLogicImpl(
                 addEntitiesToLists(channel.id, channel.members, channel.lastMessage, channel.newReactions)
             } else {
                 val members = arrayListOf<SceytMember>()
-                channel.getFirstMember()?.let {
+                channel.getPeer()?.let {
                     if (it.user.activityState == UserState.Deleted)
                         directChatsWithDeletedPeers.add(channel.id)
                     members.add(it)
@@ -791,7 +791,7 @@ internal class PersistenceChannelsLogicImpl(
         users.forEach { presenceUser ->
             ArrayList(channelsCache.getData()).forEach { channel ->
                 val user = presenceUser.user
-                if (channel.isDirect() && channel.getFirstMember()?.id == user.id)
+                if (channel.isDirect() && channel.getPeer()?.id == user.id)
                     channelsCache.updateChannelPeer(channel.id, user)
             }
         }

@@ -23,7 +23,7 @@ import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.presentation.common.getAttachmentIconAsString
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.getFormattedBody
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
@@ -219,7 +219,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     open fun setSubject(channel: SceytChannel, textView: TextView) {
         textView.text = if (channel.isGroup) channel.channelSubject
         else {
-            channel.getFirstMember()?.user?.let { from ->
+            channel.getPeer()?.user?.let { from ->
                 userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
             }
         }
@@ -247,7 +247,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     open fun setOnlineStatus(channel: SceytChannel?, onlineStatus: SceytOnlineView) {
-        val isOnline = channel?.isDirect() == true && channel.getFirstMember()?.user?.presence?.state == PresenceState.Online
+        val isOnline = channel?.isDirect() == true && channel.getPeer()?.user?.presence?.state == PresenceState.Online
         onlineStatus.isVisible = isOnline
     }
 
