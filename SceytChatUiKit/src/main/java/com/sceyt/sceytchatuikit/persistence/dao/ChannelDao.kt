@@ -1,6 +1,13 @@
 package com.sceyt.sceytchatuikit.persistence.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.RawQuery
+import androidx.room.RoomWarnings
+import androidx.room.Transaction
+import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
@@ -78,7 +85,14 @@ interface ChannelDao {
     @Transaction
     @Query("select * from channels join UserChatLink as link on link.chat_id = channels.chat_id " +
             "where link.user_id =:peerId and type =:channelTypeEnum")
-    suspend fun getDirectChannel(peerId: String, channelTypeEnum: String = ChannelTypeEnum.Direct.getString()): ChannelDb?
+    suspend fun getDirectChannel(peerId: String,
+                                 channelTypeEnum: String = ChannelTypeEnum.Direct.getString()): ChannelDb?
+
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @Transaction
+    @Query("select * from channels where type =:channelTypeEnum and metadata =:selfChannelMetadata")
+    suspend fun getSelfChannel(selfChannelMetadata: String,
+                               channelTypeEnum: String = ChannelTypeEnum.Direct.getString()): ChannelDb?
 
     @Query("select chat_id from channels where chat_id not in (:ids) and pending != 1")
     suspend fun getNotExistingChannelIdsByIds(ids: List<Long>): List<Long>

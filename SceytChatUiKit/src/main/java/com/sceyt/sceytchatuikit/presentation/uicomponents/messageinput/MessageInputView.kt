@@ -648,6 +648,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
+    internal fun setInitialStateSearchMessagesResult() {
+        with(binding.layoutInputSearchResult) {
+            tvResult.text = ""
+            icDown.isEnabled = false
+            icUp.isEnabled = false
+        }
+    }
+
     fun setInputActionsCallback(callback: MessageInputActionCallback) {
         messageInputActionCallback = callback
         messageToSendHelper.setInputActionCallback(callback)
@@ -940,7 +948,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 hideAndStopVoiceRecorder()
                 closeReplyOrEditView()
                 closeLinkDetailsView()
-                onSearchMessagesResult(SearchResult())
+                setInitialStateSearchMessagesResult()
                 layoutInputSearchResult.root.animateToVisible(150)
             } else {
                 replyMessage?.let { replyMessage(it, initWithDraft = true) }

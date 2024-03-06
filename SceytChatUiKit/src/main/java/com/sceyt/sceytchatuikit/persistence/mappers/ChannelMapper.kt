@@ -123,7 +123,9 @@ fun Channel.toSceytUiChannel(): SceytChannel {
     )
 }
 
-fun createPendingDirectChannelData(channelId: Long, createdBy: User, members: List<SceytMember>, role: String): SceytChannel {
+fun createPendingDirectChannelData(channelId: Long, createdBy: User,
+                                   members: List<SceytMember>, role: String,
+                                   metadata: String): SceytChannel {
     return SceytChannel(
         id = channelId,
         parentChannelId = null,
@@ -131,7 +133,7 @@ fun createPendingDirectChannelData(channelId: Long, createdBy: User, members: Li
         type = ChannelTypeEnum.Direct.getString(),
         subject = null,
         avatarUrl = null,
-        metadata = "",
+        metadata = metadata,
         createdAt = System.currentTimeMillis(),
         updatedAt = 0,
         messagesClearedAt = 0,
