@@ -286,9 +286,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         .filter { it.first == channel.id }
         .onEach {
             channel = it.second
-            channel.lastMessage?.let { message ->
-                loadPrevMessages(message.id, 0)
-            }
         }.launchIn(viewModelScope)
 
     SceytSyncManager.syncChannelMessagesFinished.observe(lifecycleOwner) {
