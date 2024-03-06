@@ -16,7 +16,7 @@ import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getDefaultAvatar
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
@@ -73,7 +73,7 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
             }
             val title: String = when (channel.getChannelType()) {
                 ChannelTypeEnum.Direct -> {
-                    val member = channel.getFirstMember() ?: return
+                    val member = channel.getPeer() ?: return
                     if (member.user.blocked) {
                         ""
                     } else {

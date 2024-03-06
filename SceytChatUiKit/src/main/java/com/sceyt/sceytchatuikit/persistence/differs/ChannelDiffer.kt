@@ -2,7 +2,7 @@ package com.sceyt.sceytchatuikit.persistence.differs
 
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.persistence.extensions.equalsIgnoreNull
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 
 data class ChannelDiff(
@@ -66,8 +66,8 @@ data class ChannelDiff(
 }
 
 fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
-    val firstMember = getFirstMember()
-    val otherFirstMember = other.getFirstMember()
+    val firstMember = getPeer()
+    val otherFirstMember = other.getPeer()
     val lastMessageChanged = lastMessage != other.lastMessage || lastMessage?.body.equalsIgnoreNull(other.lastMessage?.body).not()
             || lastMessage?.state != other.lastMessage?.state || lastMessage?.bodyAttributes.equalsIgnoreNull(lastMessage?.bodyAttributes).not()
     val pendingReactionChanged = pendingReactions != other.pendingReactions

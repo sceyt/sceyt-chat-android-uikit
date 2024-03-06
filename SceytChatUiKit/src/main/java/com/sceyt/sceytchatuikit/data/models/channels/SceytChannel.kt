@@ -7,7 +7,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.PendingReactionData
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isGroup
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
@@ -48,11 +48,11 @@ data class SceytChannel(
 
     val channelSubject: String
         get() = (if (isGroup) subject
-        else getFirstMember()?.getPresentableName()) ?: ""
+        else getPeer()?.getPresentableName()) ?: ""
 
     val iconUrl: String?
         get() = if (isGroup) avatarUrl
-        else getFirstMember()?.avatarUrl
+        else getPeer()?.avatarUrl
 
     val isGroup get() = stringToEnum(type).isGroup()
 

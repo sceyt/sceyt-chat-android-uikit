@@ -40,7 +40,7 @@ import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.common.ChannelActionConfirmationWithDialog
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPublic
 import com.sceyt.sceytchatuikit.presentation.root.PageState
@@ -337,7 +337,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         val icon = channel.iconUrl
         if (!icon.isNullOrBlank()) {
             val title = if (channel.isDirect()) {
-                val user = channel.getFirstMember()?.user
+                val user = channel.getPeer()?.user
                 if (user != null) SceytKitConfig.userNameBuilder?.invoke(user)
                         ?: user.getPresentableName() else null
             } else channel.subject
@@ -359,7 +359,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onBlockUnBlockUserClick(channel: SceytChannel, block: Boolean) {
-        val peer = channel.getFirstMember() ?: return
+        val peer = channel.getPeer() ?: return
         if (block) {
             showSceytDialog(this, R.string.sceyt_block_user_title,
                 R.string.sceyt_block_user_desc, R.string.sceyt_block, positiveCb = {
@@ -441,7 +441,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     open fun onBlockedOrUnblockedUser(users: List<User>) {
-        val peer = channel.getFirstMember()
+        val peer = channel.getPeer()
         users.find { user -> user.id == peer?.id }?.let { user ->
             peer?.user = user
         }

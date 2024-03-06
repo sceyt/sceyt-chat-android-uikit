@@ -12,7 +12,7 @@ import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.persistence.PersistenceChanelMiddleWare
 import com.sceyt.sceytchatuikit.persistence.PersistenceMembersMiddleWare
 import com.sceyt.sceytchatuikit.persistence.extensions.asLiveData
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.common.isPublic
@@ -227,12 +227,12 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
             is ChannelEvent.LeaveChannel -> leaveChannel(event.channel.id)
             is ChannelEvent.BlockUser -> {
                 if (event.channel.isDirect())
-                    blockUser((event.channel.getFirstMember() ?: return).id)
+                    blockUser((event.channel.getPeer() ?: return).id)
             }
 
             is ChannelEvent.UnBlockUser -> {
                 if (event.channel.isDirect())
-                    unBlockUser((event.channel.getFirstMember() ?: return).id)
+                    unBlockUser((event.channel.getPeer() ?: return).id)
             }
 
             is ChannelEvent.DeleteChannel -> deleteChannel(event.channel.id)

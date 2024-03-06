@@ -7,7 +7,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelUpdatedType
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
@@ -32,7 +32,7 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
     else
         headerView.setChannel(channel)
 
-    val peerId = channel.getFirstMember()?.id
+    val peerId = channel.getPeer()?.id
     if (channel.isDirect()) {
         SceytPresenceChecker.addNewUserToPresenceCheck(peerId)
         SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged()

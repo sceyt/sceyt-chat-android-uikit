@@ -12,7 +12,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytDialogDirectChannelActionsBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.setTextViewsDrawableColor
-import com.sceyt.sceytchatuikit.presentation.common.getFirstMember
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
@@ -47,7 +47,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     }
 
     private fun SceytDialogDirectChannelActionsBinding.initView() {
-        channel.getFirstMember()?.let {
+        channel.getPeer()?.let {
             blockUser.isVisible = it.user.blocked.not() && !channel.isPeerDeleted()
             unBlockUser.isVisible = it.user.blocked
         }
