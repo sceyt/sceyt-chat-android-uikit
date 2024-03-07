@@ -32,6 +32,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.getLoadKey
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.centerVisibleItemPosition
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
@@ -39,6 +40,7 @@ import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.extensions.getChildTopByPosition
 import com.sceyt.sceytchatuikit.extensions.isResumed
 import com.sceyt.sceytchatuikit.extensions.isThePositionVisible
+import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
@@ -343,8 +345,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         messagesListView.messageEditedOrDeleted(message)
                     else {
                         val foundToUpdate = messagesListView.updateMessage(message)
-                        if (!foundToUpdate)
+                        if (!foundToUpdate) {
+                            SceytLog.i(this@bind.TAG, "Message not found to update-> id ${message.id}, tid: ${message.tid}, body: ${message.body}")
                             notFoundMessagesToUpdate[message.tid] = message
+                        }
                     }
                 }
             }
@@ -489,17 +493,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             hasPrev = false,
             compareMessage = messagesListView.getLastMessage()?.message)
 
+        if (notFoundMessagesToUpdate.containsKey(message.tid)) {
+            notFoundMessagesToUpdate.remove(message.tid)?.let {
+                onMessage(it)
+                return
+            }
+        }
+
         messagesListView.addNewMessages(*initMessage.toTypedArray())
         messagesListView.updateViewState(PageState.Nothing)
     }
 
-    onNewOutGoingMessageFlow.onEach {
-        var message = it
-        if (notFoundMessagesToUpdate.containsKey(message.tid))
-            message = notFoundMessagesToUpdate.remove(message.tid) ?: it
-
-        onMessage(message)
-    }.launchIn(viewModelScope)
+    onNewOutGoingMessageFlow.onEach(::onMessage).launchIn(viewModelScope)
 
     onNewMessageFlow.onEach(::onMessage).launchIn(viewModelScope)
 
