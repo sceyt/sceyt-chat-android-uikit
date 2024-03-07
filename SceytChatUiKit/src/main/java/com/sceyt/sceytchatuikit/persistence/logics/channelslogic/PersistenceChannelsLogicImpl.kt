@@ -474,7 +474,7 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun findOrCreateDirectChannel(user: User): SceytResponse<SceytChannel> {
         var metadata = ""
         val channelDb = if (user.id == myId) {
-            metadata = Gson().toJson(SelfChannelMetadata())
+            metadata = Gson().toJson(SelfChannelMetadata(1))
             channelDao.getSelfChannel(selfChannelMetadata = metadata)
         } else channelDao.getDirectChannel(user.id)
         if (channelDb != null) {

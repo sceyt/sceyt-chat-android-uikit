@@ -4,5 +4,5 @@ import com.google.gson.annotations.SerializedName
 
 data class SelfChannelMetadata(
         @SerializedName("s")
-        val isSelf: Int? = 1
+        val isSelf: Int?
 )
