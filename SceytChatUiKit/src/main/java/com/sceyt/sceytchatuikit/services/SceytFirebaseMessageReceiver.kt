@@ -5,6 +5,7 @@ import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.pushes.SceytFirebaseMessagingDelegate
+import kotlinx.coroutines.runBlocking
 
 
 internal class SceytFirebaseMessageReceiver : FirebaseMessagingService() {
@@ -13,7 +14,9 @@ internal class SceytFirebaseMessageReceiver : FirebaseMessagingService() {
         super.onMessageReceived(remoteMessage)
 
         try {
-            SceytFirebaseMessagingDelegate.handleRemoteMessage(remoteMessage)
+            runBlocking {
+                SceytFirebaseMessagingDelegate.handleRemoteMessage(remoteMessage)
+            }
         } catch (exception: Exception) {
             SceytLog.e(TAG, "handleRemoteMessage error: " + exception.message.toString())
         }

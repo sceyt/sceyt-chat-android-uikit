@@ -18,15 +18,12 @@ import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytUiMessage
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 object SceytFirebaseMessagingDelegate : SceytKoinComponent {
     private val context: Context by inject()
     private val messagesLogic: PersistenceMessagesLogic by inject()
     private val preferences: SceytSharedPreference by inject()
-    private val globalScope: CoroutineScope by inject()
     private val firebaseMessaging: FirebaseMessaging by lazy { FirebaseMessaging.getInstance() }
 
     fun registerFirebaseToken(token: String) {
@@ -72,7 +69,7 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
     }
 
     @JvmStatic
-    fun handleRemoteMessage(remoteMessage: RemoteMessage): Boolean {
+    suspend fun handleRemoteMessage(remoteMessage: RemoteMessage): Boolean {
         if (!remoteMessage.isValid()) {
             return false
         }
@@ -82,12 +79,12 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
         val message = data.message
 
         if (channel != null && message != null)
-            globalScope.launch { messagesLogic.onFcmMessage(data) }
+            messagesLogic.onFcmMessage(data)
         return true
     }
 
     @JvmStatic
-    fun handleRemoteMessageGetData(remoteMessage: RemoteMessage): RemoteMessageData? {
+    suspend fun handleRemoteMessageGetData(remoteMessage: RemoteMessage): RemoteMessageData? {
         if (!remoteMessage.isValid()) {
             return null
         }
@@ -96,7 +93,7 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
         val channel = data.channel
         val message = data.message
         if (channel != null && message != null)
-            globalScope.launch { messagesLogic.onFcmMessage(data) }
+            messagesLogic.onFcmMessage(data)
         return data
     }
 
