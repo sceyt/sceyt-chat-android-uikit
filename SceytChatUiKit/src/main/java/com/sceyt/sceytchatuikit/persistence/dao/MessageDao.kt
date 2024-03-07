@@ -152,6 +152,7 @@ abstract class MessageDao {
         insertMentionedUsersMessageLinks(entities)
     }
 
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from messages join LoadRange as range on range.channelId = :channelId " +
             "and range.startId <= :lastMessageId and range.endId >= :lastMessageId " +
@@ -162,6 +163,7 @@ abstract class MessageDao {
             "order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from messages join LoadRange as range on range.channelId = :channelId " +
             "and range.startId <= :lastMessageId and range.endId >= :lastMessageId " +
@@ -172,6 +174,7 @@ abstract class MessageDao {
             "order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessagesInclude(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from messages join LoadRange as range on range.channelId = :channelId " +
             "and range.startId <= :messageId and range.endId >= :messageId " +
@@ -182,6 +185,7 @@ abstract class MessageDao {
             "order by createdAt, tid limit :limit")
     abstract suspend fun getNewestThenMessage(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from messages join LoadRange as range on range.channelId = :channelId " +
             "and range.startId <= :messageId and range.endId >= :messageId " +
