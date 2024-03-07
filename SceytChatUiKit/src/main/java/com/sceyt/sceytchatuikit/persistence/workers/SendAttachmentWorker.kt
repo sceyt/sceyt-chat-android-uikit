@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -187,7 +188,10 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
     }
 
     private suspend fun startForeground(channelId: Long) {
-        val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, creteNotification(channelId))
+        val notification = creteNotification(channelId)
+        val foregroundInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            ForegroundInfo(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else ForegroundInfo(NOTIFICATION_ID, notification)
         setForeground(foregroundInfo)
     }
 
