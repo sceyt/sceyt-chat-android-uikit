@@ -30,7 +30,7 @@ import kotlinx.coroutines.launch
 open class SceytShareableActivity : AppCompatActivity(), SceytKoinComponent {
     protected val channelsViewModel: ChannelsViewModel by viewModels()
     protected var channelsAdapter: ShareableChannelsAdapter? = null
-    private val viewHolderFactory by lazy { ShareableChannelViewHolderFactory(this) }
+    protected val viewHolderFactory by lazy { ShareableChannelViewHolderFactory(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
