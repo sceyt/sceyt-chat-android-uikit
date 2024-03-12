@@ -18,15 +18,23 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
-import com.sceyt.sceytchatuikit.extensions.*
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
+import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
+import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
+import com.sceyt.sceytchatuikit.extensions.getPresentableNameWithYou
+import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.setOnClickListenerAvailable
+import com.sceyt.sceytchatuikit.extensions.setOnLongClickListenerAvailable
 import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.presentation.common.getAttachmentIconAsString
-import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.getFormattedBody
+import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
+import com.sceyt.sceytchatuikit.presentation.common.isSelf
 import com.sceyt.sceytchatuikit.presentation.common.setChannelMessageDateAndStatusIcon
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytColorSpannableTextView
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
@@ -40,13 +48,14 @@ import com.sceyt.sceytchatuikit.sceytstyles.ChannelStyle
 import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import java.text.NumberFormat
-import java.util.*
+import java.util.Locale
 
 open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                              private var listeners: ChannelClickListeners.ClickListeners,
                              private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)? = null,
                              private val userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder) : BaseChannelViewHolder(binding.root) {
 
+    protected var isSelf = false
 
     init {
         with(binding) {
@@ -74,6 +83,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 val channel = item.channel
                 val name: String = channel.channelSubject
                 val url = channel.iconUrl
+                isSelf = channel.isSelf()
 
                 // this ui states is changed more often, and to avoid wrong ui states we need to set them every time
                 setUnreadCount(channel.newMessageCount, binding.unreadMessagesCount)
@@ -135,15 +145,21 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         } else {
             val body = message.getFormattedBody(context)
 
-            val fromText = if (message.incoming) {
-                val from = channel.lastMessage?.user
-                val userFirstName = from?.let {
-                    userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
+            val fromText = when {
+                message.incoming -> {
+                    val from = channel.lastMessage?.user
+                    val userFirstName = from?.let {
+                        userNameBuilder?.invoke(from)
+                                ?: from.getPresentableNameCheckDeleted(context)
+                    }
+                    if (channel.isGroup && !userFirstName.isNullOrBlank()) {
+                        "${userFirstName}: "
+                    } else ""
                 }
-                if (channel.isGroup && !userFirstName.isNullOrBlank()) {
-                    "${userFirstName}: "
-                } else ""
-            } else "${context.getString(R.string.sceyt_your_last_message)}: "
+
+                isSelf -> ""
+                else -> "${context.getString(R.string.sceyt_your_last_message)}: "
+            }
 
             val showBody = MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(
                 body, message.mentionedUsers, message.bodyAttributes)
@@ -219,8 +235,12 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     open fun setSubject(channel: SceytChannel, textView: TextView) {
         textView.text = if (channel.isGroup) channel.channelSubject
         else {
-            channel.getPeer()?.user?.let { from ->
-                userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
+            if (channel.isSelf()) {
+                context.getString(R.string.self_notes)
+            } else {
+                channel.getPeer()?.user?.let { from ->
+                    userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
+                }
             }
         }
     }
@@ -234,6 +254,10 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: ImageView) {
+        if (isSelf) {
+            binding.avatar.setImageUrl(null, UserStyle.notesAvatar)
+            return
+        }
         if (channel.isDirect() && channel.isPeerDeleted()) {
             binding.avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
         } else
@@ -247,7 +271,8 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     open fun setOnlineStatus(channel: SceytChannel?, onlineStatus: SceytOnlineView) {
-        val isOnline = channel?.isDirect() == true && channel.getPeer()?.user?.presence?.state == PresenceState.Online
+        val isOnline = !isSelf && channel?.isDirect() == true &&
+                channel.getPeer()?.user?.presence?.state == PresenceState.Online
         onlineStatus.isVisible = isOnline
     }
 

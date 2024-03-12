@@ -920,36 +920,34 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onMultiselectModeListener(isMultiselectMode: Boolean) {
         with(binding) {
             isInMultiSelectMode = isMultiselectMode
-            layoutInput.isInvisible = isMultiselectMode
-            rvAttachments.isVisible = !isMultiselectMode && allAttachments.isNotEmpty()
+            showHideInputOnModeChange(isMultiselectMode)
             if (isMultiselectMode) {
-                hideAndStopVoiceRecorder()
-                closeReplyOrEditView()
-                closeLinkDetailsView()
                 btnClearChat.animateToVisible(150)
-            } else {
-                replyMessage?.let { replyMessage(it, initWithDraft = true) }
-                editMessage?.let { editMessage(it, initWithDraft = true) }
-                linkDetails?.let {
-                    binding.layoutLinkPreview.isVisible = true
-                    linkPreviewFragment.showLinkDetails(it)
-                }
+            } else
                 btnClearChat.animateToGone(150)
-            }
         }
     }
 
     override fun onSearchModeListener(inSearchMode: Boolean) {
         with(binding) {
             isInSearchMode = inSearchMode
-            layoutInput.isInvisible = inSearchMode
-            rvAttachments.isVisible = !inSearchMode && allAttachments.isNotEmpty()
+            showHideInputOnModeChange(inSearchMode)
             if (inSearchMode) {
+                setInitialStateSearchMessagesResult()
+                layoutInputSearchResult.root.animateToVisible(150)
+            } else
+                layoutInputSearchResult.root.animateToGone(150)
+        }
+    }
+
+    private fun showHideInputOnModeChange(isInSelectMode: Boolean) {
+        with(binding) {
+            layoutInput.isInvisible = isInSelectMode
+            rvAttachments.isVisible = !isInSelectMode && allAttachments.isNotEmpty()
+            if (isInSelectMode) {
                 hideAndStopVoiceRecorder()
                 closeReplyOrEditView()
                 closeLinkDetailsView()
-                setInitialStateSearchMessagesResult()
-                layoutInputSearchResult.root.animateToVisible(150)
             } else {
                 replyMessage?.let { replyMessage(it, initWithDraft = true) }
                 editMessage?.let { editMessage(it, initWithDraft = true) }
@@ -957,7 +955,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                     binding.layoutLinkPreview.isVisible = true
                     linkPreviewFragment.showLinkDetails(it)
                 }
-                layoutInputSearchResult.root.animateToGone(150)
+                determineInputState()
             }
         }
     }

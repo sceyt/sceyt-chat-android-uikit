@@ -64,7 +64,7 @@ import com.sceyt.sceytchatuikit.persistence.entity.pendings.PendingMessageStateE
     FileChecksumEntity::class,
     LinkDetailsEntity::class,
     LoadRangeEntity::class
-], version = 9, autoMigrations = [
+], version = 10, autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
     AutoMigration(from = 3, to = 4, spec = SceytDatabase.AutoMigrationSpec3to4::class),
@@ -72,7 +72,8 @@ import com.sceyt.sceytchatuikit.persistence.entity.pendings.PendingMessageStateE
     AutoMigration(from = 5, to = 6, spec = SceytDatabase.AutoMigrationSpec5To6::class),
     AutoMigration(from = 6, to = 7),
     AutoMigration(from = 7, to = 8),
-    AutoMigration(from = 8, to = 9)
+    AutoMigration(from = 8, to = 9),
+    AutoMigration(from = 9, to = 10),
 ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)

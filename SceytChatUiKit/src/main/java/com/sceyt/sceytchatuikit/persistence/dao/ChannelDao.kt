@@ -9,6 +9,7 @@ import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelDb
@@ -52,13 +53,13 @@ interface ChannelDao {
     @Transaction
     @Query("select * from channels " +
             "join UserChatLink as link on link.chat_id = channels.chat_id " +
-            "where ((subject like '%' || :query || '%' and (not pending or lastMessageTid != 0) and type <> :directChannelType " +
+            "where ((subject like '%' || :query || '%' and (not pending or lastMessageTid != 0) and type <> :directType " +
             "and (case when :onlyMine then channels.userRole <> '' else 1 end)) " +
-            "or (type =:directChannelType and link.user_id in (:userIds))) " +
+            "or (type =:directType and (link.user_id in (:userIds) or isSelf and link.user_id like '%' || :query || '%'))) " +
             "group by channels.chat_id " +
             "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     suspend fun getChannelsByQueryAndUserIds(query: String, userIds: List<String>, limit: Int, offset: Int, onlyMine: Boolean,
-                                             directChannelType: String = ChannelTypeEnum.Direct.getString()): List<ChannelDb>
+                                             directType: String = ChannelTypeEnum.Direct.getString()): List<ChannelDb>
 
     @Transaction
     @RawQuery
@@ -84,15 +85,23 @@ interface ChannelDao {
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from channels join UserChatLink as link on link.chat_id = channels.chat_id " +
-            "where link.user_id =:peerId and type =:channelTypeEnum")
+            "where link.user_id =:peerId and type =:directType")
     suspend fun getDirectChannel(peerId: String,
-                                 channelTypeEnum: String = ChannelTypeEnum.Direct.getString()): ChannelDb?
+                                 directType: String = ChannelTypeEnum.Direct.getString()): ChannelDb?
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
-    @Query("select * from channels where type =:channelTypeEnum and metadata =:selfChannelMetadata")
-    suspend fun getSelfChannel(selfChannelMetadata: String,
-                               channelTypeEnum: String = ChannelTypeEnum.Direct.getString()): ChannelDb?
+    @Query("select * from channels join (select chat_id from UserChatLink where user_id =:myId " +
+            "group by chat_id having count(*) = 1) as links on links.chat_id = channels.chat_id " +
+            "where channels.type = :directType ")
+    suspend fun getDirectChannelsWhereMemberOnlyMe(
+            myId: String? = SceytKitClient.myId,
+            directType: String = ChannelTypeEnum.Direct.getString()): List<ChannelDb>
+
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @Transaction
+    @Query("select * from channels where isSelf = 1")
+    suspend fun getSelfChannel(): ChannelDb?
 
     @Query("select chat_id from channels where chat_id not in (:ids) and pending != 1")
     suspend fun getNotExistingChannelIdsByIds(ids: List<Long>): List<Long>
