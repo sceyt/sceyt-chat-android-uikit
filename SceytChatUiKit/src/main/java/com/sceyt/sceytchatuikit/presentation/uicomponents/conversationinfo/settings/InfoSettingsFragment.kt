@@ -12,6 +12,7 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.setOnlyClickable
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
+import com.sceyt.sceytchatuikit.presentation.common.isSelf
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytstyles.ConversationInfoMediaStyle
@@ -56,7 +57,7 @@ open class InfoSettingsFragment : Fragment(), ChannelUpdateListener {
     }
 
     private fun setChannelDetails(channel: SceytChannel) {
-        binding.root.isVisible = channel.checkIsMemberInChannel()
+        binding.root.isVisible = channel.checkIsMemberInChannel() && !channel.isSelf()
         binding.notification.isChecked = !channel.muted
     }
 

@@ -41,5 +41,7 @@ data class ChannelEntity(
         @ColumnInfo(index = true)
         val lastMessageAt: Long?,
         @ColumnInfo(index = true)
-        val pending: Boolean
+        val pending: Boolean,
+        @ColumnInfo(index = true, defaultValue = "false")
+        val isSelf: Boolean
 )

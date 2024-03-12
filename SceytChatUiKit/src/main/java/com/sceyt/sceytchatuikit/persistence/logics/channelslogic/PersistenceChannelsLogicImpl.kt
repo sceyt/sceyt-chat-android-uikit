@@ -321,7 +321,8 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun searchChannelsWithUserIds(offset: Int, limit: Int, searchQuery: String, userIds: List<String>,
-                                                   includeUserNames: Boolean, loadKey: LoadKeyData?, onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
+                                                   includeUserNames: Boolean, loadKey: LoadKeyData?,
+                                                   onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
             if (offset == 0) channelsCache.clear()
 
@@ -475,7 +476,7 @@ internal class PersistenceChannelsLogicImpl(
         var metadata = ""
         val channelDb = if (user.id == myId) {
             metadata = Gson().toJson(SelfChannelMetadata(1))
-            channelDao.getSelfChannel(selfChannelMetadata = metadata)
+            channelDao.getSelfChannel()
         } else channelDao.getDirectChannel(user.id)
         if (channelDb != null) {
             if (channelDb.channelEntity.pending)
@@ -483,7 +484,7 @@ internal class PersistenceChannelsLogicImpl(
             return SceytResponse.Success(channelDb.toChannel())
         }
 
-        val fail = SceytResponse.Error<SceytChannel>(SceytException(0, "Failed to create direct channel"))
+        val fail = SceytResponse.Error<SceytChannel>(SceytException(0, "Failed to create direct channel myId is null"))
         val myId = myId ?: return fail
         val createdBy = ClientWrapper.currentUser ?: usersDao.getUserById(myId)?.toUser()
         ?: User(myId)

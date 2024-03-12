@@ -199,5 +199,6 @@
     <string name="sceyt_not_found">Not found</string>
     <string name="sceyt_search_messages">Search messages</string>
     <string name="of">of</string>
+    <string name="self_notes">Self Notes</string>
 
 </resources>

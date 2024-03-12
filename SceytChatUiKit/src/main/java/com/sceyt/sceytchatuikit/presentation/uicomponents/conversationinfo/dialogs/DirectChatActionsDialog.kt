@@ -14,6 +14,7 @@ import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
+import com.sceyt.sceytchatuikit.presentation.common.isSelf
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
@@ -47,10 +48,14 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     }
 
     private fun SceytDialogDirectChannelActionsBinding.initView() {
-        channel.getPeer()?.let {
-            blockUser.isVisible = it.user.blocked.not() && !channel.isPeerDeleted()
-            unBlockUser.isVisible = it.user.blocked
-        }
+        if (channel.isSelf()) {
+            blockUser.isVisible = false
+            unBlockUser.isVisible = false
+        } else
+            channel.getPeer()?.let {
+                blockUser.isVisible = it.user.blocked.not() && !channel.isPeerDeleted()
+                unBlockUser.isVisible = it.user.blocked
+            }
 
         clearHistory.setOnClickListener {
             listener?.invoke(ActionsEnum.ClearHistory)

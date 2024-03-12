@@ -26,6 +26,7 @@ import com.sceyt.sceytchatuikit.presentation.common.getDefaultAvatar
 import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
+import com.sceyt.sceytchatuikit.presentation.common.isSelf
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -41,6 +42,8 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
     protected lateinit var channel: SceytChannel
         private set
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
+    private var isSelf: Boolean = false
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentInfoToolbarBinding.inflate(layoutInflater, container, false)
@@ -59,6 +62,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
 
     private fun getBundleArguments() {
         channel = requireNotNull(arguments?.parcelable(ChannelLinksFragment.CHANNEL))
+        isSelf = channel.isSelf()
     }
 
     private fun SceytFragmentInfoToolbarBinding.initViews() {
@@ -104,14 +108,22 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
 
     open fun setChannelToolbarTitle(channel: SceytChannel) {
         with(binding) {
-            titleToolbar.text = if (channel.isPeerDeleted()) {
-                getString(R.string.sceyt_deleted_user)
-            } else channel.channelSubject
+            titleToolbar.text = when {
+                isSelf -> {
+                    getString(R.string.self_notes)
+                }
+
+                channel.isPeerDeleted() -> {
+                    getString(R.string.sceyt_deleted_user)
+                }
+
+                else -> channel.channelSubject
+            }
         }
     }
 
     open fun setToolbarSubtitle(channel: SceytChannel) {
-        if (channel.isPeerDeleted()) {
+        if (channel.isPeerDeleted() || isSelf) {
             binding.subTitleToolbar.isVisible = false
             return
         }
@@ -147,7 +159,10 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
     }
 
     open fun setChannelToolbarAvatar(channel: SceytChannel) {
-        binding.toolbarAvatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
+        if (isSelf)
+            binding.toolbarAvatar.setImageUrl(null, UserStyle.notesAvatar)
+        else
+            binding.toolbarAvatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
     }
 
     override fun onChannelUpdated(channel: SceytChannel) {
@@ -159,6 +174,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
     }
 
     fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
+        if (isSelf) return
         val user = presenceUser.user
         val userName = SceytKitConfig.userNameBuilder?.invoke(user)
                 ?: user.getPresentableName()

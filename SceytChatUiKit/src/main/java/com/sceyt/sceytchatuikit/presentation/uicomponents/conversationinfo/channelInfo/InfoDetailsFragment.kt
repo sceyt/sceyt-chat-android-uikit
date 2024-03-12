@@ -18,6 +18,7 @@ import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getDefaultAvatar
 import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
+import com.sceyt.sceytchatuikit.presentation.common.isSelf
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -32,6 +33,7 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
     protected lateinit var channel: SceytChannel
         private set
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
+    private var isSelf: Boolean = false
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -51,6 +53,7 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
 
     private fun getBundleArguments() {
         channel = requireNotNull(arguments?.parcelable(ChannelLinksFragment.CHANNEL))
+        isSelf = channel.isSelf()
     }
 
     private fun initViews() {
@@ -67,7 +70,7 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
 
     open fun setSubtitle(channel: SceytChannel) {
         with(binding) {
-            if (channel.isPeerDeleted()) {
+            if (channel.isPeerDeleted() || isSelf) {
                 tvSubtitle.isVisible = false
                 return
             }
@@ -109,15 +112,25 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
 
     open fun setChannelTitle(channel: SceytChannel) {
         with(binding) {
-            title.text = if (channel.isPeerDeleted()) {
-                getString(R.string.sceyt_deleted_user)
-            } else channel.channelSubject
+            title.text = when {
+                isSelf -> {
+                    getString(R.string.self_notes)
+                }
+
+                channel.isPeerDeleted() -> {
+                    getString(R.string.sceyt_deleted_user)
+                }
+
+                else -> channel.channelSubject
+            }
         }
     }
 
     open fun setChannelAvatar(channel: SceytChannel) {
         with(binding) {
-            avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
+            if (isSelf)
+                avatar.setImageUrl(null, channel.getDefaultAvatar())
+            else avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
         }
     }
 
@@ -126,6 +139,7 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
     }
 
     open fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
+        if (isSelf) return
         val user = presenceUser.user
         val userName = SceytKitConfig.userNameBuilder?.invoke(user)
                 ?: user.getPresentableName()

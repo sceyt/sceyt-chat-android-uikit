@@ -18,8 +18,11 @@ import com.sceyt.chat.demo.presentation.createconversation.createchannel.CreateC
 import com.sceyt.chat.demo.presentation.createconversation.newgroup.CreateGroupActivity
 import com.sceyt.chat.demo.presentation.newchannel.adapters.UserViewHolderFactory
 import com.sceyt.chat.demo.presentation.newchannel.adapters.UsersAdapter
+import com.sceyt.chat.models.user.User
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.R.anim.sceyt_anim_slide_hold
+import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
@@ -28,6 +31,7 @@ import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.overrideTransitions
 import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
@@ -105,21 +109,25 @@ class StartChatActivity : AppCompatActivity() {
     }
 
     private fun setupUsersList(list: List<UserItem>) {
-        if (::usersAdapter.isInitialized.not()) {
-            binding.rvUsers.adapter = UsersAdapter(list as ArrayList, UserViewHolderFactory(this) {
-                if (creatingChannel) return@UserViewHolderFactory
-                creatingChannel = true
-                viewModel.findOrCreateDirectChannel(it.user)
-            }).also { usersAdapter = it }
+        val listWithSelf = list.toMutableList()
+        listWithSelf.add(0, UserItem.User(ClientWrapper.currentUser
+                ?: User(SceytKitClient.myId.toString())))
 
-            binding.rvUsers.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    if (recyclerView.isLastItemDisplaying() && viewModel.canLoadNext())
-                        viewModel.loadUsers(binding.toolbar.getQuery(), true)
-                }
-            })
-        } else usersAdapter.notifyUpdate(list)
+            if (::usersAdapter.isInitialized.not()) {
+                binding.rvUsers.adapter = UsersAdapter(listWithSelf.toArrayList(), UserViewHolderFactory(this) {
+                    if (creatingChannel) return@UserViewHolderFactory
+                    creatingChannel = true
+                    viewModel.findOrCreateDirectChannel(it.user)
+                }).also { usersAdapter = it }
+
+                binding.rvUsers.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                        super.onScrolled(recyclerView, dx, dy)
+                        if (recyclerView.isLastItemDisplaying() && viewModel.canLoadNext())
+                            viewModel.loadUsers(binding.toolbar.getQuery(), true)
+                    }
+                })
+            } else usersAdapter.notifyUpdate(listWithSelf)
     }
 
     private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->

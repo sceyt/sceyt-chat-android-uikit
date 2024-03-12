@@ -23,8 +23,11 @@ fun SceytChannel.isPeerDeleted(): Boolean {
 
 fun SceytChannel.getDefaultAvatar(): Int {
     return if (isDirect()) {
-        if (isPeerDeleted()) UserStyle.deletedUserAvatar
-        else UserStyle.userDefaultAvatar
+        when {
+            isPeerDeleted() -> UserStyle.deletedUserAvatar
+            isSelf() -> UserStyle.notesAvatar
+            else -> UserStyle.userDefaultAvatar
+        }
     } else 0
 }
 

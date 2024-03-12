@@ -9,6 +9,7 @@ import com.sceyt.sceytchatuikit.data.toDraftMessage
 import com.sceyt.sceytchatuikit.data.toSceytMember
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.sceytchatuikit.persistence.entity.channel.ChannelEntity
+import com.sceyt.sceytchatuikit.presentation.common.isSelf
 
 fun SceytChannel.toChannelEntity() = ChannelEntity(
     id = id,
@@ -38,7 +39,8 @@ fun SceytChannel.toChannelEntity() = ChannelEntity(
     messageRetentionPeriod = messageRetentionPeriod,
     lastMessageTid = getTid(lastMessage?.id, lastMessage?.tid, lastMessage?.incoming),
     lastMessageAt = lastMessage?.createdAt,
-    pending = pending
+    pending = pending,
+    isSelf = isSelf()
 )
 
 private fun getTid(msgId: Long?, tid: Long?, incoming: Boolean?): Long? {

@@ -43,6 +43,7 @@ import com.sceyt.sceytchatuikit.extensions.showSoftInput
 import com.sceyt.sceytchatuikit.presentation.common.getChannelType
 import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
+import com.sceyt.sceytchatuikit.presentation.common.isSelf
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListeners
@@ -171,10 +172,14 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 (layoutParams as MarginLayoutParams).setMargins(binding.avatar.marginLeft, marginTop, marginRight, marginBottom)
             }
         } else {
-            val title = if (isGroup) channel.channelSubject else {
-                val member = channel.getPeer() ?: return
-                userNameBuilder?.invoke(member.user)
-                        ?: member.user.getPresentableNameCheckDeleted(context)
+            val title = when {
+                isGroup -> channel.channelSubject
+                channel.isSelf() -> getString(R.string.self_notes)
+                else -> {
+                    val member = channel.getPeer() ?: return
+                    userNameBuilder?.invoke(member.user)
+                            ?: member.user.getPresentableNameCheckDeleted(context)
+                }
             }
             if (titleTextView.text.equals(title)) return
             titleTextView.text = title
@@ -182,7 +187,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     private fun setChannelSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
-        if (enablePresence.not() || channel.isPeerDeleted()) {
+        if (enablePresence.not() || channel.isPeerDeleted() || channel.isSelf()) {
             subjectTextView.isVisible = false
             return
         }
@@ -244,11 +249,13 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private fun setAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
         binding.avatar.isVisible = !replyInThread
         if (!replyInThread) {
-            if (channel.isPeerDeleted())
-                avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
-            else {
-                val subjAndSUrl = channel.getSubjectAndAvatarUrl()
-                avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second, if (isGroup) 0 else UserStyle.userDefaultAvatar)
+            when {
+                channel.isPeerDeleted() -> avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
+                channel.isSelf() -> avatar.setImageUrl(null, UserStyle.notesAvatar)
+                else -> {
+                    val subjAndSUrl = channel.getSubjectAndAvatarUrl()
+                    avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second, if (isGroup) 0 else UserStyle.userDefaultAvatar)
+                }
             }
         }
     }

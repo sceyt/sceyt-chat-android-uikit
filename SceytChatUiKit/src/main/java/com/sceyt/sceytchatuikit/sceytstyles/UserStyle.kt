@@ -15,5 +15,9 @@ object UserStyle {
     var deletedUserAvatar: Int = R.drawable.sceyt_ic_deleted_user
 
     @JvmField
+    @DrawableRes
+    var notesAvatar: Int = R.drawable.sceyt_ic_notes
+
+    @JvmField
     var userPresenceDateFormat = UserPresenceDateFormatter()
 }
