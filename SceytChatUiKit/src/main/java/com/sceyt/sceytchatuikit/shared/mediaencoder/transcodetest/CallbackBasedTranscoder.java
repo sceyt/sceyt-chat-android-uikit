@@ -16,7 +16,6 @@
 
 package com.sceyt.sceytchatuikit.shared.mediaencoder.transcodetest;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
@@ -53,16 +52,19 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p>It also tests the way the codec config buffers need to be passed from the MediaCodec to the
  * MediaMuxer.
  */
-@TargetApi(18)
 public class CallbackBasedTranscoder {
 
     private static final String TAG = CallbackBasedTranscoder.class.getSimpleName();
     private static boolean VERBOSE = true; // lots of logging
 
-    /** How long to wait for the next buffer to become available. */
+    /**
+     * How long to wait for the next buffer to become available.
+     */
     private static final int TIMEOUT_USEC = 10000;
 
-    /** Where to output the test files. */
+    /**
+     * Where to output the test files.
+     */
     private static final File OUTPUT_FILENAME_DIR = Environment.getExternalStorageDirectory();
 
     // parameters for the video encoder
@@ -88,26 +90,38 @@ public class CallbackBasedTranscoder {
      */
     private static final String FRAGMENT_SHADER =
             "#extension GL_OES_EGL_image_external : require\n" +
-            "precision mediump float;\n" +
-            "varying vec2 vTextureCoord;\n" +
-            "uniform samplerExternalOES sTexture;\n" +
-            "void main() {\n" +
-            "  gl_FragColor = texture2D(sTexture, vTextureCoord).rbga;\n" +
-            "}\n";
+                    "precision mediump float;\n" +
+                    "varying vec2 vTextureCoord;\n" +
+                    "uniform samplerExternalOES sTexture;\n" +
+                    "void main() {\n" +
+                    "  gl_FragColor = texture2D(sTexture, vTextureCoord).rbga;\n" +
+                    "}\n";
 
-    /** Whether to copy the video from the test video. */
+    /**
+     * Whether to copy the video from the test video.
+     */
     private boolean mCopyVideo;
-    /** Whether to copy the audio from the test video. */
+    /**
+     * Whether to copy the audio from the test video.
+     */
     private boolean mCopyAudio;
-    /** Width of the output frames. */
+    /**
+     * Width of the output frames.
+     */
     private int mWidth = -1;
-    /** Height of the output frames. */
+    /**
+     * Height of the output frames.
+     */
     private int mHeight = -1;
 
-    /** The raw resource used as the input file. */
+    /**
+     * The raw resource used as the input file.
+     */
     private int mSourceResId;
 
-    /** The destination file for the encoded output. */
+    /**
+     * The destination file for the encoded output.
+     */
     private String mOutputFile;
 
     private File mInputFile;
@@ -159,7 +173,7 @@ public class CallbackBasedTranscoder {
 
     }
 
-    public void cancel(){
+    public void cancel() {
         if (mTestWrapper != null)
             mTestWrapper.cancel();
     }
@@ -199,7 +213,9 @@ public class CallbackBasedTranscoder {
 //        TestWrapper.runTest(this);
 //    }
 
-    /** Wraps testExtractDecodeEditEncodeMux() */
+    /**
+     * Wraps testExtractDecodeEditEncodeMux()
+     */
     private static class TestWrapper implements Runnable {
         private Throwable mThrowable;
         private final CallbackBasedTranscoder mTest;
@@ -233,7 +249,7 @@ public class CallbackBasedTranscoder {
 
         public void cancel() {
             if (mTest != null) {
-                synchronized (mTest){
+                synchronized (mTest) {
                     mTest.mVideoEncoderDone = true;
                     mTest.mAudioEncoderDone = true;
                     mTest.notifyAll();
@@ -469,7 +485,7 @@ public class CallbackBasedTranscoder {
                 if (mVideoExtractor != null && mVideoExtractorExternal == null) {
                     mVideoExtractor.release();
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 Log.e(TAG, "error while releasing videoExtractor", e);
                 if (exception == null) {
                     exception = e;
@@ -479,7 +495,7 @@ public class CallbackBasedTranscoder {
                 if (mAudioExtractor != null) {
                     mAudioExtractor.release();
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 Log.e(TAG, "error while releasing audioExtractor", e);
                 if (exception == null) {
                     exception = e;
@@ -490,7 +506,7 @@ public class CallbackBasedTranscoder {
                     mVideoDecoder.stop();
                     mVideoDecoder.release();
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 Log.e(TAG, "error while releasing videoDecoder", e);
                 if (exception == null) {
                     exception = e;
@@ -500,7 +516,7 @@ public class CallbackBasedTranscoder {
                 if (mOutputSurface != null) {
                     mOutputSurface.release();
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 Log.e(TAG, "error while releasing outputSurface", e);
                 if (exception == null) {
                     exception = e;
@@ -511,7 +527,7 @@ public class CallbackBasedTranscoder {
                     mVideoEncoder.stop();
                     mVideoEncoder.release();
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 Log.e(TAG, "error while releasing videoEncoder", e);
                 if (exception == null) {
                     exception = e;
@@ -522,7 +538,7 @@ public class CallbackBasedTranscoder {
                     mAudioDecoder.stop();
                     mAudioDecoder.release();
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 Log.e(TAG, "error while releasing audioDecoder", e);
                 if (exception == null) {
                     exception = e;
@@ -533,7 +549,7 @@ public class CallbackBasedTranscoder {
                     mAudioEncoder.stop();
                     mAudioEncoder.release();
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 Log.e(TAG, "error while releasing audioEncoder", e);
                 if (exception == null) {
                     exception = e;
@@ -546,7 +562,7 @@ public class CallbackBasedTranscoder {
                     mMuxer.release();
 //                    mMuxer.finishMovie();
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 Log.e(TAG, "error while releasing muxer", e);
                 if (exception == null) {
                     exception = e;
@@ -556,7 +572,7 @@ public class CallbackBasedTranscoder {
                 if (mInputSurface != null) {
                     mInputSurface.release();
                 }
-            } catch(Exception e) {
+            } catch (Exception e) {
                 Log.e(TAG, "error while releasing inputSurface", e);
                 if (exception == null) {
                     exception = e;
@@ -596,11 +612,13 @@ public class CallbackBasedTranscoder {
         CallbackHandler(Looper l) {
             super(l);
         }
+
         private MediaCodec mCodec;
         private boolean mEncoder;
         private MediaCodec.Callback mCallback;
         private String mMime;
         private boolean mSetDone;
+
         @Override
         public void handleMessage(Message msg) {
             try {
@@ -613,6 +631,7 @@ public class CallbackBasedTranscoder {
                 notifyAll();
             }
         }
+
         void create(boolean encoder, String mime, MediaCodec.Callback callback) {
             mEncoder = encoder;
             mMime = mime;
@@ -628,10 +647,12 @@ public class CallbackBasedTranscoder {
                 }
             }
         }
+
         MediaCodec getCodec() {
             return mCodec;
         }
     }
+
     private HandlerThread mVideoDecoderHandlerThread;
     private CallbackHandler mVideoDecoderHandler;
 
@@ -639,7 +660,7 @@ public class CallbackBasedTranscoder {
      * Creates a decoder for the given format, which outputs to the given surface.
      *
      * @param inputFormat the format of the stream to decode
-     * @param surface into which to decode the frames
+     * @param surface     into which to decode the frames
      */
     private MediaCodec createVideoDecoder(MediaFormat inputFormat, Surface surface) throws IOException {
         mVideoDecoderHandlerThread = new HandlerThread("DecoderThread");
@@ -648,6 +669,7 @@ public class CallbackBasedTranscoder {
         MediaCodec.Callback callback = new MediaCodec.Callback() {
             public void onError(MediaCodec codec, MediaCodec.CodecException exception) {
             }
+
             public void onOutputFormatChanged(MediaCodec codec, MediaFormat format) {
                 mDecoderOutputVideoFormat = codec.getOutputFormat();
                 if (VERBOSE) {
@@ -655,6 +677,7 @@ public class CallbackBasedTranscoder {
                             + mDecoderOutputVideoFormat);
                 }
             }
+
             public void onInputBufferAvailable(MediaCodec codec, int index) {
                 // Extract video from file and feed to decoder.
                 // We feed packets regardless of whether the muxer is set up or not.
@@ -682,7 +705,7 @@ public class CallbackBasedTranscoder {
                                     0,
                                     0,
                                     MediaCodec.BUFFER_FLAG_END_OF_STREAM);
-                        } else if (size >= 0){
+                        } else if (size >= 0) {
                             codec.queueInputBuffer(
                                     index,
                                     0,
@@ -700,8 +723,9 @@ public class CallbackBasedTranscoder {
                     Log.e(TAG, "error while decoding video", e);
                 }
             }
+
             public void onOutputBufferAvailable(MediaCodec codec, int index, MediaCodec.BufferInfo info) {
-                if(mVideoEncoderDone)
+                if (mVideoEncoderDone)
                     return;
 
                 try {
@@ -785,8 +809,8 @@ public class CallbackBasedTranscoder {
      *
      * <p>The surface to use as input is stored in the given reference.
      *
-     * @param codecInfo of the codec to use
-     * @param format of the stream to be produced
+     * @param codecInfo        of the codec to use
+     * @param format           of the stream to be produced
      * @param surfaceReference to store the surface to use as input
      */
     private MediaCodec createVideoEncoder(
@@ -797,6 +821,7 @@ public class CallbackBasedTranscoder {
         encoder.setCallback(new MediaCodec.Callback() {
             public void onError(MediaCodec codec, MediaCodec.CodecException exception) {
             }
+
             public void onOutputFormatChanged(MediaCodec codec, MediaFormat format) {
                 if (VERBOSE) Log.d(TAG, "video encoder: output format changed");
                 if (mOutputVideoTrack >= 0) {
@@ -808,8 +833,10 @@ public class CallbackBasedTranscoder {
                     Log.e(TAG, "error while muxing video format", e);
                 }
             }
+
             public void onInputBufferAvailable(MediaCodec codec, int index) {
             }
+
             public void onOutputBufferAvailable(MediaCodec codec, int index, MediaCodec.BufferInfo info) {
                 if (VERBOSE) {
                     Log.d(TAG, "video encoder: returned output buffer: " + index);
@@ -839,6 +866,7 @@ public class CallbackBasedTranscoder {
         decoder.setCallback(new MediaCodec.Callback() {
             public void onError(MediaCodec codec, MediaCodec.CodecException exception) {
             }
+
             public void onOutputFormatChanged(MediaCodec codec, MediaFormat format) {
                 mDecoderOutputAudioFormat = codec.getOutputFormat();
                 if (VERBOSE) {
@@ -846,6 +874,7 @@ public class CallbackBasedTranscoder {
                             + mDecoderOutputAudioFormat);
                 }
             }
+
             public void onInputBufferAvailable(MediaCodec codec, int index) {
                 ByteBuffer decoderInputBuffer = codec.getInputBuffer(index);
                 while (!mAudioExtractorDone) {
@@ -879,6 +908,7 @@ public class CallbackBasedTranscoder {
                         break;
                 }
             }
+
             public void onOutputBufferAvailable(MediaCodec codec, int index, MediaCodec.BufferInfo info) {
                 if (VERBOSE) {
                     Log.d(TAG, "audio decoder: returned output buffer: " + index);
@@ -912,13 +942,14 @@ public class CallbackBasedTranscoder {
      * Creates an encoder for the given format using the specified codec.
      *
      * @param codecInfo of the codec to use
-     * @param format of the stream to be produced
+     * @param format    of the stream to be produced
      */
     private MediaCodec createAudioEncoder(MediaCodecInfo codecInfo, MediaFormat format) throws IOException {
         MediaCodec encoder = MediaCodec.createByCodecName(codecInfo.getName());
         encoder.setCallback(new MediaCodec.Callback() {
             public void onError(MediaCodec codec, MediaCodec.CodecException exception) {
             }
+
             public void onOutputFormatChanged(MediaCodec codec, MediaFormat format) {
                 if (VERBOSE) Log.d(TAG, "audio encoder: output format changed");
                 if (mOutputAudioTrack >= 0) {
@@ -931,6 +962,7 @@ public class CallbackBasedTranscoder {
                     throw new RuntimeException(e);
                 }
             }
+
             public void onInputBufferAvailable(MediaCodec codec, int index) {
                 if (VERBOSE) {
                     Log.d(TAG, "audio encoder: returned input buffer: " + index);
@@ -938,6 +970,7 @@ public class CallbackBasedTranscoder {
                 mPendingAudioEncoderInputBufferIndices.add(index);
                 tryEncodeAudio();
             }
+
             public void onOutputBufferAvailable(MediaCodec codec, int index, MediaCodec.BufferInfo info) {
                 if (VERBOSE) {
                     Log.d(TAG, "audio encoder: returned output buffer: " + index);
@@ -959,7 +992,7 @@ public class CallbackBasedTranscoder {
     // decoder callbacks are on the same thread.
     private void tryEncodeAudio() {
         if (mPendingAudioEncoderInputBufferIndices.size() == 0 ||
-            mPendingAudioDecoderOutputBufferIndices.size() == 0)
+                mPendingAudioDecoderOutputBufferIndices.size() == 0)
             return;
         int decoderIndex = mPendingAudioDecoderOutputBufferIndices.poll();
         int encoderIndex = mPendingAudioEncoderInputBufferIndices.poll();
@@ -1059,6 +1092,7 @@ public class CallbackBasedTranscoder {
         }
         logState();
     }
+
     private void muxAudio(int index, MediaCodec.BufferInfo info) throws Exception {
         if (!mMuxing) {
             mPendingAudioEncoderOutputBufferIndices.add(new Integer(index));
@@ -1174,17 +1208,17 @@ public class CallbackBasedTranscoder {
             Log.d(TAG, String.format(
                     "loop: "
 
-                    + "V(%b){"
-                    + "extracted:%d(done:%b) "
-                    + "decoded:%d(done:%b) "
-                    + "encoded:%d(done:%b)} "
+                            + "V(%b){"
+                            + "extracted:%d(done:%b) "
+                            + "decoded:%d(done:%b) "
+                            + "encoded:%d(done:%b)} "
 
-                    + "A(%b){"
-                    + "extracted:%d(done:%b) "
-                    + "decoded:%d(done:%b) "
-                    + "encoded:%d(done:%b) "
+                            + "A(%b){"
+                            + "extracted:%d(done:%b) "
+                            + "decoded:%d(done:%b) "
+                            + "encoded:%d(done:%b) "
 
-                    + "muxing:%b(V:%d,A:%d)",
+                            + "muxing:%b(V:%d,A:%d)",
 
                     mCopyVideo,
                     mVideoExtractedFrameCount, mVideoExtractorDone,
