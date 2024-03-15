@@ -32,6 +32,8 @@ interface PersistenceChanelMiddleWare {
     suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun muteChannel(channelId: Long, muteUntil: Long): SceytResponse<SceytChannel>
     suspend fun unMuteChannel(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun unpinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun getChannelFromDb(channelId: Long): SceytChannel?
     suspend fun getDirectChannelFromDb(peerId: String): SceytChannel?
     suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel>

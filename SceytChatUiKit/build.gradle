@@ -94,5 +94,7 @@ dependencies {
     androidTestImplementation libs.mockito.core
     androidTestImplementation libs.kotlinx.coroutines.test
     androidTestImplementation libs.truth
+    testImplementation libs.junit
+    testImplementation libs.truth
 }
 apply from: "${rootProject.projectDir}/maven-publish/publish-module.gradle"

@@ -41,12 +41,16 @@ interface ChannelDao {
 
     @Transaction
     @Query("select * from channels where userRole !=:ignoreRole and (not pending or lastMessageTid != 0) " +
-            "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
+            "order by " +
+            "case when pinnedAt > 0 then pinnedAt end desc," +
+            "case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     suspend fun getChannels(limit: Int, offset: Int, ignoreRole: String = RoleTypeEnum.None.toString()): List<ChannelDb>
 
     @Transaction
     @Query("select * from channels where subject LIKE '%' || :query || '%' and (not pending or lastMessageTid != 0) " +
-            "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
+            "order by " +
+            "case when pinnedAt > 0 then pinnedAt end desc," +
+            "case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     suspend fun getChannelsBySubject(limit: Int, offset: Int, query: String): List<ChannelDb>
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
@@ -57,7 +61,9 @@ interface ChannelDao {
             "and (case when :onlyMine then channels.userRole <> '' else 1 end)) " +
             "or (type =:directType and (link.user_id in (:userIds) or isSelf and link.user_id like '%' || :query || '%'))) " +
             "group by channels.chat_id " +
-            "order by case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
+            "order by " +
+            "case when pinnedAt > 0 then pinnedAt end desc," +
+            "case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     suspend fun getChannelsByQueryAndUserIds(query: String, userIds: List<String>, limit: Int, offset: Int, onlyMine: Boolean,
                                              directType: String = ChannelTypeEnum.Direct.getString()): List<ChannelDb>
 
@@ -140,6 +146,9 @@ interface ChannelDao {
 
     @Query("update channels set muted =:muted, mutedTill =:muteUntil where chat_id =:channelId")
     suspend fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long? = 0)
+
+    @Query("update channels set pinnedAt =:pinnedAt where chat_id =:channelId")
+    suspend fun updatePinState(channelId: Long, pinnedAt: Long?)
 
     @Query("update channels set userRole =:role where chat_id =:channelId")
     suspend fun updateUserRole(channelId: Long, role: String)

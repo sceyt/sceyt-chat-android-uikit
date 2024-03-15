@@ -63,6 +63,25 @@ class DebounceHelper {
 
     /**
      * Cancels the previous work and launches a new coroutine
+     * Run immediately if no job is running.
+     * containing the new work.
+     */
+    fun submitForceIfNotRunning(work: () -> Unit) {
+        val needToDelay = job?.isActive ?: false
+        job?.cancel()
+        job = scope.launch {
+            if (needToDelay)
+                delay(debounceMs)
+            if (isActive)
+                work()
+            //Keep job alive for next submit
+            if (!needToDelay)
+                delay(debounceMs)
+        }
+    }
+
+    /**
+     * Cancels the previous work and launches a new coroutine
      * containing the new suspendable work.
      */
     fun submitSuspendable(work: suspend () -> Unit) {

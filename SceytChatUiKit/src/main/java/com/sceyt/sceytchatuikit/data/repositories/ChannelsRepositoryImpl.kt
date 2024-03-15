@@ -522,6 +522,36 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
+    override suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel> {
+        return suspendCancellableCoroutine { continuation ->
+            ChannelOperator.build(channelId).pin(object : ChannelCallback {
+                override fun onResult(channel: Channel?) {
+                    continuation.safeResume(SceytResponse.Success(channel?.toSceytUiChannel()))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                    SceytLog.e(TAG, "pinChannel error: ${e?.message}, code: ${e?.code}")
+                }
+            })
+        }
+    }
+
+    override suspend fun unpinChannel(channelId: Long): SceytResponse<SceytChannel> {
+        return suspendCancellableCoroutine { continuation ->
+            ChannelOperator.build(channelId).unpin(object : ChannelCallback {
+                override fun onResult(channel: Channel?) {
+                    continuation.safeResume(SceytResponse.Success(channel?.toSceytUiChannel()))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                    SceytLog.e(TAG, "unpinChannel error: ${e?.message}, code: ${e?.code}")
+                }
+            })
+        }
+    }
+
     override suspend fun join(channelId: Long): SceytResponse<SceytChannel> {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).join(object : ChannelCallback {

@@ -18,6 +18,10 @@ object ChannelStyle {
 
     @JvmField
     @ColorRes
+    var pinnedChannelBackgroundColor: Int = R.color.sceyt_color_gray_themed
+
+    @JvmField
+    @ColorRes
     var titleColor: Int = R.color.sceyt_color_text_themed
 
     @JvmField

@@ -19,13 +19,14 @@ data class ChannelDiff(
         val typingStateChanged: Boolean,
         val membersChanged: Boolean,
         val metadataUpdated: Boolean,
-        val urlUpdated: Boolean
+        val urlUpdated: Boolean,
+        val pinStateChanged: Boolean
 ) {
     fun hasDifference(): Boolean {
         return subjectChanged || avatarViewChanged || lastMessageChanged || lastMessageStatusChanged ||
                 unreadCountChanged || muteStateChanged || onlineStateChanged || markedUsUnreadChanged ||
                 lastReadMsdChanged || peerBlockedChanged || typingStateChanged || membersChanged ||
-                metadataUpdated || urlUpdated
+                metadataUpdated || urlUpdated || pinStateChanged
     }
 
     companion object {
@@ -43,7 +44,8 @@ data class ChannelDiff(
             typingStateChanged = true,
             membersChanged = true,
             metadataUpdated = true,
-            urlUpdated = true
+            urlUpdated = true,
+            pinStateChanged = true
         )
 
         val DEFAULT_FALSE = ChannelDiff(
@@ -60,7 +62,8 @@ data class ChannelDiff(
             typingStateChanged = false,
             membersChanged = false,
             metadataUpdated = false,
-            urlUpdated = false
+            urlUpdated = false,
+            pinStateChanged = false
         )
     }
 }
@@ -90,6 +93,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
         typingStateChanged = typingData != other.typingData,
         membersChanged = membersCountChanged || members != other.members,
         metadataUpdated = metadata != other.metadata,
-        urlUpdated = uri != other.uri)
+        urlUpdated = uri != other.uri,
+        pinStateChanged = pinnedAt != other.pinnedAt)
 }
 

@@ -13,6 +13,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytDialogChannelActionsBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
+import com.sceyt.sceytchatuikit.presentation.common.isSelf
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
@@ -89,10 +90,13 @@ class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogN
     }
 
     private fun SceytDialogChannelActionsBinding.setIconsVisibility() {
+        val isSelf = channel.isSelf()
         markAsRead.isVisible = channel.unread
         markAsUnRead.isVisible = !channel.unread
-        mute.isVisible = !channel.muted
-        unMute.isVisible = channel.muted
+        mute.isVisible = !channel.muted && !isSelf
+        unMute.isVisible = channel.muted && !isSelf
+        pin.isVisible = !channel.pinned
+        unPin.isVisible = channel.pinned
         leave.isVisible = channel.isGroup && channel.checkIsMemberInChannel()
         delete.isVisible = !channel.isGroup
     }

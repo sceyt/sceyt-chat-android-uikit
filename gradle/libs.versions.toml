@@ -17,6 +17,7 @@ glideTransformations = "4.3.0"
 gson = "2.10.1"
 ion = "3.1.0"
 jsoup = "1.17.2"
+junit = "4.13.2"
 junitKtx = "1.1.5"
 koinAndroid = "3.5.3"
 kotlinxCoroutinesTest = "1.8.0"
@@ -59,6 +60,7 @@ glide-transformations = { module = "jp.wasabeef:glide-transformations", version.
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 ion = { module = "com.koushikdutta.ion:ion", version.ref = "ion" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+junit = { module = "junit:junit", version.ref = "junit" }
 junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "junitKtx" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinAndroid" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }

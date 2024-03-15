@@ -56,6 +56,8 @@ data class SceytChannel(
 
     val isGroup get() = stringToEnum(type).isGroup()
 
+    val pinned get() = pinnedAt != null && pinnedAt != 0L
+
     @IgnoredOnParcel
     var typingData: ChannelTypingEventData? = null
 
