@@ -645,6 +645,32 @@ internal class PersistenceChannelsLogicImpl(
         return response
     }
 
+    override suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel> {
+        val response = channelsRepository.pinChannel(channelId)
+
+        if (response is SceytResponse.Success) {
+            response.data?.let {
+                channelDao.updatePinState(it.id, it.pinnedAt)
+                channelsCache.updatePinState(it.id, it.pinnedAt)
+            }
+        }
+
+        return response
+    }
+
+    override suspend fun unpinChannel(channelId: Long): SceytResponse<SceytChannel> {
+        val response = channelsRepository.unpinChannel(channelId)
+
+        if (response is SceytResponse.Success) {
+            response.data?.let {
+                channelDao.updatePinState(it.id, it.pinnedAt)
+                channelsCache.updatePinState(it.id, it.pinnedAt)
+            }
+        }
+
+        return response
+    }
+
     override suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel> {
         val response = channelsRepository.hideChannel(channelId)
 

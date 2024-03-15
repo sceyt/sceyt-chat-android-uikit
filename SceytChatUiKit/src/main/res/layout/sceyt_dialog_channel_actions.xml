@@ -20,9 +20,7 @@
         android:paddingVertical="10dp"
         android:text="@string/sceyt_pin_chat"
         android:textColor="@color/sceyt_color_text_themed"
-        android:textSize="@dimen/_12ssp"
-        android:visibility="gone"
-        tools:visibility="visible" />
+        android:textSize="@dimen/_12ssp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/unPin"

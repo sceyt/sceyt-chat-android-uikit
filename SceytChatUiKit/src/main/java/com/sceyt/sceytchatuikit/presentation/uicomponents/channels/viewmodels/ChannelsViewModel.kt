@@ -210,6 +210,22 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
+    fun pinChannel(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelMiddleWare.pinChannel(channelId)
+            if (response is SceytResponse.Error)
+                notifyPageStateWithResponse(response)
+        }
+    }
+
+    fun unpinChannel(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelMiddleWare.unpinChannel(channelId)
+            if (response is SceytResponse.Error)
+                notifyPageStateWithResponse(response)
+        }
+    }
+
     fun hideChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelMiddleWare.hideChannel(channelId)
@@ -238,8 +254,8 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
             is ChannelEvent.DeleteChannel -> deleteChannel(event.channel.id)
             is ChannelEvent.Mute -> muteChannel(event.channel.id, 0)
             is ChannelEvent.UnMute -> unMuteChannel(event.channel.id)
-            is ChannelEvent.Pin -> {}
-            is ChannelEvent.UnPin -> {}
+            is ChannelEvent.Pin -> pinChannel(event.channel.id)
+            is ChannelEvent.UnPin -> unpinChannel(event.channel.id)
         }
     }
 }

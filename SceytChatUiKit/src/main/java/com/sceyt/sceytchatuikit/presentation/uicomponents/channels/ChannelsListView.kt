@@ -229,7 +229,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun sortChannelsBy(sortBy: SceytKitConfig.ChannelSortType) {
-        debounceHelper.submit { channelsRV.sortBy(sortBy) }
+        debounceHelper.submitForceIfNotRunning { channelsRV.sortBy(sortBy) }
     }
 
     /**

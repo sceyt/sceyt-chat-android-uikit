@@ -6,9 +6,9 @@ import com.sceyt.sceytchatuikit.data.models.channels.DraftMessage
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
-import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.persistence.differs.diff
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsComparatorBy
+import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
+import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelsComparatorDescBy
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -100,7 +100,7 @@ class ChannelsCache {
 
     fun getSorted(): List<SceytChannel> {
         synchronized(lock) {
-            return cachedData.values.sortedWith(ChannelsComparatorBy()).map { it.clone() }
+            return cachedData.values.sortedWith(ChannelsComparatorDescBy()).map { it.clone() }
         }
     }
 
@@ -133,8 +133,9 @@ class ChannelsCache {
                     }
                 } else {
                     val oldMsg = cachedChannel.lastMessage
-                    if (putAndCheckHasDiff(it).hasDifference()) {
-                        val needSort = checkNeedSortByLastMessage(oldMsg, it.lastMessage)
+                    val diff = putAndCheckHasDiff(it)
+                    if (diff.hasDifference()) {
+                        val needSort = checkNeedSortByLastMessage(oldMsg, it.lastMessage) || diff.pinStateChanged
                         channelUpdated(it, needSort, ChannelUpdatedType.Updated)
                     }
                 }
@@ -186,6 +187,15 @@ class ChannelsCache {
                 } else channel.muted = false
 
                 channelUpdated(channel, false, ChannelUpdatedType.MuteState)
+            }
+        }
+    }
+
+    fun updatePinState(channelId: Long, pinnedAt: Long?) {
+        synchronized(lock) {
+            cachedData[channelId]?.let { channel ->
+                channel.pinnedAt = pinnedAt
+                channelUpdated(channel, true, ChannelUpdatedType.PinnedAt)
             }
         }
     }

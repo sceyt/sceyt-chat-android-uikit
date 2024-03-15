@@ -98,6 +98,9 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                     if (muteStateChanged)
                         setMuteState(channel, binding.channelTitle)
 
+                    if (pinStateChanged)
+                        setPinState(channel, binding.icPinned)
+
                     if (subjectChanged)
                         setSubject(channel, binding.channelTitle)
 
@@ -253,6 +256,12 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         }
     }
 
+    open fun setPinState(channel: SceytChannel, pinImage: ImageView) {
+        val isPinned = channel.pinned
+        pinImage.isVisible = isPinned
+        binding.viewPinned.isVisible = isPinned
+    }
+
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: ImageView) {
         if (isSelf) {
             binding.avatar.setImageUrl(null, UserStyle.notesAvatar)
@@ -353,6 +362,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(ChannelStyle.unreadCountColor))
             icMention.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(ChannelStyle.unreadCountColor))
             onlineStatus.setIndicatorColor(getCompatColorByTheme(ChannelStyle.onlineStatusColor))
+            viewPinned.setBackgroundColor(getCompatColorByTheme(ChannelStyle.pinnedChannelBackgroundColor))
             dateStatus.buildStyle()
                 .setStatusIconSize(ChannelStyle.statusIconSize)
                 .setDateColor(ChannelStyle.dateTextColor)

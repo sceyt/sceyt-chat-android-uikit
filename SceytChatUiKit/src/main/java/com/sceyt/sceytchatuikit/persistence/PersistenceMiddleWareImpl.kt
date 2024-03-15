@@ -192,6 +192,14 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.unMuteChannel(channelId)
     }
 
+    override suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel> {
+        return channelLogic.pinChannel(channelId)
+    }
+
+    override suspend fun unpinChannel(channelId: Long): SceytResponse<SceytChannel> {
+        return channelLogic.unpinChannel(channelId)
+    }
+
     override suspend fun getChannelFromDb(channelId: Long): SceytChannel? {
         return channelLogic.getChannelFromDb(channelId)
     }
