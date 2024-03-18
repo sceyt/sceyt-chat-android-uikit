@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.bindings
 
+import android.provider.SyncStateContract.Helpers.update
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
@@ -41,7 +42,6 @@ import com.sceyt.sceytchatuikit.extensions.getChildTopByPosition
 import com.sceyt.sceytchatuikit.extensions.isResumed
 import com.sceyt.sceytchatuikit.extensions.isThePositionVisible
 import com.sceyt.sceytchatuikit.logger.SceytLog
-import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChannelsCache
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.MessagesCache
 import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
@@ -62,8 +62,8 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import java.util.Collections
 import kotlin.collections.set
 
 
@@ -71,9 +71,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messageActionBridge.setMessagesListView(messagesListView)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
     clearPreparingThumbs()
-
-    val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
-    val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
 
     /** Send pending markers, pending messages and update attachments transfer states when
      * lifecycle come back onResume state. */
@@ -336,25 +333,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(viewModelScope)
 
-    MessagesCache.messageUpdatedFlow.onEach { data ->
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            data.second.forEach {
-                val message = initMessageInfoData(it)
-                withContext(Dispatchers.Main) {
-                    if (it.state == MessageState.Deleted || it.state == MessageState.Edited)
-                        messagesListView.messageEditedOrDeleted(message)
-                    else {
-                        val foundToUpdate = messagesListView.updateMessage(message)
-                        if (!foundToUpdate) {
-                            SceytLog.i(this@bind.TAG, "Message not found to update-> id ${message.id}, tid: ${message.tid}, body: ${message.body}")
-                            notFoundMessagesToUpdate[message.tid] = message
-                        }
-                    }
-                }
-            }
-        }
-    }.launchIn(viewModelScope)
-
     syncCenteredMessageLiveData.observe(lifecycleOwner) { data ->
         viewModelScope.launch(Dispatchers.Default) {
             if (data.missingMessages.isNotEmpty()) {
@@ -504,9 +482,40 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         messagesListView.updateViewState(PageState.Nothing)
     }
 
-    onNewOutGoingMessageFlow.onEach(::onMessage).launchIn(viewModelScope)
+    suspend fun onMessageUpdated(data: Pair<Long, List<SceytMessage>>) {
+        suspend fun update(sceytMessage: SceytMessage) {
+            val message = initMessageInfoData(sceytMessage)
+            withContext(Dispatchers.Main) {
+                if (message.state == MessageState.Deleted || message.state == MessageState.Edited)
+                    messagesListView.messageEditedOrDeleted(message)
+                else {
+                    val foundToUpdate = messagesListView.updateMessage(message)
+                    if (!foundToUpdate) {
+                        SceytLog.i(this@bind.TAG, "Message not found to update-> id ${message.id}, tid: ${message.tid}, body: ${message.body}")
+                        notFoundMessagesToUpdate[message.tid] = message
+                    }
+                }
+            }
+        }
+
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            data.second.forEach {
+                if (it.incoming) {
+                    update(it)
+                } else outgoingMessageMutex.withLock { update(it) }
+            }
+        }
+    }
+
+    onNewOutGoingMessageFlow.onEach {
+        outgoingMessageMutex.withLock { onMessage(it) }
+    }.launchIn(viewModelScope)
 
     onNewMessageFlow.onEach(::onMessage).launchIn(viewModelScope)
+
+    MessagesCache.messageUpdatedFlow.onEach { data ->
+        onMessageUpdated(data)
+    }.launchIn(viewModelScope)
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
         checkEnableDisableActions(it)
