@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels
 
-import androidx.annotation.IntRange
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
@@ -39,18 +38,10 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     private val _loadChannelsFlow = MutableStateFlow<PaginationResponse<SceytChannel>>(PaginationResponse.Nothing())
     val loadChannelsFlow: StateFlow<PaginationResponse<SceytChannel>> = _loadChannelsFlow
 
-    private val _searchChannelsFlow = MutableStateFlow<PaginationResponse<SceytChannel>>(PaginationResponse.Nothing())
-    val searchChannelsFlow: StateFlow<PaginationResponse<SceytChannel>> = _searchChannelsFlow
-
     private val _blockUserLiveData = MutableLiveData<SceytResponse<List<User>>>()
     val blockUserLiveData = _blockUserLiveData.asLiveData()
 
-    enum class NotifyFlow {
-        LOAD, SEARCH
-    }
-
     fun getChannels(offset: Int, query: String = searchQuery, loadKey: LoadKeyData? = null, ignoreDb: Boolean = false) {
-        //Reset search if any
         searchQuery = query
         setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDb = ignoreDb)
 
@@ -60,33 +51,6 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
             channelMiddleWare.loadChannels(offset, query, loadKey, ignoreDb).collect {
                 initPaginationResponse(it)
-            }
-        }
-    }
-
-    fun searchChannelsWithUserIds(offset: Int, @IntRange(0, 50) limit: Int, searchQuery: String,
-                                  userIds: List<String>, includeUserNames: Boolean,
-                                  notifyFlow: NotifyFlow, onlyMine: Boolean, ignoreDb: Boolean = false,
-                                  loadKey: LoadKeyData? = null) {
-        if (notifyFlow == NotifyFlow.LOAD) {
-            setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDb = ignoreDb)
-
-            notifyPageLoadingState(false)
-        }
-
-        getChannelsJog?.cancel()
-        getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.searchChannelsWithUserIds(offset, limit, searchQuery, userIds,
-                includeUserNames, loadKey, onlyMine, ignoreDb).collect {
-                when (notifyFlow) {
-                    // Notifies chanel list like getChannels
-                    NotifyFlow.LOAD -> initPaginationResponse(it)
-                    // Just notifies search flow
-                    NotifyFlow.SEARCH -> {
-                        _loadChannelsFlow.value = PaginationResponse.Nothing()
-                        _searchChannelsFlow.value = it
-                    }
-                }
             }
         }
     }
