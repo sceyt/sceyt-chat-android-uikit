@@ -89,8 +89,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
+import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 
@@ -116,12 +118,14 @@ class MessageListViewModel(
     internal val placeToSavePathsList = mutableSetOf<String>()
     internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
     internal val notFoundMessagesToUpdate by lazy { mutableMapOf<Long, SceytMessage>() }
+    internal var scrollToSearchMessageJob: Job? = null
+    internal val outgoingMessageMutex by lazy { Mutex() }
+    internal val pendingDisplayMsgIds by lazy { Collections.synchronizedSet(mutableSetOf<Long>()) }
+    internal val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
     private var showSenderAvatarAndNameIfNeeded = true
     private var loadPrevJob: Job? = null
     private val loadNextJob: Job? = null
     private var loadNearJob: Job? = null
-    internal var scrollToSearchMessageJob: Job? = null
-
 
     // Pagination sync
     internal var needSyncMessagesWhenScrollStateIdle = false
