@@ -158,10 +158,7 @@ public class FileUtil {
                     return getDriveFilePath(uri);
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-
-                    // return getFilePathFromURI(context,uri);
-                    return copyFileToInternalStorage(uri, "userfiles");
-                    // return getRealPathFromURI(context,uri);
+                    return copyFileToInternalStorage(uri, "userFiles");
                 } else {
                     return getDataColumn(context, uri, null, null);
                 }
@@ -180,7 +177,7 @@ public class FileUtil {
                 String[] projection = {
                         MediaStore.Images.Media.DATA
                 };
-                Cursor cursor = null;
+                Cursor cursor;
                 try {
                     cursor = context.getContentResolver()
                             .query(uri, projection, selection, selectionArgs, null);
@@ -300,7 +297,7 @@ public class FileUtil {
         int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
         int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
         returnCursor.moveToFirst();
-        String name = (returnCursor.getString(nameIndex));
+        String name = +System.currentTimeMillis() + returnCursor.getString(nameIndex);
         String size = (Long.toString(returnCursor.getLong(sizeIndex)));
 
         File output;
@@ -316,7 +313,7 @@ public class FileUtil {
         try {
             InputStream inputStream = context.getContentResolver().openInputStream(uri);
             FileOutputStream outputStream = new FileOutputStream(output);
-            int read = 0;
+            int read;
             int bufferSize = 1024;
             final byte[] buffers = new byte[bufferSize];
             while ((read = inputStream.read(buffers)) != -1) {
@@ -327,8 +324,7 @@ public class FileUtil {
             outputStream.close();
 
         } catch (Exception e) {
-
-            Log.e("Exception", e.getMessage());
+            Log.e("Exception", String.valueOf(e.getMessage()));
         }
 
         return output.getPath();
