@@ -229,14 +229,13 @@ open class ConversationActivity : AppCompatActivity() {
         private const val REPLY_IN_THREAD_MESSAGE = "REPLY_IN_THREAD_MESSAGE"
 
         fun newInstance(context: Context, channel: SceytChannel) {
-            context.launchActivity<ConversationActivity> {
+            context.launchActivity<ConversationActivity>(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold) {
                 putExtra(CHANNEL, channel)
             }
-            context.asActivity().overrideTransitions(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold, true)
         }
 
         fun newInstance(context: Context, channel: SceytChannel, message: SceytMessage) {
-            context.launchActivity<ConversationActivity> {
+            context.launchActivity<ConversationActivity>(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold) {
                 putExtra(CHANNEL, channel)
                 putExtra(REPLY_IN_THREAD, true)
                 putExtra(REPLY_IN_THREAD_MESSAGE, message)
@@ -247,8 +246,7 @@ open class ConversationActivity : AppCompatActivity() {
 
     override fun finish() {
         if (isTaskRoot) {
-            launchActivity<MainActivity>()
-            overrideTransitions(0, 0, true)
+            launchActivity<MainActivity>(0,0)
         }
         super.finish()
         overrideTransitions(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right, true)
