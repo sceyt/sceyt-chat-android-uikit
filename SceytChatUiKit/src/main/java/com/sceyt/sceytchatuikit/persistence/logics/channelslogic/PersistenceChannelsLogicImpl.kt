@@ -143,6 +143,7 @@ internal class PersistenceChannelsLogicImpl(
                 }
             }
 
+            is ChannelEventEnum.Pin -> onChannelPinStateChange(data.channel)
             is ChannelEventEnum.MarkedUs -> onChannelMarkedAsReadOrUnread(data.channel)
             is ChannelEventEnum.Block -> {
                 if (event.blocked)
@@ -648,12 +649,8 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel> {
         val response = channelsRepository.pinChannel(channelId)
 
-        if (response is SceytResponse.Success) {
-            response.data?.let {
-                channelDao.updatePinState(it.id, it.pinnedAt)
-                channelsCache.updatePinState(it.id, it.pinnedAt)
-            }
-        }
+        if (response is SceytResponse.Success)
+            onChannelPinStateChange(response.data)
 
         return response
     }
@@ -661,12 +658,8 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun unpinChannel(channelId: Long): SceytResponse<SceytChannel> {
         val response = channelsRepository.unpinChannel(channelId)
 
-        if (response is SceytResponse.Success) {
-            response.data?.let {
-                channelDao.updatePinState(it.id, it.pinnedAt)
-                channelsCache.updatePinState(it.id, it.pinnedAt)
-            }
-        }
+        if (response is SceytResponse.Success)
+            onChannelPinStateChange(response.data)
 
         return response
     }
@@ -881,5 +874,11 @@ internal class PersistenceChannelsLogicImpl(
                 it.draftMessage = draftMessage.toDraftMessage()
             }
         }
+    }
+
+    private suspend fun onChannelPinStateChange(channel: SceytChannel?) {
+        channel ?: return
+        channelDao.updatePinState(channel.id, channel.pinnedAt)
+        channelsCache.updatePinState(channel.id, channel.pinnedAt)
     }
 }

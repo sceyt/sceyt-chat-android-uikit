@@ -11,6 +11,7 @@ sealed class ChannelEventEnum {
     data class Joined(val joinedMembers: List<SceytMember>) : ChannelEventEnum()
     data class Left(val leftMembers: List<SceytMember>) : ChannelEventEnum()
     data class Mute(val muted: Boolean) : ChannelEventEnum()
+    data class Pin(val pinned: Boolean) : ChannelEventEnum()
     data class Hide(val hidden: Boolean) : ChannelEventEnum()
     data class MarkedUs(val read: Boolean) : ChannelEventEnum()
     data class Block(val blocked: Boolean) : ChannelEventEnum()

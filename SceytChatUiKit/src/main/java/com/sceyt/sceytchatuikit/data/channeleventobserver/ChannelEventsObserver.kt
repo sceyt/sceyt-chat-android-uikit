@@ -97,6 +97,14 @@ object ChannelEventsObserver : ChannelEventManager.AllEventManagers {
                 eventManager.onChannelEvent(ChannelEventData(channel?.toSceytUiChannel(), ChannelEventEnum.Mute(false)))
             }
 
+            override fun onChannelPinned(channel: Channel?) {
+                eventManager.onChannelEvent(ChannelEventData(channel?.toSceytUiChannel(), ChannelEventEnum.Pin(true)))
+            }
+
+            override fun onChannelUnPinned(channel: Channel?) {
+                eventManager.onChannelEvent(ChannelEventData(channel?.toSceytUiChannel(), ChannelEventEnum.Pin(false)))
+            }
+
             override fun onChannelLeft(channel: Channel?, leftMembers: MutableList<Member>?) {
                 val members = leftMembers?.map { it.toSceytMember() } ?: emptyList()
                 eventManager.onChannelEvent(ChannelEventData(channel?.toSceytUiChannel(), ChannelEventEnum.Left(members)))
