@@ -619,10 +619,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         const val ACTION_SEARCH_MESSAGES = "ACTION_SEARCH_MESSAGES"
 
         fun launch(context: Context, channel: SceytChannel) {
-            context.launchActivity<ConversationInfoActivity> {
+            context.launchActivity<ConversationInfoActivity>(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold) {
                 putExtra(CHANNEL, channel)
             }
-            context.asActivity().overrideTransitions(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold, true)
         }
     }
 }

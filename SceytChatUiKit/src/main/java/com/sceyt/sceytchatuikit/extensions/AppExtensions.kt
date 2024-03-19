@@ -6,9 +6,14 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
-import android.os.*
+import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.M
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Parcelable
+import android.os.PowerManager
 import android.view.View
 import android.view.WindowInsetsController
 import android.view.inputmethod.InputMethodManager
@@ -145,8 +150,6 @@ inline fun <reified T : DialogFragment> DialogFragment.setBundleArgumentsTyped(i
     arguments = Bundle().apply { init() }
     return this as T
 }
-
-inline fun <reified T : Any> newIntent(context: Context): Intent = Intent(context, T::class.java)
 
 fun Activity.postDelayed(delayInMillis: Long, functionToExecute: () -> Unit) {
     Handler(Looper.getMainLooper()).postDelayed({

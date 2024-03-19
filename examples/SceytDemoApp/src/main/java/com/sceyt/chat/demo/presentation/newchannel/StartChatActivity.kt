@@ -159,8 +159,7 @@ class StartChatActivity : AppCompatActivity() {
     companion object {
 
         fun launch(context: Context) {
-            context.launchActivity<StartChatActivity>()
-            context.asActivity().overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
+            context.launchActivity<StartChatActivity>(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold)
         }
     }
 }

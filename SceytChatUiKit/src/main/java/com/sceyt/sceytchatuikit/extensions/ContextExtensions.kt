@@ -26,6 +26,7 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
@@ -172,13 +173,21 @@ fun Context.toast(messageResourceId: Int, length: Int) {
 }
 
 inline fun <reified T : Any> Context.launchActivity(
-        options: Bundle? = null,
+        enterAnimResId: Int? = null,
+        exitAnimResId: Int? = null,
+        options: Bundle = Bundle(),
         noinline init: Intent.() -> Unit = {},
 ) {
-    val intent = newIntent<T>(this)
+    if (enterAnimResId != null && exitAnimResId != null) {
+        val animOptions = ActivityOptionsCompat.makeCustomAnimation(this, enterAnimResId, exitAnimResId)
+        options.putAll(animOptions.toBundle())
+    }
+    val intent = createIntent<T>()
     intent.init()
     startActivity(intent, options)
 }
+
+inline fun <reified T : Any> Context.createIntent(): Intent = Intent(this, T::class.java)
 
 fun Context.showSoftInput(editText: EditText) {
     editText.isFocusable = true
