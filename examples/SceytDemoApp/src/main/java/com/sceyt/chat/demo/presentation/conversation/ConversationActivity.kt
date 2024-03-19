@@ -240,7 +240,6 @@ open class ConversationActivity : AppCompatActivity() {
                 putExtra(REPLY_IN_THREAD, true)
                 putExtra(REPLY_IN_THREAD_MESSAGE, message)
             }
-            context.asActivity().overrideTransitions(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold, true)
         }
     }
 
@@ -249,7 +248,7 @@ open class ConversationActivity : AppCompatActivity() {
             launchActivity<MainActivity>(0,0)
         }
         super.finish()
-        overrideTransitions(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right, true)
+        overrideTransitions(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right, false)
     }
 
     inner class MyViewModelFactory : ViewModelProvider.Factory {
