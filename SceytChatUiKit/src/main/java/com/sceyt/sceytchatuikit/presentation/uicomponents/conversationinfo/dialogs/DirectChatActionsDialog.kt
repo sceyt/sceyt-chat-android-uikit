@@ -30,6 +30,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
 
         binding.initView()
         binding.setupStyle()
+        binding.determinateState()
         window?.let {
             it.setWindowAnimations(R.style.SceytDialogFromBottomAnimation)
             val wlp: WindowManager.LayoutParams = it.attributes
@@ -76,10 +77,34 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
             listener?.invoke(ActionsEnum.Delete)
             dismiss()
         }
+
+        pin.setOnClickListener {
+            listener?.invoke(ActionsEnum.Pin)
+            dismiss()
+        }
+
+        unPin.setOnClickListener {
+            listener?.invoke(ActionsEnum.UnPin)
+            dismiss()
+        }
+    }
+
+    private fun SceytDialogDirectChannelActionsBinding.determinateState() {
+        if (channel.isSelf()) {
+            blockUser.isVisible = false
+            unBlockUser.isVisible = false
+        } else
+            channel.getPeer()?.let {
+                blockUser.isVisible = it.user.blocked.not() && !channel.isPeerDeleted()
+                unBlockUser.isVisible = it.user.blocked
+            }
+
+        pin.isVisible = !channel.pinned
+        unPin.isVisible = channel.pinned
     }
 
     enum class ActionsEnum {
-        ClearHistory, BlockUser, UnBlockUser, Delete
+        ClearHistory, BlockUser, UnBlockUser, Delete, Pin, UnPin
     }
 
     private fun SceytDialogDirectChannelActionsBinding.setupStyle() {

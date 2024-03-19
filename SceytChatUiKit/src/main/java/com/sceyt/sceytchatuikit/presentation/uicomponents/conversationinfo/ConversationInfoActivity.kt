@@ -50,7 +50,9 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialo
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog.ActionsEnum.BlockUser
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog.ActionsEnum.ClearHistory
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog.ActionsEnum.Delete
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog.ActionsEnum.Pin
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog.ActionsEnum.UnBlockUser
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog.ActionsEnum.UnPin
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.GroupChatActionsDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.editchannel.EditChannelFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.files.ChannelFilesFragment
@@ -141,6 +143,11 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         viewModel.muteUnMuteLiveData.observe(this) {
             channel.muted = it.muted
             onMutedOrUnMutedChannel(it)
+        }
+
+        viewModel.pinUnpinLiveData.observe(this) {
+            channel.pinnedAt = it.pinnedAt
+            onPinnedOrUnPinnedChannel(it)
         }
 
         viewModel.channelAddMemberLiveData.observe(this, ::onAddedMember)
@@ -374,6 +381,14 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
+    open fun onPinUnpinChatClick(channel: SceytChannel, pin: Boolean) {
+        if (pin) {
+            viewModel.pinChannel(channel.id)
+        } else {
+            viewModel.unpinChannel(channel.id)
+        }
+    }
+
     open fun onAddedMember(data: ChannelMembersEventData) {
     }
 
@@ -397,6 +412,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             BlockUser -> onBlockUnBlockUserClick(channel, true)
             UnBlockUser -> onBlockUnBlockUserClick(channel, false)
             Delete -> onDeleteChatClick(channel)
+            Pin -> onPinUnpinChatClick(channel, true)
+            UnPin -> onPinUnpinChatClick(channel, false)
         }
     }
 
@@ -405,6 +422,8 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             GroupChatActionsDialog.ActionsEnum.ClearHistory -> onClearHistoryClick(channel)
             GroupChatActionsDialog.ActionsEnum.Leave -> onLeaveChatClick(channel)
             GroupChatActionsDialog.ActionsEnum.Delete -> onDeleteChatClick(channel)
+            GroupChatActionsDialog.ActionsEnum.Pin -> onPinUnpinChatClick(channel, true)
+            GroupChatActionsDialog.ActionsEnum.Unpin -> onPinUnpinChatClick(channel, false)
         }
     }
 
@@ -429,6 +448,9 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     open fun onMutedOrUnMutedChannel(sceytChannel: SceytChannel) {
         setChannelSettings(sceytChannel)
+    }
+
+    open fun onPinnedOrUnPinnedChannel(sceytChannel: SceytChannel) {
     }
 
     open fun onJoinedChannel(sceytChannel: SceytChannel) {
