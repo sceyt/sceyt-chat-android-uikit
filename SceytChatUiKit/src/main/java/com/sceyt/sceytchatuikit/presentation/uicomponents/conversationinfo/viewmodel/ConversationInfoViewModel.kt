@@ -52,6 +52,9 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val _muteUnMuteLiveData = MutableLiveData<SceytChannel>()
     val muteUnMuteLiveData: LiveData<SceytChannel> = _muteUnMuteLiveData
 
+    private val _pinUnpinLiveData = MutableLiveData<SceytChannel>()
+    val pinUnpinLiveData: LiveData<SceytChannel> = _pinUnpinLiveData
+
     private val _joinLiveData = MutableLiveData<SceytChannel>()
     val joinLiveData: LiveData<SceytChannel> = _joinLiveData
 
@@ -181,6 +184,21 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelsMiddleWare.join(channelId)
             notifyResponseAndPageState(_joinLiveData, response)
+        }
+    }
+
+
+    fun pinChannel(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelsMiddleWare.pinChannel(channelId)
+            notifyResponseAndPageState(_pinUnpinLiveData, response)
+        }
+    }
+
+    fun unpinChannel(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelsMiddleWare.unpinChannel(channelId)
+            notifyResponseAndPageState(_pinUnpinLiveData, response)
         }
     }
 

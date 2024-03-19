@@ -75,12 +75,26 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
             listener?.invoke(ActionsEnum.Delete)
             dismiss()
         }
+
+        pin.setOnClickListener {
+            listener?.invoke(ActionsEnum.Pin)
+            dismiss()
+        }
+
+        unPin.setOnClickListener {
+            listener?.invoke(ActionsEnum.Unpin)
+            dismiss()
+        }
     }
 
     private fun determinateState() {
         val myRole = channel.userRole
         val enabledActions = myRole == RoleTypeEnum.Owner.toString()
-        binding.delete.isVisible = enabledActions
+        with(binding) {
+            delete.isVisible = enabledActions
+            pin.isVisible = !channel.pinned
+            unPin.isVisible = channel.pinned
+        }
     }
 
     fun setChooseTypeCb(cb: (ActionsEnum) -> Unit) {
@@ -88,7 +102,7 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
     }
 
     enum class ActionsEnum {
-        ClearHistory, Leave, Delete
+        ClearHistory, Leave, Delete, Pin, Unpin
     }
 
     private fun SceytDialogGroupChannelActionsBinding.setupStyle() {

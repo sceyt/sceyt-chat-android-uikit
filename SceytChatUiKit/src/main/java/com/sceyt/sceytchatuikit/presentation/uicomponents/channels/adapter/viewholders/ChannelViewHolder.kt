@@ -31,6 +31,7 @@ import com.sceyt.sceytchatuikit.persistence.logics.channelslogic.ChatReactionMes
 import com.sceyt.sceytchatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.sceytchatuikit.presentation.common.getAttachmentIconAsString
 import com.sceyt.sceytchatuikit.presentation.common.getFormattedBody
+import com.sceyt.sceytchatuikit.presentation.common.getFormattedLastMessageBody
 import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isDirect
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
@@ -86,8 +87,8 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 isSelf = channel.isSelf()
 
                 // this ui states is changed more often, and to avoid wrong ui states we need to set them every time
-                setUnreadCount(channel.newMessageCount, binding.unreadMessagesCount)
-                setMentionUserSymbol(channel.newMentionCount, channel.newMessageCount, binding.icMention)
+                setUnreadCount(channel, binding.unreadMessagesCount)
+                setMentionUserSymbol(channel, binding.icMention)
                 setLastMessageStatusAndDate(channel, binding.dateStatus)
                 setLastMessagedText(channel, binding.lastMessage)
                 setOnlineStatus(channel, binding.onlineStatus)
@@ -146,7 +147,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             textView.setTypeface(null, Typeface.ITALIC)
             binding.dateStatus.setStatusIcon(null)
         } else {
-            val body = message.getFormattedBody(context)
+            val body = message.getFormattedLastMessageBody(context)
 
             val fromText = when {
                 message.incoming -> {
@@ -164,12 +165,10 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 else -> "${context.getString(R.string.sceyt_your_last_message)}: "
             }
 
-            val showBody = MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(
-                body, message.mentionedUsers, message.bodyAttributes)
             (textView as SceytColorSpannableTextView).buildSpannable()
                 .append(fromText)
                 .append(message.getAttachmentIconAsString(context))
-                .append(showBody)
+                .append(body)
                 .setForegroundColorId(R.color.sceyt_color_text_themed)
                 .setIndexSpan(0, fromText.length)
                 .build()
@@ -285,9 +284,10 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         onlineStatus.isVisible = isOnline
     }
 
-    open fun setUnreadCount(unreadCount: Long?, textView: TextView) {
-        if (unreadCount == null || unreadCount == 0L) {
-            textView.isVisible = false
+    open fun setUnreadCount(channel: SceytChannel, textView: TextView) {
+        val unreadCount = channel.newMessageCount
+        if (unreadCount == 0L) {
+            textView.isVisible = channel.unread
             return
         }
 
@@ -302,19 +302,16 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         }
     }
 
-    open fun setMentionUserSymbol(unreadMentionCount: Long, unreadCount: Long, icMention: ImageView) {
-        icMention.isVisible = unreadMentionCount > 0 && unreadCount > 0
+    open fun setChannelMarkedUsUnread(channel: SceytChannel, textView: TextView) {
+        if (channel.newMessageCount > 0) return
+        if (channel.unread)
+            textView.text = "  "
+
+        textView.isVisible = channel.unread
     }
 
-    open fun setChannelMarkedUsUnread(channel: SceytChannel, unreadMessagesCount: TextView) {
-        if (channel.newMessageCount == 0L) {
-            if (channel.unread)
-                unreadMessagesCount.apply {
-                    text = "  "
-                    isVisible = true
-                }
-            else unreadMessagesCount.isVisible = false
-        }
+    open fun setMentionUserSymbol(channel: SceytChannel, icMention: ImageView) {
+        icMention.isVisible = channel.newMentionCount > 0 && channel.newMessageCount > 0
     }
 
     @SuppressLint("SetTextI18n")
