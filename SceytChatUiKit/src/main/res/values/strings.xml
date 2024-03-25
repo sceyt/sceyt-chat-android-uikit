@@ -200,5 +200,7 @@
     <string name="sceyt_search_messages">Search messages</string>
     <string name="of">of</string>
     <string name="self_notes">Self Notes</string>
+    <string name="add_notes">Add Notes</string>
+    <string name="add_notes_for_yourself_here">Add notes for yourself here.</string>
 
 </resources>

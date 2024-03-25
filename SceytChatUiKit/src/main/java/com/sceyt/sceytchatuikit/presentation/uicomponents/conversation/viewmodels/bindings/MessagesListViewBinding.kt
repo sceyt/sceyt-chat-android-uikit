@@ -1,6 +1,5 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.bindings
 
-import android.provider.SyncStateContract.Helpers.update
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
@@ -39,6 +38,7 @@ import com.sceyt.sceytchatuikit.extensions.centerVisibleItemPosition
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.extensions.getChildTopByPosition
+import com.sceyt.sceytchatuikit.extensions.getString
 import com.sceyt.sceytchatuikit.extensions.isResumed
 import com.sceyt.sceytchatuikit.extensions.isThePositionVisible
 import com.sceyt.sceytchatuikit.logger.SceytLog
@@ -48,6 +48,7 @@ import com.sceyt.sceytchatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.common.isPeerDeleted
 import com.sceyt.sceytchatuikit.presentation.common.isPublic
+import com.sceyt.sceytchatuikit.presentation.common.isSelf
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.LoadKeyType
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
@@ -56,6 +57,8 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.events.Me
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MAX_MULTISELECT_MESSAGES_COUNT
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
+import kotlin.collections.set
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
@@ -64,12 +67,13 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlin.collections.set
-
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
+    if (channel.isSelf())
+        messagesListView.getPageStateView()?.setEmptyStateView(MessagesStyle.emptyStateSelfChannel)
+
     clearPreparingThumbs()
 
     /** Send pending markers, pending messages and update attachments transfer states when
@@ -620,7 +624,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 val wasSelected = selectedMessagesMap.containsKey(event.message.tid)
 
                 if (!wasSelected && selectedMessagesMap.size >= MAX_MULTISELECT_MESSAGES_COUNT) {
-                    val errorMessage = String.format(messagesListView.context.getString(R.string.sceyt_rich_max_message_select_count, MAX_MULTISELECT_MESSAGES_COUNT.toString()))
+                    val errorMessage = String.format(messagesListView.getString(R.string.sceyt_rich_max_message_select_count, MAX_MULTISELECT_MESSAGES_COUNT.toString()))
                     customToastSnackBar(messagesListView, errorMessage)
                     return@setMessageCommandEventListener
                 }

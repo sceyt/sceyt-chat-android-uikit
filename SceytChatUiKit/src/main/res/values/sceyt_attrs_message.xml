@@ -38,8 +38,11 @@
             <flag name="italic" value="2" />
         </attr>
 
-        <attr name="sceytUiAutoLinkTextColor" format="reference" />
+        <!--Empty state-->
+        <attr name="sceytUiEmptyStateLayout" format="reference" />
+        <attr name="sceytUiEmptyStateSelfChannelLayout" format="reference" />
 
+        <attr name="sceytUiAutoLinkTextColor" format="reference" />
 
         <!--Distance between messages-->
         <attr name="sceytUiSameSenderMessageDistance" format="dimension" />
