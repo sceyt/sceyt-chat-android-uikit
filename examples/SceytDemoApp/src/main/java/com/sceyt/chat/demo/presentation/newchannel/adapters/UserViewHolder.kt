@@ -1,7 +1,6 @@
 package com.sceyt.chat.demo.presentation.newchannel.adapters
 
 import androidx.core.view.isVisible
-import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.ItemUserBinding
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.demo.presentation.common.BaseViewHolder
@@ -23,7 +22,7 @@ class UserViewHolder(private val binding: ItemUserBinding,
 
         with(binding) {
             if (user.id == SceytKitClient.myId) {
-                avatar.setNameAndImageUrl("", null, drawable.sceyt_ic_notes)
+                avatar.setNameAndImageUrl("", null, drawable.sceyt_ic_notes_with_bg)
                 userName.text = context.getString(string.self_notes)
                 tvStatus.isVisible = false
             } else {

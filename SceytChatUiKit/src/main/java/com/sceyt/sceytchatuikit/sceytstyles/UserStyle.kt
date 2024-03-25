@@ -16,7 +16,7 @@ object UserStyle {
 
     @JvmField
     @DrawableRes
-    var notesAvatar: Int = R.drawable.sceyt_ic_notes
+    var notesAvatar: Int = R.drawable.sceyt_ic_notes_with_bg
 
     @JvmField
     var userPresenceDateFormat = UserPresenceDateFormatter()

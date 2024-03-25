@@ -68,6 +68,10 @@ object MessagesStyle {
 
     @JvmField
     @LayoutRes
+    var emptyStateSelfChannel: Int = R.layout.sceyt_messages_empty_state_self_channel
+
+    @JvmField
+    @LayoutRes
     var loadingState: Int = R.layout.sceyt_loading_state
 
     @JvmField
@@ -136,6 +140,8 @@ object MessagesStyle {
         replyMessageLineColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiReplyMessageLineColor, replyMessageLineColor)
         dateSeparatorItemBackground = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemBackground, dateSeparatorItemBackground)
         dateSeparatorItemTextColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextColor, dateSeparatorItemTextColor)
+        emptyState = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiEmptyStateLayout, emptyState)
+        emptyStateSelfChannel = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiEmptyStateSelfChannelLayout, emptyStateSelfChannel)
         autoLinkTextColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiAutoLinkTextColor, autoLinkTextColor)
         sameSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiSameSenderMessageDistance, sameSenderMsgDistance)
         differentSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiDifferentSenderMessageDistance, differentSenderMsgDistance)
