@@ -25,4 +25,8 @@ object GalleryPickerStyle {
 
     @JvmField
     var maxSelectCount: Int = 20
+
+    @JvmField
+    @DrawableRes
+    var videoDurationIcon: Int = R.drawable.sceyt_ic_video
 }

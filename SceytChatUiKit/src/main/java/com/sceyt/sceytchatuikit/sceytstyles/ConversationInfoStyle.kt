@@ -15,4 +15,8 @@ object ConversationInfoStyle {
     @JvmField
     @DrawableRes
     var editIcon: Int = R.drawable.sceyt_ic_edit_stroked
+
+    @JvmField
+    @DrawableRes
+    var videoDurationIcon: Int = R.drawable.sceyt_ic_video
 }

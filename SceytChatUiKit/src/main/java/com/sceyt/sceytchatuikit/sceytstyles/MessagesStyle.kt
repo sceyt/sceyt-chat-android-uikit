@@ -109,6 +109,10 @@ object MessagesStyle {
 
     @JvmField
     @DrawableRes
+    var videoDurationIcon: Int = R.drawable.sceyt_ic_video
+
+    @JvmField
+    @DrawableRes
     var fileAttachmentIcon: Int = R.drawable.sceyt_ic_file_with_bg
 
     @JvmField
@@ -151,6 +155,7 @@ object MessagesStyle {
         dateSeparatorTextStyle = typedArray.getInt(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextStyle, dateSeparatorTextStyle)
         downScrollerUnreadCountColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDownScrollerUnreadCountColor, downScrollerUnreadCountColor)
         mediaLoaderColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMediaLoaderColor, mediaLoaderColor)
+        videoDurationIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiVideoDurationIcon, videoDurationIcon)
         fileAttachmentIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiFileAttachmentIcon, fileAttachmentIcon)
         linkAttachmentIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiLinkAttachmentIcon, linkAttachmentIcon)
         selfReactionBackgroundColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiSelfReactionBackgroundColor, selfReactionBackgroundColor)
