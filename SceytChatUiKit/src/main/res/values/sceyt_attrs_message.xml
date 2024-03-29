@@ -51,6 +51,7 @@
         <attr name="sceytUiDownScrollerUnreadCountColor" format="reference" />
 
         <attr name="sceytUiMediaLoaderColor" format="reference" />
+        <attr name="sceytUiVideoDurationIcon" format="reference" />
         <attr name="sceytUiFileAttachmentIcon" format="reference" />
         <attr name="sceytUiLinkAttachmentIcon" format="reference" />
 

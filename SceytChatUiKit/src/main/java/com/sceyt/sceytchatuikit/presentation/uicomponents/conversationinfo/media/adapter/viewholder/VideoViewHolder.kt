@@ -3,6 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.medi
 import android.util.Size
 import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelVideoBinding
+import com.sceyt.sceytchatuikit.extensions.setDrawableStart
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
@@ -23,6 +24,7 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingTo
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
+import com.sceyt.sceytchatuikit.sceytstyles.ConversationInfoStyle
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 
 class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
@@ -31,6 +33,7 @@ class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     init {
+        binding.setupStyle()
         binding.root.setOnClickListener {
             clickListeners.onAttachmentClick(it, fileItem)
         }
@@ -103,4 +106,8 @@ class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
     override fun getThumbSize() = Size(binding.root.width, binding.root.height)
 
     override fun needThumbFor() = ThumbFor.ConversationInfo
+
+    private fun SceytItemChannelVideoBinding.setupStyle() {
+        tvDuration.setDrawableStart(ConversationInfoStyle.videoDurationIcon)
+    }
 }

@@ -4,11 +4,17 @@ import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytItemGalleryVideoBinding
+import com.sceyt.sceytchatuikit.extensions.setDrawableStart
 import com.sceyt.sceytchatuikit.imagepicker.adapter.GalleryMediaAdapter
 import com.sceyt.sceytchatuikit.imagepicker.adapter.MediaItem
+import com.sceyt.sceytchatuikit.sceytstyles.GalleryPickerStyle
 
 class GalleryVideoViewHolder(val binding: SceytItemGalleryVideoBinding,
                              clickListener: GalleryMediaAdapter.MediaClickListener) : BaseGalleryViewHolder(binding.root, clickListener) {
+
+    init {
+        binding.setupStyle()
+    }
 
     override fun bind(item: MediaItem) {
         val data = item.media
@@ -45,5 +51,9 @@ class GalleryVideoViewHolder(val binding: SceytItemGalleryVideoBinding,
             "0$secondsStr"
         }
         return "$minutes:$secs"
+    }
+
+    private fun SceytItemGalleryVideoBinding.setupStyle() {
+        tvDuration.setDrawableStart(GalleryPickerStyle.videoDurationIcon)
     }
 }
