@@ -202,5 +202,10 @@
     <string name="self_notes">Self Notes</string>
     <string name="add_notes">Add Notes</string>
     <string name="add_notes_for_yourself_here">Add notes for yourself here.</string>
+    <string name="sceyt_message_info">Message info</string>
+    <string name="read_by">Read by</string>
+    <string name="delivered_to">Delivered to</string>
+    <string name="sent">Sent:</string>
+    <string name="size">Size:</string>
 
 </resources>

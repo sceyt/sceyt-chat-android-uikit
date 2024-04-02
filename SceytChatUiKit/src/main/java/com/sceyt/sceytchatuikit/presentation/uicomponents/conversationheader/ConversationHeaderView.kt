@@ -479,6 +479,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             menu.findItem(R.id.sceyt_reply).isVisible = isSingleMessage && !isPending
             menu.findItem(R.id.sceyt_forward).isVisible = !isPending
             menu.findItem(R.id.sceyt_edit_message).isVisible = isSingleMessage && !message.incoming && message.body.isNotNullOrBlank()
+            menu.findItem(R.id.sceyt_message_info).isVisible = isSingleMessage && !message.incoming && !isPending
             menu.findItem(R.id.sceyt_copy_message).isVisible = messages.any { it.body.isNotNullOrBlank() }
         }
     }

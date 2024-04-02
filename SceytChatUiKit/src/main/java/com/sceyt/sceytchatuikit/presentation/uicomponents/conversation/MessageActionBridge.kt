@@ -44,6 +44,11 @@ class MessageActionBridge {
                     messageActionListener.onEditMessageClick(message)
                 }
 
+                R.id.sceyt_message_info -> firstMessage?.let { message ->
+                    actionFinish.invoke()
+                    messageActionListener.onMessageInfoClick(message)
+                }
+
                 R.id.sceyt_forward -> {
                     actionFinish.invoke()
                     messageActionListener.onForwardMessageClick(*selectedMessages)

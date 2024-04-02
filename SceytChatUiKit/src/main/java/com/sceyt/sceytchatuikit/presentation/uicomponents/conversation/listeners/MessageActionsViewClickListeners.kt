@@ -16,6 +16,10 @@ sealed interface MessageActionsViewClickListeners {
         fun onEditMessageClick(message: SceytMessage)
     }
 
+    fun interface MessageInfo : MessageActionsViewClickListeners {
+        fun onMessageInfoClick(message: SceytMessage)
+    }
+
     fun interface ForwardMessage : MessageActionsViewClickListeners {
         fun onForwardMessageClick(vararg messages: SceytMessage)
     }
@@ -33,6 +37,6 @@ sealed interface MessageActionsViewClickListeners {
     }
 
     /** Use this if you want to implement all callbacks */
-    interface ActionsViewClickListeners : CopyMessage, DeleteMessage, EditMessage, ForwardMessage,
-            ReactMessage, ReplyMessage, ReplyInThreadMessage
+    interface ActionsViewClickListeners : CopyMessage, DeleteMessage, EditMessage, MessageInfo,
+            ForwardMessage, ReactMessage, ReplyMessage, ReplyInThreadMessage
 }

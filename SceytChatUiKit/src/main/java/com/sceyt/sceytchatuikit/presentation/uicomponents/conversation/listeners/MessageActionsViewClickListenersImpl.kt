@@ -8,6 +8,7 @@ open class MessageActionsViewClickListenersImpl(view: MessagesListView) : Messag
     private var copyMessageListener: MessageActionsViewClickListeners.CopyMessage? = null
     private var deleteMessageListener: MessageActionsViewClickListeners.DeleteMessage? = null
     private var editMessageListener: MessageActionsViewClickListeners.EditMessage? = null
+    private var messageInfoListener: MessageActionsViewClickListeners.MessageInfo? = null
     private var forwardMessageListener: MessageActionsViewClickListeners.ForwardMessage? = null
     private var reactMessageListener: MessageActionsViewClickListeners.ReactMessage? = null
     private var replyMessageListener: MessageActionsViewClickListeners.ReplyMessage? = null
@@ -26,6 +27,11 @@ open class MessageActionsViewClickListenersImpl(view: MessagesListView) : Messag
     override fun onEditMessageClick(message: SceytMessage) {
         defaultListeners.onEditMessageClick(message)
         editMessageListener?.onEditMessageClick(message)
+    }
+
+    override fun onMessageInfoClick(message: SceytMessage) {
+        defaultListeners.onMessageInfoClick(message)
+        messageInfoListener?.onMessageInfoClick(message)
     }
 
     override fun onReactMessageClick(message: SceytMessage) {
@@ -54,6 +60,7 @@ open class MessageActionsViewClickListenersImpl(view: MessagesListView) : Messag
                 copyMessageListener = listener
                 deleteMessageListener = listener
                 editMessageListener = listener
+                messageInfoListener = listener
                 forwardMessageListener = listener
                 reactMessageListener = listener
                 replyMessageListener = listener
@@ -70,6 +77,10 @@ open class MessageActionsViewClickListenersImpl(view: MessagesListView) : Messag
 
             is MessageActionsViewClickListeners.EditMessage -> {
                 editMessageListener = listener
+            }
+
+            is MessageActionsViewClickListeners.MessageInfo -> {
+                messageInfoListener = listener
             }
 
             is MessageActionsViewClickListeners.ForwardMessage -> {
