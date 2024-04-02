@@ -10,6 +10,8 @@ import com.sceyt.sceytchatuikit.data.repositories.AttachmentsRepository
 import com.sceyt.sceytchatuikit.data.repositories.AttachmentsRepositoryImpl
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepository
 import com.sceyt.sceytchatuikit.data.repositories.ChannelsRepositoryImpl
+import com.sceyt.sceytchatuikit.data.repositories.MessageMarkersRepository
+import com.sceyt.sceytchatuikit.data.repositories.MessageMarkersRepositoryImpl
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepositoryImpl
 import com.sceyt.sceytchatuikit.data.repositories.ProfileRepository
@@ -113,7 +115,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single<PersistenceUsersMiddleWare> { get<PersistenceMiddleWareImpl>() }
 
     single<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
@@ -130,6 +132,7 @@ internal val repositoryModule = module {
     factory<AttachmentsRepository> { AttachmentsRepositoryImpl() }
     factory<ReactionsRepository> { ReactionsRepositoryImpl() }
     factory<UsersRepository> { UsersRepositoryImpl() }
+    factory<MessageMarkersRepository> { MessageMarkersRepositoryImpl() }
 }
 
 internal val cacheModule = module {

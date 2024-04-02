@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.work.await
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessageState
@@ -35,6 +36,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum.Displayed
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum.Received
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
+import com.sceyt.sceytchatuikit.data.repositories.MessageMarkersRepository
 import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
@@ -105,6 +107,7 @@ internal class PersistenceMessagesLogicImpl(
         private val pendingMessageStateDao: PendingMessageStateDao,
         private val fileTransferService: FileTransferService,
         private val messagesRepository: MessagesRepository,
+        private val messageMarkersRepository: MessageMarkersRepository,
         private val preference: SceytSharedPreference,
         private val messagesCache: MessagesCache,
         private val channelCache: ChannelsCache,
@@ -691,6 +694,9 @@ internal class PersistenceMessagesLogicImpl(
 
     override fun getOnMessageFlow() = onMessageFlow.asSharedFlow()
 
+    override suspend fun getMessageMarkers(messageId: Long, name: String, offset: Int, limit: Int): SceytResponse<List<Marker>> {
+        return messageMarkersRepository.getMessageMarkers(messageId, name, offset, limit)
+    }
 
     private fun loadMessages(loadType: LoadType, conversationId: Long, messageId: Long,
                              replyInThread: Boolean, offset: Int, limit: Int,

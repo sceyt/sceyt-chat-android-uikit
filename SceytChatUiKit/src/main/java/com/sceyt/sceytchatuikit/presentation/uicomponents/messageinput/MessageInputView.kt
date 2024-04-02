@@ -39,6 +39,7 @@ import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.getString
+import com.sceyt.sceytchatuikit.extensions.hideSoftInput
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.sceytchatuikit.extensions.notAutoCorrectable
 import com.sceyt.sceytchatuikit.extensions.setTextAndMoveSelectionEnd
@@ -156,7 +157,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             determineInputState()
             addInputTextWatcher()
             setupAttachmentsList()
-            // init outside of post to, because it's using permission launcher
+            // Init SceytVoiceMessageRecorderView outside of post, because it's using permission launcher
             val voiceRecorderView = SceytVoiceMessageRecorderView(context)
             post {
                 onStateChanged(inputState)
@@ -868,6 +869,13 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         super.onAttachedToWindow()
         GalleryMediaPicker.pickerListener?.let {
             GalleryMediaPicker.pickerListener = getPickerListener()
+        }
+    }
+
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        if (!hasWindowFocus) {
+            binding.messageInput.clearFocus()
+            hideSoftInput()
         }
     }
 

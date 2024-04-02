@@ -1,5 +1,6 @@
 package com.sceyt.sceytchatuikit.persistence.logics.messageslogic
 
+import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -67,5 +68,6 @@ interface PersistenceMessagesLogic {
     suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
     suspend fun attachmentSuccessfullySent(message: SceytMessage)
     suspend fun saveChannelLastMessagesToDb(list: List<SceytMessage>?)
+    suspend fun getMessageMarkers(messageId: Long, name: String, offset: Int, limit: Int): SceytResponse<List<Marker>>
     fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>>
 }

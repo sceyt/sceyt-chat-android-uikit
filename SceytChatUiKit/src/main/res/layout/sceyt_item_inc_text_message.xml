@@ -125,7 +125,7 @@
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="@+id/layoutDetails"
             app:layout_constraintTop_toBottomOf="@+id/viewReply"
-            tools:text="Lore ipsum  is the correct text which" />
+            tools:text="Lore ipsum  is the correct text which\nis the of the..." />
 
         <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
             android:id="@+id/messageDate"

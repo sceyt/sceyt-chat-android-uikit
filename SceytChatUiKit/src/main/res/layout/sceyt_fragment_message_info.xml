@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/sceyt_color_bg"
+    android:clickable="true"
+    android:focusable="true">
+
+    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCustomToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/sceyt_color_primary"
+        app:layout_constraintTop_toTopOf="parent"
+        app:title="@string/sceyt_message_info"
+        app:titleTextColor="@color/sceyt_color_text_themed" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <ViewStub
+                android:id="@+id/viewStub"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/toolbar"
+                android:layout_marginTop="15dp"
+                android:layout="@layout/sceyt_item_out_text_message"
+                tools:visibility="visible" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvSentHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="15dp"
+                    android:fontFamily="@font/roboto_medium"
+                    android:text="@string/sent"
+                    android:textColor="@color/sceyt_color_text_themed"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvSentDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:textColor="@color/sceyt_color_gray_secondary_themed"
+                    android:textSize="14sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvSentHint"
+                    app:layout_constraintStart_toEndOf="@+id/tvSentHint"
+                    app:layout_constraintTop_toTopOf="@+id/tvSentHint"
+                    tools:text="22.07.23" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvSizeHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="5dp"
+                    android:fontFamily="@font/roboto_medium"
+                    android:text="@string/size"
+                    android:textColor="@color/sceyt_color_text_themed"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tvSentHint" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvSize"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:textColor="@color/sceyt_color_gray_secondary_themed"
+                    android:textSize="14sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvSizeHint"
+                    app:layout_constraintStart_toEndOf="@+id/tvSizeHint"
+                    app:layout_constraintTop_toTopOf="@+id/tvSizeHint"
+                    tools:text="22MB" />
+
+                <androidx.constraintlayout.widget.Group
+                    android:id="@+id/groupSizeViews"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:constraint_referenced_ids="tvSizeHint,tvSize" />
+
+                <View
+                    android:id="@+id/divider1"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="15dp"
+                    android:background="@color/sceyt_color_divider"
+                    app:layout_constraintTop_toBottomOf="@+id/tvSize" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvReadByHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="15dp"
+                    android:fontFamily="@font/roboto_medium"
+                    android:includeFontPadding="false"
+                    android:text="@string/read_by"
+                    android:textColor="@color/sceyt_color_gray_secondary_themed"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/divider1" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvReadByUsers"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:paddingHorizontal="15dp"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    app:layout_constraintTop_toBottomOf="@+id/tvReadByHint"
+                    tools:itemCount="4"
+                    tools:listitem="@layout/sceyt_item_user_marker" />
+
+                <View
+                    android:id="@+id/dividerDelivered"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@color/sceyt_color_divider"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toBottomOf="@+id/rvReadByUsers"
+                    app:layout_goneMarginTop="0dp"
+                    tools:visibility="visible" />
+
+                <androidx.constraintlayout.widget.Group
+                    android:id="@+id/groupViewsRead"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:constraint_referenced_ids="tvReadByHint,rvReadByUsers"
+                    tools:visibility="visible" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvDeliveredToHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="15dp"
+                    android:fontFamily="@font/roboto_medium"
+                    android:includeFontPadding="false"
+                    android:text="@string/delivered_to"
+                    android:textColor="@color/sceyt_color_gray_secondary_themed"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/dividerDelivered" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvDeliveredToUsers"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:paddingHorizontal="15dp"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    app:layout_constraintTop_toBottomOf="@+id/tvDeliveredToHint"
+                    tools:itemCount="4"
+                    tools:listitem="@layout/sceyt_item_user_marker" />
+
+                <androidx.constraintlayout.widget.Group
+                    android:id="@+id/groupViewsDelivered"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:constraint_referenced_ids="tvDeliveredToHint,rvDeliveredToUsers"
+                    tools:visibility="visible" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

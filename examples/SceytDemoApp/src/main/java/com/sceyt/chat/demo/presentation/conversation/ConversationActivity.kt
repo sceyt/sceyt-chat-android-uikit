@@ -12,6 +12,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsAnimationCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.commit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.sceyt.chat.demo.databinding.ActivityConversationBinding
@@ -23,7 +24,7 @@ import com.sceyt.chat.demo.presentation.mainactivity.MainActivity
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.extensions.asActivity
+import com.sceyt.sceytchatuikit.extensions.hideSoftInput
 import com.sceyt.sceytchatuikit.extensions.launchActivity
 import com.sceyt.sceytchatuikit.extensions.overrideTransitions
 import com.sceyt.sceytchatuikit.extensions.parcelable
@@ -40,6 +41,7 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.cli
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.eventlisteners.HeaderEventsListener
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity.Companion.ACTION_SEARCH_MESSAGES
+import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinfo.MessageInfoFragment
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -179,7 +181,7 @@ open class ConversationActivity : AppCompatActivity() {
         })
     }
 
-   private val conversationInfoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+    private val conversationInfoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.getBooleanExtra(ACTION_SEARCH_MESSAGES, true)?.let { search ->
                 if (search)
@@ -207,8 +209,16 @@ open class ConversationActivity : AppCompatActivity() {
                 super.onReplyMessageInThreadClick(message)
                 newInstance(this@ConversationActivity, channel, message)
             }
-        })
 
+            override fun onMessageInfoClick(message: SceytMessage) {
+                hideSoftInput()
+                supportFragmentManager.commit {
+                    setCustomAnimations(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
+                    replace(com.sceyt.chat.demo.R.id.frameLayout, MessageInfoFragment.newInstance(message))
+                    addToBackStack("MessageInfoFragment")
+                }
+            }
+        })
     }
 
     private fun MessageInputView.initMessageInputView() {
@@ -245,7 +255,7 @@ open class ConversationActivity : AppCompatActivity() {
 
     override fun finish() {
         if (isTaskRoot) {
-            launchActivity<MainActivity>(0,0)
+            launchActivity<MainActivity>(0, 0)
         }
         super.finish()
         overrideTransitions(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right, false)

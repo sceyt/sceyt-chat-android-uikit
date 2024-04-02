@@ -52,7 +52,7 @@ import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 class OutVoiceMsgViewHolder(
         private val binding: SceytItemOutVoiceMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
-        private val messageListeners: MessageClickListeners.ClickListeners,
+        private val messageListeners: MessageClickListeners.ClickListeners?,
         userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseMediaMessageViewHolder(binding.root, messageListeners, userNameBuilder = userNameBuilder, needMediaDataCallback = needMediaDataCallback) {
@@ -69,11 +69,11 @@ class OutVoiceMsgViewHolder(
             setMessageItemStyle()
 
             root.setOnClickListener {
-                messageListeners.onMessageClick(it, messageListItem as MessageItem)
+                messageListeners?.onMessageClick(it, messageListItem as MessageItem)
             }
 
             root.setOnLongClickListener {
-                messageListeners.onMessageLongClick(it, messageListItem as MessageItem)
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageItem)
                 return@setOnLongClickListener true
             }
 
@@ -84,7 +84,7 @@ class OutVoiceMsgViewHolder(
             }
 
             loadProgress.setOnClickListener {
-                messageListeners.onAttachmentLoaderClick(it, FileListItem.File(fileItem.file, (messageListItem as MessageItem).message))
+                messageListeners?.onAttachmentLoaderClick(it, FileListItem.File(fileItem.file, (messageListItem as MessageItem).message))
             }
 
             playPauseButton.setOnClickListener {

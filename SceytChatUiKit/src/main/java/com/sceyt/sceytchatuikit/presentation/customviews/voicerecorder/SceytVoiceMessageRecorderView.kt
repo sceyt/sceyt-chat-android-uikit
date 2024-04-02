@@ -12,7 +12,6 @@ import android.graphics.Color
 import android.net.Uri
 import android.provider.Settings
 import android.util.AttributeSet
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.MotionEvent.*
 import android.view.View
@@ -358,9 +357,9 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     }
 
 
-    private val buttonZ get() = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2f, context.resources.displayMetrics)
-    private val paddingNormal get() = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 11f, context.resources.displayMetrics)
-    private val paddingRecording get() = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 15f, context.resources.displayMetrics)
+    private val buttonZ get() = dpToPx(2f).toFloat()
+    private val paddingNormal get() = dpToPx(11f).toFloat()
+    private val paddingRecording get() = dpToPx(15f).toFloat()
 
     private fun SceytRecordViewBinding.showDefaultRecordButton() {
         colorAnimation?.cancel()
@@ -451,7 +450,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
             })
     }
 
-    private val requestVoicePermissionLauncher = if (isInEditMode) null else context.asComponentActivity().initPermissionLauncher {
+    private val requestVoicePermissionLauncher = if (isInEditMode) null else context.maybeComponentActivity()?.initPermissionLauncher {
         onVoicePermissionResult(it)
     }
 

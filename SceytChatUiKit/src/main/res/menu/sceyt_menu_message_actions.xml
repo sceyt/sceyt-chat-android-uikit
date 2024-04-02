@@ -22,7 +22,6 @@
         android:title="@string/sceyt_copy"
         app:showAsAction="always" />
 
-
     <item
         android:id="@+id/sceyt_delete_message"
         android:icon="@drawable/sceyt_ic_trash"
@@ -36,10 +35,16 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/sceyt_message_info"
+        android:icon="@drawable/sceyt_ic_info"
+        android:title="@string/sceyt_info"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/sceyt_reply_in_thread"
         android:icon="@drawable/sceyt_ic_reply_in_thread"
-        android:visible="false"
         android:title="@string/sceyt_reply_in_thread"
+        android:visible="false"
         app:showAsAction="ifRoom" />
 
 </menu>

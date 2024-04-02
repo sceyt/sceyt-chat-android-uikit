@@ -881,6 +881,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageCommandEventListener?.invoke(MessageCommandEvent.EditMessage(message))
     }
 
+    override fun onMessageInfoClick(message: SceytMessage) {
+
+    }
+
     override fun onForwardMessageClick(vararg messages: SceytMessage) {
         SceytForwardActivity.launch(context, *messages)
     }
@@ -894,7 +898,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onReplyMessageInThreadClick(message: SceytMessage) {
-        // Override and add your logic if you
+        // Override and add your logic if you want
     }
 
 

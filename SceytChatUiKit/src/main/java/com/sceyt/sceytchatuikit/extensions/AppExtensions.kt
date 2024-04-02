@@ -146,6 +146,12 @@ fun Fragment.setBundleArguments(init: Bundle.() -> Unit = {}): Fragment {
 }
 
 
+inline fun <reified T : Fragment> Fragment.setBundleArgumentsAs(init: Bundle.() -> Unit = {}): T {
+    arguments = Bundle().apply { init() }
+    return this as T
+}
+
+
 inline fun <reified T : DialogFragment> DialogFragment.setBundleArgumentsTyped(init: Bundle.() -> Unit = {}): T {
     arguments = Bundle().apply { init() }
     return this as T
