@@ -4,9 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.viewModels
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
@@ -29,7 +31,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.databinding.SceytActivityConversationInfoBinding
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG_NAME
-import com.sceyt.sceytchatuikit.extensions.asActivity
+import com.sceyt.sceytchatuikit.extensions.createIntent
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
@@ -622,6 +624,14 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
             context.launchActivity<ConversationInfoActivity>(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold) {
                 putExtra(CHANNEL, channel)
             }
+        }
+
+        fun startWithLauncher(context: Context, channel: SceytChannel, launcher: ActivityResultLauncher<Intent>) {
+            val intent = context.createIntent<ConversationInfoActivity>().apply {
+                putExtra(CHANNEL, channel)
+            }
+            val animOptions = ActivityOptionsCompat.makeCustomAnimation(context, R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+            launcher.launch(intent, animOptions)
         }
     }
 }

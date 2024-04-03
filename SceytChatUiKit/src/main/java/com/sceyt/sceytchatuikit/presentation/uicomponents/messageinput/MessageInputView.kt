@@ -161,13 +161,15 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             val voiceRecorderView = SceytVoiceMessageRecorderView(context)
             post {
                 onStateChanged(inputState)
-                (parent as? ViewGroup)?.addView(voiceRecorderView.apply {
-                    layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-                    setRecordingListener()
-                    voiceMessageRecorderView = this
-                    voiceMessageRecorderView?.setRecorderHeight(binding.layoutInput.height)
-                    isVisible = canShowRecorderView()
-                })
+                (parent as? ViewGroup)?.let { parentView ->
+                    val index = parentView.indexOfChild(this@MessageInputView)
+                    parentView.addView(voiceRecorderView.apply {
+                        setRecordingListener()
+                        voiceMessageRecorderView = this
+                        voiceMessageRecorderView?.setRecorderHeight(binding.layoutInput.height)
+                        isVisible = canShowRecorderView()
+                    }, index + 1, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+                }
             }
         }
     }
@@ -936,7 +938,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    override fun onSearchModeListener(inSearchMode: Boolean) {
+    override fun onSearchModeChangeListener(inSearchMode: Boolean) {
         with(binding) {
             isInSearchMode = inSearchMode
             showHideInputOnModeChange(inSearchMode)

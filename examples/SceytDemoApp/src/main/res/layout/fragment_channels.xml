@@ -53,7 +53,7 @@
                 android:background="@color/sceyt_color_bg"
                 app:elevation="0dp">
 
-                <com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
+                <com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchChannelInputView
                     android:id="@+id/searchView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

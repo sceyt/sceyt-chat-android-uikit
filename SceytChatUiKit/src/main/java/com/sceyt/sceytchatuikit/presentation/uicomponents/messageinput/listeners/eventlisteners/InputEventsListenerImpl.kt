@@ -26,9 +26,9 @@ open class InputEventsListenerImpl(view: MessageInputView) : InputEventsListener
         multiselectModeListener?.onMultiselectModeListener(isMultiselectMode)
     }
 
-    override fun onSearchModeListener(inSearchMode: Boolean) {
-        defaultListeners.onSearchModeListener(inSearchMode)
-        searchModeListener?.onSearchModeListener(inSearchMode)
+    override fun onSearchModeChangeListener(inSearchMode: Boolean) {
+        defaultListeners.onSearchModeChangeListener(inSearchMode)
+        searchModeListener?.onSearchModeChangeListener(inSearchMode)
     }
 
     fun setListener(listener: InputEventsListener) {

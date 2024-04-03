@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.databinding.ActivityCreateChannelBinding
 import com.sceyt.chat.demo.presentation.addmembers.AddMembersActivity
@@ -49,12 +50,13 @@ class CreateChannelActivity : AppCompatActivity() {
         viewModel.createChatLiveData.observe(this) {
             lifecycleScope.launch {
                 createdChannel = it
+                val animOptions = ActivityOptionsCompat.makeCustomAnimation(this@CreateChannelActivity,
+                    anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
                 addMembersActivityLauncher.launch(
                     AddMembersActivity.newInstance(
                         context = this@CreateChannelActivity,
                         buttonAlwaysEnable = true,
-                        memberType = MemberTypeEnum.Subscriber))
-                overrideTransitions(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold, true)
+                        memberType = MemberTypeEnum.Subscriber), animOptions)
             }
         }
 

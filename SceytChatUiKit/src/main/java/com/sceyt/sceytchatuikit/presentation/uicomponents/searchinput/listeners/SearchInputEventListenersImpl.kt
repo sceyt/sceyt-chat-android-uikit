@@ -1,8 +1,8 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners
 
-import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchChannelInputView
 
-open class SearchInputEventListenersImpl(view: SearchInputView) : SearchInputEventListeners.EventListeners {
+open class SearchInputEventListenersImpl(view: SearchChannelInputView) : SearchInputEventListeners.EventListeners {
     private var defaultListeners: SearchInputEventListeners.EventListeners = view
     private var searchSubmittedListener: SearchInputEventListeners.SearchSubmittedListener? = null
     private var searchSubmittedByDebounceListener: SearchInputEventListeners.SearchSubmittedByDebounceListener? = null

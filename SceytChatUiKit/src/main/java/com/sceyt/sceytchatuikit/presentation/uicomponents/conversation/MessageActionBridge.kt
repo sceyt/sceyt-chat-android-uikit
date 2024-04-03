@@ -23,8 +23,8 @@ class MessageActionBridge {
             inputView?.getEventListeners()?.onMultiselectModeListener(false)
         }
 
-        headerView.setSearchBarHiddenCallback {
-            inputView?.getEventListeners()?.onSearchModeListener(false)
+        headerView.setSearchModeChangeListener {
+            inputView?.getEventListeners()?.onSearchModeChangeListener(it)
         }
     }
 
@@ -92,6 +92,6 @@ class MessageActionBridge {
 
     fun showSearchMessage(event: MessageCommandEvent.SearchMessages){
         headerView?.uiElementsListeners?.showSearchMessagesBar(event)
-        inputView?.getEventListeners()?.onSearchModeListener(true)
+        inputView?.getEventListeners()?.onSearchModeChangeListener(true)
     }
 }
