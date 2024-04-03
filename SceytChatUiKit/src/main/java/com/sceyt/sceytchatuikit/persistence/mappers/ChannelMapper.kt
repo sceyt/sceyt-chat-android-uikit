@@ -82,10 +82,9 @@ fun ChannelDb.toChannel(): SceytChannel {
             members = members?.map { it.toSceytMember() },
             newReactions = newReactions?.map { it.toSceytReaction() },
             pendingReactions = pendingReactions?.map { it.toReactionData() },
-            pending = pending
-        ).apply {
-            draftMessage = this@toChannel.draftMessage?.toDraftMessage()
-        }
+            pending = pending,
+            draftMessage = draftMessage?.toDraftMessage()
+        )
     }
 }
 
@@ -121,7 +120,8 @@ fun Channel.toSceytUiChannel(): SceytChannel {
         members = members?.map { it.toSceytMember() },
         newReactions = newReactions.map { it.toSceytReaction() },
         pendingReactions = null,
-        pending = false
+        pending = false,
+        draftMessage = null
     )
 }
 
@@ -159,6 +159,7 @@ fun createPendingDirectChannelData(channelId: Long, createdBy: User,
         members = members,
         newReactions = null,
         pendingReactions = null,
-        pending = true
+        pending = true,
+        draftMessage = null
     )
 }

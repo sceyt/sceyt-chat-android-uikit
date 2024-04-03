@@ -1,9 +1,9 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners
 
 import android.view.View
-import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchChannelInputView
 
-class SearchInputClickListenersImpl(view: SearchInputView) : SearchInputClickListeners.ClickListeners {
+class SearchInputClickListenersImpl(view: SearchChannelInputView) : SearchInputClickListeners.ClickListeners {
     private var defaultListeners: SearchInputClickListeners.ClickListeners = view
     private var clearClickListener: SearchInputClickListeners.ClearClickListener? = null
     private var keyboardSearchClickListener: SearchInputClickListeners.KeyboardSearchClickListener? = null

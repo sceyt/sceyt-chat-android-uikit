@@ -8,6 +8,7 @@ import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.demo.databinding.ActivityStartChatBinding
 import com.sceyt.chat.demo.presentation.addmembers.AddMembersActivity
@@ -24,7 +25,6 @@ import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.R.anim.sceyt_anim_slide_hold
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.launchActivity
@@ -98,43 +98,42 @@ class StartChatActivity : AppCompatActivity() {
         }
 
         binding.tvNewGroup.setOnClickListener {
-            addMembersActivityLauncher.launch(AddMembersActivity.newInstance(this))
-            overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
+            addMembersActivityLauncher.launch(AddMembersActivity.newInstance(this), animOptions)
         }
 
         binding.tvNewChannel.setOnClickListener {
-            createConversationLauncher.launch(Intent(this, CreateChannelActivity::class.java))
-            overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
+            createConversationLauncher.launch(Intent(this, CreateChannelActivity::class.java), animOptions)
         }
     }
+
+    private val animOptions get() = ActivityOptionsCompat.makeCustomAnimation(this, anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold)
 
     private fun setupUsersList(list: List<UserItem>) {
         val listWithSelf = list.toMutableList()
         listWithSelf.add(0, UserItem.User(ClientWrapper.currentUser
                 ?: User(SceytKitClient.myId.toString())))
 
-            if (::usersAdapter.isInitialized.not()) {
-                binding.rvUsers.adapter = UsersAdapter(listWithSelf.toArrayList(), UserViewHolderFactory(this) {
-                    if (creatingChannel) return@UserViewHolderFactory
-                    creatingChannel = true
-                    viewModel.findOrCreateDirectChannel(it.user)
-                }).also { usersAdapter = it }
+        if (::usersAdapter.isInitialized.not()) {
+            binding.rvUsers.adapter = UsersAdapter(listWithSelf.toArrayList(), UserViewHolderFactory(this) {
+                if (creatingChannel) return@UserViewHolderFactory
+                creatingChannel = true
+                viewModel.findOrCreateDirectChannel(it.user)
+            }).also { usersAdapter = it }
 
-                binding.rvUsers.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                        super.onScrolled(recyclerView, dx, dy)
-                        if (recyclerView.isLastItemDisplaying() && viewModel.canLoadNext())
-                            viewModel.loadUsers(binding.toolbar.getQuery(), true)
-                    }
-                })
-            } else usersAdapter.notifyUpdate(listWithSelf)
+            binding.rvUsers.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    if (recyclerView.isLastItemDisplaying() && viewModel.canLoadNext())
+                        viewModel.loadUsers(binding.toolbar.getQuery(), true)
+                }
+            })
+        } else usersAdapter.notifyUpdate(listWithSelf)
     }
 
     private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.parcelableArrayList<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { members ->
-                createGroupLauncher.launch(CreateGroupActivity.newIntent(this, members))
-                overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
+                createGroupLauncher.launch(CreateGroupActivity.newIntent(this, members), animOptions)
             }
         }
     }

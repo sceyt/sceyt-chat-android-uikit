@@ -22,7 +22,7 @@ import com.sceyt.sceytchatuikit.presentation.common.getPeer
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.TypingCancelHelper
-import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchInputView
+import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.SearchChannelInputView
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Job
@@ -215,7 +215,7 @@ fun ChannelsViewModel.bind(channelsListView: ChannelsListView, lifecycleOwner: L
     }
 }
 
-fun ChannelsViewModel.bind(searchView: SearchInputView) {
+fun ChannelsViewModel.bind(searchView: SearchChannelInputView) {
     searchView.setDebouncedTextChangeListener {
         getChannels(0, query = it)
     }
@@ -231,6 +231,6 @@ fun bindViewFromJava(viewModel: ChannelsViewModel, channelsListView: ChannelsLis
 }
 
 @Suppress("unused")
-fun bindSearchViewFromJava(viewModel: ChannelsViewModel, searchView: SearchInputView) {
+fun bindSearchViewFromJava(viewModel: ChannelsViewModel, searchView: SearchChannelInputView) {
     viewModel.bind(searchView)
 }

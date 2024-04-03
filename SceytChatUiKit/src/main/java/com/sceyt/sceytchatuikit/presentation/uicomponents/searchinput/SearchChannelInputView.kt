@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 
-class SearchInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
+class SearchChannelInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), SearchInputClickListeners.ClickListeners,
         SearchInputEventListeners.EventListeners, SceytKoinComponent {
 

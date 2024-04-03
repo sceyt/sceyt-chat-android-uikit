@@ -44,7 +44,8 @@ data class SceytChannel(
         var members: List<SceytMember>?,
         var newReactions: List<SceytReaction>?,
         var pendingReactions: List<PendingReactionData>?,
-        var pending: Boolean) : Parcelable, Cloneable {
+        var pending: Boolean,
+        var draftMessage: DraftMessage?) : Parcelable, Cloneable {
 
     val channelSubject: String
         get() = (if (isGroup) subject
@@ -60,9 +61,6 @@ data class SceytChannel(
 
     @IgnoredOnParcel
     var typingData: ChannelTypingEventData? = null
-
-    @IgnoredOnParcel
-    var draftMessage: DraftMessage? = null
 
     fun getSubjectAndAvatarUrl(): Pair<String, String?> {
         return Pair(channelSubject, iconUrl)
@@ -109,9 +107,8 @@ data class SceytChannel(
             members = members?.map { it.clone() },
             newReactions = newReactions,
             pendingReactions = pendingReactions,
-            pending = pending
-        ).also {
-            it.draftMessage = draftMessage?.copy()
-        }
+            pending = pending,
+            draftMessage = draftMessage?.copy()
+        )
     }
 }

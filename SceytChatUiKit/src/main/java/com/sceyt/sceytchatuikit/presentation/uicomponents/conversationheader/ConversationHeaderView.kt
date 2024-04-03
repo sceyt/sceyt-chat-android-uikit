@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader
 
 import android.animation.LayoutTransition
+import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
@@ -12,6 +13,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.annotation.MenuRes
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.forEach
@@ -79,7 +81,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private var enablePresence: Boolean = true
     private val typingUsersHelper by lazy { initTypingUsersHelper() }
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
-    private var toolbarSearchHiddenCallback: (() -> Unit)? = null
+    private var toolbarSearchModeChangeListener: ((Boolean) -> Unit)? = null
     private var addedMenu: Menu? = null
     private var onSearchQueryChangeListener: ((String) -> Unit)? = null
     var isShowingMessageActions = false
@@ -370,8 +372,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         toolbarActionsHiddenCallback = callback
     }
 
-    internal fun setSearchBarHiddenCallback(callback: () -> Unit) {
-        toolbarSearchHiddenCallback = callback
+    internal fun setSearchModeChangeListener(listener: (Boolean) -> Unit) {
+        toolbarSearchModeChangeListener = listener
     }
 
     fun isTyping() = typingUsersHelper.isTyping
@@ -439,6 +441,15 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         enablePresence = enable
     }
 
+    private val conversationInfoLauncher = context.asComponentActivity().registerForActivityResult(StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.getBooleanExtra(ConversationInfoActivity.ACTION_SEARCH_MESSAGES, false)?.let { search ->
+                if (search)
+                    showSearchMessagesBar(MessageCommandEvent.SearchMessages(true))
+            }
+        }
+    }
+
     //Event listeners
     override fun onTypingEvent(data: ChannelTypingEventData) {
         typingUsersHelper.onTypingEvent(data)
@@ -486,17 +497,18 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     override fun showSearchMessagesBar(event: MessageCommandEvent.SearchMessages) {
         binding.toggleSearch(true)
+        toolbarSearchModeChangeListener?.invoke(true)
     }
 
     //Click listeners
     override fun onAvatarClick(view: View) {
         if (::channel.isInitialized)
-            ConversationInfoActivity.launch(context, channel)
+            ConversationInfoActivity.startWithLauncher(context, channel, conversationInfoLauncher)
     }
 
     override fun onToolbarClick(view: View) {
         if (::channel.isInitialized)
-            ConversationInfoActivity.launch(context, channel)
+            ConversationInfoActivity.startWithLauncher(context, channel, conversationInfoLauncher)
     }
 
     override fun onBackClick(view: View) {
@@ -508,7 +520,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
             isShowingSearchBar -> {
                 binding.toggleSearch(false)
-                toolbarSearchHiddenCallback?.invoke()
+                toolbarSearchModeChangeListener?.invoke(false)
             }
 
             else -> context.maybeComponentActivity()?.onBackPressedDispatcher?.onBackPressed()

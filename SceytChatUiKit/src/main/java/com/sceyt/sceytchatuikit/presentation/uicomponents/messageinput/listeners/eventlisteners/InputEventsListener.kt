@@ -18,7 +18,7 @@ sealed interface InputEventsListener {
     }
 
     fun interface SearchModeListener : InputEventsListener {
-        fun onSearchModeListener(inSearchMode: Boolean)
+        fun onSearchModeChangeListener(inSearchMode: Boolean)
     }
 
     /** Use this if you want to implement all callbacks */

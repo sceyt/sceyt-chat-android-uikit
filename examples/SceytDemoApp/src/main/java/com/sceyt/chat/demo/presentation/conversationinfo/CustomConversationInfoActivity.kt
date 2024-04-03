@@ -1,7 +1,6 @@
 package com.sceyt.chat.demo.presentation.conversationinfo
 
 import android.app.Activity
-import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
 import androidx.activity.result.ActivityResultLauncher
@@ -13,10 +12,8 @@ import com.sceyt.sceytchatuikit.R.anim
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.extensions.asActivity
 import com.sceyt.sceytchatuikit.extensions.createIntent
 import com.sceyt.sceytchatuikit.extensions.launchActivity
-import com.sceyt.sceytchatuikit.extensions.overrideTransitions
 import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
 import com.sceyt.sceytchatuikit.extensions.setBundleArguments
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
@@ -33,8 +30,8 @@ class CustomConversationInfoActivity : ConversationInfoActivity() {
         private lateinit var addMembersActivityLauncher: ActivityResultLauncher<Intent>
 
         override fun onAddMembersClick(memberType: MemberTypeEnum) {
-            addMembersActivityLauncher.launch(AddMembersActivity.newInstance(requireContext(), memberType, true))
-            requireContext().asActivity().overrideTransitions(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold, true)
+            val animOptions = ActivityOptionsCompat.makeCustomAnimation(requireContext(), anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold)
+            addMembersActivityLauncher.launch(AddMembersActivity.newInstance(requireContext(), memberType, true), animOptions)
         }
 
         override fun onAddedMember(data: List<SceytMember>) {

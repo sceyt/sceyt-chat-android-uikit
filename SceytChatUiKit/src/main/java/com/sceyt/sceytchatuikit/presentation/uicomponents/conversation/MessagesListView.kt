@@ -730,7 +730,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         clickListeners.setListener(listener)
     }
 
-    fun setMessagePopupClickListener(listener: MessageActionsViewClickListeners) {
+    fun setMessageActionsClickListener(listener: MessageActionsViewClickListeners) {
         messageActionsViewClickListeners.setListener(listener)
     }
 
