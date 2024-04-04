@@ -2,7 +2,12 @@ package com.sceyt.sceytchatuikit.sceytstyles
 
 import android.content.res.TypedArray
 import android.graphics.Typeface
-import androidx.annotation.*
+import androidx.annotation.ColorRes
+import androidx.annotation.Dimension
+import androidx.annotation.DrawableRes
+import androidx.annotation.FontRes
+import androidx.annotation.LayoutRes
+import androidx.annotation.StringRes
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.extensions.dpToPx
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
@@ -82,14 +87,25 @@ object MessagesStyle {
     var dateSeparatorTextFont: Int = -1
 
     @JvmField
+    var dateSeparatorTextStyle: Int = Typeface.NORMAL
+
+    @JvmField
+    var unreadMessagesSeparatorTextStyle: Int = Typeface.NORMAL
+
+    @JvmField
+    @ColorRes
+    var unreadMessagesTextColor: Int = R.color.sceyt_color_gray_400
+
+    @JvmField
+    @ColorRes
+    var unreadMessagesBackendColor: Int = R.color.sceyt_color_bg_unread_messages_separator
+
+    @JvmField
     @StringRes
     var messageEditedText: Int = R.string.sceyt_edited
 
     @JvmField
     var messageEditedTextStyle: Int = Typeface.ITALIC
-
-    @JvmField
-    var dateSeparatorTextStyle: Int = Typeface.NORMAL
 
     @JvmField
     @Dimension
@@ -153,6 +169,9 @@ object MessagesStyle {
         messageEditedTextStyle = typedArray.getInt(R.styleable.MessagesListView_sceytUiMessageEditedTextStyle, messageEditedTextStyle)
         dateSeparatorTextFont = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextFont, dateSeparatorTextFont)
         dateSeparatorTextStyle = typedArray.getInt(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextStyle, dateSeparatorTextStyle)
+        unreadMessagesSeparatorTextStyle = typedArray.getInt(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorTextStyle, unreadMessagesSeparatorTextStyle)
+        unreadMessagesTextColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorTextColor, unreadMessagesTextColor)
+        unreadMessagesBackendColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorBackgroundColor, unreadMessagesBackendColor)
         downScrollerUnreadCountColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDownScrollerUnreadCountColor, downScrollerUnreadCountColor)
         mediaLoaderColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMediaLoaderColor, mediaLoaderColor)
         videoDurationIcon = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiVideoDurationIcon, videoDurationIcon)

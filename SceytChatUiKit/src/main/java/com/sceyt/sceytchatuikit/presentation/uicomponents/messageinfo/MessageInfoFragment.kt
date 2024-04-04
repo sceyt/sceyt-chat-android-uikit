@@ -41,16 +41,23 @@ open class MessageInfoFragment : Fragment() {
 
         getBundleArguments()
 
+        initViews()
         initViewModel()
         setMessageView()
         setMessageDetails()
-        viewModel.getAllMarkers(message.id, 0, 50)
+        viewModel.getAllMarkers(message.id, 0, 100)
     }
 
     private fun getBundleArguments() {
         message = requireNotNull(
             arguments?.parcelable<SceytMessage>(KEY_MESSAGE)
         )
+    }
+
+    private fun initViews(){
+        binding.toolbar.setNavigationIconClickListener {
+            requireActivity().onBackPressedDispatcher.onBackPressed()
+        }
     }
 
     private fun initViewModel() {

@@ -22,6 +22,8 @@
     <color name="sceyt_color_bg_out_link_preview">#C9D1FF</color>
     <color name="sceyt_color_bg_inc_link_preview">#DFE1EA</color>
 
+    <color name="sceyt_color_bg_unread_messages_separator">#E8EBEF</color>
+
 
     // Not themed colors
     <color name="sceyt_color_black">#000000</color>

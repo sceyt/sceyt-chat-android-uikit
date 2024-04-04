@@ -38,6 +38,15 @@
             <flag name="italic" value="2" />
         </attr>
 
+        <!--Unread messages separator-->
+        <attr name="sceytUiUnreadMessagesSeparatorTextColor" format="reference" />
+        <attr name="sceytUiUnreadMessagesSeparatorBackgroundColor" format="reference" />
+        <attr name="sceytUiUnreadMessagesSeparatorTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+
         <!--Empty state-->
         <attr name="sceytUiEmptyStateLayout" format="reference" />
         <attr name="sceytUiEmptyStateSelfChannelLayout" format="reference" />
