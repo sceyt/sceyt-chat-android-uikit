@@ -1,7 +1,9 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import com.sceyt.sceytchatuikit.databinding.SceytItemUnreadMessagesSeparatorBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 
 class UnreadMessagesSeparatorViewHolder(
         binding: SceytItemUnreadMessagesSeparatorBinding
@@ -14,14 +16,10 @@ class UnreadMessagesSeparatorViewHolder(
     override val enableReply = false
 
     private fun SceytItemUnreadMessagesSeparatorBinding.setMessageItemStyle() {
-        with(context) {
-            /* messageDay.apply {
-                 background = getCompatDrawable(MessagesStyle.dateSeparatorItemBackground)
-                 setTextColor(getCompatColor(MessagesStyle.dateSeparatorItemTextColor))
-                 val dateTypeface = if (MessagesStyle.dateSeparatorTextFont != -1)
-                     ResourcesCompat.getFont(this@with, MessagesStyle.dateSeparatorTextFont) else typeface
-                 setTypeface(dateTypeface, MessagesStyle.dateSeparatorTextStyle)
-             }*/
+        with(tvUnreadMessagesSeparator) {
+            setTextColor(context.getCompatColor(MessagesStyle.unreadMessagesTextColor))
+            setBackgroundColor(context.getCompatColor(MessagesStyle.unreadMessagesBackendColor))
+            setTypeface(typeface, MessagesStyle.unreadMessagesSeparatorTextStyle)
         }
     }
 }

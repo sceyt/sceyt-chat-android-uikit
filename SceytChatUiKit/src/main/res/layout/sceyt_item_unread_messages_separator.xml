@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tvUnreadMessagesSeparator"
     android:layout_width="match_parent"
     android:layout_height="20dp"
-    android:background="#E8EBEF"
+    android:background="@color/sceyt_color_bg_unread_messages_separator"
     android:fontFamily="@font/roboto_medium"
     android:gravity="center"
     android:includeFontPadding="false"
     android:text="@string/sceyt_new_messages"
-    android:textColor="#757D8B"
+    android:textColor="@color/sceyt_color_gray_400"
     android:textSize="@dimen/extraSmallTextSize" />
 
