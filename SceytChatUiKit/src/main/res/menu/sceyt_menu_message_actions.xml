@@ -29,15 +29,15 @@
         app:showAsAction="always" />
 
     <item
-        android:id="@+id/sceyt_edit_message"
-        android:icon="@drawable/sceyt_ic_edit_stroked"
-        android:title="@string/sceyt_edit_message"
-        app:showAsAction="ifRoom" />
-
-    <item
         android:id="@+id/sceyt_message_info"
         android:icon="@drawable/sceyt_ic_info"
         android:title="@string/sceyt_info"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/sceyt_edit_message"
+        android:icon="@drawable/sceyt_ic_edit_stroked"
+        android:title="@string/sceyt_edit_message"
         app:showAsAction="ifRoom" />
 
     <item

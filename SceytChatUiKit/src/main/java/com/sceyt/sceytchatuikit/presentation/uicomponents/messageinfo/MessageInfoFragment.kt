@@ -26,9 +26,13 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 open class MessageInfoFragment : Fragment() {
-    private lateinit var binding: SceytFragmentMessageInfoBinding
-    private lateinit var message: SceytMessage
-    private val viewModel: MessageInfoViewModel by viewModels()
+    protected lateinit var binding: SceytFragmentMessageInfoBinding
+    protected lateinit var message: SceytMessage
+    protected val viewModelFactory by lazy { MessageInfoViewModelFactory(message) }
+    protected val viewModel: MessageInfoViewModel by viewModels { viewModelFactory }
+    protected var messageViewProvider: MessageInfoViewProvider? = null
+    protected var readMarkersAdapter: UserMarkerAdapter? = null
+    protected var deliveredMarkersAdapter: UserMarkerAdapter? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentMessageInfoBinding.inflate(inflater, container, false).also {
@@ -45,7 +49,7 @@ open class MessageInfoFragment : Fragment() {
         initViewModel()
         setMessageView()
         setMessageDetails()
-        viewModel.getAllMarkers(message.id, 0, 100)
+        viewModel.getAllMarkers(0, 100)
     }
 
     private fun getBundleArguments() {
@@ -54,7 +58,7 @@ open class MessageInfoFragment : Fragment() {
         )
     }
 
-    private fun initViews(){
+    private fun initViews() {
         binding.toolbar.setNavigationIconClickListener {
             requireActivity().onBackPressedDispatcher.onBackPressed()
         }
@@ -64,6 +68,8 @@ open class MessageInfoFragment : Fragment() {
         viewModel.uiState.onEach {
             when (it) {
                 is UIState.Success -> {
+                    message = it.message
+                    updateMessageView()
                     setDividerVisibility(it)
                     setReadUsers(it.readMarkers)
                     setDeliveredUsers(it.deliveredMarkers)
@@ -76,11 +82,15 @@ open class MessageInfoFragment : Fragment() {
     }
 
     protected open fun setMessageView() {
-        val viewProvider = getMessageInfoViewProvider()
-        viewProvider.displayMessagePreview(binding.viewStub, message)
-        viewProvider.setMessageListener(MessageClickListeners.AttachmentClickListener { _, item ->
+        messageViewProvider = getMessageInfoViewProvider()
+        messageViewProvider?.displayMessagePreview(binding.viewStub, message)
+        messageViewProvider?.setMessageListener(MessageClickListeners.AttachmentClickListener { _, item ->
             onAttachmentClick(item)
         })
+    }
+
+    protected open fun updateMessageView() {
+        messageViewProvider?.updateMessageStatus(message)
     }
 
     protected open fun setDividerVisibility(uiState: UIState.Success) {
@@ -99,16 +109,25 @@ open class MessageInfoFragment : Fragment() {
 
     protected open fun setReadUsers(list: List<Marker>) {
         binding.groupViewsRead.isVisible = list.isNotEmpty()
+        if (readMarkersAdapter != null) {
+            readMarkersAdapter?.submitList(list)
+            return
+        }
+
         binding.rvReadByUsers.adapter = UserMarkerAdapter().apply {
             submitList(list)
-        }
+        }.also { readMarkersAdapter = it }
     }
 
     protected open fun setDeliveredUsers(list: List<Marker>) {
         binding.groupViewsDelivered.isVisible = list.isNotEmpty()
+        if (deliveredMarkersAdapter != null) {
+            deliveredMarkersAdapter?.submitList(list)
+            return
+        }
         binding.rvDeliveredToUsers.adapter = UserMarkerAdapter().apply {
             submitList(list)
-        }
+        }.also { deliveredMarkersAdapter = it }
     }
 
     protected open fun getMessageInfoViewProvider(): MessageInfoViewProvider {
