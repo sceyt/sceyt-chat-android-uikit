@@ -37,6 +37,7 @@ open class MessageInfoViewProvider(context: Context) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
+    private var viewHolder: BaseMsgViewHolder? = null
     var viewType: Int = 0
         private set
 
@@ -55,7 +56,7 @@ open class MessageInfoViewProvider(context: Context) {
             MessageViewTypeEnum.OutVideo.ordinal -> createOutVideoMsgViewHolder(viewStub, R.layout.sceyt_item_out_video_message)
             MessageViewTypeEnum.OutFile.ordinal -> createOutFileMsgViewHolder(viewStub, R.layout.sceyt_item_out_file_message)
             else -> throw RuntimeException("Not supported view type")
-        }
+        }.also { viewHolder = it }
     }
 
     private fun createOutTextMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMsgViewHolder {
@@ -122,5 +123,9 @@ open class MessageInfoViewProvider(context: Context) {
 
     fun setMessageListener(listener: MessageClickListeners) {
         clickListeners.setListener(listener)
+    }
+
+    fun updateMessageStatus(message: SceytMessage) {
+        viewHolder?.bind(MessageListItem.MessageItem(message), MessageDiff.DEFAULT_FALSE.copy(statusChanged = true))
     }
 }
