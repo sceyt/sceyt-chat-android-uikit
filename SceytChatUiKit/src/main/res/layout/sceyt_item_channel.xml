@@ -12,7 +12,8 @@
         android:id="@+id/parentLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?selectableItemBackground">
+        android:foreground="@drawable/sceyt_bg_ripple"
+        tools:ignore="UnusedAttribute">
 
         <View
             android:id="@+id/viewPinned"
