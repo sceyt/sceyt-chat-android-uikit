@@ -9,6 +9,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.flow.Flow
@@ -39,7 +40,7 @@ interface PersistenceMessagesMiddleWare {
     suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                            messageId: Long): Flow<SceytResponse<List<SceytMessage>>>
 
-    suspend fun syncNearMessages(conversationId: Long,  messageId: Long,
+    suspend fun syncNearMessages(conversationId: Long, messageId: Long,
                                  replyInThread: Boolean): SyncNearMessagesResult
 
     suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
@@ -53,8 +54,8 @@ interface PersistenceMessagesMiddleWare {
     suspend fun sendAllPendingMarkers()
     suspend fun sendAllPendingMessageStateUpdates()
     suspend fun sendAllPendingReactions()
-    suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>>
-    suspend fun markMessagesAsDelivered(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>>
+    suspend fun markMessagesAs(channelId: Long, marker: MarkerTypeEnum, vararg ids: Long): List<SceytResponse<MessageListMarker>>
+    suspend fun addMessagesMarker(channelId: Long, marker: String, vararg ids: Long): List<SceytResponse<MessageListMarker>>
     suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage>
     suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage>
     suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage>

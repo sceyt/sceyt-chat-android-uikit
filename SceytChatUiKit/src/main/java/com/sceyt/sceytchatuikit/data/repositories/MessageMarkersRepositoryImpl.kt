@@ -30,8 +30,7 @@ class MessageMarkersRepositoryImpl : MessageMarkersRepository {
     private fun getQuery(messageId: Long,
                          name: String,
                          limit: Int,
-                         offset: Int) = MessageMarkerListQuery.Builder().apply {
-        setMessageId(messageId)
+                         offset: Int) = MessageMarkerListQuery.Builder(messageId).apply {
         setName(name)
         limit(limit)
         offset(offset)

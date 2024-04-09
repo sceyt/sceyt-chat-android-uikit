@@ -58,7 +58,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodel
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.MAX_MULTISELECT_MESSAGES_COUNT
 import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
-import kotlin.collections.set
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
@@ -67,6 +66,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlin.collections.set
 
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
@@ -440,7 +440,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    markAsReadLiveData.observe(lifecycleOwner, Observer {
+    messageMarkerLiveData.observe(lifecycleOwner, Observer {
         it.forEach { response ->
             if (response is SceytResponse.Success) {
                 val data = response.data ?: return@Observer
@@ -525,7 +525,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         checkEnableDisableActions(it)
     }
 
-    fun checkStateAndMarkAsRead(messageItem: MessageItem) {
+    fun onMessageDisplayed(messageItem: MessageItem) {
         val message = messageItem.message
         if (!message.incoming || message.userMarkers?.any { it.name == MarkerTypeEnum.Displayed.value() } == true)
             return
@@ -539,6 +539,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         } else pendingDisplayMsgIds.add(message.id)
     }
 
+
+    fun onVocePlaying(message: SceytMessage) {
+        if (message.userMarkers?.any { it.name == MarkerTypeEnum.Played.value() } == true)
+            return
+
+        addMessageMarker(MarkerTypeEnum.Played.value(), message.id)
+    }
 
     // todo reply in thread
     /*
@@ -716,7 +723,12 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     messagesListView.setMessageDisplayedListener {
         if (it is MessageItem)
-            checkStateAndMarkAsRead(it)
+            onMessageDisplayed(it)
+    }
+
+    messagesListView.setVoicePlayPauseListener { fileItem, playing ->
+        if (playing)
+            onVocePlaying(fileItem.sceytMessage)
     }
 }
 

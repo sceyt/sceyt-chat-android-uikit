@@ -207,5 +207,6 @@
     <string name="delivered_to">Delivered to</string>
     <string name="sent">Sent:</string>
     <string name="size">Size:</string>
+    <string name="played_by">Played by</string>
 
 </resources>

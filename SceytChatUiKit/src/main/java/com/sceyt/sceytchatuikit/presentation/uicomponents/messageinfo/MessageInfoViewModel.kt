@@ -9,8 +9,10 @@ import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.sceytchatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
+import com.sceyt.sceytchatuikit.extensions.orEmptyList
 import com.sceyt.sceytchatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -27,6 +29,7 @@ sealed interface UIState {
     data class Success(
             val readMarkers: List<Marker>,
             val deliveredMarkers: List<Marker>,
+            val playedMarkers: List<Marker>,
             val message: SceytMessage
     ) : UIState
 
@@ -65,17 +68,29 @@ class MessageInfoViewModel(private val message: SceytMessage) : ViewModel(), Sce
                         val newReadMarkers = state.readMarkers.toMutableList()
                         val deliveredMarkers = state.deliveredMarkers.filter { it.user.id != data.from?.id }
                         newReadMarkers.add(Marker(messageId, data.from, data.status.name, System.currentTimeMillis()))
-                        _uiState.update { UIState.Success(newReadMarkers, deliveredMarkers, message) }
+                        _uiState.update {
+                            UIState.Success(
+                                readMarkers = newReadMarkers,
+                                deliveredMarkers = deliveredMarkers,
+                                playedMarkers = state.playedMarkers,
+                                message = message)
+                        }
                     }
                 }
 
                 DeliveryStatus.Received -> {
-                    val deliveredMarkers = _uiState.value
-                    if (deliveredMarkers is UIState.Success) {
-                        if (deliveredMarkers.deliveredMarkers.any { it.user.id == data.from?.id }) return@launch
-                        val newDeliveredMarkers = deliveredMarkers.deliveredMarkers.toMutableList()
+                    val state = _uiState.value
+                    if (state is UIState.Success) {
+                        if (state.deliveredMarkers.any { it.user.id == data.from?.id }) return@launch
+                        val newDeliveredMarkers = state.deliveredMarkers.toMutableList()
                         newDeliveredMarkers.add(Marker(messageId, data.from, data.status.name, System.currentTimeMillis()))
-                        _uiState.update { UIState.Success(deliveredMarkers.readMarkers, newDeliveredMarkers, message) }
+                        _uiState.update {
+                            UIState.Success(
+                                readMarkers = state.readMarkers,
+                                deliveredMarkers = newDeliveredMarkers,
+                                playedMarkers = state.playedMarkers,
+                                message = message)
+                        }
                     }
                 }
 
@@ -88,6 +103,7 @@ class MessageInfoViewModel(private val message: SceytMessage) : ViewModel(), Sce
         viewModelScope.launch(Dispatchers.IO) {
             val read = DeliveryStatus.Displayed.name.lowercase()
             val displayed = DeliveryStatus.Received.name.lowercase()
+            val played = MarkerTypeEnum.Played.value()
 
             val readMarkers = async {
                 messagesLogic.getMessageMarkers(messageId, read, 0, limit)
@@ -96,19 +112,28 @@ class MessageInfoViewModel(private val message: SceytMessage) : ViewModel(), Sce
                 messagesLogic.getMessageMarkers(messageId, displayed, 0, limit)
             }
 
+            val playedMarkers = async {
+                messagesLogic.getMessageMarkers(messageId, played, 0, limit)
+            }
+
             val readMarkersResult = readMarkers.await()
             val deliveredMarkersResult = deliveredMarkers.await()
+            val playedMarkersResult = playedMarkers.await()
 
             when {
-                readMarkersResult is SceytResponse.Success && deliveredMarkersResult is SceytResponse.Success -> {
+                readMarkersResult is SceytResponse.Success && deliveredMarkersResult is SceytResponse.Success
+                        && playedMarkersResult is SceytResponse.Success -> {
                     val filteredDeliver = deliveredMarkersResult.data?.filter { deliveredMarker ->
                         readMarkersResult.data?.none { readMarker ->
                             readMarker.user.id == deliveredMarker.user.id
                         } == true
                     } ?: emptyList()
 
-                    _uiState.value = UIState.Success(readMarkersResult.data
-                            ?: emptyList(), filteredDeliver, message)
+                    _uiState.value = UIState.Success(
+                        readMarkers = readMarkersResult.data.orEmptyList(),
+                        deliveredMarkers = filteredDeliver,
+                        playedMarkers = playedMarkersResult.data.orEmptyList(),
+                        message = message)
                 }
 
                 readMarkersResult is SceytResponse.Error -> {

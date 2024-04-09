@@ -14,6 +14,8 @@ import androidx.core.text.isDigitsOnly
 import androidx.emoji2.text.EmojiCompat
 import androidx.emoji2.text.EmojiSpan
 import com.google.gson.Gson
+import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT
 import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING
 import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE
@@ -195,5 +197,13 @@ fun <T> String?.jsonToObject(clazz: Class<T>): T? {
         Gson().fromJson(this, clazz)
     } catch (e: Exception) {
         null
+    }
+}
+
+internal fun String.toDeliveryStatus(): DeliveryStatus? {
+    return when (this) {
+        MarkerTypeEnum.Displayed.value() -> DeliveryStatus.Displayed
+        MarkerTypeEnum.Received.value() -> DeliveryStatus.Received
+        else -> null
     }
 }
