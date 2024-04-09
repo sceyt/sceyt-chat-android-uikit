@@ -33,6 +33,7 @@ open class MessageInfoFragment : Fragment() {
     protected var messageViewProvider: MessageInfoViewProvider? = null
     protected var readMarkersAdapter: UserMarkerAdapter? = null
     protected var deliveredMarkersAdapter: UserMarkerAdapter? = null
+    protected var playedMarkersAdapter: UserMarkerAdapter? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentMessageInfoBinding.inflate(inflater, container, false).also {
@@ -69,9 +70,9 @@ open class MessageInfoFragment : Fragment() {
                 is UIState.Success -> {
                     message = it.message
                     updateMessageView()
-                    setDividerVisibility(it)
                     setReadUsers(it.readMarkers)
                     setDeliveredUsers(it.deliveredMarkers)
+                    setPlayedUsers(it.playedMarkers)
                 }
 
                 is UIState.Error -> customToastSnackBar(it.exception?.message ?: "")
@@ -90,10 +91,6 @@ open class MessageInfoFragment : Fragment() {
 
     protected open fun updateMessageView() {
         messageViewProvider?.updateMessageStatus(message)
-    }
-
-    protected open fun setDividerVisibility(uiState: UIState.Success) {
-        binding.dividerDelivered.isVisible = uiState.readMarkers.isNotEmpty() && uiState.deliveredMarkers.isNotEmpty()
     }
 
     protected open fun setMessageDetails() {
@@ -127,6 +124,17 @@ open class MessageInfoFragment : Fragment() {
         binding.rvDeliveredToUsers.adapter = UserMarkerAdapter().apply {
             submitList(list)
         }.also { deliveredMarkersAdapter = it }
+    }
+
+    protected open fun setPlayedUsers(list: List<Marker>) {
+        binding.groupViewsPlayed.isVisible = list.isNotEmpty()
+        if (playedMarkersAdapter != null) {
+            playedMarkersAdapter?.submitList(list)
+            return
+        }
+        binding.rvPlayedByUsers.adapter = UserMarkerAdapter().apply {
+            submitList(list)
+        }.also { playedMarkersAdapter = it }
     }
 
     protected open fun getMessageInfoViewProvider(): MessageInfoViewProvider {

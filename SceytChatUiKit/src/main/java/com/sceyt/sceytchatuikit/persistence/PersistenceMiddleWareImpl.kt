@@ -30,6 +30,7 @@ import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.sceytchatuikit.data.models.messages.FileChecksumData
 import com.sceyt.sceytchatuikit.data.models.messages.LinkPreviewDetails
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReaction
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
@@ -371,12 +372,13 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         reactionsLogic.sendAllPendingReactions()
     }
 
-    override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
-        return messagesLogic.markMessagesAsRead(channelId, *ids)
+    override suspend fun markMessagesAs(channelId: Long, marker: MarkerTypeEnum,
+                                        vararg ids: Long): List<SceytResponse<MessageListMarker>> {
+        return messagesLogic.markMessagesAs(channelId, marker, *ids)
     }
 
-    override suspend fun markMessagesAsDelivered(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
-        return messagesLogic.markMessageAsDelivered(channelId, *ids)
+    override suspend fun addMessagesMarker(channelId: Long, marker: String, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
+        return messagesLogic.addMessagesMarker(channelId, marker, *ids)
     }
 
     override suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> {

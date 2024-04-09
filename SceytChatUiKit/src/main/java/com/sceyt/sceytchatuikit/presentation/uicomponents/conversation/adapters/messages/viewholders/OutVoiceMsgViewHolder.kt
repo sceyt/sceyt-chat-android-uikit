@@ -55,6 +55,7 @@ class OutVoiceMsgViewHolder(
         private val messageListeners: MessageClickListeners.ClickListeners?,
         userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
+        private val voicePlayPauseListener: ((FileListItem, playing: Boolean) -> Unit)?,
 ) : BaseMediaMessageViewHolder(binding.root, messageListeners, userNameBuilder = userNameBuilder, needMediaDataCallback = needMediaDataCallback) {
     private var lastFilePath: String? = ""
 
@@ -204,7 +205,10 @@ class OutVoiceMsgViewHolder(
 
             override fun onToggle(playing: Boolean, filePath: String) {
                 if (!checkIsValid(filePath)) return
-                runOnMainThread { setPlayButtonIcon(playing, binding.playPauseButton) }
+                runOnMainThread {
+                    setPlayButtonIcon(playing, binding.playPauseButton)
+                    voicePlayPauseListener?.invoke(fileItem, playing)
+                }
             }
 
             override fun onStop(filePath: String) {

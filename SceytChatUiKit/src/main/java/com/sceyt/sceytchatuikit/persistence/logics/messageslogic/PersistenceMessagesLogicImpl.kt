@@ -33,7 +33,6 @@ import com.sceyt.sceytchatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
-import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum.Displayed
 import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum.Received
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.repositories.MessageMarkersRepository
@@ -41,6 +40,7 @@ import com.sceyt.sceytchatuikit.data.repositories.MessagesRepository
 import com.sceyt.sceytchatuikit.di.SceytKoinComponent
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
+import com.sceyt.sceytchatuikit.extensions.toDeliveryStatus
 import com.sceyt.sceytchatuikit.logger.SceytLog
 import com.sceyt.sceytchatuikit.persistence.dao.AttachmentDao
 import com.sceyt.sceytchatuikit.persistence.dao.LoadRangeDao
@@ -544,7 +544,7 @@ internal class PersistenceMessagesLogicImpl(
             for ((channelId, messages) in groupByChannel) {
                 val messagesByStatus = messages.groupBy { it.name }
                 for ((status, msg) in messagesByStatus)
-                    markMessagesAs(channelId, status, *msg.map { it.messageId }.toLongArray())
+                    addMessagesMarkerImpl(channelId, status, false, *msg.map { it.messageId }.toLongArray())
             }
         }
     }
@@ -573,12 +573,13 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    override suspend fun markMessageAsDelivered(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
-        return markMessagesAs(channelId, Received, *ids)
+    override suspend fun markMessagesAs(channelId: Long, marker: MarkerTypeEnum,
+                                        vararg ids: Long): List<SceytResponse<MessageListMarker>> {
+        return markMessagesAsImpl(channelId, marker, *ids)
     }
 
-    override suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
-        return markMessagesAs(channelId, Displayed, *ids)
+    override suspend fun addMessagesMarker(channelId: Long, marker: String, vararg ids: Long): List<SceytResponse<MessageListMarker>> {
+        return addMessagesMarkerImpl(channelId, marker, true, *ids)
     }
 
     override suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
@@ -1000,45 +1001,63 @@ internal class PersistenceMessagesLogicImpl(
             it.incoming && it.userMarkers?.any { marker -> marker.name == Received.value() } != true
         }
         if (notDisplayedMessages.isNotEmpty())
-            markMessageAsDelivered(channelId, *notDisplayedMessages.map { it.id }.toLongArray())
+            markMessagesAsImpl(channelId, Received, *notDisplayedMessages.map { it.id }.toLongArray())
     }
 
-    private suspend fun markMessagesAs(channelId: Long, status: MarkerTypeEnum,
-                                       vararg ids: Long): List<SceytResponse<MessageListMarker>> = withContext(dispatcherIO) {
+    private suspend fun markMessagesAsImpl(channelId: Long, marker: MarkerTypeEnum,
+                                           vararg ids: Long): List<SceytResponse<MessageListMarker>> = withContext(dispatcherIO) {
         val responseList = mutableListOf<SceytResponse<MessageListMarker>>()
         ids.toList().chunked(50).forEach {
             val typedArray = it.toLongArray()
-            addPendingMarkerToDb(channelId, status, *typedArray)
+            addPendingMarkerToDb(channelId, marker.value(), *typedArray)
 
-            val response = if (status == Displayed)
-                messagesRepository.markAsDisplayed(channelId, *typedArray)
-            else messagesRepository.markAsReceived(channelId, *typedArray)
+            val response = messagesRepository.markMessageAs(channelId, marker, *typedArray)
 
-            onMarkerResponse(channelId, response, status, *typedArray)
+            onMarkerResponse(channelId, response, marker.value(), *typedArray)
             responseList.add(response)
         }
 
         return@withContext responseList
     }
 
-    private suspend fun addPendingMarkerToDb(channelId: Long, status: MarkerTypeEnum, vararg ids: Long) {
+    private suspend fun addMessagesMarkerImpl(channelId: Long, marker: String,
+                                              saveToPendingBeforeSend: Boolean,
+                                              vararg ids: Long): List<SceytResponse<MessageListMarker>> = withContext(dispatcherIO) {
+        val responseList = mutableListOf<SceytResponse<MessageListMarker>>()
+        ids.toList().chunked(50).forEach {
+            val typedArray = it.toLongArray()
+            if (saveToPendingBeforeSend)
+                addPendingMarkerToDb(channelId, marker, *typedArray)
+
+            val response = messagesRepository.addMessagesMarker(channelId, marker, *typedArray)
+
+            onMarkerResponse(channelId, response, marker, *typedArray)
+            responseList.add(response)
+        }
+
+        return@withContext responseList
+    }
+
+    private suspend fun addPendingMarkerToDb(channelId: Long, marker: String, vararg ids: Long) {
         if (ids.isEmpty()) return
         val existMessageIds = messageDao.getExistMessageByIds(ids.toList())
         if (existMessageIds.isEmpty()) return
-        val list = existMessageIds.map { PendingMarkerEntity(channelId = channelId, messageId = it, name = status) }
+        val list = existMessageIds.map { PendingMarkerEntity(channelId = channelId, messageId = it, name = marker) }
         pendingMarkersDao.insertMany(list)
     }
 
-    private suspend fun onMarkerResponse(channelId: Long, response: SceytResponse<MessageListMarker>, status: MarkerTypeEnum, vararg ids: Long) {
+    private suspend fun onMarkerResponse(channelId: Long, response: SceytResponse<MessageListMarker>, status: String, vararg ids: Long) {
         when (response) {
             is SceytResponse.Success -> {
                 response.data?.let { data ->
                     SceytLog.i("onMarkerResponse", "send $status, ${ids.toList()}, in response ${data.messageIds}")
-                    val deliveryStatus = status.toDeliveryStatus()
                     val responseIds = data.messageIds.toList()
-                    messageDao.updateMessagesStatus(channelId, responseIds, deliveryStatus)
-                    val tIds = messageDao.getMessageTIdsByIds(*responseIds.toLongArray())
-                    messagesCache.updateMessagesStatus(channelId, deliveryStatus, *tIds.toLongArray())
+
+                    status.toDeliveryStatus()?.let { deliveryStatus ->
+                        messageDao.updateMessagesStatus(channelId, responseIds, deliveryStatus)
+                        val tIds = messageDao.getMessageTIdsByIds(*responseIds.toLongArray())
+                        messagesCache.updateMessagesStatus(channelId, deliveryStatus, *tIds.toLongArray())
+                    }
 
                     pendingMarkersDao.deleteMessagesMarkersByStatus(responseIds, status)
                     val existMessageIds = messageDao.getExistMessageByIds(responseIds)
@@ -1052,8 +1071,9 @@ internal class PersistenceMessagesLogicImpl(
             }
 
             is SceytResponse.Error -> {
-                // Check if error code is 1301 (not allowed) then delete pending markers
-                if (response.exception?.code == 1301)
+                // Check if error code is 1301 (TypeNotAllowed), 1228 (TypeBadParam) then delete pending markers
+                val code = response.exception?.code
+                if (code == 1301 || code == 1228)
                     pendingMarkersDao.deleteMessagesMarkersByStatus(ids.toList(), status)
             }
         }

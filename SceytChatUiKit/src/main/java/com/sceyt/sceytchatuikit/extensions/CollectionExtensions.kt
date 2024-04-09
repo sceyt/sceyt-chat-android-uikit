@@ -34,6 +34,11 @@ fun <T> List<T>.updateCommon(newList: List<T>, predicate: (old: T, new: T) -> Bo
     return updateList
 }
 
+
+fun <T> List<T>?.orEmptyList(): List<T> {
+    return this ?: emptyList()
+}
+
 fun <T> MutableIterable<T>.removeAllIf(predicate: Predicate<T>): Boolean {
     val itr = iterator()
     var removed = false

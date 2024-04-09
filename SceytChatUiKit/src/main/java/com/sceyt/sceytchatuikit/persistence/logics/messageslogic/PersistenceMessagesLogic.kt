@@ -11,6 +11,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
 import com.sceyt.sceytchatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.pushes.RemoteMessageData
 import kotlinx.coroutines.flow.Flow
@@ -58,8 +59,8 @@ interface PersistenceMessagesLogic {
     suspend fun sendAllPendingMessages()
     suspend fun sendAllPendingMarkers()
     suspend fun sendAllPendingMessageStateUpdates()
-    suspend fun markMessageAsDelivered(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>>
-    suspend fun markMessagesAsRead(channelId: Long, vararg ids: Long): List<SceytResponse<MessageListMarker>>
+    suspend fun markMessagesAs(channelId: Long, marker: MarkerTypeEnum, vararg ids: Long): List<SceytResponse<MessageListMarker>>
+    suspend fun addMessagesMarker(channelId: Long, marker: String, vararg ids: Long): List<SceytResponse<MessageListMarker>>
     suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage>
     suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage>
     suspend fun getMessageDbById(messageId: Long): SceytMessage?

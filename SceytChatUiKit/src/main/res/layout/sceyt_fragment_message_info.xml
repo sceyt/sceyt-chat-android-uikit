@@ -99,12 +99,61 @@
                     app:constraint_referenced_ids="tvSizeHint,tvSize" />
 
                 <View
-                    android:id="@+id/divider1"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginTop="15dp"
                     android:background="@color/sceyt_color_divider"
                     app:layout_constraintTop_toBottomOf="@+id/tvSize" />
+
+                <View
+                    android:id="@+id/dividerPlayed"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="15dp"
+                    android:background="@color/sceyt_color_divider"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toBottomOf="@+id/tvSize"
+                    tools:visibility="visible" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvPlayedByHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="15dp"
+                    android:fontFamily="@font/roboto_medium"
+                    android:includeFontPadding="false"
+                    android:text="@string/played_by"
+                    android:textColor="@color/sceyt_color_gray_secondary_themed"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/dividerPlayed" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvPlayedByUsers"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:nestedScrollingEnabled="false"
+                    android:paddingHorizontal="15dp"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    app:layout_constraintTop_toBottomOf="@+id/tvPlayedByHint"
+                    tools:itemCount="2"
+                    tools:listitem="@layout/sceyt_item_user_marker" />
+
+                <androidx.constraintlayout.widget.Group
+                    android:id="@+id/groupViewsPlayed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    app:constraint_referenced_ids="dividerPlayed,tvPlayedByHint,rvPlayedByUsers"
+                    tools:visibility="visible" />
+
+                <View
+                    android:id="@+id/divider1"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="15dp"
+                    android:background="@color/sceyt_color_divider"
+                    app:layout_constraintTop_toBottomOf="@+id/rvPlayedByUsers" />
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/tvReadByHint"
@@ -123,10 +172,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:nestedScrollingEnabled="false"
                     android:paddingHorizontal="15dp"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                     app:layout_constraintTop_toBottomOf="@+id/tvReadByHint"
-                    tools:itemCount="4"
+                    tools:itemCount="2"
                     tools:listitem="@layout/sceyt_item_user_marker" />
 
                 <View
@@ -165,10 +215,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:nestedScrollingEnabled="false"
                     android:paddingHorizontal="15dp"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                     app:layout_constraintTop_toBottomOf="@+id/tvDeliveredToHint"
-                    tools:itemCount="4"
+                    tools:itemCount="2"
                     tools:listitem="@layout/sceyt_item_user_marker" />
 
                 <androidx.constraintlayout.widget.Group

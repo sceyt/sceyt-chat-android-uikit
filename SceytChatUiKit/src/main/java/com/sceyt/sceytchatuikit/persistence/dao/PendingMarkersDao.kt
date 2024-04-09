@@ -20,8 +20,8 @@ interface PendingMarkersDao {
     suspend fun getAllMarkers(): List<PendingMarkerEntity>
 
     @Query("delete from PendingMarker where messageId =:messageId and name =:status")
-    suspend fun deleteMessageMarkerByStatus(messageId: Long, status: MarkerTypeEnum)
+    suspend fun deleteMessageMarkerByStatus(messageId: Long, status: String)
 
     @Query("delete from PendingMarker where messageId in (:messageIds) and name =:status")
-    suspend fun deleteMessagesMarkersByStatus(messageIds: List<Long>, status: MarkerTypeEnum)
+    suspend fun deleteMessagesMarkersByStatus(messageIds: List<Long>, status: String)
 }

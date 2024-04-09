@@ -30,6 +30,7 @@ import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.data.models.messages.SceytReactionTotal
@@ -147,8 +148,8 @@ class MessageListViewModel(
     private val _channelLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
     val channelLiveData: LiveData<SceytResponse<SceytChannel>> = _channelLiveData
 
-    private val _markAsReadLiveData = MutableLiveData<List<SceytResponse<MessageListMarker>>>()
-    val markAsReadLiveData: LiveData<List<SceytResponse<MessageListMarker>>> = _markAsReadLiveData
+    private val _messageMarkerLiveData = MutableLiveData<List<SceytResponse<MessageListMarker>>>()
+    val messageMarkerLiveData: LiveData<List<SceytResponse<MessageListMarker>>> = _messageMarkerLiveData
 
     private val _onChannelMemberAddedOrKickedLiveData = MutableLiveData<SceytChannel>()
     val onChannelMemberAddedOrKickedLiveData: LiveData<SceytChannel> = _onChannelMemberAddedOrKickedLiveData
@@ -492,10 +493,17 @@ class MessageListViewModel(
         }
     }
 
-    fun markMessageAsRead(vararg id: Long) {
+    fun markMessageAsRead(vararg messageIds: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.markMessagesAsRead(channel.id, *id)
-            _markAsReadLiveData.postValue(response)
+            val response = persistenceMessageMiddleWare.markMessagesAs(channel.id, MarkerTypeEnum.Displayed, *messageIds)
+            _messageMarkerLiveData.postValue(response)
+        }
+    }
+
+    fun addMessageMarker(marker: String, vararg messageIds: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = persistenceMessageMiddleWare.addMessagesMarker(channel.id, marker, *messageIds)
+            _messageMarkerLiveData.postValue(response)
         }
     }
 

@@ -10,6 +10,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.*
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.*
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -25,6 +26,7 @@ open class MessageViewHolderFactory(context: Context) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     private var clickListeners = MessageClickListenersImpl()
     private var displayedListener: ((MessageListItem) -> Unit)? = null
+    private var voicePlayPauseListener: ((FileListItem, playing: Boolean) -> Unit)? = null
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
 
@@ -80,14 +82,16 @@ open class MessageViewHolderFactory(context: Context) {
     open fun createIncVoiceMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncVoiceMsgViewHolder(
             SceytItemIncVoiceMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, clickListeners, displayedListener, userNameBuilder, needMediaDataCallback,
+            viewPoolReactions, clickListeners, displayedListener, userNameBuilder,
+            needMediaDataCallback, voicePlayPauseListener
         )
     }
 
     open fun createOutVoiceMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutVoiceMsgViewHolder(
             SceytItemOutVoiceMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
+            viewPoolReactions, clickListeners, userNameBuilder,
+            needMediaDataCallback, voicePlayPauseListener)
     }
 
     open fun createIncImageMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
@@ -209,6 +213,10 @@ open class MessageViewHolderFactory(context: Context) {
 
     fun setMessageDisplayedListener(listener: (MessageListItem) -> Unit) {
         displayedListener = listener
+    }
+
+    fun setVoicePlayPauseListener(listener: (FileListItem, playing: Boolean) -> Unit) {
+        voicePlayPauseListener = listener
     }
 
     fun setUserNameBuilder(builder: (User) -> String) {

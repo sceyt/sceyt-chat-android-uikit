@@ -16,6 +16,7 @@ import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.sceytchatuikit.data.models.SceytPagingResponse
 import com.sceyt.sceytchatuikit.data.models.SceytResponse
 import com.sceyt.sceytchatuikit.data.models.SendMessageResult
+import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.logger.SceytLog
@@ -274,31 +275,38 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
-    override suspend fun markAsDisplayed(channelId: Long, vararg id: Long): SceytResponse<MessageListMarker> {
+    override suspend fun markMessageAs(channelId: Long, marker: MarkerTypeEnum, vararg id: Long): SceytResponse<MessageListMarker> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).markMessagesAsDisplayed(id, object : MessageMarkCallback {
+            val callback = object : MessageMarkCallback {
                 override fun onResult(result: MessageListMarker) {
                     continuation.safeResume(SceytResponse.Success(result))
                 }
 
                 override fun onError(error: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(error))
-                    SceytLog.e(TAG, "markAsRead error: ${error?.message}")
+                    SceytLog.e(TAG, "markAs:${marker} error: ${error?.message}")
                 }
-            })
+            }
+            val channelOperator = ChannelOperator.build(channelId)
+            when (marker) {
+                MarkerTypeEnum.Displayed -> channelOperator.markMessagesAsDisplayed(id, callback)
+                MarkerTypeEnum.Received -> channelOperator.markMessagesAsReceived(id, callback)
+                MarkerTypeEnum.Played -> channelOperator.markMessages(id, marker.value(), callback)
+            }
         }
     }
 
-    override suspend fun markAsReceived(channelId: Long, vararg id: Long): SceytResponse<MessageListMarker> {
+    override suspend fun addMessagesMarker(channelId: Long, marker: String, vararg id: Long): SceytResponse<MessageListMarker> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).markMessagesAsReceived(id, object : MessageMarkCallback {
+            val channelOperator = ChannelOperator.build(channelId)
+            channelOperator.markMessages(id, marker, object : MessageMarkCallback {
                 override fun onResult(result: MessageListMarker) {
                     continuation.safeResume(SceytResponse.Success(result))
                 }
 
                 override fun onError(error: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(error))
-                    SceytLog.e(TAG, "markAsDelivered error: ${error?.message}")
+                    SceytLog.e(TAG, "addMessagesMarker: $marker error: ${error?.message}")
                 }
             })
         }

@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.sceyt.sceytchatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.sceytchatuikit.persistence.entity.messages.MessageEntity
 
 @Entity(tableName = "PendingMarker",
@@ -23,5 +22,5 @@ data class PendingMarkerEntity(
         val primaryKey: Int = 0,
         val channelId: Long,
         val messageId: Long,
-        val name: MarkerTypeEnum
+        val name: String
 )

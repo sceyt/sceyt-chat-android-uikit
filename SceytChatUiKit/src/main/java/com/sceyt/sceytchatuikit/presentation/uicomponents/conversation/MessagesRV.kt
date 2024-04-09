@@ -20,6 +20,7 @@ import com.sceyt.sceytchatuikit.extensions.getLastVisibleItemPosition
 import com.sceyt.sceytchatuikit.extensions.lastVisibleItemPosition
 import com.sceyt.sceytchatuikit.presentation.common.SpeedyLinearLayoutManager
 import com.sceyt.sceytchatuikit.presentation.common.SyncArrayList
+import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.ItemOffsetDecoration
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageViewHolderFactory
@@ -275,6 +276,10 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     fun setMessageDisplayedListener(listener: (message: MessageListItem) -> Unit) {
         viewHolderFactory.setMessageDisplayedListener(listener)
+    }
+
+    fun setVoicePlayPauseListener(listener: (FileListItem, playing: Boolean) -> Unit) {
+        viewHolderFactory.setVoicePlayPauseListener(listener)
     }
 
     fun setScrollDownControllerListener(listener: (Boolean) -> Unit) {

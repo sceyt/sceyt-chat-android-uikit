@@ -74,7 +74,8 @@ open class MessageInfoViewProvider(context: Context) {
     private fun createOutVoiceMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMsgViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutVoiceMessageBinding.bind(viewStub.inflate())
-        return OutVoiceMsgViewHolder(binding, viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
+        return OutVoiceMsgViewHolder(binding, viewPoolReactions, clickListeners, userNameBuilder,
+            needMediaDataCallback, null)
     }
 
     private fun createOutImageMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMsgViewHolder {

@@ -568,6 +568,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.setMessageDisplayedListener(listener)
     }
 
+    internal fun setVoicePlayPauseListener(listener: (FileListItem, playing: Boolean) -> Unit) {
+        messagesRV.setVoicePlayPauseListener(listener)
+    }
+
     internal fun setNeedLoadPrevMessagesListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         messagesRV.setNeedLoadPrevMessagesListener(listener)
     }
