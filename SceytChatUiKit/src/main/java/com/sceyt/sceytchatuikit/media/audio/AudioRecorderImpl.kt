@@ -115,7 +115,7 @@ class AudioRecorderImpl(private var context: Context,
         }
         timer = Timer()
         startTime = System.currentTimeMillis()
-        timer?.scheduleAtFixedRate(object : TimerTask() {
+        timer?.schedule(object : TimerTask() {
             override fun run() {
                 amplitudeIndex++
                 val amplitude = mediaRecorder?.maxAmplitude ?: return

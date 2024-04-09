@@ -68,6 +68,7 @@ fun SceytAttachment.toFileListItem(message: SceytMessage): FileListItem {
     return when (type) {
         AttachmentTypeEnum.Image.value() -> FileListItem.Image(this, message)
         AttachmentTypeEnum.Video.value() -> FileListItem.Video(this, message)
+        AttachmentTypeEnum.Voice.value() -> FileListItem.Voice(this, message)
         else -> FileListItem.File(this, message)
     }
 }

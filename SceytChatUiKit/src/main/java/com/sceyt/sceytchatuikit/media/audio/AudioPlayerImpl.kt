@@ -150,7 +150,7 @@ class AudioPlayerImpl(private val filePath: String) : AudioPlayer {
         timer?.cancel()
         timer = Timer()
         startTime = System.currentTimeMillis()
-        timer?.scheduleAtFixedRate(object : TimerTask() {
+        timer?.schedule(object : TimerTask() {
             override fun run() {
                 val currentPosition = player.currentPosition
                 for (event in getEvents(filePath))

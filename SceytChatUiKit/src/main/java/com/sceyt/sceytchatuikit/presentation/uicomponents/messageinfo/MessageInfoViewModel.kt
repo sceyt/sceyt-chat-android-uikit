@@ -36,6 +36,7 @@ sealed interface UIState {
 
 class MessageInfoViewModel(private val message: SceytMessage) : ViewModel(), SceytKoinComponent {
     private val messagesLogic: PersistenceMessagesLogic by inject()
+    private val limit = 100
 
     private val _uiState = MutableStateFlow<UIState>(UIState.Loading)
     val uiState = _uiState.asStateFlow()
@@ -47,6 +48,8 @@ class MessageInfoViewModel(private val message: SceytMessage) : ViewModel(), Sce
             .filter { it.messageIds.contains(messageId) }
             .onEach(::onMessageStatusChange)
             .launchIn(viewModelScope)
+
+        getAllMarkers()
     }
 
     private fun onMessageStatusChange(data: MessageStatusChangeData) {
@@ -81,16 +84,16 @@ class MessageInfoViewModel(private val message: SceytMessage) : ViewModel(), Sce
         }
     }
 
-    fun getAllMarkers(offset: Int, limit: Int) {
+    fun getAllMarkers() {
         viewModelScope.launch(Dispatchers.IO) {
             val read = DeliveryStatus.Displayed.name.lowercase()
             val displayed = DeliveryStatus.Received.name.lowercase()
 
             val readMarkers = async {
-                messagesLogic.getMessageMarkers(messageId, read, offset, limit)
+                messagesLogic.getMessageMarkers(messageId, read, 0, limit)
             }
             val deliveredMarkers = async {
-                messagesLogic.getMessageMarkers(messageId, displayed, offset, limit)
+                messagesLogic.getMessageMarkers(messageId, displayed, 0, limit)
             }
 
             val readMarkersResult = readMarkers.await()
