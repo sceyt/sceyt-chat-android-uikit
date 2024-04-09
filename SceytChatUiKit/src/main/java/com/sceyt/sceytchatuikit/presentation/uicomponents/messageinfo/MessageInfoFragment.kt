@@ -49,7 +49,6 @@ open class MessageInfoFragment : Fragment() {
         initViewModel()
         setMessageView()
         setMessageDetails()
-        viewModel.getAllMarkers(0, 100)
     }
 
     private fun getBundleArguments() {

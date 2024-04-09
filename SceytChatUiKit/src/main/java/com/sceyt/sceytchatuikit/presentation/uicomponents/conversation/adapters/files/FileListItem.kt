@@ -21,7 +21,10 @@ sealed class FileListItem : AttachmentDataItem {
     data class Video(val attachment: SceytAttachment,
                      val message: SceytMessage) : FileListItem(attachment, message)
 
-    object LoadingMoreItem : FileListItem()
+    data class Voice(val attachment: SceytAttachment,
+                     val message: SceytMessage) : FileListItem(attachment, message)
+
+    data object LoadingMoreItem : FileListItem()
 }
 
 
