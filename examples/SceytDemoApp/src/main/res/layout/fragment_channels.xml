@@ -73,7 +73,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
             android:layout_margin="16dp"
-            android:backgroundTint="@color/sceyt_color_accent"
+            android:backgroundTint="@color/colorAccent"
             app:icon="@drawable/sceyt_ic_edit"
             app:iconTint="@color/sceyt_color_white"
             app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"

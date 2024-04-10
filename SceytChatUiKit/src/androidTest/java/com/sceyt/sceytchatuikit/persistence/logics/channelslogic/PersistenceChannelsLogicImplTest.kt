@@ -37,7 +37,7 @@ class PersistenceChannelsLogicImplTest {
         SceytUIKitInitializer(ApplicationProvider.getApplicationContext()).initialize(
             clientId = UUID.randomUUID().toString(),
             appId = "yzr58x11rm",
-            host = "https://uk-london-south-api-2-staging.waafi.com",
+            apiUrl = "https://uk-london-south-api-2-staging.waafi.com",
             enableDatabase = false
         )
     }

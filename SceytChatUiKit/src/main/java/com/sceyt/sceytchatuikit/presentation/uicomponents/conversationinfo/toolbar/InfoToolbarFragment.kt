@@ -159,8 +159,10 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
     }
 
     open fun setChannelToolbarAvatar(channel: SceytChannel) {
-        if (isSelf)
+        if (isSelf) {
+            binding.toolbarAvatar.setAvatarColor(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
             binding.toolbarAvatar.setImageUrl(null, UserStyle.notesAvatar)
+        }
         else
             binding.toolbarAvatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
     }

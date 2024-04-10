@@ -19,7 +19,6 @@ import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
 import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.sceytchatuikit.extensions.getPresentableNameWithYou
@@ -264,8 +263,10 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: ImageView) {
         if (isSelf) {
             binding.avatar.setImageUrl(null, UserStyle.notesAvatar)
+            binding.avatar.setAvatarColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
             return
         }
+        binding.avatar.setAvatarColor(0)
         if (channel.isDirect() && channel.isPeerDeleted()) {
             binding.avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
         } else

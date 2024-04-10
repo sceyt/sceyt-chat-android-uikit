@@ -28,9 +28,9 @@ import org.koin.dsl.koinApplication
 
 class SceytUIKitInitializer(private val context: Context) {
 
-    fun initialize(clientId: String, appId: String, host: String, enableDatabase: Boolean): ChatClient {
+    fun initialize(apiUrl: String, appId: String, clientId: String, enableDatabase: Boolean): ChatClient {
         //Set static flags before calling initialize
-        val chatClient = ChatClient.initialize(context, host, appId, clientId)
+        val chatClient = ChatClient.initialize(context, apiUrl, appId, clientId)
         initKoin(enableDatabase)
         initEmojiSupport()
         return chatClient

@@ -53,7 +53,7 @@ object SceytKitConfig {
 
     @JvmField
     @ColorRes
-    var sceytColorAccent = R.color.sceyt_color_accent
+    var sceytColorAccent = R.color.colorAccent
 
     @JvmField
     var userNameBuilder: ((User) -> String)? = null

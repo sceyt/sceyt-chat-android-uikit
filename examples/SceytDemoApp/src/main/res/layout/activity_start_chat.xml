@@ -13,6 +13,7 @@
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
+        app:sceytSearchableToolbarIconsTint="@color/colorAccent"
         app:sceytSearchableToolbarTitle="@string/start_chat" />
 
     <androidx.appcompat.widget.AppCompatTextView

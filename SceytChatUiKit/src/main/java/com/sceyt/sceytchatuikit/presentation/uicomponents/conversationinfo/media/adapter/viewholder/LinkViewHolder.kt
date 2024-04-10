@@ -24,8 +24,6 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, {}) {
 
     init {
-        binding.setupStyle()
-
         binding.root.setOnClickListener {
             clickListener.onAttachmentClick(it, fileItem)
         }
@@ -93,9 +91,5 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
         context.getCompatDrawable(R.drawable.sceyt_ic_link)?.apply {
             setTint(context.getCompatColor(SceytKitConfig.sceytColorAccent))
         }
-    }
-
-    private fun SceytItemChannelLinkBinding.setupStyle() {
-        tvLinkUrl.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 }

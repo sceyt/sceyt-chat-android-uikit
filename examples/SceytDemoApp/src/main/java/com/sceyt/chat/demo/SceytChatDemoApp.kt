@@ -38,11 +38,10 @@ class SceytChatDemoApp : Application() {
         ChatClient.setEnableNetworkAwarenessReconnection(true)
         ChatClient.setEnableNetworkChangeDetection(true)
         chatClient = SceytUIKitInitializer(this).initialize(
-            clientId = UUID.randomUUID().toString(),
+            apiUrl = BuildConfig.API_URL,
             appId = BuildConfig.APP_ID,
-            host = BuildConfig.HOST,
+            clientId = UUID.randomUUID().toString(),
             enableDatabase = true)
-
         SceytKitConfig.backgroundUploadNotificationClickData = BackgroundUploadNotificationClickData(
             ConversationActivity::class.java, ConversationActivity.CHANNEL
         )

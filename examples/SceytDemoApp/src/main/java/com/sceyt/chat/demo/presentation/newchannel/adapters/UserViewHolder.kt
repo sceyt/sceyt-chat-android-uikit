@@ -22,7 +22,7 @@ class UserViewHolder(private val binding: ItemUserBinding,
 
         with(binding) {
             if (user.id == SceytKitClient.myId) {
-                avatar.setNameAndImageUrl("", null, drawable.sceyt_ic_notes_with_bg)
+                avatar.setNameAndImageUrl("", null, drawable.sceyt_ic_notes_with_paddings)
                 userName.text = context.getString(string.self_notes)
                 tvStatus.isVisible = false
             } else {

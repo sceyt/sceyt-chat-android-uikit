@@ -127,7 +127,6 @@ open class LinkPreviewFragment : Fragment() {
     }
 
     private fun SceytFragmentLinkPreviewBinding.setupStyle() {
-        tvLinkUrl.setTextColor(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
         icLinkImage.setImageDrawable(defaultImage)
     }
 }

@@ -1,11 +1,14 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.viewholders
 
+import android.content.res.ColorStateList
 import com.sceyt.sceytchatuikit.databinding.SceytItemInputFileAttachmentBinding
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getFileSize
 import com.sceyt.sceytchatuikit.extensions.toPrettySize
 import com.sceyt.sceytchatuikit.presentation.root.BaseViewHolder
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.AttachmentClickListeners
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 
 class AttachmentFileViewHolder(private val binding: SceytItemInputFileAttachmentBinding,
@@ -26,5 +29,6 @@ class AttachmentFileViewHolder(private val binding: SceytItemInputFileAttachment
 
     private fun SceytItemInputFileAttachmentBinding.setupStyle() {
         icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+        icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 }

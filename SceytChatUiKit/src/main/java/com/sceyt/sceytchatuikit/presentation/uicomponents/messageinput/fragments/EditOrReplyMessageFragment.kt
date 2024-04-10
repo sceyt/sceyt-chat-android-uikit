@@ -58,7 +58,7 @@ open class EditOrReplyMessageFragment : Fragment() {
     open fun editMessage(message: SceytMessage) {
         with(binding ?: return) {
             root.isVisible = true
-            if (!root.isVisible || root.height != root.measuredHeight)
+            if (!root.isVisible || root.height != root.measuredHeight || root.measuredHeight == 0)
                 ViewUtil.expandHeight(root, 0, 200)
             icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_edit)
             layoutImage.isVisible = false
@@ -71,7 +71,7 @@ open class EditOrReplyMessageFragment : Fragment() {
 
     open fun replyMessage(message: SceytMessage) {
         with(binding ?: return) {
-            if (!root.isVisible || root.height != root.measuredHeight) {
+            if (!root.isVisible || root.height != root.measuredHeight || root.measuredHeight == 0) {
                 root.isVisible = true
                 ViewUtil.expandHeight(root, 0, 200)
             }

@@ -128,8 +128,10 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
 
     open fun setChannelAvatar(channel: SceytChannel) {
         with(binding) {
-            if (isSelf)
+            if (isSelf) {
                 avatar.setImageUrl(null, channel.getDefaultAvatar())
+                avatar.setAvatarColor(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
+            }
             else avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
         }
     }

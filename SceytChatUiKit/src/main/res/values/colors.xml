@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="colorAccent">@color/sceyt_color_accent</color>
+
     //Themed colors
     <color name="sceyt_color_primary_dark">#FFFFFF</color>
     <color name="sceyt_color_primary">#FFFFFF</color>
