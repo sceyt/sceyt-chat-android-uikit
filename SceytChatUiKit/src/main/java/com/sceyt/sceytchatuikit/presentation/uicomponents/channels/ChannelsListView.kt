@@ -12,7 +12,6 @@ import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
 import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
 import com.sceyt.sceytchatuikit.persistence.differs.diff
 import com.sceyt.sceytchatuikit.presentation.common.ChannelActionConfirmationWithDialog
@@ -33,7 +32,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.popups.PopupM
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytstyles.ChannelStyle
-import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 
 class ChannelsListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners,
@@ -55,13 +53,9 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
             a.recycle()
         }
 
-        if (background == null) {
-            if (!isInEditMode) {
-                setBackgroundColor(context.getCompatColorByTheme(ChannelStyle.backgroundColor))
-                BindingUtil.themedBackgroundColor(this, ChannelStyle.backgroundColor)
-            } else
-                setBackgroundColor(context.getCompatColor(ChannelStyle.backgroundColor))
-        }
+        if (background == null)
+            setBackgroundColor(context.getCompatColor(ChannelStyle.backgroundColor))
+
         channelsRV = ChannelsRV(context)
         channelsRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
         channelsRV.clipToPadding = clipToPadding

@@ -13,7 +13,7 @@ import com.sceyt.sceytchatuikit.databinding.SceytItemIncVoiceMessageBinding
 import com.sceyt.sceytchatuikit.extensions.TAG_REF
 import com.sceyt.sceytchatuikit.extensions.durationToMinSecShort
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.sceytchatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.sceytchatuikit.extensions.runOnMainThread
@@ -295,8 +295,8 @@ class IncVoiceMsgViewHolder(
 
     private fun SceytItemIncVoiceMessageBinding.setMessageItemStyle() {
         with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))
-            tvUserName.setTextColor(getCompatColorByTheme(MessagesStyle.senderNameTextColor))
+            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColor(MessagesStyle.incBubbleColor))
+            tvUserName.setTextColor(getCompatColor(MessagesStyle.senderNameTextColor))
             playPauseButton.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
             seekBar.waveProgressColor = getCompatColor(SceytKitConfig.sceytColorAccent)
             tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)

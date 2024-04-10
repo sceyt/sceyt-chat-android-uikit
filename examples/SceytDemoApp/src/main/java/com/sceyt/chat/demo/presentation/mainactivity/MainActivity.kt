@@ -30,9 +30,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val isNightMode = isNightTheme()
-        SceytKitConfig.SceytUITheme.isDarkMode = isNightMode
-        statusBarIconsColorWithBackground(isNightMode)
+        statusBarIconsColorWithBackground(SceytKitConfig.SceytUITheme.isDarkMode)
 
         setPagerAdapter()
         setBottomNavClickListeners()

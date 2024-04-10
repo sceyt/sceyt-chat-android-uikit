@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncVideoMessageBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.setDrawableStart
 import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -221,8 +221,8 @@ class IncVideoMsgViewHolder(
 
     private fun SceytItemIncVideoMessageBinding.setMessageItemStyle() {
         with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))
-            tvUserName.setTextColor(getCompatColorByTheme(MessagesStyle.senderNameTextColor))
+            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColor(MessagesStyle.incBubbleColor))
+            tvUserName.setTextColor(getCompatColor(MessagesStyle.senderNameTextColor))
             tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
             tvDuration.setDrawableStart(MessagesStyle.videoDurationIcon)
         }

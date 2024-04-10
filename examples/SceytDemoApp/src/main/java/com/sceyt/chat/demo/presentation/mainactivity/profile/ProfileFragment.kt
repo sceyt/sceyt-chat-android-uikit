@@ -1,6 +1,5 @@
 package com.sceyt.chat.demo.presentation.mainactivity.profile
 
-import com.sceyt.sceytchatuikit.R as SceytKitR
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,18 +12,18 @@ import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.sceyt.chat.models.user.User
+import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.databinding.FragmentProfileBinding
 import com.sceyt.chat.demo.presentation.login.LoginActivity
+import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.hideKeyboard
 import com.sceyt.sceytchatuikit.extensions.isNightTheme
 import com.sceyt.sceytchatuikit.extensions.setOnlyClickable
 import com.sceyt.sceytchatuikit.extensions.showSoftInput
-import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
@@ -33,8 +32,12 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.profile.viewmodel.Prof
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
+import com.sceyt.sceytchatuikit.R as SceytKitR
 
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
@@ -47,6 +50,7 @@ class ProfileFragment : Fragment() {
     private var isEditMode = false
     private var isSaveLoading = false
     private var muted: Boolean = false
+    private var updateThemeJob: Job? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return FragmentProfileBinding.inflate(inflater, container, false).also {
@@ -98,8 +102,8 @@ class ProfileFragment : Fragment() {
         }
 
         viewModel.logOutLiveData.observe(viewLifecycleOwner) {
-            preference.setToken(null)
-            preference.setUserId(null)
+            preference.setString(AppSharedPreference.PREF_USER_ID, null)
+            preference.setString(AppSharedPreference.PREF_USER_TOKEN, null)
             LoginActivity.launch(requireContext())
             requireActivity().finish()
         }
@@ -232,14 +236,16 @@ class ProfileFragment : Fragment() {
 
     private fun setUpThemeSwitch() {
         binding.switchTheme.isChecked = requireContext().isNightTheme()
-        binding.switchTheme.setOnClickListener {
-            val oldIsDark = SceytKitConfig.SceytUITheme.isDarkMode
-            SceytKitConfig.SceytUITheme.isDarkMode = !oldIsDark
-            requireActivity().statusBarIconsColorWithBackground(!oldIsDark)
-            if (oldIsDark) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            } else
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        binding.switchTheme.setOnCheckedChangeListener { _, isChecked ->
+            updateThemeJob?.cancel()
+            updateThemeJob = lifecycleScope.launch {
+                delay(250)
+                SceytKitConfig.SceytUITheme.isDarkMode = isChecked
+                if (isChecked) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                } else
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            }
         }
     }
 

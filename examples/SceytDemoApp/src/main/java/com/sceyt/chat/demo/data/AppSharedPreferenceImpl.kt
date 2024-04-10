@@ -2,40 +2,40 @@ package com.sceyt.chat.demo.data
 
 import android.app.Application
 import android.content.Context
+import com.sceyt.chat.demo.data.AppSharedPreference.Companion.PREF_USER_ID
 
 class AppSharedPreferenceImpl(application: Application) : AppSharedPreference {
-    private companion object {
+
+    companion object {
         private const val PREF_NAME = "simple_preferences"
-        const val PREF_USER_NAME = "username"
-        const val PREF_USER_TOKEN = "token"
     }
 
     private val pref = application.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
-    override fun setUserId(userName: String?) {
+    override fun setString(key: String, value: String?) {
         val editor = pref.edit()
-        editor.putString(PREF_USER_NAME, userName)
+        editor.putString(key, value)
         editor.apply()
     }
 
-    override fun getUserId(): String? {
-        return pref.getString(PREF_USER_NAME, "")
+    override fun getString(key: String): String? {
+        return pref.getString(key, null)
+    }
+
+    override fun setBoolean(key: String, value: Boolean) {
+        val editor = pref.edit()
+        editor.putBoolean(key, value)
+        editor.apply()
+    }
+
+    override fun getBoolean(key: String, defaultValue: Boolean): Boolean {
+        return pref.getBoolean(key, defaultValue)
     }
 
     override fun deleteUsername() {
         val editor = pref.edit()
-        editor.remove(PREF_USER_NAME)
+        editor.remove(PREF_USER_ID)
         editor.apply()
-    }
-
-    override fun setToken(token: String?) {
-        val editor = pref.edit()
-        editor.putString(PREF_USER_TOKEN, token)
-        editor.apply()
-    }
-
-    override fun getToken(): String? {
-        return pref.getString(PREF_USER_TOKEN, "")
     }
 
     override fun clear() {

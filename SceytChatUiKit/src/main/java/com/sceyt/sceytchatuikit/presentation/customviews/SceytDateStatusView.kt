@@ -19,7 +19,7 @@ import android.view.View
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.isRtl
 import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
@@ -296,7 +296,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     }
 
     fun setTextColorRes(@ColorRes color: Int) {
-        textPaint.color = context.getCompatColorByTheme(color)
+        textPaint.color = context.getCompatColor(color)
         invalidate()
     }
 
@@ -322,7 +322,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         }
 
         fun setDateColor(@ColorRes color: Int): BuildStyle {
-            dateTextColor = context.getCompatColorByTheme(color)
+            dateTextColor = context.getCompatColor(color)
             return this
         }
 

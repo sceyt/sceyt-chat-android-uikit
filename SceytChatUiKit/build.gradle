@@ -70,7 +70,6 @@ dependencies {
     api libs.media3.exoplayer
     api libs.media3.ui
     api libs.lottie
-    api libs.asynclayoutinflater.appcompat
     api libs.jsoup
     api libs.flexbox
     api libs.sdp.android

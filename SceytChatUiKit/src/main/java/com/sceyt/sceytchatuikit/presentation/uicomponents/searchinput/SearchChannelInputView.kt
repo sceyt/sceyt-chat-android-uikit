@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -20,12 +21,10 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputEventListeners
 import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.listeners.SearchInputEventListenersImpl
 import com.sceyt.sceytchatuikit.sceytstyles.SearchInputViewStyle
-import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
-
 
 class SearchChannelInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), SearchInputClickListeners.ClickListeners,
@@ -53,8 +52,6 @@ class SearchChannelInputView @JvmOverloads constructor(context: Context, attrs: 
 
     init {
         binding = SceytSearchViewBinding.inflate(LayoutInflater.from(context), this, true)
-        if (!isInEditMode)
-            BindingUtil.themedBackgroundColor(this, R.color.sceyt_color_bg)
 
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SearchInputView)
@@ -105,10 +102,7 @@ class SearchChannelInputView @JvmOverloads constructor(context: Context, attrs: 
         input.hint = SearchInputViewStyle.hintText
         input.setHintTextColor(context.getCompatColor(SearchInputViewStyle.hintTextColor))
         disableDebouncedSearchDuringTyping = SearchInputViewStyle.disableDebouncedSearch
-        if (!isInEditMode) {
-            BindingUtil.themedBackgroundTintColor(rootLayout, SearchInputViewStyle.backgroundColor)
-            BindingUtil.themedTextColor(input, SearchInputViewStyle.textColor)
-        }
+        root.backgroundTintList = ColorStateList.valueOf(getCompatColor(SearchInputViewStyle.backgroundColor))
     }
 
     private fun handleClearClick() {

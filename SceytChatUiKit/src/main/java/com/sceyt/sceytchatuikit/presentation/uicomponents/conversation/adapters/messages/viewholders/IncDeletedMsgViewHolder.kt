@@ -3,7 +3,7 @@ package com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters
 import android.content.res.ColorStateList
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncDeletedMessageBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
@@ -48,8 +48,8 @@ class IncDeletedMsgViewHolder(
 
     private fun SceytItemIncDeletedMessageBinding.setMessageItemStyle() {
         with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))
-            tvUserName.setTextColor(getCompatColorByTheme(MessagesStyle.senderNameTextColor))
+            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColor(MessagesStyle.incBubbleColor))
+            tvUserName.setTextColor(getCompatColor(MessagesStyle.senderNameTextColor))
         }
     }
 }

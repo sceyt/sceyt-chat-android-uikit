@@ -12,7 +12,7 @@ import androidx.core.view.isVisible
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.databinding.ScrollToBottomViewBinding
 import com.sceyt.sceytchatuikit.extensions.animationListener
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.sceytstyles.MessagesStyle
 
 class ScrollToDownView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -30,7 +30,7 @@ class ScrollToDownView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun ScrollToBottomViewBinding.initWithStyle() {
-        unreadCount.backgroundTintList = ColorStateList.valueOf(context.getCompatColorByTheme(MessagesStyle.downScrollerUnreadCountColor))
+        unreadCount.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(MessagesStyle.downScrollerUnreadCountColor))
     }
 
     private fun setGravity() {

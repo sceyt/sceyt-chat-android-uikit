@@ -48,7 +48,6 @@
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".presentation.mainactivity.MainActivity"
-            android:configChanges="uiMode"
             android:exported="true"
             android:launchMode="singleTask"
             android:theme="@style/DefaultFontTheme"
