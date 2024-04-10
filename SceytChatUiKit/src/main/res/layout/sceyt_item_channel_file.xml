@@ -12,11 +12,12 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="center"
+        android:padding="10dp"
         android:background="@drawable/sceyt_bg_corners_8"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_ic_file_with_bg" />
+        app:srcCompat="@drawable/sceyt_ic_file_filled" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvFileName"

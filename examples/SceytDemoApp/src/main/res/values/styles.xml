@@ -5,7 +5,7 @@
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/sceyt_color_primary</item>
         <item name="colorPrimaryDark">@color/sceyt_color_primary_dark</item>
-        <item name="colorAccent">@color/sceyt_color_accent</item>
+        <item name="colorAccent">@color/colorAccent</item>
         <item name="colorSecondary">@color/sceyt_color_primary</item>
         <item name="colorControlNormal">@color/sceyt_color_primary</item>
         <item name="windowActionModeOverlay">false</item>

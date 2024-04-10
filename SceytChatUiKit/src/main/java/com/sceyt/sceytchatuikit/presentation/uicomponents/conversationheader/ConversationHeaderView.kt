@@ -160,6 +160,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         toolbarUnderline.background = ColorDrawable(context.getCompatColor(ConversationHeaderViewStyle.underlineColor))
         toolbarUnderline.isVisible = ConversationHeaderViewStyle.enableUnderline
         icSearch.imageTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        icBack.imageTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -249,7 +250,11 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         if (!replyInThread) {
             when {
                 channel.isPeerDeleted() -> avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
-                channel.isSelf() -> avatar.setImageUrl(null, UserStyle.notesAvatar)
+                channel.isSelf() -> {
+                    avatar.setAvatarColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+                    avatar.setImageUrl(null, UserStyle.notesAvatar)
+                }
+
                 else -> {
                     val subjAndSUrl = channel.getSubjectAndAvatarUrl()
                     avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second, if (isGroup) 0 else UserStyle.userDefaultAvatar)

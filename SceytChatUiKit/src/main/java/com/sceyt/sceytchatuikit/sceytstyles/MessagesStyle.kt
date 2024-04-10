@@ -129,7 +129,7 @@ object MessagesStyle {
 
     @JvmField
     @DrawableRes
-    var fileAttachmentIcon: Int = R.drawable.sceyt_ic_file_with_bg
+    var fileAttachmentIcon: Int = R.drawable.sceyt_ic_file_filled
 
     @JvmField
     @DrawableRes
