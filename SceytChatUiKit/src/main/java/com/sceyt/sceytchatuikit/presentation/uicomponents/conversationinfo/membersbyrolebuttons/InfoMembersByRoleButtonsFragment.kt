@@ -103,6 +103,7 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
     }
 
     override fun onChannelUpdated(channel: SceytChannel) {
+        if (::binding.isInitialized.not()) return
         setDetails(channel)
     }
 }

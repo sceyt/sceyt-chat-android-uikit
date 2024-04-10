@@ -169,10 +169,12 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     private fun <T : Fragment?> initOrUpdateFragmentChannel(container: FragmentContainerView,
-                                                            fragmentProvider: () -> T) {
+                                                            fragmentProvider: () -> T): T? {
         val (wasAdded, fragment) = getOrAddFragment(container, fragmentProvider)
         if (wasAdded && fragment?.isAdded == true)
             (fragment as? ChannelUpdateListener)?.onChannelUpdated(channel)
+
+        return fragment
     }
 
     /** Generic function to either retrieve an existing fragment from a container or add a new one if not present.
@@ -492,13 +494,13 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     open fun setChannelToolbar(channel: SceytChannel) {
         initOrUpdateFragmentChannel(binding?.frameLayoutToolbar ?: return) {
-            getChannelToolbarDetailsFragment(channel).also {
-                (it as? InfoToolbarFragment)?.setClickActionsListener { actionsEnum ->
-                    when (actionsEnum) {
-                        Back -> finish()
-                        Edit -> onEditClick(this.channel)
-                        More -> onMoreClick(this.channel)
-                    }
+            getChannelToolbarDetailsFragment(channel)
+        }.also {
+            (it as? InfoToolbarFragment)?.setClickActionsListener { actionsEnum ->
+                when (actionsEnum) {
+                    Back -> finish()
+                    Edit -> onEditClick(this.channel)
+                    More -> onMoreClick(this.channel)
                 }
             }
         }
@@ -506,14 +508,14 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     open fun setChannelSettings(channel: SceytChannel) {
         initOrUpdateFragmentChannel(binding?.frameLayoutSettings ?: return) {
-            getChannelSettingsFragment(channel).also {
-                (it as? InfoSettingsFragment)?.setClickActionsListener { actionsEnum ->
-                    when (actionsEnum) {
-                        InfoSettingsFragment.ClickActionsEnum.Mute -> onMuteUnMuteClick(this.channel, true)
-                        InfoSettingsFragment.ClickActionsEnum.UnMute -> onMuteUnMuteClick(this.channel, false)
-                        InfoSettingsFragment.ClickActionsEnum.AutoDeleteOn -> {}
-                        InfoSettingsFragment.ClickActionsEnum.AutoDeleteOff -> {}
-                    }
+            getChannelSettingsFragment(channel)
+        }.also {
+            (it as? InfoSettingsFragment)?.setClickActionsListener { actionsEnum ->
+                when (actionsEnum) {
+                    InfoSettingsFragment.ClickActionsEnum.Mute -> onMuteUnMuteClick(this.channel, true)
+                    InfoSettingsFragment.ClickActionsEnum.UnMute -> onMuteUnMuteClick(this.channel, false)
+                    InfoSettingsFragment.ClickActionsEnum.AutoDeleteOn -> {}
+                    InfoSettingsFragment.ClickActionsEnum.AutoDeleteOff -> {}
                 }
             }
         }
@@ -521,13 +523,13 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     open fun setChannelMembersByRoleButtons(channel: SceytChannel) {
         initOrUpdateFragmentChannel(binding?.frameLayoutMembersByRole ?: return) {
-            getChannelMembersByRoleFragment(channel).also {
-                (it as? InfoMembersByRoleButtonsFragment)?.setClickActionsListener { actionsEnum ->
-                    when (actionsEnum) {
-                        InfoMembersByRoleButtonsFragment.ClickActionsEnum.Admins -> onAdminsClick(this.channel)
-                        InfoMembersByRoleButtonsFragment.ClickActionsEnum.Members -> onMembersClick(this.channel)
-                        InfoMembersByRoleButtonsFragment.ClickActionsEnum.SearchMessages -> onSearchMessagesClick(this.channel)
-                    }
+            getChannelMembersByRoleFragment(channel)
+        }.also {
+            (it as? InfoMembersByRoleButtonsFragment)?.setClickActionsListener { actionsEnum ->
+                when (actionsEnum) {
+                    InfoMembersByRoleButtonsFragment.ClickActionsEnum.Admins -> onAdminsClick(this.channel)
+                    InfoMembersByRoleButtonsFragment.ClickActionsEnum.Members -> onMembersClick(this.channel)
+                    InfoMembersByRoleButtonsFragment.ClickActionsEnum.SearchMessages -> onSearchMessagesClick(this.channel)
                 }
             }
         }
@@ -541,11 +543,11 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     open fun setChannelInfo(channel: SceytChannel) {
         initOrUpdateFragmentChannel(binding?.frameLayoutInfo ?: return) {
-            getChannelDetailsFragment(channel).also {
-                (it as? InfoDetailsFragment)?.setClickActionsListener { actionsEnum ->
-                    when (actionsEnum) {
-                        InfoDetailsFragment.ClickActionsEnum.Avatar -> onAvatarClick(this.channel)
-                    }
+            getChannelDetailsFragment(channel)
+        }.also {
+            (it as? InfoDetailsFragment)?.setClickActionsListener { actionsEnum ->
+                when (actionsEnum) {
+                    InfoDetailsFragment.ClickActionsEnum.Avatar -> onAvatarClick(this.channel)
                 }
             }
         }
