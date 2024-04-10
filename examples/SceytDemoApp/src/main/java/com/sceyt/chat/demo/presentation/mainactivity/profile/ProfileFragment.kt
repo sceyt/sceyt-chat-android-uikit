@@ -21,7 +21,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.hideKeyboard
-import com.sceyt.sceytchatuikit.extensions.isNightTheme
+import com.sceyt.sceytchatuikit.extensions.isNightMode
 import com.sceyt.sceytchatuikit.extensions.setOnlyClickable
 import com.sceyt.sceytchatuikit.extensions.showSoftInput
 import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
@@ -29,7 +29,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialo
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
 import com.sceyt.sceytchatuikit.presentation.uicomponents.profile.viewmodel.ProfileViewModel
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import kotlinx.coroutines.Job
@@ -235,13 +234,13 @@ class ProfileFragment : Fragment() {
     }
 
     private fun setUpThemeSwitch() {
-        binding.switchTheme.isChecked = requireContext().isNightTheme()
-        binding.switchTheme.setOnCheckedChangeListener { _, isChecked ->
+        binding.switchTheme.isChecked = requireContext().isNightMode()
+        binding.switchTheme.setOnClickListener {
             updateThemeJob?.cancel()
             updateThemeJob = lifecycleScope.launch {
                 delay(250)
-                SceytKitConfig.SceytUITheme.isDarkMode = isChecked
-                if (isChecked) {
+                val isDarkMode = binding.switchTheme.isChecked
+                if (isDarkMode) {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                 } else
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)

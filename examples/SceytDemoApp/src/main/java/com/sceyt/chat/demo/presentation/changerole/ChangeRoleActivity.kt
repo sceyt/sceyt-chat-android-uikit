@@ -16,7 +16,6 @@ import com.sceyt.sceytchatuikit.extensions.findIndexed
 import com.sceyt.sceytchatuikit.extensions.overrideTransitions
 import com.sceyt.sceytchatuikit.extensions.parcelable
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class ChangeRoleActivity : AppCompatActivity() {
     private lateinit var binding: ActivityChooseRoleBinding
@@ -31,7 +30,7 @@ class ChangeRoleActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground()
 
         getBundleArguments()
         initViewModel()

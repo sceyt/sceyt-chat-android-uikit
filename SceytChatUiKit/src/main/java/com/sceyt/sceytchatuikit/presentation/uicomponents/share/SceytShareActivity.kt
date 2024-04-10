@@ -41,7 +41,7 @@ open class SceytShareActivity : SceytShareableActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground()
 
         getDataFromIntent()
         binding.initViews()

@@ -26,7 +26,6 @@ import com.sceyt.sceytchatuikit.presentation.common.SceytLoader.hideLoading
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader.showLoading
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.launch
 
 class CreateChannelActivity : AppCompatActivity() {
@@ -40,7 +39,7 @@ class CreateChannelActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground()
 
         initViewModel()
         binding.initViews()

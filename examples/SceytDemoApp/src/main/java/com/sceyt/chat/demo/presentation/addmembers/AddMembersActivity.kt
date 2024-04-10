@@ -22,7 +22,6 @@ import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
 import com.sceyt.sceytchatuikit.extensions.overrideTransitions
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class AddMembersActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAddMembersBinding
@@ -40,7 +39,7 @@ class AddMembersActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground()
 
         getIntentExtra()
         initViewModel()
@@ -59,7 +58,7 @@ class AddMembersActivity : AppCompatActivity() {
 
     private fun getIntentExtra() {
         intent?.getIntExtra(MEMBER_TYPE, memberType.ordinal)?.let { ordinal ->
-            memberType = MemberTypeEnum.values().getOrNull(ordinal) ?: memberType
+            memberType = MemberTypeEnum.entries.getOrNull(ordinal) ?: memberType
         }
 
         intent?.getBooleanExtra(BUTTON_ALWAYS_ENABLE, false)?.let {

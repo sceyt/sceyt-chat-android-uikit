@@ -15,10 +15,14 @@ import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.ActivityCreateGroupBinding
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.demo.presentation.conversation.ConversationActivity
+import com.sceyt.chat.demo.presentation.createconversation.viewmodel.CreateChatViewModel
+import com.sceyt.chat.demo.presentation.newchannel.adapters.UserViewHolderFactory
+import com.sceyt.chat.demo.presentation.newchannel.adapters.UsersAdapter
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.R.anim
+import com.sceyt.sceytchatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
 import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
@@ -27,18 +31,13 @@ import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.hideSoftInput
 import com.sceyt.sceytchatuikit.extensions.overrideTransitions
+import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader.hideLoading
 import com.sceyt.sceytchatuikit.presentation.common.SceytLoader.showLoading
 import com.sceyt.sceytchatuikit.presentation.root.PageState
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
-import com.sceyt.chat.demo.presentation.createconversation.viewmodel.CreateChatViewModel
-import com.sceyt.chat.demo.presentation.newchannel.adapters.UserViewHolderFactory
-import com.sceyt.chat.demo.presentation.newchannel.adapters.UsersAdapter
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelDescriptionData
-import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch
@@ -58,7 +57,7 @@ class CreateGroupActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground()
 
         getDataFromIntent()
         initViewModel()

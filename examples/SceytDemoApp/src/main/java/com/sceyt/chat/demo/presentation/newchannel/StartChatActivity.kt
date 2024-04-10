@@ -33,7 +33,6 @@ import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
 import com.sceyt.sceytchatuikit.presentation.root.PageState
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 class StartChatActivity : AppCompatActivity() {
     private lateinit var binding: ActivityStartChatBinding
@@ -48,7 +47,7 @@ class StartChatActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground()
 
         initViewModel()
         initViews()
