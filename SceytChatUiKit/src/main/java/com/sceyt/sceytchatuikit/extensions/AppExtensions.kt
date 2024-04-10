@@ -196,9 +196,9 @@ fun Activity.statusBarIconsColorWithBackground(isDark: Boolean,
                                                @ColorRes statusBarColor: Int = R.color.sceyt_color_status_bar,
                                                @ColorRes navigationBarColor: Int = R.color.sceyt_color_status_bar) {
 
-    window.statusBarColor = getCompatColorByTheme(statusBarColor, isDark)
+    window.statusBarColor = getCompatColor(statusBarColor)
     if (isDark)
-        window.navigationBarColor = getCompatColorByTheme(navigationBarColor, true)
+        window.navigationBarColor = getCompatColor(navigationBarColor)
 
     if (SDK_INT >= M) {
         if (SDK_INT >= Build.VERSION_CODES.R) {

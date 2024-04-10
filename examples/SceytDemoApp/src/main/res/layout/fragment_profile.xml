@@ -5,8 +5,6 @@
 
     <data>
 
-        <import type="com.sceyt.sceytchatuikit.R" />
-
         <variable
             name="isSaveLoading"
             type="Boolean" />
@@ -18,7 +16,6 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutToolbar"
-            themedBackgroundColor="@{R.color.sceyt_color_primary}"
             android:layout_width="match_parent"
             android:layout_height="?android:attr/actionBarSize"
             android:background="@color/sceyt_color_primary"
@@ -27,7 +24,6 @@
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/title"
-                themedTextColor="@{R.color.sceyt_color_black_themed}"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/profile"
@@ -67,7 +63,6 @@
 
         <View
             android:id="@+id/underline"
-            themedBackgroundColor="@{R.color.sceyt_color_divider}"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@color/sceyt_color_divider"
@@ -75,7 +70,6 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constraintLayout"
-            themedBackgroundColor="@{R.color.sceyt_color_bg_secondary_themed}"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:background="@color/sceyt_color_bg_secondary_themed"
@@ -84,7 +78,6 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/layoutUserDetails"
-                themedBackgroundColor="@{R.color.sceyt_color_primary}"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/sceyt_color_primary"
@@ -128,7 +121,6 @@
 
                 <androidx.appcompat.widget.AppCompatEditText
                     android:id="@+id/displayName"
-                    themedTextColor="@{R.color.sceyt_color_black_themed}"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
@@ -168,8 +160,6 @@
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchNotifications"
-                themedBackgroundColor="@{R.color.sceyt_color_primary}"
-                themedTextColor="@{R.color.sceyt_color_text_themed}"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -189,7 +179,6 @@
 
             <View
                 android:id="@+id/divider"
-                themedBackgroundColor="@{R.color.sceyt_color_divider}"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@color/sceyt_color_divider"
@@ -197,8 +186,6 @@
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchTheme"
-                themedBackgroundColor="@{R.color.sceyt_color_primary}"
-                themedTextColor="@{R.color.sceyt_color_black_themed}"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
@@ -216,7 +203,6 @@
                 app:layout_constraintTop_toBottomOf="@+id/divider" />
 
             <View
-                themedBackgroundColor="@{R.color.sceyt_color_divider}"
                 android:layout_width="match_parent"
                 android:layout_height=".5dp"
                 android:background="@color/sceyt_color_divider"
@@ -224,7 +210,6 @@
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/logout"
-                themedBackgroundColor="@{R.color.sceyt_color_primary}"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"

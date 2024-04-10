@@ -19,7 +19,7 @@ import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
 import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getPresentableFirstName
 import com.sceyt.sceytchatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.sceytchatuikit.extensions.getPresentableNameWithYou
@@ -354,19 +354,19 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
     private fun SceytItemChannelBinding.setChannelItemStyle() {
         with(root.context) {
-            channelTitle.setTextColor(getCompatColorByTheme(ChannelStyle.titleColor))
-            lastMessage.setTextColor(getCompatColorByTheme(ChannelStyle.lastMessageTextColor))
-            unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(ChannelStyle.unreadCountColor))
-            icMention.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(ChannelStyle.unreadCountColor))
-            onlineStatus.setIndicatorColor(getCompatColorByTheme(ChannelStyle.onlineStatusColor))
-            viewPinned.setBackgroundColor(getCompatColorByTheme(ChannelStyle.pinnedChannelBackgroundColor))
+            channelTitle.setTextColor(getCompatColor(ChannelStyle.titleColor))
+            lastMessage.setTextColor(getCompatColor(ChannelStyle.lastMessageTextColor))
+            unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(getCompatColor(ChannelStyle.unreadCountColor))
+            icMention.backgroundTintList = ColorStateList.valueOf(getCompatColor(ChannelStyle.unreadCountColor))
+            onlineStatus.setIndicatorColor(getCompatColor(ChannelStyle.onlineStatusColor))
+            viewPinned.setBackgroundColor(getCompatColor(ChannelStyle.pinnedChannelBackgroundColor))
             dateStatus.buildStyle()
                 .setStatusIconSize(ChannelStyle.statusIconSize)
                 .setDateColor(ChannelStyle.dateTextColor)
                 .build()
 
             divider.isVisible = if (ChannelStyle.enableDivider) {
-                divider.setBackgroundColor(getCompatColorByTheme(ChannelStyle.dividerColor))
+                divider.setBackgroundColor(getCompatColor(ChannelStyle.dividerColor))
                 true
             } else false
         }

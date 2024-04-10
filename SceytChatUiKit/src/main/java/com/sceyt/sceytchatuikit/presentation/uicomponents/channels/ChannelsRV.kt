@@ -35,7 +35,6 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     init {
         init()
-        ChannelViewHolderFactory.cacheViews(context)
     }
 
     private fun init() {
@@ -167,10 +166,5 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         awaitAnimationEnd {
             post { setData(sortedList) }
         }
-    }
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-        ChannelViewHolderFactory.clearCache()
     }
 }

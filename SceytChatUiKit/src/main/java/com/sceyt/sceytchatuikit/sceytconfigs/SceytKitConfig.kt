@@ -2,10 +2,7 @@ package com.sceyt.sceytchatuikit.sceytconfigs
 
 import androidx.annotation.ColorRes
 import androidx.annotation.IntRange
-import androidx.databinding.BaseObservable
-import androidx.databinding.Bindable
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.BR
 import com.sceyt.sceytchatuikit.R
 import com.sceyt.sceytchatuikit.data.repositories.MessageTransformer
 
@@ -75,14 +72,9 @@ object SceytKitConfig {
 
     val isDarkMode get() = enableDarkMode && SceytUITheme.isDarkMode
 
-    class ThemeConfig : BaseObservable() {
-        @Bindable
-        var isDarkMode = false
-            set(value) {
-                field = value
-                notifyPropertyChanged(BR.isDarkMode)
-            }
-    }
+    data class ThemeConfig(
+            var isDarkMode: Boolean = false
+    )
 
     enum class ChannelSortType {
         ByLastMsg,

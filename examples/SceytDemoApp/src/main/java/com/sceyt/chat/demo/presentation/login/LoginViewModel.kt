@@ -35,7 +35,7 @@ class LoginViewModel(private val preference: AppSharedPreference,
         viewModelScope.launch {
             val result = connectUser(userId)
             if (result.isSuccess) {
-                preference.setUserId(userId)
+                preference.setString(AppSharedPreference.PREF_USER_ID, userId)
                 updateProfile(displayName)
             } else
                 pageStateLiveDataInternal.value = PageState.StateError(null, result.exceptionOrNull()?.message
@@ -52,7 +52,7 @@ class LoginViewModel(private val preference: AppSharedPreference,
             val randomUserId = Constants.users.random()
             val result = connectUser(randomUserId)
             if (result.isSuccess) {
-                preference.setUserId(randomUserId)
+                preference.setString(AppSharedPreference.PREF_USER_ID, randomUserId)
             } else
                 pageStateLiveDataInternal.value = PageState.StateError(null, result.exceptionOrNull()?.message
                         ?: "Connection failed")
@@ -62,7 +62,7 @@ class LoginViewModel(private val preference: AppSharedPreference,
         }
     }
 
-    fun isLoggedIn() = preference.getUserId().isNullOrBlank().not()
+    fun isLoggedIn() = preference.getString(AppSharedPreference.PREF_USER_ID).isNullOrBlank().not()
 
     private suspend fun updateProfile(displayName: String) = withContext(Dispatchers.IO) {
         val currentUser: User? = ClientWrapper.currentUser

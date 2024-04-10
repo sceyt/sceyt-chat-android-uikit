@@ -8,7 +8,7 @@ import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
 import androidx.annotation.ColorRes
 import androidx.appcompat.widget.AppCompatTextView
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 
 class SceytColorSpannableTextView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : AppCompatTextView(context, attrs, defStyleAttr) {
@@ -61,7 +61,7 @@ class SceytColorSpannableTextView @JvmOverloads constructor(context: Context, at
 
         fun build(): SpannableString {
             if (fromIndex < toIndex)
-                spanString.setSpan(ForegroundColorSpan(context.getCompatColorByTheme(spanColorId)), fromIndex, toIndex, flag)
+                spanString.setSpan(ForegroundColorSpan(context.getCompatColor(spanColorId)), fromIndex, toIndex, flag)
             setSpannableText(spanString)
             buildSpannable = this
             return spanString

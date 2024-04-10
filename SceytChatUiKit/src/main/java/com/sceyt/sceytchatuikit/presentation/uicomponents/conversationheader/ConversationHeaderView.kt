@@ -58,7 +58,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.Conve
 import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytstyles.ConversationHeaderViewStyle
 import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
-import com.sceyt.sceytchatuikit.shared.utils.BindingUtil
 import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -91,9 +90,6 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     init {
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
-
-        if (!isInEditMode)
-            BindingUtil.themedBackgroundColor(this, R.color.sceyt_color_bg)
 
         if (attrs != null) {
             val a = context.obtainStyledAttributes(attrs, R.styleable.ConversationHeaderView)

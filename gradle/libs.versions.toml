@@ -1,6 +1,5 @@
 [versions]
 appcompat = "1.6.1"
-asynclayoutinflaterAppcompat = "1.1.0-alpha01"
 constraintlayout = "2.1.4"
 converterMoshi = "2.9.0"
 converterGson = "2.9.0"
@@ -43,7 +42,6 @@ workRuntimeKtx = "2.9.0"
 
 [libraries]
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
-asynclayoutinflater-appcompat = { module = "androidx.asynclayoutinflater:asynclayoutinflater-appcompat", version.ref = "asynclayoutinflaterAppcompat" }
 constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 converter-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "converterMoshi" }

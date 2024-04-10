@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytItemOutAttachmentsMessageBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
@@ -116,7 +116,7 @@ class OutAttachmentsMsgViewHolder(
 
     private fun SceytItemOutAttachmentsMessageBinding.setMessageItemStyle() {
         with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.outBubbleColor))
+            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColor(MessagesStyle.outBubbleColor))
             tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
         }
     }

@@ -76,12 +76,13 @@ class SceytConnectionProvider(
         initialized = true
     }
 
-    fun connectChatClient(userId: String = preference.getUserId() ?: "") {
+    fun connectChatClient(userId: String = preference.getString(AppSharedPreference.PREF_USER_ID)
+            ?: "") {
         launch {
-            val savedUserId = preference.getUserId()
-            if (userId.isNotBlank() && !savedUserId.isNullOrBlank() && userId != preference.getUserId()) {
+            val savedUserId = preference.getString(AppSharedPreference.PREF_USER_ID)
+            if (userId.isNotBlank() && !savedUserId.isNullOrBlank() && userId != savedUserId) {
                 ChatClient.getClient().disconnect()
-                preference.setToken("")
+                preference.setString("", AppSharedPreference.PREF_USER_TOKEN)
             }
 
             if (ConnectionEventsObserver.connectionState == ConnectionState.Connecting) {
@@ -99,7 +100,7 @@ class SceytConnectionProvider(
                 return@launch
             }
 
-            val sceytToken = preference.getToken()
+            val sceytToken = preference.getString(AppSharedPreference.PREF_USER_TOKEN)
 
             if (userId.isBlank() && sceytToken.isNullOrBlank()) {
                 SceytLog.i(Tag, "$Tag connectChatClient ignore login because has not userId and token.")
@@ -148,7 +149,7 @@ class SceytConnectionProvider(
                     ConnectionState.Disconnected -> {
                         if (it.exception?.code == 1021) {
                             SceytLog.i(Tag, "disconnected, reason ${it.exception?.message}, clear old token because of 1021 error")
-                            preference.setToken(null)
+                            preference.setString(AppSharedPreference.PREF_USER_TOKEN, null)
                         } else
                             SceytLog.i(Tag, "$Tag disconnected ${it.exception?.message}")
                     }

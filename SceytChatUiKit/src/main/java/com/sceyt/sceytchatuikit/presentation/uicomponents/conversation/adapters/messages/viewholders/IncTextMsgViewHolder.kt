@@ -5,7 +5,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.sceytchatuikit.databinding.SceytItemIncTextMessageBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -86,8 +86,8 @@ class IncTextMsgViewHolder(
 
     private fun SceytItemIncTextMessageBinding.setMessageItemStyle() {
         with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColorByTheme(MessagesStyle.incBubbleColor))
-            tvUserName.setTextColor(getCompatColorByTheme(MessagesStyle.senderNameTextColor))
+            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColor(MessagesStyle.incBubbleColor))
+            tvUserName.setTextColor(getCompatColor(MessagesStyle.senderNameTextColor))
             tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
         }
     }

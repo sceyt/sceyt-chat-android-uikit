@@ -1,10 +1,15 @@
 package com.sceyt.chat.demo.data
 
 interface AppSharedPreference {
-    fun setUserId(userName: String?)
-    fun getUserId(): String?
+    companion object {
+        const val PREF_USER_ID = "user_id"
+        const val PREF_USER_TOKEN = "token"
+    }
+
     fun deleteUsername()
-    fun setToken(token: String?)
-    fun getToken(): String?
+    fun setString(key: String, value: String?)
+    fun getString(key: String): String?
+    fun setBoolean(key: String, value: Boolean)
+    fun getBoolean(key: String, defaultValue: Boolean = false): Boolean
     fun clear()
 }

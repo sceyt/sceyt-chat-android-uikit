@@ -2,6 +2,7 @@ package com.sceyt.chat.demo
 
 import android.app.Application
 import android.util.Log
+import androidx.appcompat.app.AppCompatDelegate
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.di.apiModule
@@ -31,7 +32,7 @@ class SceytChatDemoApp : Application() {
             modules(arrayListOf(appModules, viewModelModules, apiModule, repositoryModule))
         }
 
-        SceytKitConfig.SceytUITheme.isDarkMode = isAppInDarkMode()
+        setupTheme()
         initSceyt()
         connectionProvider.init()
     }
@@ -56,5 +57,15 @@ class SceytChatDemoApp : Application() {
                 Log.ERROR, Log.ASSERT -> Log.e(TAG, "$s $s1")
             }
         }
+    }
+
+    private fun setupTheme(){
+        val isDeviceInDarkMode = isAppInDarkMode()
+        if (isDeviceInDarkMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+
+        SceytKitConfig.SceytUITheme.isDarkMode = isDeviceInDarkMode
     }
 }

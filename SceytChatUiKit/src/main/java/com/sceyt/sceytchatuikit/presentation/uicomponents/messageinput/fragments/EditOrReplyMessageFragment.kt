@@ -16,7 +16,7 @@ import com.sceyt.sceytchatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.sceytchatuikit.data.models.messages.SceytAttachment
 import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
 import com.sceyt.sceytchatuikit.databinding.SceytFragmentEditOrReplyMessageBinding
-import com.sceyt.sceytchatuikit.extensions.getCompatColorByTheme
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.getCompatDrawable
 import com.sceyt.sceytchatuikit.extensions.getPresentableName
 import com.sceyt.sceytchatuikit.extensions.isEqualsVideoOrImage
@@ -152,7 +152,7 @@ open class EditOrReplyMessageFragment : Fragment() {
     }
 
     private fun SceytFragmentEditOrReplyMessageBinding.setupStyle() {
-        icReplyOrEdit.setColorFilter(requireContext().getCompatColorByTheme(SceytKitConfig.sceytColorAccent))
-        tvName.setTextColor(requireContext().getCompatColorByTheme(MessageInputViewStyle.userNameTextColor))
+        icReplyOrEdit.setColorFilter(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
+        tvName.setTextColor(requireContext().getCompatColor(MessageInputViewStyle.userNameTextColor))
     }
 }
