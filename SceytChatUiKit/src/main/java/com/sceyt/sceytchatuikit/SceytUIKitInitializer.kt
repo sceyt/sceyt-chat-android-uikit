@@ -1,8 +1,6 @@
 package com.sceyt.sceytchatuikit
 
 import android.content.Context
-import android.util.Log
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.provider.FontRequest
 import androidx.emoji2.text.EmojiCompat
 import androidx.emoji2.text.FontRequestEmojiCompatConfig
@@ -18,7 +16,6 @@ import com.sceyt.sceytchatuikit.di.repositoryModule
 import com.sceyt.sceytchatuikit.di.viewModelModule
 import com.sceyt.sceytchatuikit.extensions.TAG
 import com.sceyt.sceytchatuikit.logger.SceytLog
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.vanniktech.emoji.EmojiManager
 import com.vanniktech.emoji.google.GoogleEmojiProvider
 import kotlinx.coroutines.Dispatchers
@@ -35,15 +32,8 @@ class SceytUIKitInitializer(private val context: Context) {
         //Set static flags before calling initialize
         val chatClient = ChatClient.initialize(context, host, appId, clientId)
         initKoin(enableDatabase)
-        initTheme()
         initEmojiSupport()
         return chatClient
-    }
-
-    private fun initTheme() {
-        if (SceytKitConfig.isDarkMode.not())
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-        else AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
     }
 
     private fun initKoin(enableDatabase: Boolean) {

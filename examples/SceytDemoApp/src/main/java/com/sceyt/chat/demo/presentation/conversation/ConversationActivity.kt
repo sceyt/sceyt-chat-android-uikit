@@ -28,7 +28,6 @@ import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.Con
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity.Companion.ACTION_SEARCH_MESSAGES
 import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinfo.MessageInfoFragment
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 
 open class ConversationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConversationBinding
@@ -43,7 +42,7 @@ open class ConversationActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode,
+        statusBarIconsColorWithBackground(
             statusBarColor = R.color.sceyt_color_primary,
             navigationBarColor = R.color.sceyt_color_primary_dark)
 

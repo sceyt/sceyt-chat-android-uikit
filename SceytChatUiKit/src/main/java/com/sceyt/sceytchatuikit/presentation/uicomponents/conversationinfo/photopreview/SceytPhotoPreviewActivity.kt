@@ -20,7 +20,7 @@ class SceytPhotoPreviewActivity : AppCompatActivity() {
             binding = it
         }.root)
 
-        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground()
         binding.setupStyle()
         initViews()
         getBundleArguments()

@@ -12,10 +12,8 @@ import com.sceyt.chat.demo.presentation.mainactivity.adapters.MainViewPagerAdapt
 import com.sceyt.chat.demo.presentation.mainactivity.profile.ProfileFragment
 import com.sceyt.sceytchatuikit.SceytKitClient
 import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
-import com.sceyt.sceytchatuikit.extensions.isNightTheme
 import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.sceytchatuikit.presentation.root.PageState
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject
@@ -30,7 +28,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        statusBarIconsColorWithBackground(SceytKitConfig.SceytUITheme.isDarkMode)
+        statusBarIconsColorWithBackground()
 
         setPagerAdapter()
         setBottomNavClickListeners()

@@ -70,8 +70,6 @@ object SceytKitConfig {
     @JvmField
     var backgroundUploadNotificationClickData: BackgroundUploadNotificationClickData? = null
 
-    val isDarkMode get() = enableDarkMode && SceytUITheme.isDarkMode
-
     data class ThemeConfig(
             var isDarkMode: Boolean = false
     )

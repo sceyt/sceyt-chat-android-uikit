@@ -85,7 +85,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setActivityContentView()
-        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground()
 
         getBundleArguments()
         initViewModel()

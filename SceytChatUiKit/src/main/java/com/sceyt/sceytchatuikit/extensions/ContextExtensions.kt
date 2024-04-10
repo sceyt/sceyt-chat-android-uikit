@@ -200,7 +200,7 @@ fun Context.setClipboard(text: CharSequence) {
     clipboard?.setPrimaryClip(clip)
 }
 
-fun Context.isNightTheme(): Boolean {
+fun Context.isNightMode(): Boolean {
     return resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
 }
 
