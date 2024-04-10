@@ -9,10 +9,10 @@
         android:id="@+id/link"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/sceyt_bg_ripple"
-        android:backgroundTint="@color/sceyt_color_primary"
+        android:background="@color/sceyt_color_primary"
         android:drawableStart="@drawable/sceyt_ic_channel_link"
         android:drawablePadding="16dp"
+        android:foreground="@drawable/sceyt_bg_ripple"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
@@ -21,6 +21,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="UnusedAttribute"
         tools:text="link" />
 
     <View

@@ -5,11 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:animateLayoutChanges="true"
-    android:background="@drawable/sceyt_bg_ripple"
-    android:backgroundTint="@color/sceyt_color_primary"
+    android:background="@color/sceyt_color_primary"
     android:clickable="true"
     android:focusable="true"
-    android:padding="8dp">
+    android:foreground="@drawable/sceyt_bg_ripple"
+    android:padding="8dp"
+    tools:ignore="UnusedAttribute">
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/icLinkImage"

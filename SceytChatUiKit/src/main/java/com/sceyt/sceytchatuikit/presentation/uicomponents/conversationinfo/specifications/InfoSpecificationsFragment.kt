@@ -67,6 +67,7 @@ open class InfoSpecificationsFragment : Fragment(), ChannelUpdateListener {
     }
 
     override fun onChannelUpdated(channel: SceytChannel) {
+        if (::binding.isInitialized.not()) return
         setChannelSpecification(channel)
     }
 

@@ -155,6 +155,7 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
     }
 
     override fun onChannelUpdated(channel: SceytChannel) {
+        if (::binding.isInitialized.not()) return
         setChannelDetails(channel)
     }
 
