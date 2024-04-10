@@ -25,7 +25,6 @@ import androidx.activity.ComponentActivity
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -33,7 +32,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import com.sceyt.sceytchatuikit.logger.SceytLog
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
@@ -235,8 +233,7 @@ fun Context.hasActiveNetwork(): Boolean {
 
 internal fun Context?.getFragmentManager(): FragmentManager? {
     return when (this) {
-        is AppCompatActivity -> supportFragmentManager
-        is ContextWrapper -> baseContext.getFragmentManager()
+        is FragmentActivity -> supportFragmentManager
         else -> null
     }
 }
