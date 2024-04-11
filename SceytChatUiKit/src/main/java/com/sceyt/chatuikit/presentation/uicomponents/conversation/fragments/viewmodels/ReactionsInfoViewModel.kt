@@ -6,9 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
-import com.sceyt.chatuikit.di.SceytKoinComponent
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
-import com.sceyt.chatuikit.persistence.logics.reactionslogic.PersistenceReactionsLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.fragments.adapters.ReactedUserItem
 import kotlinx.coroutines.Dispatchers

@@ -25,7 +25,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.di.SceytKoinComponent
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.initPendingIntent
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
@@ -38,8 +38,8 @@ import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData.Companion.withPrettySizes
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState
-import com.sceyt.chatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
-import com.sceyt.chatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.IS_SHARING

@@ -10,12 +10,12 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
-import com.sceyt.chatuikit.di.SceytKoinComponent
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.copyFile
 import com.sceyt.chatuikit.extensions.extractLinks
 import com.sceyt.chatuikit.extensions.getFileSize
-import com.sceyt.chatuikit.persistence.PersistenceMessagesMiddleWare
+import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.shared.utils.FileUtil
@@ -30,7 +30,7 @@ import java.io.FileInputStream
 import java.util.concurrent.atomic.AtomicInteger
 
 class ShareViewModel : BaseViewModel(), SceytKoinComponent {
-    private val messagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
+    private val messageInteractor by inject<MessageInteractor>()
     private val application by inject<Application>()
 
     fun sendTextMessage(vararg channelIds: Long, body: String) = callbackFlow {
@@ -53,7 +53,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
                     .build()
 
                 launch(Dispatchers.IO) {
-                    messagesMiddleWare.sendMessageAsFlow(channelId, message).collect {
+                    messageInteractor.sendMessageAsFlow(channelId, message).collect {
                         if (it.isServerResponse() || it is SendMessageResult.StartedSendingAttachment) {
                             val resultCount = count.addAndGet(1)
 
@@ -94,7 +94,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
                         .setType(MessageTypeEnum.Media.value())
                         .build()
 
-                    messagesMiddleWare.sendSharedFileMessage(channelId, message)
+                    messageInteractor.sendSharedFileMessage(channelId, message)
                 }
             }
         }

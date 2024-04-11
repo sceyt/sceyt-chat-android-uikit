@@ -33,16 +33,22 @@ import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
-import com.sceyt.chatuikit.di.SceytKoinComponent
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentPayLoadDb
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
-import com.sceyt.chatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
-import com.sceyt.chatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
-import com.sceyt.chatuikit.persistence.logics.connectionlogic.PersistenceConnectionLogic
-import com.sceyt.chatuikit.persistence.logics.memberslogic.PersistenceMembersLogic
-import com.sceyt.chatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
-import com.sceyt.chatuikit.persistence.logics.reactionslogic.PersistenceReactionsLogic
-import com.sceyt.chatuikit.persistence.logics.userslogic.PersistenceUsersLogic
+import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChanelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
+import com.sceyt.chatuikit.persistence.interactor.UserInteractor
+import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.chatuikit.services.SceytPresenceChecker
@@ -55,7 +61,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
 
 internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceChannelsLogic,
                                          private val messagesLogic: PersistenceMessagesLogic,
@@ -64,78 +69,76 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
                                          private val membersLogic: PersistenceMembersLogic,
                                          private val usersLogic: PersistenceUsersLogic,
                                          private val connectionLogic: PersistenceConnectionLogic) :
-        CoroutineScope, PersistenceMembersMiddleWare, PersistenceMessagesMiddleWare,
-        PersistenceChanelMiddleWare, PersistenceUsersMiddleWare, PersistenceAttachmentsMiddleWare,
-        PersistenceReactionsMiddleWare, SceytKoinComponent {
+        ChannelMemberInteractor, MessageInteractor, ChanelInteractor,
+        UserInteractor, AttachmentInteractor, MessageReactionInteractor, SceytKoinComponent {
 
 
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO + SupervisorJob()
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     init {
         // Channel events
-        ChannelEventsObserver.onChannelEventFlow.onEach(::onChannelEvent).launchIn(this)
-        ChannelEventsObserver.onTotalUnreadChangedFlow.onEach(::onChannelUnreadCountUpdatedEvent).launchIn(this)
-        ChannelEventsObserver.onChannelMembersEventFlow.onEach(::onChannelMemberEvent).launchIn(this)
-        ChannelEventsObserver.onChannelOwnerChangedEventFlow.onEach(::onChannelOwnerChangedEvent).launchIn(this)
+        ChannelEventsObserver.onChannelEventFlow.onEach(::onChannelEvent).launchIn(scope)
+        ChannelEventsObserver.onTotalUnreadChangedFlow.onEach(::onChannelUnreadCountUpdatedEvent).launchIn(scope)
+        ChannelEventsObserver.onChannelMembersEventFlow.onEach(::onChannelMemberEvent).launchIn(scope)
+        ChannelEventsObserver.onChannelOwnerChangedEventFlow.onEach(::onChannelOwnerChangedEvent).launchIn(scope)
         // Message events
-        ChannelEventsObserver.onMessageStatusFlow.onEach(::onMessageStatusChangeEvent).launchIn(this)
-        MessageEventsObserver.onMessageFlow.onEach(::onMessage).launchIn(this)
-        MessageEventsObserver.onMessageReactionUpdatedFlow.onEach(::onMessageReactionUpdated).launchIn(this)
-        MessageEventsObserver.onMessageEditedOrDeletedFlow.onEach(::onMessageEditedOrDeleted).launchIn(this)
+        ChannelEventsObserver.onMessageStatusFlow.onEach(::onMessageStatusChangeEvent).launchIn(scope)
+        MessageEventsObserver.onMessageFlow.onEach(::onMessage).launchIn(scope)
+        MessageEventsObserver.onMessageReactionUpdatedFlow.onEach(::onMessageReactionUpdated).launchIn(scope)
+        MessageEventsObserver.onMessageEditedOrDeletedFlow.onEach(::onMessageEditedOrDeleted).launchIn(scope)
 
         // Connection events
-        ConnectionEventsObserver.onChangedConnectStatusFlow.onEach(::onChangedConnectStatus).launchIn(this)
+        ConnectionEventsObserver.onChangedConnectStatusFlow.onEach(::onChangedConnectStatus).launchIn(scope)
 
         // Presence events
-        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach(::onPresenceChanged).launchIn(this)
+        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach(::onPresenceChanged).launchIn(scope)
     }
 
 
     private fun onChannelEvent(data: ChannelEventData) {
-        launch(Dispatchers.IO) { channelLogic.onChannelEvent(data) }
+        scope.launch(Dispatchers.IO) { channelLogic.onChannelEvent(data) }
     }
 
     private fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
-        launch(Dispatchers.IO) { channelLogic.onChannelUnreadCountUpdatedEvent(data) }
+        scope.launch(Dispatchers.IO) { channelLogic.onChannelUnreadCountUpdatedEvent(data) }
     }
 
     private fun onChannelMemberEvent(data: ChannelMembersEventData) {
-        launch(Dispatchers.IO) { membersLogic.onChannelMemberEvent(data) }
+        scope.launch(Dispatchers.IO) { membersLogic.onChannelMemberEvent(data) }
     }
 
     private fun onChannelOwnerChangedEvent(data: ChannelOwnerChangedEventData) {
-        launch(Dispatchers.IO) { membersLogic.onChannelOwnerChangedEvent(data) }
+        scope.launch(Dispatchers.IO) { membersLogic.onChannelOwnerChangedEvent(data) }
     }
 
     private fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
-        launch(Dispatchers.IO) { messagesLogic.onMessageStatusChangeEvent(data) }
-        launch(Dispatchers.IO) { channelLogic.onMessageStatusChangeEvent(data) }
+        scope.launch(Dispatchers.IO) { messagesLogic.onMessageStatusChangeEvent(data) }
+        scope.launch(Dispatchers.IO) { channelLogic.onMessageStatusChangeEvent(data) }
     }
 
     private fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
-        launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
             messagesLogic.onMessage(data)
             channelLogic.onMessage(data)
         }
     }
 
     private fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
-        launch(Dispatchers.IO) { reactionsLogic.onMessageReactionUpdated(data) }
+        scope.launch(Dispatchers.IO) { reactionsLogic.onMessageReactionUpdated(data) }
     }
 
     private fun onMessageEditedOrDeleted(sceytMessage: SceytMessage) {
-        launch(Dispatchers.IO) { messagesLogic.onMessageEditedOrDeleted(sceytMessage) }
-        launch(Dispatchers.IO) { channelLogic.onMessageEditedOrDeleted(sceytMessage) }
+        scope.launch(Dispatchers.IO) { messagesLogic.onMessageEditedOrDeleted(sceytMessage) }
+        scope.launch(Dispatchers.IO) { channelLogic.onMessageEditedOrDeleted(sceytMessage) }
     }
 
     private fun onChangedConnectStatus(data: ConnectionStateData) {
-        launch(Dispatchers.IO) { connectionLogic.onChangedConnectStatus(data) }
+        scope.launch(Dispatchers.IO) { connectionLogic.onChangedConnectStatus(data) }
     }
 
     private fun onPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>) {
-        launch(Dispatchers.IO) { usersLogic.onUserPresenceChanged(users) }
-        launch(Dispatchers.IO) { channelLogic.onUserPresenceChanged(users) }
+        scope.launch(Dispatchers.IO) { usersLogic.onUserPresenceChanged(users) }
+        scope.launch(Dispatchers.IO) { channelLogic.onUserPresenceChanged(users) }
     }
 
     override suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: LoadKeyData?,
@@ -400,6 +403,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     override suspend fun getMessageDbByTid(messageTid: Long): SceytMessage? {
         return messagesLogic.getMessageDbByTid(messageTid)
+    }
+
+    override suspend fun sendTyping(channelId: Long, typing: Boolean) {
+        messagesLogic.sendTyping(channelId, typing)
     }
 
     override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()

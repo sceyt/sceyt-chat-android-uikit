@@ -29,7 +29,7 @@ import com.sceyt.chatuikit.extensions.initPermissionLauncher
 import com.sceyt.chatuikit.extensions.initVideoCameraLauncher
 import com.sceyt.chatuikit.extensions.oneOfPermissionsIgnored
 import com.sceyt.chatuikit.extensions.permissionIgnored
-import com.sceyt.chatuikit.imagepicker.GalleryMediaPicker
+import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.GalleryMediaPicker
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.common.SceytLoader

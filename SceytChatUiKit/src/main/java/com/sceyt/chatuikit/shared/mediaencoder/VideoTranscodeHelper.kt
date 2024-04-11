@@ -4,7 +4,7 @@ import android.app.Application
 import android.net.Uri
 import com.abedelazizshe.lightcompressorlibrary.CompressionListener
 import com.abedelazizshe.lightcompressorlibrary.VideoQuality
-import com.sceyt.chatuikit.di.SceytKoinComponent
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.shared.mediaencoder.TranscodeResultEnum.Cancelled
 import com.sceyt.chatuikit.shared.mediaencoder.TranscodeResultEnum.Failure

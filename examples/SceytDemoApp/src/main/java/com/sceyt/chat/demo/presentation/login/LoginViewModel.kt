@@ -11,7 +11,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytKitClient
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
-import com.sceyt.chatuikit.persistence.PersistenceUsersMiddleWare
+import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.Dispatchers
@@ -26,7 +26,7 @@ import kotlin.coroutines.resume
 class LoginViewModel(private val preference: AppSharedPreference,
                      private val connectionProvider: SceytConnectionProvider) : BaseViewModel() {
 
-    private val usersMiddleWare: PersistenceUsersMiddleWare by lazy { SceytKitClient.getUserMiddleWare() }
+    private val userInteractor: UserInteractor by lazy { SceytKitClient.getUserMiddleWare() }
     private val _logInLiveData = MutableLiveData<Boolean>()
     val logInLiveData: LiveData<Boolean> = _logInLiveData
 
@@ -66,7 +66,7 @@ class LoginViewModel(private val preference: AppSharedPreference,
 
     private suspend fun updateProfile(displayName: String) = withContext(Dispatchers.IO) {
         val currentUser: User? = ClientWrapper.currentUser
-        usersMiddleWare.updateProfile(displayName, currentUser?.lastName, currentUser?.avatarURL)
+        userInteractor.updateProfile(displayName, currentUser?.lastName, currentUser?.avatarURL)
     }
 
     private suspend fun connectUser(userId: String): Result<Boolean> {

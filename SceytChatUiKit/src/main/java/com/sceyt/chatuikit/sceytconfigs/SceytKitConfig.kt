@@ -4,7 +4,7 @@ import androidx.annotation.ColorRes
 import androidx.annotation.IntRange
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.data.repositories.MessageTransformer
+import com.sceyt.chatuikit.data.transformers.MessageTransformer
 
 object SceytKitConfig {
     @JvmField

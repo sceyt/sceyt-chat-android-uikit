@@ -14,11 +14,11 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.toMember
-import com.sceyt.chatuikit.di.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.PersistenceChanelMiddleWare
-import com.sceyt.chatuikit.persistence.PersistenceMembersMiddleWare
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.interactor.ChanelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
-import com.sceyt.chatuikit.persistence.logics.channelslogic.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.presentation.common.getPeer
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.services.SceytPresenceChecker
@@ -31,8 +31,8 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
-    private val channelsMiddleWare by inject<PersistenceChanelMiddleWare>()
-    private val membersMiddleWare by inject<PersistenceMembersMiddleWare>()
+    private val chanelInteractor by inject<ChanelInteractor>()
+    private val channelMemberInteractor by inject<ChannelMemberInteractor>()
 
     private val _channelLiveData = MutableLiveData<SceytChannel>()
     val channelLiveData: LiveData<SceytChannel> = _channelLiveData
@@ -119,70 +119,70 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun getChannelFromServer(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.getChannelFromServer(id)
+            val response = chanelInteractor.getChannelFromServer(id)
             notifyResponseAndPageState(_channelLiveData, response, showError = false)
         }
     }
 
     fun clearHistory(channelId: Long, forEveryone: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.clearHistory(channelId, forEveryone)
+            val response = chanelInteractor.clearHistory(channelId, forEveryone)
             notifyResponseAndPageState(_clearHistoryLiveData, response)
         }
     }
 
     fun leaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.leaveChannel(channelId)
+            val response = chanelInteractor.leaveChannel(channelId)
             notifyResponseAndPageState(_leaveChannelLiveData, response)
         }
     }
 
     fun blockAndLeaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.blockAndLeaveChannel(channelId)
+            val response = chanelInteractor.blockAndLeaveChannel(channelId)
             notifyResponseAndPageState(_leaveChannelLiveData, response)
         }
     }
 
     fun deleteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.deleteChannel(channelId)
+            val response = chanelInteractor.deleteChannel(channelId)
             notifyResponseAndPageState(_deleteChannelLiveData, response)
         }
     }
 
     fun blockUser(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = membersMiddleWare.blockUnBlockUser(userId, true)
+            val response = channelMemberInteractor.blockUnBlockUser(userId, true)
             notifyResponseAndPageState(_blockUnblockUserLiveData, response)
         }
     }
 
     fun unblockUser(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = membersMiddleWare.blockUnBlockUser(userId, false)
+            val response = channelMemberInteractor.blockUnBlockUser(userId, false)
             notifyResponseAndPageState(_blockUnblockUserLiveData, response)
         }
     }
 
     fun muteChannel(channelId: Long, muteUntil: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.muteChannel(channelId, muteUntil)
+            val response = chanelInteractor.muteChannel(channelId, muteUntil)
             notifyResponseAndPageState(_muteUnMuteLiveData, response)
         }
     }
 
     fun unMuteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.unMuteChannel(channelId)
+            val response = chanelInteractor.unMuteChannel(channelId)
             notifyResponseAndPageState(_muteUnMuteLiveData, response)
         }
     }
 
     fun joinChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.join(channelId)
+            val response = chanelInteractor.join(channelId)
             notifyResponseAndPageState(_joinLiveData, response)
         }
     }
@@ -190,14 +190,14 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun pinChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.pinChannel(channelId)
+            val response = chanelInteractor.pinChannel(channelId)
             notifyResponseAndPageState(_pinUnpinLiveData, response)
         }
     }
 
     fun unpinChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsMiddleWare.unpinChannel(channelId)
+            val response = chanelInteractor.unpinChannel(channelId)
             notifyResponseAndPageState(_pinUnpinLiveData, response)
         }
     }
@@ -205,7 +205,7 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     fun addMembersToChannel(channelId: Long, users: ArrayList<SceytMember>) {
         viewModelScope.launch(Dispatchers.IO) {
             val members = users.map { it.toMember() }
-            val response = membersMiddleWare.addMembersToChannel(channelId, members)
+            val response = channelMemberInteractor.addMembersToChannel(channelId, members)
             if (response is SceytResponse.Success) {
                 val groupChannel = (response.data ?: return@launch)
 

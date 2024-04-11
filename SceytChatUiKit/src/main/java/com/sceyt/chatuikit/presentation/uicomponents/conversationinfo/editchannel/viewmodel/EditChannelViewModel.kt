@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.di.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.PersistenceChanelMiddleWare
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.interactor.ChanelInteractor
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class EditChannelViewModel : BaseViewModel(), SceytKoinComponent {
-    private val channelMiddleWare by inject<PersistenceChanelMiddleWare>()
+    private val chanelInteractor by inject<ChanelInteractor>()
     private val debounceHelper by lazy { DebounceHelper(200, viewModelScope) }
 
     private val _editChannelLiveData = MutableLiveData<SceytChannel>()
@@ -28,7 +28,7 @@ class EditChannelViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun editChannelChanges(channelId: Long, data: EditChannelData) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.editChannel(channelId, data)
+            val response = chanelInteractor.editChannel(channelId, data)
             notifyResponseAndPageState(_editChannelLiveData, response)
         }
     }
@@ -36,7 +36,7 @@ class EditChannelViewModel : BaseViewModel(), SceytKoinComponent {
     fun checkIsValidUrl(url: String) {
         debounceHelper.submit {
             viewModelScope.launch(Dispatchers.IO) {
-                val response = channelMiddleWare.getChannelFromServerByUrl(url)
+                val response = chanelInteractor.getChannelFromServerByUrl(url)
                 if (response is SceytResponse.Success) {
                     _isValidUrlLiveData.postValue(response.data.isNullOrEmpty() to url)
                 }

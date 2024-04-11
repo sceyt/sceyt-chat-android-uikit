@@ -11,7 +11,8 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.decodeByteArrayToBitmap
 import com.sceyt.chatuikit.extensions.getMimeTypeTakeFirstPart
 import com.sceyt.chatuikit.extensions.toByteArraySafety
-import com.sceyt.chatuikit.persistence.constants.SceytConstants
+import com.sceyt.chatuikit.data.constants.SceytConstants
+import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.persistence.entity.FileChecksumEntity
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentEntity
@@ -119,6 +120,41 @@ fun SceytAttachment.toTransferData(transferState: TransferState,
         url = url
     )
 }
+
+fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState,
+                                 progress: Float = 0f, linkPreviewDetails: LinkPreviewDetails? = null) = SceytAttachment(
+    id = id,
+    messageTid = messageTid,
+    messageId = messageId,
+    userId = userId,
+    name = name,
+    type = type,
+    metadata = metadata,
+    fileSize = uploadedFileSize,
+    createdAt = createdAt,
+    url = url,
+    filePath = filePath,
+    transferState = transferState,
+    progressPercent = progress,
+    originalFilePath = filePath,
+    linkPreviewDetails = linkPreviewDetails ?: getLinkPreviewDetails()
+)
+
+
+fun SceytAttachment.toAttachment(): Attachment = Attachment(
+    id ?: 0,
+    messageId,
+    name,
+    type,
+    metadata ?: "",
+    fileSize,
+    url ?: "",
+    createdAt,
+    userId,
+    0,
+    filePath ?: "",
+    false,
+)
 
 fun FileChecksumEntity.toFileChecksumData() = FileChecksumData(
     checksum, resizedFilePath, url, metadata, fileSize

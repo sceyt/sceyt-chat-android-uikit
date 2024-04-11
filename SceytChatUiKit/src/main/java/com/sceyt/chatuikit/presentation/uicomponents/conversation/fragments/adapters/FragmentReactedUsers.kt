@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.databinding.SceytFragmentReactedUsersBinding
-import com.sceyt.chatuikit.di.SceytKoinComponent
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.fragments.viewmodels.ReactionsInfoViewModel
