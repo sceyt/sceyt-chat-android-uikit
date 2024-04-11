@@ -1,6 +1,8 @@
 
 package com.sceyt.sceytchatuikit.shared.mediaencoder.transcodetest;
 
+import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
@@ -37,6 +39,8 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p>It also tests the way the codec config buffers need to be passed from the MediaCodec to the
  * MediaMuxer.
  */
+@SuppressLint("ObsoleteSdkInt")
+@TargetApi(18)
 public class CallbackBasedTranscoder {
 
     private static final String TAG = CallbackBasedTranscoder.class.getSimpleName();

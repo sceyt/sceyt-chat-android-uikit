@@ -189,10 +189,10 @@
 
     <androidx.cardview.widget.CardView
         android:id="@+id/imageViewAudio"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_marginEnd="6dp"
-        android:layout_marginBottom="4dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="8dp"
         android:clickable="true"
         android:focusable="true"
         android:translationZ="2dp"
@@ -207,10 +207,10 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/imageAudio"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
             android:background="@drawable/sceyt_bg_circle"
-            android:padding="14dp"
+            android:padding="7dp"
             android:tint="@color/sceyt_color_white"
             app:srcCompat="@drawable/sceyt_ic_voice" />
 

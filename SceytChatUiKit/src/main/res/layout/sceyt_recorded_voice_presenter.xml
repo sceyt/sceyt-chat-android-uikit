@@ -8,15 +8,15 @@
     android:background="@color/sceyt_color_bg"
     android:clickable="true"
     android:focusable="true"
-    android:paddingVertical="8dp">
+    android:paddingBottom="7dp">
 
     <ImageView
         android:id="@+id/delete_voice_record"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="14dp"
+        android:layout_marginStart="10dp"
         android:background="?selectableItemBackgroundBorderless"
-        android:src="@drawable/sceyt_ic_cancel"
+        android:src="@drawable/sceyt_close_btn"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -25,7 +25,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="12dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="8dp"
         android:background="@drawable/sceyt_bg_corners_20"
         android:backgroundTint="@color/sceyt_color_gray_themed"
         android:gravity="center_vertical"
@@ -40,7 +41,7 @@
             android:id="@+id/play_voice_record"
             android:layout_width="20dp"
             android:layout_height="0dp"
-            android:tint="@color/sceyt_color_gray_800"
+            android:tint="#A0A1B0"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintStart_toStartOf="parent"
@@ -56,7 +57,7 @@
             app:layout_constraintEnd_toStartOf="@id/voice_record_duration"
             app:layout_constraintStart_toEndOf="@id/play_voice_record"
             app:layout_constraintTop_toTopOf="parent"
-            app:wave_background_color="#99757D8B"
+            app:wave_background_color="#A0A1B0"
             app:wave_corner_radius="2dp"
             app:wave_gap="1.5dp"
             app:wave_gravity="center"
@@ -64,7 +65,6 @@
             app:wave_min_height="3dp"
             app:wave_padding_left="2dp"
             app:wave_padding_right="2dp"
-            app:wave_progress_color="@color/sceyt_color_gray_800"
             app:wave_visible_progress="0"
             app:wave_width="2dp" />
 
@@ -73,8 +73,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="4dp"
-            android:textColor="@color/sceyt_color_gray_secondary_themed"
             android:includeFontPadding="false"
+            android:textColor="@color/sceyt_color_gray_secondary_themed"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -84,10 +84,12 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icSendMessage"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:layout_marginEnd="14dp"
-        android:padding="2dp"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/sceyt_bg_circle"
+        android:padding="7dp"
+        android:tint="@color/sceyt_color_white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"

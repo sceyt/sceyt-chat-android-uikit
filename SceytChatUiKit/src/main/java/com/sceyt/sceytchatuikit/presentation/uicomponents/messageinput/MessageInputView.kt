@@ -147,7 +147,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun init() {
         with(binding) {
-            setUpStyle()
+            setupStyle()
             setOnClickListeners()
             if (!isInEditMode) {
                 editOrReplyMessageFragment.setClickListener(clickListeners)
@@ -400,20 +400,23 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }.show()
     }
 
-    private fun SceytMessageInputViewBinding.setUpStyle() {
+    private fun SceytMessageInputViewBinding.setupStyle() {
         val colorAccent = context.getCompatColor(SceytKitConfig.sceytColorAccent)
         icAddAttachments.setImageResource(MessageInputViewStyle.attachmentIcon)
         messageInput.setTextColor(context.getCompatColor(MessageInputViewStyle.inputTextColor))
         messageInput.hint = MessageInputViewStyle.inputHintText
         messageInput.setHintTextColor(context.getCompatColor(MessageInputViewStyle.inputHintTextColor))
+        icSendMessage.backgroundTintList = ColorStateList.valueOf(colorAccent)
         btnJoin.setTextColor(colorAccent)
         btnClearChat.setTextColor(colorAccent)
         layoutInputSearchResult.icDown.imageTintList = ColorStateList.valueOf(colorAccent)
         layoutInputSearchResult.icUp.imageTintList = ColorStateList.valueOf(colorAccent)
+        if (isInEditMode)
+            icSendMessage.setImageResource(MessageInputViewStyle.voiceRecordIcon)
     }
 
     private fun determineInputState() {
-        if (!isEnabledInput() || isInMultiSelectMode || isInSearchMode)
+        if (!isEnabledInput() || isInMultiSelectMode || isInSearchMode || isInEditMode)
             return
 
         val showVoiceIcon = binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
@@ -423,7 +426,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             onStateChanged(newState)
         inputState = newState
 
-        binding.icSendMessage.isVisible = !showVoiceIcon
+        binding.icSendMessage.isInvisible = showVoiceIcon
         binding.icAddAttachments.isVisible = !isEditingMessage()
         if (showVoiceIcon) {
             showVoiceRecorder()

@@ -1,10 +1,10 @@
 package com.sceyt.sceytchatuikit.imagepicker.adapter
 
-import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker.MediaModel
+import com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker.MediaData
 
-sealed class MediaItem(val media: MediaModel) {
-    data class Image(private val data: MediaModel) : MediaItem(data)
-    data class Video(private val data: MediaModel,
+sealed class MediaItem(val media: MediaData) {
+    data class Image(private val data: MediaData) : MediaItem(data)
+    data class Video(private val data: MediaData,
                      val duration: Double) : MediaItem(data)
 
     override fun equals(other: Any?): Boolean {

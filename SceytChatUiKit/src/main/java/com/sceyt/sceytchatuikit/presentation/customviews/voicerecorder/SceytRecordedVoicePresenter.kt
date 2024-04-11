@@ -1,6 +1,7 @@
 package com.sceyt.sceytchatuikit.presentation.customviews.voicerecorder
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View.OnClickListener
@@ -10,12 +11,14 @@ import com.masoudss.lib.WaveformSeekBar
 import com.sceyt.sceytchatuikit.databinding.SceytRecordedVoicePresenterBinding
 import com.sceyt.sceytchatuikit.extensions.TAG_REF
 import com.sceyt.sceytchatuikit.extensions.durationToMinSecShort
+import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.sceytchatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.sceytchatuikit.extensions.setPlayButtonIcon
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayer
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
+import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.sceytchatuikit.sceytstyles.MessageInputViewStyle
 import java.io.File
 
@@ -92,6 +95,7 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
                             }
                         }, TAG_REF)
                     }
+
                     icSendMessage.id -> {
                         AudioPlayerHelper.stop(file.path)
                         isShowing = false
@@ -109,6 +113,8 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
 
     private fun SceytRecordedVoicePresenterBinding.setupStyle() {
         icSendMessage.setImageResource(MessageInputViewStyle.sendMessageIcon)
+        icSendMessage.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        waveformSeekBar.waveProgressColor = getCompatColor(SceytKitConfig.sceytColorAccent)
     }
 
     interface RecordedVoicePresentListeners {

@@ -62,21 +62,24 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="1dp"
         android:background="@color/sceyt_color_primary"
-        android:paddingVertical="12dp"
+        android:paddingVertical="8dp"
         app:layout_constraintTop_toBottomOf="@+id/layoutLinkPreview">
 
         <com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.mention.MentionSupportEditText
             android:id="@+id/messageInput"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="14dp"
-            android:background="@null"
+            android:layout_marginHorizontal="8dp"
+            android:background="@drawable/sceyt_bg_corners_20"
+            android:backgroundTint="@color/sceyt_color_gray_themed"
             android:gravity="center_vertical"
-            android:hint="@string/sceyt_message"
+            android:hint="@string/sceyt_write_a_message"
             android:includeFontPadding="false"
             android:inputType="textMultiLine|textCapSentences"
             android:maxLines="6"
-            android:minHeight="24dp"
+            android:minHeight="35dp"
+            android:paddingHorizontal="13dp"
+            android:paddingVertical="8dp"
             android:textColor="@color/sceyt_color_black_themed"
             android:textColorHint="@color/sceyt_color_hint"
             android:textSize="16sp"
@@ -89,18 +92,22 @@
             android:id="@+id/icAddAttachments"
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:layout_marginStart="14dp"
+            android:layout_marginStart="8dp"
+            android:background="?selectableItemBackgroundBorderless"
             android:padding="2dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/icSendMessage"
             app:srcCompat="@drawable/sceyt_ic_upload_file" />
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icSendMessage"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_marginEnd="14dp"
-            android:padding="2dp"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/sceyt_bg_circle"
+            android:padding="7dp"
+            android:tint="@color/sceyt_color_white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:srcCompat="@drawable/sceyt_ic_voice" />
@@ -113,7 +120,9 @@
         android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/viewTop"
+        app:layout_constraintVertical_bias="1" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnJoin"
