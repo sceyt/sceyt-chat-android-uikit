@@ -7,7 +7,7 @@
     android:background="@color/sceyt_color_bg"
     tools:context=".presentation.createconversation.newgroup.CreateGroupActivity">
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCustomToolbar
+    <com.sceyt.chatuikit.presentation.customviews.SceytCustomToolbar
         android:id="@+id/layoutToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -33,7 +33,7 @@
                 android:paddingHorizontal="16dp"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
+                <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
                     android:id="@+id/avatar"
                     android:layout_width="@dimen/_60sdp"
                     android:layout_height="@dimen/_60sdp"
@@ -109,7 +109,7 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCustomFloatingActonButton
+    <com.sceyt.chatuikit.presentation.customviews.SceytCustomFloatingActonButton
         android:id="@+id/btnCreate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

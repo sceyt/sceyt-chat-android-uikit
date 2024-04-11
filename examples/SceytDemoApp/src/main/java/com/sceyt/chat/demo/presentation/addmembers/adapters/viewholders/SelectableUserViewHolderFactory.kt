@@ -7,7 +7,7 @@ import com.sceyt.chat.demo.databinding.ItemSelectUserBinding
 import com.sceyt.chat.demo.presentation.common.BaseViewHolder
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.demo.presentation.addmembers.adapters.SelectableUsersAdapter
-import com.sceyt.sceytchatuikit.databinding.SceytItemLoadingMoreBinding
+import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 
 class SelectableUserViewHolderFactory(context: Context, private val listeners: SelectableUsersAdapter.ClickListener) {
 

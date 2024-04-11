@@ -7,11 +7,11 @@ import androidx.core.widget.doAfterTextChanged
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.ActivityLoginBinding
 import com.sceyt.chat.demo.presentation.mainactivity.MainActivity
-import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
-import com.sceyt.sceytchatuikit.extensions.hideSoftInput
-import com.sceyt.sceytchatuikit.extensions.launchActivity
-import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.sceytchatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.hideSoftInput
+import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.presentation.root.PageState
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class LoginActivity : AppCompatActivity() {

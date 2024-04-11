@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".presentation.createconversation.createchannel.CreateChannelActivity">
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCustomToolbar
+    <com.sceyt.chatuikit.presentation.customviews.SceytCustomToolbar
         android:id="@+id/layoutToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -7,7 +7,7 @@
     android:background="@drawable/sceyt_bg_underline"
     android:paddingHorizontal="17dp">
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircleCheckBox
+    <com.sceyt.chatuikit.presentation.customviews.SceytCircleCheckBox
         android:id="@+id/checkbox"
         android:layout_width="22dp"
         android:layout_height="22dp"
@@ -16,7 +16,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
+    <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
         android:id="@+id/avatar"
         android:layout_width="40dp"
         android:layout_height="40dp"

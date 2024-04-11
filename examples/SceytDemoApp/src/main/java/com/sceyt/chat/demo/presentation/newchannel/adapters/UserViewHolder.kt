@@ -5,11 +5,11 @@ import com.sceyt.chat.demo.databinding.ItemUserBinding
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.demo.presentation.common.BaseViewHolder
 import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.sceytchatuikit.R.*
-import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.extensions.getPresentableName
-import com.sceyt.sceytchatuikit.extensions.getString
-import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import com.sceyt.chatuikit.R.*
+import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.extensions.getPresentableName
+import com.sceyt.chatuikit.extensions.getString
+import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
 class UserViewHolder(private val binding: ItemUserBinding,

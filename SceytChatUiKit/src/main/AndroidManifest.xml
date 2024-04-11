@@ -23,7 +23,7 @@
     <application android:requestLegacyExternalStorage="true">
 
         <activity
-            android:name="com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity"
+            android:name="com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustResize" />

@@ -9,11 +9,11 @@ import com.sceyt.chat.demo.data.Constants
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
-import com.sceyt.sceytchatuikit.persistence.PersistenceUsersMiddleWare
-import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
-import com.sceyt.sceytchatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.chatuikit.persistence.PersistenceUsersMiddleWare
+import com.sceyt.chatuikit.presentation.root.BaseViewModel
+import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn

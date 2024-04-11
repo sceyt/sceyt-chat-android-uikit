@@ -50,7 +50,7 @@
         app:layout_constraintTop_toBottomOf="@+id/tvFileName"
         tools:text="67 KB" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
+    <com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
         android:id="@+id/loadProgress"
         android:layout_width="35dp"
         android:layout_height="35dp"

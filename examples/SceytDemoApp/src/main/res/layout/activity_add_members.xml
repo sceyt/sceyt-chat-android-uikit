@@ -7,7 +7,7 @@
     android:orientation="vertical"
     tools:context=".presentation.addmembers.AddMembersActivity">
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytSearchableToolbar
+    <com.sceyt.chatuikit.presentation.customviews.SceytSearchableToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -56,7 +56,7 @@
         tools:itemCount="20"
         tools:listitem="@layout/item_select_user" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCustomFloatingActonButton
+    <com.sceyt.chatuikit.presentation.customviews.SceytCustomFloatingActonButton
         android:id="@+id/fabNext"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

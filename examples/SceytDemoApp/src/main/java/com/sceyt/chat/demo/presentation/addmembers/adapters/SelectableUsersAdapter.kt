@@ -6,9 +6,9 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.demo.presentation.addmembers.adapters.viewholders.SelectableUserViewHolderFactory
 import com.sceyt.chat.demo.presentation.common.BaseViewHolder
-import com.sceyt.sceytchatuikit.extensions.findIndexed
-import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
-import com.sceyt.sceytchatuikit.shared.utils.MyDiffUtil
+import com.sceyt.chatuikit.extensions.findIndexed
+import com.sceyt.chatuikit.persistence.extensions.toArrayList
+import com.sceyt.chatuikit.shared.utils.MyDiffUtil
 
 class SelectableUsersAdapter(
         private var usersList: ArrayList<UserItem>,

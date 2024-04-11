@@ -18,7 +18,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <com.sceyt.sceytchatuikit.presentation.common.ExoCustomPlayPauseImage
+        <com.sceyt.chatuikit.presentation.common.ExoCustomPlayPauseImage
             android:id="@id/exo_play_pause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

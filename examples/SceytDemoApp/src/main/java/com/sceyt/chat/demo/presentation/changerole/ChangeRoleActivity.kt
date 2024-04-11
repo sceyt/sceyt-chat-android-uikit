@@ -10,12 +10,11 @@ import com.sceyt.chat.demo.databinding.ActivityChooseRoleBinding
 import com.sceyt.chat.demo.presentation.changerole.adapter.ChooseRoleAdapter
 import com.sceyt.chat.demo.presentation.changerole.adapter.RoleItem
 import com.sceyt.chat.demo.presentation.changerole.viewmodel.RoleViewModel
-import com.sceyt.sceytchatuikit.R.anim
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.extensions.findIndexed
-import com.sceyt.sceytchatuikit.extensions.overrideTransitions
-import com.sceyt.sceytchatuikit.extensions.parcelable
-import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.extensions.findIndexed
+import com.sceyt.chatuikit.extensions.overrideTransitions
+import com.sceyt.chatuikit.extensions.parcelable
+import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 
 class ChangeRoleActivity : AppCompatActivity() {
     private lateinit var binding: ActivityChooseRoleBinding
@@ -86,12 +85,12 @@ class ChangeRoleActivity : AppCompatActivity() {
         result.putExtra(MEMBER, intent.parcelable<SceytMember>(MEMBER))
         setResult(Activity.RESULT_OK, result)
         finish()
-        overrideTransitions(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right, false)
+        overrideTransitions(com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right, false)
     }
 
     override fun finish() {
         super.finish()
-        overrideTransitions(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right, false)
+        overrideTransitions(com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right, false)
     }
 
     companion object {

@@ -7,13 +7,13 @@
     android:background="@color/sceyt_color_bg"
     tools:context=".presentation.conversation.ConversationActivity">
 
-    <com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
+    <com.sceyt.chatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
         android:id="@+id/headerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
+    <com.sceyt.chatuikit.presentation.uicomponents.conversation.MessagesListView
         android:id="@+id/messagesListView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -23,7 +23,7 @@
         app:layout_constraintBottom_toTopOf="@+id/messageInputView"
         app:layout_constraintTop_toBottomOf="@+id/headerView" />
 
-    <com.sceyt.sceytchatuikit.presentation.uicomponents.messageinput.MessageInputView
+    <com.sceyt.chatuikit.presentation.uicomponents.messageinput.MessageInputView
         android:id="@+id/messageInputView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

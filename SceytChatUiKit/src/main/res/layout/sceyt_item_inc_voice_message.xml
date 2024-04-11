@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircleCheckBox
+    <com.sceyt.chatuikit.presentation.customviews.SceytCircleCheckBox
         android:id="@+id/selectView"
         android:layout_width="22dp"
         android:layout_height="22dp"
@@ -14,7 +14,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
+    <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
         android:id="@+id/avatar"
         android:layout_width="@dimen/_28sdp"
         android:layout_height="@dimen/_28sdp"
@@ -28,7 +28,7 @@
         tools:sceytAvatarViewFullName="Ar"
         tools:visibility="visible" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytToReplyLineView
+    <com.sceyt.chatuikit.presentation.customviews.SceytToReplyLineView
         android:id="@+id/toReplyLine"
         android:layout_width="10dp"
         android:layout_height="0dp"
@@ -121,7 +121,7 @@
             app:layout_constraintTop_toBottomOf="@+id/viewReply"
             app:srcCompat="@drawable/sceyt_ic_play" />
 
-        <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
+        <com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
             android:id="@+id/loadProgress"
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -186,7 +186,7 @@
             app:layout_constraintStart_toEndOf="@id/playPauseButton"
             tools:text="00:00" />
 
-        <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
+        <com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
             android:id="@+id/messageDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

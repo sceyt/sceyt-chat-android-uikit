@@ -7,7 +7,7 @@ plugins {
 
 android {
     compileSdk compile_sdk_version
-    namespace 'com.sceyt.sceytchatuikit'
+    namespace 'com.sceyt.chatuikit'
 
     defaultConfig {
         minSdk min_sdk_version
@@ -45,7 +45,6 @@ android {
         buildConfig = true
     }
 }
-
 
 dependencies {
     api libs.appcompat

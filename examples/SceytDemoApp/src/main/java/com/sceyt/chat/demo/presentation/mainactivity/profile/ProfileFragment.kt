@@ -18,25 +18,25 @@ import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.databinding.FragmentProfileBinding
 import com.sceyt.chat.demo.presentation.login.LoginActivity
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.hideKeyboard
-import com.sceyt.sceytchatuikit.extensions.isNightMode
-import com.sceyt.sceytchatuikit.extensions.setOnlyClickable
-import com.sceyt.sceytchatuikit.extensions.showSoftInput
-import com.sceyt.sceytchatuikit.presentation.common.SceytDialog
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
-import com.sceyt.sceytchatuikit.presentation.uicomponents.profile.viewmodel.ProfileViewModel
-import com.sceyt.sceytchatuikit.sceytstyles.UserStyle
-import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
+import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.hideKeyboard
+import com.sceyt.chatuikit.extensions.isNightMode
+import com.sceyt.chatuikit.extensions.setOnlyClickable
+import com.sceyt.chatuikit.extensions.showSoftInput
+import com.sceyt.chatuikit.presentation.common.SceytDialog
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
+import com.sceyt.chatuikit.presentation.uicomponents.profile.viewmodel.ProfileViewModel
+import com.sceyt.chatuikit.sceytstyles.UserStyle
+import com.sceyt.chatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
-import com.sceyt.sceytchatuikit.R as SceytKitR
+import com.sceyt.chatuikit.R as SceytKitR
 
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
