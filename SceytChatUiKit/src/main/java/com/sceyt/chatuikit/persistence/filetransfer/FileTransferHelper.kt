@@ -7,7 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.di.SceytKoinComponent
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.runOnMainThread
@@ -18,8 +18,8 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferData.Companion.withP
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.ErrorDownload
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.ErrorUpload
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploaded
-import com.sceyt.chatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
-import com.sceyt.chatuikit.persistence.logics.messageslogic.MessagesCache
+import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.logicimpl.messageslogic.MessagesCache
 import com.sceyt.chatuikit.persistence.mappers.upsertSizeMetadata
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil

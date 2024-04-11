@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
@@ -329,7 +330,7 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
-    override suspend fun sendTypingState(channelId: Long, typing: Boolean) {
+    override suspend fun sendTyping(channelId: Long, typing: Boolean) {
         if (typing)
             ChannelOperator.build(channelId).startTyping()
         else ChannelOperator.build(channelId).stopTyping()

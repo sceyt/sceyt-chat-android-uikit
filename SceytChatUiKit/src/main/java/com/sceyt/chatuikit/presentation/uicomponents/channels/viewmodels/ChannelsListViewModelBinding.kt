@@ -16,8 +16,8 @@ import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isResumed
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
-import com.sceyt.chatuikit.persistence.logics.channelslogic.ChannelUpdateData
-import com.sceyt.chatuikit.persistence.logics.channelslogic.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelUpdateData
+import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.presentation.common.getPeer
 import com.sceyt.chatuikit.presentation.uicomponents.channels.ChannelsListView
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem

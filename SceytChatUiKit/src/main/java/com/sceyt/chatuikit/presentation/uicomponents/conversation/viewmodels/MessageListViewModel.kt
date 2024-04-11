@@ -11,7 +11,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.SceytKitClient
-import com.sceyt.chatuikit.SceytSyncManager
+import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventData
@@ -34,15 +34,14 @@ import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
-import com.sceyt.chatuikit.data.repositories.MessagesRepository
 import com.sceyt.chatuikit.data.toFileListItem
-import com.sceyt.chatuikit.di.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.PersistenceAttachmentsMiddleWare
-import com.sceyt.chatuikit.persistence.PersistenceChanelMiddleWare
-import com.sceyt.chatuikit.persistence.PersistenceMembersMiddleWare
-import com.sceyt.chatuikit.persistence.PersistenceMessagesMiddleWare
-import com.sceyt.chatuikit.persistence.PersistenceReactionsMiddleWare
-import com.sceyt.chatuikit.persistence.PersistenceUsersMiddleWare
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChanelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
+import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
@@ -62,7 +61,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
-import com.sceyt.chatuikit.persistence.logics.channelslogic.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.MessageActionBridge
@@ -103,13 +102,12 @@ class MessageListViewModel(
         var channel: SceytChannel,
 ) : BaseViewModel(), SceytKoinComponent {
 
-    private val persistenceMessageMiddleWare: PersistenceMessagesMiddleWare by inject()
-    internal val persistenceChanelMiddleWare: PersistenceChanelMiddleWare by inject()
-    private val persistenceReactionsMiddleWare: PersistenceReactionsMiddleWare by inject()
-    internal val persistenceAttachmentMiddleWare: PersistenceAttachmentsMiddleWare by inject()
-    internal val persistenceMembersMiddleWare: PersistenceMembersMiddleWare by inject()
-    internal val persistenceUsersMiddleWare: PersistenceUsersMiddleWare by inject()
-    private val messagesRepository: MessagesRepository by inject()
+    private val messageInteractor: MessageInteractor by inject()
+    internal val chanelInteractor: ChanelInteractor by inject()
+    private val messageReactionInteractor: MessageReactionInteractor by inject()
+    internal val attachmentInteractor: AttachmentInteractor by inject()
+    internal val channelMemberInteractor: ChannelMemberInteractor by inject()
+    internal val userInteractor: UserInteractor by inject()
     private val application: Application by inject()
     private val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
@@ -194,7 +192,7 @@ class MessageListViewModel(
 
 
     init {
-        onNewMessageFlow = persistenceMessageMiddleWare.getOnMessageFlow()
+        onNewMessageFlow = messageInteractor.getOnMessageFlow()
             .filter { it.first.id == channel.id /*&& it.second.replyInThread == replyInThread*/ }
             .mapNotNull { initMessageInfoData(it.second) }
 
@@ -248,7 +246,7 @@ class MessageListViewModel(
         notifyPageLoadingState(isLoadingMore)
 
         loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, loadKey = loadKey).collect {
+            messageInteractor.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, loadKey = loadKey).collect {
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(it)
                 }
@@ -263,7 +261,7 @@ class MessageListViewModel(
         notifyPageLoadingState(isLoadingMore)
 
         loadPrevJob = viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadNextMessages(conversationId, lastMessageId, replyInThread, offset).collect {
+            messageInteractor.loadNextMessages(conversationId, lastMessageId, replyInThread, offset).collect {
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(it)
                 }
@@ -277,7 +275,7 @@ class MessageListViewModel(
         loadNextJob?.cancel()
         loadNearJob = viewModelScope.launch(Dispatchers.IO) {
             val limit = min(50, MESSAGES_LOAD_SIZE * 2)
-            persistenceMessageMiddleWare.loadNearMessages(conversationId, messageId, replyInThread,
+            messageInteractor.loadNearMessages(conversationId, messageId, replyInThread,
                 limit, loadKey, ignoreServer = ignoreServer).collect { response ->
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(response)
@@ -291,7 +289,7 @@ class MessageListViewModel(
 
         loadNearJob?.cancel()
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.loadNewestMessages(conversationId, replyInThread,
+            messageInteractor.loadNewestMessages(conversationId, replyInThread,
                 loadKey = loadKey, ignoreDb = false).collect { response ->
                 withContext(Dispatchers.Main) {
                     initPaginationResponse(response)
@@ -302,14 +300,14 @@ class MessageListViewModel(
 
     fun syncCenteredMessage(messageId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.syncNearMessages(conversationId, messageId, replyInThread)
+            val response = messageInteractor.syncNearMessages(conversationId, messageId, replyInThread)
             _syncCenteredMessageLiveData.postValue(response)
         }
     }
 
     fun searchMessages(query: String) {
         viewModelScope.launch {
-            val resp = persistenceMessageMiddleWare.searchMessages(conversationId, replyInThread, query)
+            val resp = messageInteractor.searchMessages(conversationId, replyInThread, query)
             (resp as? SceytPagingResponse.Success)?.let {
                 it.data?.let { messages ->
                     val reversed = messages.reversed()
@@ -324,7 +322,7 @@ class MessageListViewModel(
     private fun loadNextSearchedMessages() {
         if (isLoadingNearToSearchMessagesServer.getAndSet(true)) return
         viewModelScope.launch {
-            val resp = persistenceMessageMiddleWare.loadNextSearchMessages()
+            val resp = messageInteractor.loadNextSearchMessages()
             (resp as? SceytPagingResponse.Success)?.let {
                 it.data?.let { messages ->
                     val oldValue = _searchResult.value ?: return@launch
@@ -360,7 +358,7 @@ class MessageListViewModel(
 
     fun sendPendingMessages() {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.sendPendingMessages(conversationId)
+            messageInteractor.sendPendingMessages(conversationId)
         }
     }
 
@@ -423,7 +421,7 @@ class MessageListViewModel(
                     // Update transfer state to Uploading, otherwise SendAttachmentWorkManager will
                     // not start uploading.
                     viewModelScope.launch(Dispatchers.IO) {
-                        persistenceAttachmentMiddleWare.updateTransferDataByMsgTid(TransferData(
+                        attachmentInteractor.updateTransferDataByMsgTid(TransferData(
                             item.sceytMessage.tid, item.file.progressPercent
                                     ?: 0f, Uploading, item.file.filePath, item.file.url))
                     }
@@ -448,7 +446,7 @@ class MessageListViewModel(
     @SuppressWarnings("WeakerAccess")
     fun addReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceReactionsMiddleWare.addReaction(channel.id, message.id, scoreKey, 1)
+            val response = messageReactionInteractor.addReaction(channel.id, message.id, scoreKey, 1)
             notifyPageStateWithResponse(response, showError = false)
         }
     }
@@ -456,33 +454,33 @@ class MessageListViewModel(
     @SuppressWarnings("WeakerAccess")
     fun deleteReaction(message: SceytMessage, scoreKey: String, isPending: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceReactionsMiddleWare.deleteReaction(channel.id, message.id, scoreKey, isPending)
+            val response = messageReactionInteractor.deleteReaction(channel.id, message.id, scoreKey, isPending)
             notifyPageStateWithResponse(response, showError = false)
         }
     }
 
     fun sendMessage(message: Message) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.sendMessageAsFlow(channel.id, message).collect()
+            messageInteractor.sendMessageAsFlow(channel.id, message).collect()
         }
     }
 
     fun sendMessages(messages: List<Message>) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.sendMessages(channel.id, messages)
+            messageInteractor.sendMessages(channel.id, messages)
         }
     }
 
     fun editMessage(message: SceytMessage) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceMessageMiddleWare.editMessage(channel.id, message)
+            messageInteractor.editMessage(channel.id, message)
         }
     }
 
     @SuppressWarnings("WeakerAccess")
     fun deleteMessage(message: SceytMessage, onlyForMe: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.deleteMessage(channel.id, message, onlyForMe)
+            val response = messageInteractor.deleteMessage(channel.id, message, onlyForMe)
             _messageForceDeleteLiveData.postValue(response)
         }
     }
@@ -495,45 +493,45 @@ class MessageListViewModel(
 
     fun markMessageAsRead(vararg messageIds: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.markMessagesAs(channel.id, MarkerTypeEnum.Displayed, *messageIds)
+            val response = messageInteractor.markMessagesAs(channel.id, MarkerTypeEnum.Displayed, *messageIds)
             _messageMarkerLiveData.postValue(response)
         }
     }
 
     fun addMessageMarker(marker: String, vararg messageIds: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceMessageMiddleWare.addMessagesMarker(channel.id, marker, *messageIds)
+            val response = messageInteractor.addMessagesMarker(channel.id, marker, *messageIds)
             _messageMarkerLiveData.postValue(response)
         }
     }
 
     fun sendTypingEvent(typing: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            messagesRepository.sendTypingState(channel.id, typing)
+            messageInteractor.sendTyping(channel.id, typing)
         }
     }
 
     fun updateDraftMessage(text: Editable?, mentionUsers: List<Mention>, styling: List<BodyStyleRange>?,
                            replyOrEditMessage: SceytMessage?, isReply: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceChanelMiddleWare.updateDraftMessage(channel.id, text.toString(),
+            chanelInteractor.updateDraftMessage(channel.id, text.toString(),
                 mentionUsers, styling, replyOrEditMessage, isReply)
         }
     }
 
     fun join() {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceChanelMiddleWare.join(channel.id)
+            val response = chanelInteractor.join(channel.id)
             _joinLiveData.postValue(response)
         }
     }
 
     fun getChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceChanelMiddleWare.getChannelFromServer(channelId)
+            val response = chanelInteractor.getChannelFromServer(channelId)
             // If response is Error, try to get channel from db.
             if (response is SceytResponse.Error)
-                persistenceChanelMiddleWare.getChannelFromDb(channelId)?.let {
+                chanelInteractor.getChannelFromDb(channelId)?.let {
                     _channelLiveData.postValue(SceytResponse.Success(it))
                 } ?: _channelLiveData.postValue(response)
         }
@@ -541,14 +539,14 @@ class MessageListViewModel(
 
     fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = persistenceChanelMiddleWare.markChannelAsRead(channelId)
+            val response = chanelInteractor.markChannelAsRead(channelId)
             _channelLiveData.postValue(response)
         }
     }
 
     fun loadChannelMembersIfNeeded() {
         viewModelScope.launch(Dispatchers.IO) {
-            val count = persistenceMembersMiddleWare.getMembersCountDb(channel.id)
+            val count = channelMemberInteractor.getMembersCountDb(channel.id)
             if (channel.memberCount > count)
                 loadChannelMembers(0, null).collect()
         }
@@ -558,12 +556,12 @@ class MessageListViewModel(
         viewModelScope.launch(Dispatchers.IO) {
 
             suspend fun loadMembers(offset: Int): PaginationResponse.ServerResponse<SceytMember>? {
-                return persistenceMembersMiddleWare.loadChannelMembers(channel.id, offset, null).firstOrNull {
+                return channelMemberInteractor.loadChannelMembers(channel.id, offset, null).firstOrNull {
                     it is PaginationResponse.ServerResponse
                 } as? PaginationResponse.ServerResponse<SceytMember>
             }
 
-            val count = persistenceMembersMiddleWare.getMembersCountDb(channel.id)
+            val count = channelMemberInteractor.getMembersCountDb(channel.id)
             if (channel.memberCount > count) {
                 var offset = 0
                 var rest = loadMembers(0)
@@ -577,12 +575,12 @@ class MessageListViewModel(
 
     @SuppressWarnings("WeakerAccess")
     fun loadChannelMembers(offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
-        return persistenceMembersMiddleWare.loadChannelMembers(channel.id, offset, role)
+        return channelMemberInteractor.loadChannelMembers(channel.id, offset, role)
     }
 
     fun clearHistory(forEveryOne: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            persistenceChanelMiddleWare.clearHistory(channel.id, forEveryOne)
+            chanelInteractor.clearHistory(channel.id, forEveryOne)
         }
     }
 

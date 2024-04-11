@@ -8,10 +8,10 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.di.SceytKoinComponent
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.getImageBitmapWithGlideWithTimeout
 import com.sceyt.chatuikit.extensions.toBase64
-import com.sceyt.chatuikit.persistence.logics.attachmentlogic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.shared.utils.BitmapUtil
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
 import com.sceyt.chatuikit.shared.utils.ThumbHash

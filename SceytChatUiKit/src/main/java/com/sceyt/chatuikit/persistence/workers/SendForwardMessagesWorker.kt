@@ -7,8 +7,8 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.Operation
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.sceyt.chatuikit.di.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.logics.messageslogic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import org.koin.core.component.inject
 

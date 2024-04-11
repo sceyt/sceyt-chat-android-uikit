@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
+import com.sceyt.chatuikit.persistence.repositories.MessageMarkersRepository
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 class MessageMarkersRepositoryImpl : MessageMarkersRepository {

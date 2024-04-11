@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
-import com.sceyt.chatuikit.persistence.logics.channelslogic.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.common.getChannelType
@@ -59,7 +59,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
                         ?: return@runBlocking null
 
                 val existUsersIds = if (loadedMembers.isEmpty())
-                    persistenceMembersMiddleWare.filterOnlyMembersByIds(channel.id, ids)
+                    channelMemberInteractor.filterOnlyMembersByIds(channel.id, ids)
                 else loadedMembers.map { it.id }
 
                 return@runBlocking mentionAnnotations.filter { annotation ->
@@ -70,7 +70,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     })
 
     viewModelScope.launch(Dispatchers.IO) {
-        persistenceChanelMiddleWare.getChannelFromDb(channel.id)?.let {
+        chanelInteractor.getChannelFromDb(channel.id)?.let {
             withContext(Dispatchers.Main) { messageInputView.setDraftMessage(it.draftMessage) }
         }
     }
@@ -161,7 +161,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     fun upsertLinkPreviewData(linkDetails: LinkPreviewDetails?) {
         if (linkDetails != null) {
             viewModelScope.launch {
-                persistenceAttachmentMiddleWare.upsertLinkPreviewData(linkDetails)
+                attachmentInteractor.upsertLinkPreviewData(linkDetails)
             }
         }
     }
@@ -198,7 +198,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
                 return
             }
             mentionJob = viewModelScope.launch(Dispatchers.IO) {
-                val result = persistenceMembersMiddleWare.loadChannelMembersByDisplayName(channel.id, query)
+                val result = channelMemberInteractor.loadChannelMembersByDisplayName(channel.id, query)
                 if (query.isEmpty())
                     loadedMembers = result
 

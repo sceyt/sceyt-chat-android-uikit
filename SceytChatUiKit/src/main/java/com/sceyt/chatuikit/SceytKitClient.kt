@@ -12,18 +12,19 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chatuikit.data.SceytSharedPreference
+import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
-import com.sceyt.chatuikit.di.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.PersistenceAttachmentsMiddleWare
-import com.sceyt.chatuikit.persistence.PersistenceChanelMiddleWare
-import com.sceyt.chatuikit.persistence.PersistenceMembersMiddleWare
-import com.sceyt.chatuikit.persistence.PersistenceMessagesMiddleWare
-import com.sceyt.chatuikit.persistence.PersistenceUsersMiddleWare
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChanelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.SceytDatabase
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
-import com.sceyt.chatuikit.persistence.logics.channelslogic.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.pushes.SceytFirebaseMessagingDelegate
+import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -42,11 +43,11 @@ object SceytKitClient : SceytKoinComponent {
     private val preferences: SceytSharedPreference by inject()
     private val database: SceytDatabase by inject()
     private val channelsCache: ChannelsCache by inject()
-    private val persistenceChannelsMiddleWare by inject<PersistenceChanelMiddleWare>()
-    private val persistenceMessagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
-    private val persistenceMembersMiddleWare by inject<PersistenceMembersMiddleWare>()
-    private val persistenceUsersMiddleWare by inject<PersistenceUsersMiddleWare>()
-    private val persistenceAttachmentsMiddleWare by inject<PersistenceAttachmentsMiddleWare>()
+    private val persistenceChannelsMiddleWare by inject<ChanelInteractor>()
+    private val messageInteractor by inject<MessageInteractor>()
+    private val channelMemberInteractor by inject<ChannelMemberInteractor>()
+    private val userInteractor by inject<UserInteractor>()
+    private val attachmentInteractor by inject<AttachmentInteractor>()
     private val sceytSyncManager by inject<SceytSyncManager>()
     private val filesTransferService by inject<FileTransferService>()
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -110,15 +111,15 @@ object SceytKitClient : SceytKoinComponent {
                     scope.launch {
                         ProcessLifecycleOwner.get().repeatOnLifecycle(Lifecycle.State.RESUMED) {
                             if (ConnectionEventsObserver.isConnected)
-                                persistenceUsersMiddleWare.setPresenceState(PresenceState.Online)
+                                userInteractor.setPresenceState(PresenceState.Online)
                         }
                     }
                     SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
                     scope.launch(Dispatchers.IO) {
-                        persistenceMessagesMiddleWare.sendAllPendingMarkers()
-                        persistenceMessagesMiddleWare.sendAllPendingMessages()
-                        persistenceMessagesMiddleWare.sendAllPendingMessageStateUpdates()
-                        persistenceMessagesMiddleWare.sendAllPendingReactions()
+                        messageInteractor.sendAllPendingMarkers()
+                        messageInteractor.sendAllPendingMessages()
+                        messageInteractor.sendAllPendingMessageStateUpdates()
+                        messageInteractor.sendAllPendingReactions()
                         if (!channelsCache.initialized)
                             delay(1000) // Await 1 second maybe channel cache will be initialized
                         sceytSyncManager.startSync(false)
@@ -158,16 +159,16 @@ object SceytKitClient : SceytKoinComponent {
     fun getChannelsMiddleWare() = persistenceChannelsMiddleWare
 
     @JvmStatic
-    fun getMessagesMiddleWare() = persistenceMessagesMiddleWare
+    fun getMessagesMiddleWare() = messageInteractor
 
     @JvmStatic
-    fun getAttachmentsMiddleWare() = persistenceAttachmentsMiddleWare
+    fun getAttachmentsMiddleWare() = attachmentInteractor
 
     @JvmStatic
-    fun getMembersMiddleWare() = persistenceMembersMiddleWare
+    fun getMembersMiddleWare() = channelMemberInteractor
 
     @JvmStatic
-    fun getUserMiddleWare() = persistenceUsersMiddleWare
+    fun getUserMiddleWare() = userInteractor
 
     @JvmStatic
     fun getSyncManager() = sceytSyncManager

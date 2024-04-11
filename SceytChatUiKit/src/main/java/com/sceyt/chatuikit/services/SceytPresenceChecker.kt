@@ -4,10 +4,10 @@ import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.di.SceytKoinComponent
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.isAppOnForeground
-import com.sceyt.chatuikit.persistence.PersistenceUsersMiddleWare
+import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,7 +19,7 @@ import java.util.Timer
 import kotlin.concurrent.timer
 
 object SceytPresenceChecker : SceytKoinComponent {
-    private val persistenceUsersMiddleWare: PersistenceUsersMiddleWare by inject()
+    private val userInteractor: UserInteractor by inject()
 
     private val onPresenceCheckUsersFlow_: MutableSharedFlow<List<PresenceUser>> = MutableSharedFlow(
         extraBufferCapacity = 5,
@@ -48,7 +48,7 @@ object SceytPresenceChecker : SceytKoinComponent {
 
     private suspend fun getUsers() {
         if (presenceCheckUsers.keys.isEmpty() || !isAppOnForeground() || !ConnectionEventsObserver.isConnected) return
-        val result = persistenceUsersMiddleWare.getUsersByIds(presenceCheckUsers.keys.toList())
+        val result = userInteractor.getUsersByIds(presenceCheckUsers.keys.toList())
         if (result is SceytResponse.Success) {
             result.data?.let { users ->
                 users.forEach {

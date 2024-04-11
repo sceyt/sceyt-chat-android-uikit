@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
+import com.sceyt.chatuikit.persistence.repositories.ProfileRepository
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 internal class ProfileRepositoryImpl : ProfileRepository {

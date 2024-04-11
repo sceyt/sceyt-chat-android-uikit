@@ -10,7 +10,7 @@ import com.sceyt.chat.demo.di.repositoryModule
 import com.sceyt.chat.demo.di.viewModelModules
 import com.sceyt.chat.demo.presentation.conversation.ConversationActivity
 import com.sceyt.chat.models.SCTLogLevel
-import com.sceyt.chatuikit.SceytChatUIKitInitializer
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.sceytconfigs.BackgroundUploadNotificationClickData
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
@@ -21,7 +21,6 @@ import java.util.UUID
 
 class SceytChatDemoApp : Application() {
     private val connectionProvider by inject<SceytConnectionProvider>()
-    private lateinit var chatClient: ChatClient
 
     override fun onCreate() {
         super.onCreate()
@@ -37,11 +36,13 @@ class SceytChatDemoApp : Application() {
     private fun initSceyt() {
         ChatClient.setEnableNetworkAwarenessReconnection(true)
         ChatClient.setEnableNetworkChangeDetection(true)
-        chatClient = SceytChatUIKitInitializer(this).initialize(
+
+        SceytChatUIKit(this).initialize(
             apiUrl = BuildConfig.API_URL,
             appId = BuildConfig.APP_ID,
             clientId = UUID.randomUUID().toString(),
             enableDatabase = true)
+
         SceytKitConfig.backgroundUploadNotificationClickData = BackgroundUploadNotificationClickData(
             ConversationActivity::class.java, ConversationActivity.CHANNEL
         )

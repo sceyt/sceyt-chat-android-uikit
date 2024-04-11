@@ -6,8 +6,8 @@ import com.sceyt.chat.models.message.Message.MessageBuilder
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.di.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.PersistenceMessagesMiddleWare
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.flowOn
 import org.koin.core.component.inject
 
 class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
-    private val messagesMiddleWare by inject<PersistenceMessagesMiddleWare>()
+    private val messageInteractor by inject<MessageInteractor>()
 
     fun sendForwardMessage(vararg channelIds: Long, markOwnMessageAsForwarded: Boolean, messages: List<SceytMessage>) = callbackFlow {
         trySend(State.Loading)
@@ -42,7 +42,7 @@ class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
                 messagesToSend.add(message)
             }
 
-            messagesMiddleWare.sendFrowardMessages(channelId, *messagesToSend.toTypedArray())
+            messageInteractor.sendFrowardMessages(channelId, *messagesToSend.toTypedArray())
         }
         trySend(State.Finish)
         awaitClose()

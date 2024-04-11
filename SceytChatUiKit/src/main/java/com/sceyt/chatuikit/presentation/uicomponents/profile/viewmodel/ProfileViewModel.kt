@@ -8,15 +8,15 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytKitClient
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.di.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.PersistenceUsersMiddleWare
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
-    private val usersMiddleWare: PersistenceUsersMiddleWare by inject()
+    private val userInteractor: UserInteractor by inject()
 
     private val _currentUserLiveData = MutableLiveData<User>()
     val currentUserLiveData: LiveData<User> = _currentUserLiveData
@@ -41,7 +41,7 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun getCurrentUser() {
         viewModelScope.launch(Dispatchers.IO) {
-            val user = usersMiddleWare.getCurrentUser()
+            val user = userInteractor.getCurrentUser()
             _currentUserLiveData.postValue(user ?: return@launch)
         }
     }
@@ -50,7 +50,7 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
         viewModelScope.launch(Dispatchers.IO) {
             var newUrl = avatarUrl
             if (editedAvatar && avatarUrl != null) {
-                val uploadResult = usersMiddleWare.uploadAvatar(avatarUrl)
+                val uploadResult = userInteractor.uploadAvatar(avatarUrl)
                 if (uploadResult is SceytResponse.Success) {
                     newUrl = uploadResult.data
                 } else {
@@ -58,7 +58,7 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
                     return@launch
                 }
             }
-            when (val response = usersMiddleWare.updateProfile(firstName, lastName, newUrl)) {
+            when (val response = userInteractor.updateProfile(firstName, lastName, newUrl)) {
                 is SceytResponse.Success -> {
                     _editProfileLiveData.postValue(response.data ?: return@launch)
                 }
@@ -73,14 +73,14 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
     fun getSettings() {
         viewModelScope.launch(Dispatchers.IO) {
             ConnectionEventsObserver.awaitToConnectSceyt()
-            val response = usersMiddleWare.getSettings()
+            val response = userInteractor.getSettings()
             notifyResponseAndPageState(_settingsLiveData, response)
         }
     }
 
     fun muteNotifications(muteUntil: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            when (val response = usersMiddleWare.muteNotifications(muteUntil)) {
+            when (val response = userInteractor.muteNotifications(muteUntil)) {
                 is SceytResponse.Success -> {
                     _muteUnMuteLiveData.postValue(true)
                 }
@@ -95,7 +95,7 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun unMuteNotifications() {
         viewModelScope.launch(Dispatchers.IO) {
-            when (val response = usersMiddleWare.unMuteNotifications()) {
+            when (val response = userInteractor.unMuteNotifications()) {
                 is SceytResponse.Success -> {
                     _muteUnMuteLiveData.postValue(false)
                 }

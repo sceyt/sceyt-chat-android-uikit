@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.chatuikit.persistence.repositories.ReactionsRepository
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.suspendCancellableCoroutine
 

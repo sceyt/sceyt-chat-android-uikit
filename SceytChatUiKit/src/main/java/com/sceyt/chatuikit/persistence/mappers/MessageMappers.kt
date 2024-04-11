@@ -5,10 +5,11 @@ import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.data.toAttachment
-import com.sceyt.chatuikit.data.toSceytAttachment
+import com.sceyt.chatuikit.persistence.entity.messages.DraftMessageDb
+import com.sceyt.chatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.chatuikit.persistence.entity.messages.ForwardingDetailsDb
 import com.sceyt.chatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.entity.messages.MessageDb
@@ -48,7 +49,6 @@ fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
         msgId
     else tid
 }
-
 
 fun SceytMessage.toMessageDb(unList: Boolean): MessageDb {
     val tid = getTid(id, tid, incoming)
@@ -279,4 +279,24 @@ fun ForwardingDetailsDb.toForwardingDetails(channelId: Long, user: User?) = Forw
     messageId, channelId,
     user,
     hops
+)
+
+fun DraftMessageDb.toDraftMessage() = DraftMessage(
+    chatId = draftMessageEntity.chatId,
+    message = draftMessageEntity.message,
+    createdAt = draftMessageEntity.createdAt,
+    mentionUsers = mentionUsers?.map { it.toUser() },
+    replyOrEditMessage = replyOrEditMessage?.toSceytMessage(),
+    isReply = draftMessageEntity.isReplyMessage ?: false,
+    bodyAttributes = draftMessageEntity.styleRanges
+)
+
+fun DraftMessageEntity.toDraftMessage(mentionUsers: List<User>?, replyMessage: SceytMessage?) = DraftMessage(
+    chatId = chatId,
+    message = message,
+    createdAt = createdAt,
+    mentionUsers = mentionUsers,
+    replyOrEditMessage = replyMessage,
+    isReply = isReplyMessage ?: false,
+    bodyAttributes = styleRanges
 )

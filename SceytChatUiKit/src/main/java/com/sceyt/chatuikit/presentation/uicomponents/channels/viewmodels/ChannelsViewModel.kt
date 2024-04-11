@@ -7,9 +7,9 @@ import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.di.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.PersistenceChanelMiddleWare
-import com.sceyt.chatuikit.persistence.PersistenceMembersMiddleWare
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.interactor.ChanelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.presentation.common.getPeer
 import com.sceyt.chatuikit.presentation.common.isDirect
@@ -27,8 +27,8 @@ import org.koin.core.component.inject
 
 class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
-    private val channelMiddleWare: PersistenceChanelMiddleWare by inject()
-    private val membersMiddleWare: PersistenceMembersMiddleWare by inject()
+    private val chanelInteractor: ChanelInteractor by inject()
+    private val channelMemberInteractor: ChannelMemberInteractor by inject()
     private var getChannelsJog: Job? = null
     val selectedChannels = mutableSetOf<Long>()
 
@@ -49,7 +49,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
         getChannelsJog?.cancel()
         getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
-            channelMiddleWare.loadChannels(offset, query, loadKey, ignoreDb).collect {
+            chanelInteractor.loadChannels(offset, query, loadKey, ignoreDb).collect {
                 initPaginationResponse(it)
             }
         }
@@ -98,7 +98,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.markChannelAsRead(channelId)
+            val response = chanelInteractor.markChannelAsRead(channelId)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
         }
@@ -106,7 +106,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun markChannelAsUnRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.markChannelAsUnRead(channelId)
+            val response = chanelInteractor.markChannelAsUnRead(channelId)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
         }
@@ -114,7 +114,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun blockAndLeaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.blockAndLeaveChannel(channelId)
+            val response = chanelInteractor.blockAndLeaveChannel(channelId)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
         }
@@ -122,21 +122,21 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun blockUser(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = membersMiddleWare.blockUnBlockUser(userId, true)
+            val response = channelMemberInteractor.blockUnBlockUser(userId, true)
             _blockUserLiveData.postValue(response)
         }
     }
 
     fun unBlockUser(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = membersMiddleWare.blockUnBlockUser(userId, false)
+            val response = channelMemberInteractor.blockUnBlockUser(userId, false)
             _blockUserLiveData.postValue(response)
         }
     }
 
     fun clearHistory(channelId: Long, forEveryone: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.clearHistory(channelId, forEveryone)
+            val response = chanelInteractor.clearHistory(channelId, forEveryone)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
         }
@@ -144,7 +144,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun deleteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.deleteChannel(channelId)
+            val response = chanelInteractor.deleteChannel(channelId)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
         }
@@ -152,7 +152,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun leaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.leaveChannel(channelId)
+            val response = chanelInteractor.leaveChannel(channelId)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
         }
@@ -160,7 +160,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun muteChannel(channelId: Long, muteUntil: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.muteChannel(channelId, muteUntil)
+            val response = chanelInteractor.muteChannel(channelId, muteUntil)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
         }
@@ -168,7 +168,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun unMuteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.unMuteChannel(channelId)
+            val response = chanelInteractor.unMuteChannel(channelId)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
         }
@@ -176,7 +176,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun pinChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.pinChannel(channelId)
+            val response = chanelInteractor.pinChannel(channelId)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
         }
@@ -184,7 +184,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun unpinChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.unpinChannel(channelId)
+            val response = chanelInteractor.unpinChannel(channelId)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
         }
@@ -192,7 +192,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun hideChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.hideChannel(channelId)
+            val response = chanelInteractor.hideChannel(channelId)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
         }

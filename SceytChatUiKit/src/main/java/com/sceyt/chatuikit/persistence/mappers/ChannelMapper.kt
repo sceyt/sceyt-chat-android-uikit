@@ -5,7 +5,6 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
-import com.sceyt.chatuikit.data.toDraftMessage
 import com.sceyt.chatuikit.data.toSceytMember
 import com.sceyt.chatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.chatuikit.persistence.entity.channel.ChannelEntity

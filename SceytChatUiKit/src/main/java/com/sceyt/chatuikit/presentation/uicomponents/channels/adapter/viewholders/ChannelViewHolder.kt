@@ -26,7 +26,7 @@ import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.setOnClickListenerAvailable
 import com.sceyt.chatuikit.extensions.setOnLongClickListenerAvailable
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
-import com.sceyt.chatuikit.persistence.logics.channelslogic.ChatReactionMessagesCache
+import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChatReactionMessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.presentation.common.getAttachmentIconAsString
 import com.sceyt.chatuikit.presentation.common.getFormattedBody

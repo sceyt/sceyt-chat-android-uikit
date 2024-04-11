@@ -16,7 +16,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytKitClient.myId
-import com.sceyt.chatuikit.SceytSyncManager
+import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.ClearedHistory
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.Deleted
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.Left
@@ -42,8 +42,8 @@ import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.isResumed
 import com.sceyt.chatuikit.extensions.isThePositionVisible
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.persistence.logics.channelslogic.ChannelsCache
-import com.sceyt.chatuikit.persistence.logics.messageslogic.MessagesCache
+import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.messageslogic.MessagesCache
 import com.sceyt.chatuikit.presentation.common.checkIsMemberInChannel
 import com.sceyt.chatuikit.presentation.common.getPeer
 import com.sceyt.chatuikit.presentation.common.isPeerDeleted
@@ -680,9 +680,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             is MessageCommandEvent.UserClick -> {
                 if (event.userId == myId) return@setMessageCommandEventListener
                 viewModelScope.launch(Dispatchers.IO) {
-                    val user = persistenceUsersMiddleWare.getUserDbById(event.userId)
+                    val user = userInteractor.getUserDbById(event.userId)
                             ?: User(event.userId)
-                    val response = persistenceChanelMiddleWare.findOrCreateDirectChannel(user)
+                    val response = chanelInteractor.findOrCreateDirectChannel(user)
                     if (response is SceytResponse.Success)
                         response.data?.let {
                             ConversationInfoActivity.launch(event.view.context, response.data)

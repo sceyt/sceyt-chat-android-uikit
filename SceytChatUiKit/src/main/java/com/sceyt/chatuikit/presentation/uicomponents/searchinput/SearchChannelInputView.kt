@@ -12,7 +12,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytSearchViewBinding
-import com.sceyt.chatuikit.di.SceytKoinComponent
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.persistence.SceytDatabase

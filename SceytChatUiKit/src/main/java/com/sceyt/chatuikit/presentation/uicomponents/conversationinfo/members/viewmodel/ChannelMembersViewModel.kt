@@ -16,8 +16,8 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.toMember
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
-import com.sceyt.chatuikit.persistence.logics.channelslogic.PersistenceChannelsLogic
-import com.sceyt.chatuikit.persistence.logics.memberslogic.PersistenceMembersLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import kotlinx.coroutines.Dispatchers

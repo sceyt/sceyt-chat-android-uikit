@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.ErrorUpload
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PauseDownload
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PauseUpload
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PendingDownload
-import com.sceyt.chatuikit.persistence.logics.filetransferlogic.FileTransferLogic
+import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.set
@@ -46,7 +46,6 @@ internal class FileTransferServiceImpl(private var context: Context,
             fileTransferLogic.getAttachmentThumb(messageTid, attachment, thumbData)
         }
     }
-
 
     override fun upload(attachment: SceytAttachment,
                         transferTask: TransferTask) {
