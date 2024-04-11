@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.persistence.SceytDatabase
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferServiceImpl
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
-import com.sceyt.chatuikit.persistence.interactor.ChanelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
@@ -87,7 +87,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
 
 internal val interactorModule = module {
     single { PersistenceMiddleWareImpl(get(), get(), get(), get(), get(), get(), get()) }
-    single<ChanelInteractor> { get<PersistenceMiddleWareImpl>() }
+    single<ChannelInteractor> { get<PersistenceMiddleWareImpl>() }
     single<MessageInteractor> { get<PersistenceMiddleWareImpl>() }
     single<AttachmentInteractor> { get<PersistenceMiddleWareImpl>() }
     single<MessageReactionInteractor> { get<PersistenceMiddleWareImpl>() }

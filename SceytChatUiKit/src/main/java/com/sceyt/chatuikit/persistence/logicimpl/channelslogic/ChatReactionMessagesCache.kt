@@ -37,12 +37,12 @@ object ChatReactionMessagesCache : SceytKoinComponent {
             list[it.id] = it
             channelsCache.channelLastReactionLoaded(channelId)
         } ?: run {
-            SceytKitClient.getMessagesMiddleWare().getMessageDbById(messageId)?.let {
+            SceytKitClient.messageInteractor.getMessageDbById(messageId)?.let {
                 list[it.id] = it
                 channelsCache.channelLastReactionLoaded(channelId)
             } ?: run {
                 ConnectionEventsObserver.awaitToConnectSceytWithTimeout(5.seconds.inWholeMilliseconds)
-                val result = SceytKitClient.getMessagesMiddleWare().getMessageFromServerById(channelId, messageId)
+                val result = SceytKitClient.messageInteractor.getMessageFromServerById(channelId, messageId)
                 if (result is SceytResponse.Success) {
                     result.data?.let {
                         list[it.id] = it

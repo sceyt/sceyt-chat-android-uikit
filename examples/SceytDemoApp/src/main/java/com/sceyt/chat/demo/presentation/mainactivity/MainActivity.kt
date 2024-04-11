@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         loginIfNeeded()
         initViewModel()
 
-        SceytKitClient.getChannelsMiddleWare().getTotalUnreadCount().onEach {
+        SceytKitClient.channelInteractor.getTotalUnreadCount().onEach {
             binding.bottomNavigationView.getOrCreateBadge(R.id.channelsFragment).apply {
                 number = it
                 isVisible = it > 0

@@ -176,7 +176,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         return if (result.first && result.second.isNotNullOrBlank() && !isStopped) {
 
             ConnectionEventsObserver.awaitToConnectSceyt()
-            val response = SceytKitClient.getMessagesMiddleWare().sendMessageWithUploadedAttachments(tmpMessage.channelId, tmpMessage.toMessage())
+            val response = SceytKitClient.messageInteractor.sendMessageWithUploadedAttachments(tmpMessage.channelId, tmpMessage.toMessage())
             if (response is SceytResponse.Success) {
                 response.data?.let {
                     messageLogic.attachmentSuccessfullySent(it)
@@ -211,7 +211,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
 
         val clickData = SceytKitConfig.backgroundUploadNotificationClickData
         val channel = if (clickData != null)
-            SceytKitClient.getChannelsMiddleWare().getChannelFromDb(channelId) else null
+            SceytKitClient.channelInteractor.getChannelFromDb(channelId) else null
 
         if (channel != null && clickData != null) {
             val pendingIntent = applicationContext.initPendingIntent(Intent(applicationContext, clickData.classToOpen).apply {

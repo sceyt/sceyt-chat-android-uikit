@@ -682,7 +682,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 viewModelScope.launch(Dispatchers.IO) {
                     val user = userInteractor.getUserDbById(event.userId)
                             ?: User(event.userId)
-                    val response = chanelInteractor.findOrCreateDirectChannel(user)
+                    val response = channelInteractor.findOrCreateDirectChannel(user)
                     if (response is SceytResponse.Success)
                         response.data?.let {
                             ConversationInfoActivity.launch(event.view.context, response.data)

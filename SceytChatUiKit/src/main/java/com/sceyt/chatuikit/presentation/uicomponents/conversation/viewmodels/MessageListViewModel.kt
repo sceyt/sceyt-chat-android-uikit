@@ -37,7 +37,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.data.toFileListItem
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
-import com.sceyt.chatuikit.persistence.interactor.ChanelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
@@ -103,7 +103,7 @@ class MessageListViewModel(
 ) : BaseViewModel(), SceytKoinComponent {
 
     private val messageInteractor: MessageInteractor by inject()
-    internal val chanelInteractor: ChanelInteractor by inject()
+    internal val channelInteractor: ChannelInteractor by inject()
     private val messageReactionInteractor: MessageReactionInteractor by inject()
     internal val attachmentInteractor: AttachmentInteractor by inject()
     internal val channelMemberInteractor: ChannelMemberInteractor by inject()
@@ -514,24 +514,24 @@ class MessageListViewModel(
     fun updateDraftMessage(text: Editable?, mentionUsers: List<Mention>, styling: List<BodyStyleRange>?,
                            replyOrEditMessage: SceytMessage?, isReply: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            chanelInteractor.updateDraftMessage(channel.id, text.toString(),
+            channelInteractor.updateDraftMessage(channel.id, text.toString(),
                 mentionUsers, styling, replyOrEditMessage, isReply)
         }
     }
 
     fun join() {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = chanelInteractor.join(channel.id)
+            val response = channelInteractor.join(channel.id)
             _joinLiveData.postValue(response)
         }
     }
 
     fun getChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = chanelInteractor.getChannelFromServer(channelId)
+            val response = channelInteractor.getChannelFromServer(channelId)
             // If response is Error, try to get channel from db.
             if (response is SceytResponse.Error)
-                chanelInteractor.getChannelFromDb(channelId)?.let {
+                channelInteractor.getChannelFromDb(channelId)?.let {
                     _channelLiveData.postValue(SceytResponse.Success(it))
                 } ?: _channelLiveData.postValue(response)
         }
@@ -539,7 +539,7 @@ class MessageListViewModel(
 
     fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = chanelInteractor.markChannelAsRead(channelId)
+            val response = channelInteractor.markChannelAsRead(channelId)
             _channelLiveData.postValue(response)
         }
     }
@@ -580,7 +580,7 @@ class MessageListViewModel(
 
     fun clearHistory(forEveryOne: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            chanelInteractor.clearHistory(channel.id, forEveryOne)
+            channelInteractor.clearHistory(channel.id, forEveryOne)
         }
     }
 

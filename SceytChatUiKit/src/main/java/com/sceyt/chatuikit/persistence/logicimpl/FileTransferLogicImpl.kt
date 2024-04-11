@@ -381,7 +381,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     private fun getAttachmentChecksum(filePath: String?): FileChecksumData? {
         val data: FileChecksumData?
         runBlocking(Dispatchers.IO) {
-            data = SceytKitClient.getAttachmentsMiddleWare().getFileChecksumData(filePath)
+            data = SceytKitClient.attachmentInteractor.getFileChecksumData(filePath)
         }
         return data
     }
