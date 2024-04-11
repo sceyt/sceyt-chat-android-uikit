@@ -15,8 +15,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
-import androidx.databinding.BaseObservable
-import androidx.databinding.Bindable
 import androidx.lifecycle.lifecycleScope
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
@@ -24,7 +22,6 @@ import androidx.loader.content.Loader
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.sceyt.chatuikit.BR
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytGaleryMediaPickerBinding
 import com.sceyt.chatuikit.extensions.TAG
@@ -36,9 +33,10 @@ import com.sceyt.chatuikit.extensions.getPermissionsForMangeStorage
 import com.sceyt.chatuikit.extensions.initPermissionLauncher
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.screenHeightPx
-import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.GalleryMediaAdapter
-import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.MediaItem
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.GalleryMediaAdapter
+import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.MediaData
+import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.MediaItem
 import com.sceyt.chatuikit.sceytstyles.GalleryPickerStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -302,18 +300,6 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
             }
         }
         awaitClose()
-    }
-
-    data class MediaData(val contentUri: Uri,
-                         val realPath: String,
-                         val isWrong: Boolean) : BaseObservable() {
-
-        var selected: Boolean = false
-            @Bindable get
-            set(value) {
-                field = value
-                notifyPropertyChanged(BR.selected)
-            }
     }
 
     data class SelectedMediaData(val contentUri: Uri,

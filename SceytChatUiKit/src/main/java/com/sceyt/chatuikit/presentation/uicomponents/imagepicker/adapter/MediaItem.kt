@@ -1,7 +1,5 @@
 package com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter
 
-import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.GalleryMediaPicker.MediaData
-
 sealed class MediaItem(val media: MediaData) {
     data class Image(private val data: MediaData) : MediaItem(data)
     data class Video(private val data: MediaData,
