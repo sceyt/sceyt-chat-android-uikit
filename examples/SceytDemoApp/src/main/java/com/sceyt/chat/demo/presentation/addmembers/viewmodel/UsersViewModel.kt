@@ -3,8 +3,8 @@ package com.sceyt.chat.demo.presentation.addmembers.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.models.user.User
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
+import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytKitClient
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -27,8 +27,8 @@ class UsersViewModel : BaseViewModel() {
         loadingNextItems.set(true)
         viewModelScope.launch(Dispatchers.IO) {
             val response = if (isLoadMore)
-                SceytKitClient.getUserMiddleWare().loadMoreUsers()
-            else SceytKitClient.getUserMiddleWare().loadUsers(query)
+                SceytKitClient.userInteractor.loadMoreUsers()
+            else SceytKitClient.userInteractor.loadUsers(query)
 
             var empty = false
             if (response is SceytResponse.Success) {
@@ -53,7 +53,7 @@ class UsersViewModel : BaseViewModel() {
 
     fun findOrCreateDirectChannel(user: User) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = SceytKitClient.getChannelsMiddleWare().findOrCreateDirectChannel(user)
+            val response = SceytKitClient.channelInteractor.findOrCreateDirectChannel(user)
             notifyResponseAndPageState(_createChannelLiveData, response)
         }
     }

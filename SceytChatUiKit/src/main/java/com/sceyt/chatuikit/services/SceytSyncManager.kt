@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.persistence.interactor.ChanelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
@@ -21,7 +21,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
-class SceytSyncManager(private val chanelInteractor: ChanelInteractor,
+class SceytSyncManager(private val channelInteractor: ChannelInteractor,
                        private val messageInteractor: MessageInteractor,
                        private val channelsCache: ChannelsCache) : SceytKoinComponent {
 
@@ -66,7 +66,7 @@ class SceytSyncManager(private val chanelInteractor: ChanelInteractor,
     }
 
     suspend fun syncConversationMessagesAfter(channelId: Long, fromMessageId: Long) {
-        val response = chanelInteractor.getChannelFromServer(channelId)
+        val response = channelInteractor.getChannelFromServer(channelId)
         if (response is SceytResponse.Success && response.data != null)
             syncMessagesAfter(response.data, fromMessageId, true)
     }
@@ -76,7 +76,7 @@ class SceytSyncManager(private val chanelInteractor: ChanelInteractor,
             suspendCancellableCoroutine { cont ->
                 launch(Dispatchers.IO) {
                     val syncChannelData = SyncChannelData(mutableSetOf(), false)
-                    chanelInteractor.syncChannels(CHANNELS_LOAD_SIZE).collect {
+                    channelInteractor.syncChannels(CHANNELS_LOAD_SIZE).collect {
                         when (it) {
                             is GetAllChannelsResponse.Error -> {
                                 syncChannelData.withError = true

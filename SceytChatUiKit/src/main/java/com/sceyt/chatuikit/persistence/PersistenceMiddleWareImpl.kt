@@ -37,7 +37,7 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentPayLoadDb
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
-import com.sceyt.chatuikit.persistence.interactor.ChanelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
@@ -69,7 +69,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
                                          private val membersLogic: PersistenceMembersLogic,
                                          private val usersLogic: PersistenceUsersLogic,
                                          private val connectionLogic: PersistenceConnectionLogic) :
-        ChannelMemberInteractor, MessageInteractor, ChanelInteractor,
+        ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
         UserInteractor, AttachmentInteractor, MessageReactionInteractor, SceytKoinComponent {
 
 

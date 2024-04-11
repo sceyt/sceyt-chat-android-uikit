@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mentio
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import kotlinx.coroutines.flow.Flow
 
-interface ChanelInteractor {
+interface ChannelInteractor {
     suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: LoadKeyData?,
                              ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
 

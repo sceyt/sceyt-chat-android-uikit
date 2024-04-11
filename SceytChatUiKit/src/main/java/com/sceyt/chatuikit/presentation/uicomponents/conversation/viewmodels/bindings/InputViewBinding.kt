@@ -70,7 +70,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     })
 
     viewModelScope.launch(Dispatchers.IO) {
-        chanelInteractor.getChannelFromDb(channel.id)?.let {
+        channelInteractor.getChannelFromDb(channel.id)?.let {
             withContext(Dispatchers.Main) { messageInputView.setDraftMessage(it.draftMessage) }
         }
     }

@@ -26,7 +26,7 @@ import kotlin.coroutines.resume
 class LoginViewModel(private val preference: AppSharedPreference,
                      private val connectionProvider: SceytConnectionProvider) : BaseViewModel() {
 
-    private val userInteractor: UserInteractor by lazy { SceytKitClient.getUserMiddleWare() }
+    private val userInteractor: UserInteractor by lazy { SceytKitClient.userInteractor }
     private val _logInLiveData = MutableLiveData<Boolean>()
     val logInLiveData: LiveData<Boolean> = _logInLiveData
 

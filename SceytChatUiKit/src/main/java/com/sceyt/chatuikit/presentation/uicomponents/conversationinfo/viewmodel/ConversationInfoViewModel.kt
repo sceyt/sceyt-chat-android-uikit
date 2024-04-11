@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.toMember
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.interactor.ChanelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
-    private val chanelInteractor by inject<ChanelInteractor>()
+    private val channelInteractor by inject<ChannelInteractor>()
     private val channelMemberInteractor by inject<ChannelMemberInteractor>()
 
     private val _channelLiveData = MutableLiveData<SceytChannel>()
@@ -119,35 +119,35 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun getChannelFromServer(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = chanelInteractor.getChannelFromServer(id)
+            val response = channelInteractor.getChannelFromServer(id)
             notifyResponseAndPageState(_channelLiveData, response, showError = false)
         }
     }
 
     fun clearHistory(channelId: Long, forEveryone: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = chanelInteractor.clearHistory(channelId, forEveryone)
+            val response = channelInteractor.clearHistory(channelId, forEveryone)
             notifyResponseAndPageState(_clearHistoryLiveData, response)
         }
     }
 
     fun leaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = chanelInteractor.leaveChannel(channelId)
+            val response = channelInteractor.leaveChannel(channelId)
             notifyResponseAndPageState(_leaveChannelLiveData, response)
         }
     }
 
     fun blockAndLeaveChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = chanelInteractor.blockAndLeaveChannel(channelId)
+            val response = channelInteractor.blockAndLeaveChannel(channelId)
             notifyResponseAndPageState(_leaveChannelLiveData, response)
         }
     }
 
     fun deleteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = chanelInteractor.deleteChannel(channelId)
+            val response = channelInteractor.deleteChannel(channelId)
             notifyResponseAndPageState(_deleteChannelLiveData, response)
         }
     }
@@ -168,21 +168,21 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun muteChannel(channelId: Long, muteUntil: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = chanelInteractor.muteChannel(channelId, muteUntil)
+            val response = channelInteractor.muteChannel(channelId, muteUntil)
             notifyResponseAndPageState(_muteUnMuteLiveData, response)
         }
     }
 
     fun unMuteChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = chanelInteractor.unMuteChannel(channelId)
+            val response = channelInteractor.unMuteChannel(channelId)
             notifyResponseAndPageState(_muteUnMuteLiveData, response)
         }
     }
 
     fun joinChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = chanelInteractor.join(channelId)
+            val response = channelInteractor.join(channelId)
             notifyResponseAndPageState(_joinLiveData, response)
         }
     }
@@ -190,14 +190,14 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun pinChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = chanelInteractor.pinChannel(channelId)
+            val response = channelInteractor.pinChannel(channelId)
             notifyResponseAndPageState(_pinUnpinLiveData, response)
         }
     }
 
     fun unpinChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = chanelInteractor.unpinChannel(channelId)
+            val response = channelInteractor.unpinChannel(channelId)
             notifyResponseAndPageState(_pinUnpinLiveData, response)
         }
     }
