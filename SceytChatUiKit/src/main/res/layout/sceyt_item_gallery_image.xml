@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:bind="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
 
         <variable
             name="data"
-            type="com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker.MediaModel" />
+            type="com.sceyt.sceytchatuikit.imagepicker.GalleryMediaPicker.MediaData" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -27,14 +28,16 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/ivSelect"
-            setGalleryItemCheckedState="@{data.selected}"
             android:layout_width="22dp"
             android:layout_height="22dp"
             android:layout_margin="9dp"
+            android:background="@drawable/sceyt_bg_circle"
+            android:backgroundTint="#00000000"
             android:scaleType="center"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/sceyt_ic_gallery_unchecked_state" />
+            app:srcCompat="@drawable/sceyt_ic_gallery_unchecked_state"
+            bind:setGalleryItemCheckedState="@{data.selected}" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

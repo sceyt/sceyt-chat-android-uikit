@@ -102,7 +102,7 @@ object MessagesStyle {
 
     @JvmField
     @StringRes
-    var messageEditedText: Int = R.string.sceyt_edited
+    var editedMessageStateText: Int = R.string.sceyt_edited
 
     @JvmField
     var messageEditedTextStyle: Int = Typeface.ITALIC
@@ -165,7 +165,7 @@ object MessagesStyle {
         autoLinkTextColor = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiAutoLinkTextColor, autoLinkTextColor)
         sameSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiSameSenderMessageDistance, sameSenderMsgDistance)
         differentSenderMsgDistance = typedArray.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiDifferentSenderMessageDistance, differentSenderMsgDistance)
-        messageEditedText = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageEditedText, messageEditedText)
+        editedMessageStateText = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiMessageEditedText, editedMessageStateText)
         messageEditedTextStyle = typedArray.getInt(R.styleable.MessagesListView_sceytUiMessageEditedTextStyle, messageEditedTextStyle)
         dateSeparatorTextFont = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextFont, dateSeparatorTextFont)
         dateSeparatorTextStyle = typedArray.getInt(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextStyle, dateSeparatorTextStyle)

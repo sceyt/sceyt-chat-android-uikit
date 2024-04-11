@@ -137,7 +137,7 @@
     <string name="sceyt_media_cannot_save_to_gallery">لا يمكن حفظ الملف في المعرض تحقق من الإذن والسماح للتطبيق بالوصول إلى التخزين</string>
     <string name="sceyt_deleted_user">مستخدم محذوف</string>
     <string name="sceyt_share_with">شارك مع</string>
-    <string name="sceyt_write_a_message">اكتب رسالة</string>
+    <string name="sceyt_write_a_message">اكتب رسالة…</string>
     <string name="sceyt_shara_max_item_count">يسمح لك بإرسال 20 ملفًا كحد أقصى.</string>
     <string name="sceyt_share_max_chats_count">يُسمح لك بإرسال رسالة بحد أقصى 5 محادثات.</string>
     <string name="sceyt_photo">صورة</string>

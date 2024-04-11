@@ -249,7 +249,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
 
     private fun initText(text: String): String {
         return if (isEdited) {
-            val editedText = context.getString(MessagesStyle.messageEditedText)
+            val editedText = context.getString(MessagesStyle.editedMessageStateText)
             val str = SpannableStringBuilder("$editedText  $text")
             str.setSpan(StyleSpan(MessagesStyle.messageEditedTextStyle), 0, editedText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             stringBuilder = str

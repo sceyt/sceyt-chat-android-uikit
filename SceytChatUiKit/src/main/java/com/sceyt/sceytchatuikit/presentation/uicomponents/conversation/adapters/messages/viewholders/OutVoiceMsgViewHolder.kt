@@ -12,7 +12,6 @@ import com.sceyt.sceytchatuikit.databinding.SceytItemOutVoiceMessageBinding
 import com.sceyt.sceytchatuikit.extensions.TAG_REF
 import com.sceyt.sceytchatuikit.extensions.durationToMinSecShort
 import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
 import com.sceyt.sceytchatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.sceytchatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.sceytchatuikit.extensions.runOnMainThread
@@ -21,6 +20,7 @@ import com.sceyt.sceytchatuikit.extensions.setTextAndDrawableColor
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayer
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.sceytchatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
+import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferData
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Downloaded
@@ -39,7 +39,6 @@ import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.sceytchatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.sceytchatuikit.persistence.differs.MessageDiff
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.adapters.messages.PlaybackSpeed

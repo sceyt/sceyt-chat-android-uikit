@@ -51,7 +51,7 @@ import java.io.File
 class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCallbacks<Cursor> {
     private lateinit var binding: SceytGaleryMediaPickerBinding
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<*>
-    private val selectedMedia = mutableSetOf<MediaModel>()
+    private val selectedMedia = mutableSetOf<MediaData>()
     private var selectedMediaPaths = mutableSetOf<String>()
     private var requestedSelectionMediaPaths = mutableSetOf<String>()
     private val screenHeight by lazy { screenHeightPx() }
@@ -274,7 +274,7 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
                     val realPath = cursor.getString(columnDataIndex)
                     val isWrong = !File(realPath).exists()
 
-                    val model = MediaModel(contentUri, realPath, isWrong)
+                    val model = MediaData(contentUri, realPath, isWrong)
                     val mediaItem = if (isImage) MediaItem.Image(model) else MediaItem.Video(model, videoDuration)
                     mediaItem.media.selected = checkSelectedItems(mediaItem)
 
@@ -304,9 +304,9 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
         awaitClose()
     }
 
-    data class MediaModel(val contentUri: Uri,
-                          val realPath: String,
-                          val isWrong: Boolean) : BaseObservable() {
+    data class MediaData(val contentUri: Uri,
+                         val realPath: String,
+                         val isWrong: Boolean) : BaseObservable() {
 
         var selected: Boolean = false
             @Bindable get

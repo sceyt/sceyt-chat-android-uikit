@@ -442,7 +442,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         enablePresence = enable
     }
 
-    private val conversationInfoLauncher = context.asComponentActivity().registerForActivityResult(StartActivityForResult()) { result ->
+    private val conversationInfoLauncher = if (isInEditMode) null else context.maybeComponentActivity()?.registerForActivityResult(StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.getBooleanExtra(ConversationInfoActivity.ACTION_SEARCH_MESSAGES, false)?.let { search ->
                 if (search)
@@ -504,12 +504,12 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     //Click listeners
     override fun onAvatarClick(view: View) {
         if (::channel.isInitialized)
-            ConversationInfoActivity.startWithLauncher(context, channel, conversationInfoLauncher)
+            conversationInfoLauncher?.let { ConversationInfoActivity.startWithLauncher(context, channel, it) }
     }
 
     override fun onToolbarClick(view: View) {
         if (::channel.isInitialized)
-            ConversationInfoActivity.startWithLauncher(context, channel, conversationInfoLauncher)
+            conversationInfoLauncher?.let { ConversationInfoActivity.startWithLauncher(context, channel, it) }
     }
 
     override fun onBackClick(view: View) {
