@@ -3,7 +3,7 @@ package com.sceyt.chat.demo.connection
 import com.sceyt.chat.demo.connection.SceytConnectionProvider.Companion.Tag
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.data.repositories.ConnectionRepo
-import com.sceyt.sceytchatuikit.logger.SceytLog
+import com.sceyt.chatuikit.logger.SceytLog
 import java.util.concurrent.atomic.AtomicBoolean
 
 class ChatClientConnectionInterceptor(private val connectionRepo: ConnectionRepo,

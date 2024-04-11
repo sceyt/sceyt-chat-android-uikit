@@ -7,7 +7,7 @@
     android:paddingStart="0dp"
     android:paddingEnd="12dp">
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircleCheckBox
+    <com.sceyt.chatuikit.presentation.customviews.SceytCircleCheckBox
         android:id="@+id/selectView"
         android:layout_width="22dp"
         android:layout_height="22dp"
@@ -38,7 +38,7 @@
             app:layout_constraintStart_toStartOf="@+id/layoutDetails"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
+        <com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
             android:id="@+id/messageDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -7,8 +7,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.demo.databinding.ItemSelectedUserBinding
 import com.sceyt.chat.demo.presentation.common.BaseViewHolder
-import com.sceyt.sceytchatuikit.extensions.findIndexed
-import com.sceyt.sceytchatuikit.extensions.getPresentableName
+import com.sceyt.chatuikit.extensions.findIndexed
+import com.sceyt.chatuikit.extensions.getPresentableName
 
 class SelectedUsersAdapter(private val users: ArrayList<UserItem.User>,
                            private val listener: RemoveListener) : RecyclerView.Adapter<BaseViewHolder<UserItem.User>>() {

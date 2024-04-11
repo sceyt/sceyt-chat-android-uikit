@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    tools:context="com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.membersbyrolebuttons.InfoMembersByRoleButtonsFragment">
+    tools:context="com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.membersbyrolebuttons.InfoMembersByRoleButtonsFragment">
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/members"

@@ -49,7 +49,7 @@
                 app:layout_constraintStart_toEndOf="@+id/icBack"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
+                <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
                     android:id="@+id/avatar"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
@@ -149,7 +149,7 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.MessageActionsToolbar
+            <com.sceyt.chatuikit.presentation.uicomponents.conversationheader.MessageActionsToolbar
                 android:id="@+id/toolBarMessageActions"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -186,7 +186,7 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:srcCompat="@drawable/sceyt_ic_search" />
 
-                <com.sceyt.sceytchatuikit.shared.helpers.SceytClearFocusEditText
+                <com.sceyt.chatuikit.shared.helpers.SceytClearFocusEditText
                     android:id="@+id/inputSearch"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"

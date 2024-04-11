@@ -11,23 +11,23 @@ import androidx.fragment.app.commit
 import com.sceyt.chat.demo.databinding.ActivityConversationBinding
 import com.sceyt.chat.demo.presentation.conversationinfo.CustomConversationInfoActivity
 import com.sceyt.chat.demo.presentation.mainactivity.MainActivity
-import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.messages.SceytMessage
-import com.sceyt.sceytchatuikit.extensions.hideSoftInput
-import com.sceyt.sceytchatuikit.extensions.launchActivity
-import com.sceyt.sceytchatuikit.extensions.overrideTransitions
-import com.sceyt.sceytchatuikit.extensions.parcelable
-import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.MessagesListView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.listeners.MessageActionsViewClickListeners
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModelFactory
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversation.viewmodels.bindings.bind
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity.Companion.ACTION_SEARCH_MESSAGES
-import com.sceyt.sceytchatuikit.presentation.uicomponents.messageinfo.MessageInfoFragment
+import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.extensions.hideSoftInput
+import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.extensions.overrideTransitions
+import com.sceyt.chatuikit.extensions.parcelable
+import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.MessagesListView
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageActionsViewClickListeners
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModelFactory
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.bindings.bind
+import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
+import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity.Companion.ACTION_SEARCH_MESSAGES
+import com.sceyt.chatuikit.presentation.uicomponents.messageinfo.MessageInfoFragment
 
 open class ConversationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityConversationBinding

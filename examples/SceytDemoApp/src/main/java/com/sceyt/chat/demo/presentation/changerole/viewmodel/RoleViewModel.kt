@@ -6,8 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.demo.presentation.changerole.adapter.RoleItem
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
+import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

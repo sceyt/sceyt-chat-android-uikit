@@ -10,10 +10,10 @@ import com.sceyt.chat.demo.di.repositoryModule
 import com.sceyt.chat.demo.di.viewModelModules
 import com.sceyt.chat.demo.presentation.conversation.ConversationActivity
 import com.sceyt.chat.models.SCTLogLevel
-import com.sceyt.sceytchatuikit.SceytUIKitInitializer
-import com.sceyt.sceytchatuikit.extensions.TAG
-import com.sceyt.sceytchatuikit.sceytconfigs.BackgroundUploadNotificationClickData
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.SceytChatUIKitInitializer
+import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.sceytconfigs.BackgroundUploadNotificationClickData
+import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -37,7 +37,7 @@ class SceytChatDemoApp : Application() {
     private fun initSceyt() {
         ChatClient.setEnableNetworkAwarenessReconnection(true)
         ChatClient.setEnableNetworkChangeDetection(true)
-        chatClient = SceytUIKitInitializer(this).initialize(
+        chatClient = SceytChatUIKitInitializer(this).initialize(
             apiUrl = BuildConfig.API_URL,
             appId = BuildConfig.APP_ID,
             clientId = UUID.randomUUID().toString(),

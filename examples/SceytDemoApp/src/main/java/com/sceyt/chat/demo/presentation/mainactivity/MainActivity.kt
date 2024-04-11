@@ -10,10 +10,10 @@ import com.sceyt.chat.demo.databinding.ActivityMainBinding
 import com.sceyt.chat.demo.presentation.login.LoginViewModel
 import com.sceyt.chat.demo.presentation.mainactivity.adapters.MainViewPagerAdapter
 import com.sceyt.chat.demo.presentation.mainactivity.profile.ProfileFragment
-import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
-import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.sceytchatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject

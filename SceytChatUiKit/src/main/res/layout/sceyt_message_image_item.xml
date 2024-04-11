@@ -19,7 +19,7 @@
         app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize17"
         tools:src="@tools:sample/backgrounds/scenic" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
+    <com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
         android:id="@+id/loadProgress"
         android:layout_width="@dimen/messageProgressSize"
         android:layout_height="@dimen/messageProgressSize"

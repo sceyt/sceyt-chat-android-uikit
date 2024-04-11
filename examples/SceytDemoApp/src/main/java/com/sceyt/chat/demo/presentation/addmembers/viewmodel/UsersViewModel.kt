@@ -5,11 +5,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
-import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.USERS_LOAD_SIZE
+import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.presentation.root.BaseViewModel
+import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.USERS_LOAD_SIZE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
