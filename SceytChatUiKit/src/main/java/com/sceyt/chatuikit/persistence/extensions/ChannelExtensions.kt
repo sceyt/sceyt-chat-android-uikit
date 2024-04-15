@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.persistence.extensions
 
 import com.google.gson.Gson
 import com.sceyt.chat.models.user.UserState

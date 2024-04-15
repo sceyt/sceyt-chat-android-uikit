@@ -21,7 +21,7 @@ import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.presentation.root.PageStateView
+import com.sceyt.chatuikit.presentation.customviews.SceytPageStateView
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ViewPagerAdapter
@@ -37,7 +37,7 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     private lateinit var channel: SceytChannel
     private var binding: SceytFragmentChannelVoiceBinding? = null
     private var mediaAdapter: ChannelMediaAdapter? = null
-    private var pageStateView: PageStateView? = null
+    private var pageStateView: SceytPageStateView? = null
     private val mediaType = listOf(AttachmentTypeEnum.Voice.value())
     private lateinit var viewModel: ChannelAttachmentsViewModel
 
@@ -126,7 +126,7 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     private fun addPageStateView() {
-        binding?.root?.addView(PageStateView(requireContext()).apply {
+        binding?.root?.addView(SceytPageStateView(requireContext()).apply {
             setEmptyStateView(R.layout.sceyt_empty_state).also {
                 it.findViewById<TextView>(R.id.empty_state_title).text = getString(R.string.sceyt_no_voice_items_yet)
             }

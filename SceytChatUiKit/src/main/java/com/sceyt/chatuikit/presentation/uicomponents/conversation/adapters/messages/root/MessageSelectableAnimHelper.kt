@@ -11,7 +11,7 @@ import androidx.core.view.marginStart
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.extensions.dpToPx
-import com.sceyt.chatuikit.presentation.common.isPending
+import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 

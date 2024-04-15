@@ -2,8 +2,8 @@ package com.sceyt.chatuikit.persistence.differs
 
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.persistence.extensions.equalsIgnoreNull
-import com.sceyt.chatuikit.presentation.common.getPeer
-import com.sceyt.chatuikit.presentation.common.isDirect
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isDirect
 
 data class ChannelDiff(
         val subjectChanged: Boolean,

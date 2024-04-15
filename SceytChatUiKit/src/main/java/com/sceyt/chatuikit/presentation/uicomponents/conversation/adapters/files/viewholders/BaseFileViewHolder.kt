@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState
 import com.sceyt.chatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
-import com.sceyt.chatuikit.presentation.root.AttachmentViewHolderHelper
+import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.AttachmentDataItem
 

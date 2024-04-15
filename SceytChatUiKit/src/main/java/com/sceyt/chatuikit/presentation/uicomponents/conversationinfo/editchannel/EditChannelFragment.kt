@@ -26,7 +26,7 @@ import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.common.SceytLoader.showLoading
-import com.sceyt.chatuikit.presentation.common.isPublic
+import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.editchannel.viewmodel.EditChannelViewModel

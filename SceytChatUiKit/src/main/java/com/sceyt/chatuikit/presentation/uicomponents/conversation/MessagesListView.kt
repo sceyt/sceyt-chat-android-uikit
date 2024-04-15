@@ -50,7 +50,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.common.KeyboardEventListener
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.presentation.root.PageStateView
+import com.sceyt.chatuikit.presentation.customviews.SceytPageStateView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -84,7 +84,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private var messagesRV: MessagesRV
     private var scrollDownIcon: ScrollToDownView
-    private var pageStateView: PageStateView? = null
+    private var pageStateView: SceytPageStateView? = null
     private lateinit var defaultClickListeners: MessageClickListenersImpl
     private lateinit var clickListeners: MessageClickListenersImpl
     internal lateinit var messageActionsViewClickListeners: MessageActionsViewClickListenersImpl
@@ -126,7 +126,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
 
         if (!isInEditMode)
-            addView(PageStateView(context).also {
+            addView(SceytPageStateView(context).also {
                 pageStateView = it
                 it.setLoadingStateView(MessagesStyle.loadingState)
                 it.setEmptyStateView(MessagesStyle.emptyState)

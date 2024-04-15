@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.customviews
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -7,7 +7,7 @@ import androidx.appcompat.widget.AppCompatImageView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.getString
 
-class ExoCustomPlayPauseImage @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
+class SceytCustomPlayPauseImage @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : AppCompatImageView(context, attrs, defStyleAttr) {
 
     @SuppressLint("PrivateResource")

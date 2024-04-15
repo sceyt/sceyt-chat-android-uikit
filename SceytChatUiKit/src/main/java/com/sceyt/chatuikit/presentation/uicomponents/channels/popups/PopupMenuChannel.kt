@@ -8,7 +8,7 @@ import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.PopupMenu
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.presentation.common.isPeerBlocked
+import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 
 class PopupMenuChannel(context: Context, anchor: View, private var channel: SceytChannel)
     : PopupMenu(context, anchor, Gravity.END) {

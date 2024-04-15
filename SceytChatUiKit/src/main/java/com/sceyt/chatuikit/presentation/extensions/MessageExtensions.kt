@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.extensions
 
 import android.content.Context
 import android.text.Spannable

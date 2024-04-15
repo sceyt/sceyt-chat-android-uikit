@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.root
+package com.sceyt.chatuikit.presentation.customviews
 
 import android.content.Context
 import android.util.AttributeSet
@@ -10,8 +10,9 @@ import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.presentation.root.PageState
 
-class PageStateView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
+class SceytPageStateView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr) {
 
     private val layoutInflater by lazy { LayoutInflater.from(context) }

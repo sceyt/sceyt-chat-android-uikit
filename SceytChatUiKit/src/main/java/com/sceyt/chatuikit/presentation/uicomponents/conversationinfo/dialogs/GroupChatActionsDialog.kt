@@ -14,7 +14,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogGroupChannelActionsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
-import com.sceyt.chatuikit.presentation.common.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
