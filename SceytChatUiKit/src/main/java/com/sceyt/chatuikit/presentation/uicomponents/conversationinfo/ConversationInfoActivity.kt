@@ -39,12 +39,12 @@ import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chatuikit.presentation.common.ChannelActionConfirmationWithDialog
+import com.sceyt.chatuikit.presentation.uicomponents.channels.dialogs.ChannelActionConfirmationWithDialog
 import com.sceyt.chatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
-import com.sceyt.chatuikit.presentation.common.getChannelType
-import com.sceyt.chatuikit.presentation.common.getPeer
-import com.sceyt.chatuikit.presentation.common.isDirect
-import com.sceyt.chatuikit.presentation.common.isPublic
+import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isDirect
+import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.channelInfo.InfoDetailsFragment
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.description.InfoDescriptionFragment

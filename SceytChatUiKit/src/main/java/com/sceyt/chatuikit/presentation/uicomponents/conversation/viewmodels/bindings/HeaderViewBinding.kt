@@ -7,8 +7,8 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelUpdatedType
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
-import com.sceyt.chatuikit.presentation.common.getPeer
-import com.sceyt.chatuikit.presentation.common.isDirect
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
 import com.sceyt.chatuikit.services.SceytPresenceChecker

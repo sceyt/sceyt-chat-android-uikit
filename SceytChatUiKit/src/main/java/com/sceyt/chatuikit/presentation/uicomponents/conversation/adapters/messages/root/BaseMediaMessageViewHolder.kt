@@ -24,7 +24,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PauseDownload
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PendingDownload
 import com.sceyt.chatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
-import com.sceyt.chatuikit.presentation.root.AttachmentViewHolderHelper
+import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem

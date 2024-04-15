@@ -14,12 +14,12 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.differs.diff
-import com.sceyt.chatuikit.presentation.common.ChannelActionConfirmationWithDialog
-import com.sceyt.chatuikit.presentation.common.checkIsMemberInChannel
-import com.sceyt.chatuikit.presentation.common.getPeer
-import com.sceyt.chatuikit.presentation.common.isDirect
+import com.sceyt.chatuikit.presentation.uicomponents.channels.dialogs.ChannelActionConfirmationWithDialog
+import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.presentation.root.PageStateView
+import com.sceyt.chatuikit.presentation.customviews.SceytPageStateView
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.chatuikit.presentation.uicomponents.channels.dialogs.ChatActionsDialog
@@ -38,7 +38,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         ChannelPopupClickListeners.PopupClickListeners {
 
     private var channelsRV: ChannelsRV
-    private var pageStateView: PageStateView? = null
+    private var pageStateView: SceytPageStateView? = null
     private var defaultClickListeners: ChannelClickListenersImpl
     private var clickListeners = ChannelClickListenersImpl(this)
     private var popupClickListeners = ChannelPopupClickListenersImpl(this)
@@ -64,7 +64,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         addView(channelsRV, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 
         if (!isInEditMode)
-            addView(PageStateView(context).also {
+            addView(SceytPageStateView(context).also {
                 pageStateView = it
                 it.setLoadingStateView(ChannelStyle.loadingState)
                 it.setEmptyStateView(ChannelStyle.emptyState)
@@ -277,7 +277,7 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun getChannelsRv() = channelsRV
 
     /**
-     * @return The inner [PageStateView] .
+     * @return The inner [SceytPageStateView] .
      */
     fun getPageStateView() = pageStateView
 

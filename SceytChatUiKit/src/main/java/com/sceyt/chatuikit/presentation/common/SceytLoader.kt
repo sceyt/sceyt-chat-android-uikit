@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.common
 import android.content.Context
 import com.sceyt.chatuikit.extensions.checkAndDismissSafety
 import com.sceyt.chatuikit.extensions.showSafety
-import com.sceyt.chatuikit.presentation.root.SceytProgressDialogLoading
 
 object SceytLoader {
     private var progressDialog: SceytProgressDialogLoading? = null

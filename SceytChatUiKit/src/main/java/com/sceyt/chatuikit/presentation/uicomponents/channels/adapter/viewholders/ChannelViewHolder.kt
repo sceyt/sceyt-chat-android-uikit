@@ -28,14 +28,14 @@ import com.sceyt.chatuikit.extensions.setOnLongClickListenerAvailable
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChatReactionMessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
-import com.sceyt.chatuikit.presentation.common.getAttachmentIconAsString
-import com.sceyt.chatuikit.presentation.common.getFormattedBody
-import com.sceyt.chatuikit.presentation.common.getFormattedLastMessageBody
-import com.sceyt.chatuikit.presentation.common.getPeer
-import com.sceyt.chatuikit.presentation.common.isDirect
-import com.sceyt.chatuikit.presentation.common.isPeerDeleted
-import com.sceyt.chatuikit.presentation.common.isSelf
-import com.sceyt.chatuikit.presentation.common.setChannelMessageDateAndStatusIcon
+import com.sceyt.chatuikit.presentation.extensions.getAttachmentIconAsString
+import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
+import com.sceyt.chatuikit.presentation.extensions.getFormattedLastMessageBody
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isDirect
+import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
+import com.sceyt.chatuikit.persistence.extensions.isSelf
+import com.sceyt.chatuikit.presentation.extensions.setChannelMessageDateAndStatusIcon
 import com.sceyt.chatuikit.presentation.customviews.SceytColorSpannableTextView
 import com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.chatuikit.presentation.customviews.SceytOnlineView
@@ -66,11 +66,11 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             }
 
             parentLayout.setOnLongClickListenerAvailable(ChannelsAdapter.longClickAvailableData) {
-                listeners.onChannelLongClick(it, (channelItem as ChannelListItem.ChannelItem))
+                listeners.onChannelLongClick(it, channelItem as ChannelListItem.ChannelItem)
             }
 
             avatar.setOnClickListenerAvailable(ChannelsAdapter.clickAvailableData) {
-                listeners.onAvatarClick((channelItem as ChannelListItem.ChannelItem))
+                listeners.onAvatarClick(channelItem as ChannelListItem.ChannelItem)
             }
         }
     }

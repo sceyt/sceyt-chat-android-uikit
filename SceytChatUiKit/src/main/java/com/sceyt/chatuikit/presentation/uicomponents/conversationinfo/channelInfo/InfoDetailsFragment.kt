@@ -14,11 +14,11 @@ import com.sceyt.chatuikit.databinding.SceytFragmentInfoDetailsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.parcelable
-import com.sceyt.chatuikit.presentation.common.getChannelType
-import com.sceyt.chatuikit.presentation.common.getDefaultAvatar
-import com.sceyt.chatuikit.presentation.common.getPeer
-import com.sceyt.chatuikit.presentation.common.isPeerDeleted
-import com.sceyt.chatuikit.presentation.common.isSelf
+import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.getDefaultAvatar
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
+import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig

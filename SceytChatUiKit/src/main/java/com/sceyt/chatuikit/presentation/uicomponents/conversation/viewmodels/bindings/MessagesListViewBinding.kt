@@ -44,11 +44,11 @@ import com.sceyt.chatuikit.extensions.isThePositionVisible
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.messageslogic.MessagesCache
-import com.sceyt.chatuikit.presentation.common.checkIsMemberInChannel
-import com.sceyt.chatuikit.presentation.common.getPeer
-import com.sceyt.chatuikit.presentation.common.isPeerDeleted
-import com.sceyt.chatuikit.presentation.common.isPublic
-import com.sceyt.chatuikit.presentation.common.isSelf
+import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
+import com.sceyt.chatuikit.persistence.extensions.isPublic
+import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.LoadKeyType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.MessagesListView

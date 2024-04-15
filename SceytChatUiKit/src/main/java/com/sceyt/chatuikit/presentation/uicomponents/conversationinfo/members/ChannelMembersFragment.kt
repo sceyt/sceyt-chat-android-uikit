@@ -39,7 +39,7 @@ import com.sceyt.chatuikit.extensions.setBoldSpan
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog
-import com.sceyt.chatuikit.presentation.common.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity

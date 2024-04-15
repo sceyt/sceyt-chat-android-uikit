@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.toSceytMember
 import com.sceyt.chatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.chatuikit.persistence.entity.channel.ChannelEntity
-import com.sceyt.chatuikit.presentation.common.isSelf
+import com.sceyt.chatuikit.persistence.extensions.isSelf
 
 fun SceytChannel.toChannelEntity() = ChannelEntity(
     id = id,

@@ -12,8 +12,8 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogChannelActionsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
-import com.sceyt.chatuikit.presentation.common.checkIsMemberInChannel
-import com.sceyt.chatuikit.presentation.common.isSelf
+import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
+import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {

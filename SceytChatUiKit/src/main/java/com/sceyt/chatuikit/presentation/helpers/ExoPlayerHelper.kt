@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.helpers
 
 import android.content.Context
 import androidx.media3.common.MediaItem

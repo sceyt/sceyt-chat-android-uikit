@@ -15,8 +15,8 @@ import com.sceyt.chatuikit.extensions.isFirstItemDisplaying
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
-import com.sceyt.chatuikit.presentation.common.getPeer
-import com.sceyt.chatuikit.presentation.common.isDirect
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelsItemComparatorBy

@@ -12,9 +12,9 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogDirectChannelActionsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
-import com.sceyt.chatuikit.presentation.common.getPeer
-import com.sceyt.chatuikit.presentation.common.isPeerDeleted
-import com.sceyt.chatuikit.presentation.common.isSelf
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
+import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {

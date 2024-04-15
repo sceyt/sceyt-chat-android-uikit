@@ -42,10 +42,10 @@ import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.showSoftInput
-import com.sceyt.chatuikit.presentation.common.getChannelType
-import com.sceyt.chatuikit.presentation.common.getPeer
-import com.sceyt.chatuikit.presentation.common.isPeerDeleted
-import com.sceyt.chatuikit.presentation.common.isSelf
+import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
+import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListeners

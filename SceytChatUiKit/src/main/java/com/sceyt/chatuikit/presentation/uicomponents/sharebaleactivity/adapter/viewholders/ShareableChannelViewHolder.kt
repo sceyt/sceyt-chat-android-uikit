@@ -14,9 +14,9 @@ import com.sceyt.chatuikit.databinding.SceytItemShareChannelBinding
 import com.sceyt.chatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
-import com.sceyt.chatuikit.presentation.common.getChannelType
-import com.sceyt.chatuikit.presentation.common.getPeer
-import com.sceyt.chatuikit.presentation.common.isPeerDeleted
+import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder

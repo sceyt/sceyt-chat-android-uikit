@@ -16,9 +16,9 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
-import com.sceyt.chatuikit.presentation.common.isPeerBlocked
-import com.sceyt.chatuikit.presentation.common.isPeerDeleted
-import com.sceyt.chatuikit.presentation.common.isPublic
+import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
+import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
+import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.sharebaleactivity.adapter.ShareableChannelsAdapter

@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.root
+package com.sceyt.chatuikit.presentation.helpers
 
 import android.content.Context
 import android.graphics.drawable.Drawable

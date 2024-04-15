@@ -37,7 +37,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUploa
 import com.sceyt.chatuikit.persistence.filetransfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
-import com.sceyt.chatuikit.presentation.common.checkLoadedFileIsCorrect
+import com.sceyt.chatuikit.presentation.extensions.checkLoadedFileIsCorrect
 import com.sceyt.chatuikit.shared.mediaencoder.VideoTranscodeHelper
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
 import kotlinx.coroutines.Dispatchers

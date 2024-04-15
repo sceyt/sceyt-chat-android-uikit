@@ -1,9 +1,11 @@
-package com.sceyt.chatuikit.presentation.common
+package com.sceyt.chatuikit.presentation.uicomponents.channels.dialogs
 
 import android.content.Context
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
 import java.util.concurrent.TimeUnit

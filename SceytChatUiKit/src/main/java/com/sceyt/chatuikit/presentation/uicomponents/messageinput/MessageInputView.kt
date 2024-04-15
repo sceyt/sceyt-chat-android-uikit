@@ -49,8 +49,8 @@ import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog
-import com.sceyt.chatuikit.presentation.common.getChannelType
-import com.sceyt.chatuikit.presentation.common.isPeerBlocked
+import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 import com.sceyt.chatuikit.presentation.customviews.voicerecorder.AudioMetadata
 import com.sceyt.chatuikit.presentation.customviews.voicerecorder.RecordingListener
 import com.sceyt.chatuikit.presentation.customviews.voicerecorder.SceytRecordedVoicePresenter

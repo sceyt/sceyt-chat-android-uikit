@@ -58,8 +58,8 @@ import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
-import com.sceyt.chatuikit.presentation.common.getFormattedBody
-import com.sceyt.chatuikit.presentation.common.setConversationMessageDateAndStatusIcon
+import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
+import com.sceyt.chatuikit.presentation.extensions.setConversationMessageDateAndStatusIcon
 import com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.chatuikit.presentation.customviews.SceytToReplyLineView

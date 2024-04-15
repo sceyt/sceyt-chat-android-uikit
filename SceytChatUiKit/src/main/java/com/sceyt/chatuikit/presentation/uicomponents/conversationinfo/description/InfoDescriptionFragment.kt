@@ -14,8 +14,8 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.jsonToObject
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
-import com.sceyt.chatuikit.presentation.common.getPeer
-import com.sceyt.chatuikit.presentation.common.isDirect
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig

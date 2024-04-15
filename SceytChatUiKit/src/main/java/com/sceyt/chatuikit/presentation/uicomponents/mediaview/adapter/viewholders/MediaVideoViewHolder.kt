@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.*
-import com.sceyt.chatuikit.presentation.common.ExoPlayerHelper
+import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.OnMediaClickCallback
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
