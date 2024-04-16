@@ -12,14 +12,15 @@ import com.sceyt.chatuikit.persistence.converters.ListStringConverter
 import com.sceyt.chatuikit.persistence.converters.MessageConverter
 import com.sceyt.chatuikit.persistence.dao.AttachmentDao
 import com.sceyt.chatuikit.persistence.dao.ChannelDao
-import com.sceyt.chatuikit.persistence.dao.ChatUsersReactionDao
+import com.sceyt.chatuikit.persistence.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.dao.DraftMessageDao
 import com.sceyt.chatuikit.persistence.dao.FileChecksumDao
 import com.sceyt.chatuikit.persistence.dao.LinkDao
 import com.sceyt.chatuikit.persistence.dao.LoadRangeDao
-import com.sceyt.chatuikit.persistence.dao.MembersDao
+import com.sceyt.chatuikit.persistence.dao.MarkerDao
+import com.sceyt.chatuikit.persistence.dao.MemberDao
 import com.sceyt.chatuikit.persistence.dao.MessageDao
-import com.sceyt.chatuikit.persistence.dao.PendingMarkersDao
+import com.sceyt.chatuikit.persistence.dao.PendingMarkerDao
 import com.sceyt.chatuikit.persistence.dao.PendingMessageStateDao
 import com.sceyt.chatuikit.persistence.dao.PendingReactionDao
 import com.sceyt.chatuikit.persistence.dao.ReactionDao
@@ -64,7 +65,7 @@ import com.sceyt.chatuikit.persistence.entity.pendings.PendingMessageStateEntity
     FileChecksumEntity::class,
     LinkDetailsEntity::class,
     LoadRangeEntity::class
-], version = 11, autoMigrations = [
+], version = 12, autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
     AutoMigration(from = 3, to = 4, spec = SceytDatabase.AutoMigrationSpec3to4::class),
@@ -75,6 +76,7 @@ import com.sceyt.chatuikit.persistence.entity.pendings.PendingMessageStateEntity
     AutoMigration(from = 8, to = 9),
     AutoMigration(from = 9, to = 10),
     AutoMigration(from = 10, to = 11),
+    AutoMigration(from = 11, to = 12),
 ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
@@ -83,16 +85,17 @@ internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
     abstract fun attachmentsDao(): AttachmentDao
     abstract fun draftMessageDao(): DraftMessageDao
-    abstract fun membersDao(): MembersDao
+    abstract fun membersDao(): MemberDao
     abstract fun userDao(): UserDao
     abstract fun reactionDao(): ReactionDao
-    abstract fun channelUsersReactionDao(): ChatUsersReactionDao
-    abstract fun pendingMarkersDao(): PendingMarkersDao
+    abstract fun channelUsersReactionDao(): ChatUserReactionDao
+    abstract fun pendingMarkersDao(): PendingMarkerDao
     abstract fun pendingReactionDao(): PendingReactionDao
     abstract fun pendingMessageStateDao(): PendingMessageStateDao
     abstract fun fileChecksumDao(): FileChecksumDao
     abstract fun linkDao(): LinkDao
     abstract fun loadRangeDao(): LoadRangeDao
+    abstract fun markerDao(): MarkerDao
 
     @RenameColumn(tableName = "messages", fromColumnName = "isParentMessage", toColumnName = "unList")
     class AutoMigrationSpec3to4 : AutoMigrationSpec

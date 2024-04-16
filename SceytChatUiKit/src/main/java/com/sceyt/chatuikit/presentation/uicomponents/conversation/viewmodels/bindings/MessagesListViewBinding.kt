@@ -10,13 +10,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytKitClient.myId
-import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.ClearedHistory
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.Deleted
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.Left
@@ -31,6 +29,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.getLoadKey
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asActivity
@@ -42,13 +41,13 @@ import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.isResumed
 import com.sceyt.chatuikit.extensions.isThePositionVisible
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
-import com.sceyt.chatuikit.persistence.logicimpl.messageslogic.MessagesCache
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.isSelf
+import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.messageslogic.MessagesCache
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.LoadKeyType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.MessagesListView
@@ -58,6 +57,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.Mes
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MAX_MULTISELECT_MESSAGES_COUNT
 import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
@@ -450,7 +450,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         (listItem as? MessageItem)?.message?.let { message ->
                             if (data.messageIds.contains(message.id)) {
                                 message.userMarkers = message.userMarkers?.toMutableSet()?.apply {
-                                    add(Marker(message.id, user, data.name, data.createdAt))
+                                    add(SceytMarker(message.id, user, data.name, data.createdAt))
                                 }?.toTypedArray()
                             }
                         }

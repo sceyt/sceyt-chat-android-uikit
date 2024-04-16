@@ -6,7 +6,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 
 data class MessageStatusChangeData(
         val channel: SceytChannel,
-        val from: User?,
+        val from: User,
         val status: DeliveryStatus,
         val messageIds: MutableList<Long>
 )

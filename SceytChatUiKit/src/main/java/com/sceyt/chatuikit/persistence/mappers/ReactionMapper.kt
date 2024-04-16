@@ -71,8 +71,6 @@ fun ReactionDb.toReaction(): Reaction {
     }
 }
 
-fun MarkerEntity.toMarker(user: User) = Marker(messageId, user, name, createdAt)
-
 fun ChatUserReactionDb.toSceytReaction(): SceytReaction {
     with(reaction) {
         return SceytReaction(id, messageId, key, score, reason, createdAt, from?.toUser(), pending = false)

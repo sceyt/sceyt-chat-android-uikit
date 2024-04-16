@@ -159,8 +159,7 @@ class MessagesRepositoryImpl : MessagesRepository {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(conversationId).getMessagesById(ids.toLongArray(), object : MessagesCallback {
                 override fun onResult(result: MutableList<Message>?) {
-                    continuation.safeResume(SceytResponse.Success(result?.map { it.toSceytUiMessage() }
-                            ?: emptyList()))
+                    continuation.safeResume(SceytResponse.Success(result?.map { it.toSceytUiMessage() }.orEmpty()))
                 }
 
                 override fun onError(error: SceytException?) {
@@ -183,8 +182,9 @@ class MessagesRepositoryImpl : MessagesRepository {
             searchMessageListQuery = getQueryForSearch(conversationId, replyInThread, MESSAGES_LOAD_SIZE, searchQuery)
             searchMessageListQuery?.loadNext(object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
-                    continuation.safeResume(SceytPagingResponse.Success((messages?.map { it.toSceytUiMessage() }
-                            ?: emptyList()), searchMessageListQuery?.hasNext ?: false))
+                    continuation.safeResume(SceytPagingResponse.Success((messages?.map {
+                        it.toSceytUiMessage()
+                    }.orEmpty()), searchMessageListQuery?.hasNext ?: false))
                 }
 
                 override fun onError(error: SceytException?) {
@@ -199,8 +199,8 @@ class MessagesRepositoryImpl : MessagesRepository {
         return suspendCancellableCoroutine { continuation ->
             searchMessageListQuery?.loadNext(object : MessagesCallback {
                 override fun onResult(messages: MutableList<Message>?) {
-                    continuation.safeResume(SceytPagingResponse.Success((messages?.map { it.toSceytUiMessage() }
-                            ?: emptyList()), searchMessageListQuery?.hasNext ?: false))
+                    continuation.safeResume(SceytPagingResponse.Success((messages?.map { it.toSceytUiMessage() }.orEmpty()),
+                        searchMessageListQuery?.hasNext ?: false))
                 }
 
                 override fun onError(error: SceytException?) {
