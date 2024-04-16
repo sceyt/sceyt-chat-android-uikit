@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.sceytstyles.GalleryPickerStyle
 
 object GalleryDataBindingUtil {
 
-    @BindingAdapter("bind:setGalleryItemCheckedState")
+    @BindingAdapter("setGalleryItemCheckedState")
     @JvmStatic
     fun setGalleryItemCheckedState(image: ImageView, isChecked: Boolean) {
         with(image) {

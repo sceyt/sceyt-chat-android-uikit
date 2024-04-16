@@ -1,9 +1,9 @@
 package com.sceyt.chatuikit.presentation.uicomponents.channels.listeners
 
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.presentation.uicomponents.channels.ChannelsListView
+import com.sceyt.chatuikit.presentation.uicomponents.channels.ChannelListView
 
-open class ChannelPopupClickListenersImpl(view: ChannelsListView) : ChannelPopupClickListeners.PopupClickListeners {
+open class ChannelPopupClickListenersImpl(view: ChannelListView) : ChannelPopupClickListeners.PopupClickListeners {
     private var defaultListeners: ChannelPopupClickListeners.PopupClickListeners = view
     private var markAsReadListener: ChannelPopupClickListeners.MarkAsRead? = null
     private var pinListener: ChannelPopupClickListeners.Pin? = null

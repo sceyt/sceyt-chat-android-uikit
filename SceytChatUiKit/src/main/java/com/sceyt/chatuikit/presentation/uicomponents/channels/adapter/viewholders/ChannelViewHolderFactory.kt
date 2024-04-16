@@ -10,13 +10,19 @@ import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelLis
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 
 open class ChannelViewHolderFactory(context: Context) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
-    protected val channelClickListenersImpl = ChannelClickListenersImpl()
+    protected open val channelClickListenersImpl = ChannelClickListenersImpl()
+    protected lateinit var channelStyle: ChannelListViewStyle
     private var attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)? = null
     var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
         private set
+
+    internal fun setStyle(channelStyle: ChannelListViewStyle) {
+        this.channelStyle = channelStyle
+    }
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return when (viewType) {
@@ -28,7 +34,7 @@ open class ChannelViewHolderFactory(context: Context) {
 
     open fun createChannelViewHolder(parent: ViewGroup): BaseChannelViewHolder {
         val binding = SceytItemChannelBinding.inflate(layoutInflater, parent, false)
-        return ChannelViewHolder(binding, channelClickListenersImpl, attachDetachListener, userNameBuilder)
+        return ChannelViewHolder(binding, channelStyle, channelClickListenersImpl, attachDetachListener, userNameBuilder)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelViewHolder {

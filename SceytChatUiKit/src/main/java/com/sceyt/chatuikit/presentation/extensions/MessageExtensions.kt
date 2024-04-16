@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.extensions
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
@@ -19,24 +20,26 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
-import com.sceyt.chatuikit.sceytstyles.ChannelStyle
+import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 import com.sceyt.chatuikit.sceytstyles.MessagesStyle
 import java.io.File
 
-fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView, dateText: String, edited: Boolean, shouldShowStatus: Boolean) {
+fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView,
+                                                     channelStyle: ChannelListViewStyle,
+                                                     dateText: String, edited: Boolean, shouldShowStatus: Boolean) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || !shouldShowStatus) {
         dateStatusView.setDateAndStatusIcon(dateText, null, edited, false)
         return
     }
     val iconResId = when (deliveryStatus) {
-        DeliveryStatus.Pending -> ChannelStyle.statusIndicatorPendingIcon
-        DeliveryStatus.Sent -> ChannelStyle.statusIndicatorSentIcon
-        DeliveryStatus.Received -> ChannelStyle.statusIndicatorDeliveredIcon
-        DeliveryStatus.Displayed -> ChannelStyle.statusIndicatorReadIcon
+        DeliveryStatus.Pending -> channelStyle.statusIndicatorPendingIcon
+        DeliveryStatus.Sent -> channelStyle.statusIndicatorSentIcon
+        DeliveryStatus.Received -> channelStyle.statusIndicatorDeliveredIcon
+        DeliveryStatus.Displayed -> channelStyle.statusIndicatorReadIcon
         else -> null
     }
     iconResId?.let {
-        dateStatusView.setDateAndStatusIcon(dateText, dateStatusView.context.getCompatDrawable(it), edited, checkIgnoreHighlight(deliveryStatus))
+        dateStatusView.setDateAndStatusIcon(dateText, it, edited, checkIgnoreHighlight(deliveryStatus))
         dateStatusView.isVisible = true
     }
 }
@@ -112,20 +115,21 @@ fun SceytAttachment?.getShowName(context: Context, body: String): String {
     }
 }
 
-fun SceytMessage.getAttachmentIconAsString(context: Context): SpannableStringBuilder {
-    val icRes = getAttachmentIconId() ?: return SpannableStringBuilder()
+fun SceytMessage.getAttachmentIconAsString(channelStyle: ChannelListViewStyle): SpannableStringBuilder {
+    val icRes = getAttachmentIconId(channelStyle) ?: return SpannableStringBuilder()
     val builder = SpannableStringBuilder(". ")
-    builder.setSpan(ImageSpan(context, icRes), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    icRes.setBounds(0, 0, icRes.intrinsicWidth, icRes.intrinsicHeight)
+    builder.setSpan(ImageSpan(icRes), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     return builder
 }
 
-fun SceytMessage.getAttachmentIconId(): Int? {
+fun SceytMessage.getAttachmentIconId(channelStyle: ChannelListViewStyle): Drawable? {
     return attachments?.getOrNull(0)?.let {
         when (it.type) {
-            AttachmentTypeEnum.Video.value() -> ChannelStyle.bodyVideoAttachmentIcon
-            AttachmentTypeEnum.Image.value() -> ChannelStyle.bodyImageAttachmentIcon
-            AttachmentTypeEnum.Voice.value() -> ChannelStyle.bodyVoiceAttachmentIcon
-            AttachmentTypeEnum.File.value() -> ChannelStyle.bodyFileAttachmentIcon
+            AttachmentTypeEnum.Video.value() -> channelStyle.bodyVideoAttachmentIcon
+            AttachmentTypeEnum.Image.value() -> channelStyle.bodyImageAttachmentIcon
+            AttachmentTypeEnum.Voice.value() -> channelStyle.bodyVoiceAttachmentIcon
+            AttachmentTypeEnum.File.value() -> channelStyle.bodyFileAttachmentIcon
             else -> null
         }
     }
