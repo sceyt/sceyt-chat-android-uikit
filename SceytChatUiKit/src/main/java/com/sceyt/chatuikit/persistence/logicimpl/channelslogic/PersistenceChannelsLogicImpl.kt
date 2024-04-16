@@ -40,7 +40,7 @@ import com.sceyt.chatuikit.extensions.toSha256
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.dao.ChannelDao
-import com.sceyt.chatuikit.persistence.dao.ChatUsersReactionDao
+import com.sceyt.chatuikit.persistence.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.dao.DraftMessageDao
 import com.sceyt.chatuikit.persistence.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.dao.MessageDao
@@ -89,7 +89,7 @@ internal class PersistenceChannelsLogicImpl(
         private val messageDao: MessageDao,
         private val rangeDao: LoadRangeDao,
         private val draftMessageDao: DraftMessageDao,
-        private val chatUsersReactionDao: ChatUsersReactionDao,
+        private val chatUserReactionDao: ChatUserReactionDao,
         private val pendingReactionDao: PendingReactionDao,
         private val context: Context,
         private val channelsCache: ChannelsCache) : PersistenceChannelsLogic, SceytKoinComponent {
@@ -232,7 +232,7 @@ internal class PersistenceChannelsLogicImpl(
 
     override suspend fun onMessageEditedOrDeleted(message: SceytMessage) {
         if (message.state == MessageState.Deleted) {
-            chatUsersReactionDao.deleteChannelMessageUserReaction(message.channelId, message.id)
+            chatUserReactionDao.deleteChannelMessageUserReaction(message.channelId, message.id)
             channelsCache.removeChannelMessageReactions(message.channelId, message.id)
         }
 
@@ -462,7 +462,7 @@ internal class PersistenceChannelsLogicImpl(
         }
         usersDao.insertUsers(users)
         messageLogic.saveChannelLastMessagesToDb(lastMessages)
-        chatUsersReactionDao.replaceChannelUserReactions(userReactions)
+        chatUserReactionDao.replaceChannelUserReactions(userReactions)
 
         // Delete old links where channel peer is deleted.
         directChatsWithDeletedPeers.forEach {
@@ -862,12 +862,12 @@ internal class PersistenceChannelsLogicImpl(
                 channelsCache.updateLastMessage(channelId, lastMessage?.toSceytMessage())
             }
         }
-        chatUsersReactionDao.deleteChannelMessageUserReaction(channelId, message.id)
+        chatUserReactionDao.deleteChannelMessageUserReaction(channelId, message.id)
     }
 
     private suspend fun fillChannelsNeededInfo(vararg channel: SceytChannel) {
         channel.forEach {
-            val reactions = chatUsersReactionDao.getChannelUserReactions(it.id)
+            val reactions = chatUserReactionDao.getChannelUserReactions(it.id)
             val pendingReactions = pendingReactionDao.getAllByChannelId(it.id)
             it.newReactions = reactions.map { reactionDb -> reactionDb.toSceytReaction() }
             it.pendingReactions = pendingReactions.map { pendingReaction -> pendingReaction.toReactionData() }

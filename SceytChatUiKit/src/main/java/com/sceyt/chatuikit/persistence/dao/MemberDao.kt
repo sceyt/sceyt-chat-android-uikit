@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.persistence.entity.channel.ChanelMemberDb
 
 @Dao
-interface MembersDao {
+interface MemberDao {
 
     @Query("select user_id from UserChatLink where chat_id =:channelId and role =:role")
     suspend fun getChannelOwner(channelId: Long, role: String = RoleTypeEnum.Owner.toString()): String?

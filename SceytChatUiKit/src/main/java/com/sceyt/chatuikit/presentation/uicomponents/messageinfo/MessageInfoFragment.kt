@@ -8,7 +8,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.models.message.Marker
+import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytFragmentMessageInfoBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -103,7 +103,7 @@ open class MessageInfoFragment : Fragment() {
         }
     }
 
-    protected open fun setReadUsers(list: List<Marker>) {
+    protected open fun setReadUsers(list: List<SceytMarker>) {
         binding.groupViewsRead.isVisible = list.isNotEmpty()
         if (readMarkersAdapter != null) {
             readMarkersAdapter?.submitList(list)
@@ -115,7 +115,7 @@ open class MessageInfoFragment : Fragment() {
         }.also { readMarkersAdapter = it }
     }
 
-    protected open fun setDeliveredUsers(list: List<Marker>) {
+    protected open fun setDeliveredUsers(list: List<SceytMarker>) {
         binding.groupViewsDelivered.isVisible = list.isNotEmpty()
         if (deliveredMarkersAdapter != null) {
             deliveredMarkersAdapter?.submitList(list)
@@ -126,7 +126,7 @@ open class MessageInfoFragment : Fragment() {
         }.also { deliveredMarkersAdapter = it }
     }
 
-    protected open fun setPlayedUsers(list: List<Marker>) {
+    protected open fun setPlayedUsers(list: List<SceytMarker>) {
         binding.groupViewsPlayed.isVisible = list.isNotEmpty()
         if (playedMarkersAdapter != null) {
             playedMarkersAdapter?.submitList(list)

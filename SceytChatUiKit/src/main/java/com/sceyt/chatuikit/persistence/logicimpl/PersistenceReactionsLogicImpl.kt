@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.persistence.repositories.ReactionsRepository
 import com.sceyt.chatuikit.persistence.dao.ChannelDao
-import com.sceyt.chatuikit.persistence.dao.ChatUsersReactionDao
+import com.sceyt.chatuikit.persistence.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.dao.MessageDao
 import com.sceyt.chatuikit.persistence.dao.PendingReactionDao
 import com.sceyt.chatuikit.persistence.dao.ReactionDao
@@ -47,7 +47,7 @@ internal class PersistenceReactionsLogicImpl(
         private var messageDao: MessageDao,
         private var usersDao: UserDao,
         private var reactionDao: ReactionDao,
-        private var channelReactionsDao: ChatUsersReactionDao,
+        private var channelReactionsDao: ChatUserReactionDao,
         private var channelDao: ChannelDao,
         private var pendingReactionDao: PendingReactionDao,
         private var channelsCache: ChannelsCache,

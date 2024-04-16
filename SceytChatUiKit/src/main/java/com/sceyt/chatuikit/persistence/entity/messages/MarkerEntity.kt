@@ -19,7 +19,9 @@ data class MarkerEntity(
         @ColumnInfo(index = true)
         val messageId: Long,
         val userId: String,
+        @ColumnInfo(index = true)
         val name: String,
+        @ColumnInfo(index = true)
         val createdAt: Long = 0,
         @PrimaryKey(autoGenerate = true)
         val primaryKey: Long = 0

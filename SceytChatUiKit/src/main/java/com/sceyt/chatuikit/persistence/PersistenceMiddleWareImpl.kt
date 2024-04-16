@@ -31,6 +31,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -40,7 +41,9 @@ import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
+import com.sceyt.chatuikit.persistence.interactor.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
@@ -66,11 +69,13 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
                                          private val messagesLogic: PersistenceMessagesLogic,
                                          private val attachmentsLogic: PersistenceAttachmentLogic,
                                          private val reactionsLogic: PersistenceReactionsLogic,
+                                         private val messageMarkerLogic: PersistenceMessageMarkerLogic,
                                          private val membersLogic: PersistenceMembersLogic,
                                          private val usersLogic: PersistenceUsersLogic,
                                          private val connectionLogic: PersistenceConnectionLogic) :
         ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
-        UserInteractor, AttachmentInteractor, MessageReactionInteractor, SceytKoinComponent {
+        UserInteractor, AttachmentInteractor, MessageMarkerInteractor,
+        MessageReactionInteractor, SceytKoinComponent {
 
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -534,5 +539,13 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String,
                                         isPending: Boolean): SceytResponse<SceytMessage> {
         return reactionsLogic.deleteReaction(channelId, messageId, scoreKey, isPending)
+    }
+
+    override suspend fun getMessageMarkers(messageId: Long, name: String, offset: Int, limit: Int): SceytResponse<List<SceytMarker>> {
+        return messageMarkerLogic.getMessageMarkers(messageId, name, offset, limit)
+    }
+
+    override suspend fun getMessageMarkersDb(messageId: Long, names: List<String>, offset: Int, limit: Int): List<SceytMarker> {
+        return messageMarkerLogic.getMessageMarkersDb(messageId, names, offset, limit)
     }
 }

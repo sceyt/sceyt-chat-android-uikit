@@ -4,15 +4,12 @@ import android.content.Context
 import androidx.work.await
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytKitClient
-import com.sceyt.chatuikit.data.models.SDKErrorTypeEnum
-import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.chatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -26,6 +23,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
+import com.sceyt.chatuikit.data.models.SDKErrorTypeEnum
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SendMessageResult
@@ -35,15 +33,15 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum.Received
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.toDeliveryStatus
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.dao.AttachmentDao
 import com.sceyt.chatuikit.persistence.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.dao.MessageDao
-import com.sceyt.chatuikit.persistence.dao.PendingMarkersDao
+import com.sceyt.chatuikit.persistence.dao.PendingMarkerDao
 import com.sceyt.chatuikit.persistence.dao.PendingMessageStateDao
 import com.sceyt.chatuikit.persistence.dao.ReactionDao
 import com.sceyt.chatuikit.persistence.dao.UserDao
@@ -57,10 +55,10 @@ import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
+import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.addAttachmentMetadata
 import com.sceyt.chatuikit.persistence.mappers.existThumb
 import com.sceyt.chatuikit.persistence.mappers.getLinkPreviewDetails
@@ -74,8 +72,8 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
-import com.sceyt.chatuikit.persistence.repositories.MessageMarkersRepository
 import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
+import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.chatuikit.pushes.RemoteMessageData
@@ -102,13 +100,12 @@ internal class PersistenceMessagesLogicImpl(
         private val messageDao: MessageDao,
         private val rangeDao: LoadRangeDao,
         private val attachmentDao: AttachmentDao,
-        private val pendingMarkersDao: PendingMarkersDao,
+        private val pendingMarkerDao: PendingMarkerDao,
         private val reactionDao: ReactionDao,
         private val userDao: UserDao,
         private val pendingMessageStateDao: PendingMessageStateDao,
         private val fileTransferService: FileTransferService,
         private val messagesRepository: MessagesRepository,
-        private val messageMarkersRepository: MessageMarkersRepository,
         private val preference: SceytSharedPreference,
         private val messagesCache: MessagesCache,
         private val channelCache: ChannelsCache,
@@ -539,7 +536,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun sendAllPendingMarkers() = withContext(dispatcherIO) {
-        val pendingMarkers = pendingMarkersDao.getAllMarkers()
+        val pendingMarkers = pendingMarkerDao.getAllMarkers()
         if (pendingMarkers.isNotEmpty()) {
             val groupByChannel = pendingMarkers.groupBy { it.channelId }
             for ((channelId, messages) in groupByChannel) {
@@ -695,10 +692,6 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override fun getOnMessageFlow() = onMessageFlow.asSharedFlow()
-
-    override suspend fun getMessageMarkers(messageId: Long, name: String, offset: Int, limit: Int): SceytResponse<List<Marker>> {
-        return messageMarkersRepository.getMessageMarkers(messageId, name, offset, limit)
-    }
 
     override suspend fun sendTyping(channelId: Long, typing: Boolean) {
         messagesRepository.sendTyping(channelId, typing)
@@ -1048,7 +1041,7 @@ internal class PersistenceMessagesLogicImpl(
         val existMessageIds = messageDao.getExistMessageByIds(ids.toList())
         if (existMessageIds.isEmpty()) return
         val list = existMessageIds.map { PendingMarkerEntity(channelId = channelId, messageId = it, name = marker) }
-        pendingMarkersDao.insertMany(list)
+        pendingMarkerDao.insertMany(list)
     }
 
     private suspend fun onMarkerResponse(channelId: Long, response: SceytResponse<MessageListMarker>, status: String, vararg ids: Long) {
@@ -1064,7 +1057,7 @@ internal class PersistenceMessagesLogicImpl(
                         messagesCache.updateMessagesStatus(channelId, deliveryStatus, *tIds.toLongArray())
                     }
 
-                    pendingMarkersDao.deleteMessagesMarkersByStatus(responseIds, status)
+                    pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, status)
                     val existMessageIds = messageDao.getExistMessageByIds(responseIds)
                     existMessageIds.forEach {
                         SceytKitClient.myId?.let { userId ->
@@ -1079,7 +1072,7 @@ internal class PersistenceMessagesLogicImpl(
                 // Check if error code is 1301 (TypeNotAllowed), 1228 (TypeBadParam) then delete pending markers
                 val code = response.exception?.code
                 if (code == 1301 || code == 1228)
-                    pendingMarkersDao.deleteMessagesMarkersByStatus(ids.toList(), status)
+                    pendingMarkerDao.deleteMessagesMarkersByStatus(ids.toList(), status)
             }
         }
     }

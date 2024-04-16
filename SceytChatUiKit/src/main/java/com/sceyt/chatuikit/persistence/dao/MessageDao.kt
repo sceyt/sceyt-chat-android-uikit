@@ -304,9 +304,6 @@ abstract class MessageDao {
     @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
     abstract suspend fun updateMessagesStatus(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus)
 
-    @Query("update messages set markerCount =:markerCount where channelId =:channelId and message_id =:messageId")
-    abstract suspend fun updateMessageMarkersCount(channelId: Long, messageId: Long, markerCount: List<MarkerTotal>?)
-
     @Query("update messages set channelId =:newChannelId where channelId =:oldChannelId")
     abstract suspend fun updateMessagesChannelId(oldChannelId: Long, newChannelId: Long): Int
 

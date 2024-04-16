@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.persistence.mappers
 
 import com.sceyt.chat.models.message.ForwardingDetails
-import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
@@ -11,7 +10,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.entity.messages.DraftMessageDb
 import com.sceyt.chatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.chatuikit.persistence.entity.messages.ForwardingDetailsDb
-import com.sceyt.chatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.entity.messages.ParentMessageDb
@@ -89,7 +87,7 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             reactionTotals = reactionsTotals?.map { it.toReactionTotal() }?.toTypedArray(),
             markerTotals = markerCount?.toTypedArray(),
             userMarkers = userMarkers?.map {
-                it.toMarker(ClientWrapper.currentUser ?: User(it.userId))
+                it.toSceytMarker(ClientWrapper.currentUser ?: User(it.userId))
             }?.toTypedArray(),
             mentionedUsers = mentionedUsers?.map {
                 it.user?.toUser() ?: User(it.link.userId)
@@ -119,10 +117,6 @@ fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
     return ParentMessageDb(toMessageEntity(true), user?.toUserEntity(), attachments?.map {
         it.toAttachmentDb(id, getTid(id, tid, incoming), channelId)
     }, null)
-}
-
-fun Marker.toMarkerEntity(): MarkerEntity {
-    return MarkerEntity(messageId, user.id, name, createdAt)
 }
 
 private fun MessageEntity.parentMessageToSceytMessage(attachments: Array<SceytAttachment>?,
@@ -222,7 +216,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         userReactions = userReactions?.map { it.toSceytReaction() }?.toTypedArray(),
         reactionTotals = reactionTotals,
         markerTotals = markerTotals,
-        userMarkers = userMarkers,
+        userMarkers = userMarkers?.map { it.toSceytMarker() }?.toTypedArray(),
         mentionedUsers = mentionedUsers,
         parentMessage = parentMessage?.toSceytUiMessage(),
         replyCount = replyCount,
@@ -258,7 +252,7 @@ fun SceytMessage.toMessage(): Message {
         userReactions?.map { it.toReaction() }?.toTypedArray(),
         reactionTotals,
         markerTotals,
-        userMarkers,
+        userMarkers?.map { it.toMarker() }?.toTypedArray(),
         mentionedUsers,
         parentMessage?.toMessage(),
         replyCount,

@@ -5,7 +5,7 @@ import com.sceyt.chatuikit.persistence.entity.channel.ChatUserReactionDb
 import com.sceyt.chatuikit.persistence.entity.channel.ChatUserReactionEntity
 
 @Dao
-interface ChatUsersReactionDao {
+interface ChatUserReactionDao {
 
     @Transaction
     suspend fun replaceChannelUserReactions(reaction: List<ChatUserReactionEntity>) {

@@ -5,22 +5,23 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.Marker
+import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.databinding.SceytItemUserMarkerBinding
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
-class UserMarkerAdapter : ListAdapter<Marker, UserMarkerAdapter.SimpleUserViewHolder>(DIFF_UTIL) {
+class UserMarkerAdapter : ListAdapter<SceytMarker, UserMarkerAdapter.SimpleUserViewHolder>(DIFF_UTIL) {
 
     companion object {
-        val DIFF_UTIL = object : DiffUtil.ItemCallback<Marker>() {
-            override fun areItemsTheSame(oldItem: Marker, newItem: Marker): Boolean {
-                return oldItem.user.id == newItem.user.id
+        val DIFF_UTIL = object : DiffUtil.ItemCallback<SceytMarker>() {
+            override fun areItemsTheSame(oldItem: SceytMarker, newItem: SceytMarker): Boolean {
+                return oldItem.userId == newItem.userId
             }
 
-            override fun areContentsTheSame(oldItem: Marker, newItem: Marker): Boolean {
-                return oldItem.user.id == newItem.user.id
+            override fun areContentsTheSame(oldItem: SceytMarker, newItem: SceytMarker): Boolean {
+                return oldItem.userId == newItem.userId
             }
         }
     }
@@ -37,9 +38,9 @@ class UserMarkerAdapter : ListAdapter<Marker, UserMarkerAdapter.SimpleUserViewHo
             private val binding: SceytItemUserMarkerBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(marker: Marker) {
+        fun bind(marker: SceytMarker) {
             with(binding) {
-                val user = marker.user
+                val user = marker.user ?: User(marker.userId)
                 val name = SceytKitConfig.userNameBuilder?.invoke(user)
                         ?: user.getPresentableName()
                 avatar.setNameAndImageUrl(name, user.avatarURL)

@@ -7,7 +7,7 @@ import androidx.room.Query
 import com.sceyt.chatuikit.persistence.entity.pendings.PendingMarkerEntity
 
 @Dao
-interface PendingMarkersDao {
+interface PendingMarkerDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(entity: PendingMarkerEntity)
