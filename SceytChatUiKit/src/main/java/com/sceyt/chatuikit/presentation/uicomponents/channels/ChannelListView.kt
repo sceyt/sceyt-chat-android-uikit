@@ -11,17 +11,16 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.differs.diff
-import com.sceyt.chatuikit.presentation.uicomponents.channels.dialogs.ChannelActionConfirmationWithDialog
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
-import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.customviews.SceytPageStateView
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
+import com.sceyt.chatuikit.presentation.uicomponents.channels.dialogs.ChannelActionConfirmationWithDialog
 import com.sceyt.chatuikit.presentation.uicomponents.channels.dialogs.ChatActionsDialog
 import com.sceyt.chatuikit.presentation.uicomponents.channels.events.ChannelEvent
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
@@ -31,9 +30,9 @@ import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelP
 import com.sceyt.chatuikit.presentation.uicomponents.channels.popups.PopupMenuChannel
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.ChannelStyle
+import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 
-class ChannelsListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
+class ChannelListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners,
         ChannelPopupClickListeners.PopupClickListeners {
 
@@ -44,19 +43,15 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var popupClickListeners = ChannelPopupClickListenersImpl(this)
     private var channelCommandEventListener: ((ChannelEvent) -> Unit)? = null
     private val debounceHelper by lazy { DebounceHelper(300, this) }
+    private val style: ChannelListViewStyle
 
     init {
-
-        if (attrs != null) {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.ChannelsListView)
-            ChannelStyle.updateWithAttributes(a)
-            a.recycle()
-        }
-
+        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ChannelsListView, 0, 0)
+        style = ChannelListViewStyle.Builder(context, typedArray).build()
         if (background == null)
-            setBackgroundColor(context.getCompatColor(ChannelStyle.backgroundColor))
+            setBackgroundColor(style.backgroundColor)
 
-        channelsRV = ChannelsRV(context)
+        channelsRV = ChannelsRV(context).also { it.setStyle(style) }
         channelsRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
         channelsRV.clipToPadding = clipToPadding
         setPadding(0, 0, 0, 0)
@@ -66,9 +61,9 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (!isInEditMode)
             addView(SceytPageStateView(context).also {
                 pageStateView = it
-                it.setLoadingStateView(ChannelStyle.loadingState)
-                it.setEmptyStateView(ChannelStyle.emptyState)
-                it.setEmptySearchStateView(ChannelStyle.emptySearchState)
+                it.setLoadingStateView(style.loadingState)
+                it.setEmptyStateView(style.emptyState)
+                it.setEmptySearchStateView(style.emptySearchState)
             })
 
         defaultClickListeners = object : ChannelClickListenersImpl() {
@@ -163,8 +158,8 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showChannelActionsPopup(view: View, item: ChannelListItem.ChannelItem) {
-        if (ChannelStyle.showChannelActionAsPopup) {
-            val popup = PopupMenuChannel(ContextThemeWrapper(context, ChannelStyle.popupStyle), view, channel = item.channel)
+        if (style.showChannelActionAsPopup) {
+            val popup = PopupMenuChannel(ContextThemeWrapper(context, style.popupStyle), view, channel = item.channel)
             popup.setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {
                     R.id.sceyt_mark_as_read -> popupClickListeners.onMarkAsReadClick(item.channel)
@@ -261,8 +256,9 @@ class ChannelsListView @JvmOverloads constructor(context: Context, attrs: Attrib
      * @param factory custom view holder factory, extended from [ChannelViewHolderFactory].
      */
     fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
-        channelsRV.setViewHolderFactory(factory.also {
-            it.setChannelListener(defaultClickListeners)
+        channelsRV.setViewHolderFactory(factory.apply {
+            setChannelListener(defaultClickListeners)
+            setStyle(style)
         })
     }
 

@@ -26,31 +26,32 @@ import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.setOnClickListenerAvailable
 import com.sceyt.chatuikit.extensions.setOnLongClickListenerAvailable
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChatReactionMessagesCache
-import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
-import com.sceyt.chatuikit.presentation.extensions.getAttachmentIconAsString
-import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
-import com.sceyt.chatuikit.presentation.extensions.getFormattedLastMessageBody
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
-import com.sceyt.chatuikit.presentation.extensions.setChannelMessageDateAndStatusIcon
+import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChatReactionMessagesCache
+import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.presentation.customviews.SceytColorSpannableTextView
 import com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.chatuikit.presentation.customviews.SceytOnlineView
+import com.sceyt.chatuikit.presentation.extensions.getAttachmentIconAsString
+import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
+import com.sceyt.chatuikit.presentation.extensions.getFormattedLastMessageBody
+import com.sceyt.chatuikit.presentation.extensions.setChannelMessageDateAndStatusIcon
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.ChannelStyle
+import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 import com.sceyt.chatuikit.sceytstyles.UserStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.text.NumberFormat
 import java.util.Locale
 
 open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
+                             private val channelStyle: ChannelListViewStyle,
                              private var listeners: ChannelClickListeners.ClickListeners,
                              private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)? = null,
                              private val userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder) : BaseChannelViewHolder(binding.root) {
@@ -166,7 +167,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
             (textView as SceytColorSpannableTextView).buildSpannable()
                 .append(fromText)
-                .append(message.getAttachmentIconAsString(context))
+                .append(message.getAttachmentIconAsString(channelStyle))
                 .append(body)
                 .setForegroundColorId(R.color.sceyt_color_text_themed)
                 .setIndexSpan(0, fromText.length)
@@ -248,7 +249,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
     open fun setMuteState(channel: SceytChannel, textView: TextView) {
         if (channel.muted) {
-            textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, ChannelStyle.mutedIcon, 0)
+            textView.setCompoundDrawablesWithIntrinsicBounds(null, null, channelStyle.mutedIcon, null)
         } else {
             textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
         }
@@ -276,7 +277,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     open fun setLastMessageStatusAndDate(channel: SceytChannel, dateStatusView: SceytDateStatusView) {
         val data = getDateData(channel)
         val shouldShowStatus = data.second
-        channel.lastMessage.setChannelMessageDateAndStatusIcon(dateStatusView, data.first, false, shouldShowStatus)
+        channel.lastMessage.setChannelMessageDateAndStatusIcon(dateStatusView, channelStyle, data.first, false, shouldShowStatus)
     }
 
     open fun setOnlineStatus(channel: SceytChannel?, onlineStatus: SceytOnlineView) {
@@ -330,7 +331,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         } else setLastMessagedText(channel, textView)
     }
 
-    protected fun getDateData(channel: SceytChannel?): Pair<String, Boolean> {
+    protected open fun getDateData(channel: SceytChannel?): Pair<String, Boolean> {
         if (channel == null) return Pair("", false)
         var shouldShowStatus = true
         val lastMsgCreatedAt = when {
@@ -350,24 +351,24 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
             else -> channel.createdAt
         }
-        return Pair(DateTimeUtil.getDateTimeStringWithDateFormatter(context, lastMsgCreatedAt, ChannelStyle.channelDateFormat), shouldShowStatus)
+        return Pair(DateTimeUtil.getDateTimeStringWithDateFormatter(context, lastMsgCreatedAt, channelStyle.channelDateFormat), shouldShowStatus)
     }
 
     private fun SceytItemChannelBinding.setChannelItemStyle() {
         with(root.context) {
-            channelTitle.setTextColor(getCompatColor(ChannelStyle.titleColor))
-            lastMessage.setTextColor(getCompatColor(ChannelStyle.lastMessageTextColor))
-            unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(getCompatColor(ChannelStyle.unreadCountColor))
-            icMention.backgroundTintList = ColorStateList.valueOf(getCompatColor(ChannelStyle.unreadCountColor))
-            onlineStatus.setIndicatorColor(getCompatColor(ChannelStyle.onlineStatusColor))
-            viewPinned.setBackgroundColor(getCompatColor(ChannelStyle.pinnedChannelBackgroundColor))
+            channelTitle.setTextColor(channelStyle.titleColor)
+            lastMessage.setTextColor(channelStyle.lastMessageTextColor)
+            unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(getCompatColor(channelStyle.unreadCountColor))
+            icMention.backgroundTintList = ColorStateList.valueOf(getCompatColor(channelStyle.unreadCountColor))
+            onlineStatus.setIndicatorColor(channelStyle.onlineStatusColor)
+            viewPinned.setBackgroundColor(channelStyle.pinnedChannelBackgroundColor)
             dateStatus.buildStyle()
-                .setStatusIconSize(ChannelStyle.statusIconSize)
-                .setDateColor(ChannelStyle.dateTextColor)
+                .setStatusIconSize(channelStyle.statusIconSize)
+                .setDateColor(channelStyle.dateTextColor)
                 .build()
 
-            divider.isVisible = if (ChannelStyle.enableDivider) {
-                divider.setBackgroundColor(getCompatColor(ChannelStyle.dividerColor))
+            divider.isVisible = if (channelStyle.enableDivider) {
+                divider.setBackgroundColor(channelStyle.dividerColor)
                 true
             } else false
         }

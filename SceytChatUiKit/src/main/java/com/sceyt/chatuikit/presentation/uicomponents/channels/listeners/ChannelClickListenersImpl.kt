@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.presentation.uicomponents.channels.listeners
 
 import android.view.View
-import com.sceyt.chatuikit.presentation.uicomponents.channels.ChannelsListView
+import com.sceyt.chatuikit.presentation.uicomponents.channels.ChannelListView
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 
 open class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
@@ -12,7 +12,7 @@ open class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
 
     internal constructor()
 
-    constructor(view: ChannelsListView) {
+    constructor(view: ChannelListView) {
         defaultListeners = view
     }
 

@@ -59,7 +59,7 @@
 
         </com.google.android.material.appbar.AppBarLayout>
 
-        <com.sceyt.chatuikit.presentation.uicomponents.channels.ChannelsListView
+        <com.sceyt.chatuikit.presentation.uicomponents.channels.ChannelListView
             android:id="@+id/channelListView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

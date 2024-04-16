@@ -321,8 +321,13 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
             return this
         }
 
-        fun setDateColor(@ColorRes color: Int): BuildStyle {
-            dateTextColor = context.getCompatColor(color)
+        fun setDateColorId(@ColorRes colorId: Int): BuildStyle {
+            dateTextColor = context.getCompatColor(colorId)
+            return this
+        }
+
+        fun setDateColor(@ColorInt color: Int): BuildStyle {
+            dateTextColor = color
             return this
         }
 

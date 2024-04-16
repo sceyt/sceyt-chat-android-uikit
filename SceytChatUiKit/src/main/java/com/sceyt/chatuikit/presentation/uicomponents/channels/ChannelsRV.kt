@@ -14,15 +14,16 @@ import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.isFirstItemDisplaying
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
-import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
+import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelsItemComparatorBy
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -160,6 +161,10 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     fun getViewHolderFactory() = viewHolderFactory
+
+    internal fun setStyle(channelStyle: ChannelListViewStyle) {
+        viewHolderFactory.setStyle(channelStyle)
+    }
 
     private fun sortAndUpdate(sortChannelsBy: SceytKitConfig.ChannelSortType, data: List<ChannelListItem>) {
         val sortedList = data.sortedWith(ChannelsItemComparatorBy(sortChannelsBy))

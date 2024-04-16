@@ -30,6 +30,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelC
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
 import com.sceyt.chatuikit.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.channels.viewmodels.bind
+import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -97,6 +98,7 @@ class ChannelsFragment : Fragment() {
             //return super.createChannelViewHolder(parent)
 
             return ViewHolderWithSceytUiAndCustomLogic(SceytItemChannelBinding.inflate(LayoutInflater.from(parent.context), parent, false),
+                channelStyle,
                 clickListeners, getAttachDetachListener())
         }
     }
@@ -105,8 +107,9 @@ class ChannelsFragment : Fragment() {
      * Use this to customise your logic*/
     class ViewHolderWithSceytUiAndCustomLogic(
             binding: SceytItemChannelBinding,
+            style: ChannelListViewStyle,
             listener: ChannelClickListeners.ClickListeners,
-            attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)?) : ChannelViewHolder(binding, listener, attachDetachListener) {
+            attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)?) : ChannelViewHolder(binding, style, listener, attachDetachListener) {
 
         override fun setLastMessagedText(channel: SceytChannel, textView: TextView) {
             textView.text = "Bla Bla"
