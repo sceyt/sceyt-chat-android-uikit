@@ -1,14 +1,30 @@
 package com.sceyt.chatuikit.persistence.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.RoomWarnings
+import androidx.room.Transaction
+import androidx.room.Update
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.DeliveryStatus.*
-import com.sceyt.chat.models.message.MarkerTotal
+import com.sceyt.chat.models.message.DeliveryStatus.Displayed
+import com.sceyt.chat.models.message.DeliveryStatus.Received
+import com.sceyt.chat.models.message.DeliveryStatus.Sent
 import com.sceyt.chatuikit.data.models.LoadNearData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.roundUp
 import com.sceyt.chatuikit.persistence.entity.link.LinkDetailsEntity
-import com.sceyt.chatuikit.persistence.entity.messages.*
+import com.sceyt.chatuikit.persistence.entity.messages.AttachmentEntity
+import com.sceyt.chatuikit.persistence.entity.messages.AttachmentPayLoadEntity
+import com.sceyt.chatuikit.persistence.entity.messages.MarkerEntity
+import com.sceyt.chatuikit.persistence.entity.messages.MentionUserMessageLink
+import com.sceyt.chatuikit.persistence.entity.messages.MessageDb
+import com.sceyt.chatuikit.persistence.entity.messages.MessageEntity
+import com.sceyt.chatuikit.persistence.entity.messages.MessageIdAndTid
+import com.sceyt.chatuikit.persistence.entity.messages.ReactionEntity
+import com.sceyt.chatuikit.persistence.entity.messages.ReactionTotalEntity
+import com.sceyt.chatuikit.persistence.entity.messages.UserMarkerLink
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.mappers.toAttachmentPayLoad
 import kotlin.math.max
@@ -72,7 +88,7 @@ abstract class MessageDao {
         //Insert user markers
         val userMarkers = messages.flatMap { it.userMarkers ?: arrayListOf() }
         if (userMarkers.isNotEmpty())
-            insertUserMarkers(userMarkers)
+            insertUserMarkersAndLinks(userMarkers)
 
         //Insert reactions
         val reactions = messages.flatMap { it.reactions ?: arrayListOf() }
@@ -127,10 +143,10 @@ abstract class MessageDao {
     abstract suspend fun insertLinkDetails(payLoad: List<LinkDetailsEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertUserMarkers(userMarkers: List<MarkerEntity>)
+    abstract suspend fun insertUserMarkers(userMarkers: List<MarkerEntity>): List<Long>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertUserMarker(userMarker: MarkerEntity)
+    abstract suspend fun insertUserMarker(userMarker: MarkerEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
@@ -138,8 +154,11 @@ abstract class MessageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertReactionTotals(reactionTotals: List<ReactionTotalEntity>)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract suspend fun insertMentionedUsersMessageLinks(mentionedUsers: List<MentionUserMessageLink>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    abstract suspend fun insetUserMarkerLinks(links: List<UserMarkerLink>)
 
     private suspend fun insertMentionedUsersMessageLinks(vararg messageEntity: MessageEntity) {
         val entities = messageEntity.flatMap { entity ->
@@ -150,6 +169,17 @@ abstract class MessageDao {
         if (entities.isEmpty()) return
 
         insertMentionedUsersMessageLinks(entities)
+    }
+
+    @Transaction
+    open suspend fun insertUserMarkersAndLinks(userMarkers: List<MarkerEntity>) {
+        val markersArray = userMarkers.toTypedArray()
+        val ids = insertUserMarkers(userMarkers)
+        val links = ids.mapIndexed { index, id ->
+            val marker = markersArray[index]
+            UserMarkerLink(messageId = marker.messageId, markerId = id)
+        }
+        insetUserMarkerLinks(links)
     }
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)

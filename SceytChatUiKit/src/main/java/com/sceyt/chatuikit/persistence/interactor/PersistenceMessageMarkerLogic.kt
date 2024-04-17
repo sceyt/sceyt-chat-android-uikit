@@ -1,5 +1,7 @@
 package com.sceyt.chatuikit.persistence.interactor
 
+import com.sceyt.chatuikit.data.channeleventobserver.MessageMarkerEventData
+import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 
@@ -9,4 +11,7 @@ interface PersistenceMessageMarkerLogic {
 
     suspend fun getMessageMarkersDb(messageId: Long, names: List<String>,
                                     offset: Int, limit: Int): List<SceytMarker>
+
+    suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
+    suspend fun onMessageMarkerEvent(data: MessageMarkerEventData)
 }

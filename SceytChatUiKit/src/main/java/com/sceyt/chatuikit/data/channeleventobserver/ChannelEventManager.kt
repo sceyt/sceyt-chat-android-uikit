@@ -30,6 +30,10 @@ sealed interface ChannelEventManager {
         fun onMessageStatusEvent(data: MessageStatusChangeData)
     }
 
+    fun interface OnMarkerReceivedEvent : ChannelEventManager {
+        fun onMarkerReceived(data: MessageMarkerEventData)
+    }
+
     interface AllEventManagers : OnTotalUnreadChanged, OnChannelEvent, OnOwnerChanged,
-            OnChannelTypingEvent, OnChangedMembersEvent, OnMessageStatusEvent
+            OnChannelTypingEvent, OnChangedMembersEvent, OnMessageStatusEvent, OnMarkerReceivedEvent
 }

@@ -196,7 +196,7 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
         channelsCache.get(data.channel.id)?.let { channel ->
             channel.lastMessage?.let { lastMessage ->
-                if (data.messageIds.contains(lastMessage.id)) {
+                if (data.marker.messageIds.contains(lastMessage.id)) {
                     data.channel.lastMessage?.let {
                         channelsCache.updateLastMessage(channel.id, it)
                     }

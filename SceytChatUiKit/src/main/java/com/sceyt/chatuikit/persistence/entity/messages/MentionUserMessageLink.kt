@@ -1,6 +1,8 @@
 package com.sceyt.chatuikit.persistence.entity.messages
 
-import androidx.room.*
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.ForeignKey
 
 @Entity(foreignKeys = [
     ForeignKey(
@@ -10,10 +12,8 @@ import androidx.room.*
         onDelete = ForeignKey.CASCADE,
         deferred = true
     )
-], indices = [Index(value = ["messageTid", "user_id"], unique = true, name = "uniqueMentionUserInMessage")])
+], primaryKeys = ["messageTid", "user_id"])
 data class MentionUserMessageLink(
-        @PrimaryKey(autoGenerate = true)
-        val id: Int = 0,
         @ColumnInfo(index = true)
         val messageTid: Long,
         @ColumnInfo(name = "user_id", index = true)

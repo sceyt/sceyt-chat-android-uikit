@@ -24,6 +24,7 @@
         app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
         <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/layoutDetails"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
@@ -111,9 +112,7 @@
                     android:layout_height="1dp"
                     android:layout_marginTop="15dp"
                     android:background="@color/sceyt_color_divider"
-                    android:visibility="gone"
-                    app:layout_constraintTop_toBottomOf="@+id/tvSize"
-                    tools:visibility="visible" />
+                    app:layout_constraintTop_toBottomOf="@+id/tvSize"/>
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/tvPlayedByHint"
@@ -148,7 +147,7 @@
                     tools:visibility="visible" />
 
                 <View
-                    android:id="@+id/divider1"
+                    android:id="@+id/dividerRead"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginTop="15dp"
@@ -165,7 +164,7 @@
                     android:text="@string/read_by"
                     android:textColor="@color/sceyt_color_gray_secondary_themed"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/divider1" />
+                    app:layout_constraintTop_toBottomOf="@+id/dividerRead" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvReadByUsers"
@@ -179,24 +178,21 @@
                     tools:itemCount="2"
                     tools:listitem="@layout/sceyt_item_user_marker" />
 
-                <View
-                    android:id="@+id/dividerDelivered"
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="8dp"
-                    android:background="@color/sceyt_color_divider"
-                    android:visibility="gone"
-                    app:layout_constraintTop_toBottomOf="@+id/rvReadByUsers"
-                    app:layout_goneMarginTop="0dp"
-                    tools:visibility="visible" />
-
                 <androidx.constraintlayout.widget.Group
                     android:id="@+id/groupViewsRead"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:visibility="gone"
-                    app:constraint_referenced_ids="tvReadByHint,rvReadByUsers"
+                    app:constraint_referenced_ids="tvReadByHint,rvReadByUsers,dividerRead"
                     tools:visibility="visible" />
+
+                <View
+                    android:id="@+id/dividerDelivered"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="15dp"
+                    android:background="@color/sceyt_color_divider"
+                    app:layout_constraintTop_toBottomOf="@+id/rvReadByUsers" />
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/tvDeliveredToHint"
@@ -227,7 +223,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:visibility="gone"
-                    app:constraint_referenced_ids="tvDeliveredToHint,rvDeliveredToUsers"
+                    app:constraint_referenced_ids="tvDeliveredToHint,rvDeliveredToUsers,dividerDelivered"
                     tools:visibility="visible" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>

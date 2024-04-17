@@ -129,4 +129,8 @@ open class MessageInfoViewProvider(context: Context) {
     fun updateMessageStatus(message: SceytMessage) {
         viewHolder?.bind(MessageListItem.MessageItem(message), MessageDiff.DEFAULT_FALSE.copy(statusChanged = true))
     }
+
+    fun setNeedMediaDataCallback(callback: (NeedMediaInfoData) -> Unit) {
+        needMediaDataCallback = callback
+    }
 }

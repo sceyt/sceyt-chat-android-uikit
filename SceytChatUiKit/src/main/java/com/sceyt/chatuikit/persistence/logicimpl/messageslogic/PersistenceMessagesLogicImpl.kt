@@ -165,7 +165,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) = withContext(dispatcherIO) {
-        val updatedMessages = messageDao.updateMessageStatusWithBefore(data.channel.id, data.status, data.messageIds.maxOf { it })
+        val updatedMessages = messageDao.updateMessageStatusWithBefore(data.channel.id, data.status, data.marker.messageIds.maxOf { it })
         messagesCache.updateMessagesStatus(data.channel.id, data.status, *updatedMessages.map { it.tid }.toLongArray())
     }
 
@@ -1059,11 +1059,10 @@ internal class PersistenceMessagesLogicImpl(
 
                     pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, status)
                     val existMessageIds = messageDao.getExistMessageByIds(responseIds)
-                    existMessageIds.forEach {
-                        SceytKitClient.myId?.let { userId ->
-                            val markerEntity = MarkerEntity(messageId = it, userId = userId, name = data.name)
-                            messageDao.insertUserMarker(markerEntity)
-                        }
+                    SceytKitClient.myId?.let { userId ->
+                        messageDao.insertUserMarkersAndLinks(existMessageIds.map {
+                            MarkerEntity(messageId = it, userId = userId, name = data.name)
+                        })
                     }
                 }
             }

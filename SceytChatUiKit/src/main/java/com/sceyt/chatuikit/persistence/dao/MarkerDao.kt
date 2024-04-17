@@ -12,7 +12,10 @@ import com.sceyt.chatuikit.persistence.entity.messages.MarkerWithUserDb
 interface MarkerDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUserMarkers(userMarker: List<MarkerEntity>)
+    suspend fun insert(marker: MarkerEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMany(marker: List<MarkerEntity>)
 
     @Transaction
     @Query("select * from MarkerEntity where messageId =:messageId and name in (:names) " +

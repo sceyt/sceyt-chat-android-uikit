@@ -5,6 +5,7 @@ import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelEvent
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_listeners.ChannelListener
 import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -59,6 +60,12 @@ object ChannelEventsObserver : ChannelEventManager.AllEventManagers {
         extraBufferCapacity = 30,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onMessageStatusFlow = onMessageStatusFlow_.asSharedFlow()
+
+
+    private val onMarkerReceivedFlow_: MutableSharedFlow<MessageMarkerEventData> = MutableSharedFlow(
+        extraBufferCapacity = 5,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val onMarkerReceivedFlow = onMarkerReceivedFlow_.asSharedFlow()
 
 
     init {
@@ -190,12 +197,16 @@ object ChannelEventsObserver : ChannelEventManager.AllEventManagers {
                     members.map { it.toSceytMember() }, ChannelMembersEventEnum.Added))
             }
 
-            override fun onDeliveryReceiptReceived(channel: Channel, from: User, messageIds: MutableList<Long>) {
-                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Received, messageIds))
+            override fun onDeliveryReceiptReceived(channel: Channel, from: User, marker: MessageListMarker) {
+                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Received, marker))
             }
 
-            override fun onReadReceiptReceived(channel: Channel, from: User, messageIds: MutableList<Long>) {
-                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Displayed, messageIds))
+            override fun onMarkerReceived(channel: Channel, user: User, marker: MessageListMarker) {
+                eventManager.onMarkerReceived(MessageMarkerEventData(channel.toSceytUiChannel(), user, marker))
+            }
+
+            override fun onReadReceiptReceived(channel: Channel, from: User, marker: MessageListMarker) {
+                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Displayed, marker))
             }
 
             override fun onChannelEvent(channel: Channel?, event: ChannelEvent?) {
@@ -227,6 +238,9 @@ object ChannelEventsObserver : ChannelEventManager.AllEventManagers {
         onMessageStatusFlow_.tryEmit(data)
     }
 
+    override fun onMarkerReceived(data: MessageMarkerEventData) {
+        onMarkerReceivedFlow_.tryEmit(data)
+    }
 
     fun setCustomListener(listener: ChannelEventManagerImpl) {
         eventManager = listener

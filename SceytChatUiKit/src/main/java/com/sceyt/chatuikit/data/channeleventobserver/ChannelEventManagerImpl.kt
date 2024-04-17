@@ -37,6 +37,10 @@ class ChannelEventManagerImpl : ChannelEventManager.AllEventManagers {
         defaultListeners?.onMessageStatusEvent(data)
     }
 
+    override fun onMarkerReceived(data: MessageMarkerEventData) {
+        defaultListeners?.onMarkerReceived(data)
+    }
+
     internal fun setDefaultListeners(listener: ChannelEventManager.AllEventManagers) {
         defaultListeners = listener
     }

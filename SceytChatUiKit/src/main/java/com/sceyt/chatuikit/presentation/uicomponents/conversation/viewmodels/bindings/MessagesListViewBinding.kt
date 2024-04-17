@@ -558,7 +558,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
       }.launchIn(viewModelScope)
   */
     onMessageStatusFlow.onEach {
-        messagesListView.updateMessagesStatus(it.status, it.messageIds)
+        messagesListView.updateMessagesStatus(it.status, it.marker.messageIds)
     }.launchIn(viewModelScope)
 
     onTransferUpdatedLiveData.asFlow().onEach {
