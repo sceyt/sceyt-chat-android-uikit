@@ -83,14 +83,14 @@
             android:layout_width="wrap_content"
             android:layout_height="?android:attr/actionBarSize"
             android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginEnd="10dp"
             android:background="?selectableItemBackgroundBorderless"
             android:padding="4dp"
             android:tint="@color/sceyt_color_white"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/sceyt_ic_more_vertical" />
+            app:srcCompat="@drawable/sceyt_ic_more_24" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="ChannelsListView">
+    <declare-styleable name="ChannelListView">
 
         <!--Background color channel list view-->
         <attr name="sceytUiChannelListBackgroundColor" format="reference|color" />
         <attr name="sceytUiChannelListPinnedBackgroundColor" format="reference|color" />
         <!-- A color of the online indicator-->
-        <attr name="sceytUiOnlineIndicatorColor" format="reference" />
+        <attr name="sceytUiOnlineIndicatorColor" format="reference|color" />
         <!-- A color of the channels divider-->
-        <attr name="sceytUiDividerColor" format="reference" />
+        <attr name="sceytUiDividerColor" format="reference|color" />
         <!-- Show/Hide channels divider-->
         <attr name="sceytUiEnableDivider" format="boolean" />
         <!-- Show channel action as popup-->
         <attr name="sceytUiShowChannelActionAsPopup" format="boolean" />
         <!-- A color of the channel title text color-->
-        <attr name="sceytUiChannelTitleTextColor" format="reference" />
+        <attr name="sceytUiChannelTitleTextColor" format="reference|color" />
         <!-- A color of the last message text color-->
-        <attr name="sceytUiLastMessageTextColor" format="reference" />
+        <attr name="sceytUiLastMessageTextColor" format="reference|color" />
         <!-- A color of the date text color-->
-        <attr name="sceytUiLastMessageDateTextColor" format="reference" />
+        <attr name="sceytUiLastMessageDateTextColor" format="reference|color" />
         <!-- Show message status icon-->
         <attr name="sceytUiStatusIndicatorSize" format="dimension" />
         <!-- Drawable of the message sent state indicator -->
@@ -40,7 +40,7 @@
         <!-- A color of the unread message count text -->
         <attr name="sceytUiUnreadMessageCounterTextColor" format="reference" />
         <!-- Background color of the unread message counter -->
-        <attr name="sceytUiUnreadMessageCounterBackgroundColor" format="reference" />
+        <attr name="sceytUiUnreadMessageCounterBackgroundColor" format="reference|color" />
         <!-- Drawable of the muted channel icon  -->
         <attr name="sceytUiMutedChannelIcon" format="reference" />
         <!-- Reference to layout resource of the channel list "loading" view -->

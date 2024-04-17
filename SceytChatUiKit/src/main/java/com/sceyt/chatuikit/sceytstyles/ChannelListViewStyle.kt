@@ -92,39 +92,39 @@ data class ChannelListViewStyle(
 
         fun build() = ChannelListViewStyle(context).run {
             copy(
-                backgroundColor = typedArray.getColor(R.styleable.ChannelsListView_sceytUiChannelListBackgroundColor, backgroundColor),
-                pinnedChannelBackgroundColor = typedArray.getColor(R.styleable.ChannelsListView_sceytUiChannelListPinnedBackgroundColor, pinnedChannelBackgroundColor),
-                titleColor = typedArray.getColor(R.styleable.ChannelsListView_sceytUiChannelTitleTextColor, titleColor),
-                lastMessageTextColor = typedArray.getColor(R.styleable.ChannelsListView_sceytUiLastMessageTextColor, lastMessageTextColor),
-                unreadCountColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiUnreadMessageCounterTextColor, unreadCountColor),
-                mutedIcon = typedArray.getDrawable(R.styleable.ChannelsListView_sceytUiMutedChannelIcon)
+                backgroundColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiChannelListBackgroundColor, backgroundColor),
+                pinnedChannelBackgroundColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiChannelListPinnedBackgroundColor, pinnedChannelBackgroundColor),
+                titleColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiChannelTitleTextColor, titleColor),
+                lastMessageTextColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiLastMessageTextColor, lastMessageTextColor),
+                unreadCountColor = typedArray.getResourceId(R.styleable.ChannelListView_sceytUiUnreadMessageCounterTextColor, unreadCountColor),
+                mutedIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiMutedChannelIcon)
                         ?: mutedIcon,
-                dateTextColor = typedArray.getColor(R.styleable.ChannelsListView_sceytUiLastMessageDateTextColor, dateTextColor),
-                statusIndicatorPendingIcon = typedArray.getDrawable(R.styleable.ChannelsListView_sceytUiIndicatorPendingIcon)
+                dateTextColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiLastMessageDateTextColor, dateTextColor),
+                statusIndicatorPendingIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiIndicatorPendingIcon)
                         ?: statusIndicatorPendingIcon,
-                statusIndicatorSentIcon = typedArray.getDrawable(R.styleable.ChannelsListView_sceytUiIndicatorSentIcon)
+                statusIndicatorSentIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiIndicatorSentIcon)
                         ?: statusIndicatorSentIcon,
-                statusIndicatorDeliveredIcon = typedArray.getDrawable(R.styleable.ChannelsListView_sceytUiIndicatorDeliveredIcon)
+                statusIndicatorDeliveredIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiIndicatorDeliveredIcon)
                         ?: statusIndicatorDeliveredIcon,
-                statusIndicatorReadIcon = typedArray.getDrawable(R.styleable.ChannelsListView_sceytUiIndicatorReadIcon)
+                statusIndicatorReadIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiIndicatorReadIcon)
                         ?: statusIndicatorReadIcon,
-                bodyFileAttachmentIcon = typedArray.getDrawable(R.styleable.ChannelsListView_sceytUiBodyFileAttachmentIcon)
+                bodyFileAttachmentIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiBodyFileAttachmentIcon)
                         ?: bodyFileAttachmentIcon,
-                bodyImageAttachmentIcon = typedArray.getDrawable(R.styleable.ChannelsListView_sceytUiBodyImageAttachmentIcon)
+                bodyImageAttachmentIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiBodyImageAttachmentIcon)
                         ?: bodyImageAttachmentIcon,
-                bodyVideoAttachmentIcon = typedArray.getDrawable(R.styleable.ChannelsListView_sceytUiBodyVideoAttachmentIcon)
+                bodyVideoAttachmentIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiBodyVideoAttachmentIcon)
                         ?: bodyVideoAttachmentIcon,
-                bodyVoiceAttachmentIcon = typedArray.getDrawable(R.styleable.ChannelsListView_sceytUiBodyVoiceAttachmentIcon)
+                bodyVoiceAttachmentIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiBodyVoiceAttachmentIcon)
                         ?: bodyVoiceAttachmentIcon,
-                statusIconSize = typedArray.getDimensionPixelSize(R.styleable.ChannelsListView_sceytUiStatusIndicatorSize, statusIconSize),
-                emptyState = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiEmptyStateView, emptyState),
-                emptySearchState = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiEmptySearchStateView, emptySearchState),
-                loadingState = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiLoadingView, loadingState),
-                onlineStatusColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiOnlineIndicatorColor, onlineStatusColor),
-                dividerColor = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiDividerColor, dividerColor),
-                enableDivider = typedArray.getBoolean(R.styleable.ChannelsListView_sceytUiEnableDivider, enableDivider),
-                showChannelActionAsPopup = typedArray.getBoolean(R.styleable.ChannelsListView_sceytUiShowChannelActionAsPopup, showChannelActionAsPopup),
-                popupStyle = typedArray.getResourceId(R.styleable.ChannelsListView_sceytUiPopupStyle, popupStyle),
+                statusIconSize = typedArray.getDimensionPixelSize(R.styleable.ChannelListView_sceytUiStatusIndicatorSize, statusIconSize),
+                emptyState = typedArray.getResourceId(R.styleable.ChannelListView_sceytUiEmptyStateView, emptyState),
+                emptySearchState = typedArray.getResourceId(R.styleable.ChannelListView_sceytUiEmptySearchStateView, emptySearchState),
+                loadingState = typedArray.getResourceId(R.styleable.ChannelListView_sceytUiLoadingView, loadingState),
+                onlineStatusColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiOnlineIndicatorColor, onlineStatusColor),
+                dividerColor = typedArray.getResourceId(R.styleable.ChannelListView_sceytUiDividerColor, dividerColor),
+                enableDivider = typedArray.getBoolean(R.styleable.ChannelListView_sceytUiEnableDivider, enableDivider),
+                showChannelActionAsPopup = typedArray.getBoolean(R.styleable.ChannelListView_sceytUiShowChannelActionAsPopup, showChannelActionAsPopup),
+                popupStyle = typedArray.getResourceId(R.styleable.ChannelListView_sceytUiPopupStyle, popupStyle),
             )
         }.let(channelStyleCustomizer::apply)
     }

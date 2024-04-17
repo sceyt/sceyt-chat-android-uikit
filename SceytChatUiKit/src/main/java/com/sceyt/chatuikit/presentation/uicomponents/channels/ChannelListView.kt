@@ -46,7 +46,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
     private val style: ChannelListViewStyle
 
     init {
-        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ChannelsListView, 0, 0)
+        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ChannelListView, 0, 0)
         style = ChannelListViewStyle.Builder(context, typedArray).build()
         if (background == null)
             setBackgroundColor(style.backgroundColor)
