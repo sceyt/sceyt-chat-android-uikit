@@ -24,6 +24,7 @@
         android:layout_width="@dimen/messageProgressSize"
         android:layout_height="@dimen/messageProgressSize"
         android:padding="1dp"
+        android:visibility="gone"
         app:backgroundColor="@color/sceyt_progress_bg_color"
         app:iconSizeInPercent="65"
         app:layout_constraintBottom_toBottomOf="parent"
