@@ -1,13 +1,11 @@
-package com.sceyt.chatuikit.data.messageeventobserver
+package com.sceyt.chatuikit.data.channeleventobserver
 
-import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 
-data class MessageStatusChangeData(
+data class MessageMarkerEventData(
         val channel: SceytChannel,
-        val from: User,
-        val status: DeliveryStatus,
+        val user: User,
         val marker: MessageListMarker
 )

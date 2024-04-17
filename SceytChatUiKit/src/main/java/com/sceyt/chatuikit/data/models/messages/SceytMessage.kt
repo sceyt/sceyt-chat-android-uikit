@@ -4,7 +4,6 @@ import android.os.Parcelable
 import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.ForwardingDetails
-import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.message.ReactionTotal

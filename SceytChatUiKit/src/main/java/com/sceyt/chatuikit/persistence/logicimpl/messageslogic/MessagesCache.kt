@@ -95,7 +95,7 @@ class MessagesCache {
 
     fun get(channelId: Long, tid: Long): SceytMessage? {
         synchronized(lock) {
-            return getMessageByTid(channelId, tid)
+            return getMessageByTid(channelId, tid)?.clone()
         }
     }
 

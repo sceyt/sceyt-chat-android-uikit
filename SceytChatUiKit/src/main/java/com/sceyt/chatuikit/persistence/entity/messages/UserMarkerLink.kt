@@ -7,15 +7,15 @@ import androidx.room.ForeignKey
 @Entity(foreignKeys = [
     ForeignKey(
         entity = MessageEntity::class,
-        parentColumns = ["tid"],
-        childColumns = ["messageTid"],
+        parentColumns = ["message_id"],
+        childColumns = ["message_id"],
         onDelete = ForeignKey.CASCADE,
         deferred = true
     )
-], primaryKeys = ["messageTid", "user_id"])
-data class MentionUserMessageLink(
+], primaryKeys = ["message_id", "markerId"])
+data class UserMarkerLink(
+        @ColumnInfo(name = "message_id", index = true)
+        val messageId: Long,
         @ColumnInfo(index = true)
-        val messageTid: Long,
-        @ColumnInfo(name = "user_id", index = true)
-        val userId: String
+        val markerId: Long
 )

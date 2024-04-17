@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.persistence.entity.messages
 
 import androidx.room.Embedded
+import androidx.room.Junction
 import androidx.room.Relation
 import com.sceyt.chatuikit.SceytKitClient
 import com.sceyt.chatuikit.persistence.entity.UserEntity
@@ -19,7 +20,10 @@ data class MessageDb(
         @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = AttachmentEntity::class)
         val attachments: List<AttachmentDb>?,
 
-        @Relation(parentColumn = "message_id", entityColumn = "messageId")
+        @Relation(
+            parentColumn = "message_id",
+            entityColumn = "primaryKey",
+            associateBy = Junction(UserMarkerLink::class, parentColumn = "message_id", entityColumn = "markerId"))
         val userMarkers: List<MarkerEntity>?,
 
         @Relation(parentColumn = "message_id", entityColumn = "messageId", entity = ReactionEntity::class)

@@ -12,7 +12,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytFragmentMessageInfoBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
-import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArgumentsAs
 import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
@@ -27,10 +26,11 @@ import kotlinx.coroutines.flow.onEach
 
 open class MessageInfoFragment : Fragment() {
     protected lateinit var binding: SceytFragmentMessageInfoBinding
-    protected lateinit var message: SceytMessage
-    protected val viewModelFactory by lazy { MessageInfoViewModelFactory(message) }
+    protected var messageId: Long = 0
+    protected var channelId: Long = 0
+    protected val viewModelFactory by lazy { MessageInfoViewModelFactory(messageId, channelId) }
     protected val viewModel: MessageInfoViewModel by viewModels { viewModelFactory }
-    protected var messageViewProvider: MessageInfoViewProvider? = null
+    protected val messageViewProvider: MessageInfoViewProvider by lazy { getMessageInfoViewProvider() }
     protected var readMarkersAdapter: UserMarkerAdapter? = null
     protected var deliveredMarkersAdapter: UserMarkerAdapter? = null
     protected var playedMarkersAdapter: UserMarkerAdapter? = null
@@ -48,14 +48,11 @@ open class MessageInfoFragment : Fragment() {
 
         initViews()
         initViewModel()
-        setMessageView()
-        setMessageDetails()
     }
 
     private fun getBundleArguments() {
-        message = requireNotNull(
-            arguments?.parcelable<SceytMessage>(KEY_MESSAGE)
-        )
+        messageId = arguments?.getLong(KEY_MESSAGE_ID) ?: 0
+        channelId = arguments?.getLong(KEY_CHANNEL_ID) ?: 0
     }
 
     private fun initViews() {
@@ -68,8 +65,7 @@ open class MessageInfoFragment : Fragment() {
         viewModel.uiState.onEach {
             when (it) {
                 is UIState.Success -> {
-                    message = it.message
-                    updateMessageView()
+                    updateMessageView(it.message)
                     setReadUsers(it.readMarkers)
                     setDeliveredUsers(it.deliveredMarkers)
                     setPlayedUsers(it.playedMarkers)
@@ -79,21 +75,23 @@ open class MessageInfoFragment : Fragment() {
                 is UIState.Loading -> return@onEach
             }
         }.launchIn(lifecycleScope)
+
+        viewModel.messageFlow.onEach {
+            setMessageView(it)
+            setMessageDetails(it)
+        }.launchIn(lifecycleScope)
     }
 
-    protected open fun setMessageView() {
-        messageViewProvider = getMessageInfoViewProvider()
-        messageViewProvider?.displayMessagePreview(binding.viewStub, message)
-        messageViewProvider?.setMessageListener(MessageClickListeners.AttachmentClickListener { _, item ->
-            onAttachmentClick(item)
-        })
+    protected open fun setMessageView(message: SceytMessage?) {
+        messageViewProvider.displayMessagePreview(binding.viewStub, message ?: return)
     }
 
-    protected open fun updateMessageView() {
-        messageViewProvider?.updateMessageStatus(message)
+    protected open fun updateMessageView(message: SceytMessage?) {
+        messageViewProvider.updateMessageStatus(message ?: return)
     }
 
-    protected open fun setMessageDetails() {
+    protected open fun setMessageDetails(message: SceytMessage?) {
+        message ?: return
         with(binding) {
             tvSentDate.text = DateTimeUtil.getDateTimeString(message.createdAt, "dd.MM.yy")
             groupSizeViews.isVisible = viewModel.getMessageAttachmentSizeIfExist(message)?.let {
@@ -138,7 +136,13 @@ open class MessageInfoFragment : Fragment() {
     }
 
     protected open fun getMessageInfoViewProvider(): MessageInfoViewProvider {
-        return MessageInfoViewProvider(requireContext())
+        return MessageInfoViewProvider(requireContext()).also { provider ->
+            provider.setMessageListener(MessageClickListeners.AttachmentClickListener { _, item ->
+                onAttachmentClick(item)
+            })
+
+            provider.setNeedMediaDataCallback { viewModel.needMediaInfo(it) }
+        }
     }
 
     protected open fun onAttachmentClick(item: FileListItem) {
@@ -156,11 +160,20 @@ open class MessageInfoFragment : Fragment() {
     }
 
     companion object {
-        private const val KEY_MESSAGE = "key_message"
+        const val KEY_MESSAGE_ID = "key_message_id"
+        const val KEY_CHANNEL_ID = "key_channel_id"
 
         fun newInstance(message: SceytMessage): MessageInfoFragment {
             return MessageInfoFragment().setBundleArgumentsAs {
-                putParcelable(KEY_MESSAGE, message)
+                putLong(KEY_MESSAGE_ID, message.id)
+                putLong(KEY_CHANNEL_ID, message.channelId)
+            }
+        }
+
+        fun newInstance(messageId: Long, channelId: Long): MessageInfoFragment {
+            return MessageInfoFragment().setBundleArgumentsAs {
+                putLong(KEY_MESSAGE_ID, messageId)
+                putLong(KEY_CHANNEL_ID, channelId)
             }
         }
     }

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventsObserver
+import com.sceyt.chatuikit.data.channeleventobserver.MessageMarkerEventData
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -12,11 +13,18 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.toFileListItem
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
+import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
@@ -31,7 +39,7 @@ sealed interface UIState {
             val readMarkers: List<SceytMarker>,
             val deliveredMarkers: List<SceytMarker>,
             val playedMarkers: List<SceytMarker>,
-            val message: SceytMessage,
+            val message: SceytMessage?,
             val isDataFromDatabase: Boolean
     ) : UIState
 
@@ -39,28 +47,57 @@ sealed interface UIState {
     data object Loading : UIState
 }
 
-class MessageInfoViewModel(private val message: SceytMessage) : ViewModel(), SceytKoinComponent {
+class MessageInfoViewModel(
+        private val messageId: Long,
+        private val channelId: Long
+) : ViewModel(), SceytKoinComponent {
     private val markerInteractor: MessageMarkerInteractor by inject()
-    private val limit = 100
+    private val messageInteractor: MessageInteractor by inject()
+    private val fileTransferService: FileTransferService by inject()
 
     private val _uiState = MutableStateFlow<UIState>(UIState.Loading)
     val uiState = _uiState.asStateFlow()
 
-    private val messageId = message.id
+    private val _messageFlow = MutableSharedFlow<SceytMessage>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val messageFlow = _messageFlow.asSharedFlow()
+
+    private val limit = 100
+    private var message: SceytMessage? = null
 
     init {
         ChannelEventsObserver.onMessageStatusFlow
-            .filter { it.messageIds.contains(messageId) }
+            .filter { it.marker.messageIds.contains(messageId) }
             .onEach(::onMessageStatusChange)
             .launchIn(viewModelScope)
 
+        ChannelEventsObserver.onMarkerReceivedFlow
+            .filter { it.marker.messageIds.contains(messageId) }
+            .onEach(::onMarkerReceived)
+            .launchIn(viewModelScope)
+
+        getMessage()
         getAllMarkers()
+    }
+
+    private fun getMessage() {
+        viewModelScope.launch(Dispatchers.IO) {
+            (messageInteractor.getMessageDbById(messageId)
+                    ?: messageInteractor.getMessageFromServerById(channelId, messageId).run {
+                        if (this is SceytResponse.Success) this.data else null
+                    })?.let { message ->
+
+                this@MessageInfoViewModel.message = initMessageFiles(message)
+                _messageFlow.tryEmit(message)
+            }
+        }
     }
 
     private fun onMessageStatusChange(data: MessageStatusChangeData) {
         viewModelScope.launch(Dispatchers.Default) {
-            if (message.deliveryStatus < data.status)
-                message.deliveryStatus = data.status
+            if ((message?.deliveryStatus ?: DeliveryStatus.Pending) < data.status)
+                message?.deliveryStatus = data.status
 
             when (data.status) {
                 DeliveryStatus.Displayed -> {
@@ -69,7 +106,7 @@ class MessageInfoViewModel(private val message: SceytMessage) : ViewModel(), Sce
                         if (state.readMarkers.any { it.userId == data.from.id }) return@launch
                         val newReadMarkers = state.readMarkers.toMutableList()
                         val deliveredMarkers = state.deliveredMarkers.filter { it.userId != data.from.id }
-                        newReadMarkers.add(SceytMarker(messageId, data.from, data.status.name, System.currentTimeMillis()))
+                        newReadMarkers.add(0, SceytMarker(messageId, data.from, data.status.name, data.marker.createdAt))
                         _uiState.update {
                             state.copy(
                                 readMarkers = newReadMarkers,
@@ -84,7 +121,7 @@ class MessageInfoViewModel(private val message: SceytMessage) : ViewModel(), Sce
                     if (state is UIState.Success) {
                         if (state.deliveredMarkers.any { it.userId == data.from.id }) return@launch
                         val newDeliveredMarkers = state.deliveredMarkers.toMutableList()
-                        newDeliveredMarkers.add(SceytMarker(messageId, data.from, data.status.name, System.currentTimeMillis()))
+                        newDeliveredMarkers.add(0, SceytMarker(messageId, data.from, data.status.name, data.marker.createdAt))
                         _uiState.update {
                             state.copy(deliveredMarkers = newDeliveredMarkers)
                         }
@@ -92,6 +129,20 @@ class MessageInfoViewModel(private val message: SceytMessage) : ViewModel(), Sce
                 }
 
                 else -> return@launch
+            }
+        }
+    }
+
+    private fun onMarkerReceived(data: MessageMarkerEventData) {
+        if (data.marker.name == MarkerTypeEnum.Played.value()) {
+            val state = _uiState.value
+            if (state is UIState.Success) {
+                if (state.playedMarkers.any { it.userId == data.user.id }) return
+                val playedMarkers = state.playedMarkers.toMutableList()
+                playedMarkers.add(0, SceytMarker(messageId, data.user, data.marker.name, data.marker.createdAt))
+                _uiState.update {
+                    state.copy(playedMarkers = playedMarkers)
+                }
             }
         }
     }
@@ -182,9 +233,32 @@ class MessageInfoViewModel(private val message: SceytMessage) : ViewModel(), Sce
         }
     }
 
+    private fun initMessageFiles(sceytMessage: SceytMessage): SceytMessage {
+        return sceytMessage.apply {
+            files = attachments?.map { it.toFileListItem(this) }
+        }
+    }
+
     fun getMessageAttachmentSizeIfExist(message: SceytMessage): Long? {
         return message.attachments?.find {
             it.type != AttachmentTypeEnum.Link.value() && it.type != AttachmentTypeEnum.File.value()
         }?.fileSize
+    }
+
+    fun needMediaInfo(data: NeedMediaInfoData) {
+        val attachment = data.item
+        when (data) {
+            is NeedMediaInfoData.NeedDownload -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    fileTransferService.download(attachment, fileTransferService.findOrCreateTransferTask(attachment))
+                }
+            }
+
+            is NeedMediaInfoData.NeedThumb -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    fileTransferService.getThumb(attachment.messageTid, attachment, data.thumbData)
+                }
+            }
+        }
     }
 }

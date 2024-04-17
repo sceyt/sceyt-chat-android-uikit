@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.persistence.logic
 
-import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData

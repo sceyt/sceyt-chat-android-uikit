@@ -43,6 +43,7 @@ import com.sceyt.chatuikit.persistence.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.entity.pendings.PendingReactionEntity
 import com.sceyt.chatuikit.persistence.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.entity.messages.ReactionTotalEntity
+import com.sceyt.chatuikit.persistence.entity.messages.UserMarkerLink
 import com.sceyt.chatuikit.persistence.entity.pendings.PendingMessageStateEntity
 
 @Database(entities = [
@@ -64,8 +65,9 @@ import com.sceyt.chatuikit.persistence.entity.pendings.PendingMessageStateEntity
     AttachmentPayLoadEntity::class,
     FileChecksumEntity::class,
     LinkDetailsEntity::class,
-    LoadRangeEntity::class
-], version = 12, autoMigrations = [
+    LoadRangeEntity::class,
+    UserMarkerLink::class
+], version = 13, autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
     AutoMigration(from = 3, to = 4, spec = SceytDatabase.AutoMigrationSpec3to4::class),
@@ -77,6 +79,7 @@ import com.sceyt.chatuikit.persistence.entity.pendings.PendingMessageStateEntity
     AutoMigration(from = 9, to = 10),
     AutoMigration(from = 10, to = 11),
     AutoMigration(from = 11, to = 12),
+    AutoMigration(from = 12, to = 13, spec = SceytDatabase.AutoMigrationSpec12To13::class),
 ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
@@ -102,4 +105,7 @@ internal abstract class SceytDatabase : RoomDatabase() {
 
     @DeleteColumn(tableName = "DraftMessageEntity", columnName = "metadata")
     class AutoMigrationSpec5To6 : AutoMigrationSpec
+
+    @DeleteColumn(tableName = "MentionUserMessageLink", columnName = "id")
+    class AutoMigrationSpec12To13 : AutoMigrationSpec
 }

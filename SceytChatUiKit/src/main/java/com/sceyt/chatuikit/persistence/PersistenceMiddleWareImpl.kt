@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelUnreadCountUpdatedEventData
+import com.sceyt.chatuikit.data.channeleventobserver.MessageMarkerEventData
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionStateData
 import com.sceyt.chatuikit.data.messageeventobserver.MessageEventsObserver
@@ -88,6 +89,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         ChannelEventsObserver.onChannelOwnerChangedEventFlow.onEach(::onChannelOwnerChangedEvent).launchIn(scope)
         // Message events
         ChannelEventsObserver.onMessageStatusFlow.onEach(::onMessageStatusChangeEvent).launchIn(scope)
+        ChannelEventsObserver.onMarkerReceivedFlow.onEach(::onMessageMarkerEvent).launchIn(scope)
         MessageEventsObserver.onMessageFlow.onEach(::onMessage).launchIn(scope)
         MessageEventsObserver.onMessageReactionUpdatedFlow.onEach(::onMessageReactionUpdated).launchIn(scope)
         MessageEventsObserver.onMessageEditedOrDeletedFlow.onEach(::onMessageEditedOrDeleted).launchIn(scope)
@@ -119,6 +121,11 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     private fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
         scope.launch(Dispatchers.IO) { messagesLogic.onMessageStatusChangeEvent(data) }
         scope.launch(Dispatchers.IO) { channelLogic.onMessageStatusChangeEvent(data) }
+        scope.launch(Dispatchers.IO) { messageMarkerLogic.onMessageStatusChangeEvent(data) }
+    }
+
+    private fun onMessageMarkerEvent(data: MessageMarkerEventData) {
+        scope.launch(Dispatchers.IO) { messageMarkerLogic.onMessageMarkerEvent(data) }
     }
 
     private fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
