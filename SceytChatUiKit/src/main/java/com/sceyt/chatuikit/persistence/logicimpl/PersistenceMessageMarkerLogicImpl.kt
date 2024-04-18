@@ -51,7 +51,8 @@ class PersistenceMessageMarkerLogicImpl(
         val response = messageMarkersRepository.getMessageMarkers(messageId, name, offset, limit)
         if (response is SceytResponse.Success) {
             response.data?.let { markers ->
-                markerDao.insertMany(markers.map { it.toMarkerEntity() })
+                if (messageDao.existsMessageById(messageId))
+                    markerDao.insertMany(markers.map { it.toMarkerEntity() })
             }
         }
         return response
