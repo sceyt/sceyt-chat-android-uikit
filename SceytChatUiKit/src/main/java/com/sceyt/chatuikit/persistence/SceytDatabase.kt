@@ -67,7 +67,7 @@ import com.sceyt.chatuikit.persistence.entity.pendings.PendingMessageStateEntity
     LinkDetailsEntity::class,
     LoadRangeEntity::class,
     UserMarkerLink::class
-], version = 13, autoMigrations = [
+], version = 11, autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
     AutoMigration(from = 3, to = 4, spec = SceytDatabase.AutoMigrationSpec3to4::class),
@@ -77,9 +77,7 @@ import com.sceyt.chatuikit.persistence.entity.pendings.PendingMessageStateEntity
     AutoMigration(from = 7, to = 8),
     AutoMigration(from = 8, to = 9),
     AutoMigration(from = 9, to = 10),
-    AutoMigration(from = 10, to = 11),
-    AutoMigration(from = 11, to = 12),
-    AutoMigration(from = 12, to = 13, spec = SceytDatabase.AutoMigrationSpec12To13::class),
+    AutoMigration(from = 10, to = 11, spec = SceytDatabase.AutoMigrationSpec10To11::class),
 ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
@@ -107,5 +105,5 @@ internal abstract class SceytDatabase : RoomDatabase() {
     class AutoMigrationSpec5To6 : AutoMigrationSpec
 
     @DeleteColumn(tableName = "MentionUserMessageLink", columnName = "id")
-    class AutoMigrationSpec12To13 : AutoMigrationSpec
+    class AutoMigrationSpec10To11 : AutoMigrationSpec
 }
