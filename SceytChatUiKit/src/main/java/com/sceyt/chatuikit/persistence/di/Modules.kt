@@ -49,7 +49,7 @@ import org.koin.dsl.module
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
-const val SCEYT_CHAT_UI_KIT_DATABASE_NAME = "sceyt_chat_ui_kit_database"
+const val SCEYT_CHAT_UI_KIT_DATABASE_NAME = "sceyt_ui_kit_database"
 
 internal val appModules = module {
     single { SceytSyncManager(get(), get(), get()) }

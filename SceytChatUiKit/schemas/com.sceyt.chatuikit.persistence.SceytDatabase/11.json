@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 11,
-    "identityHash": "77b3e151afe0ec2e764d2570891947ee",
+    "identityHash": "022a86b74fa61a00e7592b5bb123cf11",
     "entities": [
       {
         "tableName": "channels",
@@ -610,14 +610,8 @@
       },
       {
         "tableName": "MentionUserMessageLink",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `messageTid` INTEGER NOT NULL, `user_id` TEXT NOT NULL, FOREIGN KEY(`messageTid`) REFERENCES `messages`(`tid`) ON UPDATE NO ACTION ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`messageTid` INTEGER NOT NULL, `user_id` TEXT NOT NULL, PRIMARY KEY(`messageTid`, `user_id`), FOREIGN KEY(`messageTid`) REFERENCES `messages`(`tid`) ON UPDATE NO ACTION ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
         "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
           {
             "fieldPath": "messageTid",
             "columnName": "messageTid",
@@ -632,22 +626,13 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": true,
+          "autoGenerate": false,
           "columnNames": [
-            "id"
+            "messageTid",
+            "user_id"
           ]
         },
         "indices": [
-          {
-            "name": "uniqueMentionUserInMessage",
-            "unique": true,
-            "columnNames": [
-              "messageTid",
-              "user_id"
-            ],
-            "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `uniqueMentionUserInMessage` ON `${TABLE_NAME}` (`messageTid`, `user_id`)"
-          },
           {
             "name": "index_MentionUserMessageLink_messageTid",
             "unique": false,
@@ -1007,6 +992,24 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_MarkerEntity_messageId` ON `${TABLE_NAME}` (`messageId`)"
+          },
+          {
+            "name": "index_MarkerEntity_name",
+            "unique": false,
+            "columnNames": [
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_MarkerEntity_name` ON `${TABLE_NAME}` (`name`)"
+          },
+          {
+            "name": "index_MarkerEntity_createdAt",
+            "unique": false,
+            "columnNames": [
+              "createdAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_MarkerEntity_createdAt` ON `${TABLE_NAME}` (`createdAt`)"
           }
         ],
         "foreignKeys": [
@@ -1816,12 +1819,70 @@
           }
         ],
         "foreignKeys": []
+      },
+      {
+        "tableName": "UserMarkerLink",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`message_id` INTEGER NOT NULL, `markerId` INTEGER NOT NULL, PRIMARY KEY(`message_id`, `markerId`), FOREIGN KEY(`message_id`) REFERENCES `messages`(`message_id`) ON UPDATE NO ACTION ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED)",
+        "fields": [
+          {
+            "fieldPath": "messageId",
+            "columnName": "message_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "markerId",
+            "columnName": "markerId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "message_id",
+            "markerId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_UserMarkerLink_message_id",
+            "unique": false,
+            "columnNames": [
+              "message_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_UserMarkerLink_message_id` ON `${TABLE_NAME}` (`message_id`)"
+          },
+          {
+            "name": "index_UserMarkerLink_markerId",
+            "unique": false,
+            "columnNames": [
+              "markerId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_UserMarkerLink_markerId` ON `${TABLE_NAME}` (`markerId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "messages",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "message_id"
+            ],
+            "referencedColumns": [
+              "message_id"
+            ]
+          }
+        ]
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '77b3e151afe0ec2e764d2570891947ee')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '022a86b74fa61a00e7592b5bb123cf11')"
     ]
   }
 }
