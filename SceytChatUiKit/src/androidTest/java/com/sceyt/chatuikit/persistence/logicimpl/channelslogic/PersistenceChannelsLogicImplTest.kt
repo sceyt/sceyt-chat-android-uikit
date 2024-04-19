@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.logicimpl.channelslogic
 
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
+import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.channel.Builder
 import com.sceyt.chat.models.channel.Channel
@@ -13,7 +14,6 @@ import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.sceyt_callbacks.ChannelCallback
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.SceytKitClient
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver.awaitToConnectSceytWithTimeout
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
@@ -34,7 +34,8 @@ class PersistenceChannelsLogicImplTest {
 
     @Before
     fun setUp() {
-        SceytChatUIKit(ApplicationProvider.getApplicationContext()).initialize(
+        SceytChatUIKit.initialize(
+            appContext = ApplicationProvider.getApplicationContext(),
             clientId = UUID.randomUUID().toString(),
             appId = "yzr58x11rm",
             apiUrl = "https://uk-london-south-api-2-staging.waafi.com",
@@ -44,7 +45,7 @@ class PersistenceChannelsLogicImplTest {
 
     @Test
     fun createDirectChannel() = runTest {
-        SceytKitClient.connect("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MDk3MDYzMTUsImV4cCI6MTcwOTc5MjcxNSwibmJmIjoxNzA5NzA2MzE1LCJzdWIiOiJtIn0.XKjoe0haR-WdNaHZ7OSXMlTxTf0Lu2zhoXboLE3eeIcf3mFynpjupoX2ZeJd-2wkGOefbespHYvRhS9jV5vxAtk0LnuWCoYVWWKTrqwJBqfTDePdQaceyViYPqoR8PUYHhs1vRxBKhik7BK2cs39HJ_Z8Ck1z9lTFBO08xY3i_Ygr-cNDc0ZZGgbFrwf4L8NQjCtr3Mg2w2dFatl7o9K2WTi7mKTBwnTjhqwsIFNr_JUNDpoz4WfgJokhXx5CwzSj94xH1i3h4yon7PE8ZwsabApjbVhHiSTezL1yF71x60pIhS-j-xxlesKIa9a7ATfCSKlXM4ZjhZWlfBgxdRTyw")
+        ChatClient.getClient().connect("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MDk3MDYzMTUsImV4cCI6MTcwOTc5MjcxNSwibmJmIjoxNzA5NzA2MzE1LCJzdWIiOiJtIn0.XKjoe0haR-WdNaHZ7OSXMlTxTf0Lu2zhoXboLE3eeIcf3mFynpjupoX2ZeJd-2wkGOefbespHYvRhS9jV5vxAtk0LnuWCoYVWWKTrqwJBqfTDePdQaceyViYPqoR8PUYHhs1vRxBKhik7BK2cs39HJ_Z8Ck1z9lTFBO08xY3i_Ygr-cNDc0ZZGgbFrwf4L8NQjCtr3Mg2w2dFatl7o9K2WTi7mKTBwnTjhqwsIFNr_JUNDpoz4WfgJokhXx5CwzSj94xH1i3h4yon7PE8ZwsabApjbVhHiSTezL1yF71x60pIhS-j-xxlesKIa9a7ATfCSKlXM4ZjhZWlfBgxdRTyw")
         awaitToConnectSceytWithTimeout(5000L)
 
         val createdBy = ClientWrapper.currentUser

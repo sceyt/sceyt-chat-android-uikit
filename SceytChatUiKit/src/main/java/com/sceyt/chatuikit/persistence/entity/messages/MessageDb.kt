@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.persistence.entity.messages
 import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.persistence.entity.UserEntity
 import com.sceyt.chatuikit.persistence.entity.pendings.PendingReactionEntity
 
@@ -41,5 +41,5 @@ data class MessageDb(
         @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = MentionUserMessageLink::class)
         val mentionedUsers: List<MentionUserDb>?
 ) {
-    val selfReactions get() = reactions?.filter { it.from?.id == SceytKitClient.myId }
+    val selfReactions get() = reactions?.filter { it.from?.id == SceytChatUIKit.chatUIFacade.myId }
 }

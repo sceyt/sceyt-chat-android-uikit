@@ -1,20 +1,18 @@
 package com.sceyt.chatuikit.persistence.mappers
 
-import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.PendingReactionData
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.persistence.entity.channel.ChatUserReactionDb
 import com.sceyt.chatuikit.persistence.entity.channel.ChatUserReactionEntity
-import com.sceyt.chatuikit.persistence.entity.messages.MarkerEntity
-import com.sceyt.chatuikit.persistence.entity.pendings.PendingReactionEntity
 import com.sceyt.chatuikit.persistence.entity.messages.ReactionDb
 import com.sceyt.chatuikit.persistence.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.entity.messages.ReactionTotalEntity
+import com.sceyt.chatuikit.persistence.entity.pendings.PendingReactionEntity
 
 fun SceytReaction.toReactionEntity() = ReactionEntity(
     id = id,
@@ -61,7 +59,7 @@ fun PendingReactionEntity.toSceytReaction() = SceytReaction(
     score = score,
     reason = "",
     createdAt = createdAt,
-    user = ClientWrapper.currentUser ?: User(SceytKitClient.myId),
+    user = ClientWrapper.currentUser ?: User(SceytChatUIKit.chatUIFacade.myId),
     pending = true
 )
 
@@ -95,4 +93,4 @@ fun ReactionTotalEntity.toReactionTotal(): ReactionTotal = ReactionTotal(key, co
 fun PendingReactionEntity.toReactionData() = PendingReactionData(messageId, key, score, count, createdAt, isAdd, incomingMsg)
 
 fun PendingReactionData.toSceytReaction() = SceytReaction(0, messageId, key, score, "", createdAt, ClientWrapper.currentUser
-        ?: User(SceytKitClient.myId), true)
+        ?: User(SceytChatUIKit.chatUIFacade.myId), true)

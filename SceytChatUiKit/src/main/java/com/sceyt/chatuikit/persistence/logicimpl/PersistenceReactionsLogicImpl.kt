@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.chatuikit.data.messageeventobserver.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.messageeventobserver.ReactionUpdateEventEnum.Add
@@ -11,15 +11,14 @@ import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
-import com.sceyt.chatuikit.persistence.repositories.ReactionsRepository
 import com.sceyt.chatuikit.persistence.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.dao.MessageDao
 import com.sceyt.chatuikit.persistence.dao.PendingReactionDao
 import com.sceyt.chatuikit.persistence.dao.ReactionDao
 import com.sceyt.chatuikit.persistence.dao.UserDao
-import com.sceyt.chatuikit.persistence.entity.pendings.PendingReactionEntity
 import com.sceyt.chatuikit.persistence.entity.messages.ReactionTotalEntity
+import com.sceyt.chatuikit.persistence.entity.pendings.PendingReactionEntity
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
@@ -33,6 +32,7 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
 import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
+import com.sceyt.chatuikit.persistence.repositories.ReactionsRepository
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -157,7 +157,7 @@ internal class PersistenceReactionsLogicImpl(
         if (!pendingRemoveItems.isNullOrEmpty()) {
             dbReactions.apply {
                 val needTOBeRemoved = dbReactions.filter { reaction ->
-                    pendingRemoveItems.any { it.key == reaction.key && reaction.user?.id == SceytKitClient.myId }
+                    pendingRemoveItems.any { it.key == reaction.key && reaction.user?.id == SceytChatUIKit.chatUIFacade.myId }
                 }
                 removeAll(needTOBeRemoved.toSet())
             }

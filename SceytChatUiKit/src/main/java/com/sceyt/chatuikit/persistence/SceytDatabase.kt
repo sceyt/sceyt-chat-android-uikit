@@ -81,7 +81,7 @@ import com.sceyt.chatuikit.persistence.entity.pendings.PendingMessageStateEntity
 ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
-internal abstract class SceytDatabase : RoomDatabase() {
+abstract class SceytDatabase : RoomDatabase() {
     abstract fun channelDao(): ChannelDao
     abstract fun messageDao(): MessageDao
     abstract fun attachmentsDao(): AttachmentDao

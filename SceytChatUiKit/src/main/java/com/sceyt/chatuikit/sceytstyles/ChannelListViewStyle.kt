@@ -4,42 +4,41 @@ import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
-import androidx.annotation.ColorRes
 import androidx.annotation.LayoutRes
 import androidx.annotation.StyleRes
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.pxToDp
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.dateformaters.ChannelDateFormatter
 
 data class ChannelListViewStyle(
         val context: Context,
 
         @ColorInt
-        val backgroundColor: Int = context.getCompatColor(R.color.sceyt_color_bg),
+        val backgroundColor: Int = context.getCompatColor(SceytChatUIKit.theme.backgroundColor),
 
         @ColorInt
-        val pinnedChannelBackgroundColor: Int = context.getCompatColor(R.color.sceyt_color_gray_themed),
+        val pinnedChannelBackgroundColor: Int = context.getCompatColor(SceytChatUIKit.theme.surface1Color),
 
         @ColorInt
-        val titleColor: Int = context.getCompatColor(R.color.sceyt_color_text_themed),
+        val titleColor: Int = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor),
 
         @ColorInt
-        val lastMessageTextColor: Int = context.getCompatColor(R.color.sceyt_color_gray_400),
+        val lastMessageTextColor: Int = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor),
 
-        @ColorRes
-        val unreadCountColor: Int = SceytKitConfig.sceytColorAccent,
+        @ColorInt
+        val unreadCountColor: Int = context.getCompatColor(SceytChatUIKit.theme.accentColor),
 
         @ColorInt
         val onlineStatusColor: Int = context.getCompatColor(R.color.sceyt_color_green),
 
         @ColorInt
-        val dividerColor: Int = context.getCompatColor(R.color.sceyt_color_divider),
+        val dividerColor: Int = context.getCompatColor(SceytChatUIKit.theme.bordersColor),
 
         @ColorInt
-        val dateTextColor: Int = context.getCompatColor(R.color.sceyt_color_gray_400),
+        val dateTextColor: Int = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor),
 
         val mutedIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_muted),
 
@@ -49,7 +48,9 @@ data class ChannelListViewStyle(
 
         val statusIndicatorDeliveredIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_status_delivered),
 
-        val statusIndicatorReadIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_status_read),
+        val statusIndicatorReadIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_status_read).also {
+            it?.setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        },
 
         val bodyFileAttachmentIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_body_file_attachment),
 
@@ -75,7 +76,7 @@ data class ChannelListViewStyle(
 
         val showChannelActionAsPopup: Boolean = false,
 
-        val enableDivider: Boolean = true,
+        val enableDivider: Boolean = false,
 
         val statusIconSize: Int = pxToDp(16f).toInt()
 ) {
@@ -96,7 +97,7 @@ data class ChannelListViewStyle(
                 pinnedChannelBackgroundColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiChannelListPinnedBackgroundColor, pinnedChannelBackgroundColor),
                 titleColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiChannelTitleTextColor, titleColor),
                 lastMessageTextColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiLastMessageTextColor, lastMessageTextColor),
-                unreadCountColor = typedArray.getResourceId(R.styleable.ChannelListView_sceytUiUnreadMessageCounterTextColor, unreadCountColor),
+                unreadCountColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiUnreadMessageCounterTextColor, unreadCountColor),
                 mutedIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiMutedChannelIcon)
                         ?: mutedIcon,
                 dateTextColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiLastMessageDateTextColor, dateTextColor),

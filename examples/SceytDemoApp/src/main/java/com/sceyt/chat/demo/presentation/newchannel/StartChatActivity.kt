@@ -22,7 +22,7 @@ import com.sceyt.chat.demo.presentation.newchannel.adapters.UsersAdapter
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
@@ -111,7 +111,7 @@ class StartChatActivity : AppCompatActivity() {
     private fun setupUsersList(list: List<UserItem>) {
         val listWithSelf = list.toMutableList()
         listWithSelf.add(0, UserItem.User(ClientWrapper.currentUser
-                ?: User(SceytKitClient.myId.toString())))
+                ?: User(SceytChatUIKit.chatUIFacade.myId.toString())))
 
         if (::usersAdapter.isInitialized.not()) {
             binding.rvUsers.adapter = UsersAdapter(listWithSelf.toArrayList(), UserViewHolderFactory(this) {

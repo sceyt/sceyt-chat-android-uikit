@@ -8,14 +8,13 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
-import com.sceyt.chatuikit.SceytKitClient
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
 import com.sceyt.chatuikit.persistence.extensions.transcodeVideo
@@ -36,6 +35,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.filetransfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.extensions.checkLoadedFileIsCorrect
 import com.sceyt.chatuikit.shared.mediaencoder.VideoTranscodeHelper
@@ -50,7 +50,10 @@ import java.util.LinkedList
 import java.util.Queue
 import kotlin.math.max
 
-internal class FileTransferLogicImpl(private val context: Context) : FileTransferLogic, SceytKoinComponent {
+internal class FileTransferLogicImpl(
+        private val context: Context,
+        private val attachmentLogic: PersistenceAttachmentLogic
+) : FileTransferLogic, SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
     private var downloadingUrlMap = hashMapOf<String, String>()
     private var thumbPaths = hashMapOf<String, ThumbPathsData>()
@@ -381,7 +384,7 @@ internal class FileTransferLogicImpl(private val context: Context) : FileTransfe
     private fun getAttachmentChecksum(filePath: String?): FileChecksumData? {
         val data: FileChecksumData?
         runBlocking(Dispatchers.IO) {
-            data = SceytKitClient.attachmentInteractor.getFileChecksumData(filePath)
+            data = attachmentLogic.getFileChecksumData(filePath)
         }
         return data
     }

@@ -14,6 +14,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.sceytconfigs.BackgroundUploadNotificationClickData
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -37,7 +38,7 @@ class SceytChatDemoApp : Application() {
         ChatClient.setEnableNetworkAwarenessReconnection(true)
         ChatClient.setEnableNetworkChangeDetection(true)
 
-        SceytChatUIKit(this).initialize(
+        SceytChatUIKit.initialize(this,
             apiUrl = BuildConfig.API_URL,
             appId = BuildConfig.APP_ID,
             clientId = UUID.randomUUID().toString(),

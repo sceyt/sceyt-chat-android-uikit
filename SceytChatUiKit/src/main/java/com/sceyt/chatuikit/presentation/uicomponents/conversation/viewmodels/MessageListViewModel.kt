@@ -10,8 +10,7 @@ import androidx.work.ExistingWorkPolicy
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
-import com.sceyt.chatuikit.SceytKitClient
-import com.sceyt.chatuikit.services.SceytSyncManager
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventData
@@ -36,12 +35,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.data.toFileListItem
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
-import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
-import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
-import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
-import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
-import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
@@ -61,6 +54,12 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
+import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
+import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
@@ -75,6 +74,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mentio
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
+import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -133,6 +133,7 @@ class MessageListViewModel(
     internal var lastSyncCenterOffsetId = 0L
 
     private val isGroup = channel.isGroup
+    private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
 
     private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(PaginationResponse.Nothing())
     val loadMessagesFlow: StateFlow<PaginationResponse<SceytMessage>> = _loadMessagesFlow
@@ -209,7 +210,7 @@ class MessageListViewModel(
             .filter { it.channelId == channel.id }
 
         onChannelTypingEventFlow = ChannelEventsObserver.onChannelTypingEventFlow
-            .filter { it.channel.id == channel.id && it.member.id != SceytKitClient.myId }
+            .filter { it.channel.id == channel.id && it.member.id != myId }
 
         onChannelUpdatedEventFlow = ChannelsCache.channelUpdatedFlow
             .filter { it.channel.id == channel.id }
@@ -665,7 +666,7 @@ class MessageListViewModel(
         val reactionItems = message.reactionTotals?.map {
             ReactionItem.Reaction(SceytReactionTotal(it.key, it.score.toInt(),
                 message.userReactions?.find { reaction ->
-                    reaction.key == it.key && reaction.user?.id == SceytKitClient.myId
+                    reaction.key == it.key && reaction.user?.id == myId
                 } != null), message, false)
         }?.toMutableList()
 

@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.Invited
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.Joined
@@ -28,7 +28,6 @@ import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelMembersBinding
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.awaitAnimationEnd
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -37,9 +36,10 @@ import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBoldSpan
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog
-import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
@@ -66,6 +66,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         private set
     protected var currentUserRole: Role? = null
         private set
+    private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelMembersBinding.inflate(inflater, container, false).also {
@@ -153,7 +154,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     }
 
     private fun getCurrentUserRole() {
-        channel.members?.find { it.id == SceytKitClient.myId }?.let {
+        channel.members?.find { it.id == myId }?.let {
             currentUserRole = it.role
         }
     }
@@ -216,12 +217,12 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     }
 
     protected open fun onMemberClick(item: MemberItem.Member) {
-        if (item.member.id == SceytKitClient.myId) return
+        if (item.member.id == myId) return
         viewModel.findOrCreateChat(item.member.user)
     }
 
     protected open fun onMemberLongClick(item: MemberItem.Member) {
-        if (currentUserIsOwnerOrAdmin().not() || item.member.id == SceytKitClient.myId) return
+        if (currentUserIsOwnerOrAdmin().not() || item.member.id == myId) return
 
         MemberActionsDialog
             .newInstance(requireContext(), item.member, currentUserRole?.name == RoleTypeEnum.Owner.toString())
@@ -238,7 +239,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     protected open fun setOrUpdateMembersAdapter(data: List<MemberItem>) {
         if (membersAdapter == null) {
             val currentUser = channel.members?.find {
-                it.id == SceytKitClient.myId
+                it.id == myId
             }
             currentUserRole = currentUser?.role
 
