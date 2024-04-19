@@ -9,7 +9,7 @@ import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.chatuikit.data.messageeventobserver.MessageEventsObserver
 import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -117,6 +117,8 @@ internal class PersistenceMessagesLogicImpl(
     private val persistenceReactionLogic: PersistenceReactionsLogic by inject()
     private val createChannelAndSendMessageMutex = Mutex()
     private val dispatcherIO = Dispatchers.IO
+    private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
+
 
     private val onMessageFlow: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> = MutableSharedFlow(
         extraBufferCapacity = 10,
@@ -170,7 +172,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun onMessageEditedOrDeleted(data: SceytMessage) = withContext(dispatcherIO) {
-        val selfReactions = reactionDao.getSelfReactionsByMessageId(data.id, SceytKitClient.myId.toString())
+        val selfReactions = reactionDao.getSelfReactionsByMessageId(data.id, myId.toString())
         data.userReactions = selfReactions.map { it.toSceytReaction() }.toTypedArray()
         messageDao.updateMessage(data.toMessageEntity(false))
         messagesCache.messageUpdated(data.channelId, data)
@@ -1059,7 +1061,7 @@ internal class PersistenceMessagesLogicImpl(
 
                     pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, status)
                     val existMessageIds = messageDao.getExistMessageByIds(responseIds)
-                    SceytKitClient.myId?.let { userId ->
+                    myId?.let { userId ->
                         messageDao.insertUserMarkersAndLinks(existMessageIds.map {
                             MarkerEntity(messageId = it, userId = userId, name = data.name)
                         })

@@ -15,7 +15,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -57,6 +57,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                              private val userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder) : BaseChannelViewHolder(binding.root) {
 
     protected var isSelf = false
+    private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
 
     init {
         with(binding) {
@@ -184,8 +185,9 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         val removeReactions = pendingAddOrRemoveReaction?.get(false) ?: emptyList()
         val lastReaction = addReactions?.maxByOrNull { it.createdAt }?.toSceytReaction()
                 ?: channel.newReactions?.filter {
-                    it.user?.id != SceytKitClient.myId &&
-                            removeReactions.none { rm -> rm.key == it.key && rm.messageId == it.messageId && it.user?.id == SceytKitClient.myId }
+                    it.user?.id != myId && removeReactions.none { rm ->
+                        rm.key == it.key && rm.messageId == it.messageId && it.user?.id == myId
+                    }
                 }?.maxByOrNull { it.id } ?: return false
 
         val message = ChatReactionMessagesCache.getMessageById(lastReaction.messageId)
@@ -202,7 +204,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                     "$name ${reactedWord.lowercase()}"
                 }
 
-                lastReaction.user?.id == SceytKitClient.myId -> "${itemView.getString(R.string.sceyt_you)} ${itemView.getString(R.string.sceyt_reacted).lowercase()}"
+                lastReaction.user?.id == myId -> "${itemView.getString(R.string.sceyt_you)} ${itemView.getString(R.string.sceyt_reacted).lowercase()}"
                 else -> itemView.getString(R.string.sceyt_reacted)
             }
 
@@ -355,22 +357,20 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     private fun SceytItemChannelBinding.setChannelItemStyle() {
-        with(root.context) {
-            channelTitle.setTextColor(channelStyle.titleColor)
-            lastMessage.setTextColor(channelStyle.lastMessageTextColor)
-            unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(getCompatColor(channelStyle.unreadCountColor))
-            icMention.backgroundTintList = ColorStateList.valueOf(getCompatColor(channelStyle.unreadCountColor))
-            onlineStatus.setIndicatorColor(channelStyle.onlineStatusColor)
-            viewPinned.setBackgroundColor(channelStyle.pinnedChannelBackgroundColor)
-            dateStatus.buildStyle()
-                .setStatusIconSize(channelStyle.statusIconSize)
-                .setDateColor(channelStyle.dateTextColor)
-                .build()
+        channelTitle.setTextColor(channelStyle.titleColor)
+        lastMessage.setTextColor(channelStyle.lastMessageTextColor)
+        unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(channelStyle.unreadCountColor)
+        icMention.backgroundTintList = ColorStateList.valueOf(channelStyle.unreadCountColor)
+        onlineStatus.setIndicatorColor(channelStyle.onlineStatusColor)
+        viewPinned.setBackgroundColor(channelStyle.pinnedChannelBackgroundColor)
+        dateStatus.buildStyle()
+            .setStatusIconSize(channelStyle.statusIconSize)
+            .setDateColor(channelStyle.dateTextColor)
+            .build()
 
-            divider.isVisible = if (channelStyle.enableDivider) {
-                divider.setBackgroundColor(channelStyle.dividerColor)
-                true
-            } else false
-        }
+        divider.isVisible = if (channelStyle.enableDivider) {
+            divider.setBackgroundColor(channelStyle.dividerColor)
+            true
+        } else false
     }
 }

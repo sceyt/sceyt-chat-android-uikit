@@ -9,7 +9,7 @@ import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.persistence.entity.channel.ChannelDb
@@ -101,7 +101,7 @@ interface ChannelDao {
             "group by chat_id having count(*) = 1) as links on links.chat_id = channels.chat_id " +
             "where channels.type = :directType ")
     suspend fun getDirectChannelsWhereMemberOnlyMe(
-            myId: String? = SceytKitClient.myId,
+            myId: String? = SceytChatUIKit.chatUIFacade.myId,
             directType: String = ChannelTypeEnum.Direct.getString()): List<ChannelDb>
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)

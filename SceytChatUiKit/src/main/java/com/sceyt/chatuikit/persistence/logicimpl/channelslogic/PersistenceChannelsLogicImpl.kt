@@ -9,7 +9,7 @@ import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chatuikit.SceytKitClient.myId
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.ClearedHistory
@@ -51,6 +51,8 @@ import com.sceyt.chatuikit.persistence.entity.channel.ChatUserReactionEntity
 import com.sceyt.chatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.chatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.chatuikit.persistence.entity.messages.DraftMessageUserLink
+import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.mappers.createEmptyUser
@@ -69,8 +71,6 @@ import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
-import com.sceyt.chatuikit.persistence.extensions.getPeer
-import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.chatuikit.pushes.RemoteMessageData
@@ -95,6 +95,7 @@ internal class PersistenceChannelsLogicImpl(
         private val channelsCache: ChannelsCache) : PersistenceChannelsLogic, SceytKoinComponent {
 
     private val messageLogic: PersistenceMessagesLogic by inject()
+    private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
 
     override suspend fun onChannelEvent(data: ChannelEventData) {
         when (val event = data.eventType) {

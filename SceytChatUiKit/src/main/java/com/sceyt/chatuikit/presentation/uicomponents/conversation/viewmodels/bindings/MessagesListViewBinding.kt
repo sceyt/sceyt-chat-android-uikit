@@ -14,7 +14,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytKitClient.myId
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.ClearedHistory
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.Deleted
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.Left
@@ -445,7 +445,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             if (response is SceytResponse.Success) {
                 val data = response.data ?: return@Observer
                 viewModelScope.launch(Dispatchers.Default) {
-                    val user = ClientWrapper.currentUser ?: User(myId ?: return@launch)
+                    val user = ClientWrapper.currentUser ?: User(SceytChatUIKit.chatUIFacade.myId
+                            ?: return@launch)
                     messagesListView.getData().forEach { listItem ->
                         (listItem as? MessageItem)?.message?.let { message ->
                             if (data.messageIds.contains(message.id)) {
@@ -575,7 +576,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             is ClearedHistory -> messagesListView.clearData()
             is Left -> {
                 event.leftMembers.forEach { member ->
-                    if (member.id == myId && !channel.isPublic())
+                    if (member.id == SceytChatUIKit.chatUIFacade.myId && !channel.isPublic())
                         messagesListView.context.asActivity().finish()
                 }
             }
@@ -678,7 +679,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             is MessageCommandEvent.UserClick -> {
-                if (event.userId == myId) return@setMessageCommandEventListener
+                if (event.userId == SceytChatUIKit.chatUIFacade.myId) return@setMessageCommandEventListener
                 viewModelScope.launch(Dispatchers.IO) {
                     val user = userInteractor.getUserDbById(event.userId)
                             ?: User(event.userId)

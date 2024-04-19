@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
@@ -11,8 +11,6 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
-import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
-import com.sceyt.chatuikit.persistence.repositories.UsersRepository
 import com.sceyt.chatuikit.data.toMember
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.dao.ChannelDao
@@ -22,14 +20,16 @@ import com.sceyt.chatuikit.persistence.dao.MessageDao
 import com.sceyt.chatuikit.persistence.dao.UserDao
 import com.sceyt.chatuikit.persistence.entity.UserEntity
 import com.sceyt.chatuikit.persistence.entity.channel.UserChatLink
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
+import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toSceytMember
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
+import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
+import com.sceyt.chatuikit.persistence.repositories.UsersRepository
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -72,7 +72,7 @@ internal class PersistenceMembersLogicImpl(
             }
 
             ChannelMembersEventEnum.Kicked, ChannelMembersEventEnum.Blocked -> {
-                if (data.members.any { it.id == SceytKitClient.myId }) {
+                if (data.members.any { it.id == SceytChatUIKit.chatUIFacade.myId }) {
                     deleteChannelDb(chatId)
                 } else {
                     channelDao.deleteUserChatLinks(chatId, *data.members.map { it.id }.toTypedArray())

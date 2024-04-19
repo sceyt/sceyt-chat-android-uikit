@@ -12,7 +12,7 @@
         android:id="@+id/viewPinned"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="@color/sceyt_color_gray_themed"
+        android:background="@color/sceyt_color_surface_1"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

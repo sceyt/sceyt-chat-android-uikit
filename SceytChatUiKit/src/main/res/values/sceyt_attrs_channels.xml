@@ -38,7 +38,7 @@
         <!-- Drawable of the message pending indicator -->
         <attr name="sceytUiIndicatorPendingIcon" format="reference" />
         <!-- A color of the unread message count text -->
-        <attr name="sceytUiUnreadMessageCounterTextColor" format="reference" />
+        <attr name="sceytUiUnreadMessageCounterTextColor" format="reference|color" />
         <!-- Background color of the unread message counter -->
         <attr name="sceytUiUnreadMessageCounterBackgroundColor" format="reference|color" />
         <!-- Drawable of the muted channel icon  -->

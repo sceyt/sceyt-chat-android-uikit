@@ -7,7 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
@@ -16,11 +16,11 @@ import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
+import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
 import com.sceyt.chatuikit.presentation.common.SceytDialog
-import com.sceyt.chatuikit.persistence.extensions.getChannelType
-import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.MessageInputView
@@ -125,7 +125,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
             is ChannelEventEnum.Left -> {
                 if (channel.isPublic()) {
                     event.leftMembers.forEach { member ->
-                        if (member.id == SceytKitClient.myId)
+                        if (member.id == SceytChatUIKit.chatUIFacade.myId)
                             messageInputView.onChannelLeft()
                     }
                 }
@@ -134,7 +134,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
             is ChannelEventEnum.Joined -> {
                 if (channel.isPublic()) {
                     event.joinedMembers.forEach { member ->
-                        if (member.id == SceytKitClient.myId)
+                        if (member.id == SceytChatUIKit.chatUIFacade.myId)
                             messageInputView.joinSuccess()
                     }
                 }
@@ -203,7 +203,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
                     loadedMembers = result
 
                 withContext(Dispatchers.Main) {
-                    messageInputView.setMentionList(result.filter { it.id != SceytKitClient.myId && !it.user.isDeleted() })
+                    messageInputView.setMentionList(result.filter { it.id != SceytChatUIKit.chatUIFacade.myId && !it.user.isDeleted() })
                 }
             }
         }
