@@ -11,14 +11,14 @@ import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseLinkMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 class IncLinkMsgViewHolder(
         private val binding: SceytItemIncLinkMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         linkPreview: LinkPreviewHelper,
-        private val style: MessagesListViewStyle,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
         userNameBuilder: ((User) -> String)?,
@@ -96,6 +96,6 @@ class IncLinkMsgViewHolder(
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incBubbleColor)
         tvUserName.setTextColor(style.senderNameTextColor)
         tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
-        messageBody.setLinkTextColor(style.autoLinkTextColor)
+        messageBody.setupStyle(style)
     }
 }

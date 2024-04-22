@@ -8,6 +8,7 @@ import android.view.View.OnClickListener
 import android.widget.FrameLayout
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytRecordedVoicePresenterBinding
 import com.sceyt.chatuikit.extensions.TAG_REF
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
@@ -18,7 +19,6 @@ import com.sceyt.chatuikit.extensions.setPlayButtonIcon
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.MessageInputViewStyle
 import java.io.File
 
@@ -113,8 +113,8 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
 
     private fun SceytRecordedVoicePresenterBinding.setupStyle() {
         icSendMessage.setImageResource(MessageInputViewStyle.sendMessageIcon)
-        icSendMessage.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        waveformSeekBar.waveProgressColor = getCompatColor(SceytKitConfig.sceytColorAccent)
+        icSendMessage.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        waveformSeekBar.waveProgressColor = getCompatColor(SceytChatUIKit.theme.accentColor)
     }
 
     interface RecordedVoicePresentListeners {

@@ -22,13 +22,13 @@ import com.sceyt.chatuikit.extensions.setTextAndVisibility
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.OutLinkMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 abstract class BaseLinkMsgViewHolder(
         private val linkPreview: LinkPreviewHelper,
         view: View,
-        private val style: MessagesListViewStyle,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners? = null,
         displayedListener: ((MessageListItem) -> Unit)? = null,
         userNameBuilder: ((User) -> String)? = null,

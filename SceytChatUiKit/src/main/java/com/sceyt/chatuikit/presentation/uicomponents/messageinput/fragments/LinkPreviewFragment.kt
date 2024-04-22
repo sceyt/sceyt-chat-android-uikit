@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.databinding.SceytFragmentLinkPreviewBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -19,7 +20,6 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.glideRequestListener
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CancelLinkPreviewClickListener
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.shared.utils.ViewUtil
 
 open class LinkPreviewFragment : Fragment() {
@@ -122,7 +122,7 @@ open class LinkPreviewFragment : Fragment() {
 
     protected open val defaultImage by lazy {
         requireContext().getCompatDrawable(R.drawable.sceyt_ic_link)?.apply {
-            setTint(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
+            setTint(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
         }
     }
 

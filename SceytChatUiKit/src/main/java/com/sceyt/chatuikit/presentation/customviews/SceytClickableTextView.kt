@@ -11,6 +11,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import androidx.appcompat.widget.AppCompatTextView
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 
 class SceytClickableTextView @JvmOverloads constructor(
@@ -70,5 +71,10 @@ class SceytClickableTextView @JvmOverloads constructor(
 
     fun doOnClickWhenNoLink(onClick: (View) -> Unit) {
         doOnClickWhenNoLink = onClick
+    }
+
+    fun setupStyle(messageItemStyle: MessageItemStyle){
+        setTextColor(messageItemStyle.bodyTextColor)
+        setLinkTextColor(messageItemStyle.autoLinkTextColor)
     }
 }

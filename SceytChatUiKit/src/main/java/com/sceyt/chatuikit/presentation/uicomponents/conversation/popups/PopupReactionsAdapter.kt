@@ -1,16 +1,16 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversation.popups
 
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemPopupAddReactionBinding
 import com.sceyt.chatuikit.databinding.SceytItemPopupReactionBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class PopupReactionsAdapter(private var data: List<ReactionItem>,
                             private var listener: OnItemClickListener) : RecyclerView.Adapter<BaseViewHolder<ReactionItem>>() {
@@ -43,7 +43,7 @@ class PopupReactionsAdapter(private var data: List<ReactionItem>,
             val reaction = (item as ReactionItem.Reaction).reaction
             binding.emojiView.setSmileText(reaction.key)
             if (item.reaction.containsSelf)
-                binding.emojiView.setReactionBackgroundColor(context.getCompatColor(R.color.sceyt_color_surface_1))
+                binding.emojiView.setReactionBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSecondary))
             else
                 binding.emojiView.setReactionBackgroundColor(Color.TRANSPARENT)
 
@@ -65,7 +65,8 @@ class PopupReactionsAdapter(private var data: List<ReactionItem>,
         }
 
         private fun SceytItemPopupAddReactionBinding.setupStyle() {
-            addEmoji.setColorFilter(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+            addEmoji.setColorFilter(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+            addEmoji.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSecondary))
         }
     }
 

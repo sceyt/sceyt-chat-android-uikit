@@ -12,9 +12,9 @@ class StickyDateHeaderUpdater(
         recyclerView: RecyclerView,
         private var parentView: ViewGroup,
         private val listener: StickyHeaderInterface,
-        private val messagesListViewStyle: MessagesListViewStyle
+        private val messageItemStyle: MessagesListViewStyle
 ) {
-    private val dateHeaderVerticalPadding = messagesListViewStyle.differentSenderMsgDistance
+    private val dateHeaderVerticalPadding = messageItemStyle.messageItemStyle.differentSenderMsgDistance
 
     init {
         recyclerView.addRVScrollListener(onScrolled = { rv, _, _ ->
@@ -86,7 +86,7 @@ class StickyDateHeaderUpdater(
         return StickyDateHeaderView(parentView.context).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             setPadding(paddingLeft, dateHeaderVerticalPadding, paddingRight, paddingBottom)
-            setStyle(messagesListViewStyle)
+            setStyle(messageItemStyle)
             parentView.addView(this)
         }
     }

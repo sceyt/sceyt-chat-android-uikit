@@ -168,20 +168,20 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     internal fun setStyle(style: MessagesListViewStyle) {
         this.style = style
-        addItemDecoration(ItemOffsetDecoration(style))
+        addItemDecoration(ItemOffsetDecoration(style.messageItemStyle))
         viewHolderFactory.setStyle(style)
     }
 
     fun setData(messages: List<MessageListItem>, force: Boolean = false) {
         if (::mAdapter.isInitialized.not()) {
-            adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory).also {
+            adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory, style).also {
                 it.setHasStableIds(true)
                 mAdapter = it
             }
             scheduleLayoutAnimation()
             StickyDateHeaderUpdater(this, parent as ViewGroup, mAdapter, style)
 
-            val swipeController = MessageSwipeController(context, style) { position ->
+            val swipeController = MessageSwipeController(context, style.messageItemStyle) { position ->
                 Handler(Looper.getMainLooper()).postDelayed({
                     mAdapter.getData().getOrNull(position)?.let {
                         swipeToReplyListener?.invoke(it)

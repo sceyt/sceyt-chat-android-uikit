@@ -11,12 +11,12 @@ import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 class IncTextMsgViewHolder(
         private val binding: SceytItemIncTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
-        private val style: MessagesListViewStyle,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
         userNameBuilder: ((User) -> String)?
@@ -88,7 +88,7 @@ class IncTextMsgViewHolder(
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incBubbleColor)
         tvUserName.setTextColor(style.senderNameTextColor)
         tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
-        messageBody.setLinkTextColor(style.autoLinkTextColor)
+        messageBody.setupStyle(style)
     }
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)

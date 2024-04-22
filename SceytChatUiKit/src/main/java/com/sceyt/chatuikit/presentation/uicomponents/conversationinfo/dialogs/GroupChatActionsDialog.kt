@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -15,7 +16,6 @@ import com.sceyt.chatuikit.databinding.SceytDialogGroupChannelActionsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogGroupChannelActionsBinding
@@ -107,7 +107,7 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
 
     private fun SceytDialogGroupChannelActionsBinding.setupStyle() {
         setTextViewsDrawableColor(listOf(pin, unPin, clearHistory, report),
-            context.getCompatColor(SceytKitConfig.sceytColorAccent))
+            context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 
     companion object {

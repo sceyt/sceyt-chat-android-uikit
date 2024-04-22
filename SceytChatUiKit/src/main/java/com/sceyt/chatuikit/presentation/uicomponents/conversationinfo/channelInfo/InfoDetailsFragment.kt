@@ -8,6 +8,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentInfoDetailsBinding
@@ -130,7 +131,7 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
         with(binding) {
             if (isSelf) {
                 avatar.setImageUrl(null, channel.getDefaultAvatar())
-                avatar.setAvatarColor(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
+                avatar.setAvatarColor(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
             }
             else avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
         }

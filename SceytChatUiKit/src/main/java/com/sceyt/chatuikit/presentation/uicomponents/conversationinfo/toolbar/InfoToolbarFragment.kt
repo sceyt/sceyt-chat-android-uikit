@@ -10,6 +10,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -160,7 +161,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
 
     open fun setChannelToolbarAvatar(channel: SceytChannel) {
         if (isSelf) {
-            binding.toolbarAvatar.setAvatarColor(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
+            binding.toolbarAvatar.setAvatarColor(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
             binding.toolbarAvatar.setImageUrl(null, UserStyle.notesAvatar)
         }
         else
@@ -204,9 +205,9 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
         icBack.setImageResource(ConversationInfoStyle.navigationIcon)
         icEdit.setImageResource(ConversationInfoStyle.editIcon)
         icMore.setImageResource(ConversationInfoStyle.moreIcon)
-        icBack.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
-        icEdit.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
-        icMore.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
+        icBack.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
+        icEdit.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
+        icMore.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 
     companion object {

@@ -31,12 +31,12 @@ import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 class OutVideoMsgViewHolder(
         private val binding: SceytItemOutVideoMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
-        private val style: MessagesListViewStyle,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
@@ -213,6 +213,6 @@ class OutVideoMsgViewHolder(
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outBubbleColor)
         tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
         tvDuration.setDrawableStart(style.videoDurationIcon)
-        messageBody.setLinkTextColor(style.autoLinkTextColor)
+        messageBody.setupStyle(style)
     }
 }

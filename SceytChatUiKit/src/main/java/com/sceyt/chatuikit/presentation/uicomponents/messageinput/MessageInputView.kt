@@ -26,6 +26,7 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -404,7 +405,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun SceytMessageInputViewBinding.setupStyle() {
-        val colorAccent = context.getCompatColor(SceytKitConfig.sceytColorAccent)
+        val colorAccent = context.getCompatColor(SceytChatUIKit.theme.accentColor)
         icAddAttachments.setImageResource(MessageInputViewStyle.attachmentIcon)
         messageInput.setTextColor(context.getCompatColor(MessageInputViewStyle.inputTextColor))
         messageInput.hint = MessageInputViewStyle.inputHintText

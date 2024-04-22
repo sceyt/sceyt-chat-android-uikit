@@ -9,9 +9,9 @@ import android.graphics.drawable.shapes.OvalShape
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatCheckBox
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class SceytCircleCheckBox @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -24,7 +24,7 @@ class SceytCircleCheckBox @JvmOverloads constructor(
     private fun createStateListDrawable(): Drawable {
         val pressedState = android.R.attr.state_pressed
         val checkedState = android.R.attr.state_checked
-        val colorCheckBox = getCompatColor(SceytKitConfig.sceytColorAccent)
+        val colorCheckBox = getCompatColor(SceytChatUIKit.theme.accentColor)
         val stateListDrawable = StateListDrawable()
         // Checked state
         val circleDrawable = ShapeDrawable(OvalShape())

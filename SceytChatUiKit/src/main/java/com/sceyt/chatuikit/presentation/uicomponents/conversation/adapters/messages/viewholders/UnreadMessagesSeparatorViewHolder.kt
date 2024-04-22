@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 class UnreadMessagesSeparatorViewHolder(
         binding: SceytItemUnreadMessagesSeparatorBinding,
         private val style: MessagesListViewStyle
-) : BaseMsgViewHolder(view = binding.root, style) {
+) : BaseMsgViewHolder(view = binding.root, style.messageItemStyle) {
 
     init {
         binding.setMessageItemStyle()

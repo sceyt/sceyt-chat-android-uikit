@@ -40,25 +40,45 @@ data class ChannelListViewStyle(
         @ColorInt
         val dateTextColor: Int = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor),
 
-        val mutedIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_muted),
+        val mutedIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_muted)?.apply {
+            setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+        },
 
-        val statusIndicatorPendingIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_status_not_sent),
+        val pinIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_pin_filled)?.apply {
+            setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+        },
 
-        val statusIndicatorSentIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_status_on_server),
+        val statusIndicatorPendingIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_status_not_sent)?.apply {
+            setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+        },
 
-        val statusIndicatorDeliveredIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_status_delivered),
+        val statusIndicatorSentIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_status_on_server)?.apply {
+            setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+        },
+
+        val statusIndicatorDeliveredIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_status_delivered)?.apply {
+            setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+        },
 
         val statusIndicatorReadIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_status_read).also {
             it?.setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
         },
 
-        val bodyFileAttachmentIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_body_file_attachment),
+        val bodyFileAttachmentIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_body_file_attachment)?.apply {
+            setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+        },
 
-        val bodyImageAttachmentIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_body_image_attachment),
+        val bodyImageAttachmentIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_body_image_attachment)?.apply {
+            setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+        },
 
-        val bodyVideoAttachmentIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_body_video_attachment),
+        val bodyVideoAttachmentIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_body_video_attachment)?.apply {
+            setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+        },
 
-        val bodyVoiceAttachmentIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_body_voice_attachment),
+        val bodyVoiceAttachmentIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_body_voice_attachment)?.apply {
+            setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+        },
 
         @LayoutRes
         val emptyState: Int = R.layout.sceyt_channel_list_empty_state,
@@ -100,6 +120,8 @@ data class ChannelListViewStyle(
                 unreadCountColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiUnreadMessageCounterTextColor, unreadCountColor),
                 mutedIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiMutedChannelIcon)
                         ?: mutedIcon,
+                pinIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiPinnedChannelIcon)
+                        ?: pinIcon,
                 dateTextColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiLastMessageDateTextColor, dateTextColor),
                 statusIndicatorPendingIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiIndicatorPendingIcon)
                         ?: statusIndicatorPendingIcon,

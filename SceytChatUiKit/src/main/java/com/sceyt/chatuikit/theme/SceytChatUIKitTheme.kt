@@ -13,6 +13,10 @@ data class SceytChatUIKitTheme(
         @ColorRes
         val backgroundColor: Int = R.color.sceyt_color_background,
         @ColorRes
+        val backgroundColorSecondary: Int = R.color.sceyt_color_background_secondary,
+        @ColorRes
+        val backgroundColorSections: Int = R.color.sceyt_color_background_sections,
+        @ColorRes
         val surface1Color: Int = R.color.sceyt_color_surface_1,
         @ColorRes
         val surface2Color: Int = R.color.sceyt_color_surface_2,
@@ -25,13 +29,13 @@ data class SceytChatUIKitTheme(
         @ColorRes
         val bordersColor: Int = R.color.sceyt_color_border,
         @ColorRes
-        val iconSecondaryColor: Int = R.color.sceyt_color_gray_secondary,
+        val iconSecondaryColor: Int = R.color.sceyt_color_icon_secondary,
         @ColorRes
         val iconInactiveColor: Int = R.color.sceyt_color_icon_inactive,
         @ColorRes
         val textPrimaryColor: Int = R.color.sceyt_color_text_primary,
         @ColorRes
-        val textSecondaryColor: Int = R.color.sceyt_color_text_secondary_themed,
+        val textSecondaryColor: Int = R.color.sceyt_color_text_secondary,
         @ColorRes
         val textFootnoteColor: Int = R.color.sceyt_color_text_footnote_themed,
         @ColorRes

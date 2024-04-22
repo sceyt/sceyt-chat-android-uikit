@@ -3,9 +3,9 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.mess
 import android.graphics.Rect
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
-class ItemOffsetDecoration(private val style: MessagesListViewStyle) : RecyclerView.ItemDecoration() {
+class ItemOffsetDecoration(private val style: MessageItemStyle) : RecyclerView.ItemDecoration() {
 
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
         super.getItemOffsets(outRect, view, parent, state)

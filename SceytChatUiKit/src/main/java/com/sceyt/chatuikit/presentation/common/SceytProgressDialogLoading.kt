@@ -6,9 +6,9 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytProgressDialogBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class SceytProgressDialogLoading(context: Context) : Dialog(context) {
     private lateinit var binding: SceytProgressDialogBinding
@@ -20,6 +20,6 @@ class SceytProgressDialogLoading(context: Context) : Dialog(context) {
         setContentView(binding.root)
         setCancelable(false)
 
-        binding.progressBar.indeterminateDrawable.setTint(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        binding.progressBar.indeterminateDrawable.setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 }
