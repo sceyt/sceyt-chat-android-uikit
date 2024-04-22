@@ -34,7 +34,7 @@
         android:background="@drawable/sceyt_bg_top_bottom_lines"
         android:hint="@string/sceyt_write_a_message"
         android:padding="16dp"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textColorHint="@color/sceyt_color_hint"
         android:textSize="16sp"
         app:layout_constraintBottom_toTopOf="@+id/btnShare"

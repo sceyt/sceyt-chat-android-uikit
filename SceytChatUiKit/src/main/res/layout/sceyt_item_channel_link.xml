@@ -33,7 +33,7 @@
         android:ellipsize="middle"
         android:fontFamily="@font/roboto_medium"
         android:singleLine="true"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize"
         android:visibility="gone"
         app:layout_constrainedWidth="true"

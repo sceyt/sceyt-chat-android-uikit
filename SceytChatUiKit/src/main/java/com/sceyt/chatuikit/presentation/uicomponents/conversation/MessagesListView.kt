@@ -76,7 +76,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.forward.SceytForwardActivit
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MAX_SELF_REACTIONS_SIZE
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -85,6 +85,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var messagesRV: MessagesRV
     private var scrollDownIcon: ScrollToDownView
     private var pageStateView: SceytPageStateView? = null
+    internal val style: MessagesListViewStyle
     private lateinit var defaultClickListeners: MessageClickListenersImpl
     private lateinit var clickListeners: MessageClickListenersImpl
     internal lateinit var messageActionsViewClickListeners: MessageActionsViewClickListenersImpl
@@ -99,13 +100,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         private set
 
     init {
-        if (attrs != null) {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView)
-            MessagesStyle.updateWithAttributes(a)
-            a.recycle()
-        }
+        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ChannelListView, 0, 0)
+        style = MessagesListViewStyle.Builder(context, typedArray).build()
 
-        messagesRV = MessagesRV(context)
+        messagesRV = MessagesRV(context).also { it.setStyle(style) }
         messagesRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
         messagesRV.clipToPadding = clipToPadding
         setPadding(0, 0, 0, 0)
@@ -114,6 +112,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         addView(ScrollToDownView(context).also { toDownView ->
             scrollDownIcon = toDownView
+            scrollDownIcon.setStyle(style)
             messagesRV.setScrollDownControllerListener { show ->
                 scrollDownIcon.isVisible = show
             }
@@ -128,8 +127,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (!isInEditMode)
             addView(SceytPageStateView(context).also {
                 pageStateView = it
-                it.setLoadingStateView(MessagesStyle.loadingState)
-                it.setEmptyStateView(MessagesStyle.emptyState)
+                it.setLoadingStateView(style.loadingState)
+                it.setEmptyStateView(style.emptyState)
             })
 
         initClickListeners()
@@ -626,6 +625,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun setViewHolderFactory(factory: MessageViewHolderFactory) {
         messagesRV.setViewHolderFactory(factory.also {
             it.setMessageListener(defaultClickListeners)
+            it.setStyle(style)
         })
     }
 

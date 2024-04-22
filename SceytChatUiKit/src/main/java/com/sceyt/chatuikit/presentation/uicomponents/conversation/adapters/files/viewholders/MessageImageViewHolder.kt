@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.file
 
 import android.util.Size
 import com.sceyt.chatuikit.databinding.SceytMessageImageItemBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
@@ -23,11 +22,12 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUploa
 import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 
 
 class MessageImageViewHolder(
         private val binding: SceytMessageImageItemBinding,
+        private val style: MessagesListViewStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
 
@@ -108,6 +108,6 @@ class MessageImageViewHolder(
     override fun needThumbFor() = ThumbFor.MessagesLisView
 
     private fun SceytMessageImageItemBinding.setupStyle() {
-        loadProgress.setProgressColor(context.getCompatColor(MessagesStyle.mediaLoaderColor))
+        loadProgress.setProgressColor(style.mediaLoaderColor)
     }
 }

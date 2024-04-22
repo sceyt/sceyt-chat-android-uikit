@@ -5,31 +5,29 @@
     <color name="sceyt_color_accent">#6B72FF</color>
     <color name="sceyt_color_status_bar">#19191B</color>
 
-
+    <!--Surface-->
     <color name="sceyt_color_surface_1">#232324</color>
-    <color name="sceyt_color_surface_2"></color>
-    <color name="sceyt_color_surface_3"></color>
+    <color name="sceyt_color_surface_2">#303032</color>
+    <color name="sceyt_color_surface_3">#3B3B3D</color>
 
+    <!--Interface-->
+    <color name="sceyt_color_background">#19191B</color>
+    <color name="sceyt_color_border">#303032</color>
+    <color name="sceyt_color_icon_secondary">#969A9F</color>
+    <color name="sceyt_color_icon_inactive">#64666A</color>
 
-    <color name="sceyt_color_overlay_background">#000000</color>
-    <color name="sceyt_color_overlay_background_2">#111539</color>
-    <color name="sceyt_color_border">#F1F2F6</color>
-    <color name="sceyt_color_icon_secondary">#707388</color>
-    <color name="sceyt_color_icon_inactive">#C6C7D0</color>
-    <color name="sceyt_color_text_primary">#111539</color>
-    <color name="sceyt_color_text_secondary">#707388</color>
-    <color name="sceyt_color_text_footnote">#A0A1B0</color>
+    <!--Text-->
+    <color name="sceyt_color_text_primary">#E1E3E6</color>
+    <color name="sceyt_color_text_secondary">#969A9F</color>
+    <color name="sceyt_color_text_footnote">#76787A</color>
 
 
     <color name="sceyt_color_button">#303032</color>
-    <color name="sceyt_color_text_themed">#E1E3E6</color>
-    <color name="sceyt_color_divider">#303032</color>
     <color name="sceyt_color_black_themed">#FFFFFF</color>
     <color name="sceyt_color_gray_themed">#232324</color>
-    <color name="sceyt_color_gray_secondary_themed">#969A9F</color>
+    <color name="sceyt_color_text_secondary_themed">#969A9F</color>
     <color name="sceyt_color_dark_blue_themed">#303032</color>
 
-    <color name="sceyt_color_bg">@color/sceyt_color_primary_dark</color>
     <color name="sceyt_color_bg_secondary_themed">@color/sceyt_color_primary_dark</color>
 
 

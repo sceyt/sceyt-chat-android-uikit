@@ -1,19 +1,19 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
+import android.content.res.ColorStateList
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.databinding.SceytItemMessageDateSeparatorBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 class DateSeparatorViewHolder(
-        private val binding: SceytItemMessageDateSeparatorBinding
-) : BaseMsgViewHolder(view = binding.root) {
+        private val binding: SceytItemMessageDateSeparatorBinding,
+        private val style: MessagesListViewStyle,
+) : BaseMsgViewHolder(view = binding.root, style = style) {
 
     init {
         binding.setMessageItemStyle()
@@ -27,7 +27,7 @@ class DateSeparatorViewHolder(
             val dateText = DateTimeUtil.getDateTimeStringWithDateFormatter(
                 context = context,
                 time = createdAt,
-                dateFormatter = MessagesStyle.dateSeparatorDateFormat
+                dateFormatter = style.dateSeparatorDateFormat
             )
             binding.messageDay.text = dateText
         }
@@ -42,11 +42,11 @@ class DateSeparatorViewHolder(
     private fun SceytItemMessageDateSeparatorBinding.setMessageItemStyle() {
         with(context) {
             messageDay.apply {
-                background = getCompatDrawable(MessagesStyle.dateSeparatorItemBackground)
-                setTextColor(getCompatColor(MessagesStyle.dateSeparatorItemTextColor))
-                val dateTypeface = if (MessagesStyle.dateSeparatorTextFont != -1)
-                    ResourcesCompat.getFont(this@with, MessagesStyle.dateSeparatorTextFont) else typeface
-                setTypeface(dateTypeface, MessagesStyle.dateSeparatorTextStyle)
+                backgroundTintList = ColorStateList.valueOf(style.dateSeparatorItemBackgroundColor)
+                setTextColor(style.dateSeparatorItemTextColor)
+                val dateTypeface = if (style.dateSeparatorTextFont != -1)
+                    ResourcesCompat.getFont(this@with, style.dateSeparatorTextFont) else typeface
+                setTypeface(dateTypeface, style.dateSeparatorTextStyle)
             }
         }
     }

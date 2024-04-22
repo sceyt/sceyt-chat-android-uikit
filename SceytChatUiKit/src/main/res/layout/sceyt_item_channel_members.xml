@@ -26,7 +26,7 @@
         android:layout_marginHorizontal="12dp"
         android:fontFamily="@font/roboto_medium"
         android:lines="1"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize"
         app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toStartOf="@+id/roleName"

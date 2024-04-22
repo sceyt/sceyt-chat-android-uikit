@@ -99,7 +99,7 @@
             android:elevation="2dp"
             android:includeFontPadding="false"
             android:text="0:00"
-            android:textColor="@color/sceyt_color_text_themed"
+            android:textColor="@color/sceyt_color_text_primary"
             android:textSize="18sp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"

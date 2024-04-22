@@ -116,7 +116,7 @@ open class LinkPreviewFragment : Fragment() {
     protected open fun setDefaultStateLinkImage() {
         binding?.icLinkImage?.apply {
             setImageDrawable(defaultImage)
-            setBackgroundColor(context.getCompatColor(R.color.sceyt_color_bg))
+            setBackgroundColor(context.getCompatColor(R.color.sceyt_color_background))
         }
     }
 

@@ -12,7 +12,7 @@
         android:fontFamily="@font/roboto_medium"
         android:padding="14dp"
         android:text="@string/sceyt_gallery"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

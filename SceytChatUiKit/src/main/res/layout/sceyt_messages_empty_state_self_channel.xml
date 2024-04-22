@@ -45,7 +45,7 @@
         android:layout_gravity="center"
         android:layout_marginTop="5dp"
         android:text="@string/add_notes_for_yourself_here"
-        android:textColor="@color/sceyt_color_gray_secondary_themed"
+        android:textColor="@color/sceyt_color_text_secondary_themed"
         android:textDirection="locale"
         android:textSize="15sp"
         app:layout_constraintBottom_toBottomOf="parent"

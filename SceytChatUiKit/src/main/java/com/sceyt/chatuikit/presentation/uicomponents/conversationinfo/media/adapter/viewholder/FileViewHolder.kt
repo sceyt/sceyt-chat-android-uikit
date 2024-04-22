@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 
 class FileViewHolder(private val binding: SceytItemChannelFileBinding,
                      private val clickListeners: AttachmentClickListenersImpl,
@@ -51,7 +51,7 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
         get() = binding.loadProgress
 
     private fun SceytItemChannelFileBinding.setupStyle() {
-        icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+      //////////////todo style  icFile.setImageResource(MessagesListViewStyle.fileAttachmentIcon)
         icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
         loadProgress.setIconTintColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
         loadProgress.setProgressColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))

@@ -84,7 +84,7 @@
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="8dp"
-            android:textColor="@color/sceyt_color_text_themed"
+            android:textColor="@color/sceyt_color_text_primary"
             android:textSize="@dimen/mediumTextSize"
             app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"

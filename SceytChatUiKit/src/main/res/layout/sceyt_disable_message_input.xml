@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/sceyt_color_bg">
+    android:background="@color/sceyt_color_background">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icStateIcon"
@@ -29,7 +29,7 @@
         android:ellipsize="end"
         android:maxLines="3"
         android:paddingVertical="18dp"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="14sp"
         app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -41,7 +41,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

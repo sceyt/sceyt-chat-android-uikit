@@ -16,7 +16,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/chats"
-            android:textColor="@color/sceyt_color_text_themed"
+            android:textColor="@color/sceyt_color_text_primary"
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -29,7 +29,7 @@
         android:id="@+id/underline"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintTop_toBottomOf="@+id/layoutToolbar" />
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -41,7 +41,7 @@
         <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/sceyt_color_bg"
+            android:background="@color/sceyt_color_background"
             app:elevation="0dp">
 
             <com.sceyt.chatuikit.presentation.uicomponents.searchinput.SearchChannelInputView

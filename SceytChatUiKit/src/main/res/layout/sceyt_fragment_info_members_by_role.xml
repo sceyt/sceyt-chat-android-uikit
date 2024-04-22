@@ -18,7 +18,7 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_members"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -29,7 +29,7 @@
         android:id="@+id/dividerBetweenMembersAndAdmins"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintTop_toBottomOf="@+id/members" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -44,7 +44,7 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_admins"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -55,7 +55,7 @@
         android:id="@+id/divider2"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintTop_toBottomOf="@+id/admins" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -70,7 +70,7 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_search_messages"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -38,6 +38,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -72,7 +73,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.Mess
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.sceytstyles.UserStyle
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil.getDateTimeString
@@ -80,6 +81,7 @@ import com.sceyt.chatuikit.shared.utils.ViewUtil
 import kotlin.math.min
 
 abstract class BaseMsgViewHolder(private val view: View,
+                                 private val style: MessagesListViewStyle,
                                  private val messageListeners: MessageClickListeners.ClickListeners? = null,
                                  private val displayedListener: ((MessageListItem) -> Unit)? = null,
                                  private val userNameBuilder: ((User) -> String)? = null)
@@ -187,7 +189,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     protected fun setMessageStatusAndDateText(message: SceytMessage, messageDate: SceytDateStatusView) {
         val isEdited = message.state == MessageState.Edited
         val dateText = getDateTimeString(message.createdAt)
-        message.setConversationMessageDateAndStatusIcon(messageDate, dateText, isEdited)
+        message.setConversationMessageDateAndStatusIcon(messageDate, style, dateText, isEdited)
     }
 
     protected fun setReplyMessageContainer(message: SceytMessage, viewStub: ViewStub, calculateWith: Boolean = true) {
@@ -198,8 +200,8 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (viewStub.parent != null)
             SceytRecyclerReplyContainerBinding.bind(viewStub.inflate()).also {
                 replyMessageContainerBinding = it
-                it.tvName.setTextColor(context.getCompatColor(MessagesStyle.senderNameTextColor))
-                it.view.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(MessagesStyle.replyMessageLineColor))
+                it.tvName.setTextColor(style.senderNameTextColor)
+                it.view.backgroundTintList = ColorStateList.valueOf(style.replyMessageLineColor)
             }
         with(replyMessageContainerBinding ?: return) {
             val parent = message.parentMessage
@@ -239,7 +241,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                     }
 
                     else -> {
-                        imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
+                        imageAttachment.setImageDrawable(style.fileAttachmentIcon)
                         true
                     }
                 }
@@ -303,11 +305,11 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (!url.isNullOrBlank()) {
             Glide.with(itemView.context)
                 .load(url)
-                .placeholder(MessagesStyle.linkAttachmentIcon)
-                .error(MessagesStyle.linkAttachmentIcon)
+                .placeholder(style.linkAttachmentIcon)
+                .error(style.linkAttachmentIcon)
                 .override(imageAttachment.width, imageAttachment.height)
                 .into(imageAttachment)
-        } else imageAttachment.setImageResource(MessagesStyle.linkAttachmentIcon)
+        } else imageAttachment.setImageDrawable(style.linkAttachmentIcon)
     }
 
     protected fun setMessageUserAvatarAndName(avatarView: SceytAvatarView, tvName: TextView, message: SceytMessage) {
@@ -321,7 +323,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                 tvName.setTextColor(context.getCompatColor(R.color.sceyt_color_red))
             } else {
                 avatarView.setNameAndImageUrl(displayName, user?.avatarURL, UserStyle.userDefaultAvatar)
-                tvName.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+                tvName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
             }
             tvName.text = displayName
             tvName.isVisible = true

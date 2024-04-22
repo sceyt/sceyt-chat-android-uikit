@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:background="@color/sceyt_color_surface_1"
     android:layout_height="wrap_content">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -15,7 +16,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/sceyt_color_divider"
+            android:background="@color/sceyt_color_border"
             app:layout_constraintTop_toTopOf="parent" />
 
         <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
@@ -36,7 +37,7 @@
             android:ellipsize="end"
             android:fontFamily="@font/roboto_medium"
             android:maxLines="2"
-            android:textColor="@color/sceyt_color_text_themed"
+            android:textColor="@color/sceyt_color_text_primary"
             android:textSize="16sp"
             app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toTopOf="@+id/tvSubtitle"
@@ -69,7 +70,7 @@
         android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="16dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_surface_1"
         app:layout_constraintTop_toBottomOf="@+id/layoutDetails" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

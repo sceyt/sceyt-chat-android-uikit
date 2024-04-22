@@ -49,7 +49,7 @@ class BottomSheetEmojisFragment : BottomSheetDialogFragment() {
             theming = EmojiTheming(backgroundColor = Color.TRANSPARENT,
                 primaryColor = requireContext().getCompatColor(R.color.sceyt_color_gray_400),
                 secondaryColor = requireContext().getCompatColor(SceytKitConfig.sceytColorAccent),
-                dividerColor = requireContext().getCompatColor(R.color.sceyt_color_divider),
+                dividerColor = requireContext().getCompatColor(R.color.sceyt_color_border),
                 Color.BLACK, Color.BLACK),
             searchEmoji = NoSearchEmoji
         )

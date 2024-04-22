@@ -27,7 +27,7 @@
         android:fontFamily="@font/roboto_medium"
         android:padding="10dp"
         android:singleLine="true"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/bigTextSize"
         android:visibility="visible"
         app:layout_constrainedWidth="true"
@@ -49,7 +49,7 @@
         android:hint="@string/sceyt_search"
         android:padding="10dp"
         android:singleLine="true"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textColorHint="@color/sceyt_color_hint"
         android:visibility="gone"
         app:layout_constrainedWidth="true"
@@ -90,7 +90,7 @@
         android:id="@+id/underline"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
 import android.content.res.ColorStateList
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytMessageFileItemBinding
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -25,11 +26,11 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUploa
 import com.sceyt.chatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 
 class MessageFileViewHolder(
         private val binding: SceytMessageFileItemBinding,
+        private val style: MessagesListViewStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
@@ -87,7 +88,7 @@ class MessageFileViewHolder(
             }
 
             Uploaded, Downloaded -> {
-                binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+                binding.icFile.setImageDrawable(style.fileAttachmentIcon)
             }
 
             ErrorUpload, ErrorDownload, PauseDownload, PauseUpload -> {
@@ -103,8 +104,8 @@ class MessageFileViewHolder(
     }
 
     private fun SceytMessageFileItemBinding.setupStyle() {
-        loadProgress.setBackgroundColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
-        icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        loadProgress.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        icFile.setImageDrawable(style.fileAttachmentIcon)
+        icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 }

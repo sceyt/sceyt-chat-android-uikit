@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_bg">
+    android:background="@color/sceyt_color_background">
 
     <com.sceyt.chatuikit.presentation.customviews.SceytSearchableToolbar
         android:id="@+id/toolbar"
@@ -56,7 +56,7 @@
                     android:lines="1"
                     android:paddingHorizontal="15dp"
                     android:text="@string/sceyt_add_members"
-                    android:textColor="@color/sceyt_color_text_themed"
+                    android:textColor="@color/sceyt_color_text_primary"
                     android:textSize="@dimen/mediumTextSize"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/icAddMembers" />

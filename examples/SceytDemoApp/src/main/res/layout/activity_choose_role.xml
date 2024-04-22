@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     tools:context=".presentation.changerole.ChangeRoleActivity"
-    android:background="@color/sceyt_color_bg">
+    android:background="@color/sceyt_color_background">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutToolbar"
@@ -34,7 +34,7 @@
             android:layout_marginStart="15dp"
             android:padding="10dp"
             android:text="@string/change_role"
-            android:textColor="@color/sceyt_color_text_themed"
+            android:textColor="@color/sceyt_color_text_primary"
             android:textSize="@dimen/bigTextSize"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"

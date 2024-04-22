@@ -6,8 +6,10 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
+import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.support.v4.media.RatingCompat.Style
 import android.text.Layout
 import android.text.Spannable
 import android.text.SpannableStringBuilder
@@ -22,7 +24,6 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.isRtl
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
 import kotlin.math.absoluteValue
 import kotlin.math.min
 
@@ -40,6 +41,8 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     private var heightIcon = 0
     private var widthIcon = 0
     private var textColor = Color.BLACK
+    private var editedText: String = ""
+    private var editedTextStyle: Int = Typeface.ITALIC
     private var statusDrawable: Drawable? = null
     private var firstStatusIcon = true
     private var mMargin = 0
@@ -249,9 +252,8 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
 
     private fun initText(text: String): String {
         return if (isEdited) {
-            val editedText = context.getString(MessagesStyle.editedMessageStateText)
             val str = SpannableStringBuilder("$editedText  $text")
-            str.setSpan(StyleSpan(MessagesStyle.messageEditedTextStyle), 0, editedText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            str.setSpan(StyleSpan(editedTextStyle), 0, editedText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             stringBuilder = str
             str.toString()
         } else {
@@ -284,12 +286,17 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         invalidate()
     }
 
-    fun setDateAndStatusIcon(text: String, drawable: Drawable?, edited: Boolean, ignoreHighlight: Boolean = false) {
+    fun setDateAndStatusIcon(text: String, drawable: Drawable?, edited: Boolean,
+                             editedText: String = this.editedText,
+                             editedTextStyle: Int = this.editedTextStyle,
+                             ignoreHighlight: Boolean = false) {
         statusDrawable = drawable?.mutate()
         if (isHighlighted && !ignoreHighlight)
             statusDrawable?.apply { setTint(Color.WHITE) }
         dateText = text
         isEdited = edited
+        this.editedText = editedText
+        this.editedTextStyle = editedTextStyle
         init()
         requestLayout()
         invalidate()
@@ -305,6 +312,11 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         invalidate()
     }
 
+    fun setEditedText(editedText: String) {
+        this.editedText = editedText
+        invalidate()
+    }
+
     fun setHighlighted(highlighted: Boolean) {
         if (isHighlighted == highlighted) return
         isHighlighted = highlighted
@@ -315,6 +327,8 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     inner class BuildStyle {
         private var statusIconSize: Int = this@SceytDateStatusView.statusIconSize
         private var dateTextColor: Int = this@SceytDateStatusView.textColor
+        private var editedText: String = this@SceytDateStatusView.editedText
+        private var editedTextStyle: Int = this@SceytDateStatusView.editedTextStyle
 
         fun setStatusIconSize(size: Int): BuildStyle {
             statusIconSize = size
@@ -331,9 +345,21 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
             return this
         }
 
+        fun setEditedTitle(editedText: String): BuildStyle {
+            this.editedText = editedText
+            return this
+        }
+
+        fun setEditedTextStyle(@Style style: Int): BuildStyle {
+            editedTextStyle = style
+            return this
+        }
+
         fun build() {
             this@SceytDateStatusView.statusIconSize = statusIconSize
             this@SceytDateStatusView.textColor = dateTextColor
+            this@SceytDateStatusView.editedText = editedText
+            this@SceytDateStatusView.editedTextStyle = editedTextStyle
             init()
             requestLayout()
             invalidate()

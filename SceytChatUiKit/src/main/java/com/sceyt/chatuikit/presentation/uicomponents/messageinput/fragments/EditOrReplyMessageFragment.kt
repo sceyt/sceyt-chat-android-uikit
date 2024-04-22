@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.uicomponents.messageinput.fragments
 
+import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -12,12 +13,12 @@ import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytFragmentEditOrReplyMessageBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.setBoldSpan
@@ -28,7 +29,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clic
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.MessageInputViewStyle
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.utils.ViewUtil
 
 open class EditOrReplyMessageFragment : Fragment() {
@@ -69,7 +70,8 @@ open class EditOrReplyMessageFragment : Fragment() {
         }
     }
 
-    open fun replyMessage(message: SceytMessage) {
+    open fun replyMessage(message: SceytMessage, style: MessagesListViewStyle?) {
+        val messagesListViewStyle = style ?: MessagesListViewStyle(requireContext())
         with(binding ?: return) {
             if (!root.isVisible || root.height != root.measuredHeight || root.measuredHeight == 0) {
                 root.isVisible = true
@@ -85,7 +87,7 @@ open class EditOrReplyMessageFragment : Fragment() {
 
             if (!message.attachments.isNullOrEmpty()) {
                 layoutImage.isVisible = true
-                loadReplyMessageImage(message.attachments)
+                loadReplyMessageImage(message.attachments, messagesListViewStyle)
             } else layoutImage.isVisible = false
 
             tvMessageBody.text = if (message.isTextMessage())
@@ -107,39 +109,45 @@ open class EditOrReplyMessageFragment : Fragment() {
         this.clickListeners = clickListeners
     }
 
-    protected open fun loadReplyMessageImage(attachments: Array<SceytAttachment>?) {
+    protected open fun loadReplyMessageImage(attachments: Array<SceytAttachment>?, style: MessagesListViewStyle) {
         if (attachments.isNullOrEmpty()) {
             binding?.layoutImage?.isVisible = false
             return
         }
         with(binding ?: return) {
+            imageAttachment.isVisible = true
+            fileAttachment.isVisible = false
             val (links, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value() }
             if (others.isNotEmpty()) {
                 val attachment = others[0]
                 when {
                     attachment.type.isEqualsVideoOrImage() -> {
-                        loadImage(imageAttachment, attachment.metadata, attachment.filePath)
+                        loadImage(style, imageAttachment, attachment.metadata, attachment.filePath)
                     }
 
                     attachment.type == AttachmentTypeEnum.Voice.value() -> {
                         layoutImage.isVisible = false
                     }
 
-                    else -> imageAttachment.setImageResource(MessagesStyle.fileAttachmentIcon)
+                    else -> {
+                        fileAttachment.setImageDrawable(style.fileAttachmentIcon)
+                        fileAttachment.isVisible = true
+                        imageAttachment.isVisible = false
+                    }
                 }
             } else {
                 val attachment = links[0]
                 if (attachment.linkPreviewDetails != null && attachment.linkPreviewDetails?.imageUrl != null) {
-                    loadImage(imageAttachment, attachment.metadata,
-                        attachment.linkPreviewDetails?.imageUrl, getCompatDrawable(MessagesStyle.linkAttachmentIcon))
+                    loadImage(style, imageAttachment, attachment.metadata,
+                        attachment.linkPreviewDetails?.imageUrl, style.linkAttachmentIcon)
                 } else
-                    imageAttachment.setImageResource(MessagesStyle.linkAttachmentIcon)
+                    imageAttachment.setImageDrawable(style.linkAttachmentIcon)
             }
         }
     }
 
-
-    private fun loadImage(imageAttachment: ImageView, metadata: String?,
+    private fun loadImage(style: MessagesListViewStyle,
+                          imageAttachment: ImageView, metadata: String?,
                           path: String?, defaultPlaceHolder: Drawable? = null) {
         val placeHolder = getThumbFromMetadata(metadata)?.toDrawable(requireContext().resources)
             ?.mutate() ?: defaultPlaceHolder
@@ -147,12 +155,13 @@ open class EditOrReplyMessageFragment : Fragment() {
             .load(path)
             .placeholder(placeHolder)
             .override(100)
-            .error(MessagesStyle.linkAttachmentIcon)
+            .error(style.linkAttachmentIcon)
             .into(imageAttachment)
     }
 
     private fun SceytFragmentEditOrReplyMessageBinding.setupStyle() {
-        icReplyOrEdit.setColorFilter(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
+        icReplyOrEdit.setColorFilter(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
         tvName.setTextColor(requireContext().getCompatColor(MessageInputViewStyle.userNameTextColor))
+        fileAttachment.backgroundTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 }

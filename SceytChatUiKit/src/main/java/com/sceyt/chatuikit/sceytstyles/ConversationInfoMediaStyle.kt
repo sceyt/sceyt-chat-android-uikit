@@ -14,5 +14,5 @@ object ConversationInfoMediaStyle {
 
     @JvmField
     @ColorRes
-    var dividerColor: Int = R.color.sceyt_color_divider
+    var dividerColor: Int = R.color.sceyt_color_border
 }

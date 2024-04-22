@@ -28,6 +28,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messa
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 open class MessageInfoViewProvider(context: Context) {
@@ -38,6 +39,7 @@ open class MessageInfoViewProvider(context: Context) {
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
     private var viewHolder: BaseMsgViewHolder? = null
+    private var messagesListViewStyle: MessagesListViewStyle = MessagesListViewStyle(context)
     var viewType: Int = 0
         private set
 
@@ -62,38 +64,43 @@ open class MessageInfoViewProvider(context: Context) {
     private fun createOutTextMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMsgViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutTextMessageBinding.bind(viewStub.inflate())
-        return OutTextMsgViewHolder(binding, viewPoolReactions, clickListeners, userNameBuilder)
+        return OutTextMsgViewHolder(binding, viewPoolReactions,
+            messagesListViewStyle, clickListeners, userNameBuilder)
     }
 
     private fun createOutLinkMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMsgViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutLinkMessageBinding.bind(viewStub.inflate())
-        return OutLinkMsgViewHolder(binding, viewPoolReactions, linkPreview, clickListeners, userNameBuilder)
+        return OutLinkMsgViewHolder(binding, viewPoolReactions, linkPreview,
+            messagesListViewStyle, clickListeners, userNameBuilder)
     }
 
     private fun createOutVoiceMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMsgViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutVoiceMessageBinding.bind(viewStub.inflate())
-        return OutVoiceMsgViewHolder(binding, viewPoolReactions, clickListeners, userNameBuilder,
+        return OutVoiceMsgViewHolder(binding, viewPoolReactions, messagesListViewStyle, clickListeners, userNameBuilder,
             needMediaDataCallback, null)
     }
 
     private fun createOutImageMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMsgViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutImageMessageBinding.bind(viewStub.inflate())
-        return OutImageMsgViewHolder(binding, viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
+        return OutImageMsgViewHolder(binding, viewPoolReactions, messagesListViewStyle,
+            clickListeners, userNameBuilder, needMediaDataCallback)
     }
 
     private fun createOutVideoMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMsgViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutVideoMessageBinding.bind(viewStub.inflate())
-        return OutVideoMsgViewHolder(binding, viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
+        return OutVideoMsgViewHolder(binding, viewPoolReactions, messagesListViewStyle,
+            clickListeners, userNameBuilder, needMediaDataCallback)
     }
 
     private fun createOutFileMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMsgViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutFileMessageBinding.bind(viewStub.inflate())
-        return OutFileMsgViewHolder(binding, viewPoolReactions, clickListeners, userNameBuilder, needMediaDataCallback)
+        return OutFileMsgViewHolder(binding, viewPoolReactions, messagesListViewStyle,
+            clickListeners, userNameBuilder, needMediaDataCallback)
     }
 
     open fun getMessageType(message: SceytMessage): Int {

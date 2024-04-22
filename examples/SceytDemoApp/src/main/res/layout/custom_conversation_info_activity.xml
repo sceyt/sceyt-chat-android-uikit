@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_bg"
+    android:background="@color/sceyt_color_background"
     tools:context="com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -33,7 +33,7 @@
         android:id="@+id/underline"
         android:layout_width="match_parent"
         android:layout_height=".5dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintTop_toBottomOf="@+id/layoutToolbar" />
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -83,7 +83,7 @@
                         android:fontFamily="@font/roboto_medium"
                         android:hint="@string/sceyt_hint_channel_subject"
                         android:maxLines="2"
-                        android:textColor="@color/sceyt_color_text_themed"
+                        android:textColor="@color/sceyt_color_text_primary"
                         android:textColorHint="@color/sceyt_color_hint"
                         android:textSize="@dimen/bigTextSize"
                         app:layout_constraintBottom_toBottomOf="@+id/avatar"
@@ -121,7 +121,7 @@
                 app:tabIndicatorColor="@color/sceyt_color_white"
                 app:tabMaxWidth="0dp"
                 app:tabMode="fixed"
-                app:tabSelectedTextColor="@color/sceyt_color_text_themed"
+                app:tabSelectedTextColor="@color/sceyt_color_text_primary"
                 app:tabTextAppearance="@android:style/TextAppearance.Widget.TabWidget"
                 app:tabTextColor="@color/sceyt_color_white" />
 
