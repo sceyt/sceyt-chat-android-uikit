@@ -14,21 +14,20 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.TAG
-import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import java.io.File
 
 fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView,
                                                      channelStyle: ChannelListViewStyle,
                                                      dateText: String, edited: Boolean, shouldShowStatus: Boolean) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || !shouldShowStatus) {
-        dateStatusView.setDateAndStatusIcon(dateText, null, edited, false)
+        dateStatusView.setDateAndStatusIcon(dateText, null, edited, ignoreHighlight = false)
         return
     }
     val iconResId = when (deliveryStatus) {
@@ -39,30 +38,34 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: SceytDateSt
         else -> null
     }
     iconResId?.let {
-        dateStatusView.setDateAndStatusIcon(dateText, it, edited, checkIgnoreHighlight(deliveryStatus))
+        dateStatusView.setDateAndStatusIcon(dateText, it, edited, ignoreHighlight = checkIgnoreHighlight(deliveryStatus))
         dateStatusView.isVisible = true
     }
 }
 
 
-fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView, dateText: String,
+fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView,
+                                                          style: MessagesListViewStyle,
+                                                          dateText: String,
                                                           edited: Boolean) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
-        dateStatusView.setDateAndStatusIcon(dateText, null, edited, false)
+        dateStatusView.setDateAndStatusIcon(dateText, null, edited,
+            style.editedMessageStateText, style.messageEditedTextStyle, false)
         return
     }
     val iconResId = when (deliveryStatus) {
-        DeliveryStatus.Pending -> MessagesStyle.messageStatusPendingIcon
-        DeliveryStatus.Sent -> MessagesStyle.messageStatusSentIcon
-        DeliveryStatus.Received -> MessagesStyle.messageStatusDeliveredIcon
-        DeliveryStatus.Displayed -> MessagesStyle.messageStatusReadIcon
+        DeliveryStatus.Pending -> style.messageStatusPendingIcon
+        DeliveryStatus.Sent -> style.messageStatusSentIcon
+        DeliveryStatus.Received -> style.messageStatusDeliveredIcon
+        DeliveryStatus.Displayed -> style.messageStatusReadIcon
         else -> {
             SceytLog.e(TAG, "Unknown delivery status: $deliveryStatus for message: $id, tid: $tid, body: $body")
             null
         }
     }
     iconResId?.let {
-        dateStatusView.setDateAndStatusIcon(dateText, dateStatusView.context.getCompatDrawable(it), edited, checkIgnoreHighlight(deliveryStatus))
+        dateStatusView.setDateAndStatusIcon(dateText, it,
+            edited, style.editedMessageStateText, style.messageEditedTextStyle, checkIgnoreHighlight(deliveryStatus))
         dateStatusView.isVisible = true
     }
 }

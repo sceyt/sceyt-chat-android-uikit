@@ -19,7 +19,7 @@
         android:paddingHorizontal="23dp"
         android:paddingVertical="10dp"
         android:text="@string/camera"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/_12ssp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />
@@ -36,7 +36,7 @@
         android:paddingHorizontal="23dp"
         android:paddingVertical="10dp"
         android:text="@string/select_photo"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/_12ssp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />

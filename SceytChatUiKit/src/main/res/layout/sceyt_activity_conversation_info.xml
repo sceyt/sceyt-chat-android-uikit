@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_bg_secondary_themed"
+    android:background="@color/sceyt_color_surface_1"
     tools:context=".presentation.uicomponents.conversationinfo.ConversationInfoActivity">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -24,7 +24,7 @@
             <com.google.android.material.appbar.CollapsingToolbarLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:contentScrim="@color/sceyt_color_bg"
+                app:contentScrim="@color/sceyt_color_background"
                 app:layout_scrollFlags="scroll|exitUntilCollapsed"
                 app:scrimAnimationDuration="0"
                 app:titleCollapseMode="scale"
@@ -112,7 +112,7 @@
                 android:id="@+id/viewTopTabLayout"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="@color/sceyt_color_divider"
+                android:background="@color/sceyt_color_border"
                 android:visibility="gone" />
 
             <com.google.android.material.tabs.TabLayout
@@ -128,14 +128,14 @@
                 app:tabIndicatorHeight="2dp"
                 app:tabMaxWidth="100dp"
                 app:tabMinWidth="100dp"
-                app:tabSelectedTextColor="@color/sceyt_color_text_themed"
+                app:tabSelectedTextColor="@color/sceyt_color_text_primary"
                 app:tabTextAppearance="@style/SceytTabTextAppearance"
                 app:tabTextColor="@color/sceyt_color_gray_400" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="@color/sceyt_color_divider" />
+                android:background="@color/sceyt_color_border" />
 
         </com.google.android.material.appbar.AppBarLayout>
 

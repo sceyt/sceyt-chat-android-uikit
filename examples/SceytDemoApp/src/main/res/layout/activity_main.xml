@@ -5,7 +5,7 @@
     android:id="@+id/con"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_bg"
+    android:background="@color/sceyt_color_background"
     android:fitsSystemWindows="true"
     tools:context=".presentation.mainactivity.MainActivity">
 

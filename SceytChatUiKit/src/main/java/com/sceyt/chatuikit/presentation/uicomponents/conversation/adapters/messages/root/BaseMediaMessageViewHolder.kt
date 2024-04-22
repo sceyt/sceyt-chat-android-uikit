@@ -29,15 +29,17 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 abstract class BaseMediaMessageViewHolder(
         val view: View,
+        style: MessagesListViewStyle,
         messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)? = null,
         userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(view, messageListeners, displayedListener, userNameBuilder) {
+) : BaseMsgViewHolder(view, style, messageListeners, displayedListener, userNameBuilder) {
     protected val viewHolderHelper by lazy { AttachmentViewHolderHelper(itemView) }
     protected lateinit var fileItem: FileListItem
     protected var resizedImageSize: Size? = null

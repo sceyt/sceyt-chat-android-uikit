@@ -17,22 +17,22 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytMessageLinkPreviewContainerBinding
 import com.sceyt.chatuikit.extensions.calculateScaleWidthHeight
 import com.sceyt.chatuikit.extensions.dpToPx
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.glideRequestListener
 import com.sceyt.chatuikit.extensions.setTextAndVisibility
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.OutLinkMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 abstract class BaseLinkMsgViewHolder(
         private val linkPreview: LinkPreviewHelper,
         view: View,
+        private val style: MessagesListViewStyle,
         private val messageListeners: MessageClickListeners.ClickListeners? = null,
         displayedListener: ((MessageListItem) -> Unit)? = null,
         userNameBuilder: ((User) -> String)? = null,
-) : BaseMsgViewHolder(view, messageListeners, displayedListener, userNameBuilder) {
+) : BaseMsgViewHolder(view, style, messageListeners, displayedListener, userNameBuilder) {
     private var linkPreviewContainerBinding: SceytMessageLinkPreviewContainerBinding? = null
     private val maxSize by lazy {
         bubbleMaxWidth - dpToPx(28f) //(2*8 preview container + 2*6 root paddings ) is margins
@@ -132,8 +132,8 @@ abstract class BaseLinkMsgViewHolder(
 
     private fun SceytMessageLinkPreviewContainerBinding.setupStyle() {
         val color = if (this@BaseLinkMsgViewHolder is OutLinkMsgViewHolder)
-            ColorStateList.valueOf(context.getCompatColor(MessagesStyle.outLinkPreviewBackgroundColor))
-        else ColorStateList.valueOf(context.getCompatColor(MessagesStyle.incLinkPreviewBackgroundColor))
+            ColorStateList.valueOf(style.outLinkPreviewBackgroundColor)
+        else ColorStateList.valueOf(style.incLinkPreviewBackgroundColor)
         root.backgroundTintList = color
     }
 }

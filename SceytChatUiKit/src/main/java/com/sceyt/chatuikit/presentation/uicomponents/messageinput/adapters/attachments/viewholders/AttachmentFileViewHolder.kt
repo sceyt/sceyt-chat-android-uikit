@@ -9,7 +9,6 @@ import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.AttachmentClickListeners
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
 
 class AttachmentFileViewHolder(private val binding: SceytItemInputFileAttachmentBinding,
                                private val clickListeners: AttachmentClickListeners.ClickListeners) : BaseViewHolder<AttachmentItem>(binding.root) {
@@ -28,7 +27,7 @@ class AttachmentFileViewHolder(private val binding: SceytItemInputFileAttachment
     }
 
     private fun SceytItemInputFileAttachmentBinding.setupStyle() {
-        icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+        //////////////todo styleicFile.setImageResource(MessagesListViewStyle.fileAttachmentIcon)
         icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
     }
 }

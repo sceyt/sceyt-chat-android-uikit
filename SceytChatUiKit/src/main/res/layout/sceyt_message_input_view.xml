@@ -9,7 +9,7 @@
         android:id="@+id/viewTop"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintBottom_toTopOf="@+id/rvAttachments"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -53,7 +53,7 @@
         android:id="@+id/view3"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintBottom_toTopOf="@+id/layoutInput" />
 
     <androidx.constraintlayout.widget.ConstraintLayout

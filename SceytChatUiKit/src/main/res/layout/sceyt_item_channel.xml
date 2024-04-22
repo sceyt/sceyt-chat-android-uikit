@@ -37,7 +37,7 @@
         app:layout_constraintEnd_toEndOf="@id/avatar"
         app:sceytOnlineViewChangeVisibilityWithAnim="true"
         app:sceytOnlineViewIndicatorColor="@color/sceyt_color_green"
-        app:sceytOnlineViewStrokeColor="@color/sceyt_color_bg"
+        app:sceytOnlineViewStrokeColor="@color/sceyt_color_background"
         app:sceytOnlineViewStrokeWidth="1.5dp"
         tools:visibility="visible" />
 
@@ -52,7 +52,7 @@
         android:fontFamily="@font/roboto_medium"
         android:includeFontPadding="false"
         android:lines="1"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize"
         app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toStartOf="@+id/dateStatus"
@@ -86,7 +86,7 @@
         android:id="@+id/divider"
         android:layout_width="0dp"
         android:layout_height="0.5dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/channelTitle" />

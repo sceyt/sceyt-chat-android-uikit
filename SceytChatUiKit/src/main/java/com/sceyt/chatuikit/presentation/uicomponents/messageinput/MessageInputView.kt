@@ -44,18 +44,18 @@ import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
 import com.sceyt.chatuikit.extensions.setTextAndMoveSelectionEnd
 import com.sceyt.chatuikit.extensions.showSoftInput
-import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.GalleryMediaPicker
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper
-import com.sceyt.chatuikit.persistence.extensions.toArrayList
-import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
+import com.sceyt.chatuikit.persistence.extensions.toArrayList
+import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.customviews.voicerecorder.AudioMetadata
 import com.sceyt.chatuikit.presentation.customviews.voicerecorder.RecordingListener
 import com.sceyt.chatuikit.presentation.customviews.voicerecorder.SceytRecordedVoicePresenter
 import com.sceyt.chatuikit.presentation.customviews.voicerecorder.SceytVoiceMessageRecorderView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
+import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.GalleryMediaPicker
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.InputState.Text
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.InputState.Voice
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
@@ -82,6 +82,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyl
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.MessageInputViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.helpers.chooseAttachment.AttachmentChooseType
 import com.sceyt.chatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import com.vanniktech.ui.animateToGone
@@ -116,6 +117,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private val messageToSendHelper by lazy { MessageToSendHelper(context) }
     private val linkDetailsProvider by lazy { SingleLinkDetailsProvider(context, getScope()) }
     private val audioRecorderHelper: AudioRecorderHelper by lazy { AudioRecorderHelper(getScope(), context) }
+    internal var needMessagesListViewStyleCallback: () -> MessagesListViewStyle? = { null }
+
     var isInputHidden = false
         private set
     var isInMultiSelectMode = false
@@ -566,7 +569,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             editMessage = null
             replyMessage = message.clone()
             binding.layoutReplyOrEditMessage.isVisible = true
-            editOrReplyMessageFragment.replyMessage(message)
+            editOrReplyMessageFragment.replyMessage(message, needMessagesListViewStyleCallback())
 
             if (!initWithDraft) {
                 context.showSoftInput(binding.messageInput)

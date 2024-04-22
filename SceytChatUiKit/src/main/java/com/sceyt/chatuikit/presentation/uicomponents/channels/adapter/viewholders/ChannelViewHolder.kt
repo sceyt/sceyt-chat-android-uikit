@@ -170,7 +170,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 .append(fromText)
                 .append(message.getAttachmentIconAsString(channelStyle))
                 .append(body)
-                .setForegroundColorId(R.color.sceyt_color_text_themed)
+                .setForegroundColorId(R.color.sceyt_color_text_primary)
                 .setIndexSpan(0, fromText.length)
                 .build()
 
@@ -366,6 +366,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         dateStatus.buildStyle()
             .setStatusIconSize(channelStyle.statusIconSize)
             .setDateColor(channelStyle.dateTextColor)
+            .setEditedTitle(context.getString(R.string.sceyt_edited))
             .build()
 
         divider.isVisible = if (channelStyle.enableDivider) {

@@ -5,7 +5,7 @@ import android.content.res.TypedArray
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.SceytChatUIKit
 
 object MessageInputViewStyle {
     @JvmField
@@ -34,7 +34,7 @@ object MessageInputViewStyle {
 
     @JvmField
     @ColorRes
-    var userNameTextColor: Int = SceytKitConfig.sceytColorAccent
+    var userNameTextColor: Int = SceytChatUIKit.theme.accentColor
 
     lateinit var inputHintText: String
 

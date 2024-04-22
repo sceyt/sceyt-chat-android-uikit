@@ -30,7 +30,7 @@
 
         <!--Date separator item-->
         <attr name="sceytUiDateSeparatorItemTextColor" format="reference" />
-        <attr name="sceytUiDateSeparatorItemBackground" format="reference" />
+        <attr name="sceytUiDateSeparatorItemBackgroundColor" format="reference|color" />
         <attr name="sceytUiDateSeparatorItemTextFont" format="reference" />
         <attr name="sceytUiDateSeparatorItemTextStyle">
             <flag name="normal" value="0" />

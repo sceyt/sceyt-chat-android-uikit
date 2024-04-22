@@ -37,7 +37,7 @@
         android:fontFamily="@font/roboto_medium"
         android:lines="1"
         android:textAlignment="viewStart"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize"
         app:layout_constraintBottom_toTopOf="@+id/tvMemberCount"
         app:layout_constraintEnd_toEndOf="parent"

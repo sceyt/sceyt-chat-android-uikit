@@ -44,7 +44,7 @@
                 android:ellipsize="middle"
                 android:maxWidth="120dp"
                 android:singleLine="true"
-                android:textColor="@color/sceyt_color_text_themed"
+                android:textColor="@color/sceyt_color_text_primary"
                 android:textSize="@dimen/mediumTextSize"
                 android:textStyle="bold"
                 app:layout_constrainedWidth="true"

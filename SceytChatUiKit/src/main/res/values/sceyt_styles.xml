@@ -11,7 +11,7 @@
         <item name="bottomSheetDialogTheme">@style/SceytAppBottomSheetDialogTheme</item>
         <item name="windowActionModeOverlay">false</item>
         <item name="windowActionBar">false</item>
-        <item name="android:windowBackground">@color/sceyt_color_bg</item>
+        <item name="android:windowBackground">@color/sceyt_color_background</item>
         <item name="android:statusBarColor">@color/sceyt_color_status_bar</item>
         <item name="windowNoTitle">true</item>
     </style>
@@ -35,7 +35,7 @@
     <style name="SceytToolbarAppearance">
         <item name="android:textSize">20sp</item>
         <item name="android:fontFamily">@font/roboto_medium</item>
-        <item name="android:textColor">@color/sceyt_color_text_themed</item>
+        <item name="android:textColor">@color/sceyt_color_text_primary</item>
     </style>
 
     <style name="SceytAppModalStyle" parent="Widget.Design.BottomSheet.Modal">
@@ -67,7 +67,7 @@
 
     <style name="SceytPopupMenuStyle" parent="@style/Widget.AppCompat.ListView.DropDown">
         <item name="popupMenuBackground">@drawable/sceyt_bg_popup</item>
-        <item name="android:textColor">@color/sceyt_color_text_themed</item>
+        <item name="android:textColor">@color/sceyt_color_text_primary</item>
         <item name="android:overScrollMode">never</item>
         <item name="android:scrollbars">none</item>
         <item name="android:tint">@color/sceyt_color_accent</item>
@@ -113,7 +113,7 @@
     </style>
 
     <style name="SceytEditTextTheme">
-        <item name="colorControlNormal">@color/sceyt_color_divider</item>
+        <item name="colorControlNormal">@color/sceyt_color_border</item>
         <item name="colorControlActivated">@color/sceyt_color_accent</item>
         <item name="colorControlHighlight">@color/sceyt_color_accent</item>
     </style>
@@ -121,7 +121,7 @@
     <style name="SceytTabLayout" parent="Theme.AppCompat">
         <item name="tabTextAppearance">@style/SceytTabTextAppearance</item>
         <item name="tabIndicatorFullWidth">true</item>
-        <item name="tabTextColor">@color/sceyt_color_text_themed</item>
+        <item name="tabTextColor">@color/sceyt_color_text_primary</item>
         <item name="tabIndicatorColor">@color/sceyt_color_accent</item>
     </style>
 

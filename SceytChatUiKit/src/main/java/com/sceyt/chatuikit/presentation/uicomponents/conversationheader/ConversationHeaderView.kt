@@ -350,7 +350,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         hideMessageActions()
         layoutSearch.isVisible = showSearch
         layoutToolbarDetails.isVisible = !showSearch
-        root.setBackgroundColor(if (showSearch) context.getCompatColor(R.color.sceyt_color_bg)
+        root.setBackgroundColor(if (showSearch) context.getCompatColor(R.color.sceyt_color_background)
         else context.getCompatColor(R.color.sceyt_color_primary))
         isShowingSearchBar = showSearch
         if (showSearch)

@@ -51,6 +51,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     messageInputView.setReplyInThreadMessageId(replyInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
     messageInputView.setSaveUrlsPlace(placeToSavePathsList)
+    messageInputView.needMessagesListViewStyleCallback = { messageActionBridge.messagesListView?.style }
 
     messageInputView.setMentionValidator(object : MentionValidatorWatcher.MentionValidator {
         override fun getInvalidMentionAnnotations(mentionAnnotations: List<Annotation>?): List<Annotation>? {
@@ -71,7 +72,9 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
 
     viewModelScope.launch(Dispatchers.IO) {
         channelInteractor.getChannelFromDb(channel.id)?.let {
-            withContext(Dispatchers.Main) { messageInputView.setDraftMessage(it.draftMessage) }
+            withContext(Dispatchers.Main) {
+                messageInputView.setDraftMessage(it.draftMessage)
+            }
         }
     }
 

@@ -27,7 +27,7 @@
         app:layout_constraintBottom_toBottomOf="@id/avatar"
         app:layout_constraintEnd_toEndOf="@id/avatar"
         app:sceytOnlineViewIndicatorColor="@color/sceyt_color_green"
-        app:sceytOnlineViewStrokeColor="@color/sceyt_color_bg"
+        app:sceytOnlineViewStrokeColor="@color/sceyt_color_background"
         app:sceytOnlineViewStrokeWidth="1dp"
         tools:visibility="visible" />
 
@@ -37,7 +37,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
         android:lines="1"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize"
         app:layout_constraintBottom_toBottomOf="@id/avatar"
         app:layout_constraintEnd_toEndOf="parent"

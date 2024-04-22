@@ -56,7 +56,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.events.Message
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MAX_MULTISELECT_MESSAGES_COUNT
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -72,7 +71,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messageActionBridge.setMessagesListView(messagesListView)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
     if (channel.isSelf())
-        messagesListView.getPageStateView()?.setEmptyStateView(MessagesStyle.emptyStateSelfChannel)
+        messagesListView.getPageStateView()?.setEmptyStateView(messagesListView.style.emptyStateSelfChannel)
 
     clearPreparingThumbs()
 

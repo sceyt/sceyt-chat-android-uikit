@@ -7,10 +7,13 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.events.Message
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.MessageInputView
 
-class MessageActionBridge {
-    private var messagesListView: MessagesListView? = null
-    private var headerView: ConversationHeaderView? = null
-    private var inputView: MessageInputView? = null
+internal class MessageActionBridge {
+    var messagesListView: MessagesListView? = null
+        private set
+    var headerView: ConversationHeaderView? = null
+        private set
+    var inputView: MessageInputView? = null
+        private set
 
     fun setMessagesListView(messagesListView: MessagesListView) {
         this.messagesListView = messagesListView
@@ -90,7 +93,7 @@ class MessageActionBridge {
         messagesListView?.cancelMultiSelectMode()
     }
 
-    fun showSearchMessage(event: MessageCommandEvent.SearchMessages){
+    fun showSearchMessage(event: MessageCommandEvent.SearchMessages) {
         headerView?.uiElementsListeners?.showSearchMessagesBar(event)
         inputView?.getEventListeners()?.onSearchModeChangeListener(true)
     }

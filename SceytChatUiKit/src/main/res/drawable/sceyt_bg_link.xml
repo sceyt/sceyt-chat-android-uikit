@@ -4,5 +4,5 @@
     <corners android:radius="8dp" />
     <stroke
         android:width=".5dp"
-        android:color="@color/sceyt_color_divider" />
+        android:color="@color/sceyt_color_border" />
 </shape>

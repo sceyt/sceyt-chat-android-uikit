@@ -28,6 +28,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messa
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.StickyDateHeaderUpdater
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.helpers.MessageSwipeController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -57,6 +58,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private var showHideDownScroller: ((show: Boolean) -> Unit)? = null
     private var swipeToReplyListener: ((MessageListItem) -> Unit)? = null
     private var enableSwipe: Boolean = true
+    private lateinit var style: MessagesListViewStyle
 
     init {
         init()
@@ -72,7 +74,6 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
         layoutAnimation = AnimationUtils.loadLayoutAnimation(context, R.anim.sceyt_layout_anim_messages)
 
-        addItemDecoration(ItemOffsetDecoration())
         layoutManager = SpeedyLinearLayoutManager(context).apply {
             stackFromEnd = true
         }
@@ -165,6 +166,12 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         return scrollToEnd
     }
 
+    internal fun setStyle(style: MessagesListViewStyle) {
+        this.style = style
+        addItemDecoration(ItemOffsetDecoration(style))
+        viewHolderFactory.setStyle(style)
+    }
+
     fun setData(messages: List<MessageListItem>, force: Boolean = false) {
         if (::mAdapter.isInitialized.not()) {
             adapter = MessagesAdapter(SyncArrayList(messages), viewHolderFactory).also {
@@ -172,9 +179,9 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 mAdapter = it
             }
             scheduleLayoutAnimation()
-            StickyDateHeaderUpdater(this, parent as ViewGroup, mAdapter)
+            StickyDateHeaderUpdater(this, parent as ViewGroup, mAdapter, style)
 
-            val swipeController = MessageSwipeController(context) { position ->
+            val swipeController = MessageSwipeController(context, style) { position ->
                 Handler(Looper.getMainLooper()).postDelayed({
                     mAdapter.getData().getOrNull(position)?.let {
                         swipeToReplyListener?.invoke(it)

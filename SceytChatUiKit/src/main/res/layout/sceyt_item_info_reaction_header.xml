@@ -20,7 +20,7 @@
         app:sceytReactionViewInnerPaddingHorizontal="12dp"
         app:sceytReactionViewInnerPaddingVertical="8dp"
         app:sceytReactionViewSmileTextSize="15sp"
-        app:sceytReactionViewStrokeColor="@color/sceyt_color_divider"
+        app:sceytReactionViewStrokeColor="@color/sceyt_color_border"
         app:sceytReactionViewStrokeCornerRadius="30dp"
         app:sceytReactionViewStrokeWidth="1dp"
         tools:sceytReactionViewSmileText="😍" />

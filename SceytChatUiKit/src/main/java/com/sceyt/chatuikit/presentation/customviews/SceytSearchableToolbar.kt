@@ -32,7 +32,7 @@ class SceytSearchableToolbar @JvmOverloads constructor(context: Context, attrs: 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.SceytSearchableToolbar)
         toolbarTitle = a.getString(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarTitle)
-        titleColor = a.getColor(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarTitleColor, context.getCompatColor(R.color.sceyt_color_text_themed))
+        titleColor = a.getColor(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarTitleColor, context.getCompatColor(R.color.sceyt_color_text_primary))
         titleTextSize = a.getDimensionPixelSize(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarTitleTextSize,
             context.resources.getDimension(R.dimen.bigTextSize).toInt())
         enableSearch = a.getBoolean(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarEnableSearch, enableSearch)

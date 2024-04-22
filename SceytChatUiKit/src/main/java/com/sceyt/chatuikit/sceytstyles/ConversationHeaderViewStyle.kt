@@ -12,7 +12,7 @@ object ConversationHeaderViewStyle {
 
     @JvmField
     @ColorRes
-    var titleColor: Int = R.color.sceyt_color_text_themed
+    var titleColor: Int = R.color.sceyt_color_text_primary
 
     @JvmField
     @ColorRes
@@ -20,7 +20,7 @@ object ConversationHeaderViewStyle {
 
     @JvmField
     @ColorRes
-    var underlineColor: Int = R.color.sceyt_color_divider
+    var underlineColor: Int = R.color.sceyt_color_border
 
     @JvmField
     var enableUnderline: Boolean = true
