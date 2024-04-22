@@ -41,7 +41,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:sceytAvatarColor="@color/sceyt_color_dark_blue_themed"
+                    app:sceytAvatarColor="@color/sceyt_color_overlay_background_2"
                     app:sceytAvatarDefaultIcon="@drawable/sceyt_ic_camera_72" />
 
                 <androidx.appcompat.widget.AppCompatEditText
@@ -87,7 +87,7 @@
                 android:includeFontPadding="false"
                 android:paddingVertical="7dp"
                 android:text="@string/sceyt_members"
-                android:textColor="@color/sceyt_color_text_secondary_themed"
+                android:textColor="@color/sceyt_color_text_secondary"
                 android:textSize="@dimen/mediumTextSize"
                 app:layout_constraintTop_toBottomOf="@+id/layoutDetails" />
 

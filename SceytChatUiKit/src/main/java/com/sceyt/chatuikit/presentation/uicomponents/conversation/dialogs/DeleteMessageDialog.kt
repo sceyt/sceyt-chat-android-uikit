@@ -6,9 +6,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytDialogDeleteMessageBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class DeleteMessageDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle) {
     private lateinit var binding: SceytDialogDeleteMessageBinding
@@ -64,7 +64,7 @@ class DeleteMessageDialog(context: Context) : Dialog(context, R.style.SceytDialo
     }
 
     private fun SceytDialogDeleteMessageBinding.setupStyle() {
-        buttonDelete.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        buttonCancel.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        buttonDelete.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        buttonCancel.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 }

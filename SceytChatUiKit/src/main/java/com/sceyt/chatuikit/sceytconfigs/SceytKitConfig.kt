@@ -43,17 +43,10 @@ object SceytKitConfig {
     var MAX_MULTISELECT_MESSAGES_COUNT = 30
 
     @JvmField
-    var enableDarkMode = true
-
-    @JvmField
     var sortChannelsBy: ChannelSortType = ChannelSortType.ByLastMsg
 
     @JvmField
     var presenceStatusText = ""
-
-    @JvmField
-    @ColorRes
-    var sceytColorAccent = R.color.colorAccent
 
     @JvmField
     var userNameBuilder: ((User) -> String)? = null

@@ -7,6 +7,7 @@ import androidx.core.view.isVisible
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.databinding.SceytItemChannelMembersBinding
 import com.sceyt.chatuikit.extensions.firstCharToUppercase
@@ -16,10 +17,9 @@ import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListenersImpl
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.UserStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
-import java.util.*
+import java.util.Date
 
 class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
                        private val memberClickListeners: MemberClickListenersImpl,
@@ -84,7 +84,7 @@ class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
         val role = memberItem.member.role
         when (role.name) {
             RoleTypeEnum.Owner.toString() -> {
-                setRoleNameColor(SceytKitConfig.sceytColorAccent)
+                setRoleNameColor(SceytChatUIKit.theme.accentColor)
             }
 
             RoleTypeEnum.Admin.toString() -> {

@@ -28,6 +28,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -159,8 +160,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         subTitle.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.subTitleColor))
         toolbarUnderline.background = ColorDrawable(context.getCompatColor(ConversationHeaderViewStyle.underlineColor))
         toolbarUnderline.isVisible = ConversationHeaderViewStyle.enableUnderline
-        icSearch.imageTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        icBack.imageTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        icSearch.imageTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        icBack.imageTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -251,7 +252,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             when {
                 channel.isPeerDeleted() -> avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
                 channel.isSelf() -> {
-                    avatar.setAvatarColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+                    avatar.setAvatarColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
                     avatar.setImageUrl(null, UserStyle.notesAvatar)
                 }
 

@@ -170,7 +170,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 .append(fromText)
                 .append(message.getAttachmentIconAsString(channelStyle))
                 .append(body)
-                .setForegroundColorId(R.color.sceyt_color_text_primary)
+                .setForegroundColorId(SceytChatUIKit.theme.textPrimaryColor)
                 .setIndexSpan(0, fromText.length)
                 .build()
 
@@ -228,7 +228,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             val text = SpannableStringBuilder("$draft: ").apply {
                 append(MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(draftMessage.message.toString(),
                     draftMessage.mentionUsers?.toTypedArray(), draftMessage.bodyAttributes))
-                setSpan(ForegroundColorSpan(context.getCompatColor(R.color.sceyt_color_red)), 0, draft.length + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                setSpan(ForegroundColorSpan(context.getCompatColor(SceytChatUIKit.theme.errorColor)), 0, draft.length + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
             textView.text = text
             textView.setTypeface(null, Typeface.NORMAL)
@@ -259,6 +259,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
     open fun setPinState(channel: SceytChannel, pinImage: ImageView) {
         val isPinned = channel.pinned
+        pinImage.setImageDrawable(channelStyle.pinIcon)
         pinImage.isVisible = isPinned
         binding.viewPinned.isVisible = isPinned
     }
@@ -266,7 +267,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: ImageView) {
         if (isSelf) {
             binding.avatar.setImageUrl(null, UserStyle.notesAvatar)
-            binding.avatar.setAvatarColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+            binding.avatar.setAvatarColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
             return
         }
         binding.avatar.setAvatarColor(0)

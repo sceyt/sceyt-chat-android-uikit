@@ -9,10 +9,10 @@ import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytFragmentBottomSheetEmojisBinding
 import com.sceyt.chatuikit.extensions.dismissSafety
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.vanniktech.emoji.EmojiTheming
 import com.vanniktech.emoji.search.NoSearchEmoji
 
@@ -48,7 +48,7 @@ class BottomSheetEmojisFragment : BottomSheetDialogFragment() {
             editText = null,
             theming = EmojiTheming(backgroundColor = Color.TRANSPARENT,
                 primaryColor = requireContext().getCompatColor(R.color.sceyt_color_gray_400),
-                secondaryColor = requireContext().getCompatColor(SceytKitConfig.sceytColorAccent),
+                secondaryColor = requireContext().getCompatColor(SceytChatUIKit.theme.accentColor),
                 dividerColor = requireContext().getCompatColor(R.color.sceyt_color_border),
                 Color.BLACK, Color.BLACK),
             searchEmoji = NoSearchEmoji

@@ -15,6 +15,8 @@
 
     <!--Interface-->
     <color name="sceyt_color_background">#FFFFFF</color>
+    <color name="sceyt_color_background_secondary">#F1F2F6</color>
+    <color name="sceyt_color_background_sections">#FFFFFF</color>
     <color name="sceyt_color_border">#E4E6EE</color> <!--divider in light mode was F1F2F6 -->
     <color name="sceyt_color_icon_secondary">#A0A1B0</color>
     <color name="sceyt_color_icon_inactive">#C6C7D0</color>
@@ -37,13 +39,9 @@
     <color name="sceyt_color_bg_secondary_themed">#F4F5F8</color>
 
     <color name="sceyt_color_button">#F1F2F6</color>
-    <color name="sceyt_color_text_secondary_themed">#707388</color>
     <color name="sceyt_color_text_footnote_themed">#A0A1B0</color>
     <color name="sceyt_color_black_themed">#FF000000</color>
     <color name="sceyt_color_gray_themed">#F1F2F6</color>
-    <color name="sceyt_color_dark_blue_themed">#66111539</color>
-
-
 
     <color name="sceyt_color_bg_out_message">#E3E7FF</color>
     <color name="sceyt_color_bg_inc_message">#F1F2F6</color>

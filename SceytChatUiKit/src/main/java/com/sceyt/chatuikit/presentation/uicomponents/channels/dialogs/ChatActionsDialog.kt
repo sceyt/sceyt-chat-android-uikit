@@ -8,13 +8,13 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogChannelActionsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.isSelf
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogChannelActionsBinding
@@ -107,7 +107,7 @@ class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogN
 
     private fun SceytDialogChannelActionsBinding.setupStyle() {
         setTextViewsDrawableColor(listOf(pin, unPin, markAsRead, markAsUnRead, mute, unMute),
-            context.getCompatColor(SceytKitConfig.sceytColorAccent))
+            context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 
     companion object {

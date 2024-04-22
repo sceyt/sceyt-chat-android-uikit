@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 class DateSeparatorViewHolder(
         private val binding: SceytItemMessageDateSeparatorBinding,
         private val style: MessagesListViewStyle,
-) : BaseMsgViewHolder(view = binding.root, style = style) {
+) : BaseMsgViewHolder(view = binding.root, style = style.messageItemStyle) {
 
     init {
         binding.setMessageItemStyle()

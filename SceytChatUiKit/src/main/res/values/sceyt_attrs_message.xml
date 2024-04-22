@@ -2,8 +2,8 @@
 <resources>
     <declare-styleable name="MessagesListView">
 
-        <attr name="sceytUiMessageIncBubbleColor" format="reference" />
-        <attr name="sceytUiMessageOutBubbleColor" format="reference" />
+        <attr name="sceytUiMessageIncBubbleColor" format="reference|color" />
+        <attr name="sceytUiMessageOutBubbleColor" format="reference|color" />
 
         <attr name="sceytUiMessageIncLinkPreviewBackgroundColor" format="reference" />
         <attr name="sceytUiMessageOutLinkPreviewBackgroundColor" format="reference" />
@@ -17,8 +17,11 @@
         <!-- Drawable of the message pending indicator -->
         <attr name="sceytUiMessagePendingIcon" format="reference" />
 
-        <attr name="sceytUiMessageSenderNameTextColor" format="reference" />
-        <attr name="sceytUiReplyMessageLineColor" format="reference" />
+        <attr name="sceytUiMessageBodyTextColor" format="reference|color" />
+        <attr name="sceytUiMessageDateTextColor" format="reference|color" />
+
+        <attr name="sceytUiMessageSenderNameTextColor" format="reference|color" />
+        <attr name="sceytUiReplyMessageLineColor" format="reference|color" />
 
         <!--Message edited text-->
         <attr name="sceytUiMessageEditedText" format="reference" />
@@ -29,7 +32,7 @@
         </attr>
 
         <!--Date separator item-->
-        <attr name="sceytUiDateSeparatorItemTextColor" format="reference" />
+        <attr name="sceytUiDateSeparatorItemTextColor" format="reference|color" />
         <attr name="sceytUiDateSeparatorItemBackgroundColor" format="reference|color" />
         <attr name="sceytUiDateSeparatorItemTextFont" format="reference" />
         <attr name="sceytUiDateSeparatorItemTextStyle">
@@ -39,8 +42,8 @@
         </attr>
 
         <!--Unread messages separator-->
-        <attr name="sceytUiUnreadMessagesSeparatorTextColor" format="reference" />
-        <attr name="sceytUiUnreadMessagesSeparatorBackgroundColor" format="reference" />
+        <attr name="sceytUiUnreadMessagesSeparatorTextColor" format="reference|color" />
+        <attr name="sceytUiUnreadMessagesSeparatorBackgroundColor" format="reference|color" />
         <attr name="sceytUiUnreadMessagesSeparatorTextStyle">
             <flag name="normal" value="0" />
             <flag name="bold" value="1" />
@@ -51,21 +54,21 @@
         <attr name="sceytUiEmptyStateLayout" format="reference" />
         <attr name="sceytUiEmptyStateSelfChannelLayout" format="reference" />
 
-        <attr name="sceytUiAutoLinkTextColor" format="reference" />
+        <!--Loading state-->
+        <attr name="sceytUiLoadingStateLayout" format="reference" />
+
+        <attr name="sceytUiAutoLinkTextColor" format="reference|color" />
 
         <!--Distance between messages-->
         <attr name="sceytUiSameSenderMessageDistance" format="dimension" />
         <attr name="sceytUiDifferentSenderMessageDistance" format="dimension" />
 
-        <attr name="sceytUiDownScrollerUnreadCountColor" format="reference" />
+        <attr name="sceytUiDownScrollerUnreadCountColor" format="reference|color" />
 
-        <attr name="sceytUiMediaLoaderColor" format="reference" />
+        <attr name="sceytUiMediaLoaderColor" format="reference|color" />
         <attr name="sceytUiVideoDurationIcon" format="reference" />
         <attr name="sceytUiFileAttachmentIcon" format="reference" />
         <attr name="sceytUiLinkAttachmentIcon" format="reference" />
-
-        <attr name="sceytUiSelfReactionBackgroundColor" format="reference" />
-        <attr name="sceytUiSelfReactionBorderColor" format="reference" />
 
         <attr name="sceytUiSwipeReplyIcon" format="reference" />
 

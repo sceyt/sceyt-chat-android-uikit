@@ -11,6 +11,7 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytActivityShareBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -24,7 +25,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.share.viewmodel.ShareViewMo
 import com.sceyt.chatuikit.presentation.uicomponents.share.viewmodel.ShareViewModel.State.Finish
 import com.sceyt.chatuikit.presentation.uicomponents.share.viewmodel.ShareViewModel.State.Loading
 import com.sceyt.chatuikit.presentation.uicomponents.sharebaleactivity.SceytShareableActivity
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -94,8 +94,8 @@ open class SceytShareActivity : SceytShareableActivity() {
     }
 
     private fun SceytActivityShareBinding.setupStyle() {
-        btnShare.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
-        toolbar.setIconsTint(SceytKitConfig.sceytColorAccent)
+        btnShare.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
+        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
     }
 
     protected fun sendTextMessage() {

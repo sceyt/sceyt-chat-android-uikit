@@ -60,11 +60,13 @@ class SceytPageStateView @JvmOverloads constructor(context: Context, attrs: Attr
                 emptySearchStateView?.isVisible = state.isSearch && !state.wasLoadingMore
                 loadingStateView?.isVisible = false
             }
+
             is PageState.StateLoading -> {
                 emptyStateView?.isVisible = false
                 emptySearchStateView?.isVisible = false
                 loadingStateView?.isVisible = state.isLoading && showLoadingIfNeed
             }
+
             is PageState.StateError -> {
                 if (enableErrorSnackBar && state.showMessage)
                     customToastSnackBar(this, state.errorMessage.toString())
@@ -72,11 +74,13 @@ class SceytPageStateView @JvmOverloads constructor(context: Context, attrs: Attr
                 emptySearchStateView?.isVisible = false
                 loadingStateView?.isVisible = false
             }
+
             is PageState.StateLoadingMore -> {
                 emptyStateView?.isVisible = false
                 emptySearchStateView?.isVisible = false
                 loadingStateView?.isVisible = false
             }
+
             is PageState.Nothing -> {
                 emptyStateView?.isVisible = false
                 emptySearchStateView?.isVisible = false

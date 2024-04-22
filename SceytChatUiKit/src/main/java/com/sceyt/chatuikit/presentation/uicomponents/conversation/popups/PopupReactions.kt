@@ -12,9 +12,11 @@ import android.widget.PopupWindow
 import androidx.core.view.marginBottom
 import androidx.core.view.marginTop
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.databinding.SceytPopupAddReactionBinding
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isRtl
 import com.sceyt.chatuikit.extensions.screenWidthPx
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -41,6 +43,8 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
             binding = it
         }.root
 
+        binding.setupStyle()
+
         animationStyle = if (reversed) R.style.SceytReactionPopupAnimationReversed else R.style.SceytReactionPopupAnimationNormal
         setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         isOutsideTouchable = true
@@ -56,10 +60,12 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
 
             showAtLocation(anchorView, Gravity.NO_GRAVITY, xPos, yPos)
         }
+
         return this
     }
 
-    private fun setAdapter(reversed: Boolean, message: SceytMessage, reactions: List<String>, clickListener: PopupReactionsAdapter.OnItemClickListener) {
+    private fun setAdapter(reversed: Boolean, message: SceytMessage, reactions: List<String>,
+                           clickListener: PopupReactionsAdapter.OnItemClickListener) {
         val reactionsItems = reactions.map {
             val reactionItem = message.messageReactions?.find { data -> data.reaction.key == it }
             val containsSelf = reactionItem?.reaction?.containsSelf ?: false
@@ -89,5 +95,9 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
                 clickListener?.onAddClick()
             }
         }
+    }
+
+    private fun SceytPopupAddReactionBinding.setupStyle() {
+        cardView.setCardBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
     }
 }

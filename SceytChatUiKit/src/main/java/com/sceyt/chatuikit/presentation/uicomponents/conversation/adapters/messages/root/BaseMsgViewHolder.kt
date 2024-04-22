@@ -59,11 +59,11 @@ import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
-import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
-import com.sceyt.chatuikit.presentation.extensions.setConversationMessageDateAndStatusIcon
 import com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.chatuikit.presentation.customviews.SceytToReplyLineView
+import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
+import com.sceyt.chatuikit.presentation.extensions.setConversationMessageDateAndStatusIcon
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -72,8 +72,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.react
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.sceytstyles.UserStyle
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil.getDateTimeString
@@ -81,7 +80,7 @@ import com.sceyt.chatuikit.shared.utils.ViewUtil
 import kotlin.math.min
 
 abstract class BaseMsgViewHolder(private val view: View,
-                                 private val style: MessagesListViewStyle,
+                                 private val style: MessageItemStyle,
                                  private val messageListeners: MessageClickListeners.ClickListeners? = null,
                                  private val displayedListener: ((MessageListItem) -> Unit)? = null,
                                  private val userNameBuilder: ((User) -> String)? = null)
@@ -208,10 +207,10 @@ abstract class BaseMsgViewHolder(private val view: View,
             tvName.text = getSenderName(parent?.user)
             if (parent?.state == MessageState.Deleted) {
                 tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.ITALIC)
-                tvMessageBody.setTextColor(itemView.context.getCompatColor(R.color.sceyt_color_gray_400))
+                tvMessageBody.setTextColor(itemView.context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
             } else {
                 tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.NORMAL)
-                tvMessageBody.setTextColor(itemView.context.getCompatColor(R.color.sceyt_color_black_themed))
+                tvMessageBody.setTextColor(itemView.context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
             }
 
             tvMessageBody.text = parent?.getFormattedBody(itemView.context)
@@ -230,7 +229,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                         icMsgBodyStartIcon.setImageDrawable(context.getCompatDrawable(R.drawable.sceyt_ic_voice)?.apply {
                             if (message.incoming)
                                 setTint("#818C99".toColorInt())
-                            else setTint(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+                            else setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
                         })
                         false
                     }
@@ -320,7 +319,7 @@ abstract class BaseMsgViewHolder(private val view: View,
             val displayName = getSenderName(user)
             if (isDeletedUser(user)) {
                 avatarView.setImageUrl(null, UserStyle.deletedUserAvatar)
-                tvName.setTextColor(context.getCompatColor(R.color.sceyt_color_red))
+                tvName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.errorColor))
             } else {
                 avatarView.setNameAndImageUrl(displayName, user?.avatarURL, UserStyle.userDefaultAvatar)
                 tvName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
@@ -355,6 +354,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (rvReactionsViewStub.parent != null)
             rvReactionsViewStub.inflate().also {
                 recyclerViewReactions = it as RecyclerView
+                it.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
             }
 
         with(recyclerViewReactions ?: return) {
@@ -513,7 +513,7 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     open fun highlight() {
         highlightAnim?.cancel()
-        val colorFrom = context.getCompatColor(SceytKitConfig.sceytColorAccent)
+        val colorFrom = context.getCompatColor(SceytChatUIKit.theme.accentColor)
         view.setBackgroundColor(colorFrom)
         val colorFro = ColorUtils.setAlphaComponent(colorFrom, (0.3 * 255).toInt())
         val colorTo: Int = Color.TRANSPARENT

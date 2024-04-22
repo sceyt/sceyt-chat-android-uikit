@@ -29,6 +29,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clic
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.MessageInputViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.utils.ViewUtil
 
@@ -71,7 +72,8 @@ open class EditOrReplyMessageFragment : Fragment() {
     }
 
     open fun replyMessage(message: SceytMessage, style: MessagesListViewStyle?) {
-        val messagesListViewStyle = style ?: MessagesListViewStyle(requireContext())
+        val messageItemStyle = style?.messageItemStyle
+                ?: MessageItemStyle.Builder(requireContext(), null).build()
         with(binding ?: return) {
             if (!root.isVisible || root.height != root.measuredHeight || root.measuredHeight == 0) {
                 root.isVisible = true
@@ -87,7 +89,7 @@ open class EditOrReplyMessageFragment : Fragment() {
 
             if (!message.attachments.isNullOrEmpty()) {
                 layoutImage.isVisible = true
-                loadReplyMessageImage(message.attachments, messagesListViewStyle)
+                loadReplyMessageImage(message.attachments, messageItemStyle)
             } else layoutImage.isVisible = false
 
             tvMessageBody.text = if (message.isTextMessage())
@@ -109,7 +111,7 @@ open class EditOrReplyMessageFragment : Fragment() {
         this.clickListeners = clickListeners
     }
 
-    protected open fun loadReplyMessageImage(attachments: Array<SceytAttachment>?, style: MessagesListViewStyle) {
+    protected open fun loadReplyMessageImage(attachments: Array<SceytAttachment>?, style: MessageItemStyle) {
         if (attachments.isNullOrEmpty()) {
             binding?.layoutImage?.isVisible = false
             return
@@ -146,7 +148,7 @@ open class EditOrReplyMessageFragment : Fragment() {
         }
     }
 
-    private fun loadImage(style: MessagesListViewStyle,
+    private fun loadImage(style: MessageItemStyle,
                           imageAttachment: ImageView, metadata: String?,
                           path: String?, defaultPlaceHolder: Drawable? = null) {
         val placeHolder = getThumbFromMetadata(metadata)?.toDrawable(requireContext().resources)

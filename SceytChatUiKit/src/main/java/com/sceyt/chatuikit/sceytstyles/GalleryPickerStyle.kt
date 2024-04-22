@@ -3,17 +3,17 @@ package com.sceyt.chatuikit.sceytstyles
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.SceytChatUIKit
 
 object GalleryPickerStyle {
 
     @JvmField
     @ColorRes
-    var nextButtonColor: Int = SceytKitConfig.sceytColorAccent
+    var nextButtonColor: Int = SceytChatUIKit.theme.accentColor
 
     @JvmField
     @ColorRes
-    var counterColor: Int = SceytKitConfig.sceytColorAccent
+    var counterColor: Int = SceytChatUIKit.theme.accentColor
 
     @JvmField
     @DrawableRes

@@ -8,10 +8,10 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytDialogEditAvatarTypeBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class EditAvatarTypeDialog(
         context: Context,
@@ -61,6 +61,6 @@ class EditAvatarTypeDialog(
 
     private fun SceytDialogEditAvatarTypeBinding.setupStyle() {
         setTextViewsDrawableColor(listOf(tvTakePhoto, tvGallery),
-            context.getCompatColor(SceytKitConfig.sceytColorAccent))
+            context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 }

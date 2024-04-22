@@ -12,6 +12,8 @@
 
     <!--Interface-->
     <color name="sceyt_color_background">#19191B</color>
+    <color name="sceyt_color_background_secondary">#303032</color>
+    <color name="sceyt_color_background_sections">#232324</color>
     <color name="sceyt_color_border">#303032</color>
     <color name="sceyt_color_icon_secondary">#969A9F</color>
     <color name="sceyt_color_icon_inactive">#64666A</color>
@@ -25,8 +27,6 @@
     <color name="sceyt_color_button">#303032</color>
     <color name="sceyt_color_black_themed">#FFFFFF</color>
     <color name="sceyt_color_gray_themed">#232324</color>
-    <color name="sceyt_color_text_secondary_themed">#969A9F</color>
-    <color name="sceyt_color_dark_blue_themed">#303032</color>
 
     <color name="sceyt_color_bg_secondary_themed">@color/sceyt_color_primary_dark</color>
 

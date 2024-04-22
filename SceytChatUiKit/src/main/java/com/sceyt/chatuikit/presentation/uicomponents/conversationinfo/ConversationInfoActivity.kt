@@ -20,6 +20,7 @@ import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Broadcast
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Direct
@@ -237,7 +238,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }.attach()
 
         tabLayout.apply {
-            val color = getCompatColor(SceytKitConfig.sceytColorAccent)
+            val color = getCompatColor(SceytChatUIKit.theme.accentColor)
             setSelectedTabIndicatorColor(color)
             tabRippleColor = ColorStateList.valueOf(color)
         }

@@ -16,13 +16,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.screenWidthPx
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
-import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import kotlin.math.abs
 import kotlin.math.min
 
 
 class MessageSwipeController(context: Context,
-                             private val style: MessagesListViewStyle,
+                             private val style: MessageItemStyle,
                              private val swipeControllerActions: SwipeControllerActions) : Callback() {
 
     private var imageDrawable: Drawable? = null

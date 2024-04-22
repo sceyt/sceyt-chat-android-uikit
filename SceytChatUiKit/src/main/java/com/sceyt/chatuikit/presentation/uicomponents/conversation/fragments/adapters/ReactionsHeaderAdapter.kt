@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.databinding.SceytItemInfoAllReactionsHeaderBinding
@@ -18,7 +19,6 @@ import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
                              private val clickListener: OnItemClickListener) : RecyclerView.Adapter<BaseViewHolder<ReactionHeaderItem>>() {
@@ -54,7 +54,7 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
                 setCountAndSmile(score.score, score.key)
 
                 if (item.selected) {
-                    setReactionBackgroundColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+                    setReactionBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
                     setCountTextColor(Color.WHITE)
                 } else {
                     setReactionBackgroundColor(Color.TRANSPARENT)
@@ -77,7 +77,7 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
 
                 if (item.selected) {
                     background = GradientDrawable().apply {
-                        color = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
+                        color = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
                         cornerRadius = dpToPx(30f).toFloat()
                         setStroke(3, getCompatColor(R.color.sceyt_color_border))
                     }

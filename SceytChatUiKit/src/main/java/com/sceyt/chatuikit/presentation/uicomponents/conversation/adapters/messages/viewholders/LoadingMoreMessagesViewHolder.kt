@@ -2,10 +2,10 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.mess
 
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
-import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 class LoadingMoreMessagesViewHolder(binding: SceytItemLoadingMoreBinding,
-                                    style: MessagesListViewStyle) : BaseMsgViewHolder(binding.root, style) {
+                                    style: MessageItemStyle) : BaseMsgViewHolder(binding.root, style) {
 
     override val enableReply = false
 }

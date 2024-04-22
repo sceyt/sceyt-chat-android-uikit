@@ -118,9 +118,9 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
 
     private fun initViews() {
         with(binding ?: return) {
-            icAddMembers.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
+            icAddMembers.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
 
-            toolbar.setIconsTint(SceytKitConfig.sceytColorAccent)
+            toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
 
             layoutAddMembers.setOnClickListener {
                 onAddMembersClick(memberType)

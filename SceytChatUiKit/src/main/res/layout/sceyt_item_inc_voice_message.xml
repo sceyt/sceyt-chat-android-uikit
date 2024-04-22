@@ -168,7 +168,7 @@
             android:gravity="center"
             android:minWidth="30sp"
             android:paddingVertical="2dp"
-            android:textColor="@color/sceyt_color_text_secondary_themed"
+            android:textColor="@color/sceyt_color_text_secondary"
             android:textSize="12sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"

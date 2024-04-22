@@ -31,13 +31,13 @@ import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 
 class OutFileMsgViewHolder(
         private val binding: SceytItemOutFileMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
-        private val style: MessagesListViewStyle,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         userNameBuilder: ((User) -> String)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
@@ -174,6 +174,6 @@ class OutFileMsgViewHolder(
         icFile.setImageDrawable(style.fileAttachmentIcon)
         icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
         loadProgress.setBackgroundColor(accentColor)
-        messageBody.setLinkTextColor(style.autoLinkTextColor)
+        messageBody.setupStyle(style)
     }
 }

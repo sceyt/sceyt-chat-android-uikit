@@ -4,6 +4,7 @@ import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelVoiceBinding
 import com.sceyt.chatuikit.extensions.TAG_REF
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
@@ -20,7 +21,6 @@ import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 
@@ -159,8 +159,9 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
         get() = binding.loadProgress
 
     private fun SceytItemChannelVoiceBinding.setupStyle() {
-        icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        loadProgress.setIconTintColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        loadProgress.setProgressColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
+        loadProgress.setIconTintColor(accentColor)
+        loadProgress.setProgressColor(accentColor)
     }
 }

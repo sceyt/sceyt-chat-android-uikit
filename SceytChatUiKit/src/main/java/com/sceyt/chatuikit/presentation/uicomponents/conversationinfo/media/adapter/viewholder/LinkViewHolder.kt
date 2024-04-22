@@ -5,6 +5,7 @@ import android.graphics.drawable.ColorDrawable
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.databinding.SceytItemChannelLinkBinding
@@ -14,7 +15,6 @@ import com.sceyt.chatuikit.extensions.glideRequestListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 
@@ -89,7 +89,7 @@ class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
 
     private val defaultImage by lazy {
         context.getCompatDrawable(R.drawable.sceyt_ic_link)?.apply {
-            setTint(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+            setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
         }
     }
 }

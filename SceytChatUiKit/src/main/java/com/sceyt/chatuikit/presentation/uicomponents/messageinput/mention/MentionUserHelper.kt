@@ -14,6 +14,7 @@ import androidx.annotation.ColorRes
 import com.google.gson.Gson
 import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
@@ -34,7 +35,7 @@ object MentionUserHelper {
     }
 
     fun buildWithMentionedUsers(context: Context, body: CharSequence, attributes: List<BodyAttribute>?,
-                                mentionUsers: Array<User>?, @ColorRes colorId: Int = SceytKitConfig.sceytColorAccent,
+                                mentionUsers: Array<User>?, @ColorRes colorId: Int = SceytChatUIKit.theme.accentColor,
                                 mentionClickListener: ((String) -> Unit)? = null): CharSequence {
         val data = attributes?.filter { it.type == MENTION }
                 ?: return body

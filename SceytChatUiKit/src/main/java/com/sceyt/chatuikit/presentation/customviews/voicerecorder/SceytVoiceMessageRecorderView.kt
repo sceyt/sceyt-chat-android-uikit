@@ -12,7 +12,10 @@ import android.net.Uri
 import android.provider.Settings
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.view.MotionEvent.*
+import android.view.MotionEvent.ACTION_CANCEL
+import android.view.MotionEvent.ACTION_DOWN
+import android.view.MotionEvent.ACTION_MOVE
+import android.view.MotionEvent.ACTION_UP
 import android.view.View
 import android.view.View.OnTouchListener
 import android.view.ViewGroup
@@ -24,15 +27,27 @@ import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.core.view.updateLayoutParams
-import androidx.lifecycle.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytRecordViewBinding
-import com.sceyt.chatuikit.extensions.*
+import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.extensions.animatorListener
+import com.sceyt.chatuikit.extensions.checkAndAskPermissions
+import com.sceyt.chatuikit.extensions.dpToPx
+import com.sceyt.chatuikit.extensions.durationToMinSecShort
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.initPermissionLauncher
+import com.sceyt.chatuikit.extensions.maybeComponentActivity
+import com.sceyt.chatuikit.extensions.permissionIgnored
+import com.sceyt.chatuikit.extensions.runOnMainThread
+import com.sceyt.chatuikit.extensions.screenWidthPx
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.presentation.common.SceytDialog
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.MessageInputViewStyle
-import java.util.*
+import java.util.Timer
+import java.util.TimerTask
 import kotlin.math.abs
 
 class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -368,7 +383,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         recording.isInvisible = true
         with(imageAudio) {
             setPadding(paddingNormal)
-            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
+            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
             setImageResource(MessageInputViewStyle.voiceRecordIcon)
             setColorFilter(getCompatColor(R.color.sceyt_color_white))
         }
@@ -380,7 +395,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         recording.isVisible = true
         with(imageAudio) {
             setPadding(paddingRecording)
-            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
+            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
             setImageResource(MessageInputViewStyle.voiceRecordIcon)
             setColorFilter(getCompatColor(R.color.sceyt_color_white))
         }
@@ -390,7 +405,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         imageViewAudio.translationZ = buttonZ
         imageViewAudio.cardElevation = buttonZ
         with(imageAudio) {
-            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
+            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
             setImageResource(MessageInputViewStyle.sendVoiceMessageIcon)
             setPadding(paddingRecording, paddingRecording,
                 (paddingRecording - 2), paddingRecording)
@@ -402,9 +417,9 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         imageViewAudio.cardElevation = buttonZ
         with(imageAudio) {
             setPadding(paddingRecording)
-            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
+            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
             setImageResource(R.drawable.sceyt_ic_delete_record)
-            animateColor(this, getCompatColor(SceytKitConfig.sceytColorAccent), getCompatColor(R.color.sceyt_color_red))
+            animateColor(this, getCompatColor(SceytChatUIKit.theme.accentColor), getCompatColor(R.color.sceyt_color_red))
         }
     }
 
@@ -414,7 +429,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         imageAudio.setPadding(paddingRecording)
         imageAudio.setImageResource(MessageInputViewStyle.voiceRecordIcon)
         imageAudio.setColorFilter(context.getCompatColor(R.color.sceyt_color_white))
-        animateColor(imageAudio, context.getCompatColor(R.color.sceyt_color_red), context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        animateColor(imageAudio, context.getCompatColor(R.color.sceyt_color_red), context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 
     private fun animateColor(view: View, colorFrom: Int, colorTo: Int) {
@@ -427,9 +442,9 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     }
 
     private fun SceytRecordViewBinding.setupStyle() {
-        imageViewLockArrow.setColorFilter(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        lockViewStopButton.setColorFilter(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        btnCancel.setTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        imageViewLockArrow.setColorFilter(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        lockViewStopButton.setColorFilter(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        btnCancel.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 
     private fun showPermissionSettingsDialog() {

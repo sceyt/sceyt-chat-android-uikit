@@ -6,10 +6,10 @@ import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytFragmentPhotoPreviewBinding
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class SceytPhotoPreviewActivity : AppCompatActivity() {
     private lateinit var binding: SceytFragmentPhotoPreviewBinding
@@ -44,7 +44,7 @@ class SceytPhotoPreviewActivity : AppCompatActivity() {
     }
 
     private fun SceytFragmentPhotoPreviewBinding.setupStyle() {
-        toolbar.setIconsTint(SceytKitConfig.sceytColorAccent)
+        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
     }
 
     companion object {

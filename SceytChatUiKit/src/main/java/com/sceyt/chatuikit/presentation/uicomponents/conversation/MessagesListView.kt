@@ -85,7 +85,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var messagesRV: MessagesRV
     private var scrollDownIcon: ScrollToDownView
     private var pageStateView: SceytPageStateView? = null
-    internal val style: MessagesListViewStyle
     private lateinit var defaultClickListeners: MessageClickListenersImpl
     private lateinit var clickListeners: MessageClickListenersImpl
     internal lateinit var messageActionsViewClickListeners: MessageActionsViewClickListenersImpl
@@ -96,12 +95,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
     private var multiselectDestination: Map<Long, SceytMessage>? = null
     private var forceDisabledActions = false
+    val style: MessagesListViewStyle
     var enabledActions = true
         private set
 
     init {
-        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ChannelListView, 0, 0)
-        style = MessagesListViewStyle.Builder(context, typedArray).build()
+        style = MessagesListViewStyle.Builder(context, attrs).build()
 
         messagesRV = MessagesRV(context).also { it.setStyle(style) }
         messagesRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)

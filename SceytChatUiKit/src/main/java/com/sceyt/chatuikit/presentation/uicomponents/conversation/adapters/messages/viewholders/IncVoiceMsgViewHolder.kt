@@ -45,12 +45,12 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messa
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.PlaybackSpeed
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 class IncVoiceMsgViewHolder(
         private val binding: SceytItemIncVoiceMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
-        private val style: MessagesListViewStyle,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners,
         displayedListener: ((MessageListItem) -> Unit)?,
         userNameBuilder: ((User) -> String)?,
