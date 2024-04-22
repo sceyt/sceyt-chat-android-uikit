@@ -28,7 +28,7 @@
         android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="16dp"
-        android:background="@color/sceyt_color_border"
+        android:background="@color/sceyt_color_background_secondary"
         app:layout_constraintTop_toBottomOf="@+id/link" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
