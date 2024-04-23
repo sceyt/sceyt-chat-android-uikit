@@ -22,13 +22,14 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.setBoldSpan
+import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.presentation.extensions.isTextMessage
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CancelReplyMessageViewClickListener
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.MessageInputViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageInputStyle
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.utils.ViewUtil
@@ -117,6 +118,8 @@ open class EditOrReplyMessageFragment : Fragment() {
             return
         }
         with(binding ?: return) {
+            tvName.setTextColor(style.senderNameTextColor)
+            tvMessageBody.setTextColor(style.bodyTextColor)
             imageAttachment.isVisible = true
             fileAttachment.isVisible = false
             val (links, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value() }
@@ -163,7 +166,7 @@ open class EditOrReplyMessageFragment : Fragment() {
 
     private fun SceytFragmentEditOrReplyMessageBinding.setupStyle() {
         icReplyOrEdit.setColorFilter(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
-        tvName.setTextColor(requireContext().getCompatColor(MessageInputViewStyle.userNameTextColor))
         fileAttachment.backgroundTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
+        icCancelReply.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
     }
 }

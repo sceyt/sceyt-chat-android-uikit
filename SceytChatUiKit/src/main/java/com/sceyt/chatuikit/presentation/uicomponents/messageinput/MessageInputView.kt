@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.uicomponents.messageinput
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
@@ -43,7 +42,10 @@ import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
+import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setTextAndMoveSelectionEnd
+import com.sceyt.chatuikit.extensions.setTint
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper
@@ -82,7 +84,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.inline
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.MessageInputViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageInputStyle
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.helpers.chooseAttachment.AttachmentChooseType
 import com.sceyt.chatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
@@ -101,6 +103,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private lateinit var attachmentsAdapter: AttachmentsAdapter
     private var allAttachments = mutableListOf<Attachment>()
     private val binding: SceytMessageInputViewBinding
+    private var style: MessageInputStyle
     private var clickListeners = MessageInputClickListenersImpl(this)
     private var eventListeners = InputEventsListenerImpl(this)
     private var selectFileTypePopupClickListeners = SelectFileTypePopupClickListenersImpl(this)
@@ -136,15 +139,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         private set
 
     init {
+        binding = SceytMessageInputViewBinding.inflate(LayoutInflater.from(context), this, true)
+        style = MessageInputStyle.Builder(context, attrs).build()
+
         if (!isInEditMode)
             chooseAttachmentHelper = ChooseAttachmentHelper(context.asComponentActivity())
-
-        if (attrs != null) {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.MessageInputView)
-            MessageInputViewStyle.updateWithAttributes(context, a)
-            a.recycle()
-        }
-        binding = SceytMessageInputViewBinding.inflate(LayoutInflater.from(context), this, true)
 
         init()
     }
@@ -152,6 +151,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun init() {
         with(binding) {
             setupStyle()
+            voiceRecordPresenter.setStyle(style)
             setOnClickListeners()
             if (!isInEditMode) {
                 editOrReplyMessageFragment.setClickListener(clickListeners)
@@ -162,7 +162,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             addInputTextWatcher()
             setupAttachmentsList()
             // Init SceytVoiceMessageRecorderView outside of post, because it's using permission launcher
-            val voiceRecorderView = SceytVoiceMessageRecorderView(context)
+            val voiceRecorderView = SceytVoiceMessageRecorderView(context).also { it.setStyle(style) }
             post {
                 onStateChanged(inputState)
                 (parent as? ViewGroup)?.let { parentView ->
@@ -406,17 +406,20 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun SceytMessageInputViewBinding.setupStyle() {
         val colorAccent = context.getCompatColor(SceytChatUIKit.theme.accentColor)
-        icAddAttachments.setImageResource(MessageInputViewStyle.attachmentIcon)
-        messageInput.setTextColor(context.getCompatColor(MessageInputViewStyle.inputTextColor))
-        messageInput.hint = MessageInputViewStyle.inputHintText
-        messageInput.setHintTextColor(context.getCompatColor(MessageInputViewStyle.inputHintTextColor))
-        icSendMessage.backgroundTintList = ColorStateList.valueOf(colorAccent)
+        icAddAttachments.setImageDrawable(style.attachmentIcon)
+        messageInput.setTextColor(style.inputTextColor)
+        messageInput.hint = style.inputHintText
+        messageInput.setHintTextColor(style.inputHintTextColor)
+        messageInput.setBackgroundTint(style.inputBackgroundColor)
+        icSendMessage.setBackgroundTint(colorAccent)
         btnJoin.setTextColor(colorAccent)
+        btnJoin.setBackgroundTintColorRes(SceytChatUIKit.theme.surface1Color)
+        rvAttachments.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
         btnClearChat.setTextColor(colorAccent)
-        layoutInputSearchResult.icDown.imageTintList = ColorStateList.valueOf(colorAccent)
-        layoutInputSearchResult.icUp.imageTintList = ColorStateList.valueOf(colorAccent)
+        layoutInputSearchResult.icDown.setTint(colorAccent)
+        layoutInputSearchResult.icUp.setTint(colorAccent)
         if (isInEditMode)
-            icSendMessage.setImageResource(MessageInputViewStyle.voiceRecordIcon)
+            icSendMessage.setImageDrawable(style.voiceRecordIcon)
     }
 
     private fun determineInputState() {
@@ -913,9 +916,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onInputStateChanged(sendImage: ImageView, state: InputState) {
-        val iconResId = if (state == Voice) MessageInputViewStyle.voiceRecordIcon
-        else MessageInputViewStyle.sendMessageIcon
-        binding.icSendMessage.setImageResource(iconResId)
+        val iconResId = if (state == Voice) style.voiceRecordIcon
+        else style.sendMessageIcon
+        binding.icSendMessage.setImageDrawable(iconResId)
     }
 
     override fun onMentionUsersListener(query: String) {

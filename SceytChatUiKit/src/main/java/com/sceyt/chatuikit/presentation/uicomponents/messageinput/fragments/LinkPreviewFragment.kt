@@ -18,6 +18,7 @@ import com.sceyt.chatuikit.databinding.SceytFragmentLinkPreviewBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.glideRequestListener
+import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CancelLinkPreviewClickListener
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.chatuikit.shared.utils.ViewUtil
@@ -128,5 +129,6 @@ open class LinkPreviewFragment : Fragment() {
 
     private fun SceytFragmentLinkPreviewBinding.setupStyle() {
         icLinkImage.setImageDrawable(defaultImage)
+        icClose.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
     }
 }

@@ -50,6 +50,9 @@
             <flag name="italic" value="2" />
         </attr>
 
+        <!--Background color -->
+        <attr name="sceytUiMessageListBackgroundColor" format="reference|color" />
+
         <!--Empty state-->
         <attr name="sceytUiEmptyStateLayout" format="reference" />
         <attr name="sceytUiEmptyStateSelfChannelLayout" format="reference" />

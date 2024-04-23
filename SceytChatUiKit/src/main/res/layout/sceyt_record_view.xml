@@ -24,7 +24,7 @@
             android:layout_gravity="center"
             android:includeFontPadding="false"
             android:text="@string/sceyt_slide_to_cancel"
-            android:textColor="#898f9d"
+            android:textColor="@color/sceyt_color_text_secondary"
             android:textSize="16sp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -142,7 +142,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/sceyt_ic_lock"
-                app:tint="#B2B6BE" />
+                app:tint="@color/sceyt_color_icon_secondary" />
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imageViewLockArrow"

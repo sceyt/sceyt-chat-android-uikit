@@ -44,13 +44,13 @@ class SceytChatDemoApp : Application() {
             clientId = UUID.randomUUID().toString(),
             enableDatabase = true)
 
-       /* SceytChatUIKit.theme = SceytChatUIKitTheme(
+        SceytChatUIKit.theme = SceytChatUIKitTheme(
             accentColor = com.sceyt.chatuikit.R.color.sceyt_color_red,
             //backgroundColor = com.sceyt.chatuikit.R.color.sceyt_color_white,
             textSecondaryColor = com.sceyt.chatuikit.R.color.sceyt_color_green,
             textPrimaryColor = com.sceyt.chatuikit.R.color.sceyt_self_reaction_color,
             iconSecondaryColor = com.sceyt.chatuikit.R.color.sceyt_color_yellow,
-        )*/
+        )
 
         SceytKitConfig.backgroundUploadNotificationClickData = BackgroundUploadNotificationClickData(
             ConversationActivity::class.java, ConversationActivity.CHANNEL

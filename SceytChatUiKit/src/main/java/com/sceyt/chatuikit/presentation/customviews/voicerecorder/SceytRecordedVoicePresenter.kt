@@ -19,7 +19,7 @@ import com.sceyt.chatuikit.extensions.setPlayButtonIcon
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
-import com.sceyt.chatuikit.sceytstyles.MessageInputViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageInputStyle
 import java.io.File
 
 class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -31,7 +31,6 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
 
     init {
         binding = SceytRecordedVoicePresenterBinding.inflate(LayoutInflater.from(context), this, true)
-        binding.setupStyle()
     }
 
     fun init(file: File, audioMetadata: AudioMetadata, listener: RecordedVoicePresentListeners? = null) {
@@ -111,10 +110,12 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
         }
     }
 
-    private fun SceytRecordedVoicePresenterBinding.setupStyle() {
-        icSendMessage.setImageResource(MessageInputViewStyle.sendMessageIcon)
-        icSendMessage.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-        waveformSeekBar.waveProgressColor = getCompatColor(SceytChatUIKit.theme.accentColor)
+    internal fun setStyle(style: MessageInputStyle) {
+        with(binding) {
+            icSendMessage.setImageDrawable(style.sendMessageIcon)
+            icSendMessage.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+            waveformSeekBar.waveProgressColor = getCompatColor(SceytChatUIKit.theme.accentColor)
+        }
     }
 
     interface RecordedVoicePresentListeners {
