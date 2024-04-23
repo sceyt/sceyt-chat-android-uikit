@@ -91,23 +91,23 @@ data class MessageItemStyle(
 
             val messageStatusPendingIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiMessagePendingIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_status_not_sent)?.apply {
-                        setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+                        mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
                     }
 
             val messageStatusSentIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiMessageSentIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_status_on_server)?.apply {
-                        setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+                        mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
                     }
 
             val messageStatusDeliveredIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiMessageDeliveredIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_status_delivered)?.apply {
-                        setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+                        mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
                     }
 
-            val messageStatusReadIcon: Drawable? = (typedArray.getDrawable(R.styleable.MessagesListView_sceytUiMessageReadIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_status_read))?.apply {
-                setTint(accentColor)
-            }
+            val messageStatusReadIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiMessageReadIcon)
+                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_status_read)?.apply {
+                        mutate().setTint(accentColor)
+                    }
 
             val bodyTextColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageBodyTextColor,
                 context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))

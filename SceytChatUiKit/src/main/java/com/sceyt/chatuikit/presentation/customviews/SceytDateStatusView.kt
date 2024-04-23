@@ -58,7 +58,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     init {
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SceytDateStatusView)
-            statusDrawable = a.getDrawable(R.styleable.SceytDateStatusView_sceytDateStatusViewStatusIcon)
+            statusDrawable = a.getDrawable(R.styleable.SceytDateStatusView_sceytDateStatusViewStatusIcon)?.mutate()
             dateText = a.getString(R.styleable.SceytDateStatusView_sceytDateStatusViewDateText)
                     ?: dateText
             textSize = a.getDimensionPixelSize(R.styleable.SceytDateStatusView_sceytDateStatusViewDateTextSize, textSize)
@@ -279,9 +279,11 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     }
 
     fun setStatusIcon(drawable: Drawable?, ignoreHighlight: Boolean = false) {
-        statusDrawable = drawable
+        var statusIcon = drawable
         if (isHighlighted && !ignoreHighlight)
-            statusDrawable?.apply { setTint(Color.WHITE) }
+            statusIcon = drawable?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
+
+        statusDrawable = statusIcon
         init()
         requestLayout()
         invalidate()
@@ -293,9 +295,11 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
                              editedText: String = this.editedText,
                              editedTextStyle: Int = this.editedTextStyle,
                              ignoreHighlight: Boolean = false) {
-        statusDrawable = drawable?.mutate()
+        var statusIcon = drawable
         if (isHighlighted && !ignoreHighlight)
-            statusDrawable?.apply { setTint(Color.WHITE) }
+            statusIcon = drawable?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
+
+        statusDrawable = statusIcon
         dateText = text
         isEdited = edited
         this.textColor = textColor
@@ -380,7 +384,7 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
 
         fun build() {
             this@SceytDateStatusView.statusIconSize = statusIconSize
-            this@SceytDateStatusView.statusDrawable = statusIcon
+            this@SceytDateStatusView.statusDrawable = statusIcon?.mutate()
             this@SceytDateStatusView.textColor = dateTextColor
             this@SceytDateStatusView.editedText = editedText
             this@SceytDateStatusView.isEdited = isEdited

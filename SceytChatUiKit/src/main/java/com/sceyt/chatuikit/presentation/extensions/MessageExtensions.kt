@@ -28,20 +28,19 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: SceytDateSt
                                                      dateText: String, edited: Boolean, shouldShowStatus: Boolean) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || !shouldShowStatus) {
         dateStatusView.setDateAndStatusIcon(text = dateText,
-            textColor = channelStyle.dateTextColor,
             drawable = null,
             edited = edited,
             ignoreHighlight = false)
         return
     }
-    val iconResId = when (deliveryStatus) {
+    val icon = when (deliveryStatus) {
         DeliveryStatus.Pending -> channelStyle.statusIndicatorPendingIcon
         DeliveryStatus.Sent -> channelStyle.statusIndicatorSentIcon
         DeliveryStatus.Received -> channelStyle.statusIndicatorDeliveredIcon
         DeliveryStatus.Displayed -> channelStyle.statusIndicatorReadIcon
         else -> null
     }
-    iconResId?.let {
+    icon?.let {
         dateStatusView.setDateAndStatusIcon(text = dateText,
             textColor = channelStyle.dateTextColor,
             drawable = it,
@@ -58,15 +57,12 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: SceytD
                                                           edited: Boolean) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
         dateStatusView.setDateAndStatusIcon(text = dateText,
-            textColor = style.messageDateTextColor,
             drawable = null,
             edited = edited,
-            editedText = style.editedMessageStateText,
-            editedTextStyle = style.messageEditedTextStyle,
             ignoreHighlight = false)
         return
     }
-    val iconResId = when (deliveryStatus) {
+    val icon = when (deliveryStatus) {
         DeliveryStatus.Pending -> style.messageStatusPendingIcon
         DeliveryStatus.Sent -> style.messageStatusSentIcon
         DeliveryStatus.Received -> style.messageStatusDeliveredIcon
@@ -76,7 +72,7 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: SceytD
             null
         }
     }
-    iconResId?.let {
+    icon?.let {
         dateStatusView.setDateAndStatusIcon(text = dateText,
             textColor = style.messageDateTextColor,
             drawable = it,
