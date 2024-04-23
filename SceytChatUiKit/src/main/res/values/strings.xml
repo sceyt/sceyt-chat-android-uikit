@@ -208,5 +208,7 @@
     <string name="sent">Sent:</string>
     <string name="size">Size:</string>
     <string name="played_by">Played by</string>
+    <string name="no_messages_yet">No Messages yet</string>
+    <string name="empty_messages_desc">No messages yet, start the chat</string>
 
 </resources>

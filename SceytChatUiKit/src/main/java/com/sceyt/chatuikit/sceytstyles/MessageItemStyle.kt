@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
  * Style for the message item view.
@@ -23,9 +24,9 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
  * @param messageStatusSentIcon Icon for the sent message status, default is [R.drawable.sceyt_ic_status_on_server]
  * @param messageStatusDeliveredIcon Icon for the delivered message status, default is [R.drawable.sceyt_ic_status_delivered]
  * @param messageStatusReadIcon Icon for the read message status, default is [R.drawable.sceyt_ic_status_read]
- * @param messageDateTextColor Color for the message date text, default is textColorSecondary from the theme [SceytChatUIKit.theme]
- * @param senderNameTextColor Color for the sender name text, default is accentColor from the theme [SceytChatUIKit.theme]
- * @param replyMessageLineColor Color for the reply message line, default is accentColor from the theme [SceytChatUIKit.theme]
+ * @param messageDateTextColor Color for the message date text, default is [SceytChatUIKitTheme.textSecondaryColor]
+ * @param senderNameTextColor Color for the sender name text, default is [SceytChatUIKitTheme.accentColor]
+ * @param replyMessageLineColor Color for the reply message line, default is [SceytChatUIKitTheme.accentColor]
  * @param autoLinkTextColor Color for the auto link text, default is [R.color.sceyt_auto_link_color]
  * @param editedMessageStateText Text for the edited message state, default is [R.string.sceyt_edited]
  * @param messageEditedTextStyle Style for the edited message state text, default is [Typeface.ITALIC]
