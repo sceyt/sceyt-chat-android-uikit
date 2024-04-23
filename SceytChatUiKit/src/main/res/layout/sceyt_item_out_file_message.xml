@@ -124,7 +124,7 @@
             app:layout_constraintStart_toStartOf="@+id/icFile"
             app:layout_constraintTop_toTopOf="@+id/icFile"
             app:minProgress="2"
-            app:progressColor="@color/sceyt_color_white"
+            app:progressColor="@color/sceyt_color_on_primary"
             app:trackColor="@android:color/transparent" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -151,7 +151,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:includeFontPadding="false"
-            android:textColor="@color/sceyt_color_gray_400"
+            android:textColor="@color/sceyt_color_text_secondary"
             android:textSize="@dimen/tinyTextSize"
             app:layout_constraintStart_toStartOf="@+id/tvFileName"
             app:layout_constraintTop_toBottomOf="@+id/tvFileName"
@@ -166,7 +166,7 @@
             android:paddingHorizontal="5dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
+            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_text_secondary"
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
             app:sceytDateStatusViewStatusIconMargin="5dp"

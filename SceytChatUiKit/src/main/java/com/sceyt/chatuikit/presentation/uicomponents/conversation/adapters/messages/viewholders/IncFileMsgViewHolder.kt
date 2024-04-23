@@ -183,5 +183,7 @@ class IncFileMsgViewHolder(
         icFile.setImageDrawable(style.fileAttachmentIcon)
         icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
         messageBody.setupStyle(style)
+        tvFileSize.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+        tvFileName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
     }
 }

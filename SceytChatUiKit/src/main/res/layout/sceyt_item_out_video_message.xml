@@ -137,7 +137,7 @@
             android:paddingHorizontal="7dp"
             android:paddingVertical="2dp"
             android:gravity="center"
-            android:textColor="@color/sceyt_color_white"
+            android:textColor="@color/sceyt_color_on_primary"
             android:textSize="11sp"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
@@ -158,7 +158,7 @@
             app:layout_constraintStart_toStartOf="@+id/imageThumb"
             app:layout_constraintTop_toTopOf="@+id/imageThumb"
             app:minProgress="2"
-            app:progressColor="@color/sceyt_color_white"
+            app:progressColor="@color/sceyt_color_on_primary"
             app:trackColor="@android:color/transparent" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -170,7 +170,7 @@
             android:backgroundTint="@color/sceyt_progress_bg_color"
             android:paddingHorizontal="5dp"
             android:paddingVertical="1dp"
-            android:textColor="@color/sceyt_color_white"
+            android:textColor="@color/sceyt_color_on_primary"
             android:textSize="@dimen/extraSmallTextSize"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"

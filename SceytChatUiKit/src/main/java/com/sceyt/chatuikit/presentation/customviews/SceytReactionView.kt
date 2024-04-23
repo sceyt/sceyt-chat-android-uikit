@@ -1,7 +1,10 @@
 package com.sceyt.chatuikit.presentation.customviews
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.RectF
 import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
@@ -12,6 +15,8 @@ import android.view.View
 import androidx.annotation.ColorInt
 import androidx.core.graphics.toColorInt
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.processEmojiCompat
 import kotlin.math.abs
 import kotlin.math.max
@@ -29,7 +34,7 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
     private var innerPaddingVertical = 0
     private var innerPaddingHorizontal = 0
     private var strokeColor = "#CDCDCF".toColorInt()
-    private var countTetColor = Color.BLACK
+    private var countTetColor = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
     private var strikeWidth = 0
     private var cornerRadius = 30
     private var smileTextSize = 40

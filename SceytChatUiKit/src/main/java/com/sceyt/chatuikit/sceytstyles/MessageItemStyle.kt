@@ -31,7 +31,7 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
  * @param messageEditedTextStyle Style for the edited message state text, default is [Typeface.ITALIC]
  * @param sameSenderMsgDistance Distance between the same sender messages, default is 4dp
  * @param differentSenderMsgDistance Distance between the different sender messages, default is 8dp
- * @param mediaLoaderColor Color for the media loader, default is [R.color.sceyt_color_white]
+ * @param mediaLoaderColor Color for the media loader, default is [R.color.sceyt_color_on_primary]
  * @param videoDurationIcon Icon for the video duration, default is [R.drawable.sceyt_ic_video]
  * @param fileAttachmentIcon Icon for the file attachment, default is [R.drawable.sceyt_ic_file_filled]
  * @param linkAttachmentIcon Icon for the link attachment, default is [R.drawable.sceyt_ic_link_attachment]
@@ -133,7 +133,7 @@ data class MessageItemStyle(
             val messageEditedTextStyle: Int = typedArray.getInt(R.styleable.MessagesListView_sceytUiMessageEditedTextStyle, Typeface.ITALIC)
 
             val mediaLoaderColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMediaLoaderColor,
-                context.getCompatColor(R.color.sceyt_color_white))
+                context.getCompatColor(SceytChatUIKit.theme.textOnPrimaryColor))
 
             val videoDurationIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiVideoDurationIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_video)

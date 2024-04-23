@@ -21,7 +21,7 @@ import com.sceyt.chatuikit.sceytconfigs.dateformaters.MessageDateSeparatorFormat
  * @param dateSeparatorTextFont Font for the date separator item text, default is -1
  * @param dateSeparatorTextStyle Style for the date separator item text, default is [Typeface.NORMAL]
  * @param dateSeparatorItemBackgroundColor Color for the date separator item background, default is [R.color.sceyt_color_dark_blue]
- * @param dateSeparatorItemTextColor Color for the date separator item text, default is [R.color.sceyt_color_white]
+ * @param dateSeparatorItemTextColor Color for the date separator item text, default is [R.color.sceyt_color_on_primary]
  * @param unreadMessagesSeparatorTextStyle Style for the unread messages separator text, default is [Typeface.NORMAL]
  * @param unreadMessagesTextColor Color for the unread messages separator text, default is textSecondaryColor from the theme [SceytChatUIKit.theme]
  * @param unreadMessagesBackendColor Color for the unread messages separator background, default is surface1Color from the theme [SceytChatUIKit.theme]
@@ -75,10 +75,10 @@ data class MessagesListViewStyle(
             val dateSeparatorTextStyle: Int = typedArray.getInt(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextStyle, Typeface.NORMAL)
 
             val dateSeparatorItemBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiDateSeparatorItemBackgroundColor,
-                context.getCompatColor(R.color.sceyt_color_overlay_background_2))
+                context.getCompatColor(SceytChatUIKit.theme.overlayBackground2Color))
 
             val dateSeparatorItemTextColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextColor,
-                context.getCompatColor(R.color.sceyt_color_white))
+                context.getCompatColor(SceytChatUIKit.theme.textOnPrimaryColor))
 
             val unreadMessagesSeparatorTextStyle: Int = typedArray.getInt(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorTextStyle, Typeface.NORMAL)
 

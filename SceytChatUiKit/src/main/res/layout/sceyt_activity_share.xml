@@ -52,7 +52,7 @@
         android:background="@drawable/sceyt_bg_corners_6"
         android:text="@string/sceyt_share"
         android:textAllCaps="false"
-        android:textColor="@color/sceyt_color_white"
+        android:textColor="@color/sceyt_color_on_primary"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/messageInput"

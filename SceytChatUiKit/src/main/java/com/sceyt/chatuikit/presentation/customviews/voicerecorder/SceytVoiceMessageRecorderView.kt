@@ -385,7 +385,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
             setPadding(paddingNormal)
             backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
             setImageResource(MessageInputViewStyle.voiceRecordIcon)
-            setColorFilter(getCompatColor(R.color.sceyt_color_white))
+            setColorFilter(getCompatColor(R.color.sceyt_color_on_primary))
         }
     }
 
@@ -397,7 +397,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
             setPadding(paddingRecording)
             backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
             setImageResource(MessageInputViewStyle.voiceRecordIcon)
-            setColorFilter(getCompatColor(R.color.sceyt_color_white))
+            setColorFilter(getCompatColor(R.color.sceyt_color_on_primary))
         }
     }
 
@@ -428,7 +428,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         imageViewAudio.cardElevation = buttonZ
         imageAudio.setPadding(paddingRecording)
         imageAudio.setImageResource(MessageInputViewStyle.voiceRecordIcon)
-        imageAudio.setColorFilter(context.getCompatColor(R.color.sceyt_color_white))
+        imageAudio.setColorFilter(context.getCompatColor(R.color.sceyt_color_on_primary))
         animateColor(imageAudio, context.getCompatColor(R.color.sceyt_color_red), context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 

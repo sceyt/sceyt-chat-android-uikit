@@ -58,7 +58,7 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
                     setCountTextColor(Color.WHITE)
                 } else {
                     setReactionBackgroundColor(Color.TRANSPARENT)
-                    setCountTextColor(context.getCompatColor(R.color.sceyt_color_text_primary))
+                    setCountTextColor(context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
                 }
             }
 
