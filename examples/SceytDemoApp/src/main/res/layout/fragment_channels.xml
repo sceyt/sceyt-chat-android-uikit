@@ -52,10 +52,7 @@
                 android:paddingTop="15dp"
                 android:paddingBottom="8dp"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_scrollFlags="scroll|enterAlways|snap"
-                app:sceytUiHintTextColor="@color/sceyt_color_hint"
-                app:sceytUiSearchIcon="@drawable/sceyt_ic_search"
-                app:sceytUiTextColor="@color/sceyt_color_black_themed" />
+                app:layout_scrollFlags="scroll|enterAlways|snap" />
 
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -75,7 +72,7 @@
             android:layout_margin="16dp"
             android:backgroundTint="@color/colorAccent"
             app:icon="@drawable/sceyt_ic_edit"
-            app:iconTint="@color/sceyt_color_on_primary"
+            app:iconTint="@color/sceyt_color_text_on_primary"
             app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
             app:layout_constraintBottom_toBottomOf="@+id/viewPager"
             app:layout_constraintEnd_toEndOf="parent" />

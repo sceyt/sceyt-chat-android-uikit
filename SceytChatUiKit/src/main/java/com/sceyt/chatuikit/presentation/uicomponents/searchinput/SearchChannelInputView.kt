@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.uicomponents.searchinput
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -10,17 +9,16 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytSearchViewBinding
-import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.hideSoftInput
+import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.SceytDatabase
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.listeners.SearchInputClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.listeners.SearchInputClickListenersImpl
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.listeners.SearchInputEventListeners
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.listeners.SearchInputEventListenersImpl
-import com.sceyt.chatuikit.sceytstyles.SearchInputViewStyle
+import com.sceyt.chatuikit.sceytstyles.SearchChannelInputStyle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -35,7 +33,7 @@ class SearchChannelInputView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     private var binding: SceytSearchViewBinding
-
+    private val style: SearchChannelInputStyle
     private val debounceInitDelegate = lazy { DebounceHelper(TYPING_DEBOUNCE_MS, this) }
     private val debounceHelper by debounceInitDelegate
 
@@ -52,12 +50,7 @@ class SearchChannelInputView @JvmOverloads constructor(context: Context, attrs: 
 
     init {
         binding = SceytSearchViewBinding.inflate(LayoutInflater.from(context), this, true)
-
-        if (attrs != null) {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.SearchInputView)
-            SearchInputViewStyle.updateWithAttributes(context, a)
-            a.recycle()
-        }
+        style = SearchChannelInputStyle.Builder(context, attrs).build()
         init()
     }
 
@@ -96,13 +89,14 @@ class SearchChannelInputView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     private fun SceytSearchViewBinding.setUpStyle() {
-        icSearch.setImageResource(SearchInputViewStyle.searchIcon)
-        icClear.setImageResource(SearchInputViewStyle.clearIcon)
-        input.setTextColor(context.getCompatColor(SearchInputViewStyle.textColor))
-        input.hint = SearchInputViewStyle.hintText
-        input.setHintTextColor(context.getCompatColor(SearchInputViewStyle.hintTextColor))
-        disableDebouncedSearchDuringTyping = SearchInputViewStyle.disableDebouncedSearch
-        root.backgroundTintList = ColorStateList.valueOf(getCompatColor(SearchInputViewStyle.backgroundColor))
+        icSearch.setImageDrawable(style.searchIcon)
+        icClear.setImageDrawable(style.clearIcon)
+        input.setTextColor(style.textColor)
+        input.hint = style.hintText
+        input.setHintTextColor(style.hintTextColor)
+
+        disableDebouncedSearchDuringTyping = style.disableDebouncedSearch
+        root.setBackgroundTint(style.backgroundColor)
     }
 
     private fun handleClearClick() {

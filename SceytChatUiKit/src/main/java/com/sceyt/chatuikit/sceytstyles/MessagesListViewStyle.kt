@@ -10,21 +10,22 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.sceytconfigs.dateformaters.MessageDateSeparatorFormatter
+import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
  * Style for the messages list view.
  * @param emptyState Layout resource for the empty state view, default is [R.layout.sceyt_messages_empty_state]
  * @param emptyStateSelfChannel Layout resource for the empty state view for self channel, default is [R.layout.sceyt_messages_empty_state_self_channel]
  * @param loadingState Layout resource for the loading state view, default is [R.layout.sceyt_loading_state]
- * @param downScrollerUnreadCountColor Color for the unread count in the down scroller, default is accentColor from the theme [SceytChatUIKit.theme]
+ * @param downScrollerUnreadCountColor Color for the unread count in the down scroller, default is [SceytChatUIKitTheme.accentColor]
  * @param dateSeparatorDateFormat Date format for the date separator item, default is [MessageDateSeparatorFormatter]
  * @param dateSeparatorTextFont Font for the date separator item text, default is -1
  * @param dateSeparatorTextStyle Style for the date separator item text, default is [Typeface.NORMAL]
  * @param dateSeparatorItemBackgroundColor Color for the date separator item background, default is [R.color.sceyt_color_dark_blue]
  * @param dateSeparatorItemTextColor Color for the date separator item text, default is [R.color.sceyt_color_on_primary]
  * @param unreadMessagesSeparatorTextStyle Style for the unread messages separator text, default is [Typeface.NORMAL]
- * @param unreadMessagesTextColor Color for the unread messages separator text, default is textSecondaryColor from the theme [SceytChatUIKit.theme]
- * @param unreadMessagesBackendColor Color for the unread messages separator background, default is surface1Color from the theme [SceytChatUIKit.theme]
+ * @param unreadMessagesTextColor Color for the unread messages separator text, default is [SceytChatUIKitTheme.textSecondaryColor]
+ * @param unreadMessagesBackendColor Background color for the unread messages separator, default is [SceytChatUIKitTheme.surface1Color]
  * @param messageItemStyle Style for the message item view
  **/
 data class MessagesListViewStyle(
