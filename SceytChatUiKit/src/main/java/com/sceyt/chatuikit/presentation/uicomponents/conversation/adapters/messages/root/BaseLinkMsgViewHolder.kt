@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root
 
-import android.content.res.ColorStateList
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
@@ -10,6 +9,7 @@ import androidx.core.view.updateLayoutParams
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
@@ -18,7 +18,9 @@ import com.sceyt.chatuikit.databinding.SceytMessageLinkPreviewContainerBinding
 import com.sceyt.chatuikit.extensions.calculateScaleWidthHeight
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.glideRequestListener
+import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setTextAndVisibility
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.OutLinkMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -132,8 +134,10 @@ abstract class BaseLinkMsgViewHolder(
 
     private fun SceytMessageLinkPreviewContainerBinding.setupStyle() {
         val color = if (this@BaseLinkMsgViewHolder is OutLinkMsgViewHolder)
-            ColorStateList.valueOf(style.outLinkPreviewBackgroundColor)
-        else ColorStateList.valueOf(style.incLinkPreviewBackgroundColor)
-        root.backgroundTintList = color
+            style.outLinkPreviewBackgroundColor
+        else style.incLinkPreviewBackgroundColor
+        root.setBackgroundTint(color)
+        tvLinkTitle.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        tvLinkDesc.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
     }
 }

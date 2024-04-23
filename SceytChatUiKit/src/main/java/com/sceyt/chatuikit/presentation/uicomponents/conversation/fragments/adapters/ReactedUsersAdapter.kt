@@ -5,8 +5,10 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.databinding.SceytItemReactedUserBinding
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
@@ -63,6 +65,10 @@ class ReactedUsersAdapter(private var clickListener: OnItemClickListener) : List
 
     inner class UsersViewHolder(val binding: SceytItemReactedUserBinding) : BaseViewHolder<ReactedUserItem>(binding.root) {
 
+        init {
+            binding.setupStyle()
+        }
+
         override fun bind(item: ReactedUserItem) {
             with(binding) {
                 val user: User? = (item as ReactedUserItem.Item).reaction.user
@@ -78,10 +84,16 @@ class ReactedUsersAdapter(private var clickListener: OnItemClickListener) : List
                 }
             }
         }
+
+        private fun SceytItemReactedUserBinding.setupStyle() {
+            userName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+        }
     }
 
     inner class LoadingMoreViewHolder(val binding: SceytItemLoadingMoreBinding) : BaseViewHolder<ReactedUserItem>(binding.root) {
-        override fun bind(item: ReactedUserItem) {}
+        override fun bind(item: ReactedUserItem) {
+            binding.adapterListLoadingProgressBar.indeterminateDrawable.setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        }
     }
 
     fun interface OnItemClickListener {

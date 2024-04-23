@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.runOnMainThread
+import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setPlayButtonIcon
 import com.sceyt.chatuikit.extensions.setTextAndDrawableByColor
 import com.sceyt.chatuikit.media.audio.AudioPlayer
@@ -295,9 +296,10 @@ class IncVoiceMsgViewHolder(
 
     private fun SceytItemIncVoiceMessageBinding.setMessageItemStyle() {
         val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
-        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incBubbleColor)
+        layoutDetails.setBackgroundTint(style.incBubbleColor)
         tvUserName.setTextColor(style.senderNameTextColor)
-        playPauseButton.backgroundTintList = ColorStateList.valueOf(accentColor)
+        voiceDuration.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+        playPauseButton.setBackgroundTint(accentColor)
         seekBar.waveProgressColor = accentColor
         tvForwarded.setTextAndDrawableByColor(accentColor)
     }

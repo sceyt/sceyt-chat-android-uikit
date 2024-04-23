@@ -19,7 +19,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.toDrawable
-import androidx.core.graphics.toColorInt
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.marginEnd
@@ -207,10 +206,10 @@ abstract class BaseMsgViewHolder(private val view: View,
             tvName.text = getSenderName(parent?.user)
             if (parent?.state == MessageState.Deleted) {
                 tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.ITALIC)
-                tvMessageBody.setTextColor(itemView.context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+                tvMessageBody.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
             } else {
                 tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.NORMAL)
-                tvMessageBody.setTextColor(itemView.context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+                tvMessageBody.setTextColor(style.bodyTextColor)
             }
 
             tvMessageBody.text = parent?.getFormattedBody(itemView.context)
@@ -228,7 +227,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                     attachment?.type == AttachmentTypeEnum.Voice.value() -> {
                         icMsgBodyStartIcon.setImageDrawable(context.getCompatDrawable(R.drawable.sceyt_ic_voice)?.apply {
                             if (message.incoming)
-                                setTint("#818C99".toColorInt())
+                                setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
                             else setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
                         })
                         false

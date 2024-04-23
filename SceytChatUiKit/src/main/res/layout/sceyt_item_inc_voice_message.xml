@@ -143,7 +143,7 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginHorizontal="12dp"
-            app:layout_constraintBottom_toTopOf="@id/voice_duration"
+            app:layout_constraintBottom_toTopOf="@id/voiceDuration"
             app:layout_constraintEnd_toStartOf="@id/playBackSpeed"
             app:layout_constraintStart_toEndOf="@id/playPauseButton"
             app:layout_constraintTop_toTopOf="@id/playPauseButton"
@@ -176,13 +176,13 @@
             app:layout_constraintTop_toTopOf="@id/seekBar"
             tools:text="1x" />
 
-        <TextView
-            android:id="@+id/voice_duration"
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/voiceDuration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:textColor="@color/sceyt_color_gray_800"
-            android:textSize="11sp"
+            android:textColor="@color/sceyt_color_text_secondary"
+            android:textSize="@dimen/tinyTextSize"
             app:layout_constraintBottom_toBottomOf="@id/playPauseButton"
             app:layout_constraintStart_toEndOf="@id/playPauseButton"
             tools:text="00:00" />
