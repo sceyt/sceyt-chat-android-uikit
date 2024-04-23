@@ -29,6 +29,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @param messageItemStyle Style for the message item view
  **/
 data class MessagesListViewStyle(
+        @ColorInt val backgroundColor: Int,
         @LayoutRes val emptyState: Int,
         @LayoutRes val emptyStateSelfChannel: Int,
         @LayoutRes val loadingState: Int,
@@ -58,6 +59,9 @@ data class MessagesListViewStyle(
             val typedArray = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView, 0, 0)
 
             val messageItemStyle = MessageItemStyle.Builder(context, attrs).build()
+
+            val backgroundColor = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageListBackgroundColor,
+                context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
 
             val emptyState = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiEmptyStateLayout,
                 R.layout.sceyt_messages_empty_state)
@@ -92,6 +96,7 @@ data class MessagesListViewStyle(
             typedArray.recycle()
 
             return MessagesListViewStyle(
+                backgroundColor = backgroundColor,
                 emptyState = emptyState,
                 emptyStateSelfChannel = emptyStateSelfChannel,
                 loadingState = loadingState,

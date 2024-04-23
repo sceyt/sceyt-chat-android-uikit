@@ -2,8 +2,11 @@ package com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.atta
 
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.databinding.SceytItemInputImageAttachmentBinding
 import com.sceyt.chatuikit.databinding.SceytItemInputVideoAttachmentBinding
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.AttachmentClickListeners
@@ -12,6 +15,10 @@ import com.sceyt.chatuikit.shared.utils.FileResizeUtil
 
 class AttachmentVideoViewHolder(private val binding: SceytItemInputVideoAttachmentBinding,
                                 private val clickListeners: AttachmentClickListeners.ClickListeners) : BaseViewHolder<AttachmentItem>(binding.root) {
+
+    init {
+        binding.setStyle()
+    }
 
     override fun bind(item: AttachmentItem) {
         with(binding) {
@@ -33,5 +40,10 @@ class AttachmentVideoViewHolder(private val binding: SceytItemInputVideoAttachme
         }
 
         itemView.setOnClickListener { clickListeners.onRemoveAttachmentClick(it, item) }
+    }
+
+    private fun SceytItemInputVideoAttachmentBinding.setStyle() {
+        btnRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.surface3Color)
+        layoutRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.backgroundColor)
     }
 }

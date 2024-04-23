@@ -102,6 +102,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     init {
         style = MessagesListViewStyle.Builder(context, attrs).build()
 
+        if (background == null)
+            setBackgroundColor(style.backgroundColor)
+
         messagesRV = MessagesRV(context).also { it.setStyle(style) }
         messagesRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
         messagesRV.clipToPadding = clipToPadding

@@ -43,9 +43,11 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.permissionIgnored
 import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.screenWidthPx
+import com.sceyt.chatuikit.extensions.setTint
+import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.presentation.common.SceytDialog
-import com.sceyt.chatuikit.sceytstyles.MessageInputViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageInputStyle
 import java.util.Timer
 import java.util.TimerTask
 import kotlin.math.abs
@@ -75,6 +77,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private var recordingListener: RecordingListener? = null
     private var isLayoutDirectionRightToLeft = false
     private var colorAnimation: ValueAnimator? = null
+    private lateinit var style: MessageInputStyle
 
     init {
         init()
@@ -83,21 +86,6 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private fun init() {
         binding = SceytRecordViewBinding.inflate(LayoutInflater.from(context), this, true)
         binding.root.layoutTransition = LayoutTransition().apply { setDuration(200) }
-        with(binding) {
-            showDefaultRecordButton()
-            setupRecorder()
-            setupStyle()
-
-            btnCancel.setOnClickListener {
-                isLocked = false
-                stopRecording(RecordingBehaviour.CANCELED)
-            }
-
-            lockViewStopButton.setOnClickListener {
-                isLocked = false
-                stopRecording(RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW)
-            }
-        }
 
         post {
             context.maybeComponentActivity()?.lifecycle?.addObserver(lifecycleEventObserver)
@@ -109,6 +97,31 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
                     forceStopRecording()
             }
         }
+    }
+
+    private fun SceytRecordViewBinding.initViews() {
+        showDefaultRecordButton()
+        setupRecorder()
+        setupStyle()
+
+        btnCancel.setOnClickListener {
+            isLocked = false
+            stopRecording(RecordingBehaviour.CANCELED)
+        }
+
+        lockViewStopButton.setOnClickListener {
+            isLocked = false
+            stopRecording(RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW)
+        }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        binding.initViews()
+    }
+
+    internal fun setStyle(style: MessageInputStyle) {
+        this.style = style
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -384,7 +397,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         with(imageAudio) {
             setPadding(paddingNormal)
             backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
-            setImageResource(MessageInputViewStyle.voiceRecordIcon)
+            setImageDrawable(style.voiceRecordIcon)
             setColorFilter(getCompatColor(R.color.sceyt_color_on_primary))
         }
     }
@@ -396,7 +409,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         with(imageAudio) {
             setPadding(paddingRecording)
             backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
-            setImageResource(MessageInputViewStyle.voiceRecordIcon)
+            setImageDrawable(style.voiceRecordIcon)
             setColorFilter(getCompatColor(R.color.sceyt_color_on_primary))
         }
     }
@@ -406,7 +419,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         imageViewAudio.cardElevation = buttonZ
         with(imageAudio) {
             backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
-            setImageResource(MessageInputViewStyle.sendVoiceMessageIcon)
+            setImageDrawable(style.sendVoiceMessageIcon)
             setPadding(paddingRecording, paddingRecording,
                 (paddingRecording - 2), paddingRecording)
         }
@@ -427,7 +440,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         imageViewAudio.translationZ = buttonZ
         imageViewAudio.cardElevation = buttonZ
         imageAudio.setPadding(paddingRecording)
-        imageAudio.setImageResource(MessageInputViewStyle.voiceRecordIcon)
+        imageAudio.setImageDrawable(style.voiceRecordIcon)
         imageAudio.setColorFilter(context.getCompatColor(R.color.sceyt_color_on_primary))
         animateColor(imageAudio, context.getCompatColor(R.color.sceyt_color_red), context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
@@ -442,9 +455,12 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     }
 
     private fun SceytRecordViewBinding.setupStyle() {
-        imageViewLockArrow.setColorFilter(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-        lockViewStopButton.setColorFilter(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        imageViewLockArrow.setTintColorRes(SceytChatUIKit.theme.accentColor)
+        lockViewStopButton.setTintColorRes(SceytChatUIKit.theme.accentColor)
+        imageViewLock.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
         btnCancel.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        textViewTime.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+        textViewSlideCancel.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
     }
 
     private fun showPermissionSettingsDialog() {

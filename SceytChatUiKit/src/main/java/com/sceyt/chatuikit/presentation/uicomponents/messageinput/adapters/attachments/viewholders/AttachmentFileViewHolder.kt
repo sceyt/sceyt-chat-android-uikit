@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.databinding.SceytItemInputFileAttachmentBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getFileSize
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
@@ -33,5 +34,8 @@ class AttachmentFileViewHolder(private val binding: SceytItemInputFileAttachment
         icFile.setImageDrawable(MessagesListViewStyle.currentStyle?.messageItemStyle?.fileAttachmentIcon
                 ?: context.getCompatDrawable(R.drawable.sceyt_ic_file_filled))
         icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        imageCont.setCardBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.surface1Color))
+        btnRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.surface3Color)
+        layoutRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.backgroundColor)
     }
 }
