@@ -118,7 +118,7 @@ data class MessageItemStyle(
                 context.getCompatColor(SceytChatUIKit.theme.accentColor))
 
             val replyMessageLineColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiReplyMessageLineColor,
-                context.getCompatColor(SceytChatUIKit.theme.bordersColor))
+                context.getCompatColor(SceytChatUIKit.theme.accentColor))
 
             val autoLinkTextColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiAutoLinkTextColor,
                 context.getCompatColor(R.color.sceyt_auto_link_color))

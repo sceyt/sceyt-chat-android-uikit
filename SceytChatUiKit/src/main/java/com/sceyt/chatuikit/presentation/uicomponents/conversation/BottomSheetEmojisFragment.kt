@@ -47,7 +47,7 @@ class BottomSheetEmojisFragment : BottomSheetDialogFragment() {
             onEmojiBackspaceClickListener = null,
             editText = null,
             theming = EmojiTheming(backgroundColor = Color.TRANSPARENT,
-                primaryColor = requireContext().getCompatColor(R.color.sceyt_color_gray_400),
+                primaryColor = requireContext().getCompatColor(SceytChatUIKit.theme.iconSecondaryColor),
                 secondaryColor = requireContext().getCompatColor(SceytChatUIKit.theme.accentColor),
                 dividerColor = requireContext().getCompatColor(R.color.sceyt_color_border),
                 Color.BLACK, Color.BLACK),

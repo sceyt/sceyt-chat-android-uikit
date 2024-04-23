@@ -2,16 +2,24 @@ package com.sceyt.chatuikit.extensions
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.text.*
+import android.text.InputType
+import android.text.Layout
+import android.text.StaticLayout
+import android.text.TextPaint
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.annotation.ColorInt
+import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
@@ -20,7 +28,11 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.presentation.common.ClickAvailableData
 import com.sceyt.chatuikit.shared.utils.ViewEnabledUtils
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -143,6 +155,26 @@ fun View.setOnClickListenerDisableClickViewForWhile(disableDuration: Long = 1000
         ViewEnabledUtils.disableClickViewForWhile(it, disableDuration)
         onClickCallBack.invoke(it)
     }
+}
+
+fun ImageView.setTint(@ColorInt color: Int) {
+    setColorFilter(color)
+}
+
+fun ImageView.setTintColorRes(@ColorRes colorId: Int) {
+    setColorFilter(context.getCompatColor(colorId))
+}
+
+fun View.setBackgroundTint(@ColorInt color: Int) {
+    backgroundTintList = ColorStateList.valueOf(color)
+}
+
+fun View.setBackgroundTintColorRes(@ColorRes color: Int) {
+    backgroundTintList = ColorStateList.valueOf(context.getCompatColor(color))
+}
+
+fun TextView.setTextColorRes(@ColorRes color: Int) {
+    setTextColor(context.getCompatColor(color))
 }
 
 @Suppress("DEPRECATION")

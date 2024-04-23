@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.runOnMainThread
+import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setPlayButtonIcon
 import com.sceyt.chatuikit.extensions.setTextAndDrawableByColor
 import com.sceyt.chatuikit.media.audio.AudioPlayer
@@ -288,8 +289,9 @@ class OutVoiceMsgViewHolder(
 
     private fun SceytItemOutVoiceMessageBinding.setMessageItemStyle() {
         val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
-        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outBubbleColor)
-        playPauseButton.backgroundTintList = ColorStateList.valueOf(accentColor)
+        layoutDetails.setBackgroundTint(style.outBubbleColor)
+        playPauseButton.setBackgroundTint(accentColor)
+        voiceDuration.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
         seekBar.waveProgressColor = accentColor
         tvForwarded.setTextAndDrawableByColor(accentColor)
     }

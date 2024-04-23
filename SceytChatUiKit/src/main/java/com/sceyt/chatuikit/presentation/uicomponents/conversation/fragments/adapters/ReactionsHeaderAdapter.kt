@@ -79,16 +79,16 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
                     background = GradientDrawable().apply {
                         color = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
                         cornerRadius = dpToPx(30f).toFloat()
-                        setStroke(3, getCompatColor(R.color.sceyt_color_border))
+                        setStroke(3, getCompatColor(SceytChatUIKit.theme.bordersColor))
                     }
-                    setTextColor(Color.WHITE)
+                    setTextColor(getCompatColor(SceytChatUIKit.theme.textOnPrimaryColor))
                 } else {
                     background = GradientDrawable().apply {
                         color = ColorStateList.valueOf(Color.TRANSPARENT)
                         cornerRadius = dpToPx(30f).toFloat()
-                        setStroke(3, getCompatColor(R.color.sceyt_color_border))
+                        setStroke(3, getCompatColor(SceytChatUIKit.theme.bordersColor))
                     }
-                    setTextColor(getCompatColor(R.color.sceyt_color_text_primary))
+                    setTextColor(getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
                 }
 
                 binding.root.setOnClickListener {

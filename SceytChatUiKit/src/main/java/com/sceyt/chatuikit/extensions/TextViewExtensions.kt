@@ -95,3 +95,9 @@ fun setTextViewsDrawableColor(texts: List<TextView>, @ColorInt color: Int) {
         }
     }
 }
+
+fun setTextViewsTextColor(texts: List<TextView>, @ColorInt color: Int) {
+    texts.forEach {
+        it.setTextColor(color)
+    }
+}

@@ -111,7 +111,7 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginHorizontal="12dp"
-            app:layout_constraintBottom_toTopOf="@id/voice_duration"
+            app:layout_constraintBottom_toTopOf="@id/voiceDuration"
             app:layout_constraintEnd_toStartOf="@id/playBackSpeed"
             app:layout_constraintStart_toEndOf="@id/playPauseButton"
             app:layout_constraintTop_toTopOf="@id/playPauseButton"
@@ -137,20 +137,20 @@
             android:gravity="center"
             android:minWidth="30sp"
             android:paddingVertical="2dp"
-            android:textColor="@color/sceyt_color_gray_800"
+            android:textColor="@color/sceyt_color_text_secondary"
             android:textSize="12sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/seekBar"
             tools:text="1x" />
 
-        <TextView
-            android:id="@+id/voice_duration"
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/voiceDuration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:textColor="@color/sceyt_color_gray_800"
-            android:textSize="11sp"
+            android:textColor="@color/sceyt_color_text_secondary"
+            android:textSize="@dimen/tinyTextSize"
             app:layout_constraintBottom_toBottomOf="@id/playPauseButton"
             app:layout_constraintStart_toEndOf="@id/playPauseButton"
             tools:text="00:00" />
@@ -164,7 +164,7 @@
             android:paddingHorizontal="5dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
+            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_text_secondary"
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
             app:sceytDateStatusViewStatusIconMargin="5dp"

@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversation
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -10,8 +9,11 @@ import android.view.animation.AnimationUtils
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.ScrollToBottomViewBinding
 import com.sceyt.chatuikit.extensions.animationListener
+import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 
 class ScrollToDownView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -28,7 +30,8 @@ class ScrollToDownView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun setStyle(style: MessagesListViewStyle) {
-        binding.unreadCount.backgroundTintList = ColorStateList.valueOf(style.downScrollerUnreadCountColor)
+        binding.unreadCount.setBackgroundTint(style.downScrollerUnreadCountColor)
+        binding.fabNext.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
     }
 
     private fun setGravity() {
