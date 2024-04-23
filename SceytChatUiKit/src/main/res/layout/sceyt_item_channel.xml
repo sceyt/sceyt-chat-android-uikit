@@ -147,7 +147,7 @@
         android:minWidth="20dp"
         android:paddingHorizontal="6dp"
         android:singleLine="true"
-        android:textColor="@color/sceyt_color_white"
+        android:textColor="@color/sceyt_color_on_primary"
         android:textSize="@dimen/extraSmallTextSize"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"

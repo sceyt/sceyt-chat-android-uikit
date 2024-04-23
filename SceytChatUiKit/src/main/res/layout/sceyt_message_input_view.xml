@@ -107,7 +107,7 @@
             android:layout_marginEnd="10dp"
             android:background="@drawable/sceyt_bg_circle"
             android:padding="7dp"
-            android:tint="@color/sceyt_color_white"
+            android:tint="@color/sceyt_color_on_primary"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:srcCompat="@drawable/sceyt_ic_voice" />

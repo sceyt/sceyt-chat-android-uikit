@@ -155,7 +155,7 @@
             app:layout_constraintStart_toStartOf="@+id/icFile"
             app:layout_constraintTop_toTopOf="@+id/icFile"
             app:minProgress="2"
-            app:progressColor="@color/sceyt_color_white"
+            app:progressColor="@color/sceyt_color_on_primary"
             app:trackColor="@android:color/transparent" />
 
         <androidx.appcompat.widget.AppCompatTextView

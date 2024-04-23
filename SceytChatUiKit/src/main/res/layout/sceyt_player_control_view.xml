@@ -42,8 +42,8 @@
             app:layout_constraintEnd_toStartOf="@+id/exo_position"
             app:layout_constraintStart_toEndOf="@+id/exo_play_pause"
             app:layout_constraintTop_toTopOf="parent"
-            app:played_color="@color/sceyt_color_white"
-            app:scrubber_color="@color/sceyt_color_white"
+            app:played_color="@color/sceyt_color_on_primary"
+            app:scrubber_color="@color/sceyt_color_on_primary"
             app:unplayed_color="#757D8B" />
 
         <TextView
@@ -53,7 +53,7 @@
             android:layout_gravity="center"
             android:gravity="end"
             android:minWidth="50dp"
-            android:textColor="@color/sceyt_color_white"
+            android:textColor="@color/sceyt_color_on_primary"
             android:textSize="13sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/tvMiddle"
@@ -67,7 +67,7 @@
             android:paddingHorizontal="3dp"
             android:singleLine="true"
             android:text="/"
-            android:textColor="@color/sceyt_color_white"
+            android:textColor="@color/sceyt_color_on_primary"
             android:textSize="13sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/exo_duration"
@@ -81,7 +81,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:minWidth="50dp"
-            android:textColor="@color/sceyt_color_white"
+            android:textColor="@color/sceyt_color_on_primary"
             android:textSize="13sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

@@ -49,7 +49,7 @@
         android:includeFontPadding="false"
         android:paddingHorizontal="6dp"
         android:paddingVertical="3dp"
-        android:textColor="@color/sceyt_color_white"
+        android:textColor="@color/sceyt_color_on_primary"
         android:textSize="11sp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"

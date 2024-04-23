@@ -75,7 +75,7 @@
             android:layout_margin="16dp"
             android:backgroundTint="@color/colorAccent"
             app:icon="@drawable/sceyt_ic_edit"
-            app:iconTint="@color/sceyt_color_white"
+            app:iconTint="@color/sceyt_color_on_primary"
             app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
             app:layout_constraintBottom_toBottomOf="@+id/viewPager"
             app:layout_constraintEnd_toEndOf="parent" />

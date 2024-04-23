@@ -51,7 +51,8 @@
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@+id/avatar"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_goneMarginStart="12dp">
+        app:layout_goneMarginStart="12dp"
+        tools:layout_width="200dp">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvUserName"
@@ -133,7 +134,7 @@
             app:layout_constraintStart_toStartOf="@+id/playPauseButton"
             app:layout_constraintTop_toTopOf="@+id/playPauseButton"
             app:minProgress="2"
-            app:progressColor="@color/sceyt_color_white"
+            app:progressColor="@color/sceyt_color_on_primary"
             app:trackColor="@android:color/transparent"
             tools:visibility="visible" />
 
@@ -195,7 +196,7 @@
             android:paddingHorizontal="6dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="parent"
-            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
+            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_text_secondary"
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
             app:sceytDateStatusViewStatusIconSize="15.5dp"

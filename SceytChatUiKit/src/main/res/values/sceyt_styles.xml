@@ -109,7 +109,7 @@
     </style>
 
     <style name="SceytProgressBarWhite" parent="Theme.AppCompat.Light">
-        <item name="colorAccent">@color/sceyt_color_white</item>
+        <item name="colorAccent">@color/sceyt_color_on_primary</item>
     </style>
 
     <style name="SceytEditTextTheme">

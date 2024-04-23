@@ -39,7 +39,7 @@ data class SceytChatUIKitTheme(
         @ColorRes
         val textFootnoteColor: Int = R.color.sceyt_color_text_footnote_themed,
         @ColorRes
-        val textOnPrimaryColor: Int = R.color.sceyt_color_white,
+        val textOnPrimaryColor: Int = R.color.sceyt_color_on_primary,
         @ColorRes
         val errorColor: Int = R.color.sceyt_color_red,
         @ColorRes
