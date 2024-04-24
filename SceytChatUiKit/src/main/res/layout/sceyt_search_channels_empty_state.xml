@@ -35,7 +35,7 @@
             android:layout_marginTop="12dp"
             android:fontFamily="@font/roboto_medium"
             android:text="@string/sceyt_ui_channel_list_empty"
-            android:textColor="@color/sceyt_color_black_themed"
+            android:textColor="@color/sceyt_color_text_primary"
             android:textDirection="locale"
             android:textSize="20sp"
             app:layout_constraintBottom_toTopOf="@+id/tvDesc"

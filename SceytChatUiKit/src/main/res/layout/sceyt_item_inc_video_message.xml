@@ -219,7 +219,7 @@
             android:layout_marginBottom="7dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/imageThumb"
-            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
+            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_text_secondary"
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
             app:sceytDateStatusViewHighlighted="true"

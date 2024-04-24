@@ -52,7 +52,7 @@
         android:id="@+id/tvUsers"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/sceyt_color_gray_themed"
+        android:background="@color/sceyt_color_surface_1"
         android:fontFamily="@font/roboto_medium"
         android:gravity="center"
         android:includeFontPadding="false"

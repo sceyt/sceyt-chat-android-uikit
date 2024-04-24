@@ -130,7 +130,7 @@
                 app:tabMinWidth="100dp"
                 app:tabSelectedTextColor="@color/sceyt_color_text_primary"
                 app:tabTextAppearance="@style/SceytTabTextAppearance"
-                app:tabTextColor="@color/sceyt_color_gray_400" />
+                app:tabTextColor="@color/sceyt_color_text_secondary" />
 
             <View
                 android:layout_width="match_parent"

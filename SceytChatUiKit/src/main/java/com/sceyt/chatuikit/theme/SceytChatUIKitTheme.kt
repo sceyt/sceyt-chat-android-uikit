@@ -37,7 +37,7 @@ data class SceytChatUIKitTheme(
         @ColorRes
         val textSecondaryColor: Int = R.color.sceyt_color_text_secondary,
         @ColorRes
-        val textFootnoteColor: Int = R.color.sceyt_color_text_footnote_themed,
+        val textFootnoteColor: Int = R.color.sceyt_color_text_footnote,
         @ColorRes
         val textOnPrimaryColor: Int = R.color.sceyt_color_on_primary,
         @ColorRes

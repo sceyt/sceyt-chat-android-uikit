@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="20dp"
-        android:textColor="@color/sceyt_color_gray_400"
+        android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="@dimen/smallTextSize"
         app:layout_constraintEnd_toEndOf="@+id/textTitle"
         app:layout_constraintStart_toStartOf="@+id/textTitle"

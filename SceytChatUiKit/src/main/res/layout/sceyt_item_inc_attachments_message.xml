@@ -138,7 +138,7 @@
             android:paddingHorizontal="6dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/rvFiles"
-            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
+            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_text_secondary"
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
             app:sceytDateStatusViewStatusIconSize="15.5dp"

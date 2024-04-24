@@ -8,6 +8,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.TextView
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.dpToPxAsFloat
 import com.sceyt.chatuikit.extensions.getCompatColor
 
@@ -17,7 +18,7 @@ class SceytToReplyLineView @JvmOverloads constructor(context: Context, attrs: At
     private var paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val strokeWidth = dpToPxAsFloat(1.8f)
     private var isToLeft = false
-    private var strokeColor = context.getCompatColor(R.color.sceyt_color_gray_200)
+    private var strokeColor = context.getCompatColor(SceytChatUIKit.theme.bordersColor)
     private var connectedViewTopId: Int
     private var connectedViewBottomId: Int
     private var connectedViewTopHalfHeight = 0f

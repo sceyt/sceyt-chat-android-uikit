@@ -72,7 +72,7 @@
             android:id="@+id/constraintLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:background="@color/sceyt_color_bg_secondary_themed"
+            android:background="@color/sceyt_color_background"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/underline">
 
@@ -198,7 +198,7 @@
                 android:paddingVertical="12dp"
                 android:saveEnabled="false"
                 android:text="@string/dark_theme"
-                android:textColor="@color/sceyt_color_black_themed"
+                android:textColor="@color/sceyt_color_text_primary"
                 android:textSize="@dimen/mediumTextSize"
                 android:theme="@style/SceytSwitchStyle"
                 app:layout_constraintEnd_toEndOf="parent"

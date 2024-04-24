@@ -137,6 +137,7 @@ open class LinkPreviewFragment : Fragment() {
     }
 
     private fun SceytFragmentLinkPreviewBinding.setupStyle() {
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.surface1Color))
         icClose.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
         tvLinkDescription.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
     }
