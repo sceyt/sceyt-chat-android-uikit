@@ -187,7 +187,7 @@ class ProfileFragment : Fragment() {
             SceytDialog(requireContext()).setTitle(getString(R.string.log_out_title))
                 .setDescription(getString(R.string.log_out_desc))
                 .setPositiveButtonTitle(getString(R.string.log_out))
-                .setPositiveButtonTextColor(requireContext().getCompatColor(SceytKitR.color.sceyt_color_red))
+                .setPositiveButtonTextColor(requireContext().getCompatColor(SceytKitR.color.sceyt_color_error))
                 .setPositiveButtonClickListener {
                     viewModel.logout()
                 }

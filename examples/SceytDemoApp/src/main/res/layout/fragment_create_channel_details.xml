@@ -120,7 +120,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:text="@string/the_url_exist_title"
-                android:textColor="@color/sceyt_color_red"
+                android:textColor="@color/sceyt_color_error"
                 android:textSize="13sp"
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"

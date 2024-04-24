@@ -83,7 +83,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
                 checkSaveEnabled(false)
             binding?.uriWarning?.apply {
                 if (!isValid) {
-                    setUriStatusText(getString(R.string.the_url_exist_title), R.color.sceyt_color_red)
+                    setUriStatusText(getString(R.string.the_url_exist_title), R.color.sceyt_color_error)
                 } else
                     setUriStatusText(getString(R.string.valid_url_title), R.color.sceyt_color_green)
                 isVisible = true
@@ -175,9 +175,9 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             val isValidUrl = "^\\w{5,50}".toPattern().matcher(url).matches()
             if (!isValidUrl) {
                 if (inputUri.text.toString().length < 5 || inputUri.text.toString().length > 50)
-                    setUriStatusText(getString(R.string.url_length_validation_text), R.color.sceyt_color_red)
+                    setUriStatusText(getString(R.string.url_length_validation_text), R.color.sceyt_color_error)
                 else
-                    setUriStatusText(getString(R.string.url_characters_validation_text), R.color.sceyt_color_red)
+                    setUriStatusText(getString(R.string.url_characters_validation_text), R.color.sceyt_color_error)
                 uriWarning.isVisible = true
             }
             return isValidUrl

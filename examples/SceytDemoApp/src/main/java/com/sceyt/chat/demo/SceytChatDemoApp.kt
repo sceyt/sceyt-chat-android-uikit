@@ -45,11 +45,10 @@ class SceytChatDemoApp : Application() {
             enableDatabase = true)
 
         SceytChatUIKit.theme = SceytChatUIKitTheme(
-            accentColor = com.sceyt.chatuikit.R.color.sceyt_color_red,
+            accentColor = com.sceyt.chatuikit.R.color.sceyt_color_error,
             //backgroundColor = com.sceyt.chatuikit.R.color.sceyt_color_white,
             textSecondaryColor = com.sceyt.chatuikit.R.color.sceyt_color_green,
-            textPrimaryColor = com.sceyt.chatuikit.R.color.sceyt_self_reaction_color,
-            iconSecondaryColor = com.sceyt.chatuikit.R.color.sceyt_color_yellow,
+            iconSecondaryColor = com.sceyt.chatuikit.R.color.sceyt_color_warning,
         )
 
         SceytKitConfig.backgroundUploadNotificationClickData = BackgroundUploadNotificationClickData(

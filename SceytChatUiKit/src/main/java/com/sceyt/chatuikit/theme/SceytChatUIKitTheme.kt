@@ -41,9 +41,9 @@ data class SceytChatUIKitTheme(
         @ColorRes
         val textOnPrimaryColor: Int = R.color.sceyt_color_on_primary,
         @ColorRes
-        val errorColor: Int = R.color.sceyt_color_red,
+        val errorColor: Int = R.color.sceyt_color_error,
         @ColorRes
         val successColor: Int = R.color.sceyt_color_green,
         @ColorRes
-        val warningColor: Int = R.color.sceyt_color_yellow,
+        val warningColor: Int = R.color.sceyt_color_warning,
 )

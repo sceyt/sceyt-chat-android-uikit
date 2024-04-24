@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:fontFamily="@font/roboto_medium"
         android:padding="8dp"
-        android:textColor="@color/sceyt_color_gray_800"
+        android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="13sp"
         tools:text="13 October" />
 

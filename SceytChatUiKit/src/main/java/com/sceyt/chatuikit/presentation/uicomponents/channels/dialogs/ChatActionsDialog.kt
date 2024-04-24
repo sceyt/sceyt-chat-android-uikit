@@ -110,6 +110,8 @@ class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogN
         val texts = listOf(pin, unPin, markAsRead, markAsUnRead, mute, unMute)
         setTextViewsDrawableColor(texts, context.getCompatColor(SceytChatUIKit.theme.accentColor))
         setTextViewsTextColor(texts, context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+        setTextViewsDrawableColor(listOf(delete, leave), context.getCompatColor(SceytChatUIKit.theme.errorColor))
+        setTextViewsTextColor(listOf(delete, leave), context.getCompatColor(SceytChatUIKit.theme.errorColor))
     }
 
     companion object {
