@@ -443,7 +443,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun isEnabledInput() = !disabledInputByGesture && !isInputHidden
 
     private fun addAttachments(attachments: List<Attachment>) {
-        binding.rvAttachments.isVisible = true
+        binding.groupAttachments.isVisible = true
         allAttachments.addAll(attachments)
         attachmentsAdapter.addItems(attachments.map { AttachmentItem(it) })
         determineInputState()
@@ -499,7 +499,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             layoutInput.isInvisible = true
             messageInput.setText("")
             btnJoin.isVisible = false
-            rvAttachments.isVisible = false
+            groupAttachments.isVisible = false
             hideAndStopVoiceRecorder()
         }
     }
@@ -622,7 +622,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 val isBlockedPeer = channel.isPeerBlocked()
                 with(binding) {
                     if (isBlockedPeer) {
-                        rvAttachments.isVisible = false
+                        groupAttachments.isVisible = false
                         layoutReplyOrEditMessage.isVisible = false
                     }
                     isInputHidden = if (isBlockedPeer) {
@@ -856,6 +856,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
         attachmentsAdapter.removeItem(item)
         allAttachments.remove(item.attachment)
+        binding.viewTop.isVisible = allAttachments.isNotEmpty()
         determineInputState()
     }
 
@@ -963,7 +964,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun showHideInputOnModeChange(isInSelectMode: Boolean) {
         with(binding) {
             layoutInput.isInvisible = isInSelectMode
-            rvAttachments.isVisible = !isInSelectMode && allAttachments.isNotEmpty()
+            groupAttachments.isVisible = !isInSelectMode && allAttachments.isNotEmpty()
             if (isInSelectMode) {
                 hideAndStopVoiceRecorder()
                 closeReplyOrEditView()

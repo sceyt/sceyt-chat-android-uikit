@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.atta
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.databinding.SceytItemInputImageAttachmentBinding
 import com.sceyt.chatuikit.databinding.SceytItemInputVideoAttachmentBinding
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
