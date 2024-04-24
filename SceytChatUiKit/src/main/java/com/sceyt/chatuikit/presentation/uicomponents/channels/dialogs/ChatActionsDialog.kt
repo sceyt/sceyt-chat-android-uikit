@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogChannelActionsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
+import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 
@@ -106,8 +107,9 @@ class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogN
     }
 
     private fun SceytDialogChannelActionsBinding.setupStyle() {
-        setTextViewsDrawableColor(listOf(pin, unPin, markAsRead, markAsUnRead, mute, unMute),
-            context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        val texts = listOf(pin, unPin, markAsRead, markAsUnRead, mute, unMute)
+        setTextViewsDrawableColor(texts, context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        setTextViewsTextColor(texts, context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
     }
 
     companion object {
