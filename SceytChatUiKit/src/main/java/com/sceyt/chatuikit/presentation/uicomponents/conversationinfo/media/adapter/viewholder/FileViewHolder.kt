@@ -1,11 +1,11 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder
 
-import android.content.res.ColorStateList
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelFileBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
@@ -55,7 +55,7 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
     private fun SceytItemChannelFileBinding.setupStyle() {
         icFile.setImageDrawable(MessagesListViewStyle.currentStyle?.messageItemStyle?.fileAttachmentIcon
                 ?: context.getCompatDrawable(R.drawable.sceyt_ic_file_filled))
-        icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
         loadProgress.setIconTintColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
         loadProgress.setProgressColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }

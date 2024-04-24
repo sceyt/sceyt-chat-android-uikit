@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.customviews.voicerecorder
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View.OnClickListener
@@ -15,7 +14,10 @@ import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setPlayButtonIcon
+import com.sceyt.chatuikit.extensions.setTextColorRes
+import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
@@ -113,8 +115,11 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
     internal fun setStyle(style: MessageInputStyle) {
         with(binding) {
             icSendMessage.setImageDrawable(style.sendMessageIcon)
-            icSendMessage.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+            voiceRecordDuration.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
+            icSendMessage.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
             waveformSeekBar.waveProgressColor = getCompatColor(SceytChatUIKit.theme.accentColor)
+            playVoiceRecord.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
+            deleteVoiceRecord.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
         }
     }
 

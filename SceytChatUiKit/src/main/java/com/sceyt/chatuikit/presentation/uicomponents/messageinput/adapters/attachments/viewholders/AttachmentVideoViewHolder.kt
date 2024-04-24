@@ -42,7 +42,7 @@ class AttachmentVideoViewHolder(private val binding: SceytItemInputVideoAttachme
     }
 
     private fun SceytItemInputVideoAttachmentBinding.setStyle() {
-        btnRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.surface3Color)
+        btnRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
         layoutRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.backgroundColor)
     }
 }
