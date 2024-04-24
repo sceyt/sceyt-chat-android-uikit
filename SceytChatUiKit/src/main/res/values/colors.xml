@@ -27,7 +27,6 @@
     <color name="sceyt_color_text_primary">#111539</color>
     <color name="sceyt_color_text_secondary">#707388</color>
     <color name="sceyt_color_text_footnote">#A0A1B0</color>
-    <color name="sceyt_color_text_on_primary">#FFFFFF</color>
 
     <!--State-->
     <color name="sceyt_color_error">#FA4C56</color>
@@ -41,23 +40,16 @@
     <color name="sceyt_color_bg_inc_link_preview">#DFE1EA</color>
 
 
-
     // Not themed colors
     <color name="sceyt_color_black">#000000</color>
-    <color name="sceyt_color_on_primary">#FFFFFFFF</color>
+    <color name="sceyt_color_on_primary">#FFFFFF</color>
+
     <color name="sceyt_color_hint">#9B9DA8</color>
-    <color name="sceyt_color_dark_blue">#66111539</color>
     <color name="sceyt_color_green">#24C383</color>
-    <color name="sceyt_color_red">#FA4C56</color>
-    <color name="sceyt_color_yellow">#FBB019</color>
     <color name="sceyt_color_gray">#F1F2F6</color>
-    <color name="sceyt_color_gray_500">#676A7C</color>
-    <color name="sceyt_color_gray_800">#757D8B</color>
-    <color name="sceyt_color_gray_secondary">#707388</color>
     <color name="sceyt_gallery_item_default_color">#F3F5F7</color>
-    <color name="sceyt_progress_bg_color">#6617191C</color>
+    <color name="sceyt_progress_bg_color">#66111539</color>
     <color name="sceyt_color_admin_role">#7A6EF6</color>
-    <color name="sceyt_self_reaction_color">#4BBEFD</color>
     <color name="sceyt_auto_link_color">#438CED</color>
     <color name="sceyt_media_primary_color">#CC000000</color>
 

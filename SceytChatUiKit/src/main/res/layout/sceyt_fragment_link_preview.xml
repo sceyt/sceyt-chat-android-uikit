@@ -50,7 +50,7 @@
         android:layout_marginTop="4dp"
         android:ellipsize="end"
         android:singleLine="true"
-        android:textColor="@color/sceyt_color_gray_secondary"
+        android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="13sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/icClose"

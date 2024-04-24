@@ -52,7 +52,7 @@
             android:layout_gravity="center"
             android:layout_marginTop="8dp"
             android:text="@string/sceyt_ui_channel_list_empty_desc"
-            android:textColor="@color/sceyt_color_gray_secondary"
+            android:textColor="@color/sceyt_color_text_secondary"
             android:textDirection="locale"
             android:textSize="15sp"
             app:layout_constraintBottom_toBottomOf="parent"

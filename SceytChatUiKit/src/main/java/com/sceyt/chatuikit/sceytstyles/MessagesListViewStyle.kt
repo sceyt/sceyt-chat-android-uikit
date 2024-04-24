@@ -21,7 +21,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @param dateSeparatorDateFormat Date format for the date separator item, default is [MessageDateSeparatorFormatter]
  * @param dateSeparatorTextFont Font for the date separator item text, default is -1
  * @param dateSeparatorTextStyle Style for the date separator item text, default is [Typeface.NORMAL]
- * @param dateSeparatorItemBackgroundColor Color for the date separator item background, default is [R.color.sceyt_color_dark_blue]
+ * @param dateSeparatorItemBackgroundColor Color for the date separator item background, default is [R.color.sceyt_color_overlay_background_2]
  * @param dateSeparatorItemTextColor Color for the date separator item text, default is [R.color.sceyt_color_on_primary]
  * @param unreadMessagesSeparatorTextStyle Style for the unread messages separator text, default is [Typeface.NORMAL]
  * @param unreadMessagesTextColor Color for the unread messages separator text, default is [SceytChatUIKitTheme.textSecondaryColor]

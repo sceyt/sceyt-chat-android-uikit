@@ -91,7 +91,7 @@
         android:paddingHorizontal="23dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_leave_channel"
-        android:textColor="@color/sceyt_color_red"
+        android:textColor="@color/sceyt_color_error"
         android:textSize="@dimen/_12ssp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />
@@ -108,7 +108,7 @@
         android:paddingHorizontal="23dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_delete_chat"
-        android:textColor="@color/sceyt_color_red"
+        android:textColor="@color/sceyt_color_error"
         android:textSize="@dimen/_12ssp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />

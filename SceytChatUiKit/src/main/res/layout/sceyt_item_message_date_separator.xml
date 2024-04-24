@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:background="@drawable/sceyt_bg_corners_20"
-        android:backgroundTint="@color/sceyt_color_dark_blue"
+        android:backgroundTint="@color/sceyt_color_overlay_background_2"
         android:includeFontPadding="false"
         android:paddingHorizontal="12dp"
         android:paddingVertical="3dp"

@@ -47,7 +47,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
         android:lines="1"
-        android:textColor="@color/sceyt_color_gray_secondary"
+        android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="13sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

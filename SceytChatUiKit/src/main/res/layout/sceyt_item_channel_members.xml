@@ -41,7 +41,7 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
         android:lines="1"
-        android:textColor="@color/sceyt_color_gray_800"
+        android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="13sp"
         app:layout_constraintBottom_toBottomOf="@id/avatar"
         app:layout_constraintEnd_toStartOf="@+id/roleName"

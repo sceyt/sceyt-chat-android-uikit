@@ -432,7 +432,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
             setPadding(paddingRecording)
             backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
             setImageResource(R.drawable.sceyt_ic_delete_record)
-            animateColor(this, getCompatColor(SceytChatUIKit.theme.accentColor), getCompatColor(R.color.sceyt_color_red))
+            animateColor(this, getCompatColor(SceytChatUIKit.theme.accentColor), getCompatColor(R.color.sceyt_color_error))
         }
     }
 
@@ -442,7 +442,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         imageAudio.setPadding(paddingRecording)
         imageAudio.setImageDrawable(style.voiceRecordIcon)
         imageAudio.setColorFilter(context.getCompatColor(R.color.sceyt_color_on_primary))
-        animateColor(imageAudio, context.getCompatColor(R.color.sceyt_color_red), context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        animateColor(imageAudio, context.getCompatColor(R.color.sceyt_color_error), context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 
     private fun animateColor(view: View, colorFrom: Int, colorTo: Int) {
