@@ -6,6 +6,7 @@
         <attr name="sceytMessageInputSendIcon" format="reference" />
         <attr name="sceytMessageInputVoiceRecordIcon" format="reference" />
         <attr name="sceytMessageInputSendVoiceRecordIcon" format="reference" />
+        <attr name="sceytMessageInputLinkIcon" format="reference" />
         <attr name="sceytMessageInputHintText" format="string" localization="suggested" />
         <attr name="sceytMessageInputTextColor" format="reference|color" />
         <attr name="sceytMessageInputHintTextColor" format="reference|color" />

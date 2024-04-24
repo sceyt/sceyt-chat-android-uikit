@@ -177,6 +177,10 @@ fun TextView.setTextColorRes(@ColorRes color: Int) {
     setTextColor(context.getCompatColor(color))
 }
 
+fun TextView.setHintColorRes(@ColorRes color: Int) {
+    setHintTextColor(context.getCompatColor(color))
+}
+
 @Suppress("DEPRECATION")
 fun TextPaint.getStaticLayout(title: CharSequence, includePadding: Boolean, textWidth: Int): StaticLayout {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
