@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.atta
 import com.bumptech.glide.Glide
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemInputImageAttachmentBinding
-import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
