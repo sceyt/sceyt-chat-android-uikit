@@ -2,9 +2,9 @@
 <resources>
     <declare-styleable name="ConversationHeaderView">
         <attr name="sceytConvHeaderBackIcon" format="reference" />
-        <attr name="sceytConvHeaderTitleColor" format="reference" />
-        <attr name="sceytConvHeaderSubTitleColor" format="reference" />
-        <attr name="sceytConvHeaderUnderlineColor" format="reference" />
+        <attr name="sceytConvHeaderTitleColor" format="reference|color" />
+        <attr name="sceytConvHeaderSubTitleColor" format="reference|color" />
+        <attr name="sceytConvHeaderUnderlineColor" format="reference|color" />
         <attr name="sceytConvHeaderEnableUnderline" format="boolean" />
     </declare-styleable>
 </resources>

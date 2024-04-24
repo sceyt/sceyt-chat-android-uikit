@@ -42,6 +42,8 @@ import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
+import com.sceyt.chatuikit.extensions.setHintColorRes
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
@@ -158,6 +160,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         toolbarUnderline.background = ColorDrawable(style.underlineColor)
         toolbarUnderline.isVisible = style.enableUnderline
         layoutSearch.setBackgroundTintColorRes(SceytChatUIKit.theme.surface1Color)
+        inputSearch.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        inputSearch.setHintColorRes(SceytChatUIKit.theme.textFootnoteColor)
         icSearch.setTintColorRes(SceytChatUIKit.theme.accentColor)
         icBack.setTintColorRes(SceytChatUIKit.theme.accentColor)
         icClear.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)

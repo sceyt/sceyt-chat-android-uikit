@@ -152,6 +152,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         with(binding) {
             setupStyle()
             voiceRecordPresenter.setStyle(style)
+            linkPreviewFragment.setStyle(style)
             setOnClickListeners()
             if (!isInEditMode) {
                 editOrReplyMessageFragment.setClickListener(clickListeners)
