@@ -1,37 +1,58 @@
 package com.sceyt.chatuikit.sceytstyles
 
-import android.content.res.TypedArray
-import androidx.annotation.ColorRes
-import androidx.annotation.DrawableRes
+import android.content.Context
+import android.graphics.drawable.Drawable
+import android.util.AttributeSet
+import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getCompatDrawable
 
-object ConversationHeaderViewStyle {
-    @JvmField
-    @DrawableRes
-    var backIcon: Int = R.drawable.sceyt_ic_arrow_back
+data class ConversationHeaderViewStyle(
+        @ColorInt var titleColor: Int,
+        @ColorInt var subTitleColor: Int,
+        @ColorInt var underlineColor: Int,
+        var backIcon: Drawable?,
+        var enableUnderline: Boolean
+) {
 
-    @JvmField
-    @ColorRes
-    var titleColor: Int = R.color.sceyt_color_text_primary
+    companion object {
+        var conversationHeaderViewStyleCustomizer = StyleCustomizer<ConversationHeaderViewStyle> { it }
+    }
 
-    @JvmField
-    @ColorRes
-    var subTitleColor: Int = R.color.sceyt_color_gray_400
+    internal class Builder(
+            private val context: Context,
+            private val attrs: AttributeSet?
 
-    @JvmField
-    @ColorRes
-    var underlineColor: Int = R.color.sceyt_color_border
+    ) {
 
-    @JvmField
-    var enableUnderline: Boolean = true
+        fun build(): ConversationHeaderViewStyle {
+            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ConversationHeaderView, 0, 0)
 
+            val backIcon = typedArray.getDrawable(R.styleable.ConversationHeaderView_sceytConvHeaderBackIcon)
+                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back)
 
-    internal fun updateWithAttributes(typedArray: TypedArray): ConversationHeaderViewStyle {
-        backIcon = typedArray.getResourceId(R.styleable.ConversationHeaderView_sceytConvHeaderBackIcon, backIcon)
-        titleColor = typedArray.getResourceId(R.styleable.ConversationHeaderView_sceytConvHeaderTitleColor, titleColor)
-        subTitleColor = typedArray.getResourceId(R.styleable.ConversationHeaderView_sceytConvHeaderSubTitleColor, subTitleColor)
-        underlineColor = typedArray.getResourceId(R.styleable.ConversationHeaderView_sceytConvHeaderUnderlineColor, underlineColor)
-        enableUnderline = typedArray.getBoolean(R.styleable.ConversationHeaderView_sceytConvHeaderEnableUnderline, enableUnderline)
-        return this
+            val titleColor = typedArray.getColor(R.styleable.ConversationHeaderView_sceytConvHeaderTitleColor,
+                context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+
+            val subTitleColor = typedArray.getColor(R.styleable.ConversationHeaderView_sceytConvHeaderSubTitleColor,
+                context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+
+            val underlineColor = typedArray.getColor(R.styleable.ConversationHeaderView_sceytConvHeaderUnderlineColor,
+                context.getCompatColor(SceytChatUIKit.theme.bordersColor))
+
+            val enableUnderline = typedArray.getBoolean(R.styleable.ConversationHeaderView_sceytConvHeaderEnableUnderline, true)
+
+            typedArray.recycle()
+
+            return ConversationHeaderViewStyle(
+                titleColor = titleColor,
+                subTitleColor = subTitleColor,
+                underlineColor = underlineColor,
+                backIcon = backIcon,
+                enableUnderline = enableUnderline
+            ).let(conversationHeaderViewStyleCustomizer::apply)
+        }
     }
 }

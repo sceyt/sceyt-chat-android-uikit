@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.sceytstyles
 import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.drawable.Drawable
+import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import androidx.annotation.LayoutRes
 import androidx.annotation.StyleRes
@@ -79,10 +80,12 @@ data class ChannelListViewStyle(
 
     internal class Builder(
             private val context: Context,
-            private val typedArray: TypedArray
+            private val attrs: AttributeSet?
     ) {
 
         fun build(): ChannelListViewStyle {
+            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ChannelListView, 0, 0)
+
             val backgroundColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiChannelListBackgroundColor,
                 context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
 
@@ -176,6 +179,7 @@ data class ChannelListViewStyle(
             val popupStyle = typedArray.getResourceId(R.styleable.ChannelListView_sceytUiPopupStyle,
                 R.style.SceytPopupMenuStyle)
 
+            typedArray.recycle()
 
             return ChannelListViewStyle(
                 backgroundColor = backgroundColor,

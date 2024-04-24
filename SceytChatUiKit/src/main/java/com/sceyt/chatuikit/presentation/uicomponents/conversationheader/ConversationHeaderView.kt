@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversationheader
 import android.animation.LayoutTransition
 import android.app.Activity
 import android.content.Context
-import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -42,6 +41,8 @@ import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
+import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.getPeer
@@ -70,6 +71,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         HeaderEventsListener.EventListeners, HeaderUIElementsListener.ElementsListeners {
 
     private val binding: SceytConversationHeaderViewBinding
+    private val style: ConversationHeaderViewStyle
     private var clickListeners = HeaderClickListenersImpl(this)
     private var eventListeners = HeaderEventsListenerImpl(this)
     internal var uiElementsListeners = HeaderUIElementsListenerImpl(this)
@@ -91,12 +93,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     init {
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
-
-        if (attrs != null) {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.ConversationHeaderView)
-            ConversationHeaderViewStyle.updateWithAttributes(a)
-            a.recycle()
-        }
+        style = ConversationHeaderViewStyle.Builder(context, attrs).build()
         init()
     }
 
@@ -155,13 +152,15 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     private fun SceytConversationHeaderViewBinding.setUpStyle() {
-        icBack.setImageResource(ConversationHeaderViewStyle.backIcon)
-        title.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.titleColor))
-        subTitle.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.subTitleColor))
-        toolbarUnderline.background = ColorDrawable(context.getCompatColor(ConversationHeaderViewStyle.underlineColor))
-        toolbarUnderline.isVisible = ConversationHeaderViewStyle.enableUnderline
-        icSearch.imageTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-        icBack.imageTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        icBack.setImageDrawable(style.backIcon)
+        title.setTextColor(style.titleColor)
+        subTitle.setTextColor(style.subTitleColor)
+        toolbarUnderline.background = ColorDrawable(style.underlineColor)
+        toolbarUnderline.isVisible = style.enableUnderline
+        layoutSearch.setBackgroundTintColorRes(SceytChatUIKit.theme.surface1Color)
+        icSearch.setTintColorRes(SceytChatUIKit.theme.accentColor)
+        icBack.setTintColorRes(SceytChatUIKit.theme.accentColor)
+        icClear.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
     }
 
     @Suppress("UNUSED_PARAMETER")
