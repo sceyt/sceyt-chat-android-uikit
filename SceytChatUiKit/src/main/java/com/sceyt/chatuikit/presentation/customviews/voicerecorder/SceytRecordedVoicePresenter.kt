@@ -120,6 +120,7 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
             waveformSeekBar.waveProgressColor = getCompatColor(SceytChatUIKit.theme.accentColor)
             playVoiceRecord.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
             deleteVoiceRecord.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
+            layoutVoiceRecord.setBackgroundTintColorRes(SceytChatUIKit.theme.surface1Color)
         }
     }
 

@@ -5,7 +5,8 @@
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/sceyt_bg_search_view"
+    android:background="@drawable/sceyt_bg_corners_10"
+    android:backgroundTint="@color/sceyt_color_surface_1"
     android:focusable="true"
     android:focusableInTouchMode="true">
 
@@ -33,7 +34,8 @@
         android:maxLines="1"
         android:paddingHorizontal="10dp"
         android:paddingVertical="12dp"
-        android:textColor="@color/sceyt_color_black_themed"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textColorHint="@color/sceyt_color_text_footnote"
         android:textSize="16sp"
         app:layout_constraintEnd_toStartOf="@+id/icClear"
         app:layout_constraintStart_toEndOf="@+id/icSearch"

@@ -42,7 +42,7 @@
                     android:layout_height="40dp"
                     android:layout_marginStart="15dp"
                     android:background="@drawable/sceyt_bg_circle"
-                    android:backgroundTint="@color/sceyt_color_gray_themed"
+                    android:backgroundTint="@color/sceyt_color_surface_1"
                     app:layout_constraintBottom_toBottomOf="@+id/addMembers"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="@+id/addMembers"

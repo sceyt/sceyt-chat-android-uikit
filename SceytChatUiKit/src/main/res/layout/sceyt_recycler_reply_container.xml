@@ -78,7 +78,7 @@
         android:includeFontPadding="false"
         android:maxLines="2"
         android:textAlignment="viewStart"
-        android:textColor="@color/sceyt_color_black_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/smallTextSize"
         app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="parent"

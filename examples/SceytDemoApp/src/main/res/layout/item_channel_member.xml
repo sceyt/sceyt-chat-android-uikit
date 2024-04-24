@@ -59,7 +59,7 @@
         android:paddingVertical="4dp"
         android:paddingStart="0dp"
         android:paddingEnd="15dp"
-        android:textColor="@color/sceyt_color_gray_400"
+        android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="@dimen/smallTextSize"
         app:layout_constraintBottom_toBottomOf="@id/memberName"
         app:layout_constraintEnd_toEndOf="parent"

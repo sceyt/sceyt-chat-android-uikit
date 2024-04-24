@@ -22,12 +22,13 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutVoiceRecord"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="8dp"
         android:background="@drawable/sceyt_bg_corners_20"
-        android:backgroundTint="@color/sceyt_color_gray_themed"
+        android:backgroundTint="@color/sceyt_color_surface_1"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="8dp"
