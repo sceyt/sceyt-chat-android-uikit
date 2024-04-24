@@ -1,10 +1,10 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
-import android.content.res.ColorStateList
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytMessageFileItemBinding
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -106,6 +106,6 @@ class MessageFileViewHolder(
     private fun SceytMessageFileItemBinding.setupStyle() {
         loadProgress.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
         icFile.setImageDrawable(style.fileAttachmentIcon)
-        icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
     }
 }

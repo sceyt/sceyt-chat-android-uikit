@@ -25,7 +25,7 @@ class AttachmentImageViewHolder(private val binding: SceytItemInputImageAttachme
     }
 
     private fun SceytItemInputImageAttachmentBinding.setStyle() {
-        btnRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.surface3Color)
+        btnRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
         layoutRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.backgroundColor)
     }
 }

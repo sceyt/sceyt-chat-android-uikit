@@ -44,7 +44,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@drawable/sceyt_bg_circle"
-            android:backgroundTint="@color/sceyt_color_surface_3"
+            android:backgroundTint="@color/sceyt_color_icon_secondary"
             android:tint="@color/sceyt_color_on_primary"
             app:layout_constraintBottom_toBottomOf="@id/imageCont"
             app:layout_constraintStart_toStartOf="@id/imageCont"

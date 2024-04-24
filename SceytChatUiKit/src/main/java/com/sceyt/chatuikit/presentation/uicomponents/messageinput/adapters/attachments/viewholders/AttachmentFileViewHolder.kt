@@ -33,9 +33,9 @@ class AttachmentFileViewHolder(private val binding: SceytItemInputFileAttachment
     private fun SceytItemInputFileAttachmentBinding.setupStyle() {
         icFile.setImageDrawable(MessagesListViewStyle.currentStyle?.messageItemStyle?.fileAttachmentIcon
                 ?: context.getCompatDrawable(R.drawable.sceyt_ic_file_filled))
-        icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
         imageCont.setCardBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.surface1Color))
-        btnRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.surface3Color)
+        btnRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
         layoutRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.backgroundColor)
     }
 }

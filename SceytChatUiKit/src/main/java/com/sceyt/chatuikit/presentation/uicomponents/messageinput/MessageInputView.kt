@@ -45,6 +45,7 @@ import com.sceyt.chatuikit.extensions.notAutoCorrectable
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setTextAndMoveSelectionEnd
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.setTint
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
@@ -419,6 +420,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         btnClearChat.setTextColor(colorAccent)
         layoutInputSearchResult.icDown.setTint(colorAccent)
         layoutInputSearchResult.icUp.setTint(colorAccent)
+        layoutInputSearchResult.tvResult.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
         if (isInEditMode)
             icSendMessage.setImageDrawable(style.voiceRecordIcon)
     }
