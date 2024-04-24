@@ -50,7 +50,7 @@
             android:tint="@color/sceyt_color_on_primary"
             app:layout_constraintBottom_toBottomOf="@id/imageCont"
             app:layout_constraintStart_toStartOf="@id/imageCont"
-            app:srcCompat="@drawable/cancel" />
+            app:srcCompat="@drawable/sceyt_ic_cancel" />
 
     </FrameLayout>
 
