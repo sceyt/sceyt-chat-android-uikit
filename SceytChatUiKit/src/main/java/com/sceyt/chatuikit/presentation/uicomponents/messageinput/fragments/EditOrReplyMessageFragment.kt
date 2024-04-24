@@ -59,9 +59,10 @@ open class EditOrReplyMessageFragment : Fragment() {
 
     open fun editMessage(message: SceytMessage) {
         with(binding ?: return) {
-            root.isVisible = true
-            if (!root.isVisible || root.height != root.measuredHeight || root.measuredHeight == 0)
+            if (!root.isVisible || root.height != root.measuredHeight || root.measuredHeight == 0) {
+                root.isVisible = true
                 ViewUtil.expandHeight(root, 0, 200)
+            }
             icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_edit)
             layoutImage.isVisible = false
             tvName.text = getString(R.string.sceyt_edit_message)
