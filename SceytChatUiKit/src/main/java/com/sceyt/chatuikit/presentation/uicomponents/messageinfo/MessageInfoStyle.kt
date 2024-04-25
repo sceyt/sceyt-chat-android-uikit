@@ -7,6 +7,7 @@ import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.sceytstyles.StyleCustomizer
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
@@ -55,7 +56,7 @@ data class MessageInfoStyle(
                 context.getCompatColor(SceytChatUIKit.theme.borderColor))
 
             val backIcon = typedArray.getDrawable(R.styleable.SceytMessageInfo_sceytUiInfoBackIcon)
-                    ?: context.getDrawable(R.drawable.sceyt_ic_arrow_back)
+                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back)
 
             typedArray.recycle()
 

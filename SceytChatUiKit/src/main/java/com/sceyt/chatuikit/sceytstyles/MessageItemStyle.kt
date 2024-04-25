@@ -73,7 +73,7 @@ data class MessageItemStyle(
             private val attrs: AttributeSet?
     ) {
         fun build(): MessageItemStyle {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView, 0, 0)
+            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView)
             val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
 
             val incBubbleColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageIncBubbleColor,

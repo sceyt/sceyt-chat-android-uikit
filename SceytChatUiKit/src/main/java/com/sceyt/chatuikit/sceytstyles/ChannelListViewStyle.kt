@@ -84,7 +84,7 @@ data class ChannelListViewStyle(
     ) {
 
         fun build(): ChannelListViewStyle {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ChannelListView, 0, 0)
+            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ChannelListView)
 
             val backgroundColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiChannelListBackgroundColor,
                 context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
