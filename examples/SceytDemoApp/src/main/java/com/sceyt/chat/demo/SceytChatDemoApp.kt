@@ -45,7 +45,7 @@ class SceytChatDemoApp : Application() {
             enableDatabase = true)
 
         SceytChatUIKit.theme = SceytChatUIKitTheme(
-            accentColor = com.sceyt.chatuikit.R.color.sceyt_color_error,
+            accentColor = com.sceyt.chatuikit.R.color.sceyt_color_admin_role,
             //  backgroundColor = com.sceyt.chatuikit.R.color.sceyt_color_admin_role,
             textSecondaryColor = com.sceyt.chatuikit.R.color.sceyt_color_green,
             iconSecondaryColor = com.sceyt.chatuikit.R.color.sceyt_color_warning,

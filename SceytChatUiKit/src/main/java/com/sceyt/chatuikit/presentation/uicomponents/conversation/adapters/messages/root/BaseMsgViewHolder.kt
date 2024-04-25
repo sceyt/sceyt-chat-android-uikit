@@ -21,7 +21,6 @@ import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
-import androidx.core.view.marginEnd
 import androidx.core.view.marginStart
 import androidx.core.view.marginTop
 import androidx.core.view.setPadding
@@ -53,7 +52,10 @@ import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.isRtl
 import com.sceyt.chatuikit.extensions.isValidEmail
+import com.sceyt.chatuikit.extensions.marginHorizontal
 import com.sceyt.chatuikit.extensions.screenPortraitWidthPx
+import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState
@@ -190,6 +192,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         message.setConversationMessageDateAndStatusIcon(messageDate, style, dateText, isEdited)
     }
 
+    // Invoke this method after invoking setOrUpdateReactions, to calculate the final width of the layout bubble
     protected fun setReplyMessageContainer(message: SceytMessage, viewStub: ViewStub, calculateWith: Boolean = true) {
         if (!message.isReplied) {
             viewStub.isVisible = false
@@ -198,6 +201,8 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (viewStub.parent != null)
             SceytRecyclerReplyContainerBinding.bind(viewStub.inflate()).also {
                 replyMessageContainerBinding = it
+                it.viewReply.setBackgroundTint(if (message.incoming)
+                    style.incLinkPreviewBackgroundColor else style.outLinkPreviewBackgroundColor)
                 it.tvName.setTextColor(style.senderNameTextColor)
                 it.view.backgroundTintList = ColorStateList.valueOf(style.replyMessageLineColor)
             }
@@ -246,13 +251,23 @@ abstract class BaseMsgViewHolder(private val view: View,
             }
             with(root) {
                 if (calculateWith) {
-                    layoutParams.width = LayoutParams.WRAP_CONTENT
-                    (layoutParams as ConstraintLayout.LayoutParams).matchConstraintMaxWidth = bubbleMaxWidth
-                    measure(View.MeasureSpec.UNSPECIFIED, 0)
+                    val layoutParams = layoutParams as ConstraintLayout.LayoutParams
+                    layoutParams.matchConstraintMaxWidth = bubbleMaxWidth - marginHorizontal
+                    // Calculate the width of the layout bubble before measuring replyMessageContainer
                     layoutBubble?.measure(View.MeasureSpec.UNSPECIFIED, 0)
+                    // Set the width LayoutParams.WRAP_CONTENT to layoutParas to measure the real width of replyMessageContainer
+                    layoutParams.width = LayoutParams.WRAP_CONTENT
+                    measure(View.MeasureSpec.UNSPECIFIED, 0)
                     val bubbleMeasuredWidth = min(bubbleMaxWidth, layoutBubble?.measuredWidth ?: 0)
-                    if (measuredWidth < bubbleMeasuredWidth)
-                        layoutParams.width = bubbleMeasuredWidth
+                    val minBoundOfWidth = bubbleMeasuredWidth - marginHorizontal
+                    // If the width of replyMessageContainer is bigger than the width of layout bubble,
+                    // set the width of layout bubble, else set the default width of replyMessageContainer
+                    if (measuredWidth >= minBoundOfWidth)
+                        layoutParams.matchConstraintMinWidth = minBoundOfWidth
+                    else {
+                        layoutParams.matchConstraintMinWidth = 0
+                        layoutParams.width = 0
+                    }
                 }
                 isVisible = true
 
@@ -353,7 +368,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (rvReactionsViewStub.parent != null)
             rvReactionsViewStub.inflate().also {
                 recyclerViewReactions = it as RecyclerView
-                it.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
+                it.setBackgroundTintColorRes(SceytChatUIKit.theme.backgroundColorSections)
             }
 
         with(recyclerViewReactions ?: return) {
@@ -452,7 +467,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         constraintSet.clear(bodyTextView.id, ConstraintSet.BOTTOM)
 
         // Calculate maxWidth when dateView and bodyTextView are in the same line
-        val maxWidthWithDate = bubbleMaxWidth - (bodyTextView.marginStart + dateView.marginEnd)
+        val maxWidthWithDate = bubbleMaxWidth - bodyTextView.marginHorizontal
 
         // If messageBody + dateView + px12 (margins) > maxWidthWithDate, then set messageBody to endOf parentLayout,
         // else set messageBody to endOf dateView

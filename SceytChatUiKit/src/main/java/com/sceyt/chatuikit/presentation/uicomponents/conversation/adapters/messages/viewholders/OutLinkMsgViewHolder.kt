@@ -56,6 +56,7 @@ class OutLinkMsgViewHolder(
                 val message = item.message
                 tvForwarded.isVisible = message.isForwarded
                 val linkAttachment = message.attachments?.getOrNull(0)
+                loadLinkPreview(message, linkAttachment, layoutLinkPreview)
 
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
@@ -73,8 +74,6 @@ class OutLinkMsgViewHolder(
 
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, viewReply)
-
-                loadLinkPreview(message, linkAttachment, layoutLinkPreview)
             }
         }
     }

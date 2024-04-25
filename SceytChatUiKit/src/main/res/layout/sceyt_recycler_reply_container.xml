@@ -5,13 +5,16 @@
     android:id="@id/viewReply"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:paddingHorizontal="12dp">
+    android:background="@drawable/sceyt_bg_right_corners_8"
+    android:backgroundTint="#E4E6EE"
+    android:paddingStart="0dp"
+    android:paddingEnd="12dp">
 
     <View
         android:id="@+id/view"
         android:layout_width="2.1dp"
         android:layout_height="0dp"
-        android:background="@drawable/sceyt_bg_corners_10"
+        android:background="@color/sceyt_color_accent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -37,6 +40,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
+        android:layout_marginTop="4dp"
         android:fontFamily="@font/roboto_medium"
         android:includeFontPadding="false"
         android:singleLine="true"
@@ -74,6 +78,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="6dp"
         android:layout_marginTop="3dp"
+        android:layout_marginBottom="4dp"
         android:ellipsize="end"
         android:includeFontPadding="false"
         android:maxLines="2"
