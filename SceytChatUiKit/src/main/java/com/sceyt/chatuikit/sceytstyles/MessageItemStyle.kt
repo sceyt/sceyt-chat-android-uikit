@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.sceytstyles
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
@@ -17,9 +18,9 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 /**
  * Style for the message item view.
  * @param incBubbleColor Color for the incoming message bubble, default is [R.color.sceyt_color_bg_inc_message]
- * @param outBubbleColor Color for the outgoing message bubble, default is [R.color.sceyt_color_bg_out_message]
+ * @param outBubbleColor Color for the outgoing message bubble, default is 20% blend of [SceytChatUIKitTheme.accentColor]
  * @param incLinkPreviewBackgroundColor Color for the incoming link preview background, default is [R.color.sceyt_color_bg_inc_link_preview]
- * @param outLinkPreviewBackgroundColor Color for the outgoing link preview background, default is [R.color.sceyt_color_bg_out_link_preview]
+ * @param outLinkPreviewBackgroundColor Color for the outgoing link preview background, default is 30% blend of [SceytChatUIKitTheme.accentColor]
  * @param messageStatusPendingIcon Icon for the pending message status, default is [R.drawable.sceyt_ic_status_not_sent]
  * @param messageStatusSentIcon Icon for the sent message status, default is [R.drawable.sceyt_ic_status_on_server]
  * @param messageStatusDeliveredIcon Icon for the delivered message status, default is [R.drawable.sceyt_ic_status_delivered]
@@ -79,13 +80,13 @@ data class MessageItemStyle(
             val incBubbleColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageIncBubbleColor,
                 context.getCompatColor(R.color.sceyt_color_bg_inc_message))
 
-            val defaultOutBubbleColor = ColorUtils.setAlphaComponent(accentColor, (0.2 * 255).toInt())
+            val defaultOutBubbleColor = ColorUtils.blendARGB(accentColor, Color.WHITE, 0.8f)
             val outBubbleColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageOutBubbleColor, defaultOutBubbleColor)
 
             val incLinkPreviewBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageIncLinkPreviewBackgroundColor,
                 context.getCompatColor(R.color.sceyt_color_bg_inc_link_preview))
 
-            val defaultOutLinkPreviewBackgroundColor = ColorUtils.setAlphaComponent(accentColor, (0.3 * 255).toInt())
+            val defaultOutLinkPreviewBackgroundColor = ColorUtils.blendARGB(accentColor, Color.WHITE, 0.7f)
             val outLinkPreviewBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageOutLinkPreviewBackgroundColor,
                 defaultOutLinkPreviewBackgroundColor)
 
