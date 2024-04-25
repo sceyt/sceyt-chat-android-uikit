@@ -38,7 +38,7 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
         getBundleArguments()
         initViews()
         setDetails(channel)
-        binding.setupStyle()
+        binding.applyStyle()
     }
 
     private fun getBundleArguments() {
@@ -85,7 +85,7 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
         Members, Admins, SearchMessages
     }
 
-    private fun SceytFragmentInfoMembersByRoleBinding.setupStyle() {
+    private fun SceytFragmentInfoMembersByRoleBinding.applyStyle() {
         divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
         divider.setBackgroundColor(requireContext().getCompatColor(ConversationInfoMediaStyle.dividerColor))
     }

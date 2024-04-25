@@ -224,6 +224,6 @@ class IncVideoMsgViewHolder(
         tvUserName.setTextColor(style.senderNameTextColor)
         tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
         tvDuration.setDrawableStart(style.videoDurationIcon)
-        messageBody.setupStyle(style)
+        messageBody.applyStyle(style)
     }
 }

@@ -48,7 +48,7 @@ open class EditOrReplyMessageFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding?.setupStyle()
+        binding?.applyStyle()
         initViews()
     }
 
@@ -165,7 +165,7 @@ open class EditOrReplyMessageFragment : Fragment() {
             .into(imageAttachment)
     }
 
-    private fun SceytFragmentEditOrReplyMessageBinding.setupStyle() {
+    private fun SceytFragmentEditOrReplyMessageBinding.applyStyle() {
         val accentColor = requireContext().getCompatColor(SceytChatUIKit.theme.accentColor)
         root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.surface1Color))
         tvName.setTextColor(accentColor)

@@ -151,7 +151,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun init() {
         with(binding) {
-            setupStyle()
+            applyStyle()
             voiceRecordPresenter.setStyle(style)
             linkPreviewFragment.setStyle(style)
             setOnClickListeners()
@@ -406,7 +406,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         }.show()
     }
 
-    private fun SceytMessageInputViewBinding.setupStyle() {
+    private fun SceytMessageInputViewBinding.applyStyle() {
         val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.backgroundColor)
         val colorAccent = context.getCompatColor(SceytChatUIKit.theme.accentColor)
         layoutInput.setBackgroundColor(backgroundColor)

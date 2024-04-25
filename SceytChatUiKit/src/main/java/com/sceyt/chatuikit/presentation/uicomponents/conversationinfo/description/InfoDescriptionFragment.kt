@@ -38,7 +38,7 @@ open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener {
 
         getBundleArguments()
         setChannelDescription(channel)
-        binding.setupStyle()
+        binding.applyStyle()
     }
 
     private fun getBundleArguments() {
@@ -62,7 +62,7 @@ open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener {
         setChannelDescription(channel)
     }
 
-    private fun SceytFragmentInfoDescriptionBinding.setupStyle() {
+    private fun SceytFragmentInfoDescriptionBinding.applyStyle() {
         divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
         divider.setBackgroundColor(requireContext().getCompatColor(ConversationInfoMediaStyle.dividerColor))
     }

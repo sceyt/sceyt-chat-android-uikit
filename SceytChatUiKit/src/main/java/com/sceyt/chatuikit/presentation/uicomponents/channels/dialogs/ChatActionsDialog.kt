@@ -29,7 +29,7 @@ class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogN
         }.root)
 
         binding.initView()
-        binding.setupStyle()
+        binding.applyStyle()
         binding.setIconsVisibility()
         window?.let {
             it.setWindowAnimations(R.style.SceytDialogFromBottomAnimation)
@@ -106,7 +106,7 @@ class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogN
         Pin, UnPin, MarkAsRead, MarkAsUnRead, Mute, UnMute, Leave, Delete
     }
 
-    private fun SceytDialogChannelActionsBinding.setupStyle() {
+    private fun SceytDialogChannelActionsBinding.applyStyle() {
         val texts = listOf(pin, unPin, markAsRead, markAsUnRead, mute, unMute)
         setTextViewsDrawableColor(texts, context.getCompatColor(SceytChatUIKit.theme.accentColor))
         setTextViewsTextColor(texts, context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))

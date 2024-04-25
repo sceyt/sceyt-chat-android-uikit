@@ -5,6 +5,7 @@ import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
@@ -78,6 +79,16 @@ class SceytCustomToolbar @JvmOverloads constructor(
     fun setTitle(title: String?) {
         title ?: return
         binding.tvTitle.text = title
+    }
+
+    fun setTitleColorRes(@ColorRes colorId: Int) {
+        titleColor = context.getCompatColor(colorId)
+        invalidate()
+    }
+
+    fun setTitleColor(@ColorInt color: Int) {
+        titleColor = color
+        invalidate()
     }
 
     fun setIconsTint(@ColorRes colorId: Int) {

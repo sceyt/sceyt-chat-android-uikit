@@ -13,7 +13,7 @@ class GalleryVideoViewHolder(val binding: SceytItemGalleryVideoBinding,
                              clickListener: GalleryMediaAdapter.MediaClickListener) : BaseGalleryViewHolder(binding.root, clickListener) {
 
     init {
-        binding.setupStyle()
+        binding.applyStyle()
     }
 
     override fun bind(item: MediaItem) {
@@ -53,7 +53,7 @@ class GalleryVideoViewHolder(val binding: SceytItemGalleryVideoBinding,
         return "$minutes:$secs"
     }
 
-    private fun SceytItemGalleryVideoBinding.setupStyle() {
+    private fun SceytItemGalleryVideoBinding.applyStyle() {
         tvDuration.setDrawableStart(GalleryPickerStyle.videoDurationIcon)
     }
 }

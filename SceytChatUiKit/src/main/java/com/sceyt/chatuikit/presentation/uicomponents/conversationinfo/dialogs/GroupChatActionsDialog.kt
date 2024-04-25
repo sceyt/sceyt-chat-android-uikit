@@ -29,7 +29,7 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
         }.root)
 
         binding.initView()
-        binding.setupStyle()
+        binding.applyStyle()
         window?.let {
             it.setWindowAnimations(R.style.SceytDialogFromBottomAnimation)
             val wlp: WindowManager.LayoutParams = it.attributes
@@ -105,7 +105,7 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
         ClearHistory, Leave, Delete, Pin, Unpin
     }
 
-    private fun SceytDialogGroupChannelActionsBinding.setupStyle() {
+    private fun SceytDialogGroupChannelActionsBinding.applyStyle() {
         setTextViewsDrawableColor(listOf(pin, unPin, clearHistory, report),
             context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }

@@ -18,7 +18,7 @@ class AttachmentFileViewHolder(private val binding: SceytItemInputFileAttachment
                                private val clickListeners: AttachmentClickListeners.ClickListeners) : BaseViewHolder<AttachmentItem>(binding.root) {
 
     init {
-        binding.setupStyle()
+        binding.applyStyle()
     }
 
     override fun bind(item: AttachmentItem) {
@@ -30,7 +30,7 @@ class AttachmentFileViewHolder(private val binding: SceytItemInputFileAttachment
         itemView.setOnClickListener { clickListeners.onRemoveAttachmentClick(it, item) }
     }
 
-    private fun SceytItemInputFileAttachmentBinding.setupStyle() {
+    private fun SceytItemInputFileAttachmentBinding.applyStyle() {
         icFile.setImageDrawable(MessagesListViewStyle.currentStyle?.messageItemStyle?.fileAttachmentIcon
                 ?: context.getCompatDrawable(R.drawable.sceyt_ic_file_filled))
         icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)

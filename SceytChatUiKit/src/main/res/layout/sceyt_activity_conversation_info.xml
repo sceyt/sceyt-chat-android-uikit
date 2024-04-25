@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_background_secondary"
+    android:background="@color/sceyt_color_surface_1"
     tools:context=".presentation.uicomponents.conversationinfo.ConversationInfoActivity">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -22,6 +22,7 @@
             app:elevation="0dp">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
+                android:id="@+id/collapsingToolbarLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:contentScrim="@color/sceyt_color_background"

@@ -57,7 +57,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
 
         getBundleArguments()
         initViewModel()
-        binding?.setupStyle()
+        binding?.applyStyle()
         binding?.initViews()
         setDetails()
     }
@@ -246,7 +246,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         } else requireActivity().onBackPressedDispatcher.onBackPressed()
     }
 
-    private fun SceytFragmentEditChannelBinding.setupStyle() {
+    private fun SceytFragmentEditChannelBinding.applyStyle() {
         layoutToolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
     }
 

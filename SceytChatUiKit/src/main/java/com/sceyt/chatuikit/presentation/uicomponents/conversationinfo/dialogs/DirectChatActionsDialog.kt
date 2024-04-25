@@ -29,7 +29,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
         }.root)
 
         binding.initView()
-        binding.setupStyle()
+        binding.applyStyle()
         binding.determinateState()
         window?.let {
             it.setWindowAnimations(R.style.SceytDialogFromBottomAnimation)
@@ -107,7 +107,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
         ClearHistory, BlockUser, UnBlockUser, Delete, Pin, UnPin
     }
 
-    private fun SceytDialogDirectChannelActionsBinding.setupStyle() {
+    private fun SceytDialogDirectChannelActionsBinding.applyStyle() {
         setTextViewsDrawableColor(listOf(pin, unPin, blockUser, unBlockUser, clearHistory),
             context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }

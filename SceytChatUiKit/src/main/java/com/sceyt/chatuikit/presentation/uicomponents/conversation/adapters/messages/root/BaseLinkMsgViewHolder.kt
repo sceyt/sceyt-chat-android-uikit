@@ -80,7 +80,7 @@ abstract class BaseLinkMsgViewHolder(
             }
 
         with(linkPreviewContainerBinding ?: return) {
-            setupStyle()
+            applyStyle()
             if (!data.imageUrl.isNullOrBlank()) {
                 setImageSize(previewImage, data)
                 val thumb = message.files?.firstOrNull {
@@ -132,7 +132,7 @@ abstract class BaseLinkMsgViewHolder(
         image.isVisible = true
     }
 
-    private fun SceytMessageLinkPreviewContainerBinding.setupStyle() {
+    private fun SceytMessageLinkPreviewContainerBinding.applyStyle() {
         val color = if (this@BaseLinkMsgViewHolder is OutLinkMsgViewHolder)
             style.outLinkPreviewBackgroundColor
         else style.incLinkPreviewBackgroundColor

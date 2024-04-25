@@ -32,7 +32,7 @@ class MessageImageViewHolder(
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
 
     init {
-        binding.setupStyle()
+        binding.applyStyle()
 
         binding.root.setOnClickListener {
             messageListeners?.onAttachmentClick(it, fileItem)
@@ -107,7 +107,7 @@ class MessageImageViewHolder(
 
     override fun needThumbFor() = ThumbFor.MessagesLisView
 
-    private fun SceytMessageImageItemBinding.setupStyle() {
+    private fun SceytMessageImageItemBinding.applyStyle() {
         loadProgress.setProgressColor(style.mediaLoaderColor)
     }
 }

@@ -619,6 +619,11 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         overrideTransitions(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right, false)
     }
 
+    private fun SceytActivityConversationInfoBinding.applyStyle(){
+        val theme = SceytChatUIKit.theme
+        root.setBackgroundColor(theme.surface1Color)
+    }
+
     companion object {
         const val CHANNEL = "CHANNEL"
         const val ACTION_SEARCH_MESSAGES = "ACTION_SEARCH_MESSAGES"

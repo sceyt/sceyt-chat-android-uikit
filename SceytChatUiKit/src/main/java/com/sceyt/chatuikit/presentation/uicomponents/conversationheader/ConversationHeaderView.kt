@@ -101,7 +101,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     private fun init() {
         with(binding) {
-            setUpStyle()
+            applyStyle()
             layoutToolbarRoot.layoutTransition = LayoutTransition().apply {
                 disableTransitionType(LayoutTransition.DISAPPEARING)
                 setDuration(200)
@@ -153,7 +153,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
     }
 
-    private fun SceytConversationHeaderViewBinding.setUpStyle() {
+    private fun SceytConversationHeaderViewBinding.applyStyle() {
         toolbarMessageActions.popupTheme = style.menuStyle
         toolbarMessageActions.setTitleTextAppearance(context, style.menuTitleAppearance)
         icBack.setImageDrawable(style.backIcon)

@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.uicomponents.messageinfo
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,11 +9,14 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytFragmentMessageInfoBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setBundleArgumentsAs
+import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.openFile
@@ -34,6 +38,7 @@ open class MessageInfoFragment : Fragment() {
     protected var readMarkersAdapter: UserMarkerAdapter? = null
     protected var deliveredMarkersAdapter: UserMarkerAdapter? = null
     protected var playedMarkersAdapter: UserMarkerAdapter? = null
+    protected lateinit var style: MessageInfoStyle
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentMessageInfoBinding.inflate(inflater, container, false).also {
@@ -48,6 +53,11 @@ open class MessageInfoFragment : Fragment() {
 
         initViews()
         initViewModel()
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        style = MessageInfoStyle.Builder(context, null).build()
     }
 
     private fun getBundleArguments() {
@@ -157,6 +167,19 @@ open class MessageInfoFragment : Fragment() {
 
             else -> item.file.openFile(requireContext())
         }
+    }
+
+    protected open fun SceytFragmentMessageInfoBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
+        toolbar.setBackgroundColor(style.toolbarColor)
+        toolbar.setTitleColor(style.titleColor)
+        setTextViewsTextColor(listOf(tvSentDate, tvPlayedByHint, tvReadByHint, tvDeliveredToHint),
+            requireContext().getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+        divider.setBackgroundColor(style.borderColor)
+        dividerPlayed.setBackgroundColor(style.borderColor)
+        dividerRead.setBackgroundColor(style.borderColor)
+        dividerPlayed.setBackgroundColor(style.borderColor)
+        dividerDelivered.setBackgroundColor(style.borderColor)
     }
 
     companion object {

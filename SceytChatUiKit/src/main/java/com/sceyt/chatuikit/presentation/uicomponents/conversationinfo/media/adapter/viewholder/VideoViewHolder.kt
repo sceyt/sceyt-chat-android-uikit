@@ -33,7 +33,7 @@ class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     init {
-        binding.setupStyle()
+        binding.applyStyle()
         binding.root.setOnClickListener {
             clickListeners.onAttachmentClick(it, fileItem)
         }
@@ -107,7 +107,7 @@ class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
 
     override fun needThumbFor() = ThumbFor.ConversationInfo
 
-    private fun SceytItemChannelVideoBinding.setupStyle() {
+    private fun SceytItemChannelVideoBinding.applyStyle() {
         tvDuration.setDrawableStart(ConversationInfoStyle.videoDurationIcon)
     }
 }

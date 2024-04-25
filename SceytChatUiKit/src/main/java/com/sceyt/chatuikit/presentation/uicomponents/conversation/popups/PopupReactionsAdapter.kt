@@ -55,7 +55,7 @@ class PopupReactionsAdapter(private var data: List<ReactionItem>,
 
     inner class AddViewHolder(val binding: SceytItemPopupAddReactionBinding) : BaseViewHolder<ReactionItem>(binding.root) {
         init {
-            binding.setupStyle()
+            binding.applyStyle()
         }
 
         override fun bind(item: ReactionItem) {
@@ -64,7 +64,7 @@ class PopupReactionsAdapter(private var data: List<ReactionItem>,
             }
         }
 
-        private fun SceytItemPopupAddReactionBinding.setupStyle() {
+        private fun SceytItemPopupAddReactionBinding.applyStyle() {
             addEmoji.setColorFilter(context.getCompatColor(SceytChatUIKit.theme.accentColor))
             addEmoji.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSecondary))
         }

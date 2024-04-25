@@ -21,7 +21,7 @@ class DeleteMessageDialog(context: Context) : Dialog(context, R.style.SceytDialo
         binding = SceytDialogDeleteMessageBinding.inflate(LayoutInflater.from(context))
         setContentView(binding.root)
         binding.initView()
-        binding.setupStyle()
+        binding.applyStyle()
         window?.setWindowAnimations(R.style.SceytDialogWindowAnimation)
     }
 
@@ -63,7 +63,7 @@ class DeleteMessageDialog(context: Context) : Dialog(context, R.style.SceytDialo
         return this
     }
 
-    private fun SceytDialogDeleteMessageBinding.setupStyle() {
+    private fun SceytDialogDeleteMessageBinding.applyStyle() {
         buttonDelete.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
         buttonCancel.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }

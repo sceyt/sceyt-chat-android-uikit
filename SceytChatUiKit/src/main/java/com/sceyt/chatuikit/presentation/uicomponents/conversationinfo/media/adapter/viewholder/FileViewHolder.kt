@@ -22,7 +22,7 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     init {
-        binding.setupStyle()
+        binding.applyStyle()
         binding.root.setOnClickListener {
             clickListeners.onAttachmentClick(it, fileItem)
         }
@@ -52,7 +52,7 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
 
-    private fun SceytItemChannelFileBinding.setupStyle() {
+    private fun SceytItemChannelFileBinding.applyStyle() {
         icFile.setImageDrawable(MessagesListViewStyle.currentStyle?.messageItemStyle?.fileAttachmentIcon
                 ?: context.getCompatDrawable(R.drawable.sceyt_ic_file_filled))
         icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)

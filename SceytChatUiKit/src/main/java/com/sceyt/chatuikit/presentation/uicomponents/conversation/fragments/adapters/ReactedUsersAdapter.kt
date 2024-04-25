@@ -66,7 +66,7 @@ class ReactedUsersAdapter(private var clickListener: OnItemClickListener) : List
     inner class UsersViewHolder(val binding: SceytItemReactedUserBinding) : BaseViewHolder<ReactedUserItem>(binding.root) {
 
         init {
-            binding.setupStyle()
+            binding.applyStyle()
         }
 
         override fun bind(item: ReactedUserItem) {
@@ -85,7 +85,7 @@ class ReactedUsersAdapter(private var clickListener: OnItemClickListener) : List
             }
         }
 
-        private fun SceytItemReactedUserBinding.setupStyle() {
+        private fun SceytItemReactedUserBinding.applyStyle() {
             userName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
         }
     }
