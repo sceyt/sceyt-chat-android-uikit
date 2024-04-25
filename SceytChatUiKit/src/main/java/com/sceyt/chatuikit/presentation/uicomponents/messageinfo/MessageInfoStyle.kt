@@ -7,6 +7,7 @@ import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.sceytstyles.StyleCustomizer
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
@@ -26,6 +27,10 @@ data class MessageInfoStyle(
         val title: String,
         val backIcon: Drawable?,
 ) {
+
+    companion object {
+        var messageInfoStyleCustomizer = StyleCustomizer<MessageInfoStyle> { it }
+    }
 
     internal class Builder(
             private val context: Context,
@@ -60,7 +65,8 @@ data class MessageInfoStyle(
                 title = title,
                 titleColor = titleColor,
                 borderColor = borderColor,
-                backIcon = backIcon)
+                backIcon = backIcon
+            ).let(messageInfoStyleCustomizer::apply)
         }
     }
 }
