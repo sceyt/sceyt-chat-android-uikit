@@ -21,7 +21,7 @@ class SceytPhotoPreviewActivity : AppCompatActivity() {
         }.root)
 
         statusBarIconsColorWithBackground()
-        binding.setupStyle()
+        binding.applyStyle()
         initViews()
         getBundleArguments()
     }
@@ -43,7 +43,7 @@ class SceytPhotoPreviewActivity : AppCompatActivity() {
             .into(binding.imageView)
     }
 
-    private fun SceytFragmentPhotoPreviewBinding.setupStyle() {
+    private fun SceytFragmentPhotoPreviewBinding.applyStyle() {
         toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
     }
 

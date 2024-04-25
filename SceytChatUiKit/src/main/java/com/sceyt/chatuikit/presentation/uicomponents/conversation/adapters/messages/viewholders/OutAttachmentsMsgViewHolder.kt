@@ -118,7 +118,7 @@ class OutAttachmentsMsgViewHolder(
     private fun SceytItemOutAttachmentsMessageBinding.setMessageItemStyle() {
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outBubbleColor)
         tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
-        messageBody.setupStyle(style)
+        messageBody.applyStyle(style)
     }
 
     override fun setMaxWidth() {

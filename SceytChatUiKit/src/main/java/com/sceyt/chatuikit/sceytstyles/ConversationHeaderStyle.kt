@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property backgroundColor background color of the header, default is [SceytChatUIKitTheme.primaryColor]
  * @property titleColor color of the title, default is [SceytChatUIKitTheme.textPrimaryColor]
  * @property subTitleColor color of the subtitle, default is [SceytChatUIKitTheme.textSecondaryColor]
- * @property underlineColor color of the underline, default is [SceytChatUIKitTheme.bordersColor]
+ * @property underlineColor color of the underline, default is [SceytChatUIKitTheme.borderColor]
  * @property backIcon icon for back button, default is [R.drawable.sceyt_ic_arrow_back]
  * @property enableUnderline enable underline, default is true
  * @property menuStyle style for the toolbar menu, default is [R.style.SceytPopupMenuStyle]
@@ -60,7 +60,7 @@ data class ConversationHeaderStyle(
                 context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
 
             val underlineColor = typedArray.getColor(R.styleable.ConversationHeaderView_sceytConvHeaderUnderlineColor,
-                context.getCompatColor(SceytChatUIKit.theme.bordersColor))
+                context.getCompatColor(SceytChatUIKit.theme.borderColor))
 
             val enableUnderline = typedArray.getBoolean(R.styleable.ConversationHeaderView_sceytConvHeaderEnableUnderline, true)
 

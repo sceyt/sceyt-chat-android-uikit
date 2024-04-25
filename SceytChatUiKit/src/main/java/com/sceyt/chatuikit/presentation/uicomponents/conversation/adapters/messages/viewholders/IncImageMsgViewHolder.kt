@@ -182,6 +182,6 @@ class IncImageMsgViewHolder(
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incBubbleColor)
         tvUserName.setTextColor(style.senderNameTextColor)
         tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
-        messageBody.setupStyle(style)
+        messageBody.applyStyle(style)
     }
 }

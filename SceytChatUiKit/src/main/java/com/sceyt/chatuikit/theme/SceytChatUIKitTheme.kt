@@ -27,7 +27,7 @@ data class SceytChatUIKitTheme(
         @ColorRes
         val overlayBackground2Color: Int = R.color.sceyt_color_overlay_background_2,
         @ColorRes
-        val bordersColor: Int = R.color.sceyt_color_border,
+        val borderColor: Int = R.color.sceyt_color_border,
         @ColorRes
         val iconSecondaryColor: Int = R.color.sceyt_color_icon_secondary,
         @ColorRes

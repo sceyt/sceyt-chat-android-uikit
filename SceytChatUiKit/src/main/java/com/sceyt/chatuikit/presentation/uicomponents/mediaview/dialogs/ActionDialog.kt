@@ -22,7 +22,7 @@ class ActionDialog(context: Context, var listener: ((Action) -> Unit)? = null) :
         super.onCreate(savedInstanceState)
         binding = SceytDialogMediaActionsBinding.inflate(LayoutInflater.from(context))
         setContentView(binding.root)
-        binding.setupStyle()
+        binding.applyStyle()
         initView()
 
         window?.let {
@@ -53,7 +53,7 @@ class ActionDialog(context: Context, var listener: ((Action) -> Unit)? = null) :
         }
     }
 
-    private fun SceytDialogMediaActionsBinding.setupStyle() {
+    private fun SceytDialogMediaActionsBinding.applyStyle() {
         setTextViewsDrawableColor(listOf(save, share, forward), context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 

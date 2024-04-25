@@ -58,7 +58,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
         getBundleArguments()
         setChannelDetails(channel)
         binding.initViews()
-        binding.setupStyle()
+        binding.applyStyle()
     }
 
     private fun getBundleArguments() {
@@ -201,7 +201,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
         Back, Edit, More
     }
 
-    private fun SceytFragmentInfoToolbarBinding.setupStyle() {
+    private fun SceytFragmentInfoToolbarBinding.applyStyle() {
         icBack.setImageResource(ConversationInfoStyle.navigationIcon)
         icEdit.setImageResource(ConversationInfoStyle.editIcon)
         icMore.setImageResource(ConversationInfoStyle.moreIcon)

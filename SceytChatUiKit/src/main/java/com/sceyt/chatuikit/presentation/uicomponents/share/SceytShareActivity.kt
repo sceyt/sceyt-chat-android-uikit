@@ -45,7 +45,7 @@ open class SceytShareActivity : SceytShareableActivity() {
 
         getDataFromIntent()
         binding.initViews()
-        binding.setupStyle()
+        binding.applyStyle()
     }
 
     private fun getDataFromIntent() {
@@ -93,7 +93,7 @@ open class SceytShareActivity : SceytShareableActivity() {
         }
     }
 
-    private fun SceytActivityShareBinding.setupStyle() {
+    private fun SceytActivityShareBinding.applyStyle() {
         btnShare.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
         toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
     }

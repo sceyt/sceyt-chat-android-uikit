@@ -102,7 +102,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     private fun SceytRecordViewBinding.initViews() {
         showDefaultRecordButton()
         setupRecorder()
-        setupStyle()
+        applyStyle()
 
         btnCancel.setOnClickListener {
             isLocked = false
@@ -454,7 +454,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
         colorAnimation?.start()
     }
 
-    private fun SceytRecordViewBinding.setupStyle() {
+    private fun SceytRecordViewBinding.applyStyle() {
         imageViewLockArrow.setTintColorRes(SceytChatUIKit.theme.accentColor)
         lockViewStopButton.setTintColorRes(SceytChatUIKit.theme.accentColor)
         imageViewLock.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)

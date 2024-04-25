@@ -33,7 +33,7 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
     private var lastFilePath: String? = ""
 
     init {
-        binding.setupStyle()
+        binding.applyStyle()
         binding.root.setOnClickListener {
             clickListener.onAttachmentClick(it, item = fileItem)
         }
@@ -158,7 +158,7 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
 
-    private fun SceytItemChannelVoiceBinding.setupStyle() {
+    private fun SceytItemChannelVoiceBinding.applyStyle() {
         val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
         icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
         loadProgress.setIconTintColor(accentColor)

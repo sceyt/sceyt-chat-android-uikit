@@ -35,7 +35,7 @@ class MessageVideoViewHolder(
 ) : BaseFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
 
     init {
-        binding.setupStyle()
+        binding.applyStyle()
 
         binding.root.setOnClickListener {
             messageListeners?.onAttachmentClick(it, fileItem)
@@ -140,7 +140,7 @@ class MessageVideoViewHolder(
           (bindingAdapter as? MessageFilesAdapter)?.videoControllersList?.add(binding.videoViewController)
      }*/
 
-    private fun SceytMessageVideoItemBinding.setupStyle() {
+    private fun SceytMessageVideoItemBinding.applyStyle() {
         loadProgress.setProgressColor(style.mediaLoaderColor)
     }
 }

@@ -23,7 +23,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property lastMessageTextColor - Color of the last message text, default is [SceytChatUIKitTheme.textSecondaryColor].
  * @property unreadCountColor - Color of the unread message counter, default is [SceytChatUIKitTheme.accentColor].
  * @property onlineStatusColor - Color of the online status indicator, default is [R.color.sceyt_color_green].
- * @property dividerColor - Color of the divider, default is [SceytChatUIKitTheme.bordersColor].
+ * @property dividerColor - Color of the divider, default is [SceytChatUIKitTheme.borderColor].
  * @property dateTextColor - Color of the date text, default is [SceytChatUIKitTheme.textSecondaryColor].
  * @property mutedIcon - Icon for muted channel, default is [R.drawable.sceyt_ic_muted].
  * @property pinIcon - Icon for pinned channel, default is [R.drawable.sceyt_ic_pin_filled].
@@ -170,7 +170,7 @@ data class ChannelListViewStyle(
                 context.getCompatColor(R.color.sceyt_color_green))
 
             val dividerColor = typedArray.getResourceId(R.styleable.ChannelListView_sceytUiDividerColor,
-                context.getCompatColor(SceytChatUIKit.theme.bordersColor))
+                context.getCompatColor(SceytChatUIKit.theme.borderColor))
 
             val enableDivider = typedArray.getBoolean(R.styleable.ChannelListView_sceytUiEnableDivider, false)
 

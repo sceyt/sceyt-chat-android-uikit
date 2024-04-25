@@ -10,10 +10,10 @@ class LoadingMoreMessagesViewHolder(private val binding: SceytItemLoadingMoreBin
                                     style: MessageItemStyle) : BaseMsgViewHolder(binding.root, style) {
 
     init {
-        binding.setupStyle()
+        binding.applyStyle()
     }
 
-    private fun SceytItemLoadingMoreBinding.setupStyle() {
+    private fun SceytItemLoadingMoreBinding.applyStyle() {
         adapterListLoadingProgressBar.indeterminateDrawable.setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 

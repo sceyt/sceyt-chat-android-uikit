@@ -42,7 +42,7 @@ open class LinkPreviewFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding?.setupStyle()
+        binding?.applyStyle()
         initViews()
     }
 
@@ -136,7 +136,7 @@ open class LinkPreviewFragment : Fragment() {
         }
     }
 
-    private fun SceytFragmentLinkPreviewBinding.setupStyle() {
+    private fun SceytFragmentLinkPreviewBinding.applyStyle() {
         root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.surface1Color))
         icClose.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
         tvLinkDescription.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)

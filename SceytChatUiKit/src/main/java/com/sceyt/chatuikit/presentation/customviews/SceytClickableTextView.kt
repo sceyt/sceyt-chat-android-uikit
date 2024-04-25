@@ -73,7 +73,7 @@ class SceytClickableTextView @JvmOverloads constructor(
         doOnClickWhenNoLink = onClick
     }
 
-    fun setupStyle(messageItemStyle: MessageItemStyle){
+    fun applyStyle(messageItemStyle: MessageItemStyle){
         setTextColor(messageItemStyle.bodyTextColor)
         setLinkTextColor(messageItemStyle.autoLinkTextColor)
     }

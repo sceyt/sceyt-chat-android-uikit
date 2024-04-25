@@ -36,7 +36,7 @@ class MessageFileViewHolder(
 ) : BaseFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
 
     init {
-        binding.setupStyle()
+        binding.applyStyle()
 
         binding.root.setOnClickListener {
             messageListeners?.onAttachmentClick(it, fileItem)
@@ -103,7 +103,7 @@ class MessageFileViewHolder(
         FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity(), ::updateState)
     }
 
-    private fun SceytMessageFileItemBinding.setupStyle() {
+    private fun SceytMessageFileItemBinding.applyStyle() {
         loadProgress.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
         icFile.setImageDrawable(style.fileAttachmentIcon)
         icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)

@@ -43,7 +43,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
             binding = it
         }.root
 
-        binding.setupStyle()
+        binding.applyStyle()
 
         animationStyle = if (reversed) R.style.SceytReactionPopupAnimationReversed else R.style.SceytReactionPopupAnimationNormal
         setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -97,7 +97,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
         }
     }
 
-    private fun SceytPopupAddReactionBinding.setupStyle() {
+    private fun SceytPopupAddReactionBinding.applyStyle() {
         cardView.setCardBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
     }
 }

@@ -25,7 +25,7 @@ class EditAvatarTypeDialog(
         binding = SceytDialogEditAvatarTypeBinding.inflate(LayoutInflater.from(context))
         setContentView(binding.root)
         binding.initView()
-        binding.setupStyle()
+        binding.applyStyle()
 
         window?.let {
             it.setWindowAnimations(R.style.SceytDialogFromBottomAnimation)
@@ -59,7 +59,7 @@ class EditAvatarTypeDialog(
         ChooseFromGallery, TakePhoto, Delete
     }
 
-    private fun SceytDialogEditAvatarTypeBinding.setupStyle() {
+    private fun SceytDialogEditAvatarTypeBinding.applyStyle() {
         setTextViewsDrawableColor(listOf(tvTakePhoto, tvGallery),
             context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
