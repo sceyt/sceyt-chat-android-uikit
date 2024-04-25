@@ -290,8 +290,9 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     }
 
     fun setDateAndStatusIcon(text: String,
+                             drawable: Drawable?,
+                             edited: Boolean,
                              textColor: Int = this.textColor,
-                             drawable: Drawable?, edited: Boolean,
                              editedText: String = this.editedText,
                              editedTextStyle: Int = this.editedTextStyle,
                              ignoreHighlight: Boolean = false) {
