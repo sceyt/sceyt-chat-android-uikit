@@ -60,7 +60,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdate
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.ConversationHeaderViewStyle
+import com.sceyt.chatuikit.sceytstyles.ConversationHeaderStyle
 import com.sceyt.chatuikit.sceytstyles.UserStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.delay
@@ -73,7 +73,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         HeaderEventsListener.EventListeners, HeaderUIElementsListener.ElementsListeners {
 
     private val binding: SceytConversationHeaderViewBinding
-    private val style: ConversationHeaderViewStyle
+    private val style: ConversationHeaderStyle
     private var clickListeners = HeaderClickListenersImpl(this)
     private var eventListeners = HeaderEventsListenerImpl(this)
     internal var uiElementsListeners = HeaderUIElementsListenerImpl(this)
@@ -95,7 +95,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     init {
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
-        style = ConversationHeaderViewStyle.Builder(context, attrs).build()
+        style = ConversationHeaderStyle.Builder(context, attrs).build()
         init()
     }
 
@@ -154,6 +154,8 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     private fun SceytConversationHeaderViewBinding.setUpStyle() {
+        toolbarMessageActions.popupTheme = style.menuStyle
+        toolbarMessageActions.setTitleTextAppearance(context, style.menuTitleAppearance)
         icBack.setImageDrawable(style.backIcon)
         title.setTextColor(style.titleColor)
         subTitle.setTextColor(style.subTitleColor)
@@ -271,16 +273,16 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                                             listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?): Menu? {
         val menu: Menu?
         with(binding) {
-            toolBarMessageActions.setToolbarIconsVisibilityInitializer { messages, menu ->
+            toolbarMessageActions.setToolbarIconsVisibilityInitializer { messages, menu ->
                 uiElementsListeners.onInitToolbarActionsMenu(*messages, menu = menu)
             }
-            menu = toolBarMessageActions.setupMenuWithMessages(resId, *messages)
-            toolBarMessageActions.isVisible = true
+            menu = toolbarMessageActions.setupMenuWithMessages(resId, *messages)
+            toolbarMessageActions.isVisible = true
             layoutToolbarDetails.isVisible = false
             isShowingMessageActions = true
             addedMenu?.forEach { it.isVisible = false }
 
-            toolBarMessageActions.setMenuItemClickListener {
+            toolbarMessageActions.setMenuItemClickListener {
                 listener?.invoke(it) {
                     binding.hideMessageActions()
                     toolbarActionsHiddenCallback?.invoke()
@@ -344,7 +346,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     private fun SceytConversationHeaderViewBinding.hideMessageActions() {
-        toolBarMessageActions.isVisible = false
+        toolbarMessageActions.isVisible = false
         layoutToolbarDetails.isVisible = true
         isShowingMessageActions = false
         addedMenu?.forEach { item -> item.isVisible = true }

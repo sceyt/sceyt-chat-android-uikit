@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.sceytstyles
 
 import android.content.Context
-import android.content.res.TypedArray
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
@@ -12,11 +11,12 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.pxToDp
+import com.sceyt.chatuikit.presentation.uicomponents.channels.ChannelListView
 import com.sceyt.chatuikit.sceytconfigs.dateformaters.ChannelDateFormatter
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
- * Style for Channel List View
+ * Style for [ChannelListView] component.
  * @property backgroundColor - Background color of the channel list, default is [SceytChatUIKitTheme.backgroundColor].
  * @property pinnedChannelBackgroundColor - Background color of the pinned channel, default is [SceytChatUIKitTheme.surface1Color].
  * @property titleColor - Color of the channel title, default is [SceytChatUIKitTheme.textPrimaryColor].

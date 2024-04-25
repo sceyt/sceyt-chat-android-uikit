@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="ConversationHeaderView">
-        <attr name="sceytConvHeaderBackIcon" format="reference" />
+        <attr name="sceytConvHeaderBackground" format="reference|color" />
         <attr name="sceytConvHeaderTitleColor" format="reference|color" />
         <attr name="sceytConvHeaderSubTitleColor" format="reference|color" />
         <attr name="sceytConvHeaderUnderlineColor" format="reference|color" />
+        <attr name="sceytConvHeaderBackIcon" format="reference" />
         <attr name="sceytConvHeaderEnableUnderline" format="boolean" />
+        <attr name="sceytConvHeaderToolbarMenuStyle" format="reference" />
+        <attr name="sceytConvHeaderToolbarMenuTitleAppearance" format="reference" />
     </declare-styleable>
 </resources>

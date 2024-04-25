@@ -8,13 +8,27 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.presentation.uicomponents.messageinput.MessageInputView
+import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
+/**
+ * Style for [MessageInputView] component.
+ * @param attachmentIcon Icon for attachment button, default is [R.drawable.sceyt_ic_upload_file]
+ * @param sendMessageIcon Icon for send message button, default is [R.drawable.sceyt_ic_send_message]
+ * @param voiceRecordIcon Icon for voice record button, default is [R.drawable.sceyt_ic_voice]
+ * @param sendVoiceMessageIcon Icon for send voice message button, default is [R.drawable.sceyt_ic_arrow_up]
+ * @param linkIcon Icon for link button, default is [R.drawable.sceyt_ic_link]
+ * @param inputTextColor Color for the input text, default is [SceytChatUIKitTheme.textPrimaryColor]
+ * @param inputHintTextColor Color for the input hint text, default is [SceytChatUIKitTheme.textFootnoteColor]
+ * @param inputHintText Hint text for the input, default is [R.string.sceyt_write_a_message]
+ * */
 data class MessageInputStyle(
         var attachmentIcon: Drawable?,
         var sendMessageIcon: Drawable?,
         var voiceRecordIcon: Drawable?,
         var sendVoiceMessageIcon: Drawable?,
         var linkIcon: Drawable?,
+        @ColorInt var backgroundColor: Int,
         @ColorInt var inputTextColor: Int,
         @ColorInt var inputHintTextColor: Int,
         @ColorInt var inputBackgroundColor: Int,
@@ -67,6 +81,9 @@ data class MessageInputStyle(
             val inputHintText = typedArray.getString(R.styleable.MessageInputView_sceytMessageInputHintText)
                     ?: context.getString(R.string.sceyt_write_a_message)
 
+            val backgroundColor = typedArray.getColor(R.styleable.MessageInputView_sceytMessageInputRootBackgroundColor,
+                context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
+
             val inputBackgroundColor = typedArray.getColor(R.styleable.MessageInputView_sceytMessageInputBackgroundColor,
                 context.getCompatColor(SceytChatUIKit.theme.surface1Color))
 
@@ -81,6 +98,7 @@ data class MessageInputStyle(
                 inputTextColor = inputTextColor,
                 inputHintTextColor = inputHintTextColor,
                 inputHintText = inputHintText,
+                backgroundColor = backgroundColor,
                 inputBackgroundColor = inputBackgroundColor
             ).let(messageInputStyleCustomizer::apply)
         }
