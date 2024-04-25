@@ -407,7 +407,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun SceytMessageInputViewBinding.setupStyle() {
+        val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.backgroundColor)
         val colorAccent = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        layoutInput.setBackgroundColor(backgroundColor)
         icAddAttachments.setImageDrawable(style.attachmentIcon)
         messageInput.setTextColor(style.inputTextColor)
         messageInput.hint = style.inputHintText
@@ -416,8 +418,9 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         icSendMessage.setBackgroundTint(colorAccent)
         btnJoin.setTextColor(colorAccent)
         btnJoin.setBackgroundTintColorRes(SceytChatUIKit.theme.surface1Color)
-        rvAttachments.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
+        rvAttachments.setBackgroundColor(backgroundColor)
         btnClearChat.setTextColor(colorAccent)
+        layoutInputSearchResult.root.setBackgroundColor(backgroundColor)
         layoutInputSearchResult.icDown.setTint(colorAccent)
         layoutInputSearchResult.icUp.setTint(colorAccent)
         layoutInputSearchResult.tvResult.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)

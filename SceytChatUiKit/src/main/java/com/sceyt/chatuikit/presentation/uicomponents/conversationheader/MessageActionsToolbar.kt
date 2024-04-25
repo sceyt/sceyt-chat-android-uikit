@@ -11,7 +11,6 @@ import androidx.appcompat.widget.ActionMenuView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.forEach
 import androidx.core.view.isVisible
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.changeAlphaWithAnim
@@ -46,10 +45,9 @@ class MessageActionsToolbar @JvmOverloads constructor(context: Context, attribut
 
     fun setupMenuWithMessages(@MenuRes menuRes: Int, vararg messages: SceytMessage): Menu? {
         menu.clear()
-        inflateMenu(menuRes).also {
-            initMenu(*messages)
-        }
-        setTitleTextAppearance(context, R.style.SceytToolbarAppearance)
+        inflateMenu(menuRes)
+        initMenu(*messages)
+
         setTitleMargin(dpToPx(20f), 0, 0, 0)
 
         title = if (messages.isNotEmpty())

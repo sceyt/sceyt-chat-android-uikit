@@ -9,11 +9,12 @@ import androidx.annotation.LayoutRes
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.chatuikit.sceytconfigs.dateformaters.MessageDateSeparatorFormatter
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
- * Style for the messages list view.
+ * Style for [MessagesListView] component.
  * @param emptyState Layout resource for the empty state view, default is [R.layout.sceyt_messages_empty_state]
  * @param emptyStateSelfChannel Layout resource for the empty state view for self channel, default is [R.layout.sceyt_messages_empty_state_self_channel]
  * @param loadingState Layout resource for the loading state view, default is [R.layout.sceyt_loading_state]

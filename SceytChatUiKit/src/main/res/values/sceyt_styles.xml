@@ -32,7 +32,7 @@
         <item name="bottomSheetStyle">@style/SceytAppModalStyle</item>
     </style>
 
-    <style name="SceytToolbarAppearance">
+    <style name="SceytMenuTitleAppearance">
         <item name="android:textSize">20sp</item>
         <item name="android:fontFamily">@font/roboto_medium</item>
         <item name="android:textColor">@color/sceyt_color_text_primary</item>

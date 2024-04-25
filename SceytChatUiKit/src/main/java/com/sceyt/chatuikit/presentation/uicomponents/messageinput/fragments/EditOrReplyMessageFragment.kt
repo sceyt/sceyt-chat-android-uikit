@@ -17,11 +17,12 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytFragmentEditOrReplyMessageBinding
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
-import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
+import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setBoldSpan
-import com.sceyt.chatuikit.extensions.setTextColorRes
+import com.sceyt.chatuikit.extensions.setTint
 import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
@@ -165,9 +166,11 @@ open class EditOrReplyMessageFragment : Fragment() {
     }
 
     private fun SceytFragmentEditOrReplyMessageBinding.setupStyle() {
-        tvName.setTextColorRes(SceytChatUIKit.theme.accentColor)
-        icReplyOrEdit.setTintColorRes(SceytChatUIKit.theme.accentColor)
-        fileAttachment.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
+        val accentColor = requireContext().getCompatColor(SceytChatUIKit.theme.accentColor)
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.surface1Color))
+        tvName.setTextColor(accentColor)
+        icReplyOrEdit.setTint(accentColor)
+        fileAttachment.setBackgroundTint(accentColor)
         icCancelReply.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
     }
 }

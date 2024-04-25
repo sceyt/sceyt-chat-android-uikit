@@ -10,6 +10,7 @@
         <attr name="sceytMessageInputHintText" format="string" localization="suggested" />
         <attr name="sceytMessageInputTextColor" format="reference|color" />
         <attr name="sceytMessageInputHintTextColor" format="reference|color" />
+        <attr name="sceytMessageInputRootBackgroundColor" format="reference|color" />
         <attr name="sceytMessageInputBackgroundColor" format="reference|color" />
     </declare-styleable>
 </resources>
