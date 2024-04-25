@@ -22,6 +22,8 @@ import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.appcompat.widget.SwitchCompat
+import androidx.core.view.marginEnd
+import androidx.core.view.marginStart
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.findViewTreeLifecycleOwner
@@ -180,6 +182,9 @@ fun TextView.setTextColorRes(@ColorRes color: Int) {
 fun TextView.setHintColorRes(@ColorRes color: Int) {
     setHintTextColor(context.getCompatColor(color))
 }
+
+val View.marginHorizontal
+    get() = marginStart + marginEnd
 
 @Suppress("DEPRECATION")
 fun TextPaint.getStaticLayout(title: CharSequence, includePadding: Boolean, textWidth: Int): StaticLayout {

@@ -98,9 +98,6 @@ class OutImageMsgViewHolder(
             if (diff.replyCountChanged)
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
-            if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, binding.viewReply)
-
             if (diff.filesChanged)
                 initAttachment()
 
@@ -109,6 +106,9 @@ class OutImageMsgViewHolder(
 
             if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
                 initWidthsDependReactions(recyclerViewReactions, layoutDetails)
+
+            if (diff.replyContainerChanged)
+                setReplyMessageContainer(message, binding.viewReply)
         }
     }
 

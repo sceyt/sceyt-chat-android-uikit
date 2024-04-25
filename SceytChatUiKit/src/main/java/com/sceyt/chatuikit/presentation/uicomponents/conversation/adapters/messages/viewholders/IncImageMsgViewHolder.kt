@@ -102,9 +102,6 @@ class IncImageMsgViewHolder(
             if (diff.replyCountChanged)
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
-            if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, binding.viewReply)
-
             if (diff.filesChanged)
                 initAttachment()
 
@@ -113,6 +110,9 @@ class IncImageMsgViewHolder(
 
             if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
                 initWidthsDependReactions(recyclerViewReactions, layoutDetails)
+
+            if (diff.replyContainerChanged)
+                setReplyMessageContainer(message, binding.viewReply)
 
             if (item.message.shouldShowAvatarAndName)
                 avatar.setOnClickListener {

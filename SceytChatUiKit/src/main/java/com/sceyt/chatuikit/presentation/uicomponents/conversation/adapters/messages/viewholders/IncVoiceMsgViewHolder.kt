@@ -114,11 +114,11 @@ class IncVoiceMsgViewHolder(
             if (diff.reactionsChanged)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
-            if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, viewReply, false)
-
             if (diff.filesChanged)
                 initAttachment()
+
+            if (diff.replyContainerChanged)
+                setReplyMessageContainer(message, viewReply, false)
 
             if (item.message.shouldShowAvatarAndName)
                 avatar.setOnClickListener {
