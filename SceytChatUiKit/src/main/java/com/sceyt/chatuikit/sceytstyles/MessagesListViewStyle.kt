@@ -57,7 +57,7 @@ data class MessagesListViewStyle(
             private val attrs: AttributeSet?
     ) {
         fun build(): MessagesListViewStyle {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView, 0, 0)
+            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView)
 
             val messageItemStyle = MessageItemStyle.Builder(context, attrs).build()
 

@@ -45,7 +45,7 @@ data class MessageInputStyle(
             private val attrs: AttributeSet?
     ) {
         fun build(): MessageInputStyle {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.MessageInputView, 0, 0)
+            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.MessageInputView)
             val attachmentIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytMessageInputAttachmentIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_upload_file)?.apply {
                         mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))

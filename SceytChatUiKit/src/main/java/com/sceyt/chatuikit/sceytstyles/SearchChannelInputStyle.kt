@@ -39,7 +39,7 @@ data class SearchChannelInputStyle(
             private val attrs: AttributeSet?
     ) {
         fun build(): SearchChannelInputStyle {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.SearchChannelInput, 0, 0)
+            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.SearchChannelInput)
 
             val searchIcon = typedArray.getDrawable(R.styleable.SearchChannelInput_sceytUiSearchIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_search)?.apply {
@@ -62,6 +62,8 @@ data class SearchChannelInputStyle(
 
             val disableDebouncedSearch = typedArray.getBoolean(R.styleable.SearchChannelInput_sceytUiDisableDebouncedSearch,
                 false)
+
+            typedArray.recycle()
 
             return SearchChannelInputStyle(
                 searchIcon = searchIcon,

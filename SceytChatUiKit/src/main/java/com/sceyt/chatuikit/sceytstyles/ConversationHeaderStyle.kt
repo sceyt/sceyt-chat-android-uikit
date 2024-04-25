@@ -45,7 +45,7 @@ data class ConversationHeaderStyle(
     ) {
 
         fun build(): ConversationHeaderStyle {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ConversationHeaderView, 0, 0)
+            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ConversationHeaderView)
 
             val backgroundColor = typedArray.getColor(R.styleable.ConversationHeaderView_sceytConvHeaderBackground,
                 context.getCompatColor(SceytChatUIKit.theme.primaryColor))
