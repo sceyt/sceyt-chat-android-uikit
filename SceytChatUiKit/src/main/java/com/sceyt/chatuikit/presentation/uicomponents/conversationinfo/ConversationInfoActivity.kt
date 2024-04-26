@@ -39,6 +39,7 @@ import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.uicomponents.channels.dialogs.ChannelActionConfirmationWithDialog
 import com.sceyt.chatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
@@ -91,6 +92,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         getBundleArguments()
         initViewModel()
         binding?.initViews()
+        binding?.applyStyle()
         setChannelDetails(channel)
         viewModel.getChannelFromServer(channel.id)
         setupPagerAdapter(binding?.viewPager, binding?.tabLayout)
@@ -621,7 +623,11 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     private fun SceytActivityConversationInfoBinding.applyStyle(){
         val theme = SceytChatUIKit.theme
-        root.setBackgroundColor(theme.surface1Color)
+        root.setBackgroundColor(getCompatColor(theme.surface1Color))
+        collapsingToolbarLayout.setContentScrimColor(getCompatColor(theme.backgroundColor))
+        viewTopTabLayout.setBackgroundTintColorRes(theme.borderColor)
+        underlineTab.setBackgroundTintColorRes(theme.borderColor)
+        tabLayout.setBackgroundColor(getCompatColor(theme.backgroundColorSections))
     }
 
     companion object {
