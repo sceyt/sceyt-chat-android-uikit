@@ -130,6 +130,12 @@ open class MessageInfoViewProvider(private val context: Context) {
         return type.ordinal
     }
 
+
+    protected open fun getMessageListViewStyle(): MessageItemStyle {
+        return MessagesListViewStyle.currentStyle?.messageItemStyle
+                ?: MessagesListViewStyle.Builder(context = context, null).build().messageItemStyle
+    }
+
     fun setMessageListener(listener: MessageClickListeners) {
         clickListeners.setListener(listener)
     }
@@ -140,11 +146,5 @@ open class MessageInfoViewProvider(private val context: Context) {
 
     fun setNeedMediaDataCallback(callback: (NeedMediaInfoData) -> Unit) {
         needMediaDataCallback = callback
-    }
-
-    private fun getMessageListViewStyle(): MessageItemStyle {
-        return MessagesListViewStyle.currentStyle?.messageItemStyle
-                ?: MessagesListViewStyle.Builder(context = context, null)
-                    .build().messageItemStyle
     }
 }
