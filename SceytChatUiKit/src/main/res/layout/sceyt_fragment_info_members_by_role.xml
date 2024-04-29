@@ -4,16 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/sceyt_color_background_sections"
     tools:context="com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.membersbyrolebuttons.InfoMembersByRoleButtonsFragment">
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/members"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/sceyt_bg_ripple"
+        android:background="@color/sceyt_color_background_sections"
         android:drawableStart="@drawable/sceyt_ic_members"
         android:drawablePadding="16dp"
+        android:foreground="@drawable/sceyt_bg_ripple"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
@@ -36,9 +36,10 @@
         android:id="@+id/admins"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/sceyt_bg_ripple"
+        android:background="@color/sceyt_color_background_sections"
         android:drawableStart="@drawable/sceyt_ic_admin"
         android:drawablePadding="16dp"
+        android:foreground="@drawable/sceyt_bg_ripple"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
@@ -61,9 +62,10 @@
         android:id="@+id/searchMessages"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/sceyt_bg_ripple"
+        android:background="@color/sceyt_color_background_sections"
         android:drawableStart="@drawable/sceyt_ic_search_messages"
         android:drawablePadding="16dp"
+        android:foreground="@drawable/sceyt_bg_ripple"
         android:gravity="center_vertical"
         android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
@@ -74,6 +76,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/borderBetweenAdminsAndSearch"
         tools:ignore="UnusedAttribute" />
+
+    <androidx.legacy.widget.Space
+        android:id="@+id/space"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/searchMessages"
+        tools:layout_height="16dp" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/group_channel_members"
