@@ -14,7 +14,6 @@ import com.sceyt.chatuikit.databinding.SceytFragmentInfoMembersByRoleBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
-import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
@@ -88,12 +87,14 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
     }
 
     private fun SceytFragmentInfoMembersByRoleBinding.applyStyle() {
-        members.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        members.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
-        admins.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        admins.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
-        searchMessages.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        searchMessages.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
+        val textPrimaryColor = requireContext().getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
+        val backgroundColorSections = requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections)
+        members.setTextColor(textPrimaryColor)
+        members.setBackgroundColor(backgroundColorSections)
+        admins.setTextColor(textPrimaryColor)
+        admins.setBackgroundColor(backgroundColorSections)
+        searchMessages.setTextColor(textPrimaryColor)
+        searchMessages.setBackgroundColor(backgroundColorSections)
         borderBetweenMembersAndAdmins.setDividerColorResource(SceytChatUIKit.theme.borderColor)
         borderBetweenAdminsAndSearch.setDividerColorResource(SceytChatUIKit.theme.borderColor)
         space.layoutParams.height = ConversationInfoMediaStyle.spaceBetweenSections
