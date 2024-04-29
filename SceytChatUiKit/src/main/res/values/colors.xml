@@ -16,6 +16,7 @@
     <!--Interface-->
     <color name="sceyt_color_background">#FFFFFF</color>
     <color name="sceyt_color_background_secondary">#F1F2F6</color>
+    <color name="sceyt_color_background_tertiary">#F1F2F6</color>
     <color name="sceyt_color_background_sections">#FFFFFF</color>
     <color name="sceyt_color_border">#E4E6EE</color>
     <color name="sceyt_color_icon_secondary">#A0A1B0</color>

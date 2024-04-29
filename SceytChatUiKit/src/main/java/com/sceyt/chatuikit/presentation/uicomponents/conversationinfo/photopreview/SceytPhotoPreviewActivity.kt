@@ -8,6 +8,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytFragmentPhotoPreviewBinding
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 
@@ -45,6 +46,8 @@ class SceytPhotoPreviewActivity : AppCompatActivity() {
 
     private fun SceytFragmentPhotoPreviewBinding.applyStyle() {
         toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
+        toolbar.setTitleColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.primaryColor))
     }
 
     companion object {
