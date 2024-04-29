@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 
 open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener {
     protected lateinit var binding: SceytFragmentInfoMembersByRoleBinding
@@ -87,12 +88,15 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
     }
 
     private fun SceytFragmentInfoMembersByRoleBinding.applyStyle() {
-        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
         members.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        members.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
         admins.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        admins.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
         searchMessages.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        searchMessages.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
         borderBetweenMembersAndAdmins.setDividerColorResource(SceytChatUIKit.theme.borderColor)
         borderBetweenAdminsAndSearch.setDividerColorResource(SceytChatUIKit.theme.borderColor)
+        space.layoutParams.height = ConversationInfoMediaStyle.spaceBetweenSections
     }
 
     companion object {
