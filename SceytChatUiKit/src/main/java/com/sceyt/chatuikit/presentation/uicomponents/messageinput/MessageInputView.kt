@@ -441,6 +441,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         binding.icSendMessage.isInvisible = showVoiceIcon
         binding.icAddAttachments.isVisible = !isEditingMessage()
+        binding.viewAttachments.isVisible = allAttachments.isNotEmpty()
         if (showVoiceIcon) {
             showVoiceRecorder()
         } else hideAndStopVoiceRecorder()
@@ -449,7 +450,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun isEnabledInput() = !disabledInputByGesture && !isInputHidden
 
     private fun addAttachments(attachments: List<Attachment>) {
-        binding.groupAttachments.isVisible = true
+        binding.viewAttachments.isVisible = true
         allAttachments.addAll(attachments)
         attachmentsAdapter.addItems(attachments.map { AttachmentItem(it) })
         determineInputState()
@@ -505,7 +506,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             layoutInput.isInvisible = true
             messageInput.setText("")
             btnJoin.isVisible = false
-            groupAttachments.isVisible = false
+            viewAttachments.isVisible = false
             hideAndStopVoiceRecorder()
         }
     }
@@ -628,7 +629,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 val isBlockedPeer = channel.isPeerBlocked()
                 with(binding) {
                     if (isBlockedPeer) {
-                        groupAttachments.isVisible = false
+                        viewAttachments.isVisible = false
                         layoutReplyOrEditMessage.isVisible = false
                     }
                     isInputHidden = if (isBlockedPeer) {
@@ -862,7 +863,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
         attachmentsAdapter.removeItem(item)
         allAttachments.remove(item.attachment)
-        binding.viewTop.isVisible = allAttachments.isNotEmpty()
+        binding.viewAttachments.isVisible = allAttachments.isNotEmpty()
         determineInputState()
     }
 
@@ -970,7 +971,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun showHideInputOnModeChange(isInSelectMode: Boolean) {
         with(binding) {
             layoutInput.isInvisible = isInSelectMode
-            groupAttachments.isVisible = !isInSelectMode && allAttachments.isNotEmpty()
+            viewAttachments.isVisible = !isInSelectMode && allAttachments.isNotEmpty()
             if (isInSelectMode) {
                 hideAndStopVoiceRecorder()
                 closeReplyOrEditView()
