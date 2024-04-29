@@ -169,7 +169,7 @@ data class ChannelListViewStyle(
             val onlineStatusColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiOnlineIndicatorColor,
                 context.getCompatColor(R.color.sceyt_color_green))
 
-            val dividerColor = typedArray.getResourceId(R.styleable.ChannelListView_sceytUiDividerColor,
+            val dividerColor = typedArray.getColor(R.styleable.ChannelListView_sceytUiDividerColor,
                 context.getCompatColor(SceytChatUIKit.theme.borderColor))
 
             val enableDivider = typedArray.getBoolean(R.styleable.ChannelListView_sceytUiEnableDivider, false)

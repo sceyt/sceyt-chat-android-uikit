@@ -52,6 +52,7 @@ open class MessageInfoFragment : Fragment() {
 
         getBundleArguments()
 
+        binding?.applyStyle()
         initViews()
         initViewModel()
     }

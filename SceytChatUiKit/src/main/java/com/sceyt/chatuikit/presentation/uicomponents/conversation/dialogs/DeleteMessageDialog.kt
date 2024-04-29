@@ -66,5 +66,7 @@ class DeleteMessageDialog(context: Context) : Dialog(context, R.style.SceytDialo
     private fun SceytDialogDeleteMessageBinding.applyStyle() {
         buttonDelete.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
         buttonCancel.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        textTitle.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+        textDescription.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
     }
 }

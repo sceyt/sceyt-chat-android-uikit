@@ -154,6 +154,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     private fun SceytConversationHeaderViewBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
         toolbarMessageActions.popupTheme = style.menuStyle
         toolbarMessageActions.setTitleTextAppearance(context, style.menuTitleAppearance)
         icBack.setImageDrawable(style.backIcon)
