@@ -623,7 +623,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     private fun SceytActivityConversationInfoBinding.applyStyle() {
         val theme = SceytChatUIKit.theme
-        root.setBackgroundColor(getCompatColor(theme.surface1Color))
+        root.setBackgroundColor(getCompatColor(theme.backgroundColorTertiary))
         toolbar.setBackgroundColor(getCompatColor(theme.primaryColor))
         viewTopTabLayout.setBackgroundTintColorRes(theme.borderColor)
         underlineTab.setBackgroundTintColorRes(theme.borderColor)
