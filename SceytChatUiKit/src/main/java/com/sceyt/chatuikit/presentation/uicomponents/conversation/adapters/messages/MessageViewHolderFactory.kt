@@ -52,7 +52,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messa
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
@@ -62,12 +61,12 @@ open class MessageViewHolderFactory(context: Context) {
     protected val viewPoolReactions = RecyclerView.RecycledViewPool()
     protected val viewPoolFiles = RecyclerView.RecycledViewPool()
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
+    private lateinit var messageItemStyle: MessagesListViewStyle
     private var clickListeners = MessageClickListenersImpl()
     private var displayedListener: ((MessageListItem) -> Unit)? = null
     private var voicePlayPauseListener: ((FileListItem, playing: Boolean) -> Unit)? = null
     private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
-    private lateinit var messageItemStyle: MessagesListViewStyle
 
     internal fun setStyle(style: MessagesListViewStyle) {
         this.messageItemStyle = style
@@ -282,6 +281,8 @@ open class MessageViewHolderFactory(context: Context) {
     protected fun getDisplayedListener() = displayedListener
 
     protected fun getUserNameBuilder() = userNameBuilder
+
+    protected fun getMessagesListViewStyle() = messageItemStyle
 
     enum class MessageViewTypeEnum {
         IncText,
