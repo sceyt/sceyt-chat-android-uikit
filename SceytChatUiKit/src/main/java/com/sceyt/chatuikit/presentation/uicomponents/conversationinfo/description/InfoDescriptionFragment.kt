@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentInfoDescriptionBinding
@@ -14,6 +15,7 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.jsonToObject
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
@@ -63,8 +65,11 @@ open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener {
     }
 
     private fun SceytFragmentInfoDescriptionBinding.applyStyle() {
-        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
-        divider.setBackgroundColor(requireContext().getCompatColor(ConversationInfoMediaStyle.dividerColor))
+        layoutDetails.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
+        tvTitle.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
+        tvDescription.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        border.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.borderColor))
+        space.layoutParams.height = ConversationInfoMediaStyle.spaceBetweenSections
     }
 
     companion object {

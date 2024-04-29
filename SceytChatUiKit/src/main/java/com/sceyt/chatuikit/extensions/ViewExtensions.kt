@@ -17,6 +17,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
@@ -40,6 +41,10 @@ import kotlin.math.roundToInt
 
 fun View.addPaddings(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 0) {
     setPadding(paddingLeft + left, paddingTop + top, paddingRight + right, paddingBottom + bottom)
+}
+
+fun View.setPaddings(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 0) {
+    setPadding(left, top, right, bottom)
 }
 
 fun View.setMargins(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 0) {
@@ -185,6 +190,10 @@ fun TextView.setHintColorRes(@ColorRes color: Int) {
 
 val View.marginHorizontal
     get() = marginStart + marginEnd
+
+fun ProgressBar.setProgressColor(@ColorRes colorId: Int) {
+    indeterminateDrawable.setTint(context.getCompatColor(colorId))
+}
 
 @Suppress("DEPRECATION")
 fun TextPaint.getStaticLayout(title: CharSequence, includePadding: Boolean, textWidth: Int): StaticLayout {

@@ -53,6 +53,7 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
         get() = binding.loadProgress
 
     private fun SceytItemChannelFileBinding.applyStyle() {
+        root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
         icFile.setImageDrawable(MessagesListViewStyle.currentStyle?.messageItemStyle?.fileAttachmentIcon
                 ?: context.getCompatDrawable(R.drawable.sceyt_ic_file_filled))
         icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)

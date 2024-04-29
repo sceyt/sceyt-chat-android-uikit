@@ -2,11 +2,11 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.mess
 
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.setProgressColor
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
-class LoadingMoreMessagesViewHolder(private val binding: SceytItemLoadingMoreBinding,
+class LoadingMoreMessagesViewHolder(binding: SceytItemLoadingMoreBinding,
                                     style: MessageItemStyle) : BaseMsgViewHolder(binding.root, style) {
 
     init {
@@ -14,7 +14,7 @@ class LoadingMoreMessagesViewHolder(private val binding: SceytItemLoadingMoreBin
     }
 
     private fun SceytItemLoadingMoreBinding.applyStyle() {
-        adapterListLoadingProgressBar.indeterminateDrawable.setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        adapterListLoadingProgressBar.setProgressColor(SceytChatUIKit.theme.accentColor)
     }
 
     override val enableReply = false

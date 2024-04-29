@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.extensions.isAppInDarkMode
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
@@ -80,13 +81,15 @@ data class MessageItemStyle(
             val incBubbleColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageIncBubbleColor,
                 context.getCompatColor(R.color.sceyt_color_bg_inc_message))
 
-            val defaultOutBubbleColor = ColorUtils.blendARGB(accentColor, Color.WHITE, 0.8f)
-            val outBubbleColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageOutBubbleColor, defaultOutBubbleColor)
+            val color2 = if (context.isAppInDarkMode()) Color.BLACK else Color.WHITE
+            val defaultOutBubbleColor = ColorUtils.blendARGB(accentColor, color2, 0.8f)
+            val outBubbleColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageOutBubbleColor,
+                defaultOutBubbleColor)
 
             val incLinkPreviewBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageIncLinkPreviewBackgroundColor,
                 context.getCompatColor(R.color.sceyt_color_bg_inc_link_preview))
 
-            val defaultOutLinkPreviewBackgroundColor = ColorUtils.blendARGB(accentColor, Color.WHITE, 0.7f)
+            val defaultOutLinkPreviewBackgroundColor = ColorUtils.blendARGB(accentColor, color2, 0.7f)
             val outLinkPreviewBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageOutLinkPreviewBackgroundColor,
                 defaultOutLinkPreviewBackgroundColor)
 

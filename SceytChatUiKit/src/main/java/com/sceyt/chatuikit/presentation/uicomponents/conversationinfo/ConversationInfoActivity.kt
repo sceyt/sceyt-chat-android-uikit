@@ -30,7 +30,6 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityConversationInfoBinding
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.TAG_NAME
 import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -41,13 +40,14 @@ import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chatuikit.presentation.uicomponents.channels.dialogs.ChannelActionConfirmationWithDialog
-import com.sceyt.chatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPublic
+import com.sceyt.chatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
 import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.presentation.uicomponents.channels.dialogs.ChannelActionConfirmationWithDialog
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.channelInfo.InfoDetailsFragment
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.description.InfoDescriptionFragment
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.DirectChatActionsDialog
@@ -621,13 +621,14 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         overrideTransitions(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right, false)
     }
 
-    private fun SceytActivityConversationInfoBinding.applyStyle(){
+    private fun SceytActivityConversationInfoBinding.applyStyle() {
         val theme = SceytChatUIKit.theme
         root.setBackgroundColor(getCompatColor(theme.surface1Color))
-        collapsingToolbarLayout.setContentScrimColor(getCompatColor(theme.backgroundColor))
+        toolbar.setBackgroundColor(getCompatColor(theme.primaryColor))
         viewTopTabLayout.setBackgroundTintColorRes(theme.borderColor)
         underlineTab.setBackgroundTintColorRes(theme.borderColor)
         tabLayout.setBackgroundColor(getCompatColor(theme.backgroundColorSections))
+        tabLayout.setTabTextColors(getCompatColor(theme.textSecondaryColor), getCompatColor(theme.textPrimaryColor))
     }
 
     companion object {

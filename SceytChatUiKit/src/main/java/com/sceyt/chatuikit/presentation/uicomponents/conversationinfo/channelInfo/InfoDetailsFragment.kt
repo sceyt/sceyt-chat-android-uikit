@@ -163,8 +163,12 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
     }
 
     private fun SceytFragmentInfoDetailsBinding.applyStyle() {
-        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
-        divider.setBackgroundColor(requireContext().getCompatColor(ConversationInfoMediaStyle.dividerColor))
+        val theme = SceytChatUIKit.theme
+        layoutDetails.setBackgroundColor(requireContext().getCompatColor(theme.backgroundColorSections))
+        title.setTextColor(requireContext().getCompatColor(theme.textPrimaryColor))
+        tvSubtitle.setTextColor(requireContext().getCompatColor(theme.textSecondaryColor))
+        dividerTop.setDividerColorResource(theme.borderColor)
+        space.layoutParams.height = ConversationInfoMediaStyle.spaceBetweenSections
     }
 
     companion object {
