@@ -83,12 +83,12 @@ class SceytCustomToolbar @JvmOverloads constructor(
 
     fun setTitleColorRes(@ColorRes colorId: Int) {
         titleColor = context.getCompatColor(colorId)
-        invalidate()
+        binding.tvTitle.setTextColor(titleColor)
     }
 
     fun setTitleColor(@ColorInt color: Int) {
         titleColor = color
-        invalidate()
+        binding.tvTitle.setTextColor(titleColor)
     }
 
     fun setIconsTint(@ColorRes colorId: Int) {
