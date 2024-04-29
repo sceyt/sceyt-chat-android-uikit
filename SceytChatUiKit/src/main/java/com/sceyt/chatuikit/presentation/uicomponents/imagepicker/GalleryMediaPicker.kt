@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.presentation.uicomponents.imagepicker
 
 import android.content.ContentUris
-import android.content.res.ColorStateList
+import android.content.Context
 import android.content.res.Configuration
 import android.database.Cursor
 import android.graphics.Color
@@ -27,16 +27,18 @@ import com.sceyt.chatuikit.databinding.SceytGaleryMediaPickerBinding
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.checkAndAskPermissions
 import com.sceyt.chatuikit.extensions.dismissSafety
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getOrientation
 import com.sceyt.chatuikit.extensions.getPermissionsForMangeStorage
 import com.sceyt.chatuikit.extensions.initPermissionLauncher
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.screenHeightPx
+import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.persistence.differs.GalleryMediaItemDiff
 import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.GalleryMediaAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.MediaData
 import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.MediaItem
+import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.viewholders.GalleyMediaItemViewHolderFactory
 import com.sceyt.chatuikit.sceytstyles.GalleryPickerStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -54,9 +56,10 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
     private var requestedSelectionMediaPaths = mutableSetOf<String>()
     private val screenHeight by lazy { screenHeightPx() }
     private val peekHeight by lazy { screenHeight / 1.5 }
-    private var maxSelectCount: Int = GalleryPickerStyle.maxSelectCount
+    private var maxSelectCount: Int = MAX_SELECT_MEDIA_COUNT
+    private lateinit var style: GalleryPickerStyle
     private val imagesAdapter by lazy {
-        GalleryMediaAdapter(::onMediaClick)
+        GalleryMediaAdapter(initGalleryViewHolderFactory(), style)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,6 +80,11 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
         arguments?.getInt(MAX_SELECTION_COUNT)?.let {
             maxSelectCount = it
         }
+    }
+
+    private fun initGalleryViewHolderFactory(): GalleyMediaItemViewHolderFactory {
+        val clickListener = GalleryMediaAdapter.MediaClickListener(::onMediaClick)
+        return GalleyMediaItemViewHolderFactory(style, clickListener)
     }
 
     private fun checkPermissions(callBack: (Boolean) -> Unit) {
@@ -128,6 +136,11 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
                 }
             }
 
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        style = GalleryPickerStyle.Builder(context, null).build()
+    }
+
     private fun SceytGaleryMediaPickerBinding.initViews() {
         btnNext.setOnClickListener {
             pickerListener?.onSelect(selectedMedia.map {
@@ -139,17 +152,16 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
     }
 
     private fun SceytGaleryMediaPickerBinding.initStyle() {
-        val color = requireContext().getCompatColor(GalleryPickerStyle.nextButtonColor)
-        btnNext.backgroundTintList = ColorStateList.valueOf(color)
+        btnNext.setBackgroundTint(style.nextButtonColor)
         counter.background = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadii = floatArrayOf(30f, 30f, 30f, 30f, 30f, 30f, 30f, 30f)
-            setColor(requireContext().getCompatColor(GalleryPickerStyle.counterColor))
+            setColor(style.counterColor)
             setStroke(5, Color.WHITE)
         }
     }
 
-    private fun onMediaClick(mediaItem: MediaItem) {
+    private fun onMediaClick(mediaItem: MediaItem, position: Int) {
         val item = mediaItem.media
         if (selectedMedia.size == maxSelectCount && item.selected.not()) {
             Toast.makeText(requireContext(), "${context?.getString(R.string.sceyt_max_select_count_should_be)} " +
@@ -157,6 +169,7 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
             return
         }
         item.selected = !item.selected
+        imagesAdapter.notifyItemChanged(position, GalleryMediaItemDiff.DEFAULT.copy(filePathChanged = false))
 
         if (item.selected) {
             selectedMedia.add(item)
@@ -318,10 +331,11 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
         private const val CHUNK_SIZE = 150
         private const val STATE_SELECTION = "stateSelection"
         private const val MAX_SELECTION_COUNT = "maxSelectionCount"
+        const val MAX_SELECT_MEDIA_COUNT = 20
 
         var pickerListener: PickerListener? = null
 
-        fun instance(maxSelectCount: Int = GalleryPickerStyle.maxSelectCount, vararg selections: String): GalleryMediaPicker {
+        fun instance(maxSelectCount: Int = MAX_SELECT_MEDIA_COUNT, vararg selections: String): GalleryMediaPicker {
             return GalleryMediaPicker().apply {
                 arguments = bundleOf(
                     STATE_SELECTION to selections,
