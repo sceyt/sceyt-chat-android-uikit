@@ -42,12 +42,13 @@ object SceytChatUIKit : SceytKoinComponent {
             apiUrl: String,
             appId: String,
             clientId: String,
-            enableDatabase: Boolean = true) {
+            enableDatabase: Boolean = true): ChatClient {
 
-        ChatClient.initialize(appContext, apiUrl, appId, clientId)
+        val chatClient = ChatClient.initialize(appContext, apiUrl, appId, clientId)
         this.appContext = appContext
         initKoin(enableDatabase)
         initEmojiSupport()
+        return chatClient
     }
 
     fun connect(token: String) {
