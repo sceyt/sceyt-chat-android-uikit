@@ -4,8 +4,10 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelMembersBinding
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
+import com.sceyt.chatuikit.extensions.setProgressColor
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListeners
@@ -33,7 +35,14 @@ open class ChannelMembersViewHolderFactory(context: Context) {
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseMemberViewHolder {
         val binding = SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
         return object : BaseMemberViewHolder(binding.root) {
-            override fun bind(item: MemberItem, diff: MemberItemPayloadDiff) {}
+
+            override fun bind(item: MemberItem, diff: MemberItemPayloadDiff) {
+                binding.applyStyle()
+            }
+
+            private fun SceytItemLoadingMoreBinding.applyStyle() {
+                adapterListLoadingProgressBar.setProgressColor(SceytChatUIKit.theme.accentColor)
+            }
         }
     }
 

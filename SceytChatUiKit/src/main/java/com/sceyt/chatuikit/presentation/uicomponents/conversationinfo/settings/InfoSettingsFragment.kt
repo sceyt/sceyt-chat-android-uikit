@@ -6,11 +6,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentInfoSettingsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setOnlyClickable
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
@@ -83,8 +85,11 @@ open class InfoSettingsFragment : Fragment(), ChannelUpdateListener {
     }
 
     private fun SceytFragmentInfoSettingsBinding.applyStyle() {
-        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
-        divider.setBackgroundColor(requireContext().getCompatColor(ConversationInfoMediaStyle.dividerColor))
+        layoutDetails.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
+        notification.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        autoDeleteMessages.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        border.setDividerColorResource(SceytChatUIKit.theme.borderColor)
+        space.layoutParams.height = ConversationInfoMediaStyle.spaceBetweenSections
     }
 
     companion object {

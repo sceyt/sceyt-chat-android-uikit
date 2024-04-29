@@ -12,7 +12,9 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogDirectChannelActionsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.setTextViewDrawableColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
+import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
@@ -110,6 +112,12 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     private fun SceytDialogDirectChannelActionsBinding.applyStyle() {
         setTextViewsDrawableColor(listOf(pin, unPin, blockUser, unBlockUser, clearHistory),
             context.getCompatColor(SceytChatUIKit.theme.accentColor))
+
+        setTextViewsTextColor(listOf(pin, unPin, blockUser, unBlockUser, clearHistory),
+            context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+
+        delete.setTextViewDrawableColor(context.getCompatColor(SceytChatUIKit.theme.errorColor))
+        delete.setTextColor(context.getCompatColor(SceytChatUIKit.theme.errorColor))
     }
 
     companion object {

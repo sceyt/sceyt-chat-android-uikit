@@ -14,6 +14,7 @@ import com.sceyt.chatuikit.extensions.firstCharToUppercase
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableNameWithYou
 import com.sceyt.chatuikit.extensions.getString
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListenersImpl
@@ -28,6 +29,7 @@ class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
     private lateinit var memberItem: MemberItem.Member
 
     init {
+        binding.applyStyle()
         binding.root.setOnClickListener {
             memberClickListeners.onMemberClick(it, memberItem)
         }
@@ -100,5 +102,11 @@ class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
             backgroundTintList = ColorStateList.valueOf(bgColorTint)
             setTextColor(colorAccent)
         }
+    }
+
+    private fun SceytItemChannelMembersBinding.applyStyle() {
+        userName.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        tvStatus.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
+        roleName.setTextColorRes(SceytChatUIKit.theme.accentColor)
     }
 }

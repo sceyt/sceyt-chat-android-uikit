@@ -4,8 +4,11 @@ import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelMediaDateBinding
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.AttachmentsDiffUtil
@@ -104,6 +107,8 @@ class ChannelMediaAdapter(
             dateFormatter = ConversationInfoMediaStyle.mediaDateSeparatorFormat)
 
         header.tvDate.text = date
+        header.tvDate.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
+        header.root.setBackgroundColor(header.root.context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
     }
 
     override fun isHeader(itemPosition: Int): Boolean {

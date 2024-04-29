@@ -36,6 +36,8 @@ import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBoldSpan
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.extensions.setTextColorRes
+import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
@@ -80,6 +82,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         getBundleArguments()
         initViewModel()
         initViews()
+        binding?.applyStyle()
         initStringsWithAddType()
         loadInitialMembers()
     }
@@ -118,10 +121,6 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
 
     private fun initViews() {
         with(binding ?: return) {
-            icAddMembers.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
-
-            toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
-
             layoutAddMembers.setOnClickListener {
                 onAddMembersClick(memberType)
             }
@@ -430,6 +429,15 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     override fun onChannelUpdated(channel: SceytChannel) {
         this.channel = channel
         getCurrentUserRole()
+    }
+
+    private fun SceytFragmentChannelMembersBinding.applyStyle() {
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
+        toolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.primaryColor))
+        toolbar.setTitleColor(SceytChatUIKit.theme.textPrimaryColor)
+        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
+        icAddMembers.setTintColorRes(SceytChatUIKit.theme.accentColor)
+        addMembers.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
     }
 
     companion object {

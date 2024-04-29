@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setOnClickListenerDisableClickViewForWhile
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.getDefaultAvatar
@@ -202,6 +203,10 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
     }
 
     private fun SceytFragmentInfoToolbarBinding.applyStyle() {
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.primaryColor))
+        titleToolbar.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        tvToolbarInfo.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        subTitleToolbar.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
         icBack.setImageResource(ConversationInfoStyle.navigationIcon)
         icEdit.setImageResource(ConversationInfoStyle.editIcon)
         icMore.setImageResource(ConversationInfoStyle.moreIcon)

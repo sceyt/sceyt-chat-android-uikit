@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogGroupChannelActionsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
+import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 
 class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
@@ -108,6 +109,12 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
     private fun SceytDialogGroupChannelActionsBinding.applyStyle() {
         setTextViewsDrawableColor(listOf(pin, unPin, clearHistory, report),
             context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        setTextViewsDrawableColor(listOf(leaveChat, delete),
+            context.getCompatColor(SceytChatUIKit.theme.errorColor))
+        setTextViewsTextColor(listOf(pin, unPin, clearHistory, report),
+            context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+        setTextViewsTextColor(listOf(leaveChat, delete),
+            context.getCompatColor(SceytChatUIKit.theme.errorColor))
     }
 
     companion object {

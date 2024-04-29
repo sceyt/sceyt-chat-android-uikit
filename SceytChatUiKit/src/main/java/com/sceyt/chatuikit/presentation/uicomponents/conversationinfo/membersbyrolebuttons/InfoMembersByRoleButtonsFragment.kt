@@ -7,17 +7,18 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentInfoMembersByRoleBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 
 open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener {
     protected lateinit var binding: SceytFragmentInfoMembersByRoleBinding
@@ -86,8 +87,12 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
     }
 
     private fun SceytFragmentInfoMembersByRoleBinding.applyStyle() {
-        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
-        divider.setBackgroundColor(requireContext().getCompatColor(ConversationInfoMediaStyle.dividerColor))
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
+        members.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        admins.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        searchMessages.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        borderBetweenMembersAndAdmins.setDividerColorResource(SceytChatUIKit.theme.borderColor)
+        borderBetweenAdminsAndSearch.setDividerColorResource(SceytChatUIKit.theme.borderColor)
     }
 
     companion object {

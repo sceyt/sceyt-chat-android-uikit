@@ -160,6 +160,7 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
 
     private fun SceytItemChannelVoiceBinding.applyStyle() {
         val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
         icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
         loadProgress.setIconTintColor(accentColor)
         loadProgress.setProgressColor(accentColor)
