@@ -13,14 +13,14 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelFilesBinding
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
-import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.customviews.SceytPageStateView
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
@@ -30,6 +30,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adap
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.launch
 
@@ -40,6 +41,8 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     protected var pageStateView: SceytPageStateView? = null
     protected val mediaType = listOf(AttachmentTypeEnum.File.value())
     protected lateinit var viewModel: ChannelAttachmentsViewModel
+    protected lateinit var style: ConversationInfoStyle
+        private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelFilesBinding.inflate(inflater, container, false).also {

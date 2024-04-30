@@ -34,6 +34,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adap
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 import kotlinx.coroutines.launch
 
 open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
@@ -43,6 +44,8 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     protected open val mediaType = listOf("image", "video")
     protected open var pageStateView: SceytPageStateView? = null
     protected lateinit var viewModel: ChannelAttachmentsViewModel
+    protected lateinit var style: ConversationInfoStyle
+        private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelMediaBinding.inflate(inflater, container, false).also {

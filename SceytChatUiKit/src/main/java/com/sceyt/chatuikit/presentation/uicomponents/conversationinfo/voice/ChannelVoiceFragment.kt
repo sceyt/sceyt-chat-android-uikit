@@ -14,14 +14,14 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelVoiceBinding
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
-import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.customviews.SceytPageStateView
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ViewPagerAdapter
@@ -31,15 +31,18 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adap
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 import kotlinx.coroutines.launch
 
 open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     private lateinit var channel: SceytChannel
     private var binding: SceytFragmentChannelVoiceBinding? = null
-    private var mediaAdapter: ChannelMediaAdapter? = null
-    private var pageStateView: SceytPageStateView? = null
-    private val mediaType = listOf(AttachmentTypeEnum.Voice.value())
+    protected open var mediaAdapter: ChannelMediaAdapter? = null
+    protected open var pageStateView: SceytPageStateView? = null
+    protected open val mediaType = listOf(AttachmentTypeEnum.Voice.value())
     private lateinit var viewModel: ChannelAttachmentsViewModel
+    protected lateinit var style: ConversationInfoStyle
+        private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelVoiceBinding.inflate(inflater, container, false).also {
@@ -113,7 +116,7 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     open fun getUserNameBuilder(): ((User) -> String)? = SceytKitConfig.userNameBuilder
 
-    protected fun loadInitialFilesList() {
+    protected open fun loadInitialFilesList() {
         if (channel.pending) {
             binding?.root?.post { pageStateView?.updateState(PageState.StateEmpty()) }
             return

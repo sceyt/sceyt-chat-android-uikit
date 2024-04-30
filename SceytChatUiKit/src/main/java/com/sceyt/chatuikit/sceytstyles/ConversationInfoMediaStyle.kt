@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.sceytstyles
 
-import com.sceyt.chatuikit.extensions.dpToPx
+import androidx.annotation.DrawableRes
+import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.sceytconfigs.dateformaters.ConversationMediaDateFormatter
 
 object ConversationInfoMediaStyle {
@@ -8,5 +9,6 @@ object ConversationInfoMediaStyle {
     var mediaDateSeparatorFormat = ConversationMediaDateFormatter()
 
     @JvmField
-    var spaceBetweenSections = dpToPx(16f)
+    @DrawableRes
+    var videoDurationIcon: Int = R.drawable.sceyt_ic_video
 }

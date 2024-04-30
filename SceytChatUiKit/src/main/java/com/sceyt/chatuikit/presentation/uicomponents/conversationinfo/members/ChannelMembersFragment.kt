@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members
 
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -45,6 +44,7 @@ import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.ChannelMembersAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
@@ -55,9 +55,10 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.po
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.popups.MemberActionsDialog.ActionsEnum.RevokeAdmin
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoinComponent {
+open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ConversationInfoStyleApplier, SceytKoinComponent {
     protected val viewModel by viewModel<ChannelMembersViewModel>()
     protected var membersAdapter: ChannelMembersAdapter? = null
     protected var binding: SceytFragmentChannelMembersBinding? = null
@@ -65,6 +66,8 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     protected lateinit var channel: SceytChannel
         private set
     protected lateinit var memberType: MemberTypeEnum
+        private set
+    protected lateinit var style: ConversationInfoStyle
         private set
     protected var currentUserRole: Role? = null
         private set
@@ -95,7 +98,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     private fun getBundleArguments() {
         channel = requireNotNull(arguments?.parcelable(CHANNEL))
         val type = requireNotNull(arguments?.getInt(MEMBER_TYPE, MemberTypeEnum.Member.ordinal))
-        memberType = MemberTypeEnum.values().getOrNull(type) ?: MemberTypeEnum.Member
+        memberType = MemberTypeEnum.entries.getOrNull(type) ?: MemberTypeEnum.Member
         getCurrentUserRole()
     }
 
@@ -276,11 +279,11 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     protected open fun onRemovedMember(data: List<SceytMember>) {
     }
 
-    protected fun currentUserIsOwnerOrAdmin(): Boolean {
+    protected open fun currentUserIsOwnerOrAdmin(): Boolean {
         return currentUserRole?.name == RoleTypeEnum.Owner.toString() || currentUserRole?.name == RoleTypeEnum.Admin.toString()
     }
 
-    protected fun loadInitialMembers() {
+    protected open fun loadInitialMembers() {
         viewModel.getChannelMembers(channel.id, 0, getRole())
     }
 
@@ -429,6 +432,10 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     override fun onChannelUpdated(channel: SceytChannel) {
         this.channel = channel
         getCurrentUserRole()
+    }
+
+    override fun setStyle(style: ConversationInfoStyle) {
+        this.style = style
     }
 
     private fun SceytFragmentChannelMembersBinding.applyStyle() {
