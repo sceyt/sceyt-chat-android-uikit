@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
@@ -26,6 +27,8 @@ class SceytSearchableToolbar @JvmOverloads constructor(context: Context, attrs: 
     private var searchIcon: Int
     private var backIcon: Int
     private var clearIcon: Int
+
+    @ColorInt
     private var iconsTint: Int = 0
     private var titleTextSize: Int
 
@@ -39,7 +42,7 @@ class SceytSearchableToolbar @JvmOverloads constructor(context: Context, attrs: 
         searchIcon = a.getResourceId(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarSearchIcon, R.drawable.sceyt_ic_search)
         backIcon = a.getResourceId(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarBackIcon, R.drawable.sceyt_ic_arrow_back)
         clearIcon = a.getResourceId(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarClearIcon, R.drawable.sceyt_ic_cancel)
-        iconsTint = a.getResourceId(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarIconsTint, iconsTint)
+        iconsTint = a.getColor(R.styleable.SceytSearchableToolbar_sceytSearchableToolbarIconsTint, iconsTint)
         a.recycle()
 
         binding = SceytLayoutSearchableToolbarBinding.inflate(LayoutInflater.from(context), this, true)
@@ -55,8 +58,8 @@ class SceytSearchableToolbar @JvmOverloads constructor(context: Context, attrs: 
             setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize.toFloat())
         }
         if (iconsTint != 0) {
-            binding.icSearch.setColorFilter(context.getCompatColor(iconsTint))
-            binding.icBack.setColorFilter(context.getCompatColor(iconsTint))
+            binding.icSearch.setColorFilter(iconsTint)
+            binding.icBack.setColorFilter(iconsTint)
         }
     }
 
@@ -113,7 +116,7 @@ class SceytSearchableToolbar @JvmOverloads constructor(context: Context, attrs: 
     }
 
     fun setIconsTint(@ColorRes colorId: Int) {
-        iconsTint = colorId
+        iconsTint = context.getCompatColor(colorId)
         setIconsAndColors()
     }
 
