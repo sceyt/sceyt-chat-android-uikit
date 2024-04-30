@@ -74,7 +74,6 @@ import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.chatuikit.pushes.RemoteMessageData
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -96,6 +95,7 @@ internal class PersistenceChannelsLogicImpl(
 
     private val messageLogic: PersistenceMessagesLogic by inject()
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
+    private val channelsLoadSize get() = SceytChatUIKit.config.channelsLoadSize
 
     override suspend fun onChannelEvent(data: ChannelEventData) {
         when (val event = data.eventType) {
@@ -289,7 +289,7 @@ internal class PersistenceChannelsLogicImpl(
             if (offset == 0) channelsCache.clear()
 
             val dbChannels = getChannelsDb(offset, searchQuery)
-            var hasNext = dbChannels.size == CHANNELS_LOAD_SIZE
+            var hasNext = dbChannels.size == channelsLoadSize
 
             trySend(PaginationResponse.DBResponse(data = dbChannels, loadKey = loadKey, offset = offset,
                 hasNext = hasNext, hasPrev = false, query = searchQuery))
@@ -307,7 +307,7 @@ internal class PersistenceChannelsLogicImpl(
 
                 val savedChannels = saveChannelsToDb(channels)
                 val hasDiff = channelsCache.addAll(savedChannels.map { it.clone() }, offset != 0) || offset == 0
-                hasNext = response.data?.size == CHANNELS_LOAD_SIZE
+                hasNext = response.data?.size == channelsLoadSize
 
                 trySend(PaginationResponse.ServerResponse(data = response, cacheData = channelsCache.getSorted(),
                     loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext, hasPrev = false,
@@ -353,7 +353,7 @@ internal class PersistenceChannelsLogicImpl(
 
                 val savedChannels = saveChannelsToDb(channels)
                 val hasDiff = channelsCache.addAll(savedChannels.map { it.clone() }, offset != 0) || offset == 0
-                hasNext = response.data?.size == CHANNELS_LOAD_SIZE
+                hasNext = response.data?.size == channelsLoadSize
 
                 trySend(PaginationResponse.ServerResponse(data = response, cacheData = channelsCache.getSorted(),
                     loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext, hasPrev = false,
@@ -410,12 +410,12 @@ internal class PersistenceChannelsLogicImpl(
 
     private suspend fun getChannelsDb(offset: Int, searchQuery: String): List<SceytChannel> {
         return if (searchQuery.isBlank()) {
-            channelDao.getChannels(limit = CHANNELS_LOAD_SIZE, offset = offset).map { channel ->
+            channelDao.getChannels(limit = channelsLoadSize, offset = offset).map { channel ->
                 channel.toChannel()
             }
         } else {
             val ids = usersDao.getUserIdsByDisplayName(searchQuery)
-            channelDao.getChannelsByQueryAndUserIds(query = searchQuery, userIds = ids, limit = CHANNELS_LOAD_SIZE,
+            channelDao.getChannelsByQueryAndUserIds(query = searchQuery, userIds = ids, limit = channelsLoadSize,
                 offset = offset, false).map { channel ->
                 channel.toChannel()
             }

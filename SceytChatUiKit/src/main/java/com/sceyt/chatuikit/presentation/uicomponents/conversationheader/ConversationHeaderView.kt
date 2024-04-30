@@ -59,7 +59,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.eventlis
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.ConversationHeaderStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil

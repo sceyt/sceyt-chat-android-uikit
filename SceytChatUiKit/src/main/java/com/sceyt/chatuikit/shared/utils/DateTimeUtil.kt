@@ -6,10 +6,12 @@ import android.text.format.DateFormat
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.sceytconfigs.dateformaters.BaseDateFormatter
 import com.sceyt.chatuikit.sceytconfigs.dateformaters.DateFormatData
-import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 import java.text.ParseException
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import kotlin.math.absoluteValue
 
@@ -217,7 +219,7 @@ object DateTimeUtil {
             val hoursDiff = TimeUnit.MILLISECONDS.toHours(now.timeInMillis - date2.timeInMillis).toInt().absoluteValue
             val minDiff = TimeUnit.MILLISECONDS.toMinutes(now.timeInMillis - date2.timeInMillis).toInt().absoluteValue
 
-            val dateFormatter = SceytChatUIKit.theme.userPresenceDateFormat
+            val dateFormatter = SceytChatUIKit.userPresenceDateFormatter
             return when {
                 yearsDiff > 0 -> {
                     getDateText(date, dateFormatter.olderThisYear(context, date))

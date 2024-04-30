@@ -9,7 +9,6 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.USERS_LOAD_SIZE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -33,7 +32,7 @@ class UsersViewModel : BaseViewModel() {
             var empty = false
             if (response is SceytResponse.Success) {
                 empty = response.data.isNullOrEmpty()
-                hasNext = response.data?.size == USERS_LOAD_SIZE
+                hasNext = response.data?.size == SceytChatUIKit.config.usersLoadSize
                 if (isLoadMore)
                     _loadMoreChannelsLiveData.postValue(mapToUserItems(response.data, hasNext))
                 else _usersLiveData.postValue(mapToUserItems(response.data, hasNext))

@@ -9,6 +9,7 @@ import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
@@ -29,7 +30,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelP
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
 import com.sceyt.chatuikit.presentation.uicomponents.channels.popups.PopupMenuChannel
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.ChannelSortType
 import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 
 class ChannelListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -93,7 +94,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
         channelsRV.getData()?.let {
             if (it.contains(channelItem)) return
             val newData = ArrayList(it).also { items -> items.add(channelItem) }
-            channelsRV.sortByAndSetNewData(SceytKitConfig.sortChannelsBy, newData)
+            channelsRV.sortByAndSetNewData(SceytChatUIKit.config.sortChannelsBy, newData)
         } ?: channelsRV.setData(arrayListOf(channelItem))
 
         pageStateView?.updateState(PageState.Nothing)
@@ -216,7 +217,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
         channelsRV.hideLoadingMore()
     }
 
-    fun sortChannelsBy(sortBy: SceytKitConfig.ChannelSortType) {
+    fun sortChannelsBy(sortBy: ChannelSortType) {
         debounceHelper.submitForceIfNotRunning { channelsRV.sortBy(sortBy) }
     }
 
@@ -261,7 +262,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
         })
     }
 
-    fun setuserNameFormatter(builder: (User) -> String) {
+    fun setUserNameFormatter(builder: (User) -> String) {
         channelsRV.getViewHolderFactory().setUserNameFormatter(builder)
     }
 

@@ -23,7 +23,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.channels.ChannelListView
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.TypingCancelHelper
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.SearchChannelInputView
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.filter
@@ -55,7 +54,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
                     }
                     needToUpdateChannelsAfterResume.clear()
                     if (needSort)
-                        channelListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
+                        channelListView.sortChannelsBy(SceytChatUIKit.config.sortChannelsBy)
                 }
             }
         }
@@ -115,7 +114,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
             val diff = channelListView.channelUpdated(data.channel)
             if (diff != null) {
                 if (diff.lastMessageChanged || data.needSorting || isCanceled)
-                    channelListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
+                    channelListView.sortChannelsBy(SceytChatUIKit.config.sortChannelsBy)
                 SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body} draft:${data.channel.draftMessage?.message}  unreadCount ${data.channel.newMessageCount}" +
                         " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${diff.hasDifference()} lastMessageChanged: ${diff.lastMessageChanged} needSorting: ${data.needSorting}")
             } else {

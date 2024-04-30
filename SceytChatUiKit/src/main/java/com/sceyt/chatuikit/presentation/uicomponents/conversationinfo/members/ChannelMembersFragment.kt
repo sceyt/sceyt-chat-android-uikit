@@ -54,7 +54,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.po
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.popups.MemberActionsDialog.ActionsEnum.Delete
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.popups.MemberActionsDialog.ActionsEnum.RevokeAdmin
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -186,7 +185,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
                  itemsDb.addAll(items.minus(itemsDb.toSet()))
              }*/
 
-            if (data.offset + SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE >= members.size)
+            if (data.offset + SceytChatUIKit.config.channelMembersLoadSize >= members.size)
                 if (hasNext) {
                     if (!itemsDb.contains(MemberItem.LoadingMore))
                         itemsDb.add(MemberItem.LoadingMore)

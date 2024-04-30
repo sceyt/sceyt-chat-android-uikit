@@ -30,7 +30,6 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytMember
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
 import com.sceyt.chatuikit.persistence.repositories.UsersRepository
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -47,6 +46,7 @@ internal class PersistenceMembersLogicImpl(
         private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent {
 
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
+    private val channelMembersLoadSize get() = SceytChatUIKit.config.channelMembersLoadSize
 
     override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
         val chatId = data.channel.id
@@ -97,10 +97,10 @@ internal class PersistenceMembersLogicImpl(
     }
 
     override fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
-        val normalizedOffset = offset / CHANNELS_MEMBERS_LOAD_SIZE * CHANNELS_MEMBERS_LOAD_SIZE
+        val normalizedOffset = offset / channelMembersLoadSize * channelMembersLoadSize
         return callbackFlow {
-            val dbMembers = getMembersDb(channelId, normalizedOffset, role, CHANNELS_MEMBERS_LOAD_SIZE)
-            val hasNextDb = dbMembers.size == CHANNELS_MEMBERS_LOAD_SIZE
+            val dbMembers = getMembersDb(channelId, normalizedOffset, role, channelMembersLoadSize)
+            val hasNextDb = dbMembers.size == channelMembersLoadSize
             if (dbMembers.isNotEmpty())
                 trySend(PaginationResponse.DBResponse(dbMembers, null, normalizedOffset, hasNextDb))
 
@@ -112,8 +112,8 @@ internal class PersistenceMembersLogicImpl(
                 getRemovedItemsAndDeleteFromDb(channelId, dbMembers, response.data)
 
                 // Get new updated items from DB
-                val updatedMembers = getMembersDb(channelId, 0, role, normalizedOffset + CHANNELS_MEMBERS_LOAD_SIZE)
-                val hasNextServer = response.data?.size == CHANNELS_MEMBERS_LOAD_SIZE
+                val updatedMembers = getMembersDb(channelId, 0, role, normalizedOffset + channelMembersLoadSize)
+                val hasNextServer = response.data?.size == channelMembersLoadSize
                 trySend(PaginationResponse.ServerResponse(data = response, cacheData = updatedMembers, loadKey = null,
                     normalizedOffset, hasDiff = true, hasNext = hasNextServer, hasPrev = false,
                     LoadNext, false))

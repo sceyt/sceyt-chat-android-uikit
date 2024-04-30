@@ -77,7 +77,6 @@ import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.chatuikit.pushes.RemoteMessageData
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.SendChannel
@@ -118,7 +117,7 @@ internal class PersistenceMessagesLogicImpl(
     private val createChannelAndSendMessageMutex = Mutex()
     private val dispatcherIO = Dispatchers.IO
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
-
+    private val messagesLoadSize get() = SceytChatUIKit.config.messagesLoadSize
 
     private val onMessageFlow: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> = MutableSharedFlow(
         extraBufferCapacity = 10,
@@ -763,12 +762,12 @@ internal class PersistenceMessagesLogicImpl(
         when (loadType) {
             LoadPrev -> {
                 messages = getPrevMessagesDb(channelId, lastMessageId, offset, limit)
-                hasPrev = messages.size == MESSAGES_LOAD_SIZE
+                hasPrev = messages.size == messagesLoadSize
             }
 
             LoadNext -> {
                 messages = getNextMessagesDb(channelId, lastMessageId, offset, limit)
-                hasNext = messages.size == MESSAGES_LOAD_SIZE
+                hasNext = messages.size == messagesLoadSize
             }
 
             LoadNear -> {
@@ -780,7 +779,7 @@ internal class PersistenceMessagesLogicImpl(
 
             LoadNewest -> {
                 messages = getPrevMessagesDb(channelId, Long.MAX_VALUE, offset, limit)
-                hasPrev = messages.size == MESSAGES_LOAD_SIZE
+                hasPrev = messages.size == messagesLoadSize
             }
         }
 
@@ -813,7 +812,7 @@ internal class PersistenceMessagesLogicImpl(
                 response = messagesRepository.getPrevMessages(channelId, msgId, replyInThread, limit)
                 if (response is SceytResponse.Success) {
                     messages = response.data ?: arrayListOf()
-                    hasPrev = response.data?.size == MESSAGES_LOAD_SIZE
+                    hasPrev = response.data?.size == messagesLoadSize
                     // Check maybe messages was cleared
                     if (offset == 0 && messages.isEmpty()) {
                         messageDao.deleteAllMessagesExceptPending(channelId)
@@ -828,7 +827,7 @@ internal class PersistenceMessagesLogicImpl(
                 response = messagesRepository.getNextMessages(channelId, lastMessageId, replyInThread, limit)
                 if (response is SceytResponse.Success) {
                     messages = response.data ?: arrayListOf()
-                    hasNext = response.data?.size == MESSAGES_LOAD_SIZE
+                    hasNext = response.data?.size == messagesLoadSize
                 }
             }
 
@@ -841,8 +840,8 @@ internal class PersistenceMessagesLogicImpl(
                     val newest = groupOldAndNewData[true]
                     val oldest = groupOldAndNewData[false]
 
-                    hasNext = (newest?.size ?: 0) >= MESSAGES_LOAD_SIZE / 2
-                    hasPrev = (oldest?.size ?: 0) >= MESSAGES_LOAD_SIZE / 2
+                    hasNext = (newest?.size ?: 0) >= messagesLoadSize / 2
+                    hasPrev = (oldest?.size ?: 0) >= messagesLoadSize / 2
                 }
             }
 
@@ -850,7 +849,7 @@ internal class PersistenceMessagesLogicImpl(
                 response = messagesRepository.getPrevMessages(channelId, Long.MAX_VALUE, replyInThread, limit)
                 if (response is SceytResponse.Success) {
                     messages = response.data ?: arrayListOf()
-                    hasPrev = response.data?.size == MESSAGES_LOAD_SIZE
+                    hasPrev = response.data?.size == messagesLoadSize
                 }
             }
         }

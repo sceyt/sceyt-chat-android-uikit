@@ -33,7 +33,6 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
 import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ReactionsRepository
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -54,6 +53,7 @@ internal class PersistenceReactionsLogicImpl(
         private var messagesCache: MessagesCache) : PersistenceReactionsLogic {
 
     private val reactionUpdateMutex = Mutex()
+    private val reactionsLoadSize get() = SceytChatUIKit.config.reactionsLoadSize
 
     override suspend fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
         reactionUpdateMutex.withLock {
@@ -107,8 +107,8 @@ internal class PersistenceReactionsLogicImpl(
     override suspend fun loadReactions(messageId: Long, offset: Int, key: String, loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<SceytReaction>> {
         return callbackFlow {
 
-            var dbReactions = getReactionsDb(messageId, offset, SceytKitConfig.REACTIONS_LOAD_SIZE, key)
-            var hasNext = dbReactions.size == SceytKitConfig.REACTIONS_LOAD_SIZE
+            var dbReactions = getReactionsDb(messageId, offset, reactionsLoadSize, key)
+            var hasNext = dbReactions.size == reactionsLoadSize
 
             dbReactions = dbReactions.updateWithPendingReactions(messageId, key)
 
@@ -131,10 +131,10 @@ internal class PersistenceReactionsLogicImpl(
 
                 saveReactionsToDb(reactions)
 
-                val limit = SceytKitConfig.REACTIONS_LOAD_SIZE + offset
+                val limit = reactionsLoadSize + offset
                 val cashData = getReactionsDb(messageId, 0, limit, key).updateWithPendingReactions(messageId, key)
 
-                hasNext = response.data?.size == SceytKitConfig.REACTIONS_LOAD_SIZE
+                hasNext = response.data?.size == reactionsLoadSize
 
                 trySend(PaginationResponse.ServerResponse(data = response, cacheData = cashData,
                     loadKey = loadKey, offset = offset, hasDiff = true, hasNext = hasNext, hasPrev = false,
