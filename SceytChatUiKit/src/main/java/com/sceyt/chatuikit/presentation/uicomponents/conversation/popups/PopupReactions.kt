@@ -18,11 +18,13 @@ import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.databinding.SceytPopupAddReactionBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isRtl
+import com.sceyt.chatuikit.extensions.marginHorizontal
 import com.sceyt.chatuikit.extensions.screenWidthPx
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MAX_SELF_REACTIONS_SIZE
 import java.lang.Integer.max
+import kotlin.math.min
 
 class PopupReactions(private var context: Context) : PopupWindow(context) {
     private lateinit var binding: SceytPopupAddReactionBinding
@@ -53,6 +55,8 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
 
         with(binding.cardView) {
             measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+
+            this@PopupReactions.width = min(context.screenWidthPx(), measuredWidth + marginHorizontal)
 
             val minYPos = measuredHeight + marginBottom + marginTop
             val xPos = if (reversed) context.screenWidthPx() else 0
