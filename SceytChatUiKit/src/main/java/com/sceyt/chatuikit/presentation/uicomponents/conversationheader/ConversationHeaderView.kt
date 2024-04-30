@@ -81,7 +81,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private var replyMessage: SceytMessage? = null
     private var isReplyInThread: Boolean = false
     private var isGroup = false
-    private var userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter
+    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
     private var enablePresence: Boolean = true
     private val typingUsersHelper by lazy { initTypingUsersHelper() }
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null

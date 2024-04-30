@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemIncAttachmentsMessageBinding
@@ -50,7 +51,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messa
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.UnreadMessagesSeparatorViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
@@ -65,7 +65,7 @@ open class MessageViewHolderFactory(context: Context) {
     private var clickListeners = MessageClickListenersImpl()
     private var displayedListener: ((MessageListItem) -> Unit)? = null
     private var voicePlayPauseListener: ((FileListItem, playing: Boolean) -> Unit)? = null
-    private var userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter
+    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
 
     internal fun setStyle(style: MessagesListViewStyle) {

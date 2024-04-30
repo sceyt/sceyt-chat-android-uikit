@@ -3,20 +3,20 @@ package com.sceyt.chatuikit.presentation.uicomponents.sharebaleactivity.adapter.
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.sceyt.chatuikit.databinding.SceytItemShareChannelBinding
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
+import com.sceyt.chatuikit.databinding.SceytItemShareChannelBinding
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelLoadingMoreViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 
 open class ShareableChannelViewHolderFactory(context: Context) {
     protected val layoutInflater = LayoutInflater.from(context)
     protected val channelClickListenersImpl = ChannelClickListenersImpl()
-    var userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter
+    var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
         private set
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {

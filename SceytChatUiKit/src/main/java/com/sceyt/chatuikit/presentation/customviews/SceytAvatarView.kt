@@ -1,7 +1,13 @@
 package com.sceyt.chatuikit.presentation.customviews
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.BitmapShader
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Matrix
+import android.graphics.Paint
+import android.graphics.Shader
 import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
@@ -14,11 +20,11 @@ import androidx.core.graphics.toColorInt
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getFirstCharIsEmoji
 import com.sceyt.chatuikit.extensions.processEmojiCompat
 import com.sceyt.chatuikit.extensions.roundUp
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import kotlin.math.abs
 
 
@@ -122,7 +128,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     private fun getAvatarRandomColor(): Int {
-        val colors = SceytKitConfig.avatarColors
+        val colors = SceytChatUIKit.theme.avatarColors
         return colors[abs((fullName ?: "").hashCode()) % colors.size].toColorInt()
     }
 

@@ -32,7 +32,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adap
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 import kotlinx.coroutines.launch
@@ -123,7 +122,7 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0, enableErrorSnackBar = false)
     }
 
-    open fun getUserNameFormatter(): UserNameFormatter? = SceytKitConfig.userNameFormatter
+    open fun getUserNameFormatter(): UserNameFormatter? = SceytChatUIKit.userNameFormatter
 
     protected open fun loadInitialFilesList() {
         if (channel.pending) {

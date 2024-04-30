@@ -83,7 +83,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.inline
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.inlinequery.InlineQueryChangedListener
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageInputStyle
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
@@ -111,7 +110,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
     private val typingDebounceHelper by lazy { DebounceHelper(100, getScope()) }
     private var typingTimeoutJob: Job? = null
-    private var userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter
+    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
     private var inputState = Voice
     private var disabledInputByGesture: Boolean = false
     private var enableMention: Boolean = true
@@ -536,7 +535,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             (parent as? ViewGroup)?.addView(MentionUserContainer(context).apply {
                 mentionUserContainer = initWithMessageInputView(this@MessageInputView).also {
                     setUserClickListener {
-                        val name = (MentionUserHelper.userNameFormatter?.format(it.user)
+                        val name = (SceytChatUIKit.mentionUserNameFormatter?.format(it.user)
                                 ?: it.getPresentableName()).notAutoCorrectable()
                         binding.messageInput.replaceTextWithMention(name, it.id)
                     }

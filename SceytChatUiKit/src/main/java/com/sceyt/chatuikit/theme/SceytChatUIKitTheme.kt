@@ -56,6 +56,10 @@ data class SceytChatUIKitTheme(
         var deletedUserAvatar: Int = R.drawable.sceyt_ic_deleted_user,
         @DrawableRes
         var notesAvatar: Int = R.drawable.sceyt_ic_notes_with_paddings,
-        // User presence date formatter
+
         var userPresenceDateFormat: UserPresenceDateFormatter = UserPresenceDateFormatter(),
+
+        var avatarColors: List<String> = listOf("#4F6AFF"),
+
+        var defaultReactions: List<String> = listOf("\uD83D\uDE0E", "\uD83D\uDE02", "\uD83D\uDC4C", "\uD83D\uDE0D", "\uD83D\uDC4D", "\uD83D\uDE0F")
 )
