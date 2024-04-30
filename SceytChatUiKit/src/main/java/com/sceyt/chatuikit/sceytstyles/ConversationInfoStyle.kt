@@ -23,7 +23,7 @@ data class ConversationInfoStyle(
 ) {
 
     companion object {
-        var conversationInfoStyleCustomizer = StyleCustomizer<ConversationInfoStyle> { it }
+        var styleCustomizer = StyleCustomizer<ConversationInfoStyle> { it }
     }
 
     internal class Builder(
@@ -53,7 +53,7 @@ data class ConversationInfoStyle(
                 moreIcon = moreIcon,
                 editIcon = editIcon,
                 spaceBetweenSections = spaceBetweenSections
-            ).let(conversationInfoStyleCustomizer::apply)
+            ).let(styleCustomizer::apply)
         }
     }
 }

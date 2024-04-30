@@ -37,7 +37,7 @@ data class MessageInputStyle(
 
     companion object {
         @JvmField
-        var messageInputStyleCustomizer = StyleCustomizer<MessageInputStyle> { it }
+        var styleCustomizer = StyleCustomizer<MessageInputStyle> { it }
     }
 
     internal class Builder(
@@ -100,7 +100,7 @@ data class MessageInputStyle(
                 inputHintText = inputHintText,
                 backgroundColor = backgroundColor,
                 inputBackgroundColor = inputBackgroundColor
-            ).let(messageInputStyleCustomizer::apply)
+            ).let(styleCustomizer::apply)
         }
     }
 }

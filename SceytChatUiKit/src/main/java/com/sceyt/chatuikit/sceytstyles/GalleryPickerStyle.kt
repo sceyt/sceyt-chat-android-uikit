@@ -21,7 +21,7 @@ data class GalleryPickerStyle(
 
     companion object {
         @JvmField
-        var galleryPickerStyleCustomizer = StyleCustomizer<GalleryPickerStyle> { it }
+        var styleCustomizer = StyleCustomizer<GalleryPickerStyle> { it }
     }
 
     internal class Builder(
@@ -57,7 +57,7 @@ data class GalleryPickerStyle(
                 unCheckedStateIcon = unCheckedStateIcon,
                 maxSelectCount = maxSelectCount,
                 videoDurationIcon = videoDurationIcon
-            ).let(galleryPickerStyleCustomizer::apply)
+            ).let(styleCustomizer::apply)
         }
     }
 }

@@ -18,7 +18,7 @@ data class ConversationInfoMediaStyle(
 ) {
 
     companion object {
-        var conversationInfoMediaStyleCustomizer = StyleCustomizer<ConversationInfoMediaStyle> { it }
+        var styleCustomizer = StyleCustomizer<ConversationInfoMediaStyle> { it }
     }
 
     internal class Builder(
@@ -38,7 +38,7 @@ data class ConversationInfoMediaStyle(
             return ConversationInfoMediaStyle(
                 videoDurationIcon = videoDurationIcon,
                 mediaDateSeparatorFormat = mediaDateSeparatorFormat
-            ).let(conversationInfoMediaStyleCustomizer::apply)
+            ).let(styleCustomizer::apply)
         }
     }
 }
