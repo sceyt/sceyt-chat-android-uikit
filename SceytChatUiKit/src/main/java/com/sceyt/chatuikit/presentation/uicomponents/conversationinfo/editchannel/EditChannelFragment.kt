@@ -32,6 +32,7 @@ import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.editchannel.viewmodel.EditChannelViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 import com.sceyt.chatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -44,6 +45,8 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     private var urlIsValidByServer = false
     private var checkingUrl: String? = null
     protected lateinit var channel: SceytChannel
+        private set
+    protected lateinit var style: ConversationInfoStyle
         private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

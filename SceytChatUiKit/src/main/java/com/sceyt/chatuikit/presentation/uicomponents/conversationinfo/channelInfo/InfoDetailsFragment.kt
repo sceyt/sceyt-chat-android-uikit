@@ -21,21 +21,23 @@ import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
-open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
+open class InfoDetailsFragment : Fragment(), ChannelUpdateListener, ConversationInfoStyleApplier {
     protected lateinit var binding: SceytFragmentInfoDetailsBinding
         private set
     protected lateinit var channel: SceytChannel
         private set
+    protected lateinit var style: ConversationInfoStyle
+        private set
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
     private var isSelf: Boolean = false
-
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentInfoDetailsBinding.inflate(layoutInflater, container, false)
@@ -132,8 +134,7 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
             if (isSelf) {
                 avatar.setImageUrl(null, channel.getDefaultAvatar())
                 avatar.setAvatarColor(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
-            }
-            else avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
+            } else avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
         }
     }
 
@@ -162,13 +163,17 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
         setChannelDetails(channel)
     }
 
+    override fun setStyle(style: ConversationInfoStyle) {
+        this.style = style
+    }
+
     private fun SceytFragmentInfoDetailsBinding.applyStyle() {
         val theme = SceytChatUIKit.theme
         layoutDetails.setBackgroundColor(requireContext().getCompatColor(theme.backgroundColorSections))
         title.setTextColor(requireContext().getCompatColor(theme.textPrimaryColor))
         tvSubtitle.setTextColor(requireContext().getCompatColor(theme.textSecondaryColor))
         dividerTop.setDividerColorResource(theme.borderColor)
-        space.layoutParams.height = ConversationInfoMediaStyle.spaceBetweenSections
+        space.layoutParams.height = style.spaceBetweenSections
     }
 
     companion object {

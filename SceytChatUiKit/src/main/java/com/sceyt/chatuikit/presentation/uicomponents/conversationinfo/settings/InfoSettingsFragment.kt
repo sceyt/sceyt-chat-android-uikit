@@ -16,16 +16,18 @@ import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 
-open class InfoSettingsFragment : Fragment(), ChannelUpdateListener {
+open class InfoSettingsFragment : Fragment(), ChannelUpdateListener, ConversationInfoStyleApplier {
     protected lateinit var binding: SceytFragmentInfoSettingsBinding
         private set
     protected lateinit var channel: SceytChannel
         private set
+    protected lateinit var style: ConversationInfoStyle
+        private set
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
-
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentInfoSettingsBinding.inflate(layoutInflater, container, false)
@@ -84,12 +86,16 @@ open class InfoSettingsFragment : Fragment(), ChannelUpdateListener {
         setChannelDetails(channel)
     }
 
+    override fun setStyle(style: ConversationInfoStyle) {
+        this.style = style
+    }
+
     private fun SceytFragmentInfoSettingsBinding.applyStyle() {
         layoutDetails.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
         notification.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
         autoDeleteMessages.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
         border.setDividerColorResource(SceytChatUIKit.theme.borderColor)
-        space.layoutParams.height = ConversationInfoMediaStyle.spaceBetweenSections
+        space.layoutParams.height = style.spaceBetweenSections
     }
 
     companion object {

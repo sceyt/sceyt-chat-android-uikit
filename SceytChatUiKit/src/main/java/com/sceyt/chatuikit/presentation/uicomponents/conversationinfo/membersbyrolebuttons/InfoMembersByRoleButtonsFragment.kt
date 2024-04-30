@@ -17,13 +17,16 @@ import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 
-open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener {
+open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener, ConversationInfoStyleApplier {
     protected lateinit var binding: SceytFragmentInfoMembersByRoleBinding
         private set
     protected lateinit var channel: SceytChannel
+        private set
+    protected lateinit var style: ConversationInfoStyle
         private set
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
 
@@ -97,7 +100,7 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
         searchMessages.setBackgroundColor(backgroundColorSections)
         borderBetweenMembersAndAdmins.setDividerColorResource(SceytChatUIKit.theme.borderColor)
         borderBetweenAdminsAndSearch.setDividerColorResource(SceytChatUIKit.theme.borderColor)
-        space.layoutParams.height = ConversationInfoMediaStyle.spaceBetweenSections
+        space.layoutParams.height = style.spaceBetweenSections
     }
 
     companion object {
@@ -115,5 +118,9 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
     override fun onChannelUpdated(channel: SceytChannel) {
         if (::binding.isInitialized.not()) return
         setDetails(channel)
+    }
+
+    override fun setStyle(style: ConversationInfoStyle) {
+        this.style = style
     }
 }

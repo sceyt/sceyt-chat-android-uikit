@@ -19,13 +19,16 @@ import com.sceyt.chatuikit.extensions.setClipboard
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 
-open class InfoSpecificationsFragment : Fragment(), ChannelUpdateListener {
+open class InfoSpecificationsFragment : Fragment(), ChannelUpdateListener, ConversationInfoStyleApplier {
     protected lateinit var binding: SceytFragmentInfoSpecificationsBinding
         private set
     protected lateinit var channel: SceytChannel
+        private set
+    protected lateinit var style: ConversationInfoStyle
         private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -73,10 +76,14 @@ open class InfoSpecificationsFragment : Fragment(), ChannelUpdateListener {
         setChannelSpecification(channel)
     }
 
+    override fun setStyle(style: ConversationInfoStyle) {
+        this.style = style
+    }
+
     private fun SceytFragmentInfoSpecificationsBinding.applyStyle() {
         link.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
         link.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        space.layoutParams.height = ConversationInfoMediaStyle.spaceBetweenSections
+        space.layoutParams.height = style.spaceBetweenSections
     }
 
     companion object {

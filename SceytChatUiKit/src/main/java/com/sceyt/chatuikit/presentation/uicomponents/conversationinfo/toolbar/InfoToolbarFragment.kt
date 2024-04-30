@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.toolbar
 
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -22,6 +21,7 @@ import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setOnClickListenerDisableClickViewForWhile
 import com.sceyt.chatuikit.extensions.setTextColorRes
+import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.getDefaultAvatar
@@ -30,6 +30,7 @@ import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
@@ -38,10 +39,12 @@ import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
-open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
+open class InfoToolbarFragment : Fragment(), ChannelUpdateListener, ConversationInfoStyleApplier {
     protected lateinit var binding: SceytFragmentInfoToolbarBinding
         private set
     protected lateinit var channel: SceytChannel
+        private set
+    protected lateinit var style: ConversationInfoStyle
         private set
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
     private var isSelf: Boolean = false
@@ -108,7 +111,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
         }
     }
 
-    open fun setChannelToolbarTitle(channel: SceytChannel) {
+    protected open fun setChannelToolbarTitle(channel: SceytChannel) {
         with(binding) {
             titleToolbar.text = when {
                 isSelf -> {
@@ -124,7 +127,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
         }
     }
 
-    open fun setToolbarSubtitle(channel: SceytChannel) {
+    protected open fun setToolbarSubtitle(channel: SceytChannel) {
         if (channel.isPeerDeleted() || isSelf) {
             binding.subTitleToolbar.isVisible = false
             return
@@ -160,18 +163,21 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
         binding.subTitleToolbar.text = title
     }
 
-    open fun setChannelToolbarAvatar(channel: SceytChannel) {
+    protected open fun setChannelToolbarAvatar(channel: SceytChannel) {
         if (isSelf) {
             binding.toolbarAvatar.setAvatarColor(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
             binding.toolbarAvatar.setImageUrl(null, UserStyle.notesAvatar)
-        }
-        else
+        } else
             binding.toolbarAvatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
     }
 
     override fun onChannelUpdated(channel: SceytChannel) {
         if (::binding.isInitialized.not()) return
         setChannelDetails(channel)
+    }
+
+    override fun setStyle(style: ConversationInfoStyle) {
+        this.style = style
     }
 
     fun setClickActionsListener(listener: (ClickActionsEnum) -> Unit) {
@@ -186,15 +192,15 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
         binding.toolbarAvatar.setNameAndImageUrl(userName, user.avatarURL, UserStyle.userDefaultAvatar)
     }
 
-    open fun onBackClick() {
+    protected open fun onBackClick() {
         buttonsListener?.invoke(ClickActionsEnum.Back)
     }
 
-    open fun onEditClick() {
+    protected open fun onEditClick() {
         buttonsListener?.invoke(ClickActionsEnum.Edit)
     }
 
-    open fun onMoreClick() {
+    protected open fun onMoreClick() {
         buttonsListener?.invoke(ClickActionsEnum.More)
     }
 
@@ -207,12 +213,12 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener {
         titleToolbar.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
         tvToolbarInfo.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
         subTitleToolbar.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
-        icBack.setImageResource(ConversationInfoStyle.navigationIcon)
-        icEdit.setImageResource(ConversationInfoStyle.editIcon)
-        icMore.setImageResource(ConversationInfoStyle.moreIcon)
-        icBack.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
-        icEdit.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
-        icMore.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
+        icBack.setImageDrawable(style.navigationIcon)
+        icEdit.setImageDrawable(style.editIcon)
+        icMore.setImageDrawable(style.moreIcon)
+        icBack.setTintColorRes(SceytChatUIKit.theme.accentColor)
+        icEdit.setTintColorRes(SceytChatUIKit.theme.accentColor)
+        icMore.setTintColorRes(SceytChatUIKit.theme.accentColor)
     }
 
     companion object {
