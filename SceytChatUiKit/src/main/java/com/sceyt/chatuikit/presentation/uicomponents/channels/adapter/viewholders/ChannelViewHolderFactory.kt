@@ -3,12 +3,12 @@ package com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholde
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 
@@ -17,7 +17,7 @@ open class ChannelViewHolderFactory(context: Context) {
     protected open val channelClickListenersImpl = ChannelClickListenersImpl()
     protected lateinit var channelStyle: ChannelListViewStyle
     private var attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)? = null
-    var userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter
+    var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
         private set
 
     internal fun setStyle(channelStyle: ChannelListViewStyle) {

@@ -32,7 +32,6 @@ import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
@@ -186,7 +185,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener, Conversation
     fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
         if (isSelf) return
         val user = presenceUser.user
-        val userName = SceytKitConfig.userNameFormatter?.format(user)
+        val userName = SceytChatUIKit.userNameFormatter?.format(user)
                 ?: user.getPresentableName()
         binding.toolbarAvatar.setNameAndImageUrl(userName, user.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
     }

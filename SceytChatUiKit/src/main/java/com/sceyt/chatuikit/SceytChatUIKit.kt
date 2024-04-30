@@ -8,6 +8,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
 import com.sceyt.chatuikit.data.di.repositoryModule
+import com.sceyt.chatuikit.data.transformers.MessageTransformer
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -20,6 +21,7 @@ import com.sceyt.chatuikit.persistence.di.interactorModule
 import com.sceyt.chatuikit.persistence.di.logicModule
 import com.sceyt.chatuikit.persistence.lazyVar
 import com.sceyt.chatuikit.presentation.di.viewModelModule
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 import com.vanniktech.emoji.EmojiManager
 import com.vanniktech.emoji.google.GoogleEmojiProvider
@@ -36,6 +38,19 @@ object SceytChatUIKit : SceytKoinComponent {
     private lateinit var appContext: Context
     val chatUIFacade: SceytChatUIFacade by inject()
     var theme: SceytChatUIKitTheme by lazyVar { SceytChatUIKitTheme() }
+
+    @JvmField
+    var messageTransformer: MessageTransformer? = null
+
+    var userNameFormatter: UserNameFormatter? = null
+        set(value) {
+            field = value
+            if (mentionUserNameFormatter == null)
+                mentionUserNameFormatter = value
+        }
+
+    @JvmField
+    var mentionUserNameFormatter: UserNameFormatter? = null
 
     fun initialize(
             appContext: Context,

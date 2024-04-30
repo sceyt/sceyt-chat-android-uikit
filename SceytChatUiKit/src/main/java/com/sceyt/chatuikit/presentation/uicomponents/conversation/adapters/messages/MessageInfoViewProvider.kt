@@ -6,6 +6,7 @@ import android.view.ViewStub
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemOutFileMessageBinding
@@ -26,7 +27,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messa
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.OutVoiceMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
@@ -37,7 +37,7 @@ open class MessageInfoViewProvider(private val context: Context) {
     protected val viewPoolReactions = RecyclerView.RecycledViewPool()
     private var clickListeners = MessageClickListenersImpl()
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
-    private var userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter
+    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
     private var viewHolder: BaseMsgViewHolder? = null
     private val messageItemStyle: MessageItemStyle by lazy { getMessageListViewStyle() }

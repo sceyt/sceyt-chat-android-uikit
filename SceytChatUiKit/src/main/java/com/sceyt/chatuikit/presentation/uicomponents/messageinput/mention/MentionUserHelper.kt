@@ -15,16 +15,14 @@ import com.google.gson.Gson
 import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.SceytChatUIKit.userNameFormatter
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 
 object MentionUserHelper {
     const val MENTION = "mention"
-    var userNameFormatter = SceytKitConfig.userNameFormatter
-        private set
+    private val userNameFormatter get() = SceytChatUIKit.mentionUserNameFormatter
 
     fun initMentionAttributes(mentionUsers: List<Mention>): List<BodyAttribute>? {
         if (mentionUsers.isEmpty()) return null
@@ -124,10 +122,6 @@ object MentionUserHelper {
 
         newBody.replace(item.offset, end, name)
         return name
-    }
-
-    fun setCustomUserNameFormatter(userNameFormatter: UserNameFormatter) {
-        this.userNameFormatter = userNameFormatter
     }
 
     fun Annotation.getValueData(): MentionAnnotationValue? {

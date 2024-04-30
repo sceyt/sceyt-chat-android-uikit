@@ -21,7 +21,6 @@ import com.sceyt.chatuikit.extensions.isRtl
 import com.sceyt.chatuikit.extensions.marginHorizontal
 import com.sceyt.chatuikit.extensions.screenWidthPx
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MAX_SELF_REACTIONS_SIZE
 import java.lang.Integer.max
 import kotlin.math.min
@@ -32,7 +31,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
     private var clickListener: PopupReactionsAdapter.OnItemClickListener? = null
 
     fun showPopup(anchorView: View, message: SceytMessage,
-                  reactions: List<String> = SceytKitConfig.defaultReactions,
+                  reactions: List<String> = SceytChatUIKit.theme.defaultReactions,
                   clickListener: PopupReactionsAdapter.OnItemClickListener): PopupReactions {
         this.clickListener = clickListener
 

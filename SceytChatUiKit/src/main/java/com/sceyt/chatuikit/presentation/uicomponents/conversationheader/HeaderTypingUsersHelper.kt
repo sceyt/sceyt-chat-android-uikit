@@ -4,12 +4,12 @@ import android.content.Context
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getPresentableFirstName
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -24,7 +24,7 @@ class HeaderTypingUsersHelper(
     private val typingCancelHelper by lazy { TypingCancelHelper() }
     private var typingTextBuilder: ((SceytMember) -> String)? = null
     private val _typingUsers by lazy { mutableSetOf<SceytMember>() }
-    private var userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter
+    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
     private val debounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
     private var updateTypingJob: Job? = null
     var isTyping: Boolean = false

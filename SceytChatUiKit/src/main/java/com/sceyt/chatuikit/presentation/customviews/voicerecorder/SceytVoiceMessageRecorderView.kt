@@ -455,6 +455,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     }
 
     private fun SceytRecordViewBinding.applyStyle() {
+        recording.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
         imageViewLockArrow.setTintColorRes(SceytChatUIKit.theme.accentColor)
         lockViewStopButton.setTintColorRes(SceytChatUIKit.theme.accentColor)
         imageViewLock.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)

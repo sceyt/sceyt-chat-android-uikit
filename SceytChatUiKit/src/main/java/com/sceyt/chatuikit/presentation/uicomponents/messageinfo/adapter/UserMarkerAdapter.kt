@@ -6,10 +6,10 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.databinding.SceytItemUserMarkerBinding
 import com.sceyt.chatuikit.extensions.getPresentableName
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 class UserMarkerAdapter : ListAdapter<SceytMarker, UserMarkerAdapter.SimpleUserViewHolder>(DIFF_UTIL) {
@@ -41,7 +41,7 @@ class UserMarkerAdapter : ListAdapter<SceytMarker, UserMarkerAdapter.SimpleUserV
         fun bind(marker: SceytMarker) {
             with(binding) {
                 val user = marker.user ?: User(marker.userId)
-                val name = SceytKitConfig.userNameFormatter?.format(user)
+                val name = SceytChatUIKit.userNameFormatter?.format(user)
                         ?: user.getPresentableName()
                 avatar.setNameAndImageUrl(name, user.avatarURL)
                 userName.text = name

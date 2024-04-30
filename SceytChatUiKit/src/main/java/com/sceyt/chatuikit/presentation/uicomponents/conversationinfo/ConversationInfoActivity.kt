@@ -74,7 +74,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.toolbar.In
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.toolbar.InfoToolbarFragment.ClickActionsEnum.More
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.viewmodel.ConversationInfoViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.voice.ChannelVoiceFragment
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 
@@ -356,7 +355,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         if (!icon.isNullOrBlank()) {
             val title = if (channel.isDirect()) {
                 val user = channel.getPeer()?.user
-                if (user != null) SceytKitConfig.userNameFormatter?.format(user)
+                if (user != null) SceytChatUIKit.userNameFormatter?.format(user)
                         ?: user.getPresentableName() else null
             } else channel.subject
 

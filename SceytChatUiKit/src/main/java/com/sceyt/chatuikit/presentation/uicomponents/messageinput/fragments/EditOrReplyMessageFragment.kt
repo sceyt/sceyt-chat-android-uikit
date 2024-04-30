@@ -28,7 +28,6 @@ import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.presentation.extensions.isTextMessage
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CancelReplyMessageViewClickListener
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
@@ -37,7 +36,7 @@ import com.sceyt.chatuikit.shared.utils.ViewUtil
 open class EditOrReplyMessageFragment : Fragment() {
     protected var binding: SceytFragmentEditOrReplyMessageBinding? = null
     protected var clickListeners: CancelReplyMessageViewClickListener? = null
-    protected var userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter
+    protected var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentEditOrReplyMessageBinding.inflate(inflater, container, false).also {

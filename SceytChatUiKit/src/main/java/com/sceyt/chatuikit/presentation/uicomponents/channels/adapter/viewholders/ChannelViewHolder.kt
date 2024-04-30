@@ -13,7 +13,6 @@ import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -43,7 +42,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelLis
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
@@ -54,7 +52,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                              private val channelStyle: ChannelListViewStyle,
                              private var listeners: ChannelClickListeners.ClickListeners,
                              private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)? = null,
-                             private val userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter) : BaseChannelViewHolder(binding.root) {
+                             private val userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter) : BaseChannelViewHolder(binding.root) {
 
     protected var isSelf = false
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
@@ -199,7 +197,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
             val reactUserName = when {
                 channel.isGroup -> {
-                    val name = lastReaction.user?.let { SceytKitConfig.userNameFormatter?.format(it) }
+                    val name = lastReaction.user?.let { SceytChatUIKit.userNameFormatter?.format(it) }
                             ?: lastReaction.user?.getPresentableNameWithYou(context)
                     "$name ${reactedWord.lowercase()}"
                 }

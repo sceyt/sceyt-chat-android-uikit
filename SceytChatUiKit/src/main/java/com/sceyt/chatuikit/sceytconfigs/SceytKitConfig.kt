@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.sceytconfigs
 
 import androidx.annotation.IntRange
-import com.sceyt.chatuikit.data.transformers.MessageTransformer
 
 object SceytKitConfig {
 
@@ -44,20 +43,7 @@ object SceytKitConfig {
     var presenceStatusText = ""
 
     @JvmField
-    var userNameFormatter: UserNameFormatter? = null
-
-    @JvmField
-    var defaultReactions = arrayListOf("\uD83D\uDE0E", "\uD83D\uDE02", "\uD83D\uDC4C", "\uD83D\uDE0D", "\uD83D\uDC4D", "\uD83D\uDE0F")
-
-    @JvmField
-    var avatarColors = arrayOf("#4F6AFF")
-
-    @JvmField
-    var messageTransformer: MessageTransformer? = null
-
-    @JvmField
     var backgroundUploadNotificationClickData: BackgroundUploadNotificationClickData? = null
-
 
     enum class ChannelSortType {
         ByLastMsg,

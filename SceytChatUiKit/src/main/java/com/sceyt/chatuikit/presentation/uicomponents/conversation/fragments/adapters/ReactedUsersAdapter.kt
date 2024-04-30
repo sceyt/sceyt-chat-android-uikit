@@ -11,7 +11,6 @@ import com.sceyt.chatuikit.databinding.SceytItemReactedUserBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class ReactedUsersAdapter(private var clickListener: OnItemClickListener) : ListAdapter<ReactedUserItem, BaseViewHolder<ReactedUserItem>>(DIFF_UTIL) {
 
@@ -71,7 +70,7 @@ class ReactedUsersAdapter(private var clickListener: OnItemClickListener) : List
         override fun bind(item: ReactedUserItem) {
             with(binding) {
                 val user: User? = (item as ReactedUserItem.Item).reaction.user
-                val userPresentableName = user?.let { SceytKitConfig.userNameFormatter?.format(it) }
+                val userPresentableName = user?.let { SceytChatUIKit.userNameFormatter?.format(it) }
                         ?: user?.getPresentableName()
                 avatar.setNameAndImageUrl(userPresentableName, user?.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
                 userName.text = userPresentableName

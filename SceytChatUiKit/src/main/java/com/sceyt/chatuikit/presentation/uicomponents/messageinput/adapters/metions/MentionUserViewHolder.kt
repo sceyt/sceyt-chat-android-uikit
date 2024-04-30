@@ -7,7 +7,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytItemMemberBinding
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
-import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 
 class MentionUserViewHolder(private val binding: SceytItemMemberBinding,
                             private val itemClickListener: UsersAdapter.ClickListener) : BaseViewHolder<SceytMember>(binding.root) {
@@ -18,7 +17,7 @@ class MentionUserViewHolder(private val binding: SceytItemMemberBinding,
         val user = item.user
 
         with(binding) {
-            val userPresentableName = MentionUserHelper.userNameFormatter?.format(item.user)
+            val userPresentableName = SceytChatUIKit.mentionUserNameFormatter?.format(item.user)
                     ?: user.getPresentableName()
             avatar.setNameAndImageUrl(userPresentableName, user.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
             userName.text = userPresentableName
