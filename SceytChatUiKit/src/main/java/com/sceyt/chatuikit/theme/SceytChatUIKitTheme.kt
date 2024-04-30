@@ -1,7 +1,9 @@
 package com.sceyt.chatuikit.theme
 
 import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.sceytconfigs.dateformaters.UserPresenceDateFormatter
 
 data class SceytChatUIKitTheme(
         @ColorRes
@@ -48,4 +50,12 @@ data class SceytChatUIKitTheme(
         val successColor: Int = R.color.sceyt_color_green,
         @ColorRes
         val warningColor: Int = R.color.sceyt_color_warning,
+        @DrawableRes
+        var userDefaultAvatar: Int = R.drawable.sceyt_ic_default_avatar,
+        @DrawableRes
+        var deletedUserAvatar: Int = R.drawable.sceyt_ic_deleted_user,
+        @DrawableRes
+        var notesAvatar: Int = R.drawable.sceyt_ic_notes_with_paddings,
+        // User presence date formatter
+        var userPresenceDateFormat: UserPresenceDateFormatter = UserPresenceDateFormatter(),
 )

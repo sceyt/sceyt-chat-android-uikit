@@ -4,6 +4,7 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Broadcast
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Direct
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Group
@@ -21,7 +22,6 @@ import com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
-import com.sceyt.chatuikit.sceytstyles.UserStyle
 
 open class ShareableChannelViewHolder(private val binding: SceytItemShareChannelBinding,
                                       private val clickListener: ChannelClickListeners.ChannelClickListener,
@@ -63,9 +63,10 @@ open class ShareableChannelViewHolder(private val binding: SceytItemShareChannel
 
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: SceytAvatarView) {
         if (channel.isPeerDeleted()) {
-            binding.avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
+            binding.avatar.setImageUrl(null, SceytChatUIKit.theme.deletedUserAvatar)
         } else
-            binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup) 0 else UserStyle.userDefaultAvatar)
+            binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup)
+                0 else SceytChatUIKit.theme.userDefaultAvatar)
     }
 
     open fun setSubject(channel: SceytChannel, textView: TextView) {

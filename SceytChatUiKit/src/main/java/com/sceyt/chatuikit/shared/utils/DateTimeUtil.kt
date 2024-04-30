@@ -3,9 +3,10 @@ package com.sceyt.chatuikit.shared.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import android.text.format.DateFormat
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.sceytconfigs.dateformaters.BaseDateFormatter
 import com.sceyt.chatuikit.sceytconfigs.dateformaters.DateFormatData
-import com.sceyt.chatuikit.sceytstyles.UserStyle
+import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -216,37 +217,38 @@ object DateTimeUtil {
             val hoursDiff = TimeUnit.MILLISECONDS.toHours(now.timeInMillis - date2.timeInMillis).toInt().absoluteValue
             val minDiff = TimeUnit.MILLISECONDS.toMinutes(now.timeInMillis - date2.timeInMillis).toInt().absoluteValue
 
+            val dateFormatter = SceytChatUIKit.theme.userPresenceDateFormat
             return when {
                 yearsDiff > 0 -> {
-                    getDateText(date, UserStyle.userPresenceDateFormat.olderThisYear(context, date))
+                    getDateText(date, dateFormatter.olderThisYear(context, date))
                 }
 
                 weeksDiff > 0 -> {
-                    getDateText(date, UserStyle.userPresenceDateFormat.thisYear(context, date))
+                    getDateText(date, dateFormatter.thisYear(context, date))
                 }
 
                 weeksDiff == 0 && daysDiff > 1 -> {
-                    getDateText(date, UserStyle.userPresenceDateFormat.currentWeek(context, date))
+                    getDateText(date, dateFormatter.currentWeek(context, date))
                 }
 
                 daysDiff == 1 -> {
-                    getDateText(date, UserStyle.userPresenceDateFormat.yesterday(context, date))
+                    getDateText(date, dateFormatter.yesterday(context, date))
                 }
 
                 hoursDiff > 1 -> {
-                    getDateText(date, UserStyle.userPresenceDateFormat.today(context, date))
+                    getDateText(date, dateFormatter.today(context, date))
                 }
 
                 hoursDiff == 1 -> {
-                    getDateText(date, UserStyle.userPresenceDateFormat.oneHourAgo(context, date))
+                    getDateText(date, dateFormatter.oneHourAgo(context, date))
                 }
 
                 minDiff > 1 -> {
-                    getDateText(date, UserStyle.userPresenceDateFormat.lessThenOneHour(context, minDiff, date))
+                    getDateText(date, dateFormatter.lessThenOneHour(context, minDiff, date))
                 }
 
                 else -> {
-                    getDateText(date, UserStyle.userPresenceDateFormat.oneMinAgo(context, date))
+                    getDateText(date, dateFormatter.oneMinAgo(context, date))
                 }
             }
         } catch (e: ParseException) {

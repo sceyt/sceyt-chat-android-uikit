@@ -9,7 +9,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.channels.SelfChannelMetadata
 import com.sceyt.chatuikit.data.models.channels.stringToEnum
 import com.sceyt.chatuikit.extensions.toBoolean
-import com.sceyt.chatuikit.sceytstyles.UserStyle
 
 fun SceytChannel.checkIsMemberInChannel(): Boolean {
     return if (isGroup) {
@@ -22,11 +21,12 @@ fun SceytChannel.isPeerDeleted(): Boolean {
 }
 
 fun SceytChannel.getDefaultAvatar(): Int {
+    val theme = SceytChatUIKit.theme
     return if (isDirect()) {
         when {
-            isPeerDeleted() -> UserStyle.deletedUserAvatar
-            isSelf() -> UserStyle.notesAvatar
-            else -> UserStyle.userDefaultAvatar
+            isPeerDeleted() -> theme.deletedUserAvatar
+            isSelf() -> theme.notesAvatar
+            else -> theme.userDefaultAvatar
         }
     } else 0
 }

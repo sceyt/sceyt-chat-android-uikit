@@ -2,12 +2,12 @@ package com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.meti
 
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.user.PresenceState
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytItemMemberBinding
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
-import com.sceyt.chatuikit.sceytstyles.UserStyle
 
 class MentionUserViewHolder(private val binding: SceytItemMemberBinding,
                             private val itemClickListener: UsersAdapter.ClickListener) : BaseViewHolder<SceytMember>(binding.root) {
@@ -20,7 +20,7 @@ class MentionUserViewHolder(private val binding: SceytItemMemberBinding,
         with(binding) {
             val userPresentableName = MentionUserHelper.userNameBuilder?.invoke(item.user)
                     ?: user.getPresentableName()
-            avatar.setNameAndImageUrl(userPresentableName, user.avatarURL, UserStyle.userDefaultAvatar)
+            avatar.setNameAndImageUrl(userPresentableName, user.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
             userName.text = userPresentableName
             onlineStatus.isVisible = user.presence?.state == PresenceState.Online
 
