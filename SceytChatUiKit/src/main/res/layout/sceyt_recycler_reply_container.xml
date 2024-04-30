@@ -21,14 +21,13 @@
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/imageAttachment"
-        android:layout_width="0dp"
+        android:layout_width="34dp"
         android:layout_height="34dp"
         android:layout_marginStart="6dp"
         android:scaleType="centerCrop"
         android:visibility="gone"
         app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintStart_toEndOf="@+id/view"
         app:layout_constraintTop_toTopOf="@+id/view"
         app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize5"
@@ -57,20 +56,18 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icMsgBodyStartIcon"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="wrap_content"
+        android:layout_height="16dp"
         android:layout_marginStart="8dp"
-        android:layout_marginEnd="6dp"
         android:adjustViewBounds="true"
         android:padding=".5dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/tvMessageBody"
-        app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toEndOf="@+id/imageAttachment"
         app:layout_constraintTop_toTopOf="@+id/tvMessageBody"
-        tools:src="@drawable/sceyt_ic_voice" />
+        tools:src="@drawable/sceyt_ic_voice"
+        tools:visibility="visible" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvMessageBody"

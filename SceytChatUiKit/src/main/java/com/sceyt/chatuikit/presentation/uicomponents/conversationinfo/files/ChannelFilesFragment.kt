@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.files
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,7 +15,6 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelFilesBinding
-import com.sceyt.chatuikit.databinding.SceytFragmentChannelMediaBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
@@ -33,7 +33,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adap
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.launch
 
@@ -44,8 +44,13 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     protected var pageStateView: SceytPageStateView? = null
     protected val mediaType = listOf(AttachmentTypeEnum.File.value())
     protected lateinit var viewModel: ChannelAttachmentsViewModel
-    protected lateinit var style: ConversationInfoStyle
+    protected lateinit var style: ConversationInfoMediaStyle
         private set
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        style = ConversationInfoMediaStyle.Builder(context, null).build()
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelFilesBinding.inflate(inflater, container, false).also {
@@ -84,7 +89,7 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     open fun onInitialFilesList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
-            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(requireContext()).also {
+            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(requireContext(), style).also {
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                     item.file.openFile(requireContext())
                 })

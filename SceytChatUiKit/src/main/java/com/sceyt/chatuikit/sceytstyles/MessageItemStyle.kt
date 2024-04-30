@@ -37,6 +37,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @param mediaLoaderColor Color for the media loader, default is [R.color.sceyt_color_on_primary]
  * @param videoDurationIcon Icon for the video duration, default is [R.drawable.sceyt_ic_video]
  * @param fileAttachmentIcon Icon for the file attachment, default is [R.drawable.sceyt_ic_file_filled]
+ * @param voiceAttachmentIcon Icon for the voice attachment, default is [R.drawable.sceyt_ic_voice]
  * @param linkAttachmentIcon Icon for the link attachment, default is [R.drawable.sceyt_ic_link_attachment]
  * @param swipeReplyIcon Icon for the swipe reply, default is [R.drawable.sceyt_is_reply_swipe]
  * */
@@ -61,6 +62,7 @@ data class MessageItemStyle(
         @ColorInt val mediaLoaderColor: Int,
         val videoDurationIcon: Drawable?,
         val fileAttachmentIcon: Drawable?,
+        val voiceAttachmentIcon: Drawable?,
         val linkAttachmentIcon: Drawable?,
         val swipeReplyIcon: Drawable?
 ) {
@@ -146,6 +148,9 @@ data class MessageItemStyle(
             val fileAttachmentIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiFileAttachmentIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_file_filled)
 
+            val voiceAttachmentIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiVoiceAttachmentIcon)
+                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_voice)
+
             val linkAttachmentIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiLinkAttachmentIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_link_attachment)
 
@@ -174,6 +179,7 @@ data class MessageItemStyle(
                 mediaLoaderColor = mediaLoaderColor,
                 videoDurationIcon = videoDurationIcon,
                 fileAttachmentIcon = fileAttachmentIcon,
+                voiceAttachmentIcon = voiceAttachmentIcon,
                 linkAttachmentIcon = linkAttachmentIcon,
                 swipeReplyIcon = swipeReplyIcon
             ).let(messageItemStyleCustomizer::apply)

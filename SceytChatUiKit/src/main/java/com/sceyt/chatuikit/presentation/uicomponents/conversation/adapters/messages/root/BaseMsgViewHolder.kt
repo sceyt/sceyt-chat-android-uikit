@@ -45,7 +45,6 @@ import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.extractLinks
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.chatuikit.extensions.getStaticLayout
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
@@ -56,6 +55,7 @@ import com.sceyt.chatuikit.extensions.marginHorizontal
 import com.sceyt.chatuikit.extensions.screenPortraitWidthPx
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
+import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState
@@ -230,11 +230,12 @@ abstract class BaseMsgViewHolder(private val view: View,
                     }
 
                     attachment?.type == AttachmentTypeEnum.Voice.value() -> {
-                        icMsgBodyStartIcon.setImageDrawable(context.getCompatDrawable(R.drawable.sceyt_ic_voice)?.apply {
-                            if (message.incoming)
-                                setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
-                            else setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-                        })
+                        with(icMsgBodyStartIcon) {
+                            setImageDrawable(style.voiceAttachmentIcon)
+                            val tint = if (message.incoming)
+                                SceytChatUIKit.theme.iconSecondaryColor else SceytChatUIKit.theme.accentColor
+                            setTintColorRes(tint)
+                        }
                         false
                     }
 
@@ -251,22 +252,24 @@ abstract class BaseMsgViewHolder(private val view: View,
             }
             with(root) {
                 if (calculateWith) {
-                    val layoutParams = layoutParams as ConstraintLayout.LayoutParams
-                    layoutParams.matchConstraintMaxWidth = bubbleMaxWidth - marginHorizontal
-                    // Calculate the width of the layout bubble before measuring replyMessageContainer
-                    layoutBubble?.measure(View.MeasureSpec.UNSPECIFIED, 0)
-                    // Set the width LayoutParams.WRAP_CONTENT to layoutParas to measure the real width of replyMessageContainer
-                    layoutParams.width = LayoutParams.WRAP_CONTENT
-                    measure(View.MeasureSpec.UNSPECIFIED, 0)
-                    val bubbleMeasuredWidth = min(bubbleMaxWidth, layoutBubble?.measuredWidth ?: 0)
-                    val minBoundOfWidth = bubbleMeasuredWidth - marginHorizontal
-                    // If the width of replyMessageContainer is bigger than the width of layout bubble,
-                    // set the width of layout bubble, else set the default width of replyMessageContainer
-                    if (measuredWidth >= minBoundOfWidth)
-                        layoutParams.matchConstraintMinWidth = minBoundOfWidth
-                    else {
-                        layoutParams.matchConstraintMinWidth = 0
-                        layoutParams.width = 0
+                    (layoutParams as? ConstraintLayout.LayoutParams)?.let { layoutParams ->
+                        layoutParams.matchConstraintMaxWidth = bubbleMaxWidth - marginHorizontal
+                        // Calculate the width of the layout bubble before measuring replyMessageContainer
+                        layoutBubble?.measure(View.MeasureSpec.UNSPECIFIED, 0)
+                        // Set the width LayoutParams.WRAP_CONTENT to layoutParas to measure the real width of replyMessageContainer
+                        layoutParams.width = LayoutParams.WRAP_CONTENT
+                        measure(View.MeasureSpec.UNSPECIFIED, 0)
+                        val bubbleMeasuredWidth = min(bubbleMaxWidth, layoutBubble?.measuredWidth
+                                ?: 0)
+                        val minBoundOfWidth = bubbleMeasuredWidth - marginHorizontal
+                        // If the width of replyMessageContainer is bigger than the width of layout bubble,
+                        // set the width of layout bubble, else set the default width of replyMessageContainer
+                        if (measuredWidth >= minBoundOfWidth)
+                            layoutParams.matchConstraintMinWidth = minBoundOfWidth
+                        else {
+                            layoutParams.matchConstraintMinWidth = 0
+                            layoutParams.width = 0
+                        }
                     }
                 }
                 isVisible = true
