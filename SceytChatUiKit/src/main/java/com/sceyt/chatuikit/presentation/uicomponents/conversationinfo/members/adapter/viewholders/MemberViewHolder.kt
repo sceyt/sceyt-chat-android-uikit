@@ -18,7 +18,6 @@ import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListenersImpl
-import com.sceyt.chatuikit.sceytstyles.UserStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
@@ -50,7 +49,7 @@ class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
                     ?: member.getPresentableNameWithYou(itemView.context)
 
             if (diff.nameChanged || diff.avatarChanged) {
-                avatar.setNameAndImageUrl(presentableName, member.user.avatarURL, UserStyle.userDefaultAvatar)
+                avatar.setNameAndImageUrl(presentableName, member.user.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
 
                 userName.text = presentableName
             }

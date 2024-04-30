@@ -74,7 +74,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.Mess
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
-import com.sceyt.chatuikit.sceytstyles.UserStyle
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.chatuikit.shared.utils.ViewUtil
@@ -335,10 +334,10 @@ abstract class BaseMsgViewHolder(private val view: View,
             val user = message.user
             val displayName = getSenderName(user)
             if (isDeletedUser(user)) {
-                avatarView.setImageUrl(null, UserStyle.deletedUserAvatar)
+                avatarView.setImageUrl(null, SceytChatUIKit.theme.deletedUserAvatar)
                 tvName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.errorColor))
             } else {
-                avatarView.setNameAndImageUrl(displayName, user?.avatarURL, UserStyle.userDefaultAvatar)
+                avatarView.setNameAndImageUrl(displayName, user?.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
                 tvName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
             }
             tvName.text = displayName

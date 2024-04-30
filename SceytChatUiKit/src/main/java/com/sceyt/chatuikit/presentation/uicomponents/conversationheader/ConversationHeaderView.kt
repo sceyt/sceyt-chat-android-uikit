@@ -61,7 +61,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdate
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.ConversationHeaderStyle
-import com.sceyt.chatuikit.sceytstyles.UserStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -256,15 +255,16 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         binding.avatar.isVisible = !replyInThread
         if (!replyInThread) {
             when {
-                channel.isPeerDeleted() -> avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
+                channel.isPeerDeleted() -> avatar.setImageUrl(null, SceytChatUIKit.theme.deletedUserAvatar)
                 channel.isSelf() -> {
                     avatar.setAvatarColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-                    avatar.setImageUrl(null, UserStyle.notesAvatar)
+                    avatar.setImageUrl(null, SceytChatUIKit.theme.notesAvatar)
                 }
 
                 else -> {
                     val subjAndSUrl = channel.getSubjectAndAvatarUrl()
-                    avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second, if (isGroup) 0 else UserStyle.userDefaultAvatar)
+                    avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second,
+                        if (isGroup) 0 else SceytChatUIKit.theme.userDefaultAvatar)
                 }
             }
         }

@@ -45,7 +45,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelC
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
-import com.sceyt.chatuikit.sceytstyles.UserStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.text.NumberFormat
 import java.util.Locale
@@ -266,15 +265,16 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: ImageView) {
         if (isSelf) {
-            binding.avatar.setImageUrl(null, UserStyle.notesAvatar)
+            binding.avatar.setImageUrl(null, SceytChatUIKit.theme.notesAvatar)
             binding.avatar.setAvatarColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
             return
         }
         binding.avatar.setAvatarColor(0)
         if (channel.isDirect() && channel.isPeerDeleted()) {
-            binding.avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
+            binding.avatar.setImageUrl(null, SceytChatUIKit.theme.deletedUserAvatar)
         } else
-            binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup) 0 else UserStyle.userDefaultAvatar)
+            binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup)
+                0 else SceytChatUIKit.theme.userDefaultAvatar)
     }
 
     open fun setLastMessageStatusAndDate(channel: SceytChannel, dateStatusView: SceytDateStatusView) {

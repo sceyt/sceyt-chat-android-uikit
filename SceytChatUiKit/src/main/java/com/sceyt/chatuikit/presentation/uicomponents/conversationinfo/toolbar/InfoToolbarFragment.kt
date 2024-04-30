@@ -34,7 +34,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.Conversati
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
-import com.sceyt.chatuikit.sceytstyles.UserStyle
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
@@ -166,7 +165,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener, Conversation
     protected open fun setChannelToolbarAvatar(channel: SceytChannel) {
         if (isSelf) {
             binding.toolbarAvatar.setAvatarColor(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
-            binding.toolbarAvatar.setImageUrl(null, UserStyle.notesAvatar)
+            binding.toolbarAvatar.setImageUrl(null, SceytChatUIKit.theme.notesAvatar)
         } else
             binding.toolbarAvatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
     }
@@ -189,7 +188,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener, Conversation
         val user = presenceUser.user
         val userName = SceytKitConfig.userNameBuilder?.invoke(user)
                 ?: user.getPresentableName()
-        binding.toolbarAvatar.setNameAndImageUrl(userName, user.avatarURL, UserStyle.userDefaultAvatar)
+        binding.toolbarAvatar.setNameAndImageUrl(userName, user.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
     }
 
     protected open fun onBackClick() {
