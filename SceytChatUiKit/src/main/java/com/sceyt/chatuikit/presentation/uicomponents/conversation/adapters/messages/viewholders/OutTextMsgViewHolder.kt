@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.mess
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemOutTextMessageBinding
 import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
@@ -11,6 +10,7 @@ import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 class OutTextMsgViewHolder(
@@ -18,8 +18,8 @@ class OutTextMsgViewHolder(
         private val viewPool: RecyclerView.RecycledViewPool,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        userNameBuilder: ((User) -> String)?
-) : BaseMsgViewHolder(binding.root, style, messageListeners, userNameBuilder = userNameBuilder) {
+        userNameFormatter: UserNameFormatter?
+) : BaseMsgViewHolder(binding.root, style, messageListeners, userNameFormatter = userNameFormatter) {
 
     init {
         with(binding) {

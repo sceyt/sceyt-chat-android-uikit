@@ -19,10 +19,11 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 
 object MentionUserHelper {
     const val MENTION = "mention"
-    var userNameBuilder = SceytKitConfig.userNameBuilder
+    var userNameFormatter = SceytKitConfig.userNameFormatter
         private set
 
     fun initMentionAttributes(mentionUsers: List<Mention>): List<BodyAttribute>? {
@@ -102,7 +103,7 @@ object MentionUserHelper {
         data.forEach { entry ->
             val userId = entry.metadata ?: return@forEach
             val user = mentionUsers?.find { it.id == entry.metadata } ?: User(userId)
-            val name = userNameBuilder?.invoke(user) ?: user.getPresentableName()
+            val name = userNameFormatter?.format(user) ?: user.getPresentableName()
             list.add(Mention(userId, name, entry.offset, entry.length))
         }
         return list
@@ -112,7 +113,7 @@ object MentionUserHelper {
                                    item: BodyAttribute): String {
         val mentionUser = mentionUsers?.find { mentionUser -> mentionUser.id == item.metadata }
         var name = mentionUser?.let { user ->
-            userNameBuilder?.invoke(user) ?: user.getPresentableName()
+            userNameFormatter?.format(user) ?: user.getPresentableName()
         } ?: item.metadata
         name = "@$name".notAutoCorrectable()
 
@@ -125,8 +126,8 @@ object MentionUserHelper {
         return name
     }
 
-    fun setCustomUserNameBuilder(userNameBuilder: (User) -> String) {
-        this.userNameBuilder = userNameBuilder
+    fun setCustomUserNameFormatter(userNameFormatter: UserNameFormatter) {
+        this.userNameFormatter = userNameFormatter
     }
 
     fun Annotation.getValueData(): MentionAnnotationValue? {

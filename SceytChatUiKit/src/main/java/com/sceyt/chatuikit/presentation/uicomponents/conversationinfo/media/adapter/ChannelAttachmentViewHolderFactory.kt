@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.ada
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.databinding.SceytItemChannelFileBinding
 import com.sceyt.chatuikit.databinding.SceytItemChannelImageBinding
 import com.sceyt.chatuikit.databinding.SceytItemChannelLinkBinding
@@ -23,6 +22,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adap
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.VideoViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.VoiceViewHolder
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
@@ -32,7 +32,7 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
     protected val layoutInflater = LayoutInflater.from(context)
     protected var clickListeners = AttachmentClickListenersImpl()
         private set
-    protected var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+    protected var userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter
         private set
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
     protected var linkPreviewHelper: LinkPreviewHelper? = null
@@ -72,7 +72,7 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
     open fun createVoiceViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         return VoiceViewHolder(
             SceytItemChannelVoiceBinding.inflate(layoutInflater, parent, false), clickListeners,
-            needMediaDataCallback = needMediaDataCallback, userNameBuilder = userNameBuilder)
+            needMediaDataCallback = needMediaDataCallback, userNameFormatter = userNameFormatter)
     }
 
     open fun createLinkViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
@@ -118,8 +118,8 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
         needMediaDataCallback = callback
     }
 
-    fun setUserNameBuilder(builder: (User) -> String) {
-        userNameBuilder = builder
+    fun setUserNameFormatter(formatter: UserNameFormatter) {
+        userNameFormatter = formatter
     }
 
     fun setLinkPreviewHelper(helper: LinkPreviewHelper) {

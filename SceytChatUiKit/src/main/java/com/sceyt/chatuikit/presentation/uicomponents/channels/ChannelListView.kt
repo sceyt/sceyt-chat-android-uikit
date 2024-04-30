@@ -261,8 +261,8 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
         })
     }
 
-    fun setUserNameBuilder(builder: (User) -> String) {
-        channelsRV.getViewHolderFactory().setUserNameBuilder(builder)
+    fun setuserNameFormatter(builder: (User) -> String) {
+        channelsRV.getViewHolderFactory().setUserNameFormatter(builder)
     }
 
     /**

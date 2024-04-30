@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.a
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelMembersBinding
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
@@ -13,11 +12,12 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.ad
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListenersImpl
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 
 open class ChannelMembersViewHolderFactory(context: Context) {
     private val layoutInflater = LayoutInflater.from(context)
     private val clickListeners = MemberClickListenersImpl()
-    private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+    private var userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseMemberViewHolder {
         return when (viewType) {
@@ -29,7 +29,7 @@ open class ChannelMembersViewHolderFactory(context: Context) {
 
     open fun createMemberViewHolder(parent: ViewGroup): BaseMemberViewHolder {
         return MemberViewHolder(SceytItemChannelMembersBinding.inflate(layoutInflater, parent, false),
-            clickListeners, userNameBuilder)
+            clickListeners, userNameFormatter)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseMemberViewHolder {
@@ -57,8 +57,8 @@ open class ChannelMembersViewHolderFactory(context: Context) {
         clickListeners.setListener(listeners)
     }
 
-    fun setUserNameBuilder(builder: (User) -> String) {
-        userNameBuilder = builder
+    fun setUserNameFormatter(formatter: UserNameFormatter) {
+        userNameFormatter = formatter
     }
 
     enum class ItemType {

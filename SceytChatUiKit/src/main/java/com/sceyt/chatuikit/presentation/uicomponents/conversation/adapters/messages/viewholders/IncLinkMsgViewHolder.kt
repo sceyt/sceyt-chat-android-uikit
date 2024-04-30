@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.mess
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemIncLinkMessageBinding
 import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
@@ -11,6 +10,7 @@ import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseLinkMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
@@ -21,8 +21,8 @@ class IncLinkMsgViewHolder(
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        userNameBuilder: ((User) -> String)?,
-) : BaseLinkMsgViewHolder(linkPreview, binding.root, style, messageListeners, displayedListener, userNameBuilder) {
+        userNameFormatter: UserNameFormatter?,
+) : BaseLinkMsgViewHolder(linkPreview, binding.root, style, messageListeners, displayedListener, userNameFormatter) {
 
     init {
         with(binding) {

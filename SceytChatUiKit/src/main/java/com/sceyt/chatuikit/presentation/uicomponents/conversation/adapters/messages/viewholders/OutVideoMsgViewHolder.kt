@@ -4,7 +4,6 @@ import android.content.res.ColorStateList
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemOutVideoMessageBinding
@@ -31,6 +30,7 @@ import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 class OutVideoMsgViewHolder(
@@ -38,9 +38,9 @@ class OutVideoMsgViewHolder(
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        userNameBuilder: ((User) -> String)?,
+        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, userNameBuilder = userNameBuilder, needMediaDataCallback = needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, userNameFormatter = userNameFormatter, needMediaDataCallback = needMediaDataCallback) {
 
     init {
         with(binding) {

@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.ada
 
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelVoiceBinding
@@ -21,12 +20,13 @@ import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 
 class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
                       private val clickListener: AttachmentClickListenersImpl,
-                      private val userNameBuilder: ((User) -> String)?,
+                      private val userNameFormatter: UserNameFormatter?,
                       private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
@@ -62,7 +62,7 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
         with(binding) {
             val user = (item as ChannelFileItem.Voice).data.user
             tvFileName.text = user?.let {
-                userNameBuilder?.invoke(it) ?: it.getPresentableName()
+                userNameFormatter?.format(it) ?: it.getPresentableName()
             } ?: ""
             tvDate.text = DateTimeUtil.getDateTimeString(attachment.createdAt, "dd.MM.yy • HH:mm")
 

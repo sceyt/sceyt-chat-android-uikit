@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.sharebaleactivity.adapter.
 
 import android.widget.TextView
 import androidx.core.view.isVisible
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Broadcast
@@ -22,10 +21,11 @@ import com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 
 open class ShareableChannelViewHolder(private val binding: SceytItemShareChannelBinding,
                                       private val clickListener: ChannelClickListeners.ChannelClickListener,
-                                      private val userNameBuilder: ((User) -> String)?) : BaseChannelViewHolder(binding.root) {
+                                      private val userNameFormatter: UserNameFormatter?) : BaseChannelViewHolder(binding.root) {
 
     override fun bind(item: ChannelListItem, diff: ChannelDiff) {
         super.bind(item, diff)
@@ -73,7 +73,7 @@ open class ShareableChannelViewHolder(private val binding: SceytItemShareChannel
         textView.text = if (channel.isGroup) channel.channelSubject
         else {
             channel.getPeer()?.user?.let { from ->
-                userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
+                userNameFormatter?.format(from) ?: from.getPresentableNameCheckDeleted(context)
             }
         }
     }

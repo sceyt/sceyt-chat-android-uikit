@@ -631,8 +631,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         })
     }
 
-    fun setUserNameBuilder(builder: (User) -> String) {
-        messagesRV.getViewHolderFactory().setUserNameBuilder(builder)
+    fun setuserNameFormatter(builder: (User) -> String) {
+        messagesRV.getViewHolderFactory().setUserNameFormatter(builder)
     }
 
     fun setNeedDownloadListener(callBack: (NeedMediaInfoData) -> Unit) {

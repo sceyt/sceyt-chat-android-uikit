@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.mess
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemOutAttachmentsMessageBinding
@@ -15,6 +14,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 class OutAttachmentsMsgViewHolder(
@@ -23,9 +23,9 @@ class OutAttachmentsMsgViewHolder(
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        userNameBuilder: ((User) -> String)?,
+        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(binding.root, style, messageListeners, userNameBuilder = userNameBuilder) {
+) : BaseMsgViewHolder(binding.root, style, messageListeners, userNameFormatter = userNameFormatter) {
     private var filedAdapter: MessageFilesAdapter? = null
 
     init {
