@@ -1,14 +1,10 @@
 package com.sceyt.chatuikit.sceytconfigs
 
-import androidx.annotation.ColorRes
 import androidx.annotation.IntRange
 import com.sceyt.chat.models.user.User
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.transformers.MessageTransformer
 
 object SceytKitConfig {
-    @JvmField
-    val SceytUITheme = ThemeConfig()
 
     @JvmField
     @IntRange(1, 50)
@@ -63,9 +59,6 @@ object SceytKitConfig {
     @JvmField
     var backgroundUploadNotificationClickData: BackgroundUploadNotificationClickData? = null
 
-    data class ThemeConfig(
-            var isDarkMode: Boolean = false
-    )
 
     enum class ChannelSortType {
         ByLastMsg,
