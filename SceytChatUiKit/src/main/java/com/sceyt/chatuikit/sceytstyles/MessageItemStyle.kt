@@ -69,7 +69,7 @@ data class MessageItemStyle(
 
     companion object {
         @JvmField
-        var messageItemStyleCustomizer = StyleCustomizer<MessageItemStyle> { it }
+        var styleCustomizer = StyleCustomizer<MessageItemStyle> { it }
     }
 
     internal class Builder(
@@ -182,7 +182,7 @@ data class MessageItemStyle(
                 voiceAttachmentIcon = voiceAttachmentIcon,
                 linkAttachmentIcon = linkAttachmentIcon,
                 swipeReplyIcon = swipeReplyIcon
-            ).let(messageItemStyleCustomizer::apply)
+            ).let(styleCustomizer::apply)
         }
     }
 }

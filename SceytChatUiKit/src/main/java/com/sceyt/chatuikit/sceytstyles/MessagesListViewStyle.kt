@@ -47,7 +47,7 @@ data class MessagesListViewStyle(
 ) {
     companion object {
         @JvmField
-        var messagesListViewStyleCustomizer = StyleCustomizer<MessagesListViewStyle> { it }
+        var styleCustomizer = StyleCustomizer<MessagesListViewStyle> { it }
 
         internal var currentStyle: MessagesListViewStyle? = null
     }
@@ -110,7 +110,7 @@ data class MessagesListViewStyle(
                 unreadMessagesTextColor = unreadMessagesTextColor,
                 unreadMessagesBackendColor = unreadMessagesBackgroundColor,
                 messageItemStyle = messageItemStyle
-            ).let(messagesListViewStyleCustomizer::apply).also {
+            ).let(styleCustomizer::apply).also {
                 currentStyle = it
             }
         }

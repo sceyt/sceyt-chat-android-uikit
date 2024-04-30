@@ -299,7 +299,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         } else MemberTypeEnum.Member
     }
 
-    protected open fun setChannelDetails(channel: SceytChannel) {
+    open fun setChannelDetails(channel: SceytChannel) {
         setChannelToolbar(channel)
         setChannelSettings(channel)
         setChannelMembersByRoleButtons(channel)
