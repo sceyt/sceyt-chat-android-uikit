@@ -9,7 +9,8 @@ import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 class ChannelMediaDateViewHolder(
-        private val binding: SceytItemChannelMediaDateBinding
+        private val binding: SceytItemChannelMediaDateBinding,
+        private val style: ConversationInfoMediaStyle
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, {}) {
 
     init {
@@ -21,7 +22,7 @@ class ChannelMediaDateViewHolder(
         val date = DateTimeUtil.getDateTimeStringWithDateFormatter(
             context = itemView.context,
             time = createdAt,
-            dateFormatter = ConversationInfoMediaStyle.mediaDateSeparatorFormat)
+            dateFormatter = style.mediaDateSeparatorFormat)
         binding.tvDate.text = date
     }
 

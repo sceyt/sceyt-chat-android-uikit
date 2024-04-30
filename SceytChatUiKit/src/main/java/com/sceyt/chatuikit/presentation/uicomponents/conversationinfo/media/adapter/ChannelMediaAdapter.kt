@@ -14,7 +14,6 @@ import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.AttachmentsDiffUtil
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 class ChannelMediaAdapter(
@@ -104,7 +103,7 @@ class ChannelMediaAdapter(
         val date = DateTimeUtil.getDateTimeStringWithDateFormatter(
             context = header.root.context,
             time = attachments.getOrNull(headerPosition)?.getCreatedAt(),
-            dateFormatter = ConversationInfoMediaStyle.mediaDateSeparatorFormat)
+            dateFormatter = attachmentViewHolderFactory.getMediaStyle().mediaDateSeparatorFormat)
 
         header.tvDate.text = date
         header.tvDate.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)

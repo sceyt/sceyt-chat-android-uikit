@@ -23,15 +23,20 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adap
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.VideoViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.VoiceViewHolder
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 open class ChannelAttachmentViewHolderFactory(context: Context,
-                                              private val linkPreviewHelper: LinkPreviewHelper? = null) {
+                                              protected val style: ConversationInfoMediaStyle) {
 
     protected val layoutInflater = LayoutInflater.from(context)
-    private var clickListeners = AttachmentClickListenersImpl()
-    private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+    protected var clickListeners = AttachmentClickListenersImpl()
+        private set
+    protected var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+        private set
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
+    protected var linkPreviewHelper: LinkPreviewHelper? = null
+        private set
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<ChannelFileItem> {
         return when (viewType) {
@@ -54,8 +59,8 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
 
     open fun createVideoViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         return VideoViewHolder(
-            SceytItemChannelVideoBinding.inflate(layoutInflater, parent, false), clickListeners,
-            needMediaDataCallback = needMediaDataCallback)
+            SceytItemChannelVideoBinding.inflate(layoutInflater, parent, false),
+            style, clickListeners, needMediaDataCallback = needMediaDataCallback)
     }
 
     open fun createFileViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
@@ -78,7 +83,7 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
 
     open fun createMediaDateViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         val binding = SceytItemChannelMediaDateBinding.inflate(layoutInflater, parent, false)
-        return ChannelMediaDateViewHolder(binding)
+        return ChannelMediaDateViewHolder(binding, style)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
@@ -107,12 +112,18 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
 
     fun getClickListeners() = clickListeners as AttachmentClickListeners.ClickListeners
 
+    fun getMediaStyle() = style
+
     fun setNeedMediaDataCallback(callback: (NeedMediaInfoData) -> Unit) {
         needMediaDataCallback = callback
     }
 
     fun setUserNameBuilder(builder: (User) -> String) {
         userNameBuilder = builder
+    }
+
+    fun setLinkPreviewHelper(helper: LinkPreviewHelper) {
+        linkPreviewHelper = helper
     }
 
     protected fun getNeedMediaDataCallback() = needMediaDataCallback

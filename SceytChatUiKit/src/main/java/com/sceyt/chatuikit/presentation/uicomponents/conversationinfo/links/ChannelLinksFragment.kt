@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.databinding.SceytFragmentChannelFilesBinding
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelLinksBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getString
@@ -33,7 +33,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adap
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import kotlinx.coroutines.launch
 
@@ -44,8 +44,13 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     protected open var pageStateView: SceytPageStateView? = null
     protected open val mediaType = listOf("link")
     protected lateinit var viewModel: ChannelAttachmentsViewModel
-    protected lateinit var style: ConversationInfoStyle
+    protected lateinit var style: ConversationInfoMediaStyle
         private set
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        style = ConversationInfoMediaStyle.Builder(context, null).build()
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelLinksBinding.inflate(inflater, container, false).also {
@@ -104,8 +109,11 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     open fun onInitialLinksList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
-            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(requireContext(),
-                LinkPreviewHelper(requireContext(), lifecycleScope)).also {
+            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(
+                requireContext(), style
+            ).also {
+                it.setLinkPreviewHelper(LinkPreviewHelper(requireContext(), lifecycleScope))
+
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                     onLinkClick(item.file.url)
                 })
