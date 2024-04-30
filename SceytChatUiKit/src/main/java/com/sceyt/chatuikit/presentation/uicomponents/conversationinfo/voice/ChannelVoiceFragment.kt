@@ -11,9 +11,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelVoiceBinding
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.screenHeightPx
@@ -57,6 +59,7 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         initViewModel()
         addPageStateView()
         loadInitialFilesList()
+        binding?.applyStyle()
     }
 
     private fun getBundleArguments() {
@@ -155,9 +158,13 @@ open class ChannelVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         pageStateView?.updateState(PageState.StateEmpty())
     }
 
-    companion object {
+    private fun SceytFragmentChannelVoiceBinding.applyStyle() {
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
+    }
 
+    companion object {
         const val CHANNEL = "CHANNEL"
+
         fun newInstance(channel: SceytChannel): ChannelVoiceFragment {
             val fragment = ChannelVoiceFragment()
             fragment.setBundleArguments {
