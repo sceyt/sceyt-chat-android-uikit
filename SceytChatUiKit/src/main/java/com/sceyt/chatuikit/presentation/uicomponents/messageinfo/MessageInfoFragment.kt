@@ -25,6 +25,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messa
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
 import com.sceyt.chatuikit.presentation.uicomponents.messageinfo.adapter.UserMarkerAdapter
+import com.sceyt.chatuikit.sceytstyles.MessageInfoStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach

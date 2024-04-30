@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.uicomponents.messageinfo
+package com.sceyt.chatuikit.sceytstyles
 
 import android.content.Context
 import android.graphics.drawable.Drawable
@@ -8,7 +8,6 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.sceytstyles.StyleCustomizer
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
@@ -30,7 +29,7 @@ data class MessageInfoStyle(
 ) {
 
     companion object {
-        var messageInfoStyleCustomizer = StyleCustomizer<MessageInfoStyle> { it }
+        var styleCustomizer = StyleCustomizer<MessageInfoStyle> { it }
     }
 
     internal class Builder(
@@ -67,7 +66,7 @@ data class MessageInfoStyle(
                 titleColor = titleColor,
                 borderColor = borderColor,
                 backIcon = backIcon
-            ).let(messageInfoStyleCustomizer::apply)
+            ).let(styleCustomizer::apply)
         }
     }
 }
