@@ -12,9 +12,8 @@ import com.sceyt.chat.demo.presentation.conversation.ConversationActivity
 import com.sceyt.chat.models.SCTLogLevel
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.TAG
-import com.sceyt.chatuikit.sceytconfigs.BackgroundUploadNotificationClickData
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
+import com.sceyt.chatuikit.sceytconfigs.SceytChatUIKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UploadNotificationClickHandleData
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -44,17 +43,11 @@ class SceytChatDemoApp : Application() {
             clientId = UUID.randomUUID().toString(),
             enableDatabase = true)
 
-        SceytChatUIKit.theme = SceytChatUIKitTheme(
-            accentColor = com.sceyt.chatuikit.R.color.sceyt_color_admin_role,
-            //  backgroundColor = com.sceyt.chatuikit.R.color.sceyt_color_admin_role,
-            textSecondaryColor = com.sceyt.chatuikit.R.color.sceyt_color_green,
-            iconSecondaryColor = com.sceyt.chatuikit.R.color.sceyt_color_warning,
+        SceytChatUIKit.config = SceytChatUIKitConfig(
+            uploadNotificationClickHandleData = UploadNotificationClickHandleData(
+                ConversationActivity::class.java, ConversationActivity.CHANNEL
+            )
         )
-
-        SceytKitConfig.backgroundUploadNotificationClickData = BackgroundUploadNotificationClickData(
-            ConversationActivity::class.java, ConversationActivity.CHANNEL
-        )
-
         ChatClient.setSceytLogLevel(SCTLogLevel.Info) { i: Int, s: String, s1: String ->
             when (i) {
                 Log.DEBUG, Log.INFO -> Log.i(TAG, "$s $s1")

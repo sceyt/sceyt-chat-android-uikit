@@ -73,7 +73,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.SearchResult
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MESSAGES_LOAD_SIZE
 import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
@@ -275,7 +274,7 @@ class MessageListViewModel(
         loadPrevJob?.cancel()
         loadNextJob?.cancel()
         loadNearJob = viewModelScope.launch(Dispatchers.IO) {
-            val limit = min(50, MESSAGES_LOAD_SIZE * 2)
+            val limit = min(50, SceytChatUIKit.config.messagesLoadSize * 2)
             messageInteractor.loadNearMessages(conversationId, messageId, replyInThread,
                 limit, loadKey, ignoreServer = ignoreServer).collect { response ->
                 withContext(Dispatchers.Main) {
@@ -759,7 +758,7 @@ class MessageListViewModel(
         _searchResult.postValue(searchResult.copy(currentIndex = nextIndex))
         _onScrollToSearchMessageLiveData.postValue(messages[nextIndex])
 
-        if (searchResult.hasNext && messages.size - nextIndex < MESSAGES_LOAD_SIZE / 2) {
+        if (searchResult.hasNext && messages.size - nextIndex < SceytChatUIKit.config.messagesLoadSize / 2) {
             loadNextSearchedMessages()
         }
     }

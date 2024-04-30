@@ -55,7 +55,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messa
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MAX_MULTISELECT_MESSAGES_COUNT
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -629,9 +628,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
             is MessageCommandEvent.OnMultiselectEvent -> {
                 val wasSelected = selectedMessagesMap.containsKey(event.message.tid)
+                val maxCount = SceytChatUIKit.config.maxMultiselectMessagesCount
 
-                if (!wasSelected && selectedMessagesMap.size >= MAX_MULTISELECT_MESSAGES_COUNT) {
-                    val errorMessage = String.format(messagesListView.getString(R.string.sceyt_rich_max_message_select_count, MAX_MULTISELECT_MESSAGES_COUNT.toString()))
+                if (!wasSelected && selectedMessagesMap.size >= maxCount) {
+                    val errorMessage = String.format(messagesListView.getString(R.string.sceyt_rich_max_message_select_count, maxCount.toString()))
                     customToastSnackBar(messagesListView, errorMessage)
                     return@setMessageCommandEventListener
                 }

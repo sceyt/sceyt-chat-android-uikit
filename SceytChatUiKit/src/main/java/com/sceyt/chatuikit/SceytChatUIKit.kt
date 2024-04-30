@@ -21,7 +21,9 @@ import com.sceyt.chatuikit.persistence.di.interactorModule
 import com.sceyt.chatuikit.persistence.di.logicModule
 import com.sceyt.chatuikit.persistence.lazyVar
 import com.sceyt.chatuikit.presentation.di.viewModelModule
+import com.sceyt.chatuikit.sceytconfigs.SceytChatUIKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
+import com.sceyt.chatuikit.sceytconfigs.dateformaters.UserPresenceDateFormatter
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 import com.vanniktech.emoji.EmojiManager
 import com.vanniktech.emoji.google.GoogleEmojiProvider
@@ -38,6 +40,7 @@ object SceytChatUIKit : SceytKoinComponent {
     private lateinit var appContext: Context
     val chatUIFacade: SceytChatUIFacade by inject()
     var theme: SceytChatUIKitTheme by lazyVar { SceytChatUIKitTheme() }
+    var config: SceytChatUIKitConfig by lazyVar { SceytChatUIKitConfig() }
 
     @JvmField
     var messageTransformer: MessageTransformer? = null
@@ -51,6 +54,10 @@ object SceytChatUIKit : SceytKoinComponent {
 
     @JvmField
     var mentionUserNameFormatter: UserNameFormatter? = null
+
+    @JvmField
+    var userPresenceDateFormatter = UserPresenceDateFormatter()
+
 
     fun initialize(
             appContext: Context,

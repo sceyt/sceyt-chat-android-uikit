@@ -21,7 +21,6 @@ import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 
 open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener, ConversationInfoStyleApplier {
@@ -54,7 +53,7 @@ open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener, Conversa
         with(binding) {
             val about = if (channel.isDirect()) {
                 channel.getPeer()?.user?.presence?.status
-                        ?: SceytKitConfig.presenceStatusText
+                        ?: SceytChatUIKit.config.presenceStatusText
             } else channel.metadata?.jsonToObject(ChannelDescriptionData::class.java)?.description
 
             tvDescription.text = about

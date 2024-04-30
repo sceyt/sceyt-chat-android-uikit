@@ -21,7 +21,6 @@ import com.sceyt.chatuikit.extensions.isRtl
 import com.sceyt.chatuikit.extensions.marginHorizontal
 import com.sceyt.chatuikit.extensions.screenWidthPx
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MAX_SELF_REACTIONS_SIZE
 import java.lang.Integer.max
 import kotlin.math.min
 
@@ -75,7 +74,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
             ReactionItem.Reaction(SceytReactionTotal(it, containsSelf = containsSelf), message, reactionItem?.isPending
                     ?: false)
         }.run {
-            if ((message.messageReactions?.size ?: 0) < MAX_SELF_REACTIONS_SIZE)
+            if ((message.messageReactions?.size ?: 0) < SceytChatUIKit.config.maxSelfReactionsSize)
                 plus(ReactionItem.Other(message))
             else this
         }

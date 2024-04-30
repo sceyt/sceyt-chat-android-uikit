@@ -19,6 +19,7 @@ import com.sceyt.chat.sceyt_callbacks.ChannelsCallback
 import com.sceyt.chat.sceyt_callbacks.MembersCallback
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
@@ -32,8 +33,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
+import com.sceyt.chatuikit.sceytconfigs.ChannelSortType
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -44,14 +44,14 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     private lateinit var channelsQuery: ChannelListQuery
 
     private fun getOrder(): ChannelListQuery.ChannelListOrder {
-        return if (SceytKitConfig.sortChannelsBy == SceytKitConfig.ChannelSortType.ByLastMsg)
+        return if (SceytChatUIKit.config.sortChannelsBy == ChannelSortType.ByLastMsg)
             ChannelListQuery.ChannelListOrder.ListQueryChannelOrderLastMessage
         else ChannelListQuery.ChannelListOrder.ListQueryChannelOrderCreatedAt
     }
 
     private fun createMemberListQuery(channelId: Long, offset: Int, role: String?): MemberListQuery {
         return MemberListQuery.Builder(channelId)
-            .limit(SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE)
+            .limit(SceytChatUIKit.config.channelMembersLoadSize)
             .orderType(MemberListQuery.QueryOrderType.ListQueryOrderAscending)
             .order(MemberListQuery.MemberListOrder.MemberListQueryOrderKeyUserName)
             .apply {
@@ -573,7 +573,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             .order(getOrder())
             .query(query?.ifBlank { null })
             .withQueryParam(channelQueryParam)
-            .limit(CHANNELS_LOAD_SIZE)
+            .limit(SceytChatUIKit.config.channelsLoadSize)
             .build()
     }
 

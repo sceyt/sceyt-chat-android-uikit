@@ -74,7 +74,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.popups.PopupRe
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.popups.PopupReactionsAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.forward.SceytForwardActivity
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MAX_SELF_REACTIONS_SIZE
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -271,8 +270,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (message.deliveryStatus == DeliveryStatus.Pending) return null
         val reactions = message.messageReactions?.map { it.reaction.key }?.toArrayList()
                 ?: arrayListOf()
-        if (reactions.size < MAX_SELF_REACTIONS_SIZE)
-            reactions.addAll(SceytChatUIKit.theme.defaultReactions.minus(reactions.toSet()).take(MAX_SELF_REACTIONS_SIZE - reactions.size))
+        if (reactions.size < SceytChatUIKit.config.maxSelfReactionsSize)
+            reactions.addAll(SceytChatUIKit.theme.defaultReactions.minus(reactions.toSet())
+                .take(SceytChatUIKit.config.maxSelfReactionsSize - reactions.size))
 
         return PopupReactions(context).showPopup(view, message, reactions, object : PopupReactionsAdapter.OnItemClickListener {
             override fun onReactionClick(reaction: ReactionItem.Reaction) {

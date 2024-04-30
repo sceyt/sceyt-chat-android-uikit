@@ -19,6 +19,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
@@ -46,7 +47,6 @@ import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.IS_SHAR
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.MESSAGE_TID
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.NOTIFICATION_ID
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.UPLOAD_CHANNEL_ID
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.runBlocking
@@ -210,7 +210,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setSmallIcon(R.drawable.sceyt_ic_upload)
 
-        val clickData = SceytKitConfig.backgroundUploadNotificationClickData
+        val clickData = SceytChatUIKit.config.uploadNotificationClickHandleData
         val channel = if (clickData != null)
             channelLogic.getChannelFromDb(channelId) else null
 

@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getFirstVisibleItemPosition
@@ -27,7 +28,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messa
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessagesAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.StickyDateHeaderUpdater
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.helpers.MessageSwipeController
 import kotlinx.coroutines.delay
@@ -101,7 +101,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private fun checkNeedLoadPrev(dy: Int) {
         if (mAdapter.itemCount == 0) return
         val firstVisiblePosition = getFirstVisibleItemPosition()
-        if (firstVisiblePosition <= SceytKitConfig.MESSAGES_LOAD_SIZE / 2 && dy < 0) {
+        if (firstVisiblePosition <= SceytChatUIKit.config.messagesLoadSize / 2 && dy < 0) {
             if (firstVisiblePosition == 0) {
                 if (!richToStartInvoked) {
                     val skip = mAdapter.getSkip()
@@ -125,7 +125,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         val lastVisiblePosition = getLastVisibleItemPosition()
         checkScrollDown(lastVisiblePosition)
 
-        if (mAdapter.itemCount - lastVisiblePosition <= SceytKitConfig.MESSAGES_LOAD_SIZE / 2 && dy > 0) {
+        if (mAdapter.itemCount - lastVisiblePosition <= SceytChatUIKit.config.messagesLoadSize / 2 && dy > 0) {
             if (lastVisiblePosition == mAdapter.itemCount - 1) {
                 if (!richToEndInvoked) {
                     val skip = mAdapter.getSkip()
