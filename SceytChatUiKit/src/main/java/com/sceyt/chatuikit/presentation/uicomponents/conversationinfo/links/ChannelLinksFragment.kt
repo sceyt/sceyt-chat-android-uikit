@@ -10,8 +10,11 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.databinding.SceytFragmentChannelFilesBinding
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelLinksBinding
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.openLink
@@ -57,6 +60,7 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         initViewModel()
         addPageStateView()
         loadInitialLinksList()
+        binding?.applyStyle()
     }
 
     private fun getBundleArguments() {
@@ -152,6 +156,10 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     override fun onHistoryCleared() {
         mediaAdapter?.clearData()
         pageStateView?.updateState(PageState.StateEmpty())
+    }
+
+    private fun SceytFragmentChannelLinksBinding.applyStyle() {
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
     }
 
     companion object {
