@@ -23,7 +23,6 @@ import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
@@ -85,6 +84,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.inline
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageInputStyle
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.helpers.chooseAttachment.AttachmentChooseType
@@ -111,7 +111,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
     private val typingDebounceHelper by lazy { DebounceHelper(100, getScope()) }
     private var typingTimeoutJob: Job? = null
-    private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+    private var userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter
     private var inputState = Voice
     private var disabledInputByGesture: Boolean = false
     private var enableMention: Boolean = true
@@ -536,7 +536,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             (parent as? ViewGroup)?.addView(MentionUserContainer(context).apply {
                 mentionUserContainer = initWithMessageInputView(this@MessageInputView).also {
                     setUserClickListener {
-                        val name = (MentionUserHelper.userNameBuilder?.invoke(it.user)
+                        val name = (MentionUserHelper.userNameFormatter?.format(it.user)
                                 ?: it.getPresentableName()).notAutoCorrectable()
                         binding.messageInput.replaceTextWithMention(name, it.id)
                     }
@@ -783,8 +783,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         clickListeners.setListener(listener)
     }
 
-    fun setUserNameBuilder(builder: (User) -> String) {
-        userNameBuilder = builder
+    fun setUserNameFormatter(builder: UserNameFormatter) {
+        userNameFormatter = builder
     }
 
     fun setCustomClickListener(listener: MessageInputClickListenersImpl) {

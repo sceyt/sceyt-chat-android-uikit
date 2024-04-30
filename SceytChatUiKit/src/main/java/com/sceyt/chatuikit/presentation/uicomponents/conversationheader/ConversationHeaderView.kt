@@ -60,6 +60,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdate
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.ConversationHeaderStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.delay
@@ -80,7 +81,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private var replyMessage: SceytMessage? = null
     private var isReplyInThread: Boolean = false
     private var isGroup = false
-    private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+    private var userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter
     private var enablePresence: Boolean = true
     private val typingUsersHelper by lazy { initTypingUsersHelper() }
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
@@ -182,7 +183,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 channel.isSelf() -> getString(R.string.self_notes)
                 else -> {
                     val member = channel.getPeer() ?: return
-                    userNameBuilder?.invoke(member.user)
+                    userNameFormatter?.format(member.user)
                             ?: member.user.getPresentableNameCheckDeleted(context)
                 }
             }
@@ -422,9 +423,9 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         typingUsersHelper.setTypingTextBuilder(builder)
     }
 
-    fun setUserNameBuilder(builder: (User) -> String) {
-        userNameBuilder = builder
-        typingUsersHelper.setUserNameBuilder(builder)
+    fun setUserNameFormatter(formatter: UserNameFormatter) {
+        userNameFormatter = formatter
+        typingUsersHelper.setUserNameFormatter(formatter)
     }
 
     fun invalidateUi() {

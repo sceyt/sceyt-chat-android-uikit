@@ -5,7 +5,6 @@ import androidx.annotation.ColorRes
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
@@ -18,12 +17,13 @@ import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListenersImpl
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
 class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
                        private val memberClickListeners: MemberClickListenersImpl,
-                       private val userNameBuilder: ((User) -> String)? = null) : BaseMemberViewHolder(binding.root) {
+                       private val userNameFormatter: UserNameFormatter? = null) : BaseMemberViewHolder(binding.root) {
 
     private lateinit var memberItem: MemberItem.Member
 
@@ -45,7 +45,7 @@ class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
 
         with(binding) {
 
-            val presentableName = userNameBuilder?.invoke(member.user)
+            val presentableName = userNameFormatter?.format(member.user)
                     ?: member.getPresentableNameWithYou(itemView.context)
 
             if (diff.nameChanged || diff.avatarChanged) {

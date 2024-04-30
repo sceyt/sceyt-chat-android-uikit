@@ -44,6 +44,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelsAd
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.text.NumberFormat
@@ -53,7 +54,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                              private val channelStyle: ChannelListViewStyle,
                              private var listeners: ChannelClickListeners.ClickListeners,
                              private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)? = null,
-                             private val userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder) : BaseChannelViewHolder(binding.root) {
+                             private val userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter) : BaseChannelViewHolder(binding.root) {
 
     protected var isSelf = false
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
@@ -153,7 +154,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 message.incoming -> {
                     val from = channel.lastMessage?.user
                     val userFirstName = from?.let {
-                        userNameBuilder?.invoke(from)
+                        userNameFormatter?.format(from)
                                 ?: from.getPresentableNameCheckDeleted(context)
                     }
                     if (channel.isGroup && !userFirstName.isNullOrBlank()) {
@@ -198,7 +199,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
             val reactUserName = when {
                 channel.isGroup -> {
-                    val name = lastReaction.user?.let { SceytKitConfig.userNameBuilder?.invoke(it) }
+                    val name = lastReaction.user?.let { SceytKitConfig.userNameFormatter?.format(it) }
                             ?: lastReaction.user?.getPresentableNameWithYou(context)
                     "$name ${reactedWord.lowercase()}"
                 }
@@ -242,7 +243,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 context.getString(R.string.self_notes)
             } else {
                 channel.getPeer()?.user?.let { from ->
-                    userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
+                    userNameFormatter?.format(from) ?: from.getPresentableNameCheckDeleted(context)
                 }
             }
         }
@@ -325,7 +326,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         if (data.typing) {
             textView.setTypeface(null, Typeface.ITALIC)
             if (channel.isGroup) {
-                val name = userNameBuilder?.invoke(data.member.user)
+                val name = userNameFormatter?.format(data.member.user)
                         ?: data.member.getPresentableFirstName()
                 textView.text = "$name ${context.getString(R.string.sceyt_typing_)}"
             } else

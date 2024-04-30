@@ -73,6 +73,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.react
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil.getDateTimeString
@@ -83,7 +84,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                                  private val style: MessageItemStyle,
                                  private val messageListeners: MessageClickListeners.ClickListeners? = null,
                                  private val displayedListener: ((MessageListItem) -> Unit)? = null,
-                                 private val userNameBuilder: ((User) -> String)? = null)
+                                 private val userNameFormatter: UserNameFormatter? = null)
     : RecyclerView.ViewHolder(view) {
 
     protected val context: Context by lazy { view.context }
@@ -504,7 +505,7 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     private fun getSenderName(user: User?): String {
         user ?: return ""
-        return userNameBuilder?.invoke(user) ?: user.getPresentableNameCheckDeleted(context)
+        return userNameFormatter?.format(user) ?: user.getPresentableNameCheckDeleted(context)
     }
 
     private fun isDeletedUser(user: User?): Boolean {

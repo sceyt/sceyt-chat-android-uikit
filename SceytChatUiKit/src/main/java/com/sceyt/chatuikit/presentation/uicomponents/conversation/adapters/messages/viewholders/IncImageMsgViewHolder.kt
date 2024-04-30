@@ -4,7 +4,6 @@ import android.content.res.ColorStateList
 import android.widget.ImageView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemIncImageMessageBinding
 import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
@@ -29,6 +28,7 @@ import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 
@@ -38,9 +38,9 @@ class IncImageMsgViewHolder(
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        userNameBuilder: ((User) -> String)?,
+        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, userNameBuilder, needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, userNameFormatter, needMediaDataCallback) {
 
     init {
         with(binding) {

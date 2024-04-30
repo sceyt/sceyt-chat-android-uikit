@@ -10,7 +10,6 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
@@ -30,6 +29,7 @@ import com.sceyt.chatuikit.presentation.extensions.isTextMessage
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CancelReplyMessageViewClickListener
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.utils.ViewUtil
@@ -37,7 +37,7 @@ import com.sceyt.chatuikit.shared.utils.ViewUtil
 open class EditOrReplyMessageFragment : Fragment() {
     protected var binding: SceytFragmentEditOrReplyMessageBinding? = null
     protected var clickListeners: CancelReplyMessageViewClickListener? = null
-    protected var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+    protected var userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentEditOrReplyMessageBinding.inflate(inflater, container, false).also {
@@ -81,7 +81,7 @@ open class EditOrReplyMessageFragment : Fragment() {
                 root.isVisible = true
                 ViewUtil.expandHeight(root, 0, 200)
             }
-            val name = message.user?.let { userNameBuilder?.invoke(it) }
+            val name = message.user?.let { userNameFormatter?.format(it) }
                     ?: message.user?.getPresentableName() ?: ""
             val text = "${getString(R.string.sceyt_reply)} $name".run {
                 setBoldSpan(length - name.length, length)

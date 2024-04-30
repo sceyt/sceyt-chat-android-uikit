@@ -356,7 +356,7 @@ open class ConversationInfoActivity : AppCompatActivity(), SceytKoinComponent {
         if (!icon.isNullOrBlank()) {
             val title = if (channel.isDirect()) {
                 val user = channel.getPeer()?.user
-                if (user != null) SceytKitConfig.userNameBuilder?.invoke(user)
+                if (user != null) SceytKitConfig.userNameFormatter?.format(user)
                         ?: user.getPresentableName() else null
             } else channel.subject
 

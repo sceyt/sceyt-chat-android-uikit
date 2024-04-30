@@ -3,17 +3,14 @@ package com.sceyt.chatuikit.presentation.uicomponents.mediaview.adapter
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.databinding.SceytMediaItemImageBinding
 import com.sceyt.chatuikit.databinding.SceytMediaItemVideoBinding
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.adapter.viewholders.MediaImageViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.adapter.viewholders.MediaVideoViewHolder
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.userNameBuilder
 
 open class MediaFilesViewHolderFactory(context: Context) {
-
     protected val layoutInflater = LayoutInflater.from(context)
     private var clickListeners: (MediaItem) -> Unit = {}
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
@@ -51,10 +48,6 @@ open class MediaFilesViewHolderFactory(context: Context) {
 
     fun setNeedMediaDataCallback(callback: (NeedMediaInfoData) -> Unit) {
         needMediaDataCallback = callback
-    }
-
-    fun setUserNameBuilder(builder: (User) -> String) {
-        userNameBuilder = builder
     }
 
     protected fun getNeedMediaDataCallback() = needMediaDataCallback

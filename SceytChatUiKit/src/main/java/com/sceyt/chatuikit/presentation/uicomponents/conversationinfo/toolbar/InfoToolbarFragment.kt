@@ -186,7 +186,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener, Conversation
     fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
         if (isSelf) return
         val user = presenceUser.user
-        val userName = SceytKitConfig.userNameBuilder?.invoke(user)
+        val userName = SceytKitConfig.userNameFormatter?.format(user)
                 ?: user.getPresentableName()
         binding.toolbarAvatar.setNameAndImageUrl(userName, user.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
     }

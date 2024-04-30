@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.sharebaleactivity.adapter.
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.databinding.SceytItemShareChannelBinding
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
@@ -12,11 +11,12 @@ import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholder
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
 import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 
 open class ShareableChannelViewHolderFactory(context: Context) {
     protected val layoutInflater = LayoutInflater.from(context)
     protected val channelClickListenersImpl = ChannelClickListenersImpl()
-    var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+    var userNameFormatter: UserNameFormatter? = SceytKitConfig.userNameFormatter
         private set
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
@@ -29,7 +29,7 @@ open class ShareableChannelViewHolderFactory(context: Context) {
 
     open fun createChannelViewHolder(parent: ViewGroup): BaseChannelViewHolder {
         val binding = SceytItemShareChannelBinding.inflate(layoutInflater, parent, false)
-        return ShareableChannelViewHolder(binding, channelClickListenersImpl, userNameBuilder)
+        return ShareableChannelViewHolder(binding, channelClickListenersImpl, userNameFormatter)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelViewHolder {
@@ -41,8 +41,8 @@ open class ShareableChannelViewHolderFactory(context: Context) {
         channelClickListenersImpl.setListener(listener)
     }
 
-    fun setUserNameBuilder(builder: (User) -> String) {
-        userNameBuilder = builder
+    fun setUserNameFormatter(formatter: UserNameFormatter) {
+        userNameFormatter = formatter
     }
 
     protected val clickListeners get() = channelClickListenersImpl as ChannelClickListeners.ClickListeners

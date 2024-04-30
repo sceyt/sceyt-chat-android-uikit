@@ -18,7 +18,7 @@ class MentionUserViewHolder(private val binding: SceytItemMemberBinding,
         val user = item.user
 
         with(binding) {
-            val userPresentableName = MentionUserHelper.userNameBuilder?.invoke(item.user)
+            val userPresentableName = MentionUserHelper.userNameFormatter?.format(item.user)
                     ?: user.getPresentableName()
             avatar.setNameAndImageUrl(userPresentableName, user.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
             userName.text = userPresentableName

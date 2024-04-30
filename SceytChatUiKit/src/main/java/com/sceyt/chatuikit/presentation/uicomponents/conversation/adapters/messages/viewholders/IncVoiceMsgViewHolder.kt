@@ -1,12 +1,10 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
-import android.content.res.ColorStateList
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
@@ -46,6 +44,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messa
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.PlaybackSpeed
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 class IncVoiceMsgViewHolder(
@@ -54,10 +53,10 @@ class IncVoiceMsgViewHolder(
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners,
         displayedListener: ((MessageListItem) -> Unit)?,
-        userNameBuilder: ((User) -> String)?,
+        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
         private val voicePlayPauseListener: ((FileListItem, playing: Boolean) -> Unit)?
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, userNameBuilder, needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, userNameFormatter, needMediaDataCallback) {
     private var currentPlaybackSpeed: PlaybackSpeed = PlaybackSpeed.X1
         set(value) {
             field = value

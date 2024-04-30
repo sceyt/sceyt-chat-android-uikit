@@ -71,7 +71,7 @@ class ReactedUsersAdapter(private var clickListener: OnItemClickListener) : List
         override fun bind(item: ReactedUserItem) {
             with(binding) {
                 val user: User? = (item as ReactedUserItem.Item).reaction.user
-                val userPresentableName = user?.let { SceytKitConfig.userNameBuilder?.invoke(it) }
+                val userPresentableName = user?.let { SceytKitConfig.userNameFormatter?.format(it) }
                         ?: user?.getPresentableName()
                 avatar.setNameAndImageUrl(userPresentableName, user?.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
                 userName.text = userPresentableName
