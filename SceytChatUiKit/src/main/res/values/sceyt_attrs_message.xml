@@ -5,8 +5,13 @@
         <attr name="sceytUiMessageIncBubbleColor" format="reference|color" />
         <attr name="sceytUiMessageOutBubbleColor" format="reference|color" />
 
-        <attr name="sceytUiMessageIncLinkPreviewBackgroundColor" format="reference" />
-        <attr name="sceytUiMessageOutLinkPreviewBackgroundColor" format="reference" />
+        <!--Background color reply message -->
+        <attr name="sceytUiMessageIncReplyBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageOutReplBackgroundColor" format="reference|color" />
+
+        <!--Background color of link preview -->
+        <attr name="sceytUiMessageIncLinkPreviewBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageOutLinkPreviewBackgroundColor" format="reference|color" />
 
         <!-- Drawable of the message sent state indicator -->
         <attr name="sceytUiMessageSentIcon" format="reference" />

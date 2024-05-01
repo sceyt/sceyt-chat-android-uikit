@@ -44,6 +44,8 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 data class MessageItemStyle(
         @ColorInt val incBubbleColor: Int,
         @ColorInt val outBubbleColor: Int,
+        @ColorInt val incReplyBackgroundColor: Int,
+        @ColorInt val outReplyBackgroundColor: Int,
         @ColorInt val incLinkPreviewBackgroundColor: Int,
         @ColorInt val outLinkPreviewBackgroundColor: Int,
         val messageStatusPendingIcon: Drawable?,
@@ -88,12 +90,18 @@ data class MessageItemStyle(
             val outBubbleColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageOutBubbleColor,
                 defaultOutBubbleColor)
 
+            val defaultOutDarkColor = ColorUtils.blendARGB(accentColor, color2, 0.75f)
+            val incReplyBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageIncLinkPreviewBackgroundColor,
+                context.getCompatColor(R.color.sceyt_color_bg_inc_link_preview))
+
+            val outReplyBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageOutLinkPreviewBackgroundColor,
+                defaultOutDarkColor)
+
             val incLinkPreviewBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageIncLinkPreviewBackgroundColor,
                 context.getCompatColor(R.color.sceyt_color_bg_inc_link_preview))
 
-            val defaultOutLinkPreviewBackgroundColor = ColorUtils.blendARGB(accentColor, color2, 0.7f)
             val outLinkPreviewBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageOutLinkPreviewBackgroundColor,
-                defaultOutLinkPreviewBackgroundColor)
+                defaultOutDarkColor)
 
             val messageStatusPendingIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiMessagePendingIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_status_not_sent)?.apply {
@@ -161,6 +169,8 @@ data class MessageItemStyle(
             return MessageItemStyle(
                 incBubbleColor = incBubbleColor,
                 outBubbleColor = outBubbleColor,
+                incReplyBackgroundColor = incReplyBackgroundColor,
+                outReplyBackgroundColor = outReplyBackgroundColor,
                 incLinkPreviewBackgroundColor = incLinkPreviewBackgroundColor,
                 outLinkPreviewBackgroundColor = outLinkPreviewBackgroundColor,
                 messageStatusPendingIcon = messageStatusPendingIcon,
