@@ -7,7 +7,7 @@ plugins {
 
 android {
     compileSdk compile_sdk_version
-    namespace 'com.sceyt.sceytchatuikit'
+    namespace 'com.sceyt.chatuikit'
 
     defaultConfig {
         minSdk min_sdk_version
@@ -46,7 +46,6 @@ android {
     }
 }
 
-
 dependencies {
     api libs.appcompat
     api libs.material
@@ -57,7 +56,6 @@ dependencies {
     api libs.sceyt.chat.android.sdk
     api libs.lifecycle.runtime.ktx
     api libs.lifecycle.livedata.ktx
-    api libs.liveevent
     api libs.glide
     api libs.glide.transformations
     api libs.ion
@@ -71,7 +69,6 @@ dependencies {
     api libs.media3.exoplayer
     api libs.media3.ui
     api libs.lottie
-    api libs.asynclayoutinflater.appcompat
     api libs.jsoup
     api libs.flexbox
     api libs.sdp.android
@@ -83,6 +80,8 @@ dependencies {
     api libs.emoji2.bundled
     api libs.emoji.google
     api libs.libphonenumber
+
+    // Overriding the version of the library
     api libs.gson
     api libs.okio
 
@@ -93,5 +92,7 @@ dependencies {
     androidTestImplementation libs.mockito.core
     androidTestImplementation libs.kotlinx.coroutines.test
     androidTestImplementation libs.truth
+    testImplementation libs.junit
+    testImplementation libs.truth
 }
 apply from: "${rootProject.projectDir}/maven-publish/publish-module.gradle"

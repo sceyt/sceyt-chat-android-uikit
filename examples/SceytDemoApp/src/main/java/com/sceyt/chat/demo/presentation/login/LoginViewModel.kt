@@ -9,11 +9,11 @@ import com.sceyt.chat.demo.data.Constants
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
-import com.sceyt.sceytchatuikit.persistence.PersistenceUsersMiddleWare
-import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
-import com.sceyt.sceytchatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.chatuikit.persistence.interactor.UserInteractor
+import com.sceyt.chatuikit.presentation.root.BaseViewModel
+import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
@@ -26,7 +26,7 @@ import kotlin.coroutines.resume
 class LoginViewModel(private val preference: AppSharedPreference,
                      private val connectionProvider: SceytConnectionProvider) : BaseViewModel() {
 
-    private val usersMiddleWare: PersistenceUsersMiddleWare by lazy { SceytKitClient.getUserMiddleWare() }
+    private val userInteractor: UserInteractor by lazy { SceytChatUIKit.chatUIFacade.userInteractor }
     private val _logInLiveData = MutableLiveData<Boolean>()
     val logInLiveData: LiveData<Boolean> = _logInLiveData
 
@@ -35,7 +35,7 @@ class LoginViewModel(private val preference: AppSharedPreference,
         viewModelScope.launch {
             val result = connectUser(userId)
             if (result.isSuccess) {
-                preference.setUserId(userId)
+                preference.setString(AppSharedPreference.PREF_USER_ID, userId)
                 updateProfile(displayName)
             } else
                 pageStateLiveDataInternal.value = PageState.StateError(null, result.exceptionOrNull()?.message
@@ -52,7 +52,7 @@ class LoginViewModel(private val preference: AppSharedPreference,
             val randomUserId = Constants.users.random()
             val result = connectUser(randomUserId)
             if (result.isSuccess) {
-                preference.setUserId(randomUserId)
+                preference.setString(AppSharedPreference.PREF_USER_ID, randomUserId)
             } else
                 pageStateLiveDataInternal.value = PageState.StateError(null, result.exceptionOrNull()?.message
                         ?: "Connection failed")
@@ -62,11 +62,11 @@ class LoginViewModel(private val preference: AppSharedPreference,
         }
     }
 
-    fun isLoggedIn() = preference.getUserId().isNullOrBlank().not()
+    fun isLoggedIn() = preference.getString(AppSharedPreference.PREF_USER_ID).isNullOrBlank().not()
 
     private suspend fun updateProfile(displayName: String) = withContext(Dispatchers.IO) {
         val currentUser: User? = ClientWrapper.currentUser
-        usersMiddleWare.updateProfile(displayName, currentUser?.lastName, currentUser?.avatarURL)
+        userInteractor.updateProfile(displayName, currentUser?.lastName, currentUser?.avatarURL)
     }
 
     private suspend fun connectUser(userId: String): Result<Boolean> {

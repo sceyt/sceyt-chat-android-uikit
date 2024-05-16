@@ -1,37 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="ChannelsListView">
+    <declare-styleable name="ChannelListView">
 
         <!--Background color channel list view-->
-        <attr name="sceytUiChannelListBackgroundColor" format="reference" />
+        <attr name="sceytUiChannelListBackgroundColor" format="reference|color" />
+        <attr name="sceytUiChannelListPinnedBackgroundColor" format="reference|color" />
         <!-- A color of the online indicator-->
-        <attr name="sceytUiOnlineIndicatorColor" format="reference" />
+        <attr name="sceytUiOnlineIndicatorColor" format="reference|color" />
         <!-- A color of the channels divider-->
-        <attr name="sceytUiDividerColor" format="reference" />
+        <attr name="sceytUiDividerColor" format="reference|color" />
         <!-- Show/Hide channels divider-->
         <attr name="sceytUiEnableDivider" format="boolean" />
+        <!-- Show channel action as popup-->
+        <attr name="sceytUiShowChannelActionAsPopup" format="boolean" />
         <!-- A color of the channel title text color-->
-        <attr name="sceytUiChannelTitleTextColor" format="reference" />
+        <attr name="sceytUiChannelTitleTextColor" format="reference|color" />
         <!-- A color of the last message text color-->
-        <attr name="sceytUiLastMessageTextColor" format="reference" />
+        <attr name="sceytUiLastMessageTextColor" format="reference|color" />
         <!-- A color of the date text color-->
-        <attr name="sceytUiLastMessageDateTextColor" format="reference" />
+        <attr name="sceytUiLastMessageDateTextColor" format="reference|color" />
         <!-- Show message status icon-->
         <attr name="sceytUiStatusIndicatorSize" format="dimension" />
         <!-- Drawable of the message sent state indicator -->
         <attr name="sceytUiIndicatorSentIcon" format="reference" />
         <!-- Drawable of the message read state indicator -->
         <attr name="sceytUiIndicatorReadIcon" format="reference" />
+        <!-- Drawable of the file attachment icon -->
+        <attr name="sceytUiBodyFileAttachmentIcon" format="reference" />
+        <!-- Drawable of the image attachment icon -->
+        <attr name="sceytUiBodyImageAttachmentIcon" format="reference" />
+        <!-- Drawable of the video attachment icon -->
+        <attr name="sceytUiBodyVideoAttachmentIcon" format="reference" />
+        <!-- Drawable of the voice attachment icon -->
+        <attr name="sceytUiBodyVoiceAttachmentIcon" format="reference" />
         <!-- Drawable of the message delivery indicator -->
         <attr name="sceytUiIndicatorDeliveredIcon" format="reference" />
         <!-- Drawable of the message pending indicator -->
         <attr name="sceytUiIndicatorPendingIcon" format="reference" />
         <!-- A color of the unread message count text -->
-        <attr name="sceytUiUnreadMessageCounterTextColor" format="reference" />
+        <attr name="sceytUiUnreadMessageCounterTextColor" format="reference|color" />
         <!-- Background color of the unread message counter -->
-        <attr name="sceytUiUnreadMessageCounterBackgroundColor" format="reference" />
+        <attr name="sceytUiUnreadMessageCounterBackgroundColor" format="reference|color" />
         <!-- Drawable of the muted channel icon  -->
         <attr name="sceytUiMutedChannelIcon" format="reference" />
+        <!-- Drawable of the pinned channel icon  -->
+        <attr name="sceytUiPinnedChannelIcon" format="reference" />
         <!-- Reference to layout resource of the channel list "loading" view -->
         <attr name="sceytUiLoadingView" format="reference" />
         <!-- Reference to layout resource of the channel list empty state view -->

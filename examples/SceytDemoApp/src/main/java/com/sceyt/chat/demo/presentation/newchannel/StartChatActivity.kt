@@ -8,6 +8,7 @@ import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.demo.databinding.ActivityStartChatBinding
 import com.sceyt.chat.demo.presentation.addmembers.AddMembersActivity
@@ -18,18 +19,19 @@ import com.sceyt.chat.demo.presentation.createconversation.createchannel.CreateC
 import com.sceyt.chat.demo.presentation.createconversation.newgroup.CreateGroupActivity
 import com.sceyt.chat.demo.presentation.newchannel.adapters.UserViewHolderFactory
 import com.sceyt.chat.demo.presentation.newchannel.adapters.UsersAdapter
-import com.sceyt.sceytchatuikit.R.anim
-import com.sceyt.sceytchatuikit.R.anim.sceyt_anim_slide_hold
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.extensions.asActivity
-import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
-import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
-import com.sceyt.sceytchatuikit.extensions.launchActivity
-import com.sceyt.sceytchatuikit.extensions.overrideTransitions
-import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
-import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.sceytchatuikit.presentation.root.PageState
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chat.models.user.User
+import com.sceyt.chat.wrapper.ClientWrapper
+import com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.isLastItemDisplaying
+import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.extensions.overrideTransitions
+import com.sceyt.chatuikit.extensions.parcelableArrayList
+import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.persistence.extensions.toArrayList
+import com.sceyt.chatuikit.presentation.root.PageState
 
 class StartChatActivity : AppCompatActivity() {
     private lateinit var binding: ActivityStartChatBinding
@@ -44,7 +46,7 @@ class StartChatActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground()
 
         initViewModel()
         initViews()
@@ -90,23 +92,29 @@ class StartChatActivity : AppCompatActivity() {
 
         binding.toolbar.setNavigationIconClickListener {
             onBackPressedDispatcher.onBackPressed()
-            overrideTransitions(sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right, false)
+            overrideTransitions(sceyt_anim_slide_hold, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right, false)
         }
 
         binding.tvNewGroup.setOnClickListener {
-            addMembersActivityLauncher.launch(AddMembersActivity.newInstance(this))
-            overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
+            addMembersActivityLauncher.launch(AddMembersActivity.newInstance(this), animOptions)
         }
 
         binding.tvNewChannel.setOnClickListener {
-            createConversationLauncher.launch(Intent(this, CreateChannelActivity::class.java))
-            overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
+            createConversationLauncher.launch(Intent(this, CreateChannelActivity::class.java), animOptions)
         }
     }
 
+    private val animOptions
+        get() = ActivityOptionsCompat.makeCustomAnimation(this,
+            com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold)
+
     private fun setupUsersList(list: List<UserItem>) {
+        val listWithSelf = list.toMutableList()
+        listWithSelf.add(0, UserItem.User(ClientWrapper.currentUser
+                ?: User(SceytChatUIKit.chatUIFacade.myId.toString())))
+
         if (::usersAdapter.isInitialized.not()) {
-            binding.rvUsers.adapter = UsersAdapter(list as ArrayList, UserViewHolderFactory(this) {
+            binding.rvUsers.adapter = UsersAdapter(listWithSelf.toArrayList(), UserViewHolderFactory(this) {
                 if (creatingChannel) return@UserViewHolderFactory
                 creatingChannel = true
                 viewModel.findOrCreateDirectChannel(it.user)
@@ -119,14 +127,13 @@ class StartChatActivity : AppCompatActivity() {
                         viewModel.loadUsers(binding.toolbar.getQuery(), true)
                 }
             })
-        } else usersAdapter.notifyUpdate(list)
+        } else usersAdapter.notifyUpdate(listWithSelf)
     }
 
     private val addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.parcelableArrayList<SceytMember>(AddMembersActivity.SELECTED_USERS)?.let { members ->
-                createGroupLauncher.launch(CreateGroupActivity.newIntent(this, members))
-                overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
+                createGroupLauncher.launch(CreateGroupActivity.newIntent(this, members), animOptions)
             }
         }
     }
@@ -145,14 +152,13 @@ class StartChatActivity : AppCompatActivity() {
 
     override fun finish() {
         super.finish()
-        overrideTransitions(sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right, false)
+        overrideTransitions(sceyt_anim_slide_hold, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right, false)
     }
 
     companion object {
 
         fun launch(context: Context) {
-            context.launchActivity<StartChatActivity>()
-            context.asActivity().overrideTransitions(anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold, true)
+            context.launchActivity<StartChatActivity>(com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right, sceyt_anim_slide_hold)
         }
     }
 }

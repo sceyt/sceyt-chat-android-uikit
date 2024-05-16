@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@color/sceyt_color_primary"
+        android:background="@color/sceyt_color_background"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         tools:layout_height="60dp"
@@ -24,7 +24,7 @@
             android:layout_gravity="center"
             android:includeFontPadding="false"
             android:text="@string/sceyt_slide_to_cancel"
-            android:textColor="#898f9d"
+            android:textColor="@color/sceyt_color_text_secondary"
             android:textSize="16sp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -82,7 +82,7 @@
             android:layout_gravity="center_vertical"
             android:layout_marginStart="12dp"
             android:background="@drawable/sceyt_bg_circle"
-            android:backgroundTint="@color/sceyt_color_red"
+            android:backgroundTint="@color/sceyt_color_error"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -99,7 +99,7 @@
             android:elevation="2dp"
             android:includeFontPadding="false"
             android:text="0:00"
-            android:textColor="@color/sceyt_color_text_themed"
+            android:textColor="@color/sceyt_color_text_primary"
             android:textSize="18sp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -142,7 +142,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/sceyt_ic_lock"
-                app:tint="#B2B6BE" />
+                app:tint="@color/sceyt_color_icon_secondary" />
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imageViewLockArrow"
@@ -189,10 +189,10 @@
 
     <androidx.cardview.widget.CardView
         android:id="@+id/imageViewAudio"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_marginEnd="6dp"
-        android:layout_marginBottom="4dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="8dp"
         android:clickable="true"
         android:focusable="true"
         android:translationZ="2dp"
@@ -207,11 +207,11 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/imageAudio"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
             android:background="@drawable/sceyt_bg_circle"
-            android:padding="14dp"
-            android:tint="@color/sceyt_color_white"
+            android:padding="7dp"
+            android:tint="@color/sceyt_color_on_primary"
             app:srcCompat="@drawable/sceyt_ic_voice" />
 
     </androidx.cardview.widget.CardView>

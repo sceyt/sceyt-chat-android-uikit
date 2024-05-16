@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircleCheckBox
+    <com.sceyt.chatuikit.presentation.customviews.SceytCircleCheckBox
         android:id="@+id/selectView"
         android:layout_width="22dp"
         android:layout_height="22dp"
@@ -14,7 +14,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
+    <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
         android:id="@+id/avatar"
         android:layout_width="@dimen/_28sdp"
         android:layout_height="@dimen/_28sdp"
@@ -28,7 +28,7 @@
         tools:sceytAvatarViewFullName="Ar"
         tools:visibility="visible" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytToReplyLineView
+    <com.sceyt.chatuikit.presentation.customviews.SceytToReplyLineView
         android:id="@+id/toReplyLine"
         android:layout_width="10dp"
         android:layout_height="0dp"
@@ -45,13 +45,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:background="@drawable/sceyt_bg_inc_message"
+        android:background="@drawable/sceyt_bg_corners_18"
         app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@+id/avatar"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_goneMarginStart="12dp">
+        app:layout_goneMarginStart="12dp"
+        tools:backgroundTint="#F1F2F6">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvUserName"
@@ -97,24 +98,24 @@
 
         <ViewStub
             android:id="@+id/viewReply"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
             android:layout_marginTop="8dp"
             android:layout="@layout/sceyt_recycler_reply_container"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvForwarded"
             tools:visibility="visible" />
 
-        <com.sceyt.sceytchatuikit.presentation.customviews.SceytClickableTextView
+        <com.sceyt.chatuikit.presentation.customviews.SceytClickableTextView
             android:id="@+id/messageBody"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="4dp"
-            android:textColor="@color/sceyt_color_text_themed"
+            android:textColor="@color/sceyt_color_text_primary"
             android:textSize="@dimen/mediumTextSize"
             android:visibility="gone"
             app:layout_constrainedWidth="true"
@@ -139,7 +140,7 @@
             tools:layout_height="200dp"
             tools:src="@tools:sample/backgrounds/scenic" />
 
-        <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
+        <com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
             android:id="@+id/loadProgress"
             android:layout_width="@dimen/messageProgressSize"
             android:layout_height="@dimen/messageProgressSize"
@@ -152,11 +153,11 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/fileImage"
             app:minProgress="2"
-            app:progressColor="@color/sceyt_color_white"
+            app:progressColor="@color/sceyt_color_on_primary"
             app:trackColor="@android:color/transparent"
             tools:visibility="visible" />
 
-        <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
+        <com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
             android:id="@+id/messageDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -164,7 +165,7 @@
             android:layout_marginBottom="7dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/fileImage"
-            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
+            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_text_secondary"
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
             app:sceytDateStatusViewHighlighted="true"

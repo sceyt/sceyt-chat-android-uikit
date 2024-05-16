@@ -19,19 +19,19 @@ import com.google.gson.Gson
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.FragmentCreateChannelDetailsBinding
 import com.sceyt.chat.demo.presentation.createconversation.createchannel.CreateChannelActivity
-import com.sceyt.sceytchatuikit.R.*
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
-import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
-import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.hideSoftInput
-import com.sceyt.sceytchatuikit.extensions.isNotNullOrBlank
-import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
+import com.sceyt.chatuikit.R.*
+import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.hideSoftInput
+import com.sceyt.chatuikit.extensions.isNotNullOrBlank
+import com.sceyt.chatuikit.persistence.extensions.resizeImage
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
 import com.sceyt.chat.demo.presentation.createconversation.viewmodel.CreateChatViewModel
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelDescriptionData
-import com.sceyt.sceytchatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
+import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
+import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
+import com.sceyt.chatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import com.yalantis.ucrop.UCrop
 import java.io.File
 
@@ -64,7 +64,7 @@ class ChannelDetailsFragment : Fragment(R.layout.fragment_create_channel_details
                 checkNextEnabled(false)
             binding.uriWarning.apply {
                 if (!it) {
-                    setUriStatusText(getString(string.the_url_exist_title), color.sceyt_color_red)
+                    setUriStatusText(getString(string.the_url_exist_title), color.sceyt_color_error)
                 } else
                     setUriStatusText(getString(string.valid_url_title), color.sceyt_color_green)
                 isVisible = true
@@ -158,9 +158,9 @@ class ChannelDetailsFragment : Fragment(R.layout.fragment_create_channel_details
                     ?: return false).matches()
             if (!isValidUrl) {
                 if (inputUri.text.toString().length < 5 || inputUri.text.toString().length > 50)
-                    setUriStatusText(getString(string.url_length_validation_text), color.sceyt_color_red)
+                    setUriStatusText(getString(string.url_length_validation_text), color.sceyt_color_error)
                 else
-                    setUriStatusText(getString(string.url_characters_validation_text),color.sceyt_color_red)
+                    setUriStatusText(getString(string.url_characters_validation_text),color.sceyt_color_error)
             }
             uriWarning.isVisible = true
             return isValidUrl

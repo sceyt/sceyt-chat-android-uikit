@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import com.sceyt.chat.demo.databinding.ItemUserBinding
 import com.sceyt.chat.demo.presentation.common.BaseViewHolder
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
-import com.sceyt.sceytchatuikit.databinding.SceytItemLoadingMoreBinding
+import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 
 class UserViewHolderFactory (context: Context, private val listeners: UsersAdapter.ClickListener) {
 

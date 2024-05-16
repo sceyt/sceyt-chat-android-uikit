@@ -8,7 +8,7 @@
     android:paddingEnd="5dp"
     android:paddingBottom="6dp">
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
+    <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
         android:id="@+id/avatar"
         android:layout_width="56dp"
         android:layout_height="56dp"
@@ -28,7 +28,7 @@
         app:layout_constraintTop_toTopOf="@+id/avatar"
         app:srcCompat="@drawable/sceyt_ic_remove" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytOnlineView
+    <com.sceyt.chatuikit.presentation.customviews.SceytOnlineView
         android:id="@+id/onlineStatus"
         android:layout_width="12dp"
         android:layout_height="12dp"
@@ -37,7 +37,7 @@
         app:layout_constraintBottom_toBottomOf="@id/avatar"
         app:layout_constraintEnd_toEndOf="@id/avatar"
         app:sceytOnlineViewIndicatorColor="@color/sceyt_color_green"
-        app:sceytOnlineViewStrokeColor="@color/sceyt_color_bg"
+        app:sceytOnlineViewStrokeColor="@color/sceyt_color_background"
         app:sceytOnlineViewStrokeWidth="1dp" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -47,7 +47,7 @@
         android:ellipsize="middle"
         android:gravity="center"
         android:singleLine="true"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/extraSmallTextSize"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

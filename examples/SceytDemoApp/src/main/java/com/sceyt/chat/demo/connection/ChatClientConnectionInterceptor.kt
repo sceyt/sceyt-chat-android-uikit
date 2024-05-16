@@ -3,7 +3,7 @@ package com.sceyt.chat.demo.connection
 import com.sceyt.chat.demo.connection.SceytConnectionProvider.Companion.Tag
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.data.repositories.ConnectionRepo
-import com.sceyt.sceytchatuikit.logger.SceytLog
+import com.sceyt.chatuikit.logger.SceytLog
 import java.util.concurrent.atomic.AtomicBoolean
 
 class ChatClientConnectionInterceptor(private val connectionRepo: ConnectionRepo,
@@ -30,7 +30,7 @@ class ChatClientConnectionInterceptor(private val connectionRepo: ConnectionRepo
         return if (result.isSuccess) {
             val token: String? = result.getOrNull()?.token
             SceytLog.i(Tag, "Sceyt token success, token ${token?.take(8)}")
-            preference.setToken(token)
+            preference.setString(AppSharedPreference.PREF_USER_TOKEN, token)
             token?.let {
                 Result.success(it)
             } ?: Result.failure(Throwable("Sceyt token is null"))

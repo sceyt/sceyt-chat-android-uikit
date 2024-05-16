@@ -3,19 +3,19 @@ package com.sceyt.chat.demo.presentation.createconversation.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.data.toMember
-import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.toMember
+import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class CreateChatViewModel : BaseViewModel() {
-    private val channelMiddleWare by lazy { SceytKitClient.getChannelsMiddleWare() }
-    private val membersMiddleWare by lazy { SceytKitClient.getMembersMiddleWare() }
+    private val channelInteractor by lazy { SceytChatUIKit.chatUIFacade.channelInteractor }
+    private val channelMemberInteractor by lazy { SceytChatUIKit.chatUIFacade.channelMemberInteractor }
 
     private val _createChatLiveData = MutableLiveData<SceytChannel>()
     val createChatLiveData: LiveData<SceytChannel> = _createChatLiveData
@@ -29,7 +29,7 @@ class CreateChatViewModel : BaseViewModel() {
     fun createChat(createChannelData: CreateChannelData) {
         notifyPageLoadingState(false)
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.createChannel(createChannelData)
+            val response = channelInteractor.createChannel(createChannelData)
             notifyResponseAndPageState(_createChatLiveData, response)
         }
     }
@@ -38,14 +38,14 @@ class CreateChatViewModel : BaseViewModel() {
         notifyPageLoadingState(false)
         viewModelScope.launch(Dispatchers.IO) {
             val members = users.map { it.toMember() }
-            val response = membersMiddleWare.addMembersToChannel(channelId, members)
+            val response = channelMemberInteractor.addMembersToChannel(channelId, members)
             notifyResponseAndPageState(_addMembersLiveData, response)
         }
     }
 
     fun checkIsValidUrl(url: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMiddleWare.getChannelFromServerByUrl(url)
+            val response = channelInteractor.getChannelFromServerByUrl(url)
             if (response is SceytResponse.Success) {
                 _isValidUrlLiveData.postValue(response.data.isNullOrEmpty())
             }

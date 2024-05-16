@@ -3,13 +3,12 @@ package com.sceyt.chat.demo.presentation.addmembers.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.models.user.User
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
-import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.data.models.SceytResponse
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.presentation.root.BaseViewModel
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig.USERS_LOAD_SIZE
+import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -27,13 +26,13 @@ class UsersViewModel : BaseViewModel() {
         loadingNextItems.set(true)
         viewModelScope.launch(Dispatchers.IO) {
             val response = if (isLoadMore)
-                SceytKitClient.getUserMiddleWare().loadMoreUsers()
-            else SceytKitClient.getUserMiddleWare().loadUsers(query)
+                SceytChatUIKit.chatUIFacade.userInteractor.loadMoreUsers()
+            else SceytChatUIKit.chatUIFacade.userInteractor.loadUsers(query)
 
             var empty = false
             if (response is SceytResponse.Success) {
                 empty = response.data.isNullOrEmpty()
-                hasNext = response.data?.size == USERS_LOAD_SIZE
+                hasNext = response.data?.size == SceytChatUIKit.config.usersLoadSize
                 if (isLoadMore)
                     _loadMoreChannelsLiveData.postValue(mapToUserItems(response.data, hasNext))
                 else _usersLiveData.postValue(mapToUserItems(response.data, hasNext))
@@ -53,7 +52,7 @@ class UsersViewModel : BaseViewModel() {
 
     fun findOrCreateDirectChannel(user: User) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = SceytKitClient.getChannelsMiddleWare().findOrCreateDirectChannel(user)
+            val response = SceytChatUIKit.chatUIFacade.channelInteractor.findOrCreateDirectChannel(user)
             notifyResponseAndPageState(_createChannelLiveData, response)
         }
     }

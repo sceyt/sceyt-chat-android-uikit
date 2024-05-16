@@ -4,7 +4,7 @@
 
     <data>
 
-        <import type="com.sceyt.sceytchatuikit.R" />
+        <import type="com.sceyt.chatuikit.SceytChatUIKit" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -13,6 +13,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/appCompatImageView"
+            setTintColor="@{SceytChatUIKit.INSTANCE.theme.accentColor}"
             android:layout_width="50dp"
             android:layout_height="0dp"
             app:layout_constraintBottom_toTopOf="@+id/textView"
@@ -27,13 +28,14 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/textView"
-            themedTextColor="@{R.color.sceyt_color_black_themed}"
+            setTextColor="@{SceytChatUIKit.INSTANCE.theme.textPrimaryColor}"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="12dp"
+            android:fontFamily="@font/roboto_medium"
             android:text="@string/sceyt_ui_channel_list_empty"
-            android:textColor="@color/sceyt_color_black_themed"
+            android:textColor="@color/sceyt_color_text_primary"
             android:textDirection="locale"
             android:textSize="20sp"
             app:layout_constraintBottom_toTopOf="@+id/tvDesc"
@@ -44,11 +46,13 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvDesc"
+            setTextColor="@{SceytChatUIKit.INSTANCE.theme.textSecondaryColor}"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:layout_marginTop="8dp"
             android:text="@string/sceyt_ui_channel_list_empty_desc"
-            android:textColor="@color/sceyt_color_gray_secondary"
+            android:textColor="@color/sceyt_color_text_secondary"
             android:textDirection="locale"
             android:textSize="15sp"
             app:layout_constraintBottom_toBottomOf="parent"

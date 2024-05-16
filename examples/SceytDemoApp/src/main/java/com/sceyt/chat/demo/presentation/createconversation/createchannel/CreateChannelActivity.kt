@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.databinding.ActivityCreateChannelBinding
 import com.sceyt.chat.demo.presentation.addmembers.AddMembersActivity
@@ -13,19 +14,17 @@ import com.sceyt.chat.demo.presentation.conversation.ConversationActivity
 import com.sceyt.chat.demo.presentation.createconversation.viewmodel.CreateChatViewModel
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.R.anim
-import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.extensions.overrideTransitions
-import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
-import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.sceytchatuikit.persistence.extensions.toArrayList
-import com.sceyt.sceytchatuikit.presentation.common.SceytLoader.hideLoading
-import com.sceyt.sceytchatuikit.presentation.common.SceytLoader.showLoading
-import com.sceyt.sceytchatuikit.presentation.root.PageState
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.extensions.overrideTransitions
+import com.sceyt.chatuikit.extensions.parcelableArrayList
+import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.persistence.extensions.toArrayList
+import com.sceyt.chatuikit.presentation.common.SceytLoader.hideLoading
+import com.sceyt.chatuikit.presentation.common.SceytLoader.showLoading
+import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
 import kotlinx.coroutines.launch
 
 class CreateChannelActivity : AppCompatActivity() {
@@ -39,7 +38,7 @@ class CreateChannelActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground()
 
         initViewModel()
         binding.initViews()
@@ -49,12 +48,13 @@ class CreateChannelActivity : AppCompatActivity() {
         viewModel.createChatLiveData.observe(this) {
             lifecycleScope.launch {
                 createdChannel = it
+                val animOptions = ActivityOptionsCompat.makeCustomAnimation(this@CreateChannelActivity,
+                    com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold)
                 addMembersActivityLauncher.launch(
                     AddMembersActivity.newInstance(
                         context = this@CreateChannelActivity,
                         buttonAlwaysEnable = true,
-                        memberType = MemberTypeEnum.Subscriber))
-                overrideTransitions(anim.sceyt_anim_slide_in_right, anim.sceyt_anim_slide_hold, true)
+                        memberType = MemberTypeEnum.Subscriber), animOptions)
             }
         }
 
@@ -107,6 +107,6 @@ class CreateChannelActivity : AppCompatActivity() {
 
     override fun finish() {
         super.finish()
-        overrideTransitions(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right, false)
+        overrideTransitions(com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right, false)
     }
 }

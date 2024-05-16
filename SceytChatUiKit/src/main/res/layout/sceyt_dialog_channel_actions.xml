@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/sceyt_color_background_sections"
     android:orientation="vertical"
     android:paddingVertical="15dp">
 
@@ -19,10 +20,8 @@
         android:paddingHorizontal="23dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_pin_chat"
-        android:textColor="@color/sceyt_color_text_themed"
-        android:textSize="@dimen/_12ssp"
-        android:visibility="gone"
-        tools:visibility="visible" />
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textSize="@dimen/_12ssp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/unPin"
@@ -36,7 +35,7 @@
         android:paddingHorizontal="23dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_un_pin_chat"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/_12ssp"
         android:visibility="gone"
         tools:visibility="visible" />
@@ -53,7 +52,7 @@
         android:paddingHorizontal="23dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_mark_as_read"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/_12ssp"
         tools:visibility="visible" />
 
@@ -69,7 +68,7 @@
         android:paddingHorizontal="23dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_mark_as_unread"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/_12ssp"
         android:visibility="gone"
         tools:visibility="visible" />
@@ -86,7 +85,7 @@
         android:paddingHorizontal="23dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_mute_"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/_12ssp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />
@@ -103,7 +102,7 @@
         android:paddingHorizontal="23dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_un_mute_"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/_12ssp"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
@@ -122,7 +121,7 @@
         android:paddingHorizontal="23dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_leave"
-        android:textColor="@color/sceyt_color_red"
+        android:textColor="@color/sceyt_color_error"
         android:textSize="@dimen/_12ssp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />
@@ -139,7 +138,7 @@
         android:paddingHorizontal="23dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_delete"
-        android:textColor="@color/sceyt_color_red"
+        android:textColor="@color/sceyt_color_error"
         android:textSize="@dimen/_12ssp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/appCompatTextView3" />

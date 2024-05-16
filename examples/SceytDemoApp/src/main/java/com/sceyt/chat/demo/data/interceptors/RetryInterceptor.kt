@@ -1,6 +1,6 @@
 package com.sceyt.chat.demo.data.interceptors
 
-import com.sceyt.sceytchatuikit.logger.SceytLog
+import com.sceyt.chatuikit.logger.SceytLog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor

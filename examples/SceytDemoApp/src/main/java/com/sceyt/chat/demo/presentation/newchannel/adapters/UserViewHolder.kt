@@ -5,9 +5,12 @@ import com.sceyt.chat.demo.databinding.ItemUserBinding
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.demo.presentation.common.BaseViewHolder
 import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.sceytchatuikit.extensions.getPresentableName
-import com.sceyt.sceytchatuikit.extensions.getString
-import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import com.sceyt.chatuikit.R.drawable
+import com.sceyt.chatuikit.R.string
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.getPresentableName
+import com.sceyt.chatuikit.extensions.getString
+import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
 class UserViewHolder(private val binding: ItemUserBinding,
@@ -19,17 +22,25 @@ class UserViewHolder(private val binding: ItemUserBinding,
         val user = item.user
 
         with(binding) {
-            val userPresentableName = user.getPresentableName()
-            avatar.setNameAndImageUrl(userPresentableName, user.avatarURL)
-            userName.text = userPresentableName
-
-            if (user.presence == null || user.presence!!.lastActiveAt == 0L)
+            if (user.id == SceytChatUIKit.chatUIFacade.myId) {
+                avatar.setNameAndImageUrl("", null, drawable.sceyt_ic_notes_with_paddings)
+                userName.text = context.getString(string.self_notes)
                 tvStatus.isVisible = false
-            else
-                tvStatus.text = if (user.presence?.state == PresenceState.Online)
-                    itemView.getString(com.sceyt.sceytchatuikit.R.string.sceyt_online)
-                else DateTimeUtil.getPresenceDateFormatData(itemView.context, Date(user.presence?.lastActiveAt
-                        ?: 0))
+            } else {
+                val userPresentableName = user.getPresentableName()
+                avatar.setNameAndImageUrl(userPresentableName, user.avatarURL, drawable.sceyt_ic_default_avatar)
+                userName.text = userPresentableName
+
+                if (user.presence == null || user.presence!!.lastActiveAt == 0L)
+                    tvStatus.isVisible = false
+                else {
+                    tvStatus.text = if (user.presence?.state == PresenceState.Online)
+                        itemView.getString(string.sceyt_online)
+                    else DateTimeUtil.getPresenceDateFormatData(itemView.context, Date(user.presence?.lastActiveAt
+                            ?: 0))
+                    tvStatus.isVisible = true
+                }
+            }
 
             itemView.setOnClickListener {
                 itemClickListener.onClick(bindItem)

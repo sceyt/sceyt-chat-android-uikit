@@ -15,7 +15,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
+    <com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
         android:id="@+id/progress"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -29,7 +29,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintWidth_percent=".16"
         app:minProgress="2"
-        app:progressColor="@color/sceyt_color_white"
+        app:progressColor="@color/sceyt_color_on_primary"
         app:rotateAnimEnabled="false"
         app:trackColor="@android:color/transparent"
         tools:visibility="visible" />

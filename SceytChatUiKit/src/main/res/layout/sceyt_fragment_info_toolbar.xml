@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="?android:actionBarSize"
-    android:background="@color/sceyt_color_primary"
-    app:layout_constraintTop_toTopOf="parent">
+    android:background="@color/sceyt_color_primary">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icBack"
@@ -31,7 +30,7 @@
         app:layout_constraintStart_toEndOf="@+id/icBack"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
+        <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
             android:id="@+id/toolbarAvatar"
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -49,7 +48,7 @@
             android:fontFamily="@font/roboto_medium"
             android:gravity="start"
             android:singleLine="true"
-            android:textColor="@color/sceyt_color_text_themed"
+            android:textColor="@color/sceyt_color_text_primary"
             android:textSize="16sp"
             app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toTopOf="@+id/subTitleToolbar"
@@ -70,7 +69,7 @@
             android:gravity="start"
             android:marqueeRepeatLimit="marquee_forever"
             android:singleLine="true"
-            android:textColor="@color/sceyt_color_gray_400"
+            android:textColor="@color/sceyt_color_text_secondary"
             android:textSize="13sp"
             app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -88,7 +87,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:text="@string/sceyt_info"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/largeTextSize"
         app:fontFamily="@font/roboto_medium"
         app:layout_constrainedWidth="true"

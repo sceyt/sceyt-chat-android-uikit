@@ -3,5 +3,6 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="color_bottom_nav">#ffffff</color>
+    <color name="colorAccent">@color/sceyt_color_accent</color>
 
 </resources>
