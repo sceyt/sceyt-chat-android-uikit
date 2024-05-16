@@ -7,10 +7,11 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.WindowManager
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytDialogChooseFileTypeBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.shared.helpers.chooseAttachment.AttachmentChooseType
 
 class ChooseFileTypeDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
@@ -23,7 +24,7 @@ class ChooseFileTypeDialog(context: Context) : Dialog(context, R.style.SceytDial
         setContentView(binding.root)
 
         binding.initView()
-        binding.setupStyle()
+        binding.applyStyle()
 
         window?.let {
             it.setWindowAnimations(R.style.SceytDialogFromBottomAnimation)
@@ -61,8 +62,9 @@ class ChooseFileTypeDialog(context: Context) : Dialog(context, R.style.SceytDial
         return this
     }
 
-    private fun SceytDialogChooseFileTypeBinding.setupStyle() {
-        setTextViewsDrawableColor(listOf(takePhoto, takeVideo, gallery, file),
-            context.getCompatColor(SceytKitConfig.sceytColorAccent))
+    private fun SceytDialogChooseFileTypeBinding.applyStyle() {
+        val texts = listOf(takePhoto, takeVideo, gallery, file)
+        setTextViewsDrawableColor(texts, context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        setTextViewsTextColor(texts, context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
     }
 }

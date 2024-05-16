@@ -5,31 +5,20 @@ import com.bumptech.glide.Glide
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytItemGalleryVideoBinding
 import com.sceyt.chatuikit.extensions.setDrawableStart
+import com.sceyt.chatuikit.persistence.differs.GalleryMediaItemDiff
 import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.GalleryMediaAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.MediaItem
 import com.sceyt.chatuikit.sceytstyles.GalleryPickerStyle
 
-class GalleryVideoViewHolder(val binding: SceytItemGalleryVideoBinding,
-                             clickListener: GalleryMediaAdapter.MediaClickListener) : BaseGalleryViewHolder(binding.root, clickListener) {
+class GalleryVideoViewHolder(private val binding: SceytItemGalleryVideoBinding,
+                             private val style: GalleryPickerStyle,
+                             clickListener: GalleryMediaAdapter.MediaClickListener
+) : BaseGalleryViewHolder(binding.root, style, clickListener) {
+
+    private lateinit var item: MediaItem
 
     init {
-        binding.setupStyle()
-    }
-
-    override fun bind(item: MediaItem) {
-        val data = item.media
-        binding.data = data
-
-        binding.tvDuration.isVisible = data.isWrong.not()
-
-        Glide.with(itemView.context)
-            .load(item.media.realPath)
-            .override(itemView.width)
-            .placeholder(R.color.sceyt_gallery_item_default_color)
-            .error(R.drawable.sceyt_ic_broken_image)
-            .into(binding.ivImage)
-
-        binding.tvDuration.text = millisecondsToTime((item as MediaItem.Video).duration.toLong())
+        binding.applyStyle()
 
         itemView.setOnClickListener {
             onItemClick(item)
@@ -38,6 +27,26 @@ class GalleryVideoViewHolder(val binding: SceytItemGalleryVideoBinding,
         binding.ivSelect.setOnClickListener {
             onItemClick(item)
         }
+    }
+
+    override fun bind(item: MediaItem, diff: GalleryMediaItemDiff) {
+        this.item = item
+
+
+        if (diff.filePathChanged) {
+            Glide.with(itemView.context)
+                .load(item.media.realPath)
+                .override(itemView.width)
+                .placeholder(R.color.sceyt_gallery_item_default_color)
+                .error(R.drawable.sceyt_ic_broken_image)
+                .into(binding.ivImage)
+        }
+
+        if (diff.checkStateChanged)
+            setGalleryItemCheckedState(binding.ivSelect, item.media.selected)
+
+        binding.tvDuration.isVisible = item.media.isWrong.not()
+        binding.tvDuration.text = millisecondsToTime((item as MediaItem.Video).duration.toLong())
     }
 
     private fun millisecondsToTime(milliseconds: Long): String {
@@ -53,7 +62,7 @@ class GalleryVideoViewHolder(val binding: SceytItemGalleryVideoBinding,
         return "$minutes:$secs"
     }
 
-    private fun SceytItemGalleryVideoBinding.setupStyle() {
-        tvDuration.setDrawableStart(GalleryPickerStyle.videoDurationIcon)
+    private fun SceytItemGalleryVideoBinding.applyStyle() {
+        tvDuration.setDrawableStart(style.videoDurationIcon)
     }
 }

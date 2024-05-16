@@ -4,14 +4,16 @@ import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelMediaDateBinding
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.AttachmentsDiffUtil
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 class ChannelMediaAdapter(
@@ -101,9 +103,11 @@ class ChannelMediaAdapter(
         val date = DateTimeUtil.getDateTimeStringWithDateFormatter(
             context = header.root.context,
             time = attachments.getOrNull(headerPosition)?.getCreatedAt(),
-            dateFormatter = ConversationInfoMediaStyle.mediaDateSeparatorFormat)
+            dateFormatter = attachmentViewHolderFactory.getMediaStyle().mediaDateSeparatorFormat)
 
         header.tvDate.text = date
+        header.tvDate.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
+        header.root.setBackgroundColor(header.root.context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
     }
 
     override fun isHeader(itemPosition: Int): Boolean {

@@ -5,27 +5,29 @@
     android:id="@id/viewReply"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:paddingHorizontal="12dp">
+    android:background="@drawable/sceyt_bg_right_corners_8"
+    android:backgroundTint="#E4E6EE"
+    android:paddingStart="0dp"
+    android:paddingEnd="12dp">
 
     <View
         android:id="@+id/view"
         android:layout_width="2.1dp"
         android:layout_height="0dp"
-        android:background="@drawable/sceyt_bg_corners_10"
+        android:background="@color/sceyt_color_accent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/imageAttachment"
-        android:layout_width="0dp"
+        android:layout_width="34dp"
         android:layout_height="34dp"
         android:layout_marginStart="6dp"
         android:scaleType="centerCrop"
         android:visibility="gone"
         app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintStart_toEndOf="@+id/view"
         app:layout_constraintTop_toTopOf="@+id/view"
         app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize5"
@@ -37,6 +39,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
+        android:layout_marginTop="4dp"
         android:fontFamily="@font/roboto_medium"
         android:includeFontPadding="false"
         android:singleLine="true"
@@ -53,20 +56,18 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icMsgBodyStartIcon"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="wrap_content"
+        android:layout_height="16dp"
         android:layout_marginStart="8dp"
-        android:layout_marginEnd="6dp"
         android:adjustViewBounds="true"
         android:padding=".5dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/tvMessageBody"
-        app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toEndOf="@+id/imageAttachment"
         app:layout_constraintTop_toTopOf="@+id/tvMessageBody"
-        tools:src="@drawable/sceyt_ic_voice" />
+        tools:src="@drawable/sceyt_ic_voice"
+        tools:visibility="visible" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvMessageBody"
@@ -74,11 +75,12 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="6dp"
         android:layout_marginTop="3dp"
+        android:layout_marginBottom="4dp"
         android:ellipsize="end"
         android:includeFontPadding="false"
         android:maxLines="2"
         android:textAlignment="viewStart"
-        android:textColor="@color/sceyt_color_black_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/smallTextSize"
         app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="parent"

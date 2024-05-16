@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivityForwardBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -16,7 +17,6 @@ import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.forward.viewmodel.ForwardViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.sharebaleactivity.SceytShareableActivity
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -36,7 +36,7 @@ open class SceytForwardActivity : SceytShareableActivity() {
 
         getDataFromIntent()
         binding.initViews()
-        binding.setupStyle()
+        binding.applyStyle()
     }
 
     private fun getDataFromIntent() {
@@ -57,9 +57,9 @@ open class SceytForwardActivity : SceytShareableActivity() {
         }
     }
 
-    private fun SceytActivityForwardBinding.setupStyle() {
-        btnForward.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
-        toolbar.setIconsTint(SceytKitConfig.sceytColorAccent)
+    private fun SceytActivityForwardBinding.applyStyle() {
+        btnForward.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
+        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
     }
 
     protected fun sendForwardMessage(markOwnMessageAsForwarded: Boolean) {

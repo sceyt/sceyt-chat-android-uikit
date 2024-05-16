@@ -7,7 +7,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.models.ConnectionState
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.logger.SceytLog
@@ -36,13 +36,13 @@ class SceytConnectionProvider(
         observeToConnectionState()
 
         launch {
-            SceytKitClient.onTokenExpired.collect {
+            SceytChatUIKit.chatUIFacade.onTokenExpired.collect {
                 SceytLog.i(Tag, "onTokenExpired")
                 launch {
-                    chatClientConnectionInterceptor.getChatToken(SceytKitClient.myId.toString())?.let { token ->
+                    chatClientConnectionInterceptor.getChatToken(SceytChatUIKit.chatUIFacade.myId.toString())?.let { token ->
                         if (application.isAppOnForeground()) {
                             SceytLog.i(Tag, "onTokenExpired, will connect with new token: ${token.take(8)}")
-                            SceytKitClient.connect(token)
+                            SceytChatUIKit.connect(token)
                         }
                     } ?: run {
                         SceytLog.i(Tag, "connectChatClient failed because ChatClient token is null. Called in onTokenExpired")
@@ -52,16 +52,16 @@ class SceytConnectionProvider(
         }
 
         launch {
-            SceytKitClient.onTokenWillExpire.collect {
+            SceytChatUIKit.chatUIFacade.onTokenWillExpire.collect {
                 launch {
                     SceytLog.i(Tag, "onTokenWillExpire")
-                    chatClientConnectionInterceptor.getChatToken(SceytKitClient.myId.toString())?.let { token ->
-                        SceytKitClient.updateToken(token, listener = { success, errorMessage ->
+                    chatClientConnectionInterceptor.getChatToken(SceytChatUIKit.chatUIFacade.myId.toString())?.let { token ->
+                        SceytChatUIKit.chatUIFacade.updateToken(token, listener = { success, errorMessage ->
                             if (!success) {
                                 SceytLog.e(Tag, "$Tag update chatSdk Token failed, will connect, error: $errorMessage")
                                 if (application.isAppOnForeground()) {
                                     SceytLog.i(Tag, "$Tag onTokenWillExpire, will connect with new token: ${token.take(8)}")
-                                    SceytKitClient.connect(token)
+                                    SceytChatUIKit.connect(token)
                                 }
                             } else
                                 SceytLog.i(Tag, "$Tag updateToken success")
@@ -111,12 +111,12 @@ class SceytConnectionProvider(
 
             if (!sceytToken.isNullOrBlank()) {
                 SceytLog.i(Tag, "$Tag saved ChatClient token is exist, trying connect with that token: ${sceytToken}.")
-                SceytKitClient.connect(sceytToken)
+                SceytChatUIKit.connect(sceytToken)
             } else {
                 SceytLog.i(Tag, "$Tag saved ChatClient token is empty, trying to get Cat client token, userId: $userId.")
                 chatClientConnectionInterceptor.getChatToken(userId)?.let { token ->
                     SceytLog.i(Tag, "$Tag connectChatClient will connect with new token: ${token.take(8)}")
-                    SceytKitClient.connect(token)
+                    SceytChatUIKit.connect(token)
                 } ?: run {
                     SceytLog.i(Tag, "$Tag connectChatClient failed because ChatClient token is null. Called in connectChatClient")
                 }
@@ -133,7 +133,7 @@ class SceytConnectionProvider(
                 }
 
                 Lifecycle.Event.ON_DESTROY -> {
-                    SceytKitClient.disconnect()
+                    SceytChatUIKit.disconnect()
                 }
 
                 else -> {}

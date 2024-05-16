@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
@@ -46,7 +47,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.mediaview.adapter.MediaFile
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.dialogs.ActionDialog
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.viewmodel.MediaViewModel
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -178,7 +178,7 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
     private fun loadMediaDetail(item: MediaItem) {
         currentItem = item
         val name = item.data.user?.let {
-            SceytKitConfig.userNameBuilder?.invoke(it) ?: it.getPresentableName()
+            SceytChatUIKit.userNameFormatter?.format(it) ?: it.getPresentableName()
         }
         binding.tvTitle.text = name ?: ""
         binding.tvDate.text = DateTimeUtil.getDateTimeString(item.data.attachment.createdAt, "dd.MM.yy, HH:mm")

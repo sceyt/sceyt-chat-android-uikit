@@ -7,11 +7,13 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.WindowManager
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytDialogMediaActionsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
-import com.sceyt.chatuikit.presentation.uicomponents.mediaview.dialogs.ActionDialog.Action.*
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.presentation.uicomponents.mediaview.dialogs.ActionDialog.Action.Forward
+import com.sceyt.chatuikit.presentation.uicomponents.mediaview.dialogs.ActionDialog.Action.Save
+import com.sceyt.chatuikit.presentation.uicomponents.mediaview.dialogs.ActionDialog.Action.Share
 
 class ActionDialog(context: Context, var listener: ((Action) -> Unit)? = null) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogMediaActionsBinding
@@ -20,7 +22,7 @@ class ActionDialog(context: Context, var listener: ((Action) -> Unit)? = null) :
         super.onCreate(savedInstanceState)
         binding = SceytDialogMediaActionsBinding.inflate(LayoutInflater.from(context))
         setContentView(binding.root)
-        binding.setupStyle()
+        binding.applyStyle()
         initView()
 
         window?.let {
@@ -51,8 +53,8 @@ class ActionDialog(context: Context, var listener: ((Action) -> Unit)? = null) :
         }
     }
 
-    private fun SceytDialogMediaActionsBinding.setupStyle() {
-        setTextViewsDrawableColor(listOf(save, share, forward), context.getCompatColor(SceytKitConfig.sceytColorAccent))
+    private fun SceytDialogMediaActionsBinding.applyStyle() {
+        setTextViewsDrawableColor(listOf(save, share, forward), context.getCompatColor(SceytChatUIKit.theme.accentColor))
     }
 
     enum class Action {

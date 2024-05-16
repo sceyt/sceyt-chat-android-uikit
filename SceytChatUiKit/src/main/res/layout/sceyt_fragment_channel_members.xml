@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_bg">
+    android:background="@color/sceyt_color_background">
 
     <com.sceyt.chatuikit.presentation.customviews.SceytSearchableToolbar
         android:id="@+id/toolbar"
@@ -42,7 +42,7 @@
                     android:layout_height="40dp"
                     android:layout_marginStart="15dp"
                     android:background="@drawable/sceyt_bg_circle"
-                    android:backgroundTint="@color/sceyt_color_gray_themed"
+                    android:backgroundTint="@color/sceyt_color_surface_1"
                     app:layout_constraintBottom_toBottomOf="@+id/addMembers"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="@+id/addMembers"
@@ -56,7 +56,7 @@
                     android:lines="1"
                     android:paddingHorizontal="15dp"
                     android:text="@string/sceyt_add_members"
-                    android:textColor="@color/sceyt_color_text_themed"
+                    android:textColor="@color/sceyt_color_text_primary"
                     android:textSize="@dimen/mediumTextSize"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/icAddMembers" />

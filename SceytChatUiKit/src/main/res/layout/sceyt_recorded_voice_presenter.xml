@@ -5,12 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="bottom"
-    android:background="@color/sceyt_color_bg"
+    android:background="@color/sceyt_color_background"
     android:clickable="true"
     android:focusable="true"
     android:paddingBottom="7dp">
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/delete_voice_record"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -19,16 +19,16 @@
         android:src="@drawable/sceyt_close_btn"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="ContentDescription" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutVoiceRecord"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="8dp"
         android:background="@drawable/sceyt_bg_corners_20"
-        android:backgroundTint="@color/sceyt_color_gray_themed"
+        android:backgroundTint="@color/sceyt_color_surface_1"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="8dp"
@@ -74,7 +74,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="4dp"
             android:includeFontPadding="false"
-            android:textColor="@color/sceyt_color_gray_secondary_themed"
+            android:textColor="@color/sceyt_color_text_secondary"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -89,7 +89,7 @@
         android:layout_marginEnd="10dp"
         android:background="@drawable/sceyt_bg_circle"
         android:padding="7dp"
-        android:tint="@color/sceyt_color_white"
+        android:tint="@color/sceyt_color_on_primary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"

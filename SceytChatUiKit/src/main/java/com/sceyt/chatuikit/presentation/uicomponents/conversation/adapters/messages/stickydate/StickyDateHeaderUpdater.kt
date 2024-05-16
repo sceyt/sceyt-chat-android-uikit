@@ -6,14 +6,15 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.DateSeparatorViewHolder
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 
 class StickyDateHeaderUpdater(
         recyclerView: RecyclerView,
         private var parentView: ViewGroup,
         private val listener: StickyHeaderInterface,
+        private val messageItemStyle: MessagesListViewStyle
 ) {
-    private val dateHeaderVerticalPadding = MessagesStyle.differentSenderMsgDistance
+    private val dateHeaderVerticalPadding = messageItemStyle.messageItemStyle.differentSenderMsgDistance
 
     init {
         recyclerView.addRVScrollListener(onScrolled = { rv, _, _ ->
@@ -85,6 +86,7 @@ class StickyDateHeaderUpdater(
         return StickyDateHeaderView(parentView.context).apply {
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             setPadding(paddingLeft, dateHeaderVerticalPadding, paddingRight, paddingBottom)
+            setStyle(messageItemStyle)
             parentView.addView(this)
         }
     }

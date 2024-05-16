@@ -11,11 +11,14 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import androidx.appcompat.widget.AppCompatTextView
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 
-class SceytClickableTextView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : AppCompatTextView(context, attrs, defStyleAttr) {
+class SceytClickableTextView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : AppCompatTextView(context, attrs, defStyleAttr) {
     private var doOnLongClick: ((View) -> Unit)? = null
     private var doOnClickWhenNoLink: ((View) -> Unit)? = null
     private val handler = Handler(Looper.getMainLooper())
@@ -23,10 +26,6 @@ class SceytClickableTextView @JvmOverloads constructor(context: Context, attrs: 
     private val longClickRunnable = Runnable {
         isLongClick = true
         doOnLongClick?.invoke(this)
-    }
-
-    init {
-        setLinkTextColor(context.getCompatColor(MessagesStyle.autoLinkTextColor))
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -72,5 +71,10 @@ class SceytClickableTextView @JvmOverloads constructor(context: Context, attrs: 
 
     fun doOnClickWhenNoLink(onClick: (View) -> Unit) {
         doOnClickWhenNoLink = onClick
+    }
+
+    fun applyStyle(messageItemStyle: MessageItemStyle){
+        setTextColor(messageItemStyle.bodyTextColor)
+        setLinkTextColor(messageItemStyle.autoLinkTextColor)
     }
 }

@@ -8,6 +8,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentInfoDetailsBinding
@@ -20,21 +21,22 @@ import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
-open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
+open class InfoDetailsFragment : Fragment(), ChannelUpdateListener, ConversationInfoStyleApplier {
     protected lateinit var binding: SceytFragmentInfoDetailsBinding
         private set
     protected lateinit var channel: SceytChannel
         private set
+    protected lateinit var style: ConversationInfoStyle
+        private set
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
     private var isSelf: Boolean = false
-
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentInfoDetailsBinding.inflate(layoutInflater, container, false)
@@ -48,7 +50,7 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
         getBundleArguments()
         initViews()
         setChannelDetails(channel)
-        binding.setupStyle()
+        binding.applyStyle()
     }
 
     private fun getBundleArguments() {
@@ -130,9 +132,8 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
         with(binding) {
             if (isSelf) {
                 avatar.setImageUrl(null, channel.getDefaultAvatar())
-                avatar.setAvatarColor(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
-            }
-            else avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
+                avatar.setAvatarColor(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
+            } else avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
         }
     }
 
@@ -143,7 +144,7 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
     open fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
         if (isSelf) return
         val user = presenceUser.user
-        val userName = SceytKitConfig.userNameBuilder?.invoke(user)
+        val userName = SceytChatUIKit.userNameFormatter?.format(user)
                 ?: user.getPresentableName()
         binding.avatar.setNameAndImageUrl(userName, user.avatarURL, channel.getDefaultAvatar())
     }
@@ -161,9 +162,17 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener {
         setChannelDetails(channel)
     }
 
-    private fun SceytFragmentInfoDetailsBinding.setupStyle() {
-        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
-        divider.setBackgroundColor(requireContext().getCompatColor(ConversationInfoMediaStyle.dividerColor))
+    override fun setStyle(style: ConversationInfoStyle) {
+        this.style = style
+    }
+
+    private fun SceytFragmentInfoDetailsBinding.applyStyle() {
+        val theme = SceytChatUIKit.theme
+        layoutDetails.setBackgroundColor(requireContext().getCompatColor(theme.backgroundColorSections))
+        title.setTextColor(requireContext().getCompatColor(theme.textPrimaryColor))
+        tvSubtitle.setTextColor(requireContext().getCompatColor(theme.textSecondaryColor))
+        dividerTop.setDividerColorResource(theme.borderColor)
+        space.layoutParams.height = style.spaceBetweenSections
     }
 
     companion object {

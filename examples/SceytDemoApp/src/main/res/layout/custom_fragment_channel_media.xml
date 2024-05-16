@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_red">
+    android:background="@color/sceyt_color_error">
 
     <TextView
         android:id="@+id/rvFiles"
@@ -15,7 +15,7 @@
         android:paddingHorizontal="2dp"
         android:paddingTop="15dp"
         android:text="Custom media fragment"
-        android:textColor="@color/sceyt_color_white"
+        android:textColor="@color/sceyt_color_on_primary"
         android:textSize="20dp"
         app:spanCount="3"
         tools:itemCount="9"

@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.interactor
 
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
@@ -11,24 +12,23 @@ import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
 interface MessageInteractor {
     suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long,
-                                 replyInThread: Boolean, offset: Int, limit: Int = SceytKitConfig.MESSAGES_LOAD_SIZE,
+                                 replyInThread: Boolean, offset: Int, limit: Int = SceytChatUIKit.config.messagesLoadSize,
                                  loadKey: LoadKeyData, ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
-                                 offset: Int, limit: Int = SceytKitConfig.MESSAGES_LOAD_SIZE,
+                                 offset: Int, limit: Int = SceytChatUIKit.config.messagesLoadSize,
                                  ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
                                  limit: Int, loadKey: LoadKeyData,
                                  ignoreDb: Boolean = false, ignoreServer: Boolean = false): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int = SceytKitConfig.MESSAGES_LOAD_SIZE,
+    suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int = SceytChatUIKit.config.messagesLoadSize,
                                    loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun searchMessages(conversationId: Long, replyInThread: Boolean,

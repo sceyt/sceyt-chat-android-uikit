@@ -2,14 +2,13 @@ package com.sceyt.chatuikit.persistence.extensions
 
 import com.google.gson.Gson
 import com.sceyt.chat.models.user.UserState
-import com.sceyt.chatuikit.SceytKitClient.myId
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.channels.SelfChannelMetadata
 import com.sceyt.chatuikit.data.models.channels.stringToEnum
 import com.sceyt.chatuikit.extensions.toBoolean
-import com.sceyt.chatuikit.sceytstyles.UserStyle
 
 fun SceytChannel.checkIsMemberInChannel(): Boolean {
     return if (isGroup) {
@@ -22,11 +21,12 @@ fun SceytChannel.isPeerDeleted(): Boolean {
 }
 
 fun SceytChannel.getDefaultAvatar(): Int {
+    val theme = SceytChatUIKit.theme
     return if (isDirect()) {
         when {
-            isPeerDeleted() -> UserStyle.deletedUserAvatar
-            isSelf() -> UserStyle.notesAvatar
-            else -> UserStyle.userDefaultAvatar
+            isPeerDeleted() -> theme.deletedUserAvatar
+            isSelf() -> theme.notesAvatar
+            else -> theme.userDefaultAvatar
         }
     } else 0
 }
@@ -40,7 +40,7 @@ fun SceytChannel.getChannelType(): ChannelTypeEnum {
 }
 
 fun SceytChannel.getPeer(): SceytMember? {
-    return members?.firstOrNull { it.id != myId } ?: run {
+    return members?.firstOrNull { it.id != SceytChatUIKit.chatUIFacade.myId } ?: run {
         if (isSelf()) members?.firstOrNull() else null
     }
 }

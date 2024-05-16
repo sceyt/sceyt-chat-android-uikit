@@ -38,11 +38,13 @@
         <!-- Drawable of the message pending indicator -->
         <attr name="sceytUiIndicatorPendingIcon" format="reference" />
         <!-- A color of the unread message count text -->
-        <attr name="sceytUiUnreadMessageCounterTextColor" format="reference" />
+        <attr name="sceytUiUnreadMessageCounterTextColor" format="reference|color" />
         <!-- Background color of the unread message counter -->
         <attr name="sceytUiUnreadMessageCounterBackgroundColor" format="reference|color" />
         <!-- Drawable of the muted channel icon  -->
         <attr name="sceytUiMutedChannelIcon" format="reference" />
+        <!-- Drawable of the pinned channel icon  -->
+        <attr name="sceytUiPinnedChannelIcon" format="reference" />
         <!-- Reference to layout resource of the channel list "loading" view -->
         <attr name="sceytUiLoadingView" format="reference" />
         <!-- Reference to layout resource of the channel list empty state view -->

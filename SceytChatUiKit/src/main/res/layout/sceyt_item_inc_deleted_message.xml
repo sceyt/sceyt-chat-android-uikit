@@ -34,10 +34,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:background="@drawable/sceyt_bg_inc_message"
+        android:background="@drawable/sceyt_bg_corners_18"
         app:layout_constraintStart_toEndOf="@+id/avatar"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_goneMarginStart="12dp">
+        app:layout_goneMarginStart="12dp"
+        tools:backgroundTint="#F1F2F6">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvUserName"
@@ -67,7 +68,7 @@
             android:layout_marginEnd="12dp"
             android:layout_marginBottom="8dp"
             android:text="@string/sceyt_message_was_deleted"
-            android:textColor="@color/sceyt_color_gray_400"
+            android:textColor="@color/sceyt_color_text_secondary"
             android:textSize="@dimen/mediumTextSize"
             android:textStyle="italic"
             app:layout_constrainedWidth="true"
@@ -84,7 +85,7 @@
             android:layout_marginBottom="5dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/layoutDetails"
-            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
+            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_text_secondary"
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
             app:sceytDateStatusViewStatusIconSize="15.5dp"

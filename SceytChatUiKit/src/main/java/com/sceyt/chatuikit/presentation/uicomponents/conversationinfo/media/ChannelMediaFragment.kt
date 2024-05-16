@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,17 +12,19 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelMediaBinding
-import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isLandscape
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
-import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.customviews.SceytPageStateView
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem.Companion.getData
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
@@ -32,15 +35,23 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adap
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 import kotlinx.coroutines.launch
 
 open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     protected lateinit var channel: SceytChannel
     protected var binding: SceytFragmentChannelMediaBinding? = null
-    protected var mediaAdapter: ChannelMediaAdapter? = null
+    protected open var mediaAdapter: ChannelMediaAdapter? = null
     protected open val mediaType = listOf("image", "video")
-    protected var pageStateView: SceytPageStateView? = null
+    protected open var pageStateView: SceytPageStateView? = null
     protected lateinit var viewModel: ChannelAttachmentsViewModel
+    protected lateinit var style: ConversationInfoMediaStyle
+        private set
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        style = ConversationInfoMediaStyle.Builder(context, null).build()
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelMediaBinding.inflate(inflater, container, false).also {
@@ -55,6 +66,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         initViewModel()
         addPageStateView()
         loadInitialMediaList()
+        binding?.applyStyle()
     }
 
     private fun getBundleArguments() {
@@ -96,7 +108,9 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     protected open fun onInitialMediaList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
-            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(requireContext()).also {
+            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(
+                requireContext(), style).also {
+
                 it.setNeedMediaDataCallback { data ->
                     viewModel.needMediaInfo(data)
                 }
@@ -175,6 +189,10 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     override fun onHistoryCleared() {
         mediaAdapter?.clearData()
         pageStateView?.updateState(PageState.StateEmpty())
+    }
+
+    private fun SceytFragmentChannelMediaBinding.applyStyle() {
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
     }
 
     companion object {

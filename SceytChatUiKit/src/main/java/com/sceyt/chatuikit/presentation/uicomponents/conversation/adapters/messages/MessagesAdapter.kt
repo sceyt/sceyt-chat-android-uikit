@@ -7,7 +7,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
-import com.sceyt.chatuikit.extensions.*
+import com.sceyt.chatuikit.extensions.asComponentActivity
+import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
+import com.sceyt.chatuikit.extensions.findIndexed
+import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
@@ -16,7 +19,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messa
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.StickyDateHeaderView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.stickydate.StickyHeaderInterface
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -24,7 +27,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
-                      private val viewHolderFactory: MessageViewHolderFactory) :
+                      private val viewHolderFactory: MessageViewHolderFactory,
+                      private val style: MessagesListViewStyle) :
         RecyclerView.Adapter<BaseMsgViewHolder>(), StickyHeaderInterface {
     private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
     private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
@@ -261,7 +265,7 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         val date = DateTimeUtil.getDateTimeStringWithDateFormatter(
             context = header.context,
             time = messages.getOrNull(headerPosition)?.getMessageCreatedAtForDateHeader() ?: return,
-            dateFormatter = MessagesStyle.dateSeparatorDateFormat)
+            dateFormatter = style.dateSeparatorDateFormat)
 
         header.setDate(date)
         lastHeaderPosition = headerPosition

@@ -9,21 +9,26 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentInfoSpecificationsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setClipboard
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 
-open class InfoSpecificationsFragment : Fragment(), ChannelUpdateListener {
+open class InfoSpecificationsFragment : Fragment(), ChannelUpdateListener, ConversationInfoStyleApplier {
     protected lateinit var binding: SceytFragmentInfoSpecificationsBinding
         private set
     protected lateinit var channel: SceytChannel
+        private set
+    protected lateinit var style: ConversationInfoStyle
         private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -37,7 +42,7 @@ open class InfoSpecificationsFragment : Fragment(), ChannelUpdateListener {
 
         getBundleArguments()
         setChannelSpecification(channel)
-        binding.setupStyle()
+        binding.applyStyle()
         binding.initViews()
     }
 
@@ -71,9 +76,14 @@ open class InfoSpecificationsFragment : Fragment(), ChannelUpdateListener {
         setChannelSpecification(channel)
     }
 
-    private fun SceytFragmentInfoSpecificationsBinding.setupStyle() {
-        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
-        divider.setBackgroundColor(requireContext().getCompatColor(ConversationInfoMediaStyle.dividerColor))
+    override fun setStyle(style: ConversationInfoStyle) {
+        this.style = style
+    }
+
+    private fun SceytFragmentInfoSpecificationsBinding.applyStyle() {
+        link.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
+        link.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        space.layoutParams.height = style.spaceBetweenSections
     }
 
     companion object {

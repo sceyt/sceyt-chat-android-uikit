@@ -8,14 +8,16 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogDirectChannelActionsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.setTextViewDrawableColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
+import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogDirectChannelActionsBinding
@@ -29,7 +31,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
         }.root)
 
         binding.initView()
-        binding.setupStyle()
+        binding.applyStyle()
         binding.determinateState()
         window?.let {
             it.setWindowAnimations(R.style.SceytDialogFromBottomAnimation)
@@ -107,9 +109,15 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
         ClearHistory, BlockUser, UnBlockUser, Delete, Pin, UnPin
     }
 
-    private fun SceytDialogDirectChannelActionsBinding.setupStyle() {
+    private fun SceytDialogDirectChannelActionsBinding.applyStyle() {
         setTextViewsDrawableColor(listOf(pin, unPin, blockUser, unBlockUser, clearHistory),
-            context.getCompatColor(SceytKitConfig.sceytColorAccent))
+            context.getCompatColor(SceytChatUIKit.theme.accentColor))
+
+        setTextViewsTextColor(listOf(pin, unPin, blockUser, unBlockUser, clearHistory),
+            context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+
+        delete.setTextViewDrawableColor(context.getCompatColor(SceytChatUIKit.theme.errorColor))
+        delete.setTextColor(context.getCompatColor(SceytChatUIKit.theme.errorColor))
     }
 
     companion object {

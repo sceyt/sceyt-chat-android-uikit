@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventsObserver
@@ -15,11 +15,11 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.toMember
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.extensions.asLiveData
+import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
-import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
-import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Dispatchers
@@ -104,7 +104,7 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
             .onEach {
                 when (val event = it.eventType) {
                     is ChannelEventEnum.Left -> {
-                        if (event.leftMembers.any { member -> member.id == SceytKitClient.myId })
+                        if (event.leftMembers.any { member -> member.id == SceytChatUIKit.chatUIFacade.myId })
                             _onChannelLeftLiveData.postValue(it)
                     }
 

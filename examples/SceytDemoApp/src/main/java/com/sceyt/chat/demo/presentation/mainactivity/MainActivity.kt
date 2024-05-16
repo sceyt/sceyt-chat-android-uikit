@@ -10,7 +10,7 @@ import com.sceyt.chat.demo.databinding.ActivityMainBinding
 import com.sceyt.chat.demo.presentation.login.LoginViewModel
 import com.sceyt.chat.demo.presentation.mainactivity.adapters.MainViewPagerAdapter
 import com.sceyt.chat.demo.presentation.mainactivity.profile.ProfileFragment
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         loginIfNeeded()
         initViewModel()
 
-        SceytKitClient.channelInteractor.getTotalUnreadCount().onEach {
+        SceytChatUIKit.chatUIFacade.channelInteractor.getTotalUnreadCount().onEach {
             binding.bottomNavigationView.getOrCreateBadge(R.id.channelsFragment).apply {
                 number = it
                 isVisible = it > 0

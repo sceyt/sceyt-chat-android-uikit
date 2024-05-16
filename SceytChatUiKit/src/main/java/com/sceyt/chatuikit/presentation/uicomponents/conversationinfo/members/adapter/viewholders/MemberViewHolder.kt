@@ -5,29 +5,30 @@ import androidx.annotation.ColorRes
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.databinding.SceytItemChannelMembersBinding
 import com.sceyt.chatuikit.extensions.firstCharToUppercase
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableNameWithYou
 import com.sceyt.chatuikit.extensions.getString
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.listeners.MemberClickListenersImpl
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.UserStyle
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
-import java.util.*
+import java.util.Date
 
 class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
                        private val memberClickListeners: MemberClickListenersImpl,
-                       private val userNameBuilder: ((User) -> String)? = null) : BaseMemberViewHolder(binding.root) {
+                       private val userNameFormatter: UserNameFormatter? = null) : BaseMemberViewHolder(binding.root) {
 
     private lateinit var memberItem: MemberItem.Member
 
     init {
+        binding.applyStyle()
         binding.root.setOnClickListener {
             memberClickListeners.onMemberClick(it, memberItem)
         }
@@ -44,11 +45,11 @@ class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
 
         with(binding) {
 
-            val presentableName = userNameBuilder?.invoke(member.user)
+            val presentableName = userNameFormatter?.format(member.user)
                     ?: member.getPresentableNameWithYou(itemView.context)
 
             if (diff.nameChanged || diff.avatarChanged) {
-                avatar.setNameAndImageUrl(presentableName, member.user.avatarURL, UserStyle.userDefaultAvatar)
+                avatar.setNameAndImageUrl(presentableName, member.user.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
 
                 userName.text = presentableName
             }
@@ -84,7 +85,7 @@ class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
         val role = memberItem.member.role
         when (role.name) {
             RoleTypeEnum.Owner.toString() -> {
-                setRoleNameColor(SceytKitConfig.sceytColorAccent)
+                setRoleNameColor(SceytChatUIKit.theme.accentColor)
             }
 
             RoleTypeEnum.Admin.toString() -> {
@@ -100,5 +101,11 @@ class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
             backgroundTintList = ColorStateList.valueOf(bgColorTint)
             setTextColor(colorAccent)
         }
+    }
+
+    private fun SceytItemChannelMembersBinding.applyStyle() {
+        userName.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        tvStatus.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
+        roleName.setTextColorRes(SceytChatUIKit.theme.accentColor)
     }
 }

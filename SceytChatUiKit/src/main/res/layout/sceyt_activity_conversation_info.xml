@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_bg_secondary_themed"
+    android:background="@color/sceyt_color_background_tertiary"
     tools:context=".presentation.uicomponents.conversationinfo.ConversationInfoActivity">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -22,9 +22,10 @@
             app:elevation="0dp">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
+                android:id="@+id/collapsingToolbarLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:contentScrim="@color/sceyt_color_bg"
+                app:contentScrim="@android:color/transparent"
                 app:layout_scrollFlags="scroll|exitUntilCollapsed"
                 app:scrimAnimationDuration="0"
                 app:titleCollapseMode="scale"
@@ -83,7 +84,7 @@
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <androidx.appcompat.widget.Toolbar
-                    android:id="@+id/activity_goods_details_toolbar"
+                    android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="?actionBarSize"
                     android:contentInsetStart="0dp"
@@ -112,14 +113,14 @@
                 android:id="@+id/viewTopTabLayout"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="@color/sceyt_color_divider"
+                android:background="@color/sceyt_color_border"
                 android:visibility="gone" />
 
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tabLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/sceyt_color_primary"
+                android:background="@color/sceyt_color_background_sections"
                 app:layout_constraintTop_toTopOf="parent"
                 app:tabIndicator="@drawable/sceyt_bg_corners_6"
                 app:tabIndicatorAnimationMode="elastic"
@@ -128,14 +129,15 @@
                 app:tabIndicatorHeight="2dp"
                 app:tabMaxWidth="100dp"
                 app:tabMinWidth="100dp"
-                app:tabSelectedTextColor="@color/sceyt_color_text_themed"
+                app:tabSelectedTextColor="@color/sceyt_color_text_primary"
                 app:tabTextAppearance="@style/SceytTabTextAppearance"
-                app:tabTextColor="@color/sceyt_color_gray_400" />
+                app:tabTextColor="@color/sceyt_color_text_secondary" />
 
             <View
+                android:id="@+id/underlineTab"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="@color/sceyt_color_divider" />
+                android:background="@color/sceyt_color_border" />
 
         </com.google.android.material.appbar.AppBarLayout>
 

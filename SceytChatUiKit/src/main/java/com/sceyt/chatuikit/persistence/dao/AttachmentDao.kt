@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.persistence.dao
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.LoadNearData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentDb
@@ -10,7 +11,6 @@ import com.sceyt.chatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentPayLoadDb
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 @Dao
 abstract class AttachmentDao {
@@ -31,12 +31,12 @@ abstract class AttachmentDao {
 
     @Transaction
     open suspend fun getNearAttachments(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): LoadNearData<AttachmentDb> {
-        val newest = getNewestThenMessageInclude(channelId, attachmentId, SceytKitConfig.ATTACHMENTS_LOAD_SIZE / 2 + 1, types)
-        val newMessages = newest.take(SceytKitConfig.ATTACHMENTS_LOAD_SIZE / 1)
+        val newest = getNewestThenMessageInclude(channelId, attachmentId, limit / 2 + 1, types)
+        val newMessages = newest.take(limit / 1)
 
         val oldest = getOldestThenAttachment(channelId, attachmentId, limit - newMessages.size, types).reversed()
         val hasPrev = oldest.size == limit - newMessages.size
-        val hasNext = newest.size > SceytKitConfig.ATTACHMENTS_LOAD_SIZE / 2
+        val hasNext = newest.size > limit / 2
         return LoadNearData(oldest + newMessages, hasNext = hasNext, hasPrev)
     }
 

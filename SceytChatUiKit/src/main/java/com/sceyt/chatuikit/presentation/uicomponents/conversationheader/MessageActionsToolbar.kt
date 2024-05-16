@@ -11,13 +11,12 @@ import androidx.appcompat.widget.ActionMenuView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.forEach
 import androidx.core.view.isVisible
-import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.changeAlphaWithAnim
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListener.ToolbarActionsVisibilityListener
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class MessageActionsToolbar @JvmOverloads constructor(context: Context, attributeSet: AttributeSet? = null, defStyleAttr: Int = 0)
     : Toolbar(context, attributeSet, defStyleAttr) {
@@ -30,9 +29,9 @@ class MessageActionsToolbar @JvmOverloads constructor(context: Context, attribut
         private set
 
     private fun initMenu(vararg messages: SceytMessage) {
-        overflowIcon?.setTint(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+        overflowIcon?.setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
         menu.forEach {
-            it.icon?.setTint(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+            it.icon?.setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
         }
 
         setOnMenuItemClickListener {
@@ -46,10 +45,9 @@ class MessageActionsToolbar @JvmOverloads constructor(context: Context, attribut
 
     fun setupMenuWithMessages(@MenuRes menuRes: Int, vararg messages: SceytMessage): Menu? {
         menu.clear()
-        inflateMenu(menuRes).also {
-            initMenu(*messages)
-        }
-        setTitleTextAppearance(context, R.style.SceytToolbarAppearance)
+        inflateMenu(menuRes)
+        initMenu(*messages)
+
         setTitleMargin(dpToPx(20f), 0, 0, 0)
 
         title = if (messages.isNotEmpty())

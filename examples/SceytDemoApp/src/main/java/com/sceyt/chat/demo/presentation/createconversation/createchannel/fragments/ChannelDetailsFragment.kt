@@ -64,7 +64,7 @@ class ChannelDetailsFragment : Fragment(R.layout.fragment_create_channel_details
                 checkNextEnabled(false)
             binding.uriWarning.apply {
                 if (!it) {
-                    setUriStatusText(getString(string.the_url_exist_title), color.sceyt_color_red)
+                    setUriStatusText(getString(string.the_url_exist_title), color.sceyt_color_error)
                 } else
                     setUriStatusText(getString(string.valid_url_title), color.sceyt_color_green)
                 isVisible = true
@@ -158,9 +158,9 @@ class ChannelDetailsFragment : Fragment(R.layout.fragment_create_channel_details
                     ?: return false).matches()
             if (!isValidUrl) {
                 if (inputUri.text.toString().length < 5 || inputUri.text.toString().length > 50)
-                    setUriStatusText(getString(string.url_length_validation_text), color.sceyt_color_red)
+                    setUriStatusText(getString(string.url_length_validation_text), color.sceyt_color_error)
                 else
-                    setUriStatusText(getString(string.url_characters_validation_text),color.sceyt_color_red)
+                    setUriStatusText(getString(string.url_characters_validation_text),color.sceyt_color_error)
             }
             uriWarning.isVisible = true
             return isValidUrl

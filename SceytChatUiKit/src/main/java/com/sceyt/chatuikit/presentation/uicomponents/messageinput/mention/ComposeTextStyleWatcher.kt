@@ -9,11 +9,11 @@ import android.text.TextUtils
 import android.text.TextWatcher
 import android.text.style.ForegroundColorSpan
 import androidx.core.text.getSpans
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isVisuallyEmpty
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyler
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyler.isSupportedStyle
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 
 class ComposeTextStyleWatcher(private val context: Context) : TextWatcher {
@@ -41,7 +41,7 @@ class ComposeTextStyleWatcher(private val context: Context) : TextWatcher {
         // Set mention spans
         s.getSpans<Annotation>(0, s.length).forEach {
             if (it.key == MentionUserHelper.MENTION)
-                s.setSpan(ForegroundColorSpan(context.getCompatColor(SceytKitConfig.sceytColorAccent)), s.getSpanStart(it), s.getSpanEnd(it), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                s.setSpan(ForegroundColorSpan(context.getCompatColor(SceytChatUIKit.theme.accentColor)), s.getSpanStart(it), s.getSpanEnd(it), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
 
         // Set text formatting spans

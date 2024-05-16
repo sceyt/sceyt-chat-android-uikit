@@ -12,15 +12,17 @@ import android.widget.PopupWindow
 import androidx.core.view.marginBottom
 import androidx.core.view.marginTop
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.databinding.SceytPopupAddReactionBinding
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isRtl
+import com.sceyt.chatuikit.extensions.marginHorizontal
 import com.sceyt.chatuikit.extensions.screenWidthPx
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MAX_SELF_REACTIONS_SIZE
 import java.lang.Integer.max
+import kotlin.math.min
 
 class PopupReactions(private var context: Context) : PopupWindow(context) {
     private lateinit var binding: SceytPopupAddReactionBinding
@@ -28,7 +30,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
     private var clickListener: PopupReactionsAdapter.OnItemClickListener? = null
 
     fun showPopup(anchorView: View, message: SceytMessage,
-                  reactions: List<String> = SceytKitConfig.defaultReactions,
+                  reactions: List<String> = SceytChatUIKit.theme.defaultReactions,
                   clickListener: PopupReactionsAdapter.OnItemClickListener): PopupReactions {
         this.clickListener = clickListener
 
@@ -41,6 +43,8 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
             binding = it
         }.root
 
+        binding.applyStyle()
+
         animationStyle = if (reversed) R.style.SceytReactionPopupAnimationReversed else R.style.SceytReactionPopupAnimationNormal
         setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         isOutsideTouchable = true
@@ -50,23 +54,27 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
         with(binding.cardView) {
             measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
 
+            this@PopupReactions.width = min(context.screenWidthPx(), measuredWidth + marginHorizontal)
+
             val minYPos = measuredHeight + marginBottom + marginTop
             val xPos = if (reversed) context.screenWidthPx() else 0
             val yPos = max(minYPos, y - measuredHeight - marginBottom)
 
             showAtLocation(anchorView, Gravity.NO_GRAVITY, xPos, yPos)
         }
+
         return this
     }
 
-    private fun setAdapter(reversed: Boolean, message: SceytMessage, reactions: List<String>, clickListener: PopupReactionsAdapter.OnItemClickListener) {
+    private fun setAdapter(reversed: Boolean, message: SceytMessage, reactions: List<String>,
+                           clickListener: PopupReactionsAdapter.OnItemClickListener) {
         val reactionsItems = reactions.map {
             val reactionItem = message.messageReactions?.find { data -> data.reaction.key == it }
             val containsSelf = reactionItem?.reaction?.containsSelf ?: false
             ReactionItem.Reaction(SceytReactionTotal(it, containsSelf = containsSelf), message, reactionItem?.isPending
                     ?: false)
         }.run {
-            if ((message.messageReactions?.size ?: 0) < MAX_SELF_REACTIONS_SIZE)
+            if ((message.messageReactions?.size ?: 0) < SceytChatUIKit.config.maxSelfReactionsSize)
                 plus(ReactionItem.Other(message))
             else this
         }
@@ -89,5 +97,9 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
                 clickListener?.onAddClick()
             }
         }
+    }
+
+    private fun SceytPopupAddReactionBinding.applyStyle() {
+        cardView.setCardBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
     }
 }

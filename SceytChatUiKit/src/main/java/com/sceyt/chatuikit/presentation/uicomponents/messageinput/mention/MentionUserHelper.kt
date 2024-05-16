@@ -14,15 +14,15 @@ import androidx.annotation.ColorRes
 import com.google.gson.Gson
 import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.SceytChatUIKit.userNameFormatter
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 object MentionUserHelper {
     const val MENTION = "mention"
-    var userNameBuilder = SceytKitConfig.userNameBuilder
-        private set
+    private val userNameFormatter get() = SceytChatUIKit.mentionUserNameFormatter
 
     fun initMentionAttributes(mentionUsers: List<Mention>): List<BodyAttribute>? {
         if (mentionUsers.isEmpty()) return null
@@ -34,7 +34,7 @@ object MentionUserHelper {
     }
 
     fun buildWithMentionedUsers(context: Context, body: CharSequence, attributes: List<BodyAttribute>?,
-                                mentionUsers: Array<User>?, @ColorRes colorId: Int = SceytKitConfig.sceytColorAccent,
+                                mentionUsers: Array<User>?, @ColorRes colorId: Int = SceytChatUIKit.theme.accentColor,
                                 mentionClickListener: ((String) -> Unit)? = null): CharSequence {
         val data = attributes?.filter { it.type == MENTION }
                 ?: return body
@@ -101,7 +101,7 @@ object MentionUserHelper {
         data.forEach { entry ->
             val userId = entry.metadata ?: return@forEach
             val user = mentionUsers?.find { it.id == entry.metadata } ?: User(userId)
-            val name = userNameBuilder?.invoke(user) ?: user.getPresentableName()
+            val name = userNameFormatter?.format(user) ?: user.getPresentableName()
             list.add(Mention(userId, name, entry.offset, entry.length))
         }
         return list
@@ -111,7 +111,7 @@ object MentionUserHelper {
                                    item: BodyAttribute): String {
         val mentionUser = mentionUsers?.find { mentionUser -> mentionUser.id == item.metadata }
         var name = mentionUser?.let { user ->
-            userNameBuilder?.invoke(user) ?: user.getPresentableName()
+            userNameFormatter?.format(user) ?: user.getPresentableName()
         } ?: item.metadata
         name = "@$name".notAutoCorrectable()
 
@@ -122,10 +122,6 @@ object MentionUserHelper {
 
         newBody.replace(item.offset, end, name)
         return name
-    }
-
-    fun setCustomUserNameBuilder(userNameBuilder: (User) -> String) {
-        this.userNameBuilder = userNameBuilder
     }
 
     fun Annotation.getValueData(): MentionAnnotationValue? {

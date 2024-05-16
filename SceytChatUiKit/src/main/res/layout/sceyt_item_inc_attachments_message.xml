@@ -44,7 +44,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_toEndOf="@+id/avatar"
-        android:background="@drawable/sceyt_bg_inc_message">
+        android:background="@drawable/sceyt_bg_corners_18"
+        tools:backgroundTint="#F1F2F6">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvUserName"
@@ -91,11 +92,11 @@
             android:id="@+id/viewReply"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
             android:layout_marginTop="8dp"
             android:layout="@layout/sceyt_recycler_reply_container"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvForwarded"
             tools:visibility="visible" />
@@ -106,7 +107,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="4dp"
-            android:textColor="@color/sceyt_color_text_themed"
+            android:textColor="@color/sceyt_color_text_primary"
             android:textSize="@dimen/mediumTextSize"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
@@ -138,7 +139,7 @@
             android:paddingHorizontal="6dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/rvFiles"
-            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
+            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_text_secondary"
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
             app:sceytDateStatusViewStatusIconSize="15.5dp"

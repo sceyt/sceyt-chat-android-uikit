@@ -2,30 +2,49 @@ package com.sceyt.chatuikit.extensions
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.text.*
+import android.text.InputType
+import android.text.Layout
+import android.text.StaticLayout
+import android.text.TextPaint
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import android.widget.ImageView
+import android.widget.ProgressBar
+import android.widget.TextView
+import androidx.annotation.ColorInt
+import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.appcompat.widget.SwitchCompat
+import androidx.core.view.marginEnd
+import androidx.core.view.marginStart
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.presentation.common.ClickAvailableData
 import com.sceyt.chatuikit.shared.utils.ViewEnabledUtils
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.min
 import kotlin.math.roundToInt
 
 fun View.addPaddings(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 0) {
     setPadding(paddingLeft + left, paddingTop + top, paddingRight + right, paddingBottom + bottom)
+}
+
+fun View.setPaddings(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 0) {
+    setPadding(left, top, right, bottom)
 }
 
 fun View.setMargins(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 0) {
@@ -143,6 +162,37 @@ fun View.setOnClickListenerDisableClickViewForWhile(disableDuration: Long = 1000
         ViewEnabledUtils.disableClickViewForWhile(it, disableDuration)
         onClickCallBack.invoke(it)
     }
+}
+
+fun ImageView.setTint(@ColorInt color: Int) {
+    setColorFilter(color)
+}
+
+fun ImageView.setTintColorRes(@ColorRes colorId: Int) {
+    setColorFilter(context.getCompatColor(colorId))
+}
+
+fun View.setBackgroundTint(@ColorInt color: Int) {
+    backgroundTintList = ColorStateList.valueOf(color)
+}
+
+fun View.setBackgroundTintColorRes(@ColorRes color: Int) {
+    backgroundTintList = ColorStateList.valueOf(context.getCompatColor(color))
+}
+
+fun TextView.setTextColorRes(@ColorRes color: Int) {
+    setTextColor(context.getCompatColor(color))
+}
+
+fun TextView.setHintColorRes(@ColorRes color: Int) {
+    setHintTextColor(context.getCompatColor(color))
+}
+
+val View.marginHorizontal
+    get() = marginStart + marginEnd
+
+fun ProgressBar.setProgressColor(@ColorRes colorId: Int) {
+    indeterminateDrawable.setTint(context.getCompatColor(colorId))
 }
 
 @Suppress("DEPRECATION")

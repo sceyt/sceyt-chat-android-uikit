@@ -1,10 +1,10 @@
 package com.sceyt.chatuikit.presentation.uicomponents.channels.adapter
 
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem.LoadingMoreItem
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.ChannelSortType
+import com.sceyt.chatuikit.sceytconfigs.ChannelSortType
 
-class ChannelsItemComparatorBy(private val compareBy: ChannelSortType = SceytKitConfig.sortChannelsBy) : Comparator<ChannelListItem> {
+class ChannelsItemComparatorBy(private val compareBy: ChannelSortType = SceytChatUIKit.config.sortChannelsBy) : Comparator<ChannelListItem> {
     private val channelsComparatorDescBy = ChannelsComparatorDescBy(compareBy)
 
     override fun compare(first: ChannelListItem, second: ChannelListItem): Int {

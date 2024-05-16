@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.files
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,17 +11,19 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelFilesBinding
-import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
-import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.customviews.SceytPageStateView
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
@@ -30,6 +33,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adap
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.launch
 
@@ -40,6 +44,13 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     protected var pageStateView: SceytPageStateView? = null
     protected val mediaType = listOf(AttachmentTypeEnum.File.value())
     protected lateinit var viewModel: ChannelAttachmentsViewModel
+    protected lateinit var style: ConversationInfoMediaStyle
+        private set
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        style = ConversationInfoMediaStyle.Builder(context, null).build()
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelFilesBinding.inflate(inflater, container, false).also {
@@ -54,6 +65,7 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         initViewModel()
         addPageStateView()
         loadInitialFilesList()
+        binding?.applyStyle()
     }
 
     private fun getBundleArguments() {
@@ -77,7 +89,7 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     open fun onInitialFilesList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
-            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(requireContext()).also {
+            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(requireContext(), style).also {
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                     item.file.openFile(requireContext())
                 })
@@ -113,7 +125,7 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0, enableErrorSnackBar = false)
     }
 
-    protected fun loadInitialFilesList() {
+    protected open fun loadInitialFilesList() {
         if (channel.pending) {
             binding?.root?.post { pageStateView?.updateState(PageState.StateEmpty()) }
             return
@@ -150,6 +162,10 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     override fun onHistoryCleared() {
         mediaAdapter?.clearData()
         pageStateView?.updateState(PageState.StateEmpty())
+    }
+
+    private fun SceytFragmentChannelFilesBinding.applyStyle() {
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
     }
 
     companion object {

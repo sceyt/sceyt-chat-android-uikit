@@ -3,13 +3,13 @@ package com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholde
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 
 open class ChannelViewHolderFactory(context: Context) {
@@ -17,7 +17,7 @@ open class ChannelViewHolderFactory(context: Context) {
     protected open val channelClickListenersImpl = ChannelClickListenersImpl()
     protected lateinit var channelStyle: ChannelListViewStyle
     private var attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)? = null
-    var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+    var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
         private set
 
     internal fun setStyle(channelStyle: ChannelListViewStyle) {
@@ -34,7 +34,7 @@ open class ChannelViewHolderFactory(context: Context) {
 
     open fun createChannelViewHolder(parent: ViewGroup): BaseChannelViewHolder {
         val binding = SceytItemChannelBinding.inflate(layoutInflater, parent, false)
-        return ChannelViewHolder(binding, channelStyle, channelClickListenersImpl, attachDetachListener, userNameBuilder)
+        return ChannelViewHolder(binding, channelStyle, channelClickListenersImpl, attachDetachListener, userNameFormatter)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelViewHolder {
@@ -50,8 +50,8 @@ open class ChannelViewHolderFactory(context: Context) {
         attachDetachListener = listener
     }
 
-    fun setUserNameBuilder(builder: (User) -> String) {
-        userNameBuilder = builder
+    fun setUserNameFormatter(formatter: UserNameFormatter) {
+        userNameFormatter = formatter
     }
 
     protected val clickListeners get() = channelClickListenersImpl as ChannelClickListeners.ClickListeners

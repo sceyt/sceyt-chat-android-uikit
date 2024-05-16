@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentInfoMembersByRoleBinding
@@ -16,13 +17,16 @@ import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 
-open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener {
+open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener, ConversationInfoStyleApplier {
     protected lateinit var binding: SceytFragmentInfoMembersByRoleBinding
         private set
     protected lateinit var channel: SceytChannel
+        private set
+    protected lateinit var style: ConversationInfoStyle
         private set
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
 
@@ -38,7 +42,7 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
         getBundleArguments()
         initViews()
         setDetails(channel)
-        binding.setupStyle()
+        binding.applyStyle()
     }
 
     private fun getBundleArguments() {
@@ -85,9 +89,18 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
         Members, Admins, SearchMessages
     }
 
-    private fun SceytFragmentInfoMembersByRoleBinding.setupStyle() {
-        divider.layoutParams.height = ConversationInfoMediaStyle.dividerHeight
-        divider.setBackgroundColor(requireContext().getCompatColor(ConversationInfoMediaStyle.dividerColor))
+    private fun SceytFragmentInfoMembersByRoleBinding.applyStyle() {
+        val textPrimaryColor = requireContext().getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
+        val backgroundColorSections = requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections)
+        members.setTextColor(textPrimaryColor)
+        members.setBackgroundColor(backgroundColorSections)
+        admins.setTextColor(textPrimaryColor)
+        admins.setBackgroundColor(backgroundColorSections)
+        searchMessages.setTextColor(textPrimaryColor)
+        searchMessages.setBackgroundColor(backgroundColorSections)
+        borderBetweenMembersAndAdmins.setDividerColorResource(SceytChatUIKit.theme.borderColor)
+        borderBetweenAdminsAndSearch.setDividerColorResource(SceytChatUIKit.theme.borderColor)
+        space.layoutParams.height = style.spaceBetweenSections
     }
 
     companion object {
@@ -105,5 +118,9 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener 
     override fun onChannelUpdated(channel: SceytChannel) {
         if (::binding.isInitialized.not()) return
         setDetails(channel)
+    }
+
+    override fun setStyle(style: ConversationInfoStyle) {
+        this.style = style
     }
 }

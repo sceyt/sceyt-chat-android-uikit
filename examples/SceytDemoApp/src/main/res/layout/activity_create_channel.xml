@@ -13,7 +13,7 @@
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
         app:title="@string/new_channel"
-        app:titleTextColor="@color/sceyt_color_text_themed" />
+        app:titleTextColor="@color/sceyt_color_text_primary" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragment_container"

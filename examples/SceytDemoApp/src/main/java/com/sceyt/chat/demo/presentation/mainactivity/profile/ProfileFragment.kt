@@ -18,6 +18,7 @@ import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.databinding.FragmentProfileBinding
 import com.sceyt.chat.demo.presentation.login.LoginActivity
 import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.hideKeyboard
@@ -29,7 +30,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.Ed
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
 import com.sceyt.chatuikit.presentation.uicomponents.profile.viewmodel.ProfileViewModel
-import com.sceyt.chatuikit.sceytstyles.UserStyle
 import com.sceyt.chatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -187,7 +187,7 @@ class ProfileFragment : Fragment() {
             SceytDialog(requireContext()).setTitle(getString(R.string.log_out_title))
                 .setDescription(getString(R.string.log_out_desc))
                 .setPositiveButtonTitle(getString(R.string.log_out))
-                .setPositiveButtonTextColor(requireContext().getCompatColor(SceytKitR.color.sceyt_color_red))
+                .setPositiveButtonTextColor(requireContext().getCompatColor(SceytKitR.color.sceyt_color_error))
                 .setPositiveButtonClickListener {
                     viewModel.logout()
                 }
@@ -250,6 +250,6 @@ class ProfileFragment : Fragment() {
 
     private fun setProfileImage(filePath: String?) {
         avatarUrl = filePath
-        binding.avatar.setImageUrl(filePath, UserStyle.userDefaultAvatar)
+        binding.avatar.setImageUrl(filePath, SceytChatUIKit.theme.userDefaultAvatar)
     }
 }

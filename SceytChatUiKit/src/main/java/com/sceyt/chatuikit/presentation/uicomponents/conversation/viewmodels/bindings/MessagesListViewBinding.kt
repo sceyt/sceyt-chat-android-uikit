@@ -14,7 +14,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytKitClient.myId
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.ClearedHistory
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.Deleted
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.Left
@@ -55,8 +55,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messa
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MAX_MULTISELECT_MESSAGES_COUNT
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -72,7 +70,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messageActionBridge.setMessagesListView(messagesListView)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
     if (channel.isSelf())
-        messagesListView.getPageStateView()?.setEmptyStateView(MessagesStyle.emptyStateSelfChannel)
+        messagesListView.getPageStateView()?.setEmptyStateView(messagesListView.style.emptyStateSelfChannel)
 
     clearPreparingThumbs()
 
@@ -445,7 +443,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             if (response is SceytResponse.Success) {
                 val data = response.data ?: return@Observer
                 viewModelScope.launch(Dispatchers.Default) {
-                    val user = ClientWrapper.currentUser ?: User(myId ?: return@launch)
+                    val user = ClientWrapper.currentUser ?: User(SceytChatUIKit.chatUIFacade.myId
+                            ?: return@launch)
                     messagesListView.getData().forEach { listItem ->
                         (listItem as? MessageItem)?.message?.let { message ->
                             if (data.messageIds.contains(message.id)) {
@@ -575,7 +574,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             is ClearedHistory -> messagesListView.clearData()
             is Left -> {
                 event.leftMembers.forEach { member ->
-                    if (member.id == myId && !channel.isPublic())
+                    if (member.id == SceytChatUIKit.chatUIFacade.myId && !channel.isPublic())
                         messagesListView.context.asActivity().finish()
                 }
             }
@@ -629,9 +628,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
             is MessageCommandEvent.OnMultiselectEvent -> {
                 val wasSelected = selectedMessagesMap.containsKey(event.message.tid)
+                val maxCount = SceytChatUIKit.config.maxMultiselectMessagesCount
 
-                if (!wasSelected && selectedMessagesMap.size >= MAX_MULTISELECT_MESSAGES_COUNT) {
-                    val errorMessage = String.format(messagesListView.getString(R.string.sceyt_rich_max_message_select_count, MAX_MULTISELECT_MESSAGES_COUNT.toString()))
+                if (!wasSelected && selectedMessagesMap.size >= maxCount) {
+                    val errorMessage = String.format(messagesListView.getString(R.string.sceyt_rich_max_message_select_count, maxCount.toString()))
                     customToastSnackBar(messagesListView, errorMessage)
                     return@setMessageCommandEventListener
                 }
@@ -678,7 +678,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             is MessageCommandEvent.UserClick -> {
-                if (event.userId == myId) return@setMessageCommandEventListener
+                if (event.userId == SceytChatUIKit.chatUIFacade.myId) return@setMessageCommandEventListener
                 viewModelScope.launch(Dispatchers.IO) {
                     val user = userInteractor.getUserDbById(event.userId)
                             ?: User(event.userId)

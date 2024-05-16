@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.persistence.di
 import android.content.Context
 import androidx.room.Room
 import com.sceyt.chatuikit.BuildConfig
+import com.sceyt.chatuikit.SceytChatUIFacade
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.PersistenceMiddleWareImpl
 import com.sceyt.chatuikit.persistence.SceytDatabase
@@ -98,6 +99,7 @@ internal val interactorModule = module {
     single<MessageReactionInteractor> { get<PersistenceMiddleWareImpl>() }
     single<ChannelMemberInteractor> { get<PersistenceMiddleWareImpl>() }
     single<UserInteractor> { get<PersistenceMiddleWareImpl>() }
+    single<SceytChatUIFacade> { SceytChatUIFacade(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 }
 
 internal val logicModule = module {
@@ -109,7 +111,7 @@ internal val logicModule = module {
     single<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     single<PersistenceMessageMarkerLogic> { PersistenceMessageMarkerLogicImpl(get(), get(), get()) }
     single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get()) }
-    single<FileTransferLogic> { FileTransferLogicImpl(get()) }
+    single<FileTransferLogic> { FileTransferLogicImpl(get(), get()) }
 }
 
 internal val cacheModule = module {

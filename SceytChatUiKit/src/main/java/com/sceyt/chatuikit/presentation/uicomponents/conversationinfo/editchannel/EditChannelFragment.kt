@@ -12,26 +12,27 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentEditChannelBinding
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.jsonToObject
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.common.SceytLoader.showLoading
-import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.editchannel.viewmodel.EditChannelViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.ChannelMembersFragment
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 import com.sceyt.chatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -45,6 +46,8 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     private var checkingUrl: String? = null
     protected lateinit var channel: SceytChannel
         private set
+    protected lateinit var style: ConversationInfoStyle
+        private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentEditChannelBinding.inflate(inflater, container, false)
@@ -57,7 +60,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
 
         getBundleArguments()
         initViewModel()
-        binding?.setupStyle()
+        binding?.applyStyle()
         binding?.initViews()
         setDetails()
     }
@@ -83,7 +86,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
                 checkSaveEnabled(false)
             binding?.uriWarning?.apply {
                 if (!isValid) {
-                    setUriStatusText(getString(R.string.the_url_exist_title), R.color.sceyt_color_red)
+                    setUriStatusText(getString(R.string.the_url_exist_title), R.color.sceyt_color_error)
                 } else
                     setUriStatusText(getString(R.string.valid_url_title), R.color.sceyt_color_green)
                 isVisible = true
@@ -175,9 +178,9 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             val isValidUrl = "^\\w{5,50}".toPattern().matcher(url).matches()
             if (!isValidUrl) {
                 if (inputUri.text.toString().length < 5 || inputUri.text.toString().length > 50)
-                    setUriStatusText(getString(R.string.url_length_validation_text), R.color.sceyt_color_red)
+                    setUriStatusText(getString(R.string.url_length_validation_text), R.color.sceyt_color_error)
                 else
-                    setUriStatusText(getString(R.string.url_characters_validation_text), R.color.sceyt_color_red)
+                    setUriStatusText(getString(R.string.url_characters_validation_text), R.color.sceyt_color_error)
                 uriWarning.isVisible = true
             }
             return isValidUrl
@@ -246,8 +249,8 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         } else requireActivity().onBackPressedDispatcher.onBackPressed()
     }
 
-    private fun SceytFragmentEditChannelBinding.setupStyle() {
-        layoutToolbar.setIconsTint(SceytKitConfig.sceytColorAccent)
+    private fun SceytFragmentEditChannelBinding.applyStyle() {
+        layoutToolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
     }
 
     companion object {

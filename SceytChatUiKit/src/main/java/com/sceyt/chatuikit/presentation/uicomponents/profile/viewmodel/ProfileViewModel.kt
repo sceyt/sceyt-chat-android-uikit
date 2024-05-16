@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.User
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -110,10 +110,10 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun logout() {
         viewModelScope.launch(Dispatchers.IO) {
-            SceytKitClient.logOut { success, errorMessage ->
+            SceytChatUIKit.chatUIFacade.logOut { success, errorMessage ->
                 if (success)
                     _logOutLiveData.postValue(true)
-                else _logOutErrorLiveData.postValue(errorMessage)
+                else _logOutErrorLiveData.postValue(errorMessage ?: "")
             }
         }
     }

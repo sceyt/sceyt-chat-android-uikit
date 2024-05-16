@@ -6,7 +6,7 @@ import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 
 fun Member.getPresentableName(): String {
@@ -34,7 +34,7 @@ fun SceytMember.getPresentableNameWithYou(context: Context): String {
 }
 
 fun User.getPresentableNameWithYou(context: Context): String {
-    if (SceytKitClient.myId == id)
+    if (SceytChatUIKit.chatUIFacade.myId == id)
         return context.getString(R.string.sceyt_you)
     return getPresentableNameCheckDeleted(context)
 }

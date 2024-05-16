@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <declare-styleable name="SearchInputView">
+    <declare-styleable name="SearchChannelInput">
         <attr name="sceytUiSearchIcon" format="reference" />
         <attr name="sceytUiClearIcon" format="reference" />
         <attr name="sceytUiHintText" format="string" localization="suggested" />
-        <attr name="sceytUiBackgroundColor" format="reference" />
-        <attr name="sceytUiTextColor" format="reference" />
-        <attr name="sceytUiHintTextColor" format="reference" />
+        <attr name="sceytUiBackgroundColor" format="reference|color" />
+        <attr name="sceytUiTextColor" format="reference|color" />
+        <attr name="sceytUiHintTextColor" format="reference|color" />
         <attr name="sceytUiDisableDebouncedSearch" format="boolean" />
     </declare-styleable>
 </resources>

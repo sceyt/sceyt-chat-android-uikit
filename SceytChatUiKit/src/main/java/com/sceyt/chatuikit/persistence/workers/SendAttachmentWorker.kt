@@ -19,16 +19,16 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.initPendingIntent
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.dao.FileChecksumDao
 import com.sceyt.chatuikit.persistence.entity.FileChecksumEntity
@@ -39,6 +39,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData.Companion.withPrettySizes
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
@@ -46,7 +47,6 @@ import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.IS_SHAR
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.MESSAGE_TID
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.NOTIFICATION_ID
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.UPLOAD_CHANNEL_ID
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.runBlocking
@@ -85,6 +85,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
     private val fileTransferService: FileTransferService by inject()
     private val attachmentLogic: PersistenceAttachmentLogic by inject()
     private val messageLogic: PersistenceMessagesLogic by inject()
+    private val channelLogic: PersistenceChannelsLogic by inject()
     private val fileChecksumDao: FileChecksumDao by inject()
 
     private suspend fun checkToUploadAttachmentsBeforeSend(tmpMessage: SceytMessage, isSharing: Boolean): Pair<Boolean, String?> {
@@ -176,7 +177,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         return if (result.first && result.second.isNotNullOrBlank() && !isStopped) {
 
             ConnectionEventsObserver.awaitToConnectSceyt()
-            val response = SceytKitClient.messageInteractor.sendMessageWithUploadedAttachments(tmpMessage.channelId, tmpMessage.toMessage())
+            val response = messageLogic.sendMessageWithUploadedAttachments(tmpMessage.channelId, tmpMessage.toMessage())
             if (response is SceytResponse.Success) {
                 response.data?.let {
                     messageLogic.attachmentSuccessfullySent(it)
@@ -209,9 +210,9 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setSmallIcon(R.drawable.sceyt_ic_upload)
 
-        val clickData = SceytKitConfig.backgroundUploadNotificationClickData
+        val clickData = SceytChatUIKit.config.uploadNotificationClickHandleData
         val channel = if (clickData != null)
-            SceytKitClient.channelInteractor.getChannelFromDb(channelId) else null
+            channelLogic.getChannelFromDb(channelId) else null
 
         if (channel != null && clickData != null) {
             val pendingIntent = applicationContext.initPendingIntent(Intent(applicationContext, clickData.classToOpen).apply {

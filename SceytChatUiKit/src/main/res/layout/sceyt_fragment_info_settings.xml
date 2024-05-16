@@ -6,6 +6,7 @@
     android:orientation="vertical">
 
     <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/layoutDetails"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
@@ -21,15 +22,15 @@
             android:paddingHorizontal="16dp"
             android:paddingVertical="10dp"
             android:text="@string/sceyt_notifications"
-            android:textColor="@color/sceyt_color_text_themed"
+            android:textColor="@color/sceyt_color_text_primary"
             android:textSize="16sp"
             android:theme="@style/SceytSwitchStyle" />
 
-        <View
-            android:id="@+id/divider1"
+        <com.google.android.material.divider.MaterialDivider
+            android:id="@+id/border"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/sceyt_color_divider"
+            android:background="@color/sceyt_color_border"
             android:visibility="gone"
             tools:visibility="visible" />
 
@@ -43,7 +44,7 @@
             android:paddingHorizontal="16dp"
             android:paddingVertical="10dp"
             android:text="@string/auto_delete_messages_off"
-            android:textColor="@color/sceyt_color_text_themed"
+            android:textColor="@color/sceyt_color_text_primary"
             android:textSize="16sp"
             android:theme="@style/SceytSwitchStyle"
             android:visibility="gone"
@@ -51,10 +52,10 @@
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
-    <View
-        android:id="@+id/divider"
+    <androidx.legacy.widget.Space
+        android:id="@+id/space"
         android:layout_width="match_parent"
-        android:layout_height="16dp"
-        android:background="@color/sceyt_color_bg" />
+        android:layout_height="wrap_content"
+        tools:layout_height="16dp" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

@@ -8,18 +8,18 @@ import com.sceyt.chat.models.link.LoadLinkDetailsRequest
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_callbacks.AttachmentsCallback
 import com.sceyt.chat.sceyt_callbacks.LinkDetailsCallback
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.repositories.AttachmentsRepository
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 class AttachmentsRepositoryImpl : AttachmentsRepository {
 
     private fun getQuery(conversationId: Long, types: List<String>) = AttachmentListQuery.Builder(conversationId)
-        .setLimit(SceytKitConfig.ATTACHMENTS_LOAD_SIZE)
+        .setLimit(SceytChatUIKit.config.attachmentsLoadSize)
         .withTypes(types)
         .build()
 

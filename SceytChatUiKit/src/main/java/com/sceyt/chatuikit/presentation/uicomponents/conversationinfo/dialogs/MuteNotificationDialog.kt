@@ -5,7 +5,10 @@ import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytDialogMuteNotificationsBinding
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 
 class MuteNotificationDialog(
         context: Context,
@@ -18,6 +21,7 @@ class MuteNotificationDialog(
         binding = SceytDialogMuteNotificationsBinding.inflate(LayoutInflater.from(context))
         setContentView(binding.root)
         initView()
+        binding.applyStyle()
         window?.setWindowAnimations(R.style.SceytDialogWindowAnimation)
     }
 
@@ -43,5 +47,10 @@ class MuteNotificationDialog(
 
     fun setTitles(title: String) {
         binding.tvTitle.text = title
+    }
+
+    private fun SceytDialogMuteNotificationsBinding.applyStyle() {
+        setTextViewsTextColor(listOf(tvTitle, muteOneHour, muteTwoHour, muteForever),
+            context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
     }
 }

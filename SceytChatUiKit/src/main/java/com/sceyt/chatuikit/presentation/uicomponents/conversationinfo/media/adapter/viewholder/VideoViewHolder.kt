@@ -24,16 +24,18 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUploa
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
+                      private val style: ConversationInfoMediaStyle,
                       private val clickListeners: AttachmentClickListenersImpl,
                       private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     init {
-        binding.setupStyle()
+        binding.applyStyle()
+
         binding.root.setOnClickListener {
             clickListeners.onAttachmentClick(it, fileItem)
         }
@@ -107,7 +109,7 @@ class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
 
     override fun needThumbFor() = ThumbFor.ConversationInfo
 
-    private fun SceytItemChannelVideoBinding.setupStyle() {
-        tvDuration.setDrawableStart(ConversationInfoStyle.videoDurationIcon)
+    private fun SceytItemChannelVideoBinding.applyStyle() {
+        tvDuration.setDrawableStart(style.videoDurationIcon)
     }
 }

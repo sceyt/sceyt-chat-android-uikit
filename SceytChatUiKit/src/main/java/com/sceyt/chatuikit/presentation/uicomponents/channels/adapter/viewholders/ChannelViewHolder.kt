@@ -13,9 +13,8 @@ import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -43,9 +42,8 @@ import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelLis
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
-import com.sceyt.chatuikit.sceytstyles.UserStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.text.NumberFormat
 import java.util.Locale
@@ -54,9 +52,10 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                              private val channelStyle: ChannelListViewStyle,
                              private var listeners: ChannelClickListeners.ClickListeners,
                              private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)? = null,
-                             private val userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder) : BaseChannelViewHolder(binding.root) {
+                             private val userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter) : BaseChannelViewHolder(binding.root) {
 
     protected var isSelf = false
+    private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
 
     init {
         with(binding) {
@@ -153,7 +152,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 message.incoming -> {
                     val from = channel.lastMessage?.user
                     val userFirstName = from?.let {
-                        userNameBuilder?.invoke(from)
+                        userNameFormatter?.format(from)
                                 ?: from.getPresentableNameCheckDeleted(context)
                     }
                     if (channel.isGroup && !userFirstName.isNullOrBlank()) {
@@ -169,7 +168,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 .append(fromText)
                 .append(message.getAttachmentIconAsString(channelStyle))
                 .append(body)
-                .setForegroundColorId(R.color.sceyt_color_text_themed)
+                .setForegroundColorId(SceytChatUIKit.theme.textPrimaryColor)
                 .setIndexSpan(0, fromText.length)
                 .build()
 
@@ -184,8 +183,9 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         val removeReactions = pendingAddOrRemoveReaction?.get(false) ?: emptyList()
         val lastReaction = addReactions?.maxByOrNull { it.createdAt }?.toSceytReaction()
                 ?: channel.newReactions?.filter {
-                    it.user?.id != SceytKitClient.myId &&
-                            removeReactions.none { rm -> rm.key == it.key && rm.messageId == it.messageId && it.user?.id == SceytKitClient.myId }
+                    it.user?.id != myId && removeReactions.none { rm ->
+                        rm.key == it.key && rm.messageId == it.messageId && it.user?.id == myId
+                    }
                 }?.maxByOrNull { it.id } ?: return false
 
         val message = ChatReactionMessagesCache.getMessageById(lastReaction.messageId)
@@ -197,12 +197,12 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
             val reactUserName = when {
                 channel.isGroup -> {
-                    val name = lastReaction.user?.let { SceytKitConfig.userNameBuilder?.invoke(it) }
+                    val name = lastReaction.user?.let { SceytChatUIKit.userNameFormatter?.format(it) }
                             ?: lastReaction.user?.getPresentableNameWithYou(context)
                     "$name ${reactedWord.lowercase()}"
                 }
 
-                lastReaction.user?.id == SceytKitClient.myId -> "${itemView.getString(R.string.sceyt_you)} ${itemView.getString(R.string.sceyt_reacted).lowercase()}"
+                lastReaction.user?.id == myId -> "${itemView.getString(R.string.sceyt_you)} ${itemView.getString(R.string.sceyt_reacted).lowercase()}"
                 else -> itemView.getString(R.string.sceyt_reacted)
             }
 
@@ -226,7 +226,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             val text = SpannableStringBuilder("$draft: ").apply {
                 append(MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(draftMessage.message.toString(),
                     draftMessage.mentionUsers?.toTypedArray(), draftMessage.bodyAttributes))
-                setSpan(ForegroundColorSpan(context.getCompatColor(R.color.sceyt_color_red)), 0, draft.length + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                setSpan(ForegroundColorSpan(context.getCompatColor(SceytChatUIKit.theme.errorColor)), 0, draft.length + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
             textView.text = text
             textView.setTypeface(null, Typeface.NORMAL)
@@ -241,7 +241,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
                 context.getString(R.string.self_notes)
             } else {
                 channel.getPeer()?.user?.let { from ->
-                    userNameBuilder?.invoke(from) ?: from.getPresentableNameCheckDeleted(context)
+                    userNameFormatter?.format(from) ?: from.getPresentableNameCheckDeleted(context)
                 }
             }
         }
@@ -257,21 +257,23 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
     open fun setPinState(channel: SceytChannel, pinImage: ImageView) {
         val isPinned = channel.pinned
+        pinImage.setImageDrawable(channelStyle.pinIcon)
         pinImage.isVisible = isPinned
         binding.viewPinned.isVisible = isPinned
     }
 
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: ImageView) {
         if (isSelf) {
-            binding.avatar.setImageUrl(null, UserStyle.notesAvatar)
-            binding.avatar.setAvatarColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+            binding.avatar.setImageUrl(null, SceytChatUIKit.theme.notesAvatar)
+            binding.avatar.setAvatarColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
             return
         }
         binding.avatar.setAvatarColor(0)
         if (channel.isDirect() && channel.isPeerDeleted()) {
-            binding.avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
+            binding.avatar.setImageUrl(null, SceytChatUIKit.theme.deletedUserAvatar)
         } else
-            binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup) 0 else UserStyle.userDefaultAvatar)
+            binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup)
+                0 else SceytChatUIKit.theme.userDefaultAvatar)
     }
 
     open fun setLastMessageStatusAndDate(channel: SceytChannel, dateStatusView: SceytDateStatusView) {
@@ -322,7 +324,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         if (data.typing) {
             textView.setTypeface(null, Typeface.ITALIC)
             if (channel.isGroup) {
-                val name = userNameBuilder?.invoke(data.member.user)
+                val name = userNameFormatter?.format(data.member.user)
                         ?: data.member.getPresentableFirstName()
                 textView.text = "$name ${context.getString(R.string.sceyt_typing_)}"
             } else
@@ -355,22 +357,21 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
     }
 
     private fun SceytItemChannelBinding.setChannelItemStyle() {
-        with(root.context) {
-            channelTitle.setTextColor(channelStyle.titleColor)
-            lastMessage.setTextColor(channelStyle.lastMessageTextColor)
-            unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(getCompatColor(channelStyle.unreadCountColor))
-            icMention.backgroundTintList = ColorStateList.valueOf(getCompatColor(channelStyle.unreadCountColor))
-            onlineStatus.setIndicatorColor(channelStyle.onlineStatusColor)
-            viewPinned.setBackgroundColor(channelStyle.pinnedChannelBackgroundColor)
-            dateStatus.buildStyle()
-                .setStatusIconSize(channelStyle.statusIconSize)
-                .setDateColor(channelStyle.dateTextColor)
-                .build()
+        channelTitle.setTextColor(channelStyle.titleColor)
+        lastMessage.setTextColor(channelStyle.lastMessageTextColor)
+        unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(channelStyle.unreadCountColor)
+        icMention.backgroundTintList = ColorStateList.valueOf(channelStyle.unreadCountColor)
+        onlineStatus.setIndicatorColor(channelStyle.onlineStatusColor)
+        viewPinned.setBackgroundColor(channelStyle.pinnedChannelBackgroundColor)
+        dateStatus.buildStyle()
+            .setStatusIconSize(channelStyle.statusIconSize)
+            .setDateColor(channelStyle.dateTextColor)
+            .setEditedTitle(context.getString(R.string.sceyt_edited))
+            .build()
 
-            divider.isVisible = if (channelStyle.enableDivider) {
-                divider.setBackgroundColor(channelStyle.dividerColor)
-                true
-            } else false
-        }
+        divider.isVisible = if (channelStyle.enableDivider) {
+            divider.setBackgroundColor(channelStyle.dividerColor)
+            true
+        } else false
     }
 }

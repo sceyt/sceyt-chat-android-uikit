@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root
 
-import android.content.res.ColorStateList
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
@@ -9,7 +8,7 @@ import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
@@ -17,22 +16,25 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytMessageLinkPreviewContainerBinding
 import com.sceyt.chatuikit.extensions.calculateScaleWidthHeight
 import com.sceyt.chatuikit.extensions.dpToPx
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.glideRequestListener
+import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setTextAndVisibility
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.OutLinkMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 abstract class BaseLinkMsgViewHolder(
         private val linkPreview: LinkPreviewHelper,
         view: View,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners? = null,
         displayedListener: ((MessageListItem) -> Unit)? = null,
-        userNameBuilder: ((User) -> String)? = null,
-) : BaseMsgViewHolder(view, messageListeners, displayedListener, userNameBuilder) {
+        userNameFormatter: UserNameFormatter? = null,
+) : BaseMsgViewHolder(view, style, messageListeners, displayedListener, userNameFormatter) {
     private var linkPreviewContainerBinding: SceytMessageLinkPreviewContainerBinding? = null
     private val maxSize by lazy {
         bubbleMaxWidth - dpToPx(28f) //(2*8 preview container + 2*6 root paddings ) is margins
@@ -78,7 +80,7 @@ abstract class BaseLinkMsgViewHolder(
             }
 
         with(linkPreviewContainerBinding ?: return) {
-            setupStyle()
+            applyStyle()
             if (!data.imageUrl.isNullOrBlank()) {
                 setImageSize(previewImage, data)
                 val thumb = message.files?.firstOrNull {
@@ -130,10 +132,12 @@ abstract class BaseLinkMsgViewHolder(
         image.isVisible = true
     }
 
-    private fun SceytMessageLinkPreviewContainerBinding.setupStyle() {
+    private fun SceytMessageLinkPreviewContainerBinding.applyStyle() {
         val color = if (this@BaseLinkMsgViewHolder is OutLinkMsgViewHolder)
-            ColorStateList.valueOf(context.getCompatColor(MessagesStyle.outLinkPreviewBackgroundColor))
-        else ColorStateList.valueOf(context.getCompatColor(MessagesStyle.incLinkPreviewBackgroundColor))
-        root.backgroundTintList = color
+            style.outLinkPreviewBackgroundColor
+        else style.incLinkPreviewBackgroundColor
+        root.setBackgroundTint(color)
+        tvLinkTitle.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        tvLinkDesc.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
     }
 }

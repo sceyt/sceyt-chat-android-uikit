@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/sceyt_color_surface_1"
     android:visibility="gone"
     tools:visibility="visible">
 
@@ -11,7 +12,7 @@
         android:id="@+id/view3"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -38,6 +39,21 @@
             app:layout_constraintTop_toTopOf="parent"
             app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize5"
             tools:src="@tools:sample/backgrounds/scenic" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/fileAttachment"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/sceyt_bg_circle"
+            android:scaleType="center"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize5"
+            tools:src="@drawable/sceyt_ic_file_filled" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -74,7 +90,7 @@
         android:layout_marginBottom="13dp"
         android:ellipsize="middle"
         android:singleLine="true"
-        android:textColor="@color/sceyt_color_gray_800"
+        android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="@dimen/smallTextSize"
         app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -88,6 +104,7 @@
         android:id="@+id/icCancelReply"
         android:layout_width="24dp"
         android:layout_height="24dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="6dp"
         android:scaleType="center"
         android:tint="#898B99"

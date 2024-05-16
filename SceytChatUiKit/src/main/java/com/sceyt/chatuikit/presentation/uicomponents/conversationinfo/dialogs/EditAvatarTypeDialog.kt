@@ -8,10 +8,11 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytDialogEditAvatarTypeBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 
 class EditAvatarTypeDialog(
         context: Context,
@@ -25,7 +26,7 @@ class EditAvatarTypeDialog(
         binding = SceytDialogEditAvatarTypeBinding.inflate(LayoutInflater.from(context))
         setContentView(binding.root)
         binding.initView()
-        binding.setupStyle()
+        binding.applyStyle()
 
         window?.let {
             it.setWindowAnimations(R.style.SceytDialogFromBottomAnimation)
@@ -59,8 +60,14 @@ class EditAvatarTypeDialog(
         ChooseFromGallery, TakePhoto, Delete
     }
 
-    private fun SceytDialogEditAvatarTypeBinding.setupStyle() {
+    private fun SceytDialogEditAvatarTypeBinding.applyStyle() {
         setTextViewsDrawableColor(listOf(tvTakePhoto, tvGallery),
-            context.getCompatColor(SceytKitConfig.sceytColorAccent))
+            context.getCompatColor(SceytChatUIKit.theme.accentColor))
+
+        setTextViewsTextColor(listOf(tvTakePhoto, tvGallery),
+            context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+
+        setTextViewsTextColor(listOf(tvDelete),
+            context.getCompatColor(SceytChatUIKit.theme.errorColor))
     }
 }

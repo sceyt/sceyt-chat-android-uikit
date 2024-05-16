@@ -8,13 +8,13 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.core.view.marginLeft
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.calculateScaleWidthHeight
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.setMargins
+import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.filetransfer.ThumbData
@@ -26,18 +26,20 @@ import com.sceyt.chatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 abstract class BaseMediaMessageViewHolder(
         val view: View,
+        style: MessageItemStyle,
         messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)? = null,
-        userNameBuilder: ((User) -> String)?,
+        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(view, messageListeners, displayedListener, userNameBuilder) {
+) : BaseMsgViewHolder(view, style, messageListeners, displayedListener, userNameFormatter) {
     protected val viewHolderHelper by lazy { AttachmentViewHolderHelper(itemView) }
     protected lateinit var fileItem: FileListItem
     protected var resizedImageSize: Size? = null

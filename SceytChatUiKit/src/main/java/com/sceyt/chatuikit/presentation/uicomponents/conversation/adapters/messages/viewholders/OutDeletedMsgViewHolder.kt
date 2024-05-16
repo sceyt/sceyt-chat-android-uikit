@@ -1,17 +1,19 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemOutDeletedMessageBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 class OutDeletedMsgViewHolder(
-        private val binding: SceytItemOutDeletedMessageBinding
-) : BaseMsgViewHolder(binding.root) {
+        private val binding: SceytItemOutDeletedMessageBinding,
+        private val style: MessageItemStyle
+) : BaseMsgViewHolder(binding.root, style) {
 
     init {
         binding.setMessageItemStyle()
@@ -37,8 +39,7 @@ class OutDeletedMsgViewHolder(
     override val selectMessageView get() = binding.selectView
 
     private fun SceytItemOutDeletedMessageBinding.setMessageItemStyle() {
-        with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColor(MessagesStyle.outBubbleColor))
-        }
+        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outBubbleColor)
+        messageBody.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
     }
 }
