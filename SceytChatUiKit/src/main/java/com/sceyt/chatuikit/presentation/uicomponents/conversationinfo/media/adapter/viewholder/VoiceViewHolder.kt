@@ -2,8 +2,8 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.ada
 
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelVoiceBinding
 import com.sceyt.chatuikit.extensions.TAG_REF
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
@@ -20,20 +20,20 @@ import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 
 class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
                       private val clickListener: AttachmentClickListenersImpl,
-                      private val userNameBuilder: ((User) -> String)?,
+                      private val userNameFormatter: UserNameFormatter?,
                       private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     private var lastFilePath: String? = ""
 
     init {
-        binding.setupStyle()
+        binding.applyStyle()
         binding.root.setOnClickListener {
             clickListener.onAttachmentClick(it, item = fileItem)
         }
@@ -62,7 +62,7 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
         with(binding) {
             val user = (item as ChannelFileItem.Voice).data.user
             tvFileName.text = user?.let {
-                userNameBuilder?.invoke(it) ?: it.getPresentableName()
+                userNameFormatter?.format(it) ?: it.getPresentableName()
             } ?: ""
             tvDate.text = DateTimeUtil.getDateTimeString(attachment.createdAt, "dd.MM.yy • HH:mm")
 
@@ -158,9 +158,11 @@ class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
 
-    private fun SceytItemChannelVoiceBinding.setupStyle() {
-        icFile.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        loadProgress.setIconTintColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        loadProgress.setProgressColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+    private fun SceytItemChannelVoiceBinding.applyStyle() {
+        val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
+        icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
+        loadProgress.setIconTintColor(accentColor)
+        loadProgress.setProgressColor(accentColor)
     }
 }

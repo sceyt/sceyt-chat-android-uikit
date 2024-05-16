@@ -8,18 +8,22 @@ import android.graphics.drawable.GradientDrawable
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.graphics.toColorInt
-import androidx.recyclerview.widget.ItemTouchHelper.*
+import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_IDLE
+import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_SWIPE
+import androidx.recyclerview.widget.ItemTouchHelper.Callback
+import androidx.recyclerview.widget.ItemTouchHelper.RIGHT
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.extensions.dpToPx
-import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.screenWidthPx
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import kotlin.math.abs
 import kotlin.math.min
 
 
-class MessageSwipeController(private val context: Context, private val swipeControllerActions: SwipeControllerActions) : Callback() {
+class MessageSwipeController(context: Context,
+                             private val style: MessageItemStyle,
+                             private val swipeControllerActions: SwipeControllerActions) : Callback() {
 
     private var imageDrawable: Drawable? = null
     private lateinit var shareRound: Drawable
@@ -32,7 +36,7 @@ class MessageSwipeController(private val context: Context, private val swipeCont
 
     override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
         mView = viewHolder.itemView
-        imageDrawable = context.getCompatDrawable(MessagesStyle.swipeReplyIcon)
+        imageDrawable = style.swipeReplyIcon
         shareRound = GradientDrawable().apply {
             shape = GradientDrawable.OVAL
             setColor("#3D000000".toColorInt())

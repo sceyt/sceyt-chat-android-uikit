@@ -3,14 +3,14 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversationheader
 import android.content.Context
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getPresentableFirstName
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -24,7 +24,7 @@ class HeaderTypingUsersHelper(
     private val typingCancelHelper by lazy { TypingCancelHelper() }
     private var typingTextBuilder: ((SceytMember) -> String)? = null
     private val _typingUsers by lazy { mutableSetOf<SceytMember>() }
-    private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
     private val debounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
     private var updateTypingJob: Job? = null
     var isTyping: Boolean = false
@@ -63,7 +63,7 @@ class HeaderTypingUsersHelper(
     private fun initTypingTitle(member: SceytMember): String {
         return typingTextBuilder?.invoke(member) ?: if (isGroup)
             buildString {
-                append(userNameBuilder?.invoke(member.user)
+                append(userNameFormatter?.format(member.user)
                         ?: member.getPresentableFirstName().take(10))
                 append(" ${context.getString(R.string.sceyt_typing)}")
             }
@@ -105,8 +105,8 @@ class HeaderTypingUsersHelper(
         typingTextBuilder = builder
     }
 
-    fun setUserNameBuilder(builder: (User) -> String) {
-        userNameBuilder = builder
+    fun setUserNameFormatter(formatter: UserNameFormatter) {
+        userNameFormatter = formatter
     }
 
     val typingUsers get() = _typingUsers.toList()

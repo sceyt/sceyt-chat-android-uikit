@@ -34,13 +34,14 @@
         android:id="@+id/layoutDetails"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/sceyt_bg_out_message"
+        android:background="@drawable/sceyt_bg_corners_18"
         android:paddingTop="2dp"
         app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        tools:backgroundTint="#E3E7FF">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvForwarded"
@@ -66,15 +67,16 @@
 
         <ViewStub
             android:id="@+id/viewReply"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
             android:layout_marginTop="5dp"
             android:layout="@layout/sceyt_recycler_reply_container"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvForwarded"
+            app:layout_goneMarginTop="6dp"
             tools:visibility="visible" />
 
         <com.sceyt.chatuikit.presentation.customviews.SceytClickableTextView
@@ -84,7 +86,7 @@
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="8dp"
-            android:textColor="@color/sceyt_color_text_themed"
+            android:textColor="@color/sceyt_color_text_primary"
             android:textSize="@dimen/mediumTextSize"
             app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
@@ -105,7 +107,7 @@
             android:paddingEnd="5dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/layoutDetails"
-            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
+            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_text_secondary"
             app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
             app:sceytDateStatusViewFirstStatus="false"
             app:sceytDateStatusViewStatusIconMargin="5dp"

@@ -19,7 +19,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
@@ -49,8 +49,8 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.common.KeyboardEventListener
-import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.customviews.SceytPageStateView
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -74,9 +74,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.popups.PopupRe
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.popups.PopupReactionsAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.forward.SceytForwardActivity
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.MAX_SELF_REACTIONS_SIZE
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -95,17 +93,17 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
     private var multiselectDestination: Map<Long, SceytMessage>? = null
     private var forceDisabledActions = false
+    val style: MessagesListViewStyle
     var enabledActions = true
         private set
 
     init {
-        if (attrs != null) {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView)
-            MessagesStyle.updateWithAttributes(a)
-            a.recycle()
-        }
+        style = MessagesListViewStyle.Builder(context, attrs).build()
 
-        messagesRV = MessagesRV(context)
+        if (background == null)
+            setBackgroundColor(style.backgroundColor)
+
+        messagesRV = MessagesRV(context).also { it.setStyle(style) }
         messagesRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
         messagesRV.clipToPadding = clipToPadding
         setPadding(0, 0, 0, 0)
@@ -114,6 +112,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         addView(ScrollToDownView(context).also { toDownView ->
             scrollDownIcon = toDownView
+            scrollDownIcon.setStyle(style)
             messagesRV.setScrollDownControllerListener { show ->
                 scrollDownIcon.isVisible = show
             }
@@ -128,8 +127,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (!isInEditMode)
             addView(SceytPageStateView(context).also {
                 pageStateView = it
-                it.setLoadingStateView(MessagesStyle.loadingState)
-                it.setEmptyStateView(MessagesStyle.emptyState)
+                it.setLoadingStateView(style.loadingState)
+                it.setEmptyStateView(style.emptyState)
             })
 
         initClickListeners()
@@ -271,8 +270,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (message.deliveryStatus == DeliveryStatus.Pending) return null
         val reactions = message.messageReactions?.map { it.reaction.key }?.toArrayList()
                 ?: arrayListOf()
-        if (reactions.size < MAX_SELF_REACTIONS_SIZE)
-            reactions.addAll(SceytKitConfig.defaultReactions.minus(reactions.toSet()).take(MAX_SELF_REACTIONS_SIZE - reactions.size))
+        if (reactions.size < SceytChatUIKit.config.maxSelfReactionsSize)
+            reactions.addAll(SceytChatUIKit.theme.defaultReactions.minus(reactions.toSet())
+                .take(SceytChatUIKit.config.maxSelfReactionsSize - reactions.size))
 
         return PopupReactions(context).showPopup(view, message, reactions, object : PopupReactionsAdapter.OnItemClickListener {
             override fun onReactionClick(reaction: ReactionItem.Reaction) {
@@ -626,11 +626,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun setViewHolderFactory(factory: MessageViewHolderFactory) {
         messagesRV.setViewHolderFactory(factory.also {
             it.setMessageListener(defaultClickListeners)
+            it.setStyle(style)
         })
     }
 
-    fun setUserNameBuilder(builder: (User) -> String) {
-        messagesRV.getViewHolderFactory().setUserNameBuilder(builder)
+    fun setuserNameFormatter(builder: (User) -> String) {
+        messagesRV.getViewHolderFactory().setUserNameFormatter(builder)
     }
 
     fun setNeedDownloadListener(callBack: (NeedMediaInfoData) -> Unit) {
@@ -802,7 +803,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         context.getFragmentManager()?.let {
             BottomSheetReactionsInfoFragment.newInstance(item.message).also { fragment ->
                 fragment.setClickListener { reaction ->
-                    if (reaction.user?.id == SceytKitClient.myId)
+                    if (reaction.user?.id == SceytChatUIKit.chatUIFacade.myId)
                         reactionClickListeners.onRemoveReaction(ReactionItem.Reaction(SceytReactionTotal(reaction.key, containsSelf = true), item.message, reaction.pending))
                 }
             }.show(it, null)

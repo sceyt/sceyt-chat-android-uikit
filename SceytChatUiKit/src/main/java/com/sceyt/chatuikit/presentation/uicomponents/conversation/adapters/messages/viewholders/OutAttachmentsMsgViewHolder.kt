@@ -3,29 +3,29 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.mess
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemOutAttachmentsMessageBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setTextAndDrawableColor
+import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
+import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
-import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 class OutAttachmentsMsgViewHolder(
         private val binding: SceytItemOutAttachmentsMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        userNameBuilder: ((User) -> String)?,
+        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(binding.root, messageListeners, userNameBuilder = userNameBuilder) {
+) : BaseMsgViewHolder(binding.root, style, messageListeners, userNameFormatter = userNameFormatter) {
     private var filedAdapter: MessageFilesAdapter? = null
 
     init {
@@ -102,9 +102,10 @@ class OutAttachmentsMsgViewHolder(
 
                 setRecycledViewPool(viewPoolFiles)
                 itemAnimator = null
-                adapter = MessageFilesAdapter(attachments, FilesViewHolderFactory(context = context, messageListeners, needMediaDataCallback)).also {
-                    filedAdapter = it
-                }
+                adapter = MessageFilesAdapter(attachments,
+                    FilesViewHolderFactory(context = context, messageListeners, needMediaDataCallback).apply {
+                        setStyle(style)
+                    }).also { filedAdapter = it }
             }
         } else filedAdapter?.notifyUpdate(attachments)
     }
@@ -115,10 +116,9 @@ class OutAttachmentsMsgViewHolder(
     }
 
     private fun SceytItemOutAttachmentsMessageBinding.setMessageItemStyle() {
-        with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColor(MessagesStyle.outBubbleColor))
-            tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
-        }
+        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outBubbleColor)
+        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
+        messageBody.applyStyle(style)
     }
 
     override fun setMaxWidth() {

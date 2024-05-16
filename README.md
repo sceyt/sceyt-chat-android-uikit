@@ -107,7 +107,7 @@ Here's how you can customize various aspects:
 
 ```kotlin
 // Set the primary accent color for the SceytKit UI elements to enhance visual appeal.
-SceytKitConfig.sceytColorAccent = R.color.colorAccent
+SceytChatUIKit.theme.accentColor = R.color.colorAccent
 
 // Set avatar colors in SceytKit to assign a color array for default user avatars and channel icons.
 SceytKitConfig.avatarColors = arrayOf("#FFC107", "#FF9800", "#FF5722", "#795548")

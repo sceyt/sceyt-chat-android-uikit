@@ -4,17 +4,17 @@ import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.persistence.repositories.ProfileRepository
-import com.sceyt.chatuikit.persistence.repositories.UsersRepository
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.dao.UserDao
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
 import com.sceyt.chatuikit.persistence.mappers.toUser
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.persistence.repositories.ProfileRepository
+import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
+import com.sceyt.chatuikit.persistence.repositories.UsersRepository
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -126,7 +126,7 @@ internal class PersistenceUsersLogicImpl(
         val status = ClientWrapper.currentUser?.presence?.status
         val response = suspendCancellableCoroutine<SceytResponse<Boolean>> { continuation ->
             ClientWrapper.setPresence(presenceState, if (status.isNullOrBlank())
-                SceytKitConfig.presenceStatusText else status) {
+                SceytChatUIKit.config.presenceStatusText else status) {
                 if (it.isOk) {
                     continuation.safeResume(SceytResponse.Success(true))
                 } else continuation.safeResume(SceytResponse.Error(it.error))

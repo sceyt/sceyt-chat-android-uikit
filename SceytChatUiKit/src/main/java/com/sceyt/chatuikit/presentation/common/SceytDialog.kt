@@ -6,9 +6,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.annotation.StringRes
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytDialogViewBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle) {
     private val binding: SceytDialogViewBinding by lazy { SceytDialogViewBinding.inflate(LayoutInflater.from(context)) }
@@ -125,8 +125,8 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle
                 setNegativeButtonTitle(negativeBtnTitle)
                 setPositiveButtonClickListener(positiveCb)
                 setNegativeButtonClickListener(negativeCb)
-                setPositiveButtonTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-                setNegativeButtonTextColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+                setPositiveButtonTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+                setNegativeButtonTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
                 show()
                 setOnDismissListener { lastDialog = null }
                 lastDialog = this

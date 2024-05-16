@@ -4,12 +4,12 @@ import android.content.res.ColorStateList
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemOutVideoMessageBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setDrawableStart
-import com.sceyt.chatuikit.extensions.setTextAndDrawableColor
+import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
+import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Downloaded
@@ -27,20 +27,20 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
-import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 class OutVideoMsgViewHolder(
         private val binding: SceytItemOutVideoMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        userNameBuilder: ((User) -> String)?,
+        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, messageListeners, userNameBuilder = userNameBuilder, needMediaDataCallback = needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, userNameFormatter = userNameFormatter, needMediaDataCallback = needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -100,9 +100,6 @@ class OutVideoMsgViewHolder(
             if (diff.replyCountChanged)
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
-            if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, binding.viewReply)
-
             if (diff.filesChanged)
                 initAttachment()
 
@@ -111,6 +108,9 @@ class OutVideoMsgViewHolder(
 
             if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
                 initWidthsDependReactions(recyclerViewReactions, layoutDetails)
+
+            if (diff.replyContainerChanged)
+                setReplyMessageContainer(message, binding.viewReply)
         }
     }
 
@@ -210,10 +210,9 @@ class OutVideoMsgViewHolder(
     override val selectMessageView get() = binding.selectView
 
     private fun SceytItemOutVideoMessageBinding.setMessageItemStyle() {
-        with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColor(MessagesStyle.outBubbleColor))
-            tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
-            tvDuration.setDrawableStart(MessagesStyle.videoDurationIcon)
-        }
+        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outBubbleColor)
+        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
+        tvDuration.setDrawableStart(style.videoDurationIcon)
+        messageBody.applyStyle(style)
     }
 }

@@ -1,19 +1,19 @@
 package com.sceyt.chatuikit.services
 
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
-import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.persistence.shared.LiveEvent
 import com.sceyt.chatuikit.presentation.common.ConcurrentHashSet
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.CHANNELS_LOAD_SIZE
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -76,7 +76,7 @@ class SceytSyncManager(private val channelInteractor: ChannelInteractor,
             suspendCancellableCoroutine { cont ->
                 launch(Dispatchers.IO) {
                     val syncChannelData = SyncChannelData(mutableSetOf(), false)
-                    channelInteractor.syncChannels(CHANNELS_LOAD_SIZE).collect {
+                    channelInteractor.syncChannels(SceytChatUIKit.config.channelsLoadSize).collect {
                         when (it) {
                             is GetAllChannelsResponse.Error -> {
                                 syncChannelData.withError = true

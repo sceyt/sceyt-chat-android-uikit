@@ -41,14 +41,14 @@ class PopupMenuMessage(private val context: Context, anchor: View, private var m
             deleteMessageItem.apply {
                 title = setColoredTitle(title.toString())
                 icon?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                    ContextCompat.getColor(context, R.color.sceyt_color_red), BlendModeCompat.SRC_ATOP)
+                    ContextCompat.getColor(context, R.color.sceyt_color_error), BlendModeCompat.SRC_ATOP)
             }
         super.show()
     }
 
     private fun setColoredTitle(text: String): SpannableString {
         val headerTitle = SpannableString(text)
-        headerTitle.setSpan(ForegroundColorSpan(ContextCompat.getColor(context, R.color.sceyt_color_red)), 0, headerTitle.length, 0)
+        headerTitle.setSpan(ForegroundColorSpan(ContextCompat.getColor(context, R.color.sceyt_color_error)), 0, headerTitle.length, 0)
         return headerTitle
     }
 }

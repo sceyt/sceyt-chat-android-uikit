@@ -1,12 +1,11 @@
 package com.sceyt.chatuikit.presentation.customviews
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.util.AttributeSet
+import android.view.View.OnClickListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 
 class SceytCustomFloatingActonButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : FloatingActionButton(context, attrs, defStyleAttr) {
@@ -20,11 +19,8 @@ class SceytCustomFloatingActonButton @JvmOverloads constructor(context: Context,
 
     fun setEnabledOrNot(enabled: Boolean) {
         isEnabledClick = enabled
-        backgroundTintList = if (enabled) {
-            ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        } else {
-            ColorStateList.valueOf(context.getCompatColor(R.color.sceyt_color_disabled))
-        }
+        setBackgroundTintColorRes(if (enabled)
+            SceytChatUIKit.theme.accentColor else SceytChatUIKit.theme.iconInactiveColor)
     }
 
     private fun initClickListener() {

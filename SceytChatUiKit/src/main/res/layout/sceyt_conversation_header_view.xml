@@ -66,7 +66,7 @@
                     android:layout_marginHorizontal="12dp"
                     android:fontFamily="@font/roboto_medium"
                     android:singleLine="true"
-                    android:textColor="@color/sceyt_color_text_themed"
+                    android:textColor="@color/sceyt_color_text_primary"
                     android:textSize="16sp"
                     app:layout_constrainedWidth="true"
                     app:layout_constraintBottom_toTopOf="@+id/layoutSubTitle"
@@ -98,7 +98,7 @@
                         android:gravity="start"
                         android:marqueeRepeatLimit="marquee_forever"
                         android:singleLine="true"
-                        android:textColor="@color/sceyt_color_gray_400"
+                        android:textColor="@color/sceyt_color_text_secondary"
                         android:textSize="13sp"
                         app:layout_constrainedWidth="true"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -114,7 +114,7 @@
                         android:ellipsize="middle"
                         android:singleLine="true"
                         android:text="@string/sceyt_typing"
-                        android:textColor="@color/sceyt_color_gray_400"
+                        android:textColor="@color/sceyt_color_text_secondary"
                         android:textSize="13sp"
                         app:layout_constrainedWidth="true"
                         app:layout_constraintEnd_toStartOf="@+id/lottieTyping"
@@ -150,7 +150,7 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <com.sceyt.chatuikit.presentation.uicomponents.conversationheader.MessageActionsToolbar
-                android:id="@+id/toolBarMessageActions"
+                android:id="@+id/toolbar_message_actions"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:visibility="gone"
@@ -165,7 +165,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:background="@drawable/sceyt_bg_search_view"
+                android:background="@drawable/sceyt_bg_corners_10"
+                android:backgroundTint="@color/sceyt_color_surface_1"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:visibility="gone"
@@ -198,8 +199,8 @@
                     android:maxLines="1"
                     android:paddingHorizontal="10dp"
                     android:paddingVertical="10dp"
-                    android:textColor="@color/sceyt_color_black_themed"
-                    android:textColorHint="@color/sceyt_color_hint"
+                    android:textColor="@color/sceyt_color_text_primary"
+                    android:textColorHint="@color/sceyt_color_text_footnote"
                     android:textSize="16sp"
                     app:layout_constraintEnd_toStartOf="@+id/icClear"
                     app:layout_constraintStart_toEndOf="@+id/icSearch"
@@ -216,7 +217,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintDimensionRatio="1:1"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHeight_percent=".6"
+                    app:layout_constraintHeight_percent=".7"
                     app:layout_constraintTop_toTopOf="parent"
                     app:srcCompat="@drawable/sceyt_ic_cancel" />
 
@@ -230,7 +231,7 @@
         android:id="@+id/toolbarUnderline"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintBottom_toBottomOf="parent" />
 
 </com.google.android.material.appbar.AppBarLayout>

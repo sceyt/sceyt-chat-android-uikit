@@ -1,13 +1,13 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import com.sceyt.chatuikit.databinding.SceytItemUnreadMessagesSeparatorBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 
 class UnreadMessagesSeparatorViewHolder(
-        binding: SceytItemUnreadMessagesSeparatorBinding
-) : BaseMsgViewHolder(view = binding.root) {
+        binding: SceytItemUnreadMessagesSeparatorBinding,
+        private val style: MessagesListViewStyle
+) : BaseMsgViewHolder(view = binding.root, style.messageItemStyle) {
 
     init {
         binding.setMessageItemStyle()
@@ -17,9 +17,9 @@ class UnreadMessagesSeparatorViewHolder(
 
     private fun SceytItemUnreadMessagesSeparatorBinding.setMessageItemStyle() {
         with(tvUnreadMessagesSeparator) {
-            setTextColor(context.getCompatColor(MessagesStyle.unreadMessagesTextColor))
-            setBackgroundColor(context.getCompatColor(MessagesStyle.unreadMessagesBackendColor))
-            setTypeface(typeface, MessagesStyle.unreadMessagesSeparatorTextStyle)
+            setTextColor(style.unreadMessagesTextColor)
+            setBackgroundColor(style.unreadMessagesBackendColor)
+            setTypeface(typeface, style.unreadMessagesSeparatorTextStyle)
         }
     }
 }

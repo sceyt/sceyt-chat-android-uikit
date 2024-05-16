@@ -1,27 +1,27 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
-import android.content.res.ColorStateList
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.databinding.SceytItemIncVoiceMessageBinding
 import com.sceyt.chatuikit.extensions.TAG_REF
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.runOnMainThread
+import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setPlayButtonIcon
-import com.sceyt.chatuikit.extensions.setTextAndDrawableColor
+import com.sceyt.chatuikit.extensions.setTextAndDrawableByColor
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
+import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Downloaded
@@ -40,23 +40,23 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.PlaybackSpeed
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 class IncVoiceMsgViewHolder(
         private val binding: SceytItemIncVoiceMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners,
         displayedListener: ((MessageListItem) -> Unit)?,
-        userNameBuilder: ((User) -> String)?,
+        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
         private val voicePlayPauseListener: ((FileListItem, playing: Boolean) -> Unit)?
-) : BaseMediaMessageViewHolder(binding.root, messageListeners, displayedListener, userNameBuilder, needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, userNameFormatter, needMediaDataCallback) {
     private var currentPlaybackSpeed: PlaybackSpeed = PlaybackSpeed.X1
         set(value) {
             field = value
@@ -113,11 +113,11 @@ class IncVoiceMsgViewHolder(
             if (diff.reactionsChanged)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
-            if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, viewReply, false)
-
             if (diff.filesChanged)
                 initAttachment()
+
+            if (diff.replyContainerChanged)
+                setReplyMessageContainer(message, viewReply, false)
 
             if (item.message.shouldShowAvatarAndName)
                 avatar.setOnClickListener {
@@ -294,12 +294,12 @@ class IncVoiceMsgViewHolder(
     }
 
     private fun SceytItemIncVoiceMessageBinding.setMessageItemStyle() {
-        with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColor(MessagesStyle.incBubbleColor))
-            tvUserName.setTextColor(getCompatColor(MessagesStyle.senderNameTextColor))
-            playPauseButton.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
-            seekBar.waveProgressColor = getCompatColor(SceytKitConfig.sceytColorAccent)
-            tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
-        }
+        val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        layoutDetails.setBackgroundTint(style.incBubbleColor)
+        tvUserName.setTextColor(style.senderNameTextColor)
+        voiceDuration.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+        playPauseButton.setBackgroundTint(accentColor)
+        seekBar.waveProgressColor = accentColor
+        tvForwarded.setTextAndDrawableByColor(accentColor)
     }
 }

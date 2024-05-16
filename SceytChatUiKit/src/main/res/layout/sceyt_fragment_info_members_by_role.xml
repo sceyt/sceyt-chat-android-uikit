@@ -10,7 +10,7 @@
         android:id="@+id/members"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/sceyt_color_primary"
+        android:background="@color/sceyt_color_background_sections"
         android:drawableStart="@drawable/sceyt_ic_members"
         android:drawablePadding="16dp"
         android:foreground="@drawable/sceyt_bg_ripple"
@@ -18,25 +18,25 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_members"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="UnusedAttribute" />
 
-    <View
-        android:id="@+id/dividerBetweenMembersAndAdmins"
+    <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/borderBetweenMembersAndAdmins"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintTop_toBottomOf="@+id/members" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/admins"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/sceyt_color_primary"
+        android:background="@color/sceyt_color_background_sections"
         android:drawableStart="@drawable/sceyt_ic_admin"
         android:drawablePadding="16dp"
         android:foreground="@drawable/sceyt_bg_ripple"
@@ -44,25 +44,25 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_admins"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dividerBetweenMembersAndAdmins"
+        app:layout_constraintTop_toBottomOf="@+id/borderBetweenMembersAndAdmins"
         tools:ignore="UnusedAttribute" />
 
-    <View
-        android:id="@+id/divider2"
+    <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/borderBetweenAdminsAndSearch"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintTop_toBottomOf="@+id/admins" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/searchMessages"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/sceyt_color_primary"
+        android:background="@color/sceyt_color_background_sections"
         android:drawableStart="@drawable/sceyt_ic_search_messages"
         android:drawablePadding="16dp"
         android:foreground="@drawable/sceyt_bg_ripple"
@@ -70,29 +70,30 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_search_messages"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/divider2"
+        app:layout_constraintTop_toBottomOf="@+id/borderBetweenAdminsAndSearch"
         tools:ignore="UnusedAttribute" />
 
-    <View
-        android:id="@+id/divider"
+    <androidx.legacy.widget.Space
+        android:id="@+id/space"
         android:layout_width="match_parent"
-        android:layout_height="16dp"
-        app:layout_constraintTop_toBottomOf="@+id/searchMessages" />
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/searchMessages"
+        tools:layout_height="16dp" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/group_channel_members"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="dividerBetweenMembersAndAdmins,members" />
+        app:constraint_referenced_ids="borderBetweenMembersAndAdmins,members" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/group_channel_admins"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="divider2,admins" />
+        app:constraint_referenced_ids="borderBetweenAdminsAndSearch,admins" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -9,7 +9,7 @@ import com.sceyt.chat.demo.data.Constants
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
@@ -26,7 +26,7 @@ import kotlin.coroutines.resume
 class LoginViewModel(private val preference: AppSharedPreference,
                      private val connectionProvider: SceytConnectionProvider) : BaseViewModel() {
 
-    private val userInteractor: UserInteractor by lazy { SceytKitClient.userInteractor }
+    private val userInteractor: UserInteractor by lazy { SceytChatUIKit.chatUIFacade.userInteractor }
     private val _logInLiveData = MutableLiveData<Boolean>()
     val logInLiveData: LiveData<Boolean> = _logInLiveData
 

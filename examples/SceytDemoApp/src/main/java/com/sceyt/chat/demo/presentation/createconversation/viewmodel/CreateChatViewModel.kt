@@ -3,7 +3,7 @@ package com.sceyt.chat.demo.presentation.createconversation.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -14,8 +14,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class CreateChatViewModel : BaseViewModel() {
-    private val channelInteractor by lazy { SceytKitClient.channelInteractor }
-    private val channelMemberInteractor by lazy { SceytKitClient.channelMemberInteractor }
+    private val channelInteractor by lazy { SceytChatUIKit.chatUIFacade.channelInteractor }
+    private val channelMemberInteractor by lazy { SceytChatUIKit.chatUIFacade.channelMemberInteractor }
 
     private val _createChatLiveData = MutableLiveData<SceytChannel>()
     val createChatLiveData: LiveData<SceytChannel> = _createChatLiveData

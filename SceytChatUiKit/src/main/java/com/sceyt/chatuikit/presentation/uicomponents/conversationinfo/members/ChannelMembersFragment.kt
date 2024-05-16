@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members
 
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,7 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventData
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.Invited
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventEnum.Joined
@@ -28,7 +27,6 @@ import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelMembersBinding
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.awaitAnimationEnd
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -37,12 +35,16 @@ import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBoldSpan
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.extensions.setTextColorRes
+import com.sceyt.chatuikit.extensions.setTintColorRes
+import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog
-import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.ChannelMembersAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
@@ -52,10 +54,10 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.po
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.popups.MemberActionsDialog.ActionsEnum.Delete
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.popups.MemberActionsDialog.ActionsEnum.RevokeAdmin
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoinComponent {
+open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ConversationInfoStyleApplier, SceytKoinComponent {
     protected val viewModel by viewModel<ChannelMembersViewModel>()
     protected var membersAdapter: ChannelMembersAdapter? = null
     protected var binding: SceytFragmentChannelMembersBinding? = null
@@ -64,8 +66,11 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         private set
     protected lateinit var memberType: MemberTypeEnum
         private set
+    protected lateinit var style: ConversationInfoStyle
+        private set
     protected var currentUserRole: Role? = null
         private set
+    private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelMembersBinding.inflate(inflater, container, false).also {
@@ -79,6 +84,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         getBundleArguments()
         initViewModel()
         initViews()
+        binding?.applyStyle()
         initStringsWithAddType()
         loadInitialMembers()
     }
@@ -91,7 +97,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     private fun getBundleArguments() {
         channel = requireNotNull(arguments?.parcelable(CHANNEL))
         val type = requireNotNull(arguments?.getInt(MEMBER_TYPE, MemberTypeEnum.Member.ordinal))
-        memberType = MemberTypeEnum.values().getOrNull(type) ?: MemberTypeEnum.Member
+        memberType = MemberTypeEnum.entries.getOrNull(type) ?: MemberTypeEnum.Member
         getCurrentUserRole()
     }
 
@@ -117,10 +123,6 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
 
     private fun initViews() {
         with(binding ?: return) {
-            icAddMembers.imageTintList = ColorStateList.valueOf(requireContext().getCompatColor(SceytKitConfig.sceytColorAccent))
-
-            toolbar.setIconsTint(SceytKitConfig.sceytColorAccent)
-
             layoutAddMembers.setOnClickListener {
                 onAddMembersClick(memberType)
             }
@@ -153,7 +155,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     }
 
     private fun getCurrentUserRole() {
-        channel.members?.find { it.id == SceytKitClient.myId }?.let {
+        channel.members?.find { it.id == myId }?.let {
             currentUserRole = it.role
         }
     }
@@ -183,7 +185,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
                  itemsDb.addAll(items.minus(itemsDb.toSet()))
              }*/
 
-            if (data.offset + SceytKitConfig.CHANNELS_MEMBERS_LOAD_SIZE >= members.size)
+            if (data.offset + SceytChatUIKit.config.channelMembersLoadSize >= members.size)
                 if (hasNext) {
                     if (!itemsDb.contains(MemberItem.LoadingMore))
                         itemsDb.add(MemberItem.LoadingMore)
@@ -216,12 +218,12 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     }
 
     protected open fun onMemberClick(item: MemberItem.Member) {
-        if (item.member.id == SceytKitClient.myId) return
+        if (item.member.id == myId) return
         viewModel.findOrCreateChat(item.member.user)
     }
 
     protected open fun onMemberLongClick(item: MemberItem.Member) {
-        if (currentUserIsOwnerOrAdmin().not() || item.member.id == SceytKitClient.myId) return
+        if (currentUserIsOwnerOrAdmin().not() || item.member.id == myId) return
 
         MemberActionsDialog
             .newInstance(requireContext(), item.member, currentUserRole?.name == RoleTypeEnum.Owner.toString())
@@ -238,7 +240,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     protected open fun setOrUpdateMembersAdapter(data: List<MemberItem>) {
         if (membersAdapter == null) {
             val currentUser = channel.members?.find {
-                it.id == SceytKitClient.myId
+                it.id == myId
             }
             currentUserRole = currentUser?.role
 
@@ -276,11 +278,11 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     protected open fun onRemovedMember(data: List<SceytMember>) {
     }
 
-    protected fun currentUserIsOwnerOrAdmin(): Boolean {
+    protected open fun currentUserIsOwnerOrAdmin(): Boolean {
         return currentUserRole?.name == RoleTypeEnum.Owner.toString() || currentUserRole?.name == RoleTypeEnum.Admin.toString()
     }
 
-    protected fun loadInitialMembers() {
+    protected open fun loadInitialMembers() {
         viewModel.getChannelMembers(channel.id, 0, getRole())
     }
 
@@ -300,7 +302,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         SceytDialog.showSceytDialog(requireContext(), R.string.sceyt_revoke_admin_title, R.string.sceyt_revoke_admin_desc, R.string.sceyt_revoke, positiveCb = {
             revokeAdmin(member)
         }).apply {
-            val name = SceytKitConfig.userNameBuilder?.invoke(member.user)
+            val name = SceytChatUIKit.userNameFormatter?.format(member.user)
                     ?: member.user.getPresentableNameCheckDeleted(requireContext())
             val desc = String.format(getString(R.string.sceyt_revoke_admin_desc), name)
             val nameFromIndex = desc.lastIndexOf(name)
@@ -330,7 +332,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         SceytDialog.showSceytDialog(requireContext(), titleId = titleId, positiveBtnTitleId = R.string.sceyt_remove, positiveCb = {
             viewModel.kickMember(channel.id, member.id, false)
         }).apply {
-            val name = SceytKitConfig.userNameBuilder?.invoke(member.user)
+            val name = SceytChatUIKit.userNameFormatter?.format(member.user)
                     ?: member.user.getPresentableNameCheckDeleted(requireContext())
 
             val desc = String.format(getString(descId), name)
@@ -429,6 +431,19 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     override fun onChannelUpdated(channel: SceytChannel) {
         this.channel = channel
         getCurrentUserRole()
+    }
+
+    override fun setStyle(style: ConversationInfoStyle) {
+        this.style = style
+    }
+
+    private fun SceytFragmentChannelMembersBinding.applyStyle() {
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
+        toolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.primaryColor))
+        toolbar.setTitleColor(SceytChatUIKit.theme.textPrimaryColor)
+        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
+        icAddMembers.setTintColorRes(SceytChatUIKit.theme.accentColor)
+        addMembers.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
     }
 
     companion object {

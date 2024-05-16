@@ -5,12 +5,13 @@ import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytCustomToolbarBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class SceytCustomToolbar @JvmOverloads constructor(
         context: Context,
@@ -22,8 +23,8 @@ class SceytCustomToolbar @JvmOverloads constructor(
     private var navigationIconId = R.drawable.sceyt_ic_arrow_back
     private var menuIconId: Int = 0
     private var title = ""
-    private var titleColor = context.getCompatColor(R.color.sceyt_color_black)
-    private var iconsTint = context.getCompatColor(SceytKitConfig.sceytColorAccent)
+    private var titleColor = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
+    private var iconsTint = context.getCompatColor(SceytChatUIKit.theme.accentColor)
     private var enableDivider = true
 
     init {
@@ -78,6 +79,16 @@ class SceytCustomToolbar @JvmOverloads constructor(
     fun setTitle(title: String?) {
         title ?: return
         binding.tvTitle.text = title
+    }
+
+    fun setTitleColorRes(@ColorRes colorId: Int) {
+        titleColor = context.getCompatColor(colorId)
+        binding.tvTitle.setTextColor(titleColor)
+    }
+
+    fun setTitleColor(@ColorInt color: Int) {
+        titleColor = color
+        binding.tvTitle.setTextColor(titleColor)
     }
 
     fun setIconsTint(@ColorRes colorId: Int) {

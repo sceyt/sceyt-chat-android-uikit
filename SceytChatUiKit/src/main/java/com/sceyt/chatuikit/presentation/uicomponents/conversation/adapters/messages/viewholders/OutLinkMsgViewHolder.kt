@@ -3,25 +3,25 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.mess
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemOutLinkMessageBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setTextAndDrawableColor
+import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseLinkMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 class OutLinkMsgViewHolder(
         private val binding: SceytItemOutLinkMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
         linkPreview: LinkPreviewHelper,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        userNameBuilder: ((User) -> String)?
-) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, userNameBuilder = userNameBuilder) {
+        userNameFormatter: UserNameFormatter?
+) : BaseLinkMsgViewHolder(linkPreview, binding.root, style, messageListeners, userNameFormatter = userNameFormatter) {
 
     init {
         with(binding) {
@@ -56,6 +56,7 @@ class OutLinkMsgViewHolder(
                 val message = item.message
                 tvForwarded.isVisible = message.isForwarded
                 val linkAttachment = message.attachments?.getOrNull(0)
+                loadLinkPreview(message, linkAttachment, layoutLinkPreview)
 
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
@@ -73,8 +74,6 @@ class OutLinkMsgViewHolder(
 
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, viewReply)
-
-                loadLinkPreview(message, linkAttachment, layoutLinkPreview)
             }
         }
     }
@@ -84,9 +83,8 @@ class OutLinkMsgViewHolder(
     override val selectMessageView get() = binding.selectView
 
     private fun SceytItemOutLinkMessageBinding.setMessageItemStyle() {
-        with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColor(MessagesStyle.outBubbleColor))
-            tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
-        }
+        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outBubbleColor)
+        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
+        messageBody.applyStyle(style)
     }
 }

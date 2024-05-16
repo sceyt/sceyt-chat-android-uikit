@@ -7,6 +7,7 @@ import com.sceyt.chat.models.message.ReactionsListQuery
 import com.sceyt.chat.operators.ChannelOperator
 import com.sceyt.chat.sceyt_callbacks.MessageCallback
 import com.sceyt.chat.sceyt_callbacks.ReactionsCallback
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
@@ -16,7 +17,6 @@ import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.chatuikit.persistence.repositories.ReactionsRepository
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 class ReactionsRepositoryImpl : ReactionsRepository {
@@ -69,7 +69,7 @@ class ReactionsRepositoryImpl : ReactionsRepository {
     private fun createReactionsQuery(messageId: Long, key: String? = null): ReactionsListQuery {
         return ReactionsListQuery.Builder(messageId)
             .withReactionKey(key)
-            .setLimit(SceytKitConfig.REACTIONS_LOAD_SIZE)
+            .setLimit(SceytChatUIKit.config.reactionsLoadSize)
             .build()
     }
 

@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversationheader
 import android.animation.LayoutTransition
 import android.app.Activity
 import android.content.Context
-import android.content.res.ColorStateList
 import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -28,6 +27,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -41,6 +41,10 @@ import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
+import com.sceyt.chatuikit.extensions.setHintColorRes
+import com.sceyt.chatuikit.extensions.setTextColorRes
+import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.getPeer
@@ -55,9 +59,8 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.eventlis
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.ConversationHeaderViewStyle
-import com.sceyt.chatuikit.sceytstyles.UserStyle
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
+import com.sceyt.chatuikit.sceytstyles.ConversationHeaderStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -69,6 +72,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         HeaderEventsListener.EventListeners, HeaderUIElementsListener.ElementsListeners {
 
     private val binding: SceytConversationHeaderViewBinding
+    private val style: ConversationHeaderStyle
     private var clickListeners = HeaderClickListenersImpl(this)
     private var eventListeners = HeaderEventsListenerImpl(this)
     internal var uiElementsListeners = HeaderUIElementsListenerImpl(this)
@@ -76,7 +80,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     private var replyMessage: SceytMessage? = null
     private var isReplyInThread: Boolean = false
     private var isGroup = false
-    private var userNameBuilder: ((User) -> String)? = SceytKitConfig.userNameBuilder
+    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
     private var enablePresence: Boolean = true
     private val typingUsersHelper by lazy { initTypingUsersHelper() }
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
@@ -90,18 +94,13 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     init {
         binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
-
-        if (attrs != null) {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.ConversationHeaderView)
-            ConversationHeaderViewStyle.updateWithAttributes(a)
-            a.recycle()
-        }
+        style = ConversationHeaderStyle.Builder(context, attrs).build()
         init()
     }
 
     private fun init() {
         with(binding) {
-            setUpStyle()
+            applyStyle()
             layoutToolbarRoot.layoutTransition = LayoutTransition().apply {
                 disableTransitionType(LayoutTransition.DISAPPEARING)
                 setDuration(200)
@@ -153,14 +152,21 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         }
     }
 
-    private fun SceytConversationHeaderViewBinding.setUpStyle() {
-        icBack.setImageResource(ConversationHeaderViewStyle.backIcon)
-        title.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.titleColor))
-        subTitle.setTextColor(context.getCompatColor(ConversationHeaderViewStyle.subTitleColor))
-        toolbarUnderline.background = ColorDrawable(context.getCompatColor(ConversationHeaderViewStyle.underlineColor))
-        toolbarUnderline.isVisible = ConversationHeaderViewStyle.enableUnderline
-        icSearch.imageTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        icBack.imageTintList = ColorStateList.valueOf(context.getCompatColor(SceytKitConfig.sceytColorAccent))
+    private fun SceytConversationHeaderViewBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
+        toolbarMessageActions.popupTheme = style.menuStyle
+        toolbarMessageActions.setTitleTextAppearance(context, style.menuTitleAppearance)
+        icBack.setImageDrawable(style.backIcon)
+        title.setTextColor(style.titleColor)
+        subTitle.setTextColor(style.subTitleColor)
+        toolbarUnderline.background = ColorDrawable(style.underlineColor)
+        toolbarUnderline.isVisible = style.enableUnderline
+        layoutSearch.setBackgroundTintColorRes(SceytChatUIKit.theme.surface1Color)
+        inputSearch.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        inputSearch.setHintColorRes(SceytChatUIKit.theme.textFootnoteColor)
+        icSearch.setTintColorRes(SceytChatUIKit.theme.accentColor)
+        icBack.setTintColorRes(SceytChatUIKit.theme.accentColor)
+        icClear.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -176,7 +182,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                 channel.isSelf() -> getString(R.string.self_notes)
                 else -> {
                     val member = channel.getPeer() ?: return
-                    userNameBuilder?.invoke(member.user)
+                    userNameFormatter?.format(member.user)
                             ?: member.user.getPresentableNameCheckDeleted(context)
                 }
             }
@@ -249,15 +255,16 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         binding.avatar.isVisible = !replyInThread
         if (!replyInThread) {
             when {
-                channel.isPeerDeleted() -> avatar.setImageUrl(null, UserStyle.deletedUserAvatar)
+                channel.isPeerDeleted() -> avatar.setImageUrl(null, SceytChatUIKit.theme.deletedUserAvatar)
                 channel.isSelf() -> {
-                    avatar.setAvatarColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-                    avatar.setImageUrl(null, UserStyle.notesAvatar)
+                    avatar.setAvatarColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+                    avatar.setImageUrl(null, SceytChatUIKit.theme.notesAvatar)
                 }
 
                 else -> {
                     val subjAndSUrl = channel.getSubjectAndAvatarUrl()
-                    avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second, if (isGroup) 0 else UserStyle.userDefaultAvatar)
+                    avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second,
+                        if (isGroup) 0 else SceytChatUIKit.theme.userDefaultAvatar)
                 }
             }
         }
@@ -267,16 +274,16 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
                                             listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?): Menu? {
         val menu: Menu?
         with(binding) {
-            toolBarMessageActions.setToolbarIconsVisibilityInitializer { messages, menu ->
+            toolbarMessageActions.setToolbarIconsVisibilityInitializer { messages, menu ->
                 uiElementsListeners.onInitToolbarActionsMenu(*messages, menu = menu)
             }
-            menu = toolBarMessageActions.setupMenuWithMessages(resId, *messages)
-            toolBarMessageActions.isVisible = true
+            menu = toolbarMessageActions.setupMenuWithMessages(resId, *messages)
+            toolbarMessageActions.isVisible = true
             layoutToolbarDetails.isVisible = false
             isShowingMessageActions = true
             addedMenu?.forEach { it.isVisible = false }
 
-            toolBarMessageActions.setMenuItemClickListener {
+            toolbarMessageActions.setMenuItemClickListener {
                 listener?.invoke(it) {
                     binding.hideMessageActions()
                     toolbarActionsHiddenCallback?.invoke()
@@ -340,7 +347,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     private fun SceytConversationHeaderViewBinding.hideMessageActions() {
-        toolBarMessageActions.isVisible = false
+        toolbarMessageActions.isVisible = false
         layoutToolbarDetails.isVisible = true
         isShowingMessageActions = false
         addedMenu?.forEach { item -> item.isVisible = true }
@@ -350,7 +357,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         hideMessageActions()
         layoutSearch.isVisible = showSearch
         layoutToolbarDetails.isVisible = !showSearch
-        root.setBackgroundColor(if (showSearch) context.getCompatColor(R.color.sceyt_color_bg)
+        root.setBackgroundColor(if (showSearch) context.getCompatColor(R.color.sceyt_color_background)
         else context.getCompatColor(R.color.sceyt_color_primary))
         isShowingSearchBar = showSearch
         if (showSearch)
@@ -415,9 +422,9 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         typingUsersHelper.setTypingTextBuilder(builder)
     }
 
-    fun setUserNameBuilder(builder: (User) -> String) {
-        userNameBuilder = builder
-        typingUsersHelper.setUserNameBuilder(builder)
+    fun setUserNameFormatter(formatter: UserNameFormatter) {
+        userNameFormatter = formatter
+        typingUsersHelper.setUserNameFormatter(formatter)
     }
 
     fun invalidateUi() {

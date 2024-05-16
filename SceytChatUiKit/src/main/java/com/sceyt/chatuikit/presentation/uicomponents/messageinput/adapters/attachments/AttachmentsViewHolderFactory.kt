@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.atta
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.databinding.SceytItemInputFileAttachmentBinding
 import com.sceyt.chatuikit.databinding.SceytItemInputImageAttachmentBinding
@@ -14,7 +13,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.attac
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.attachments.viewholders.AttachmentVideoViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.AttachmentClickListenersImpl
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig.userNameBuilder
 
 open class AttachmentsViewHolderFactory(context: Context) {
     private val layoutInflater = LayoutInflater.from(context)
@@ -54,10 +52,6 @@ open class AttachmentsViewHolderFactory(context: Context) {
 
     fun setClickListener(listeners: AttachmentClickListeners) {
         clickListeners.setListener(listeners)
-    }
-
-    fun setUserNameBuilder(builder: (User) -> String) {
-        userNameBuilder = builder
     }
 
     enum class ItemType {

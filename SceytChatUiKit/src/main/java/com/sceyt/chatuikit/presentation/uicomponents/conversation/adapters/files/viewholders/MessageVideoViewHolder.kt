@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.file
 import android.util.Size
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.databinding.SceytMessageVideoItemBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
@@ -24,18 +23,19 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUploa
 import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 
 class MessageVideoViewHolder(
         private val binding: SceytMessageVideoItemBinding,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
 
     init {
-        binding.setupStyle()
+        binding.applyStyle()
 
         binding.root.setOnClickListener {
             messageListeners?.onAttachmentClick(it, fileItem)
@@ -53,8 +53,8 @@ class MessageVideoViewHolder(
 
     override fun bind(item: FileListItem) {
         super.bind(item)
-       /* binding.parentLayout.clipToOutline = true
-        binding.videoView.isVisible = false*/
+        /* binding.parentLayout.clipToOutline = true
+         binding.videoView.isVisible = false*/
         setVideoDuration()
     }
 
@@ -135,12 +135,12 @@ class MessageVideoViewHolder(
     override val loadingProgressView: SceytCircularProgressView
         get() = binding.loadProgress
 
-   /* private fun initializePlayer(mediaPath: String?) {
-         binding.videoViewController.setPlayerViewAndPath(binding.videoView, mediaPath)
-         (bindingAdapter as? MessageFilesAdapter)?.videoControllersList?.add(binding.videoViewController)
-    }*/
+    /* private fun initializePlayer(mediaPath: String?) {
+          binding.videoViewController.setPlayerViewAndPath(binding.videoView, mediaPath)
+          (bindingAdapter as? MessageFilesAdapter)?.videoControllersList?.add(binding.videoViewController)
+     }*/
 
-    private fun SceytMessageVideoItemBinding.setupStyle() {
-        loadProgress.setProgressColor(context.getCompatColor(MessagesStyle.mediaLoaderColor))
+    private fun SceytMessageVideoItemBinding.applyStyle() {
+        loadProgress.setProgressColor(style.mediaLoaderColor)
     }
 }

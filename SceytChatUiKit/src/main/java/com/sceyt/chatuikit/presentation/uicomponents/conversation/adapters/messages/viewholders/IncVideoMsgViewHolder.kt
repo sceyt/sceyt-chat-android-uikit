@@ -4,12 +4,12 @@ import android.content.res.ColorStateList
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemIncVideoMessageBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setDrawableStart
-import com.sceyt.chatuikit.extensions.setTextAndDrawableColor
+import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
+import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Downloaded
@@ -27,21 +27,21 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
-import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 class IncVideoMsgViewHolder(
         private val binding: SceytItemIncVideoMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        userNameBuilder: ((User) -> String)?,
+        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, messageListeners, displayedListener, userNameBuilder, needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, userNameFormatter, needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -105,9 +105,6 @@ class IncVideoMsgViewHolder(
             if (diff.replyCountChanged)
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
-            if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, binding.viewReply)
-
             if (diff.filesChanged)
                 initAttachment()
 
@@ -116,6 +113,9 @@ class IncVideoMsgViewHolder(
 
             if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
                 initWidthsDependReactions(recyclerViewReactions, layoutDetails)
+
+            if (diff.replyContainerChanged)
+                setReplyMessageContainer(message, binding.viewReply)
 
             if (item.message.shouldShowAvatarAndName)
                 avatar.setOnClickListener {
@@ -220,11 +220,10 @@ class IncVideoMsgViewHolder(
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
     private fun SceytItemIncVideoMessageBinding.setMessageItemStyle() {
-        with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColor(MessagesStyle.incBubbleColor))
-            tvUserName.setTextColor(getCompatColor(MessagesStyle.senderNameTextColor))
-            tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
-            tvDuration.setDrawableStart(MessagesStyle.videoDurationIcon)
-        }
+        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incBubbleColor)
+        tvUserName.setTextColor(style.senderNameTextColor)
+        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
+        tvDuration.setDrawableStart(style.videoDurationIcon)
+        messageBody.applyStyle(style)
     }
 }

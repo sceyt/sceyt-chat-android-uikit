@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_bg"
+    android:background="@color/sceyt_color_background"
     android:clickable="true"
     android:focusable="true">
 
@@ -15,7 +15,7 @@
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
         app:title="@string/sceyt_message_info"
-        app:titleTextColor="@color/sceyt_color_text_themed" />
+        app:titleTextColor="@color/sceyt_color_text_primary" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -50,7 +50,7 @@
                     android:layout_marginTop="15dp"
                     android:fontFamily="@font/roboto_medium"
                     android:text="@string/sent"
-                    android:textColor="@color/sceyt_color_text_themed"
+                    android:textColor="@color/sceyt_color_text_primary"
                     android:textSize="14sp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -60,7 +60,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="5dp"
-                    android:textColor="@color/sceyt_color_gray_secondary_themed"
+                    android:textColor="@color/sceyt_color_text_secondary"
                     android:textSize="14sp"
                     app:layout_constraintBottom_toBottomOf="@+id/tvSentHint"
                     app:layout_constraintStart_toEndOf="@+id/tvSentHint"
@@ -75,7 +75,7 @@
                     android:layout_marginTop="5dp"
                     android:fontFamily="@font/roboto_medium"
                     android:text="@string/size"
-                    android:textColor="@color/sceyt_color_text_themed"
+                    android:textColor="@color/sceyt_color_text_primary"
                     android:textSize="14sp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/tvSentHint" />
@@ -85,7 +85,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="5dp"
-                    android:textColor="@color/sceyt_color_gray_secondary_themed"
+                    android:textColor="@color/sceyt_color_text_secondary"
                     android:textSize="14sp"
                     app:layout_constraintBottom_toBottomOf="@+id/tvSizeHint"
                     app:layout_constraintStart_toEndOf="@+id/tvSizeHint"
@@ -100,10 +100,11 @@
                     app:constraint_referenced_ids="tvSizeHint,tvSize" />
 
                 <View
+                    android:id="@+id/divider"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginTop="15dp"
-                    android:background="@color/sceyt_color_divider"
+                    android:background="@color/sceyt_color_border"
                     app:layout_constraintTop_toBottomOf="@+id/tvSize" />
 
                 <View
@@ -111,7 +112,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginTop="15dp"
-                    android:background="@color/sceyt_color_divider"
+                    android:background="@color/sceyt_color_border"
                     app:layout_constraintTop_toBottomOf="@+id/tvSize"/>
 
                 <androidx.appcompat.widget.AppCompatTextView
@@ -122,7 +123,7 @@
                     android:fontFamily="@font/roboto_medium"
                     android:includeFontPadding="false"
                     android:text="@string/played_by"
-                    android:textColor="@color/sceyt_color_gray_secondary_themed"
+                    android:textColor="@color/sceyt_color_text_secondary"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/dividerPlayed" />
 
@@ -151,7 +152,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginTop="15dp"
-                    android:background="@color/sceyt_color_divider"
+                    android:background="@color/sceyt_color_border"
                     app:layout_constraintTop_toBottomOf="@+id/rvPlayedByUsers" />
 
                 <androidx.appcompat.widget.AppCompatTextView
@@ -162,7 +163,7 @@
                     android:fontFamily="@font/roboto_medium"
                     android:includeFontPadding="false"
                     android:text="@string/read_by"
-                    android:textColor="@color/sceyt_color_gray_secondary_themed"
+                    android:textColor="@color/sceyt_color_text_secondary"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/dividerRead" />
 
@@ -191,7 +192,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginTop="15dp"
-                    android:background="@color/sceyt_color_divider"
+                    android:background="@color/sceyt_color_border"
                     app:layout_constraintTop_toBottomOf="@+id/rvReadByUsers" />
 
                 <androidx.appcompat.widget.AppCompatTextView
@@ -202,7 +203,7 @@
                     android:fontFamily="@font/roboto_medium"
                     android:includeFontPadding="false"
                     android:text="@string/delivered_to"
-                    android:textColor="@color/sceyt_color_gray_secondary_themed"
+                    android:textColor="@color/sceyt_color_text_secondary"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/dividerDelivered" />
 

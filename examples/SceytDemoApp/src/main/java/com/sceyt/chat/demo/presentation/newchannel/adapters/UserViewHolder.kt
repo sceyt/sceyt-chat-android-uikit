@@ -5,8 +5,9 @@ import com.sceyt.chat.demo.databinding.ItemUserBinding
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.demo.presentation.common.BaseViewHolder
 import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.chatuikit.R.*
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.R.drawable
+import com.sceyt.chatuikit.R.string
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
@@ -21,7 +22,7 @@ class UserViewHolder(private val binding: ItemUserBinding,
         val user = item.user
 
         with(binding) {
-            if (user.id == SceytKitClient.myId) {
+            if (user.id == SceytChatUIKit.chatUIFacade.myId) {
                 avatar.setNameAndImageUrl("", null, drawable.sceyt_ic_notes_with_paddings)
                 userName.text = context.getString(string.self_notes)
                 tvStatus.isVisible = false

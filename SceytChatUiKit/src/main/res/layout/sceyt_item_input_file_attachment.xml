@@ -13,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="60dp"
         android:layout_marginTop="10dp"
-        app:cardBackgroundColor="@color/sceyt_color_gray_themed"
+        app:cardBackgroundColor="@color/sceyt_color_surface_1"
         app:cardCornerRadius="8dp"
         app:cardElevation="0dp"
         app:layout_constraintStart_toStartOf="parent"
@@ -44,7 +44,7 @@
                 android:ellipsize="middle"
                 android:maxWidth="120dp"
                 android:singleLine="true"
-                android:textColor="@color/sceyt_color_text_themed"
+                android:textColor="@color/sceyt_color_text_primary"
                 android:textSize="@dimen/mediumTextSize"
                 android:textStyle="bold"
                 app:layout_constrainedWidth="true"
@@ -59,7 +59,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
                 android:includeFontPadding="false"
-                android:textColor="@color/sceyt_color_gray_400"
+                android:textColor="@color/sceyt_color_text_secondary"
                 android:textSize="@dimen/tinyTextSize"
                 app:layout_constraintStart_toStartOf="@+id/tvFileName"
                 app:layout_constraintTop_toBottomOf="@+id/tvFileName"
@@ -67,19 +67,33 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-
     </androidx.cardview.widget.CardView>
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/closeBtn"
+    <FrameLayout
+        android:id="@+id/layoutRemove"
         android:layout_width="22dp"
         android:layout_height="22dp"
         android:layout_marginStart="47dp"
         android:layout_marginTop="-9dp"
         android:layout_marginBottom="47dp"
+        android:background="@drawable/sceyt_bg_circle"
+        android:backgroundTint="@color/sceyt_color_background"
+        android:padding="2dp"
         app:layout_constraintEnd_toEndOf="@+id/imageCont"
         app:layout_constraintStart_toEndOf="@+id/imageCont"
-        app:layout_constraintTop_toTopOf="@+id/imageCont"
-        app:srcCompat="@drawable/sceyt_ic_remove" />
+        app:layout_constraintTop_toTopOf="@+id/imageCont">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/btnRemove"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/sceyt_bg_circle"
+            android:backgroundTint="@color/sceyt_color_surface_3"
+            android:tint="@color/sceyt_color_on_primary"
+            app:layout_constraintBottom_toBottomOf="@id/imageCont"
+            app:layout_constraintStart_toStartOf="@id/imageCont"
+            app:srcCompat="@drawable/sceyt_ic_cancel" />
+
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -3,26 +3,26 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.mess
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemIncLinkMessageBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setTextAndDrawableColor
+import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseLinkMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 class IncLinkMsgViewHolder(
         private val binding: SceytItemIncLinkMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         linkPreview: LinkPreviewHelper,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        userNameBuilder: ((User) -> String)?,
-) : BaseLinkMsgViewHolder(linkPreview, binding.root, messageListeners, displayedListener, userNameBuilder) {
+        userNameFormatter: UserNameFormatter?,
+) : BaseLinkMsgViewHolder(linkPreview, binding.root, style, messageListeners, displayedListener, userNameFormatter) {
 
     init {
         with(binding) {
@@ -57,6 +57,7 @@ class IncLinkMsgViewHolder(
                 val message = item.message
                 tvForwarded.isVisible = message.isForwarded
                 val linkAttachment = message.attachments?.getOrNull(0)
+                loadLinkPreview(message, linkAttachment, layoutLinkPreview)
 
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
@@ -82,8 +83,6 @@ class IncLinkMsgViewHolder(
                     avatar.setOnClickListener {
                         messageListeners?.onAvatarClick(it, item)
                     }
-
-                loadLinkPreview(message, linkAttachment, layoutLinkPreview)
             }
         }
     }
@@ -93,10 +92,9 @@ class IncLinkMsgViewHolder(
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
     private fun SceytItemIncLinkMessageBinding.setMessageItemStyle() {
-        with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColor(MessagesStyle.incBubbleColor))
-            tvUserName.setTextColor(getCompatColor(MessagesStyle.senderNameTextColor))
-            tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
-        }
+        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incBubbleColor)
+        tvUserName.setTextColor(style.senderNameTextColor)
+        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
+        messageBody.applyStyle(style)
     }
 }

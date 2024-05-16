@@ -3,11 +3,11 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.mess
 import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.databinding.SceytItemOutFileMessageBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setTextAndDrawableColor
+import com.sceyt.chatuikit.extensions.setTextAndDrawableByColor
 import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -30,17 +30,18 @@ import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 
 class OutFileMsgViewHolder(
         private val binding: SceytItemOutFileMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        userNameBuilder: ((User) -> String)?,
+        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, messageListeners, userNameBuilder = userNameBuilder, needMediaDataCallback = needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, userNameFormatter = userNameFormatter, needMediaDataCallback = needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -101,14 +102,14 @@ class OutFileMsgViewHolder(
             if (diff.replyCountChanged)
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
-            if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, binding.viewReply, false)
-
             if (diff.filesChanged)
                 initAttachment()
 
             if (diff.reactionsChanged)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
+
+            if (diff.replyContainerChanged)
+                setReplyMessageContainer(message, binding.viewReply, false)
         }
     }
 
@@ -131,7 +132,7 @@ class OutFileMsgViewHolder(
         super.updateState(data, isOnBind)
         when (data.state) {
             Uploaded, Downloaded -> {
-                binding.icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
+                binding.icFile.setImageDrawable(style.fileAttachmentIcon)
                 binding.tvFileSize.text = data.fileTotalSize
                         ?: fileItem.file.fileSize.toPrettySize()
             }
@@ -167,12 +168,14 @@ class OutFileMsgViewHolder(
     }
 
     private fun SceytItemOutFileMessageBinding.setMessageItemStyle() {
-        with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColor(MessagesStyle.outBubbleColor))
-            tvForwarded.setTextAndDrawableColor(SceytKitConfig.sceytColorAccent)
-            icFile.setImageResource(MessagesStyle.fileAttachmentIcon)
-            icFile.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytKitConfig.sceytColorAccent))
-            loadProgress.setBackgroundColor(context.getCompatColor(SceytKitConfig.sceytColorAccent))
-        }
+        val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outBubbleColor)
+        tvForwarded.setTextAndDrawableByColor(accentColor)
+        icFile.setImageDrawable(style.fileAttachmentIcon)
+        icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
+        loadProgress.setBackgroundColor(accentColor)
+        messageBody.applyStyle(style)
+        tvFileSize.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+        tvFileName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
     }
 }

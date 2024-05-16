@@ -5,6 +5,7 @@ import androidx.lifecycle.asFlow
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.LoadNearData
 import com.sceyt.chatuikit.data.models.PaginationResponse
@@ -18,9 +19,8 @@ import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.persistence.repositories.AttachmentsRepository
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.dao.AttachmentDao
 import com.sceyt.chatuikit.persistence.dao.FileChecksumDao
@@ -34,8 +34,8 @@ import com.sceyt.chatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
-import com.sceyt.chatuikit.persistence.logicimpl.messageslogic.MessagesCache
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
+import com.sceyt.chatuikit.persistence.logicimpl.messageslogic.MessagesCache
 import com.sceyt.chatuikit.persistence.mappers.getTid
 import com.sceyt.chatuikit.persistence.mappers.isHiddenLinkDetails
 import com.sceyt.chatuikit.persistence.mappers.toAttachment
@@ -45,7 +45,7 @@ import com.sceyt.chatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.persistence.mappers.toUser
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.persistence.repositories.AttachmentsRepository
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -65,6 +65,7 @@ internal class PersistenceAttachmentLogicImpl(
         private val attachmentsRepository: AttachmentsRepository) : PersistenceAttachmentLogic, SceytKoinComponent {
 
     private val messagesLogic: PersistenceMessagesLogic by inject()
+    private val attachmentsLoadSize get() = SceytChatUIKit.config.attachmentsLoadSize
 
     override suspend fun setupFileTransferUpdateObserver() {
         FileTransferHelper.onTransferUpdatedLiveData.asFlow().collect {
@@ -186,12 +187,12 @@ internal class PersistenceAttachmentLogicImpl(
         when (loadType) {
             LoadPrev -> {
                 attachments = getPrevAttachmentsDb(conversationId, attachmentId, types)
-                hasPrev = attachments.size == SceytKitConfig.ATTACHMENTS_LOAD_SIZE
+                hasPrev = attachments.size == attachmentsLoadSize
             }
 
             LoadNext -> {
                 attachments = getNextAttachmentsDb(conversationId, attachmentId, types)
-                hasNext = attachments.size == SceytKitConfig.ATTACHMENTS_LOAD_SIZE
+                hasNext = attachments.size == attachmentsLoadSize
             }
 
             LoadNear -> {
@@ -203,7 +204,7 @@ internal class PersistenceAttachmentLogicImpl(
 
             LoadNewest -> {
                 attachments = getPrevAttachmentsDb(conversationId, Long.MAX_VALUE, types)
-                hasPrev = attachments.size == SceytKitConfig.ATTACHMENTS_LOAD_SIZE
+                hasPrev = attachments.size == attachmentsLoadSize
             }
         }
 
@@ -221,17 +222,17 @@ internal class PersistenceAttachmentLogicImpl(
 
     private suspend fun getPrevAttachmentsDb(channelId: Long, lastAttachmentId: Long, types: List<String>): List<SceytAttachment> {
         val id = if (lastAttachmentId == 0L) Long.MAX_VALUE else lastAttachmentId
-        val attachments = attachmentDao.getOldestThenAttachment(channelId, id, SceytKitConfig.ATTACHMENTS_LOAD_SIZE, types)
+        val attachments = attachmentDao.getOldestThenAttachment(channelId, id, attachmentsLoadSize, types)
         return attachments.map { attachmentDb -> attachmentDb.toAttachment() }.reversed()
     }
 
     private suspend fun getNextAttachmentsDb(channelId: Long, lastAttachmentId: Long, types: List<String>): List<SceytAttachment> {
-        val attachments = attachmentDao.getNewestThenAttachment(channelId, lastAttachmentId, SceytKitConfig.ATTACHMENTS_LOAD_SIZE, types)
+        val attachments = attachmentDao.getNewestThenAttachment(channelId, lastAttachmentId, attachmentsLoadSize, types)
         return attachments.map { attachmentDb -> attachmentDb.toAttachment() }
     }
 
     private suspend fun getNearAttachmentsDb(channelId: Long, attachmentId: Long, types: List<String>): LoadNearData<AttachmentDb> {
-        return attachmentDao.getNearAttachments(channelId, attachmentId, SceytKitConfig.ATTACHMENTS_LOAD_SIZE, types)
+        return attachmentDao.getNearAttachments(channelId, attachmentId, attachmentsLoadSize, types)
     }
 
     private suspend fun getAttachmentsServerByLoadType(loadType: PaginationResponse.LoadType, conversationId: Long,
@@ -246,13 +247,13 @@ internal class PersistenceAttachmentLogicImpl(
             LoadPrev -> {
                 response = attachmentsRepository.getPrevAttachments(conversationId, attachmentId, types)
                 if (response is SceytResponse.Success)
-                    hasPrev = response.data?.first?.size == SceytKitConfig.ATTACHMENTS_LOAD_SIZE
+                    hasPrev = response.data?.first?.size == attachmentsLoadSize
             }
 
             LoadNext -> {
                 response = attachmentsRepository.getNextAttachments(conversationId, attachmentId, types)
                 if (response is SceytResponse.Success)
-                    hasPrev = response.data?.first?.size == SceytKitConfig.ATTACHMENTS_LOAD_SIZE
+                    hasPrev = response.data?.first?.size == attachmentsLoadSize
             }
 
             LoadNear -> {
@@ -263,8 +264,8 @@ internal class PersistenceAttachmentLogicImpl(
                         val newest = groupOldAndNewData[true]
                         val oldest = groupOldAndNewData[false]
 
-                        hasNext = (newest?.size ?: 0) >= SceytKitConfig.MESSAGES_LOAD_SIZE / 2
-                        hasPrev = (oldest?.size ?: 0) >= SceytKitConfig.MESSAGES_LOAD_SIZE / 2
+                        hasNext = (newest?.size ?: 0) >= attachmentsLoadSize / 2
+                        hasPrev = (oldest?.size ?: 0) >= attachmentsLoadSize / 2
                     }
                 }
             }
@@ -272,7 +273,7 @@ internal class PersistenceAttachmentLogicImpl(
             LoadNewest -> {
                 response = attachmentsRepository.getPrevAttachments(conversationId, Long.MAX_VALUE, types)
                 if (response is SceytResponse.Success)
-                    hasPrev = response.data?.first?.size == SceytKitConfig.ATTACHMENTS_LOAD_SIZE
+                    hasPrev = response.data?.first?.size == attachmentsLoadSize
             }
         }
 

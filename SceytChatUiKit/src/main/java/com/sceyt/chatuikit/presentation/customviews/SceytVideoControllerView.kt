@@ -52,13 +52,13 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
         val enablePlayPauseClick = a.getBoolean(R.styleable.SceytVideoControllerView_sceytVideoControllerEnablePlayPauseClick, true)
         a.recycle()
 
-        binding.setupStyle()
+        binding.applyStyle()
 
         if (enablePlayPauseClick)
             setOnClickListeners()
     }
 
-    private fun SceytVideoControllerViewBinding.setupStyle() {
+    private fun SceytVideoControllerViewBinding.applyStyle() {
         playPauseItem.apply {
             layoutParams.width = playPauseButtonSize
             layoutParams.height = playPauseButtonSize

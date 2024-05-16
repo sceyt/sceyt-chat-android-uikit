@@ -6,7 +6,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.withResumed
-import com.sceyt.chatuikit.SceytKitClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventsObserver
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
@@ -16,17 +16,18 @@ import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isResumed
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
+import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelUpdateData
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
-import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.presentation.uicomponents.channels.ChannelListView
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.TypingCancelHelper
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.SearchChannelInputView
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 
@@ -53,7 +54,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
                     }
                     needToUpdateChannelsAfterResume.clear()
                     if (needSort)
-                        channelListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
+                        channelListView.sortChannelsBy(SceytChatUIKit.config.sortChannelsBy)
                 }
             }
         }
@@ -113,7 +114,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
             val diff = channelListView.channelUpdated(data.channel)
             if (diff != null) {
                 if (diff.lastMessageChanged || data.needSorting || isCanceled)
-                    channelListView.sortChannelsBy(SceytKitConfig.sortChannelsBy)
+                    channelListView.sortChannelsBy(SceytChatUIKit.config.sortChannelsBy)
                 SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body} draft:${data.channel.draftMessage?.message}  unreadCount ${data.channel.newMessageCount}" +
                         " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${diff.hasDifference()} lastMessageChanged: ${diff.lastMessageChanged} needSorting: ${data.needSorting}")
             } else {
@@ -170,7 +171,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
     }.launchIn(viewModelScope)
 
     ChannelEventsObserver.onChannelTypingEventFlow
-        .filter { it.member.id != SceytKitClient.myId }
+        .filter { it.member.id != SceytChatUIKit.chatUIFacade.myId }
         .onEach {
             typingCancelHelper.await(it) { data ->
                 channelListView.onTyping(data)

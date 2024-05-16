@@ -8,13 +8,14 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogChannelActionsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
+import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.isSelf
-import com.sceyt.chatuikit.sceytconfigs.SceytKitConfig
 
 class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogChannelActionsBinding
@@ -28,7 +29,7 @@ class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogN
         }.root)
 
         binding.initView()
-        binding.setupStyle()
+        binding.applyStyle()
         binding.setIconsVisibility()
         window?.let {
             it.setWindowAnimations(R.style.SceytDialogFromBottomAnimation)
@@ -105,9 +106,12 @@ class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogN
         Pin, UnPin, MarkAsRead, MarkAsUnRead, Mute, UnMute, Leave, Delete
     }
 
-    private fun SceytDialogChannelActionsBinding.setupStyle() {
-        setTextViewsDrawableColor(listOf(pin, unPin, markAsRead, markAsUnRead, mute, unMute),
-            context.getCompatColor(SceytKitConfig.sceytColorAccent))
+    private fun SceytDialogChannelActionsBinding.applyStyle() {
+        val texts = listOf(pin, unPin, markAsRead, markAsUnRead, mute, unMute)
+        setTextViewsDrawableColor(texts, context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        setTextViewsTextColor(texts, context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+        setTextViewsDrawableColor(listOf(delete, leave), context.getCompatColor(SceytChatUIKit.theme.errorColor))
+        setTextViewsTextColor(listOf(delete, leave), context.getCompatColor(SceytChatUIKit.theme.errorColor))
     }
 
     companion object {

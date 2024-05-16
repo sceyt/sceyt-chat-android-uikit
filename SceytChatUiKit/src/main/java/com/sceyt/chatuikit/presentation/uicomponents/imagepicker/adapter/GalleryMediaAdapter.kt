@@ -1,29 +1,25 @@
 package com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter
 
 import android.annotation.SuppressLint
-import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.databinding.SceytItemGalleryImageBinding
-import com.sceyt.chatuikit.databinding.SceytItemGalleryVideoBinding
-import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.viewholders.GalleryImageViewHolder
-import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.viewholders.GalleryVideoViewHolder
+import com.sceyt.chatuikit.persistence.differs.GalleryMediaItemDiff
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
-import com.sceyt.chatuikit.presentation.root.BaseViewHolder
+import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.viewholders.BaseGalleryViewHolder
+import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.viewholders.GalleyMediaItemViewHolderFactory
+import com.sceyt.chatuikit.sceytstyles.GalleryPickerStyle
 
-class GalleryMediaAdapter(private var clickListener: MediaClickListener) : RecyclerView.Adapter<BaseViewHolder<MediaItem>>() {
+class GalleryMediaAdapter(private val viewHolderFactory: GalleyMediaItemViewHolderFactory,
+                          private val style: GalleryPickerStyle
+) : RecyclerView.Adapter<BaseGalleryViewHolder>() {
     private var currentList = arrayListOf<MediaItem>()
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<MediaItem> {
-        return when (viewType) {
-            ViewType.Image.ordinal -> GalleryImageViewHolder(SceytItemGalleryImageBinding.inflate(
-                LayoutInflater.from(parent.context), parent, false), clickListener)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseGalleryViewHolder {
+        return viewHolderFactory.onCreateViewHolder(parent, viewType)
+    }
 
-            ViewType.Video.ordinal -> GalleryVideoViewHolder(SceytItemGalleryVideoBinding.inflate(
-                LayoutInflater.from(parent.context), parent, false), clickListener)
-
-            else -> throw Exception("Unsupported view type")
-        }
+    override fun getItemViewType(position: Int): Int {
+        return viewHolderFactory.getItemViewType(currentList[position])
     }
 
     override fun getItemCount(): Int {
@@ -41,27 +37,26 @@ class GalleryMediaAdapter(private var clickListener: MediaClickListener) : Recyc
         notifyItemRangeInserted(currentList.size - data.size, data.size)
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return when (currentList[position]) {
-            is MediaItem.Image -> ViewType.Image.ordinal
-            is MediaItem.Video -> ViewType.Video.ordinal
-        }
+    override fun onBindViewHolder(holder: BaseGalleryViewHolder, position: Int) {
+        holder.bind(currentList[position], diff = GalleryMediaItemDiff.DEFAULT)
     }
 
-    override fun onBindViewHolder(holder: BaseViewHolder<MediaItem>, position: Int) {
-        holder.bind(currentList[position])
+    override fun onBindViewHolder(holder: BaseGalleryViewHolder, position: Int, payloads: MutableList<Any>) {
+        val diff = payloads.find { it is GalleryMediaItemDiff } as? GalleryMediaItemDiff
+                ?: GalleryMediaItemDiff.DEFAULT
+        holder.bind(item = currentList[position], diff = diff)
     }
 
     fun interface MediaClickListener {
-        fun onClick(item: MediaItem)
+        fun onClick(item: MediaItem, position: Int)
     }
 
-    override fun onViewAttachedToWindow(holder: BaseViewHolder<MediaItem>) {
+    override fun onViewAttachedToWindow(holder: BaseGalleryViewHolder) {
         super.onViewAttachedToWindow(holder)
         holder.onViewAttachedToWindow()
     }
 
-    override fun onViewDetachedFromWindow(holder: BaseViewHolder<MediaItem>) {
+    override fun onViewDetachedFromWindow(holder: BaseGalleryViewHolder) {
         super.onViewDetachedFromWindow(holder)
         holder.onViewDetachedFromWindow()
     }

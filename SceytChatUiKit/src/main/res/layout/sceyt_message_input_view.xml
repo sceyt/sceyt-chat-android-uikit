@@ -6,10 +6,11 @@
     android:layout_height="wrap_content">
 
     <View
-        android:id="@+id/viewTop"
+        android:id="@+id/viewAttachments"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/rvAttachments"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -17,10 +18,11 @@
         android:id="@+id/rvAttachments"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:background="@color/sceyt_color_background"
         android:clipToPadding="false"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp"
-        android:visibility="gone"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -32,11 +34,11 @@
         android:name="com.sceyt.chatuikit.presentation.uicomponents.messageinput.fragments.EditOrReplyMessageFragment"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/sceyt_color_primary"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/rvAttachments" />
+        app:layout_constraintTop_toBottomOf="@+id/rvAttachments"
+        app:layout_goneMarginTop="0dp" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/layoutLinkPreview"
@@ -53,14 +55,13 @@
         android:id="@+id/view3"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintBottom_toTopOf="@+id/layoutInput" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="1dp"
         android:background="@color/sceyt_color_primary"
         android:paddingVertical="8dp"
         app:layout_constraintTop_toBottomOf="@+id/layoutLinkPreview">
@@ -71,7 +72,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="8dp"
             android:background="@drawable/sceyt_bg_corners_20"
-            android:backgroundTint="@color/sceyt_color_gray_themed"
+            android:backgroundTint="@color/sceyt_color_surface_1"
             android:gravity="center_vertical"
             android:hint="@string/sceyt_write_a_message"
             android:includeFontPadding="false"
@@ -80,8 +81,8 @@
             android:minHeight="35dp"
             android:paddingHorizontal="13dp"
             android:paddingVertical="8dp"
-            android:textColor="@color/sceyt_color_black_themed"
-            android:textColorHint="@color/sceyt_color_hint"
+            android:textColor="@color/sceyt_color_text_primary"
+            android:textColorHint="@color/sceyt_color_text_footnote"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/icSendMessage"
@@ -107,7 +108,7 @@
             android:layout_marginEnd="10dp"
             android:background="@drawable/sceyt_bg_circle"
             android:padding="7dp"
-            android:tint="@color/sceyt_color_white"
+            android:tint="@color/sceyt_color_on_primary"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:srcCompat="@drawable/sceyt_ic_voice" />
@@ -128,8 +129,9 @@
         android:id="@+id/btnJoin"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/sceyt_color_bg_secondary_themed"
+        android:background="@color/sceyt_color_surface_1"
         android:fontFamily="@font/roboto_medium"
+        android:foreground="?attr/selectableItemBackground"
         android:gravity="center"
         android:paddingVertical="15dp"
         android:text="@string/sceyt_join"
@@ -140,14 +142,16 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/viewTop" />
+        app:layout_constraintTop_toBottomOf="@id/viewTop"
+        tools:ignore="UnusedAttribute" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/btnClearChat"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/sceyt_bg_ripple"
+        android:background="@color/sceyt_color_background"
         android:fontFamily="@font/roboto_medium"
+        android:foreground="?attr/selectableItemBackground"
         android:gravity="center"
         android:paddingVertical="15dp"
         android:text="@string/sceyt_clear_chat"
@@ -157,7 +161,8 @@
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        tools:ignore="UnusedAttribute" />
 
     <include
         android:id="@+id/layoutInputSearchResult"

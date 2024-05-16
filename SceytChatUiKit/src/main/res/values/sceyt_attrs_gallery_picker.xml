@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="SceytGalleryPicker">
+        <attr name="sceytUiPickerNextButtonColor" format="reference|color" />
+        <attr name="sceytUiPickerCounterColor" format="reference|color" />
+        <attr name="sceytUiPickerCheckedStateIcon" format="reference" />
+        <attr name="sceytUiPickerUnCheckedStateIcon" format="reference" />
+        <attr name="sceytUiPickerUnVideoDurationIcon" format="reference" />
+        <attr name="sceytUiPickerMaxSelectCount" format="integer" />
+
+    </declare-styleable>
+</resources>

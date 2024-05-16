@@ -1,21 +1,23 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders
 
 import android.content.res.ColorStateList
-import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemIncDeletedMessageBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.sceytstyles.MessagesStyle
+import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 class IncDeletedMsgViewHolder(
         private val binding: SceytItemIncDeletedMessageBinding,
-        userNameBuilder: ((User) -> String)?,
+        private val style: MessageItemStyle,
+        userNameFormatter: UserNameFormatter?,
         displayedListener: ((MessageListItem) -> Unit)?,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-) : BaseMsgViewHolder(binding.root, userNameBuilder = userNameBuilder, displayedListener = displayedListener) {
+) : BaseMsgViewHolder(binding.root, style, userNameFormatter = userNameFormatter, displayedListener = displayedListener) {
 
     init {
         binding.setMessageItemStyle()
@@ -47,9 +49,8 @@ class IncDeletedMsgViewHolder(
     override val selectMessageView get() = binding.selectView
 
     private fun SceytItemIncDeletedMessageBinding.setMessageItemStyle() {
-        with(context) {
-            layoutDetails.backgroundTintList = ColorStateList.valueOf(getCompatColor(MessagesStyle.incBubbleColor))
-            tvUserName.setTextColor(getCompatColor(MessagesStyle.senderNameTextColor))
-        }
+        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incBubbleColor)
+        tvUserName.setTextColor(style.senderNameTextColor)
+        messageBody.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
     }
 }

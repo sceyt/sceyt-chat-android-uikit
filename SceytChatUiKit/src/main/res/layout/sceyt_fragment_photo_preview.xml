@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:titleTextColor="@color/sceyt_color_text_themed" />
+        app:titleTextColor="@color/sceyt_color_text_primary" />
 
     <com.github.chrisbanes.photoview.PhotoView
         android:id="@+id/imageView"
