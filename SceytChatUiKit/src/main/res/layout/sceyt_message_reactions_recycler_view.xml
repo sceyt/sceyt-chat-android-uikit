@@ -6,7 +6,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@drawable/sceyt_bg_corners_20"
-    android:backgroundTint="@color/sceyt_color_primary"
+    android:backgroundTint="@color/sceyt_color_background_sections"
     android:elevation="1dp"
     android:layoutDirection="ltr"
     android:orientation="horizontal"

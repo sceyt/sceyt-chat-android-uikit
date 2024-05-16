@@ -6,9 +6,9 @@ import com.sceyt.chat.demo.presentation.addmembers.adapters.SelectableUsersAdapt
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.demo.presentation.common.BaseViewHolder
 import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.sceytchatuikit.extensions.getPresentableName
-import com.sceyt.sceytchatuikit.extensions.getString
-import com.sceyt.sceytchatuikit.shared.utils.DateTimeUtil
+import com.sceyt.chatuikit.extensions.getPresentableName
+import com.sceyt.chatuikit.extensions.getString
+import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
 class SelectableUserViewHolder(private val binding: ItemSelectUserBinding,
@@ -31,7 +31,7 @@ class SelectableUserViewHolder(private val binding: ItemSelectUserBinding,
                         ?: 0) > 0L
 
                 tvStatus.text = if (user.presence?.state == PresenceState.Online) {
-                    itemView.getString(com.sceyt.sceytchatuikit.R.string.sceyt_online)
+                    itemView.getString(com.sceyt.chatuikit.R.string.sceyt_online)
                 } else {
                     if (user.presence?.lastActiveAt == 0L) {
                         ""

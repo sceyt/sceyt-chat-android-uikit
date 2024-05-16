@@ -12,7 +12,7 @@
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_mute_chat"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize"
         android:textStyle="bold" />
 
@@ -25,7 +25,7 @@
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_mute_for_1_hour"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -36,7 +36,7 @@
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_mute_for_8_hours"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -47,7 +47,7 @@
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_mute_forever"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

@@ -6,21 +6,21 @@
     android:layout_height="wrap_content"
     android:paddingHorizontal="2dp">
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytReactionView
+    <com.sceyt.chatuikit.presentation.customviews.SceytReactionView
         android:id="@+id/reaction"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:sceytReactionViewCountText="2"
-        app:sceytReactionViewCountTextColor="@color/sceyt_color_black_themed"
+        app:sceytReactionViewCountTextColor="@color/sceyt_color_text_primary"
         app:sceytReactionViewCountTextMargin="5dp"
         app:sceytReactionViewCountTextSize="15sp"
         app:sceytReactionViewEnableStroke="true"
         app:sceytReactionViewInnerPaddingHorizontal="12dp"
         app:sceytReactionViewInnerPaddingVertical="8dp"
         app:sceytReactionViewSmileTextSize="15sp"
-        app:sceytReactionViewStrokeColor="@color/sceyt_color_divider"
+        app:sceytReactionViewStrokeColor="@color/sceyt_color_border"
         app:sceytReactionViewStrokeCornerRadius="30dp"
         app:sceytReactionViewStrokeWidth="1dp"
         tools:sceytReactionViewSmileText="😍" />

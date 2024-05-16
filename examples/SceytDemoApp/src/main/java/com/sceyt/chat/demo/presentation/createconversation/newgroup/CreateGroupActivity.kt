@@ -15,31 +15,29 @@ import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.ActivityCreateGroupBinding
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.demo.presentation.conversation.ConversationActivity
-import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.role.Role
-import com.sceyt.chat.models.user.User
-import com.sceyt.sceytchatuikit.R.anim
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelTypeEnum
-import com.sceyt.sceytchatuikit.data.models.channels.CreateChannelData
-import com.sceyt.sceytchatuikit.data.models.channels.RoleTypeEnum
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
-import com.sceyt.sceytchatuikit.extensions.getCompatColor
-import com.sceyt.sceytchatuikit.extensions.hideSoftInput
-import com.sceyt.sceytchatuikit.extensions.overrideTransitions
-import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.sceytchatuikit.persistence.extensions.resizeImage
-import com.sceyt.sceytchatuikit.presentation.common.SceytLoader.hideLoading
-import com.sceyt.sceytchatuikit.presentation.common.SceytLoader.showLoading
-import com.sceyt.sceytchatuikit.presentation.root.PageState
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
 import com.sceyt.chat.demo.presentation.createconversation.viewmodel.CreateChatViewModel
 import com.sceyt.chat.demo.presentation.newchannel.adapters.UserViewHolderFactory
 import com.sceyt.chat.demo.presentation.newchannel.adapters.UsersAdapter
-import com.sceyt.sceytchatuikit.data.models.channels.ChannelDescriptionData
-import com.sceyt.sceytchatuikit.extensions.parcelableArrayList
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
-import com.sceyt.sceytchatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
+import com.sceyt.chat.models.member.Member
+import com.sceyt.chat.models.role.Role
+import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
+import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
+import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.hideSoftInput
+import com.sceyt.chatuikit.extensions.overrideTransitions
+import com.sceyt.chatuikit.extensions.parcelableArrayList
+import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.persistence.extensions.resizeImage
+import com.sceyt.chatuikit.presentation.common.SceytLoader.hideLoading
+import com.sceyt.chatuikit.presentation.common.SceytLoader.showLoading
+import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
+import com.sceyt.chatuikit.shared.helpers.chooseAttachment.ChooseAttachmentHelper
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch
 import java.io.File
@@ -58,7 +56,7 @@ class CreateGroupActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground()
 
         getDataFromIntent()
         initViewModel()
@@ -193,7 +191,8 @@ class CreateGroupActivity : AppCompatActivity() {
 
     override fun finish() {
         super.finish()
-        overrideTransitions(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right, false)
+        overrideTransitions(com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold,
+            com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right, false)
     }
 
     companion object {

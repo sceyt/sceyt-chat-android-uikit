@@ -5,12 +5,12 @@
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/sceyt_color_primary</item>
         <item name="colorPrimaryDark">@color/sceyt_color_primary_dark</item>
-        <item name="colorAccent">@color/sceyt_color_accent</item>
+        <item name="colorAccent">@color/colorAccent</item>
         <item name="colorSecondary">@color/sceyt_color_primary</item>
         <item name="colorControlNormal">@color/sceyt_color_primary</item>
         <item name="windowActionModeOverlay">false</item>
         <item name="windowActionBar">false</item>
-        <item name="android:windowBackground">@color/sceyt_color_bg</item>
+        <item name="android:windowBackground">@color/sceyt_color_background</item>
         <item name="android:statusBarColor">@color/sceyt_color_status_bar</item>
         <item name="windowNoTitle">true</item>
     </style>

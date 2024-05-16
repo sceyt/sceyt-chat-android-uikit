@@ -9,7 +9,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:textColor="@color/sceyt_color_black_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         tools:text="Empty" />
 
 </FrameLayout>

@@ -10,12 +10,10 @@ import com.sceyt.chat.demo.databinding.ActivityMainBinding
 import com.sceyt.chat.demo.presentation.login.LoginViewModel
 import com.sceyt.chat.demo.presentation.mainactivity.adapters.MainViewPagerAdapter
 import com.sceyt.chat.demo.presentation.mainactivity.profile.ProfileFragment
-import com.sceyt.sceytchatuikit.SceytKitClient
-import com.sceyt.sceytchatuikit.extensions.customToastSnackBar
-import com.sceyt.sceytchatuikit.extensions.isNightTheme
-import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.sceytchatuikit.presentation.root.PageState
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject
@@ -30,16 +28,14 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val isNightMode = isNightTheme()
-        SceytKitConfig.SceytUITheme.isDarkMode = isNightMode
-        statusBarIconsColorWithBackground(isNightMode)
+        statusBarIconsColorWithBackground()
 
         setPagerAdapter()
         setBottomNavClickListeners()
         loginIfNeeded()
         initViewModel()
 
-        SceytKitClient.getChannelsMiddleWare().getTotalUnreadCount().onEach {
+        SceytChatUIKit.chatUIFacade.channelInteractor.getTotalUnreadCount().onEach {
             binding.bottomNavigationView.getOrCreateBadge(R.id.channelsFragment).apply {
                 number = it
                 isVisible = it > 0

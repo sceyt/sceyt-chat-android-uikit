@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_bg"
-    tools:context="com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity">
+    android:background="@color/sceyt_color_background"
+    tools:context="com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutToolbar"
@@ -33,7 +33,7 @@
         android:id="@+id/underline"
         android:layout_width="match_parent"
         android:layout_height=".5dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintTop_toBottomOf="@+id/layoutToolbar" />
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -83,7 +83,7 @@
                         android:fontFamily="@font/roboto_medium"
                         android:hint="@string/sceyt_hint_channel_subject"
                         android:maxLines="2"
-                        android:textColor="@color/sceyt_color_text_themed"
+                        android:textColor="@color/sceyt_color_text_primary"
                         android:textColorHint="@color/sceyt_color_hint"
                         android:textSize="@dimen/bigTextSize"
                         app:layout_constraintBottom_toBottomOf="@+id/avatar"
@@ -100,7 +100,7 @@
                         android:background="?selectableItemBackground"
                         android:paddingVertical="10dp"
                         android:text="@string/sceyt_clear_history"
-                        android:textColor="@color/sceyt_color_red"
+                        android:textColor="@color/sceyt_color_error"
                         android:textSize="@dimen/mediumTextSize"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -118,12 +118,12 @@
                 android:background="@color/sceyt_color_accent"
                 app:layout_constraintTop_toBottomOf="@+id/layoutDetails"
                 app:tabGravity="fill"
-                app:tabIndicatorColor="@color/sceyt_color_white"
+                app:tabIndicatorColor="@color/sceyt_color_on_primary"
                 app:tabMaxWidth="0dp"
                 app:tabMode="fixed"
-                app:tabSelectedTextColor="@color/sceyt_color_text_themed"
+                app:tabSelectedTextColor="@color/sceyt_color_text_primary"
                 app:tabTextAppearance="@android:style/TextAppearance.Widget.TabWidget"
-                app:tabTextColor="@color/sceyt_color_white" />
+                app:tabTextColor="@color/sceyt_color_on_primary" />
 
         </com.google.android.material.appbar.AppBarLayout>
 

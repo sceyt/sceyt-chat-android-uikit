@@ -15,14 +15,12 @@ import com.sceyt.chat.demo.presentation.addmembers.adapters.SelectedUsersAdapter
 import com.sceyt.chat.demo.presentation.addmembers.adapters.UserItem
 import com.sceyt.chat.demo.presentation.addmembers.adapters.viewholders.SelectableUserViewHolderFactory
 import com.sceyt.chat.demo.presentation.addmembers.viewmodel.UsersViewModel
-import com.sceyt.sceytchatuikit.R
-import com.sceyt.sceytchatuikit.R.anim
-import com.sceyt.sceytchatuikit.data.models.channels.SceytMember
-import com.sceyt.sceytchatuikit.extensions.isLastItemDisplaying
-import com.sceyt.sceytchatuikit.extensions.overrideTransitions
-import com.sceyt.sceytchatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.sceytchatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
-import com.sceyt.sceytchatuikit.sceytconfigs.SceytKitConfig
+import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.extensions.isLastItemDisplaying
+import com.sceyt.chatuikit.extensions.overrideTransitions
+import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
 
 class AddMembersActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAddMembersBinding
@@ -40,7 +38,7 @@ class AddMembersActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
-        statusBarIconsColorWithBackground(SceytKitConfig.isDarkMode)
+        statusBarIconsColorWithBackground()
 
         getIntentExtra()
         initViewModel()
@@ -59,7 +57,7 @@ class AddMembersActivity : AppCompatActivity() {
 
     private fun getIntentExtra() {
         intent?.getIntExtra(MEMBER_TYPE, memberType.ordinal)?.let { ordinal ->
-            memberType = MemberTypeEnum.values().getOrNull(ordinal) ?: memberType
+            memberType = MemberTypeEnum.entries.getOrNull(ordinal) ?: memberType
         }
 
         intent?.getBooleanExtra(BUTTON_ALWAYS_ENABLE, false)?.let {
@@ -184,7 +182,7 @@ class AddMembersActivity : AppCompatActivity() {
 
     override fun finish() {
         super.finish()
-        overrideTransitions(anim.sceyt_anim_slide_hold, anim.sceyt_anim_slide_out_right, false)
+        overrideTransitions(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right, false)
     }
 
     companion object {

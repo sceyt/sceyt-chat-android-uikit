@@ -13,7 +13,7 @@
         android:button="@drawable/sceyt_custom_radiobutton"
         android:gravity="end|center"
         android:paddingVertical="10dp"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:layoutDirection="rtl"
         android:textDirection="rtl"
         android:textSize="@dimen/mediumTextSize"

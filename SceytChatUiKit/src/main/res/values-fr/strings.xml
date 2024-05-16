@@ -137,7 +137,7 @@
     <string name="sceyt_media_cannot_save_to_gallery">Impossible d’enregistrer le fichier dans la galerie. Vérifier l’autorisation et autoriser l’application à accéder au stockage</string>
     <string name="sceyt_deleted_user">utilisateur supprimé</string>
     <string name="sceyt_share_with">partager avec</string>
-    <string name="sceyt_write_a_message">écrire un message</string>
+    <string name="sceyt_write_a_message">écrire un message…</string>
     <string name="sceyt_shara_max_item_count">vous êtes autorisé à envoyer un maximum de 20 fichiers</string>
     <string name="sceyt_share_max_chats_count">Vous êtes autorisé à envoyer un message à un maximum de 5 discussion.</string>
     <string name="sceyt_photo">photo</string>

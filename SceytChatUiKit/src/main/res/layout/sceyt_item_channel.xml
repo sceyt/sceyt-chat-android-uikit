@@ -1,148 +1,158 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/parentLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:foreground="@drawable/sceyt_bg_ripple"
+    tools:ignore="UnusedAttribute">
 
-    <data>
-
-        <import type="com.sceyt.sceytchatuikit.R" />
-    </data>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/parentLayout"
+    <View
+        android:id="@+id/viewPinned"
         android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@color/sceyt_color_surface_1"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
+        android:id="@+id/avatar"
+        android:layout_width="@dimen/_45sdp"
+        android:layout_height="@dimen/_45sdp"
+        android:layout_marginVertical="8dp"
+        android:layout_marginStart="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.sceyt.chatuikit.presentation.customviews.SceytOnlineView
+        android:id="@+id/onlineStatus"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:layout_margin="1dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/avatar"
+        app:layout_constraintEnd_toEndOf="@id/avatar"
+        app:sceytOnlineViewChangeVisibilityWithAnim="true"
+        app:sceytOnlineViewIndicatorColor="@color/sceyt_color_green"
+        app:sceytOnlineViewStrokeColor="@color/sceyt_color_background"
+        app:sceytOnlineViewStrokeWidth="1.5dp"
+        tools:visibility="visible" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/channelTitle"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="?selectableItemBackground">
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="8dp"
+        android:drawablePadding="5dp"
+        android:ellipsize="end"
+        android:fontFamily="@font/roboto_medium"
+        android:includeFontPadding="false"
+        android:lines="1"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textSize="@dimen/mediumTextSize"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toStartOf="@+id/dateStatus"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toEndOf="@+id/avatar"
+        app:layout_constraintTop_toTopOf="@+id/avatar"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Title" />
 
-        <com.sceyt.sceytchatuikit.presentation.customviews.SceytAvatarView
-            android:id="@+id/avatar"
-            android:layout_width="@dimen/_45sdp"
-            android:layout_height="@dimen/_45sdp"
-            android:layout_marginVertical="8dp"
-            android:layout_marginStart="10dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+    <com.sceyt.chatuikit.presentation.customviews.SceytColorSpannableTextView
+        android:id="@+id/lastMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="10dp"
+        android:ellipsize="end"
+        android:includeFontPadding="false"
+        android:lines="2"
+        android:maxLines="2"
+        android:textAlignment="viewStart"
+        android:textColor="@color/sceyt_color_text_secondary"
+        android:textSize="@dimen/smallTextSize"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintEnd_toStartOf="@+id/icPinned"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="@+id/channelTitle"
+        app:layout_constraintTop_toBottomOf="@+id/channelTitle"
+        tools:text="Description" />
 
-        <com.sceyt.sceytchatuikit.presentation.customviews.SceytOnlineView
-            android:id="@+id/onlineStatus"
-            themeStrokeColorOnlineView="@{R.color.sceyt_color_bg}"
-            android:layout_width="14dp"
-            android:layout_height="14dp"
-            android:layout_margin="1dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@id/avatar"
-            app:layout_constraintEnd_toEndOf="@id/avatar"
-            app:sceytOnlineViewChangeVisibilityWithAnim="true"
-            app:sceytOnlineViewIndicatorColor="@color/sceyt_color_green"
-            app:sceytOnlineViewStrokeColor="@color/sceyt_color_bg"
-            app:sceytOnlineViewStrokeWidth="1.5dp"
-            tools:visibility="visible" />
+    <View
+        android:id="@+id/divider"
+        android:layout_width="0dp"
+        android:layout_height="0.5dp"
+        android:background="@color/sceyt_color_border"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/channelTitle" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/channelTitle"
-            themedTextColor="@{R.color.sceyt_color_text_themed}"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="8dp"
-            android:drawablePadding="5dp"
-            android:ellipsize="end"
-            android:fontFamily="@font/roboto_medium"
-            android:includeFontPadding="false"
-            android:lines="1"
-            android:textColor="@color/sceyt_color_text_themed"
-            android:textSize="@dimen/mediumTextSize"
-            app:layout_constrainedWidth="true"
-            app:layout_constraintEnd_toStartOf="@+id/dateStatus"
-            app:layout_constraintHorizontal_bias="0"
-            app:layout_constraintStart_toEndOf="@+id/avatar"
-            app:layout_constraintTop_toTopOf="@+id/avatar"
-            app:layout_constraintVertical_chainStyle="packed"
-            tools:text="Title" />
+    <com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
+        android:id="@+id/dateStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/channelTitle"
+        app:sceytDateStatusViewDateTextColor="@color/sceyt_color_text_secondary"
+        app:sceytDateStatusViewDateTextSize="13sp"
+        app:sceytDateStatusViewFirstStatus="true"
+        app:sceytDateStatusViewIgnoreRtl="true"
+        app:sceytDateStatusViewStatusIconMargin="4dp"
+        app:sceytDateStatusViewStatusIconSize="16dp"
+        tools:sceytDateStatusViewDateText="12:28"
+        tools:sceytDateStatusViewStatusIcon="@drawable/sceyt_ic_status_delivered" />
 
-        <com.sceyt.sceytchatuikit.presentation.customviews.SceytColorSpannableTextView
-            android:id="@+id/lastMessage"
-            themedSpannableTextColor="@{true}"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAlignment="viewStart"
-            android:layout_marginTop="4dp"
-            android:layout_marginEnd="10dp"
-            android:ellipsize="end"
-            android:includeFontPadding="false"
-            android:lines="2"
-            android:maxLines="2"
-            android:textColor="@color/sceyt_color_gray_400"
-            android:textSize="@dimen/smallTextSize"
-            app:layout_constrainedWidth="true"
-            app:layout_constraintEnd_toStartOf="@+id/icMention"
-            app:layout_constraintHorizontal_bias="0"
-            app:layout_constraintStart_toStartOf="@+id/channelTitle"
-            app:layout_constraintTop_toBottomOf="@+id/channelTitle"
-            tools:text="Description" />
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icPinned"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="8dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toStartOf="@+id/icMention"
+        app:layout_constraintTop_toBottomOf="@+id/dateStatus"
+        app:srcCompat="@drawable/sceyt_ic_pin_filled"
+        tools:visibility="visible" />
 
-        <View
-            android:id="@+id/divider"
-            themedBackgroundColor="@{R.color.sceyt_color_divider}"
-            android:layout_width="0dp"
-            android:layout_height="0.5dp"
-            android:background="@color/sceyt_color_divider"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@id/channelTitle" />
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icMention"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/sceyt_bg_circle"
+        android:gravity="center"
+        android:padding="2dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toStartOf="@+id/unreadMessagesCount"
+        app:layout_constraintTop_toBottomOf="@+id/dateStatus"
+        app:srcCompat="@drawable/sceyt_ic_mention"
+        tools:visibility="visible" />
 
-        <com.sceyt.sceytchatuikit.presentation.customviews.SceytDateStatusView
-            android:id="@+id/dateStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/channelTitle"
-            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_gray_400"
-            app:sceytDateStatusViewDateTextSize="13sp"
-            app:sceytDateStatusViewFirstStatus="true"
-            app:sceytDateStatusViewIgnoreRtl="true"
-            app:sceytDateStatusViewStatusIconMargin="4dp"
-            app:sceytDateStatusViewStatusIconSize="16dp"
-            tools:sceytDateStatusViewDateText="12:28"
-            tools:sceytDateStatusViewStatusIcon="@drawable/sceyt_ic_status_delivered" />
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/unreadMessagesCount"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/sceyt_bg_corners_30"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:maxLength="3"
+        android:minWidth="20dp"
+        android:paddingHorizontal="6dp"
+        android:singleLine="true"
+        android:textColor="@color/sceyt_color_on_primary"
+        android:textSize="@dimen/extraSmallTextSize"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dateStatus"
+        tools:text="9"
+        tools:visibility="visible" />
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/icMention"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/sceyt_bg_circle"
-            android:gravity="center"
-            android:padding="2dp"
-            android:visibility="gone"
-            app:layout_constraintEnd_toStartOf="@+id/unreadMessagesCount"
-            app:layout_constraintTop_toBottomOf="@+id/dateStatus"
-            app:srcCompat="@drawable/sceyt_ic_mention"
-            tools:visibility="visible" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/unreadMessagesCount"
-            android:layout_width="wrap_content"
-            android:layout_height="20dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="10dp"
-            android:background="@drawable/sceyt_bg_corners_30"
-            android:gravity="center"
-            android:includeFontPadding="false"
-            android:maxLength="3"
-            android:minWidth="20dp"
-            android:paddingHorizontal="6dp"
-            android:singleLine="true"
-            android:textColor="@color/sceyt_color_white"
-            android:textSize="@dimen/extraSmallTextSize"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/dateStatus"
-            tools:text="9"
-            tools:visibility="visible" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</layout>
+</androidx.constraintlayout.widget.ConstraintLayout>

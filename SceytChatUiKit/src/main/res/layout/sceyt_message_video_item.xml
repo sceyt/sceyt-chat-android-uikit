@@ -7,18 +7,18 @@
     android:layout_height="wrap_content"
     android:background="@drawable/sceyt_rounded_video_background">
 
-<!--    <androidx.media3.ui.PlayerView
-        android:id="@+id/videoView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:visibility="gone"
-        app:layout_constraintDimensionRatio="1:.8"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:resize_mode="zoom"
-        app:surface_type="texture_view"
-        app:use_controller="false" />-->
+    <!--    <androidx.media3.ui.PlayerView
+            android:id="@+id/videoView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            app:layout_constraintDimensionRatio="1:.8"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:resize_mode="zoom"
+            app:surface_type="texture_view"
+            app:use_controller="false" />-->
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/imageThumb"
@@ -58,10 +58,11 @@
         android:backgroundTint="@color/sceyt_progress_bg_color"
         android:drawableStart="@drawable/sceyt_ic_video"
         android:drawablePadding="5dp"
+        android:gravity="center"
         android:includeFontPadding="false"
         android:paddingHorizontal="7dp"
-        android:paddingVertical="3dp"
-        android:textColor="@color/sceyt_color_white"
+        android:paddingVertical="2dp"
+        android:textColor="@color/sceyt_color_on_primary"
         android:textSize="11sp"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
@@ -69,7 +70,7 @@
         tools:text="0:11"
         tools:visibility="visible" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
+    <com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
         android:id="@+id/loadProgress"
         android:layout_width="@dimen/messageProgressSize"
         android:layout_height="@dimen/messageProgressSize"
@@ -82,7 +83,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:minProgress="2"
-        app:progressColor="@color/sceyt_color_white"
+        app:progressColor="@color/sceyt_color_on_primary"
         app:trackColor="@android:color/transparent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.sceyt.sceytchatuikit.presentation.uicomponents.forward.SceytForwardActivity">
+    tools:context="com.sceyt.chatuikit.presentation.uicomponents.forward.SceytForwardActivity">
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytSearchableToolbar
+    <com.sceyt.chatuikit.presentation.customviews.SceytSearchableToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -35,7 +35,7 @@
         android:background="@drawable/sceyt_bg_corners_6"
         android:text="@string/sceyt_forward"
         android:textAllCaps="false"
-        android:textColor="@color/sceyt_color_white"
+        android:textColor="@color/sceyt_color_on_primary"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/rvChannels"

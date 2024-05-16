@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/sceyt_color_primary"
+    android:background="@color/sceyt_color_background_sections"
     android:padding="8dp">
 
     <androidx.appcompat.widget.AppCompatImageView
@@ -12,11 +12,12 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="center"
+        android:padding="10dp"
         android:background="@drawable/sceyt_bg_corners_8"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_ic_file_with_bg" />
+        app:srcCompat="@drawable/sceyt_ic_file_filled" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvFileName"
@@ -25,7 +26,7 @@
         android:layout_marginHorizontal="8dp"
         android:ellipsize="middle"
         android:singleLine="true"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize"
         android:textStyle="bold"
         app:layout_constrainedWidth="true"
@@ -41,7 +42,7 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="8dp"
         android:layout_marginTop="2dp"
-        android:textColor="@color/sceyt_color_gray_400"
+        android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="13sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0"
@@ -49,7 +50,7 @@
         app:layout_constraintTop_toBottomOf="@+id/tvFileName"
         tools:text="67 KB" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCircularProgressView
+    <com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
         android:id="@+id/loadProgress"
         android:layout_width="35dp"
         android:layout_height="35dp"

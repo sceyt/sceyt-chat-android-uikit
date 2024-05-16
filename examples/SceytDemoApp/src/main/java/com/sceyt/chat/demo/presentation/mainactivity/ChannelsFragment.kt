@@ -16,20 +16,21 @@ import com.sceyt.chat.demo.databinding.FragmentChannelsBinding
 import com.sceyt.chat.demo.presentation.conversation.ConversationActivity
 import com.sceyt.chat.demo.presentation.newchannel.StartChatActivity
 import com.sceyt.chat.models.ConnectionState
-import com.sceyt.sceytchatuikit.data.connectionobserver.ConnectionEventsObserver
-import com.sceyt.sceytchatuikit.data.models.channels.SceytChannel
-import com.sceyt.sceytchatuikit.databinding.SceytItemChannelBinding
-import com.sceyt.sceytchatuikit.extensions.setMargins
-import com.sceyt.sceytchatuikit.persistence.differs.ChannelDiff
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolder
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
-import com.sceyt.sceytchatuikit.presentation.uicomponents.channels.viewmodels.bind
+import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.databinding.SceytItemChannelBinding
+import com.sceyt.chatuikit.extensions.setMargins
+import com.sceyt.chatuikit.persistence.differs.ChannelDiff
+import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
+import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
+import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolder
+import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
+import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
+import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
+import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
+import com.sceyt.chatuikit.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
+import com.sceyt.chatuikit.presentation.uicomponents.channels.viewmodels.bind
+import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
@@ -97,6 +98,7 @@ class ChannelsFragment : Fragment() {
             //return super.createChannelViewHolder(parent)
 
             return ViewHolderWithSceytUiAndCustomLogic(SceytItemChannelBinding.inflate(LayoutInflater.from(parent.context), parent, false),
+                channelStyle,
                 clickListeners, getAttachDetachListener())
         }
     }
@@ -105,8 +107,9 @@ class ChannelsFragment : Fragment() {
      * Use this to customise your logic*/
     class ViewHolderWithSceytUiAndCustomLogic(
             binding: SceytItemChannelBinding,
+            style: ChannelListViewStyle,
             listener: ChannelClickListeners.ClickListeners,
-            attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)?) : ChannelViewHolder(binding, listener, attachDetachListener) {
+            attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)?) : ChannelViewHolder(binding, style, listener, attachDetachListener) {
 
         override fun setLastMessagedText(channel: SceytChannel, textView: TextView) {
             textView.text = "Bla Bla"

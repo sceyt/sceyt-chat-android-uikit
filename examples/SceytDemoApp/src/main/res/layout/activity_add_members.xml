@@ -7,7 +7,7 @@
     android:orientation="vertical"
     tools:context=".presentation.addmembers.AddMembersActivity">
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytSearchableToolbar
+    <com.sceyt.chatuikit.presentation.customviews.SceytSearchableToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -32,12 +32,12 @@
         android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/sceyt_color_gray_themed"
+        android:background="@color/sceyt_color_surface_1"
         android:fontFamily="@font/roboto_medium"
         android:gravity="center"
         android:paddingVertical="4dp"
         android:text="@string/users"
-        android:textColor="@color/sceyt_color_gray_secondary_themed"
+        android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="@dimen/_12sdp"
         app:layout_constraintStart_toStartOf="@+id/rvSelectedUsers"
         app:layout_constraintTop_toBottomOf="@+id/rvSelectedUsers" />
@@ -56,7 +56,7 @@
         tools:itemCount="20"
         tools:listitem="@layout/item_select_user" />
 
-    <com.sceyt.sceytchatuikit.presentation.customviews.SceytCustomFloatingActonButton
+    <com.sceyt.chatuikit.presentation.customviews.SceytCustomFloatingActonButton
         android:id="@+id/fabNext"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

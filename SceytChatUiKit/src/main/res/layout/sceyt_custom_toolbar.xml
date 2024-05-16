@@ -29,7 +29,7 @@
         android:padding="10dp"
         android:singleLine="true"
         android:textAlignment="viewStart"
-        android:textColor="@color/sceyt_color_text_themed"
+        android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/bigTextSize"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/icMenuIcon"
@@ -52,7 +52,7 @@
         android:id="@+id/underline"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/sceyt_color_divider"
+        android:background="@color/sceyt_color_border"
         app:layout_constraintBottom_toBottomOf="@+id/layoutToolbar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

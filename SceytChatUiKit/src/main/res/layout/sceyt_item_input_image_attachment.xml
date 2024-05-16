@@ -27,14 +27,30 @@
 
     </androidx.cardview.widget.CardView>
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/closeBtn"
+    <FrameLayout
+        android:id="@+id/layoutRemove"
         android:layout_width="22dp"
         android:layout_height="22dp"
         android:layout_marginStart="47dp"
         android:layout_marginBottom="47dp"
+        android:background="@drawable/sceyt_bg_circle"
+        android:backgroundTint="@color/sceyt_color_background"
+        android:padding="2dp"
         app:layout_constraintBottom_toBottomOf="@id/imageCont"
-        app:layout_constraintStart_toStartOf="@id/imageCont"
-        app:srcCompat="@drawable/sceyt_ic_remove" />
+        app:layout_constraintStart_toStartOf="@id/imageCont">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/btnRemove"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/sceyt_bg_circle"
+            android:backgroundTint="@color/sceyt_color_icon_secondary"
+            android:tint="@color/sceyt_color_on_primary"
+            app:layout_constraintBottom_toBottomOf="@id/imageCont"
+            app:layout_constraintStart_toStartOf="@id/imageCont"
+            app:srcCompat="@drawable/sceyt_ic_cancel" />
+
+    </FrameLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

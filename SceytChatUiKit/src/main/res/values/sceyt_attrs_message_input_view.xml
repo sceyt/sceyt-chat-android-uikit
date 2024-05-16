@@ -5,9 +5,12 @@
         <attr name="sceytMessageInputAttachmentIcon" format="reference" />
         <attr name="sceytMessageInputSendIcon" format="reference" />
         <attr name="sceytMessageInputVoiceRecordIcon" format="reference" />
+        <attr name="sceytMessageInputSendVoiceRecordIcon" format="reference" />
+        <attr name="sceytMessageInputLinkIcon" format="reference" />
         <attr name="sceytMessageInputHintText" format="string" localization="suggested" />
-        <attr name="sceytMessageInputTextColor" format="reference" />
-        <attr name="sceytMessageInputHintTextColor" format="reference" />
-        <attr name="sceytMessageInputUserNameTextColor" format="reference" />
+        <attr name="sceytMessageInputTextColor" format="reference|color" />
+        <attr name="sceytMessageInputHintTextColor" format="reference|color" />
+        <attr name="sceytMessageInputRootBackgroundColor" format="reference|color" />
+        <attr name="sceytMessageInputBackgroundColor" format="reference|color" />
     </declare-styleable>
 </resources>

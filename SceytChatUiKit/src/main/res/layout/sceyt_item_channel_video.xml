@@ -19,7 +19,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@color/sceyt_color_gray"/>
+        app:srcCompat="@color/sceyt_color_gray" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvDuration"
@@ -30,10 +30,11 @@
         android:backgroundTint="@color/sceyt_progress_bg_color"
         android:drawableStart="@drawable/sceyt_ic_video"
         android:drawablePadding="5dp"
+        android:gravity="center"
         android:includeFontPadding="false"
         android:paddingHorizontal="7dp"
-        android:paddingVertical="3dp"
-        android:textColor="@color/sceyt_color_white"
+        android:paddingVertical="2dp"
+        android:textColor="@color/sceyt_color_on_primary"
         android:textSize="11sp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
