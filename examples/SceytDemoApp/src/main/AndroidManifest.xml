@@ -58,39 +58,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="com.sceyt.chat.demo.presentation.changerole.ChangeRoleActivity"
-            android:exported="false"
-            android:theme="@style/DefaultFontTheme" />
-        <activity
-            android:name=".presentation.conversationinfo.CustomConversationInfoActivity"
-            android:exported="false"
-            android:theme="@style/DefaultFontTheme"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".presentation.conversation.ConversationActivity"
-            android:exported="false"
-            android:theme="@style/DefaultFontTheme"
-            android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name="com.sceyt.chat.demo.presentation.addmembers.AddMembersActivity"
-            android:exported="false"
-            android:theme="@style/DefaultFontTheme" />
-        <activity
-            android:name="com.sceyt.chat.demo.presentation.newchannel.StartChatActivity"
-            android:exported="false"
-            android:theme="@style/DefaultFontTheme" />
-        <activity
-            android:name="com.sceyt.chat.demo.presentation.createconversation.newgroup.CreateGroupActivity"
-            android:exported="false"
-            android:theme="@style/DefaultFontTheme" />
-        <activity
-            android:name=".presentation.createconversation.createchannel.CreateChannelActivity"
-            android:exported="false"
-            android:theme="@style/DefaultFontTheme"
-            android:windowSoftInputMode="adjustResize" />
 
-        <activity android:name="com.yalantis.ucrop.UCropActivity" />
+        <activity
+            android:name="com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytChatActivity"
+            android:exported="false"
+            android:theme="@style/DefaultFontTheme"
+            android:windowSoftInputMode="adjustResize" />
 
         <service
             android:name="com.sceyt.chatuikit.services.SceytFirebaseMessageReceiver"

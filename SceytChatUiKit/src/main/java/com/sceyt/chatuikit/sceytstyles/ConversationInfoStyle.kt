@@ -6,10 +6,10 @@ import android.util.AttributeSet
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.SceytConversationInfoActivity
 
 /**
- * Style for [ConversationInfoActivity] page.
+ * Style for [SceytConversationInfoActivity] page.
  * @param navigationIcon - icon for navigation back, default value is [R.drawable.sceyt_ic_arrow_back]
  * @param moreIcon - icon for more actions, default value is [R.drawable.sceyt_ic_more_24]
  * @param editIcon - icon for edit actions, default value is [R.drawable.sceyt_ic_edit_stroked]

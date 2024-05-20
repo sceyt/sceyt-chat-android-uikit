@@ -660,7 +660,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         with(binding.layoutInputSearchResult) {
             val hasResult = data.messages.isNotEmpty()
             tvResult.text = if (hasResult)
-                "${data.currentIndex + 1} ${getString(R.string.of)} ${data.messages.size}"
+                "${data.currentIndex + 1} ${getString(R.string.sceyt_of)} ${data.messages.size}"
             else getString(R.string.sceyt_not_found)
             icDown.isEnabled = hasResult && data.currentIndex > 0
             icUp.isEnabled = hasResult && data.currentIndex < data.messages.lastIndex
