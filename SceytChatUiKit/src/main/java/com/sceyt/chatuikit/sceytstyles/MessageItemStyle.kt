@@ -91,10 +91,10 @@ data class MessageItemStyle(
                 defaultOutBubbleColor)
 
             val defaultOutDarkColor = ColorUtils.blendARGB(accentColor, color2, 0.75f)
-            val incReplyBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageIncLinkPreviewBackgroundColor,
-                context.getCompatColor(R.color.sceyt_color_bg_inc_link_preview))
+            val incReplyBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageIncReplyBackgroundColor,
+                context.getCompatColor(R.color.sceyt_color_surface_2))
 
-            val outReplyBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageOutLinkPreviewBackgroundColor,
+            val outReplyBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageOutReplBackgroundColor,
                 defaultOutDarkColor)
 
             val incLinkPreviewBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageIncLinkPreviewBackgroundColor,
