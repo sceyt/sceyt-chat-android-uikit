@@ -60,15 +60,15 @@ open class InfoSpecificationsFragment : Fragment(), ChannelUpdateListener, Conve
     open fun setChannelSpecification(channel: SceytChannel) {
         with(binding) {
             if (channel.isPublic()) {
-                link.text = "@${channel.uri}"
+                link.text = channel.uri
             } else binding.root.isVisible = false
         }
     }
 
     private fun onLinkClick(channel: SceytChannel) {
-        val uri = channel.uri?.removePrefix("@") ?: return
+        val uri = channel.uri ?: return
         context?.setClipboard(uri)
-        Toast.makeText(context, getString(R.string.channel_uri_copied), Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, getString(R.string.sceyt_channel_uri_copied), Toast.LENGTH_SHORT).show()
     }
 
     override fun onChannelUpdated(channel: SceytChannel) {
