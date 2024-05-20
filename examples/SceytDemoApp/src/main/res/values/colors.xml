@@ -3,6 +3,9 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="color_bottom_nav">#ffffff</color>
-    <color name="colorAccent">@color/sceyt_color_accent</color>
+    <color name="colorAccent2">#430434</color>
+    <color name="pink">#EA1DB6</color>
+    <color name="primary">#05125B</color>
+    <color name="textPrimary">#FF5722</color>
 
 </resources>
