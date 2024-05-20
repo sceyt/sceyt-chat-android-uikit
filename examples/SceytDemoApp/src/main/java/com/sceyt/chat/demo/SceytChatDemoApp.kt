@@ -8,13 +8,12 @@ import com.sceyt.chat.demo.di.apiModule
 import com.sceyt.chat.demo.di.appModules
 import com.sceyt.chat.demo.di.repositoryModule
 import com.sceyt.chat.demo.di.viewModelModules
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytChatActivity
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytConversationActivity
 import com.sceyt.chat.models.SCTLogLevel
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.sceytconfigs.SceytChatUIKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UploadNotificationClickHandleData
-import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -46,7 +45,7 @@ class SceytChatDemoApp : Application() {
 
         SceytChatUIKit.config = SceytChatUIKitConfig(
             uploadNotificationClickHandleData = UploadNotificationClickHandleData(
-                SceytChatActivity::class.java, SceytChatActivity.CHANNEL
+                SceytConversationActivity::class.java, SceytConversationActivity.CHANNEL
             )
         )
         ChatClient.setSceytLogLevel(SCTLogLevel.Info) { i: Int, s: String, s1: String ->

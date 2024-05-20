@@ -38,7 +38,7 @@
     <color name="sceyt_color_bg_out_message">#E3E7FF</color>
     <color name="sceyt_color_bg_inc_message">#F1F2F6</color>
     <color name="sceyt_color_bg_out_link_preview">#C9D1FF</color>
-    <color name="sceyt_color_bg_inc_link_preview">#DFE1EA</color>
+    <color name="sceyt_color_bg_inc_link_preview">#E4E6EE</color>
 
 
     // Not themed colors

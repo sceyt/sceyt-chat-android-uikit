@@ -24,7 +24,7 @@ import com.sceyt.chatuikit.presentation.common.SceytLoader.hideLoading
 import com.sceyt.chatuikit.presentation.common.SceytLoader.showLoading
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.addmembers.SceytAddMembersActivity
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytChatActivity
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytConversationActivity
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.MemberTypeEnum
 import com.sceyt.chatuikit.presentation.uicomponents.createchat.viewmodel.CreateChatViewModel
 import kotlinx.coroutines.launch
@@ -101,7 +101,7 @@ class SceytCreateChannelActivity : AppCompatActivity() {
     }
 
     private fun startConversationPageAndFinish(channel: SceytChannel) {
-        SceytChatActivity.newInstance(this@SceytCreateChannelActivity, channel)
+        SceytConversationActivity.newInstance(this@SceytCreateChannelActivity, channel)
 
         val intent = Intent()
         setResult(RESULT_OK, intent)
