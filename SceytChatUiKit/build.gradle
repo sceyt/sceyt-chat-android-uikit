@@ -80,6 +80,8 @@ dependencies {
     api libs.emoji2.bundled
     api libs.emoji.google
     api libs.libphonenumber
+    api libs.ucrop
+
 
     // Overriding the version of the library
     api libs.gson

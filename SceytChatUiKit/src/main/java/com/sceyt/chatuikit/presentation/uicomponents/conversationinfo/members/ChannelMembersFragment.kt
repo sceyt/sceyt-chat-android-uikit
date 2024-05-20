@@ -1,9 +1,15 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
@@ -33,6 +39,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
+import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.setBoldSpan
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setTextColorRes
@@ -42,9 +49,10 @@ import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.presentation.uicomponents.addmembers.SceytAddMembersActivity
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
-import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.SceytConversationInfoActivity
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.ChannelMembersAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
@@ -71,6 +79,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
     protected var currentUserRole: Role? = null
         private set
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
+    private lateinit var addMembersActivityLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelMembersBinding.inflate(inflater, container, false).also {
@@ -87,6 +96,21 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
         binding?.applyStyle()
         initStringsWithAddType()
         loadInitialMembers()
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                result.data?.parcelableArrayList<SceytMember>(SceytAddMembersActivity.SELECTED_USERS)?.let { users ->
+                    if (memberType == MemberTypeEnum.Admin) {
+                        users.map { it.role = Role(RoleTypeEnum.Admin.toString()) }
+                        changeRole(*users.toTypedArray())
+                    }
+                    addMembersToChannel(users)
+                }
+            }
+        }
     }
 
     override fun onDestroyView() {
@@ -273,6 +297,8 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
     }
 
     protected open fun onAddedMember(data: List<SceytMember>) {
+        if (memberType == MemberTypeEnum.Admin)
+            viewModel.changeRole(channel.id, *data.toTypedArray())
     }
 
     protected open fun onRemovedMember(data: List<SceytMember>) {
@@ -295,7 +321,9 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
     }
 
     protected open fun onAddMembersClick(memberType: MemberTypeEnum) {
-        // Override and add your logic
+        val animOptions = ActivityOptionsCompat.makeCustomAnimation(requireContext(),
+            R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
+        addMembersActivityLauncher.launch(SceytAddMembersActivity.newInstance(requireContext(), memberType, true), animOptions)
     }
 
     protected open fun onRevokeAdminClick(member: SceytMember) {
@@ -420,7 +448,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
     }
 
     protected open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
-        ConversationInfoActivity.launch(requireContext(), sceytChannel)
+        SceytConversationInfoActivity.launch(requireContext(), sceytChannel)
     }
 
     protected open fun onPageStateChange(pageState: PageState) {
@@ -440,7 +468,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
     private fun SceytFragmentChannelMembersBinding.applyStyle() {
         root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
         toolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.primaryColor))
-        toolbar.setTitleColor(SceytChatUIKit.theme.textPrimaryColor)
+        toolbar.setTitleColorRes(SceytChatUIKit.theme.textPrimaryColor)
         toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
         icAddMembers.setTintColorRes(SceytChatUIKit.theme.accentColor)
         addMembers.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)

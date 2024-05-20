@@ -54,7 +54,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.MessagesListVi
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
-import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.SceytConversationInfoActivity
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -685,7 +685,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     val response = channelInteractor.findOrCreateDirectChannel(user)
                     if (response is SceytResponse.Success)
                         response.data?.let {
-                            ConversationInfoActivity.launch(event.view.context, response.data)
+                            SceytConversationInfoActivity.launch(event.view.context, response.data)
                         }
                 }
             }

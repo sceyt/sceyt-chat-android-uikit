@@ -113,7 +113,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener, Conversation
         with(binding) {
             titleToolbar.text = when {
                 isSelf -> {
-                    getString(R.string.self_notes)
+                    getString(R.string.sceyt_self_notes)
                 }
 
                 channel.isPeerDeleted() -> {

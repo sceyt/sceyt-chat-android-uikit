@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/sceyt_color_background"
+    android:clickable="true"
+    android:focusable="true">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutDetails"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true"
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="15dp"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
+                android:id="@+id/avatar"
+                android:layout_width="@dimen/_62sdp"
+                android:layout_height="@dimen/_62sdp"
+                android:layout_marginTop="24dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:sceytAvatarColor="@color/sceyt_color_overlay_background_2"
+                app:sceytAvatarDefaultIcon="@drawable/sceyt_ic_camera_72" />
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/inputSubject"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:background="@drawable/sceyt_bg_underline"
+                android:ellipsize="end"
+                android:hint="@string/sceyt_channel_name"
+                android:inputType="textCapSentences"
+                android:maxLines="2"
+                android:paddingVertical="15dp"
+                android:textColor="@color/sceyt_color_text_primary"
+                android:textColorHint="@color/sceyt_color_hint"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/avatar" />
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/inputDescription"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/sceyt_bg_underline"
+                android:ellipsize="end"
+                android:hint="@string/sceyt_about"
+                android:maxLines="5"
+                android:paddingVertical="15dp"
+                android:textColor="@color/sceyt_color_text_primary"
+                android:textColorHint="@color/sceyt_color_hint"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="@+id/inputSubject"
+                app:layout_constraintTop_toBottomOf="@+id/inputSubject" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/uriBegin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layoutDirection="ltr"
+                android:paddingVertical="15dp"
+                android:text="\@"
+                android:textColor="@color/sceyt_color_text_primary"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="@+id/inputDescription"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toStartOf="@+id/inputDescription"
+                app:layout_constraintTop_toBottomOf="@+id/inputDescription"
+                tools:ignore="HardcodedText" />
+
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/inputUri"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:hint="sceytchn1"
+                android:inputType="textUri"
+                android:layoutDirection="ltr"
+                android:paddingVertical="15dp"
+                android:singleLine="true"
+                android:textAlignment="viewStart"
+                android:textColor="@color/sceyt_color_text_primary"
+                android:textColorHint="@color/sceyt_color_hint"
+                android:textSize="16sp"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintBottom_toBottomOf="@+id/uriBegin"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toEndOf="@+id/uriBegin"
+                app:layout_constraintTop_toTopOf="@+id/uriBegin"
+                tools:ignore="HardcodedText" />
+
+            <View
+                android:id="@+id/uriUnderline"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@drawable/sceyt_bg_underline"
+                app:layout_constraintEnd_toEndOf="@+id/inputUri"
+                app:layout_constraintStart_toStartOf="@+id/uriBegin"
+                app:layout_constraintTop_toBottomOf="@+id/inputUri" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/uriWarning"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/sceyt_the_url_exist_title"
+                android:textColor="@color/sceyt_color_error"
+                android:textSize="13sp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/uriUnderline"
+                tools:visibility="visible" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <com.sceyt.chatuikit.presentation.customviews.SceytCustomFloatingActonButton
+        android:id="@+id/fabNext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:clickable="false"
+        android:src="@drawable/sceyt_ic_save"
+        android:tint="@color/sceyt_color_on_primary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+

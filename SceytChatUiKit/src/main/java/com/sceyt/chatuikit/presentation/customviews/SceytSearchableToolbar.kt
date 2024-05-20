@@ -102,9 +102,10 @@ class SceytSearchableToolbar @JvmOverloads constructor(context: Context, attrs: 
         binding.tvTitle.text = title.trim()
     }
 
-    fun setTitleColor(@ColorRes colorId: Int) {
+    fun setTitleColorRes(@ColorRes colorId: Int) {
         titleColor = context.getCompatColor(colorId)
         binding.tvTitle.setTextColor(titleColor)
+        binding.input.setTextColor(titleColor)
     }
 
     fun setQueryChangeListener(listener: (String) -> Unit) {

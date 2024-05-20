@@ -134,14 +134,21 @@ class MessageInfoViewModel(
     }
 
     private fun onMarkerReceived(data: MessageMarkerEventData) {
-        if (data.marker.name == MarkerTypeEnum.Played.value()) {
-            val state = _uiState.value
-            if (state is UIState.Success) {
-                if (state.playedMarkers.any { it.userId == data.user.id }) return
-                val playedMarkers = state.playedMarkers.toMutableList()
-                playedMarkers.add(0, SceytMarker(messageId, data.user, data.marker.name, data.marker.createdAt))
-                _uiState.update {
-                    state.copy(playedMarkers = playedMarkers)
+        viewModelScope.launch(Dispatchers.Default) {
+            if (data.marker.name == MarkerTypeEnum.Played.value()) {
+                val state = _uiState.value
+                if (state is UIState.Success) {
+                    if (state.playedMarkers.any { it.userId == data.user.id }) return@launch
+                    val playedMarkers = state.playedMarkers.toMutableList()
+                    val newReadMarkers = state.readMarkers.filter { it.userId != data.user.id }
+                    val deliveredMarkers = state.deliveredMarkers.filter { it.userId != data.user.id }
+                    playedMarkers.add(0, SceytMarker(messageId, data.user, data.marker.name, data.marker.createdAt))
+                    _uiState.update {
+                        state.copy(
+                            playedMarkers = playedMarkers,
+                            readMarkers = newReadMarkers,
+                            deliveredMarkers = deliveredMarkers)
+                    }
                 }
             }
         }
@@ -189,10 +196,15 @@ class MessageInfoViewModel(
                 readMarker.userId == deliveredMarker.userId
             }
         }
+        val filteredRead = readMarkersResult.filter { marker ->
+            playedMarkersResult.none { readMarker ->
+                readMarker.userId == marker.userId
+            }
+        }
         withContext(Dispatchers.Main) {
             _uiState.update {
                 UIState.Success(
-                    readMarkers = readMarkersResult,
+                    readMarkers = filteredRead,
                     deliveredMarkers = filteredDeliver,
                     playedMarkers = playedMarkersResult,
                     message = message, true)
@@ -212,10 +224,16 @@ class MessageInfoViewModel(
                     } == true
                 } ?: emptyList()
 
+                val filteredRead = readMarkersResult.data?.filter { deliveredMarker ->
+                    playedMarkersResult.data?.none { marker ->
+                        marker.userId == deliveredMarker.userId
+                    } == true
+                } ?: emptyList()
+
                 withContext(Dispatchers.Main) {
                     _uiState.update {
                         UIState.Success(
-                            readMarkers = readMarkersResult.data.orEmpty(),
+                            readMarkers = filteredRead,
                             deliveredMarkers = filteredDeliver,
                             playedMarkers = playedMarkersResult.data.orEmpty(),
                             message = message, false)

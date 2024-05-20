@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/sceyt_color_background"
+    tools:context=".presentation.uicomponents.createchat.newgroup.SceytCreateGroupActivity">
+
+    <com.sceyt.chatuikit.presentation.customviews.SceytCustomToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/sceyt_color_primary"
+        app:layout_constraintTop_toTopOf="parent"
+        app:title="@string/sceyt_new_group"
+        app:titleTextColor="@color/sceyt_color_text_primary" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layoutDetails"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:paddingHorizontal="16dp"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
+                    android:id="@+id/avatar"
+                    android:layout_width="@dimen/_60sdp"
+                    android:layout_height="@dimen/_60sdp"
+                    android:layout_marginTop="24dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:sceytAvatarColor="@color/sceyt_color_overlay_background_2"
+                    app:sceytAvatarDefaultIcon="@drawable/sceyt_ic_camera_72" />
+
+                <androidx.appcompat.widget.AppCompatEditText
+                    android:id="@+id/tvSubject"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:background="@drawable/sceyt_bg_underline"
+                    android:hint="@string/sceyt_group_name"
+                    android:inputType="textCapSentences"
+                    android:paddingVertical="15dp"
+                    android:textColor="@color/sceyt_color_text_primary"
+                    android:textColorHint="@color/sceyt_color_hint"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/avatar" />
+
+                <androidx.appcompat.widget.AppCompatEditText
+                    android:id="@+id/tvDescription"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/sceyt_bg_underline"
+                    android:hint="@string/sceyt_about"
+                    android:paddingVertical="15dp"
+                    android:textColor="@color/sceyt_color_text_primary"
+                    android:textColorHint="@color/sceyt_color_hint"
+                    android:textSize="16sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@+id/tvSubject"
+                    app:layout_constraintTop_toBottomOf="@+id/tvSubject" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvContacts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:background="@color/sceyt_color_surface_1"
+                android:fontFamily="@font/roboto_medium"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:paddingVertical="7dp"
+                android:text="@string/sceyt_members"
+                android:textColor="@color/sceyt_color_text_secondary"
+                android:textSize="@dimen/mediumTextSize"
+                app:layout_constraintTop_toBottomOf="@+id/layoutDetails" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvMembers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                android:paddingVertical="4dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="@id/tvContacts"
+                app:layout_constraintTop_toBottomOf="@+id/tvContacts"
+                tools:itemCount="20"
+                tools:listitem="@layout/sceyt_item_user" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <com.sceyt.chatuikit.presentation.customviews.SceytCustomFloatingActonButton
+        android:id="@+id/btnCreate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:clickable="false"
+        android:src="@drawable/sceyt_ic_save"
+        android:tint="@color/sceyt_color_on_primary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+
