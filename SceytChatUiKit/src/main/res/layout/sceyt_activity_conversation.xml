@@ -25,7 +25,8 @@
         app:sceytUiMessageIncBubbleColor="@color/sceyt_color_bg_inc_message"
         app:sceytUiMessageIncLinkPreviewBackgroundColor="@color/sceyt_color_bg_inc_link_preview"
         app:sceytUiMessageOutBubbleColor="@color/sceyt_color_bg_out_message"
-        app:sceytUiMessageOutLinkPreviewBackgroundColor="@color/sceyt_color_bg_out_link_preview" />
+        app:sceytUiMessageOutLinkPreviewBackgroundColor="@color/sceyt_color_bg_out_link_preview"
+        app:sceytUiMessageOutReplBackgroundColor="@color/sceyt_color_bg_out_link_preview" />
 
     <com.sceyt.chatuikit.presentation.uicomponents.messageinput.MessageInputView
         android:id="@+id/messageInputView"
