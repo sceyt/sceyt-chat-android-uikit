@@ -30,7 +30,7 @@ import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.addmembers.SceytAddMembersActivity
 import com.sceyt.chatuikit.presentation.uicomponents.addmembers.adapters.UserItem
 import com.sceyt.chatuikit.presentation.uicomponents.addmembers.viewmodel.UsersViewModel
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytChatActivity
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytConversationActivity
 import com.sceyt.chatuikit.presentation.uicomponents.createchat.createchannel.SceytCreateChannelActivity
 import com.sceyt.chatuikit.presentation.uicomponents.createchat.newgroup.SceytCreateGroupActivity
 import com.sceyt.chatuikit.presentation.uicomponents.startchat.adapters.UserViewHolderFactory
@@ -83,7 +83,7 @@ class SceytStartChatActivity : AppCompatActivity() {
         }
 
         viewModel.createChannelLiveData.observe(this) {
-            SceytChatActivity.newInstance(this, it)
+            SceytConversationActivity.newInstance(this, it)
             finish()
             creatingChannel = false
         }

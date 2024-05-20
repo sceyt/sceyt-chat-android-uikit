@@ -27,7 +27,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.SceytConve
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.SceytConversationInfoActivity.Companion.ACTION_SEARCH_MESSAGES
 import com.sceyt.chatuikit.presentation.uicomponents.messageinfo.MessageInfoFragment
 
-open class SceytChatActivity : AppCompatActivity() {
+open class SceytConversationActivity : AppCompatActivity() {
     private lateinit var binding: SceytActivityConversationBinding
     private val viewModel: MessageListViewModel by viewModels { factory }
     private lateinit var channel: SceytChannel
@@ -61,11 +61,11 @@ open class SceytChatActivity : AppCompatActivity() {
     private fun ConversationHeaderView.initHeaderView() {
         setCustomClickListener(object : HeaderClickListenersImpl(this) {
             override fun onAvatarClick(view: View) {
-                SceytConversationInfoActivity.startWithLauncher(this@SceytChatActivity, channel, conversationInfoLauncher)
+                SceytConversationInfoActivity.startWithLauncher(this@SceytConversationActivity, channel, conversationInfoLauncher)
             }
 
             override fun onToolbarClick(view: View) {
-                SceytConversationInfoActivity.startWithLauncher(this@SceytChatActivity, channel, conversationInfoLauncher)
+                SceytConversationInfoActivity.startWithLauncher(this@SceytConversationActivity, channel, conversationInfoLauncher)
             }
         })
     }
@@ -99,7 +99,7 @@ open class SceytChatActivity : AppCompatActivity() {
         const val CHANNEL = "CHANNEL"
 
         fun newInstance(context: Context, channel: SceytChannel) {
-            context.launchActivity<SceytChatActivity>(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold) {
+            context.launchActivity<SceytConversationActivity>(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold) {
                 putExtra(CHANNEL, channel)
             }
         }

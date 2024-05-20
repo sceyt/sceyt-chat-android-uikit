@@ -35,7 +35,7 @@ import com.sceyt.chatuikit.presentation.common.SceytLoader.hideLoading
 import com.sceyt.chatuikit.presentation.common.SceytLoader.showLoading
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.addmembers.adapters.UserItem
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytChatActivity
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytConversationActivity
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.presentation.uicomponents.createchat.viewmodel.CreateChatViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.startchat.adapters.UserViewHolderFactory
@@ -75,7 +75,7 @@ class SceytCreateGroupActivity : AppCompatActivity() {
     private fun initViewModel() {
         viewModel.createChatLiveData.observe(this) {
             lifecycleScope.launch {
-                SceytChatActivity.newInstance(this@SceytCreateGroupActivity, it)
+                SceytConversationActivity.newInstance(this@SceytCreateGroupActivity, it)
                 val intent = Intent()
                 setResult(RESULT_OK, intent)
                 finish()
