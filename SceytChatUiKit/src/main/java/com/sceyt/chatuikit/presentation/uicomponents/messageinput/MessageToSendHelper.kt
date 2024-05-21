@@ -181,8 +181,7 @@ class MessageToSendHelper(private val context: Context) {
     fun buildAttachment(path: String,
                         url: String = "",
                         metadata: String = "",
-                        attachmentType: String? = null,
-                        upload: Boolean = true): Attachment? {
+                        attachmentType: String? = null): Attachment? {
         val file = File(path)
         if (file.exists()) {
             val type = attachmentType ?: getAttachmentType(path).value()
@@ -192,7 +191,7 @@ class MessageToSendHelper(private val context: Context) {
                 .setMetadata(metadata)
                 .setCreatedAt(System.currentTimeMillis())
                 .setFileSize(getFileSize(path))
-                .setUpload(upload)
+                .setUpload(false)
                 .build()
         }
         return null

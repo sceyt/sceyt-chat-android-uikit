@@ -49,7 +49,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
                     .apply {
                         if (isContainsLink)
                             setAttachments(arrayOf(buildAttachment("", links[0],
-                                AttachmentTypeEnum.Link, "", 0,false)))
+                                AttachmentTypeEnum.Link, "", 0)))
                     }
                     .build()
 
@@ -80,14 +80,14 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
             channelIds.forEach { channelId ->
                 val attachments = paths.map { path ->
                     val fileName = File(path).name
-                    buildAttachment(path, "", getAttachmentType(path), fileName, getFileSize(path),true)
+                    buildAttachment(path, "", getAttachmentType(path), fileName, getFileSize(path))
                 }
                 attachments.mapIndexed { index, attachment ->
                     val message = MessageBuilder(channelId)
                         .setBody(if (index == 0) messageBody else "")
                         .apply {
                             if (index == 0 && isContainsLink) {
-                                val link = buildAttachment("", links[0], AttachmentTypeEnum.Link, "", 0,false)
+                                val link = buildAttachment("", links[0], AttachmentTypeEnum.Link, "", 0)
                                 setAttachments(arrayOf(attachment, link))
                             } else setAttachments(arrayOf(attachment))
                         }
@@ -104,16 +104,13 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
         awaitClose()
     }
 
-    private fun buildAttachment(path: String, url: String,
-                                typeEnum: AttachmentTypeEnum,
-                                fileName: String, fileSize: Long,
-                                upload: Boolean) =
+    private fun buildAttachment(path: String, url: String, typeEnum: AttachmentTypeEnum, fileName: String, fileSize: Long) =
             Attachment.Builder(path, url, typeEnum.value())
                 .setName(fileName)
                 .withTid(ClientWrapper.generateTid())
                 .setFileSize(fileSize)
                 .setMetadata("")
-                .setUpload(upload)
+                .setUpload(false)
                 .build()
 
     private fun getPathFromFile(vararg uris: Uri): List<String> {
