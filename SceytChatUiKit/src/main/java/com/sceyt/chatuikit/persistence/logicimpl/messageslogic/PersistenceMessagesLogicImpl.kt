@@ -460,7 +460,7 @@ internal class PersistenceMessagesLogicImpl(
     private fun checkHasFileAttachments(message: Message): Boolean {
         if (message.attachments.isNullOrEmpty()) return false
         message.attachments.forEach {
-            if (it.type != AttachmentTypeEnum.Link.value() && it.isUpload) return true
+            if (it.type != AttachmentTypeEnum.Link.value()) return true
         }
         return false
     }
