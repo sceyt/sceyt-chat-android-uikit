@@ -26,7 +26,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.android.material.snackbar.Snackbar
-import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import java.io.File
 import java.io.Serializable
 
@@ -193,8 +193,8 @@ fun Context.isLandscape(): Boolean {
 }
 
 fun Activity.statusBarIconsColorWithBackground(isDark: Boolean = isNightMode(),
-                                               @ColorRes statusBarColor: Int = R.color.sceyt_color_status_bar,
-                                               @ColorRes navigationBarColor: Int = R.color.sceyt_color_status_bar) {
+                                               @ColorRes statusBarColor: Int = SceytChatUIKit.theme.statusBarColor,
+                                               @ColorRes navigationBarColor: Int = SceytChatUIKit.theme.primaryColor) {
 
     window.statusBarColor = getCompatColor(statusBarColor)
     if (isDark)

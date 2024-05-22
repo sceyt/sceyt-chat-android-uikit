@@ -21,7 +21,11 @@
         android:required="false" />
 
     <application android:requestLegacyExternalStorage="true">
-
+        <activity
+            android:name="com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytConversationActivity"
+            android:exported="false"
+            android:theme="@style/DefaultFontTheme"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name="com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.SceytConversationInfoActivity"
             android:exported="false"

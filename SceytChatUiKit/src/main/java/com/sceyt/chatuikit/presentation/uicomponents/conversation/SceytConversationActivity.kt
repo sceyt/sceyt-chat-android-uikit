@@ -9,6 +9,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivityConversationBinding
@@ -41,8 +42,8 @@ open class SceytConversationActivity : AppCompatActivity() {
             .root)
 
         statusBarIconsColorWithBackground(
-            statusBarColor = R.color.sceyt_color_primary,
-            navigationBarColor = R.color.sceyt_color_primary_dark)
+            statusBarColor = SceytChatUIKit.theme.statusBarColor,
+            navigationBarColor = SceytChatUIKit.theme.primaryColor)
 
         getDataFromIntent()
 
