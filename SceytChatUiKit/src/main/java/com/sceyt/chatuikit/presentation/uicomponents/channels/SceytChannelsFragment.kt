@@ -10,9 +10,13 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.connectivity_change.NetworkMonitor
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelsBinding
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setMargins
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.uicomponents.channels.viewmodels.ChannelsViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.channels.viewmodels.bind
 import com.sceyt.chatuikit.presentation.uicomponents.startchat.SceytStartChatActivity
@@ -33,6 +37,7 @@ class SceytChannelsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         initViews()
+        binding.applyStyle()
 
         mViewModel.bind(binding.channelListView, viewLifecycleOwner)
         mViewModel.bind(binding.searchView)
@@ -68,5 +73,13 @@ class SceytChannelsFragment : Fragment() {
             ConnectionState.Connected -> getString(R.string.sceyt_chats)
         }
         binding.title.text = title
+    }
+
+    private fun SceytFragmentChannelsBinding.applyStyle() {
+        layoutToolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.primaryColor))
+        searchAppBarLayout.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
+        title.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        underline.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.borderColor))
+        fabNewChannel.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
     }
 }

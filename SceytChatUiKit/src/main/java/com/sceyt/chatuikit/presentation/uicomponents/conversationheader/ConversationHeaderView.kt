@@ -34,6 +34,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytConversationHeaderViewBinding
+import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableNameCheckDeleted
@@ -532,6 +533,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
             }
 
             else -> context.maybeComponentActivity()?.onBackPressedDispatcher?.onBackPressed()
+                    ?: context.asActivity().finish()
         }
     }
 }

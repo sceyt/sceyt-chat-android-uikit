@@ -59,12 +59,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name="com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytConversationActivity"
-            android:exported="false"
-            android:theme="@style/DefaultFontTheme"
-            android:windowSoftInputMode="adjustResize" />
-
         <service
             android:name="com.sceyt.chatuikit.services.SceytFirebaseMessageReceiver"
             android:enabled="true"
