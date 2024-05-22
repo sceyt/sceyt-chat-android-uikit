@@ -43,7 +43,7 @@ This will enable your project to use libraries from Maven Central.
 
 ```groovy
 dependencies {
-    implementation 'com.sceyt:sceyt-chat-android-uikit:1.5.9'
+    implementation 'com.sceyt:sceyt-chat-android-uikit:1.6.0'
 }
 ```
 ## Usage
@@ -66,11 +66,11 @@ class MyApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-
-        SceytUIKitInitializer(this).initialize(
-            clientId = UUID.randomUUID().toString(),
+        
+        SceytChatUIKit.initialize(this,
+            apiUrl = "https://us-ohio-api.sceyt.com",
             appId = "8lwox2ge93",
-            host = "https://us-ohio-api.sceyt.com",
+            clientId = UUID.randomUUID().toString(),
             enableDatabase = true)
     }
 }
@@ -92,7 +92,7 @@ Make sure that your application class defined in your AndroidManifest.xml:
 ```kotlin
 fun connectToChatClient(){
     val token = "Your token"
-    SceytKitClient.connect(token)
+    SceytChatUIKit.connect(token)
 }
 ```
 
@@ -106,15 +106,21 @@ These following customizations can be applied during the Sceyt Chat UIKit initia
 Here's how you can customize various aspects:
 
 ```kotlin
-// Set the primary accent color for the SceytKit UI elements to enhance visual appeal.
-SceytChatUIKit.theme.accentColor = R.color.colorAccent
-
+// Set the primary accent color for the SceytKit UI elements to enhance visual appeal, and
 // Set avatar colors in SceytKit to assign a color array for default user avatars and channel icons.
-SceytKitConfig.avatarColors = arrayOf("#FFC107", "#FF9800", "#FF5722", "#795548")
+SceytChatUIKit.theme = SceytChatUIKitTheme(
+    accentColor = R.color.accentColor,
+    avatarColors = arrayOf("#FFC107", "#FF9800", "#FF5722", "#795548"),
+)
 
 // Set incoming and outgoing message bubble colors in SceytKit.
-MessagesStyle.incBubbleColor = R.color.colorAccent
-MessagesStyle.outBubbleColor = R.color.colorAccent
+MessagesListViewStyle.styleCustomizer = StyleCustomizer {
+    it.copy(
+        messageItemStyle = it.messageItemStyle.copy(
+            incBubbleColor = getCompatColor(R.color.gray),
+            outBubbleColor = getCompatColor(R.color.pink),
+        ))
+}
 ```
 
 To get more about customization, you check our [Sceyt Demo application](https://github.com/sceyt/sceyt-chat-android-uikit/tree/dev/examples/SceytDemoApp).
@@ -124,9 +130,9 @@ To get more about customization, you check our [Sceyt Demo application](https://
 If you are using Proguard with this library, make sure to add the following rules to your proguard-rules file:
 
 ``` groovy
-# Keep all necessary classes in 'com.sceyt.chat' package and its subpackages
+# Keep all necessary classes in 'com.sceyt.chatuikit' package and its subpackages
 
--keep class com.sceyt.sceytchatuikit.** { *; }
+-keep class com.sceyt.chatuikit.** { *; }
 ```
 
 These rules will ensure that all classes in the specified packages and their sub-packages are not obfuscated by Proguard.

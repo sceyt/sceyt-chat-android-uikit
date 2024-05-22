@@ -13,6 +13,8 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
+import androidx.annotation.ColorInt
+import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.graphics.drawable.toBitmap
@@ -21,6 +23,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getFirstCharIsEmoji
 import com.sceyt.chatuikit.extensions.processEmojiCompat
@@ -38,6 +41,8 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     private lateinit var backgroundPaint: Paint
     private var textSize = 0
     private var avatarLoadCb: ((loading: Boolean) -> Unit?)? = null
+
+    @ColorInt
     private var avatarBackgroundColor: Int = 0
     private var defaultAvatarResId: Int = 0
 
@@ -201,13 +206,16 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         avatarLoadCb = cb
     }
 
-    @Suppress("UNUSED")
-    fun setAvatarColor(color: Int) {
+    fun setAvatarColor(@ColorInt color: Int) {
         avatarBackgroundColor = color
         invalidate()
     }
 
-    @Suppress("UNUSED")
+    fun setAvatarColorRes(@ColorRes colorId: Int) {
+        avatarBackgroundColor = context.getCompatColor(colorId)
+        invalidate()
+    }
+
     fun setDefaultIcon(@DrawableRes id: Int) {
         defaultAvatarResId = id
         invalidate()

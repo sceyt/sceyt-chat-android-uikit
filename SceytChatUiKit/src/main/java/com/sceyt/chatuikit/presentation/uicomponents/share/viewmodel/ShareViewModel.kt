@@ -48,7 +48,8 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
                     .setType(MessageTypeEnum.Text.value())
                     .apply {
                         if (isContainsLink)
-                            setAttachments(arrayOf(buildAttachment("", links[0], AttachmentTypeEnum.Link, "", 0)))
+                            setAttachments(arrayOf(buildAttachment("", links[0],
+                                AttachmentTypeEnum.Link, "", 0)))
                     }
                     .build()
 

@@ -71,7 +71,7 @@
         android:includeFontPadding="false"
         android:paddingHorizontal="23dp"
         android:paddingVertical="10dp"
-        android:text="@string/report_channel"
+        android:text="@string/sceyt_report_channel"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/_12ssp"
         android:visibility="gone"

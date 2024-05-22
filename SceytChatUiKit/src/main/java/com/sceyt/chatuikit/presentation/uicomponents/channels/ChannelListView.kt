@@ -29,6 +29,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelC
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
 import com.sceyt.chatuikit.presentation.uicomponents.channels.popups.PopupMenuChannel
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytConversationActivity
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.chatuikit.sceytconfigs.ChannelSortType
 import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
@@ -279,18 +280,17 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-        // Need open your conversation page
+        SceytConversationActivity.newInstance(context, item.channel)
     }
 
     override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
-
+        SceytConversationActivity.newInstance(context, item.channel)
     }
 
     override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {
         if (item.channel.checkIsMemberInChannel())
             showChannelActionsPopup(view, item)
     }
-
 
     // Channel Popup callbacks
     override fun onMarkAsReadClick(channel: SceytChannel) {

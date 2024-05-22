@@ -58,7 +58,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.eventlis
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.eventlisteners.HeaderEventsListenerImpl
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListener
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListenerImpl
-import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.SceytConversationInfoActivity
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.ConversationHeaderStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
@@ -179,7 +179,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         } else {
             val title = when {
                 isGroup -> channel.channelSubject
-                channel.isSelf() -> getString(R.string.self_notes)
+                channel.isSelf() -> getString(R.string.sceyt_self_notes)
                 else -> {
                     val member = channel.getPeer() ?: return
                     userNameFormatter?.format(member.user)
@@ -451,7 +451,7 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
 
     private val conversationInfoLauncher = if (isInEditMode) null else context.maybeComponentActivity()?.registerForActivityResult(StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.getBooleanExtra(ConversationInfoActivity.ACTION_SEARCH_MESSAGES, false)?.let { search ->
+            result.data?.getBooleanExtra(SceytConversationInfoActivity.ACTION_SEARCH_MESSAGES, false)?.let { search ->
                 if (search)
                     showSearchMessagesBar(MessageCommandEvent.SearchMessages(true))
             }
@@ -511,12 +511,12 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
     //Click listeners
     override fun onAvatarClick(view: View) {
         if (::channel.isInitialized)
-            conversationInfoLauncher?.let { ConversationInfoActivity.startWithLauncher(context, channel, it) }
+            conversationInfoLauncher?.let { SceytConversationInfoActivity.startWithLauncher(context, channel, it) }
     }
 
     override fun onToolbarClick(view: View) {
         if (::channel.isInitialized)
-            conversationInfoLauncher?.let { ConversationInfoActivity.startWithLauncher(context, channel, it) }
+            conversationInfoLauncher?.let { SceytConversationInfoActivity.startWithLauncher(context, channel, it) }
     }
 
     override fun onBackClick(view: View) {

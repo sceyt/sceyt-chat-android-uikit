@@ -22,7 +22,10 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.jsonToObject
 import com.sceyt.chatuikit.extensions.parcelable
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.extensions.setTextViewsHintTextColorRes
+import com.sceyt.chatuikit.extensions.setTextViewsTextColorRes
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
@@ -86,9 +89,9 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
                 checkSaveEnabled(false)
             binding?.uriWarning?.apply {
                 if (!isValid) {
-                    setUriStatusText(getString(R.string.the_url_exist_title), R.color.sceyt_color_error)
+                    setUriStatusText(getString(R.string.sceyt_the_url_exist_title), R.color.sceyt_color_error)
                 } else
-                    setUriStatusText(getString(R.string.valid_url_title), R.color.sceyt_color_green)
+                    setUriStatusText(getString(R.string.sceyt_valid_url_title), R.color.sceyt_color_green)
                 isVisible = true
             }
         }
@@ -111,7 +114,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             checkSaveEnabled(true)
         }
 
-        layoutToolbar.navigationIcon.setOnClickListener {
+        toolbar.navigationIcon.setOnClickListener {
             requireActivity().onBackPressedDispatcher.onBackPressed()
         }
 
@@ -178,9 +181,9 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             val isValidUrl = "^\\w{5,50}".toPattern().matcher(url).matches()
             if (!isValidUrl) {
                 if (inputUri.text.toString().length < 5 || inputUri.text.toString().length > 50)
-                    setUriStatusText(getString(R.string.url_length_validation_text), R.color.sceyt_color_error)
+                    setUriStatusText(getString(R.string.sceyt_url_length_validation_text), R.color.sceyt_color_error)
                 else
-                    setUriStatusText(getString(R.string.url_characters_validation_text), R.color.sceyt_color_error)
+                    setUriStatusText(getString(R.string.sceyt_url_characters_validation_text), R.color.sceyt_color_error)
                 uriWarning.isVisible = true
             }
             return isValidUrl
@@ -232,7 +235,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     open fun onSaveClick() {
         val newSubject = binding?.tvSubject?.text?.trim().toString()
         val newDescription = binding?.tvDescription?.text?.trim().toString()
-        val newUrl = binding?.inputUri?.text?.trim().toString()
+        val newUrl = "@${binding?.inputUri?.text?.trim()}"
         val isEditedAvatar = avatarUrl != channel.avatarUrl
         val oldDesc = channel.metadata.jsonToObject(ChannelDescriptionData::class.java)?.description?.trim()
         val isEditedSubjectOrDesc = newSubject != channel.channelSubject.trim() || newDescription != oldDesc
@@ -250,7 +253,14 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun SceytFragmentEditChannelBinding.applyStyle() {
-        layoutToolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
+        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
+        toolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.primaryColor))
+        toolbar.setTitleColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        uriWarning.setTextColor(requireContext().getCompatColor(SceytChatUIKit.theme.errorColor))
+        icSave.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
+        setTextViewsTextColorRes(listOf(tvSubject, tvDescription, uriBegin, inputUri), SceytChatUIKit.theme.textPrimaryColor)
+        setTextViewsHintTextColorRes(listOf(tvSubject, tvDescription, inputUri), SceytChatUIKit.theme.textFootnoteColor)
     }
 
     companion object {

@@ -137,8 +137,10 @@ class MessagesCache {
             val updatesMessages = mutableListOf<SceytMessage>()
             tIds.forEach {
                 getMessageByTid(channelId, it)?.let { message ->
-                    message.deliveryStatus = status
-                    updatesMessages.add(message)
+                    if (message.deliveryStatus < status) {
+                        message.deliveryStatus = status
+                        updatesMessages.add(message)
+                    }
                 }
             }
             emitMessageUpdated(channelId, *updatesMessages.toTypedArray())

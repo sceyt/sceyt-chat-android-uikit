@@ -202,7 +202,7 @@ abstract class BaseMsgViewHolder(private val view: View,
             SceytRecyclerReplyContainerBinding.bind(viewStub.inflate()).also {
                 replyMessageContainerBinding = it
                 it.viewReply.setBackgroundTint(if (message.incoming)
-                    style.incLinkPreviewBackgroundColor else style.outLinkPreviewBackgroundColor)
+                    style.incReplyBackgroundColor else style.outReplyBackgroundColor)
                 it.tvName.setTextColor(style.senderNameTextColor)
                 it.view.backgroundTintList = ColorStateList.valueOf(style.replyMessageLineColor)
             }

@@ -101,3 +101,19 @@ fun setTextViewsTextColor(texts: List<TextView>, @ColorInt color: Int) {
         it.setTextColor(color)
     }
 }
+
+fun setTextViewsTextColorRes(texts: List<TextView>, @ColorRes colorId: Int) {
+    if (texts.isEmpty()) return
+    val color = texts.first().context.getCompatColor(colorId)
+    texts.forEach {
+        it.setTextColor(color)
+    }
+}
+
+fun setTextViewsHintTextColorRes(texts: List<TextView>, @ColorRes colorId: Int) {
+    if (texts.isEmpty()) return
+    val color = texts.first().context.getCompatColor(colorId)
+    texts.forEach {
+        it.setHintTextColor(color)
+    }
+}

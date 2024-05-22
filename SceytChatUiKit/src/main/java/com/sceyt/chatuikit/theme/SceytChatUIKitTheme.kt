@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.theme
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.sceytconfigs.dateformaters.UserPresenceDateFormatter
 
 data class SceytChatUIKitTheme(
         @ColorRes

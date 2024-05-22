@@ -178,11 +178,14 @@ class MessageToSendHelper(private val context: Context) {
         return this
     }
 
-    fun buildAttachment(path: String, metadata: String = "", attachmentType: String? = null): Attachment? {
+    fun buildAttachment(path: String,
+                        url: String = "",
+                        metadata: String = "",
+                        attachmentType: String? = null): Attachment? {
         val file = File(path)
         if (file.exists()) {
             val type = attachmentType ?: getAttachmentType(path).value()
-            return Attachment.Builder(path, null, type)
+            return Attachment.Builder(path, url, type)
                 .setName(File(path).name)
                 .withTid(ClientWrapper.generateTid())
                 .setMetadata(metadata)

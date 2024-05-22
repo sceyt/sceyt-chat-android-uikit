@@ -238,7 +238,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         textView.text = if (channel.isGroup) channel.channelSubject
         else {
             if (channel.isSelf()) {
-                context.getString(R.string.self_notes)
+                context.getString(R.string.sceyt_self_notes)
             } else {
                 channel.getPeer()?.user?.let { from ->
                     userNameFormatter?.format(from) ?: from.getPresentableNameCheckDeleted(context)
