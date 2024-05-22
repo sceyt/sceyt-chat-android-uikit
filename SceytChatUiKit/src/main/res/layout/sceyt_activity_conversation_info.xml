@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/sceyt_color_background_tertiary"
-    tools:context=".presentation.uicomponents.conversationinfo.ConversationInfoActivity">
+    tools:context=".presentation.uicomponents.conversationinfo.SceytConversationInfoActivity">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/coordinatorLayout"

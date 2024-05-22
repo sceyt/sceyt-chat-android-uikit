@@ -26,7 +26,7 @@ import com.sceyt.chatuikit.presentation.customviews.SceytPageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
-import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoActivity
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.SceytConversationInfoActivity
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ViewPagerAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
@@ -146,7 +146,7 @@ open class ChannelFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             pageStateView = this
 
             post {
-                (activity as? ConversationInfoActivity)?.getViewPagerY()?.let {
+                (activity as? SceytConversationInfoActivity)?.getViewPagerY()?.let {
                     if (it > 0)
                         layoutParams.height = screenHeightPx() - it
                 }

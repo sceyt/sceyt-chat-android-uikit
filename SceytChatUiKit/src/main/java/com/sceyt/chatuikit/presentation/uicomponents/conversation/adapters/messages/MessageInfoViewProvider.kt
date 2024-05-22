@@ -35,12 +35,12 @@ import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 open class MessageInfoViewProvider(private val context: Context) {
     protected val linkPreview: LinkPreviewHelper = LinkPreviewHelper(context)
     protected val viewPoolReactions = RecyclerView.RecycledViewPool()
-    private var clickListeners = MessageClickListenersImpl()
+    protected var clickListeners = MessageClickListenersImpl()
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
-    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
+    protected var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
-    private var viewHolder: BaseMsgViewHolder? = null
-    private val messageItemStyle: MessageItemStyle by lazy { getMessageListViewStyle() }
+    protected var viewHolder: BaseMsgViewHolder? = null
+    protected val messageItemStyle: MessageItemStyle by lazy { getMessageListViewStyle() }
     var viewType: Int = 0
         private set
 
@@ -146,5 +146,9 @@ open class MessageInfoViewProvider(private val context: Context) {
 
     fun setNeedMediaDataCallback(callback: (NeedMediaInfoData) -> Unit) {
         needMediaDataCallback = callback
+    }
+
+    fun getNeedMediaDataCallback(): (NeedMediaInfoData) -> Unit {
+        return needMediaDataCallback
     }
 }

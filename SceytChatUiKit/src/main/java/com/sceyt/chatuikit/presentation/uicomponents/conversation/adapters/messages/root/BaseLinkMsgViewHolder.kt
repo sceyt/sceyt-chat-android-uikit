@@ -133,9 +133,9 @@ abstract class BaseLinkMsgViewHolder(
     }
 
     private fun SceytMessageLinkPreviewContainerBinding.applyStyle() {
-        val color = if (this@BaseLinkMsgViewHolder is OutLinkMsgViewHolder)
-            style.outLinkPreviewBackgroundColor
-        else style.incLinkPreviewBackgroundColor
+        val color = if ((messageListItem as MessageListItem.MessageItem).message.incoming)
+            style.incLinkPreviewBackgroundColor
+        else style.outLinkPreviewBackgroundColor
         root.setBackgroundTint(color)
         tvLinkTitle.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
         tvLinkDesc.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)

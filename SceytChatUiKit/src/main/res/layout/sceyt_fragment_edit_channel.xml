@@ -8,19 +8,19 @@
     tools:context=".presentation.uicomponents.conversationinfo.editchannel.EditChannelFragment">
 
     <com.sceyt.chatuikit.presentation.customviews.SceytCustomToolbar
-        android:id="@+id/layoutToolbar"
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:title="@string/edit_channel"
+        app:title="@string/sceyt_edit_channel"
         app:titleTextColor="@color/sceyt_color_text_primary" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/layoutToolbar">
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/layoutDetails"
@@ -50,7 +50,7 @@
                 android:inputType="textCapSentences"
                 android:paddingVertical="15dp"
                 android:textColor="@color/sceyt_color_text_primary"
-                android:textColorHint="@color/sceyt_color_hint"
+                android:textColorHint="@color/sceyt_color_text_footnote"
                 android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -64,7 +64,7 @@
                 android:hint="@string/sceyt_about"
                 android:paddingVertical="15dp"
                 android:textColor="@color/sceyt_color_text_primary"
-                android:textColorHint="@color/sceyt_color_hint"
+                android:textColorHint="@color/sceyt_color_text_footnote"
                 android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="@+id/tvSubject"
@@ -97,7 +97,7 @@
                 android:singleLine="true"
                 android:textAlignment="viewStart"
                 android:textColor="@color/sceyt_color_text_primary"
-                android:textColorHint="@color/sceyt_color_hint"
+                android:textColorHint="@color/sceyt_color_text_footnote"
                 android:textSize="16sp"
                 app:layout_constrainedWidth="true"
                 app:layout_constraintBottom_toBottomOf="@+id/uriBegin"
@@ -129,7 +129,7 @@
                 app:layout_constraintHorizontal_bias="0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/uriUnderline"
-                tools:text="@string/the_url_exist_title"
+                tools:text="@string/sceyt_the_url_exist_title"
                 tools:visibility="visible" />
 
             <androidx.constraintlayout.widget.Group
