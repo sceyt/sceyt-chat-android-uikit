@@ -8,12 +8,15 @@ import com.sceyt.chat.demo.di.apiModule
 import com.sceyt.chat.demo.di.appModules
 import com.sceyt.chat.demo.di.repositoryModule
 import com.sceyt.chat.demo.di.viewModelModules
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytConversationActivity
 import com.sceyt.chat.models.SCTLogLevel
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytConversationActivity
 import com.sceyt.chatuikit.sceytconfigs.SceytChatUIKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UploadNotificationClickHandleData
+import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
+import com.sceyt.chatuikit.sceytstyles.StyleCustomizer
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -42,6 +45,16 @@ class SceytChatDemoApp : Application() {
             appId = BuildConfig.APP_ID,
             clientId = UUID.randomUUID().toString(),
             enableDatabase = true)
+
+        MessagesListViewStyle.styleCustomizer = StyleCustomizer {
+            it.copy(
+                messageItemStyle = it.messageItemStyle.copy(
+                    outBubbleColor = getCompatColor(com.sceyt.chatuikit.R.color.sceyt_color_bg_out_message),
+                    outLinkPreviewBackgroundColor = getCompatColor(com.sceyt.chatuikit.R.color.sceyt_color_bg_out_link_preview),
+                    outReplyBackgroundColor = getCompatColor(com.sceyt.chatuikit.R.color.sceyt_color_bg_out_link_preview),
+                )
+            )
+        }
 
         SceytChatUIKit.config = SceytChatUIKitConfig(
             uploadNotificationClickHandleData = UploadNotificationClickHandleData(
