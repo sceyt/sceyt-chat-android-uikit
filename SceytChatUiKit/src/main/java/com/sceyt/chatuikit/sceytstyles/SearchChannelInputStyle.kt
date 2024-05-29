@@ -31,7 +31,7 @@ data class SearchChannelInputStyle(
 ) {
 
     companion object {
-        var styleCustomizer = StyleCustomizer<SearchChannelInputStyle> { it }
+        var styleCustomizer = StyleCustomizer<SearchChannelInputStyle> { _, style -> style }
     }
 
     internal class Builder(
@@ -73,7 +73,7 @@ data class SearchChannelInputStyle(
                 backgroundColor = backgroundColor,
                 hintText = context.getString(R.string.sceyt_search_for_channels),
                 disableDebouncedSearch = disableDebouncedSearch
-            ).let(styleCustomizer::apply)
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }
