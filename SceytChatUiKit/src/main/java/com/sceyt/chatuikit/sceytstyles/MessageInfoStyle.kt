@@ -29,7 +29,7 @@ data class MessageInfoStyle(
 ) {
 
     companion object {
-        var styleCustomizer = StyleCustomizer<MessageInfoStyle> { it }
+        var styleCustomizer = StyleCustomizer<MessageInfoStyle> { _, style -> style }
     }
 
     internal class Builder(
@@ -66,7 +66,7 @@ data class MessageInfoStyle(
                 titleColor = titleColor,
                 borderColor = borderColor,
                 backIcon = backIcon
-            ).let(styleCustomizer::apply)
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }

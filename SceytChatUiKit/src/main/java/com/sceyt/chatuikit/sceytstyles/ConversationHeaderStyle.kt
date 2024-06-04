@@ -35,7 +35,7 @@ data class ConversationHeaderStyle(
 ) {
 
     companion object {
-        var styleCustomizer = StyleCustomizer<ConversationHeaderStyle> { it }
+        var styleCustomizer = StyleCustomizer<ConversationHeaderStyle> { _, style -> style }
     }
 
     internal class Builder(
@@ -81,7 +81,7 @@ data class ConversationHeaderStyle(
                 enableUnderline = enableUnderline,
                 menuStyle = menuStyle,
                 menuTitleAppearance = menuTitleAppearance
-            ).let(styleCustomizer::apply)
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }
