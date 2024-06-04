@@ -75,7 +75,7 @@ data class ChannelListViewStyle(
 
     companion object {
         @JvmField
-        var styleCustomizer = StyleCustomizer<ChannelListViewStyle> { it }
+        var styleCustomizer = StyleCustomizer<ChannelListViewStyle> { _, style -> style }
     }
 
     internal class Builder(
@@ -208,7 +208,7 @@ data class ChannelListViewStyle(
                 channelDateFormat = ChannelDateFormatter(),
                 showChannelActionAsPopup = showChannelActionAsPopup,
                 enableDivider = enableDivider
-            ).let(styleCustomizer::apply)
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }

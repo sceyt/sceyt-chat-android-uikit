@@ -43,7 +43,7 @@ This will enable your project to use libraries from Maven Central.
 
 ```groovy
 dependencies {
-    implementation 'com.sceyt:sceyt-chat-android-uikit:1.6.1'
+    implementation 'com.sceyt:sceyt-chat-android-uikit:1.6.2'
 }
 ```
 ## Usage
@@ -114,12 +114,13 @@ SceytChatUIKit.theme = SceytChatUIKitTheme(
 )
 
 // Set incoming and outgoing message bubble colors in SceytKit.
-MessagesListViewStyle.styleCustomizer = StyleCustomizer {
-    it.copy(
-        messageItemStyle = it.messageItemStyle.copy(
-            incBubbleColor = getCompatColor(R.color.gray),
-            outBubbleColor = getCompatColor(R.color.pink),
-        ))
+MessagesListViewStyle.styleCustomizer = StyleCustomizer { context, style ->
+    style.copy(
+        messageItemStyle = style.messageItemStyle.copy(
+            incBubbleColor = context.getCompatColor(R.color.gray),
+            outBubbleColor = context.getCompatColor(R.color.pink)
+        )
+    )
 }
 ```
 

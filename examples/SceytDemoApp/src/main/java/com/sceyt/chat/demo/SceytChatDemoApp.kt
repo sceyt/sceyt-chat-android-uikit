@@ -9,6 +9,7 @@ import com.sceyt.chat.demo.di.appModules
 import com.sceyt.chat.demo.di.repositoryModule
 import com.sceyt.chat.demo.di.viewModelModules
 import com.sceyt.chat.models.SCTLogLevel
+import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -46,12 +47,12 @@ class SceytChatDemoApp : Application() {
             clientId = UUID.randomUUID().toString(),
             enableDatabase = true)
 
-        MessagesListViewStyle.styleCustomizer = StyleCustomizer {
-            it.copy(
-                messageItemStyle = it.messageItemStyle.copy(
-                    outBubbleColor = getCompatColor(com.sceyt.chatuikit.R.color.sceyt_color_bg_out_message),
-                    outLinkPreviewBackgroundColor = getCompatColor(com.sceyt.chatuikit.R.color.sceyt_color_bg_out_link_preview),
-                    outReplyBackgroundColor = getCompatColor(com.sceyt.chatuikit.R.color.sceyt_color_bg_out_link_preview),
+        MessagesListViewStyle.styleCustomizer = StyleCustomizer { context, style ->
+            style.copy(
+                messageItemStyle = style.messageItemStyle.copy(
+                    outBubbleColor = context.getCompatColor(R.color.sceyt_color_bg_out_message),
+                    outLinkPreviewBackgroundColor = context.getCompatColor(R.color.sceyt_color_bg_out_link_preview),
+                    outReplyBackgroundColor = context.getCompatColor(R.color.sceyt_color_bg_out_link_preview),
                 )
             )
         }
