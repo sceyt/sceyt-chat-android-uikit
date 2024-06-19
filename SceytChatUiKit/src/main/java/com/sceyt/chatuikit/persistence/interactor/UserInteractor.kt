@@ -15,7 +15,9 @@ interface UserInteractor {
     suspend fun getCurrentUser(): User?
     fun getCurrentUserAsFlow(): Flow<User>
     suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String>
-    suspend fun updateProfile(firsName: String?, lastName: String?, avatarUrl: String?): SceytResponse<User>
+    suspend fun updateProfile(firsName: String?, lastName: String?,
+                              avatarUrl: String?, metadata: String?): SceytResponse<User>
+
     suspend fun setPresenceState(presenceState: PresenceState): SceytResponse<Boolean>
     suspend fun updateStatus(status: String): SceytResponse<Boolean>
     suspend fun getSettings(): SceytResponse<UserSettings>
