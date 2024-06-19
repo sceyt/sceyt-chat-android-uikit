@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.data.repositories
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.settings.UserSettings
+import com.sceyt.chat.models.user.SetProfileRequest
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
@@ -18,15 +19,9 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 
 internal class ProfileRepositoryImpl : ProfileRepository {
 
-    override suspend fun updateProfile(firstName: String?, lastName: String?, avatarUri: String?): SceytResponse<User> {
+    override suspend fun updateProfile(request: SetProfileRequest): SceytResponse<User> {
         return suspendCancellableCoroutine { continuation ->
-            User.setProfileRequest().apply {
-                avatarUri?.let { uri ->
-                    setAvatar(uri)
-                }
-                setFirstName(firstName ?: "")
-                setLastName(lastName ?: "")
-            }.execute(object : UserCallback {
+            request.execute(object : UserCallback {
                 override fun onResult(user: User) {
                     continuation.safeResume(SceytResponse.Success(user))
                 }
