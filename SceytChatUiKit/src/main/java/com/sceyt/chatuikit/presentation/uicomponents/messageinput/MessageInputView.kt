@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.uicomponents.messageinput
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.text.Editable
 import android.text.TextWatcher
@@ -35,6 +36,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.empty
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.getString
@@ -335,7 +337,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.layoutInput.isVisible = true
         showVoiceRecorder()
         binding.voiceRecordPresenter.isVisible = false
-        binding.messageInput.setText("")
+        binding.messageInput.setText(empty)
         determineInputState()
         binding.messageInput.requestFocus()
     }
@@ -503,7 +505,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 root.isVisible = true
             }
             layoutInput.isInvisible = true
-            messageInput.setText("")
+            messageInput.setText(empty)
             btnJoin.isVisible = false
             viewAttachments.isVisible = false
             hideAndStopVoiceRecorder()
@@ -669,7 +671,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun setInitialStateSearchMessagesResult() {
         with(binding.layoutInputSearchResult) {
-            tvResult.text = ""
+            tvResult.text = empty
             icDown.isEnabled = false
             icUp.isEnabled = false
         }
@@ -904,7 +906,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     // Choose file type popup listeners
     override fun onGalleryClick() {
         binding.messageInput.clearFocus()
-        chooseAttachmentHelper?.openSceytGallery(getPickerListener(), *allAttachments.map { it.filePath }.toTypedArray())
+        chooseAttachmentHelper?.openSceytGallery(getPickerListener(), selections = allAttachments.map { it.filePath }.toTypedArray())
     }
 
     override fun onTakePhotoClick() {
