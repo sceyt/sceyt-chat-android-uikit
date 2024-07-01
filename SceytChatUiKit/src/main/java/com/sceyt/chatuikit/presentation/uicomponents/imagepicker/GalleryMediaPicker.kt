@@ -149,7 +149,7 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
     private fun SceytGaleryMediaPickerBinding.initViews() {
         btnNext.setOnClickListener {
             pickerListener?.onSelect(selectedMedia.map {
-                SelectedMediaData(it.contentUri, it.realPath)
+                SelectedMediaData(it.contentUri, it.realPath, it.mediaType)
             })
             pickerListener = null
             dismissSafety()
@@ -296,7 +296,8 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
                     val realPath = cursor.getString(columnDataIndex)
                     val isWrong = !File(realPath).exists()
 
-                    val model = MediaData(contentUri, realPath, isWrong)
+                    val mediaType = if (isImage) MediaType.Image else MediaType.Video
+                    val model = MediaData(contentUri, realPath, isWrong, mediaType = mediaType)
                     val mediaItem = if (isImage) MediaItem.Image(model) else MediaItem.Video(model, videoDuration)
                     mediaItem.media.selected = checkSelectedItems(mediaItem)
 
@@ -327,7 +328,13 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
     }
 
     data class SelectedMediaData(val contentUri: Uri,
-                                 val realPath: String)
+                                 val realPath: String,
+                                 val mediaType: MediaType)
+
+    enum class MediaType {
+        Image,
+        Video
+    }
 
     fun interface PickerListener {
         fun onSelect(items: List<SelectedMediaData>)
