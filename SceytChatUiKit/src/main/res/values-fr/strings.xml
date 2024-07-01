@@ -105,7 +105,7 @@
     <string name="sceyt_gallery">galerie</string>
     <string name="sceyt_this_unsupported_file_format">le format de ce fichier est insupportable</string>
     <string name="sceyt_unsupported_file_format">le format de ce fichier est insupportable</string>
-    <string name="sceyt_max_select_count_should_be">Le nombre maximal de sélections doit être inférieur à</string>
+    <string name="sceyt_you_can_select_max">Le nombre maximal de sélections doit être inférieur à</string>
     <string name="sceyt_video">Vidéo</string>
     <string name="sceyt_image">image</string>
     <string name="sceyt_voice">voix</string>
