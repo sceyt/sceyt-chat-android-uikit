@@ -184,32 +184,36 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytMessage>) {
+        val enableDateSeparator = messagesListView.style.enableDateSeparator
         if (response.offset == 0) {
             messagesListView.setMessagesList(mapToMessageListItem(data = response.data,
-                hasNext = response.hasNext, hasPrev = response.hasPrev), true)
+                hasNext = response.hasNext, hasPrev = response.hasPrev,
+                enableDateSeparator = enableDateSeparator), true)
         } else {
             when (response.loadType) {
                 LoadPrev -> {
                     messagesListView.addPrevPageMessages(mapToMessageListItem(data = response.data,
-                        hasNext = response.hasNext, hasPrev = response.hasPrev))
+                        hasNext = response.hasNext, hasPrev = response.hasPrev,
+                        enableDateSeparator = enableDateSeparator))
                 }
 
                 LoadNext -> {
                     val hasNext = checkMaybeHesNext(response)
                     val compareMessage = getCompareMessage(response.loadType, response.data)
                     messagesListView.addNextPageMessages(mapToMessageListItem(data = response.data,
-                        hasNext = hasNext, hasPrev = response.hasPrev, compareMessage))
+                        hasNext = hasNext, hasPrev = response.hasPrev, compareMessage,
+                        enableDateSeparator = enableDateSeparator))
                 }
 
                 LoadNear -> {
                     val hasNext = checkMaybeHesNext(response)
                     messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = hasNext,
-                        hasPrev = response.hasPrev), true)
+                        hasPrev = response.hasPrev, enableDateSeparator = enableDateSeparator), true)
                 }
 
                 LoadNewest -> {
                     messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = response.hasNext,
-                        hasPrev = response.hasPrev), true)
+                        hasPrev = response.hasPrev, enableDateSeparator = enableDateSeparator), true)
                 }
             }
         }
@@ -227,7 +231,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     val newMessages = mapToMessageListItem(data = dataToMap,
                         hasNext = response.hasNext,
                         hasPrev = response.hasPrev,
-                        compareMessage = getCompareMessage(response.loadType, dataToMap))
+                        compareMessage = getCompareMessage(response.loadType, dataToMap),
+                        enableDateSeparator = messagesListView.style.enableDateSeparator)
 
                     if (response.dbResultWasEmpty) {
                         if (response.loadType == LoadNear)
@@ -302,7 +307,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 if (newMessages.isNotEmpty()) {
                     val isLastDisplaying = messagesListView.isLastCompletelyItemDisplaying()
                     messagesListView.addNextPageMessages(mapToMessageListItem(data = newMessages,
-                        hasNext = false, hasPrev = false, messagesListView.getLastMessage()?.message))
+                        hasNext = false, hasPrev = false, messagesListView.getLastMessage()?.message,
+                        enableDateSeparator = messagesListView.style.enableDateSeparator))
                     if (isLastDisplaying)
                         messagesListView.scrollToLastMessage()
 
@@ -346,7 +352,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     val compareMessage = getCompareMessage(LoadNear, data.missingMessages)
 
                     items.addAll(mapToMessageListItem(data = data.missingMessages, hasNext = false, hasPrev = false,
-                        compareMessage, ignoreUnreadMessagesSeparator = true))
+                        compareMessage, ignoreUnreadMessagesSeparator = true,
+                        enableDateSeparator = messagesListView.style.enableDateSeparator))
 
                     items.sortBy { item -> item.getMessageCreatedAt() }
                     val filtered = mutableSetOf(*items.toTypedArray())
@@ -472,7 +479,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             data = arrayListOf(message),
             hasNext = false,
             hasPrev = false,
-            compareMessage = messagesListView.getLastMessage()?.message)
+            compareMessage = messagesListView.getLastMessage()?.message,
+            enableDateSeparator = messagesListView.style.enableDateSeparator)
 
         if (notFoundMessagesToUpdate.containsKey(message.tid)) {
             notFoundMessagesToUpdate.remove(message.tid)?.let {

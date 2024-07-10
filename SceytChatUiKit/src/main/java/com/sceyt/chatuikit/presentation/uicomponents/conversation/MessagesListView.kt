@@ -81,7 +81,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         MessageActionsViewClickListeners.ActionsViewClickListeners, ReactionPopupClickListeners.PopupClickListeners {
 
     private var messagesRV: MessagesRV
-    private var scrollDownIcon: ScrollToDownView
+    private var scrollDownIcon: ScrollToDownView? = null
     private var pageStateView: SceytPageStateView? = null
     private lateinit var defaultClickListeners: MessageClickListenersImpl
     private lateinit var clickListeners: MessageClickListenersImpl
@@ -110,13 +110,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         addView(messagesRV, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
 
-        addView(ScrollToDownView(context).also { toDownView ->
-            scrollDownIcon = toDownView
-            scrollDownIcon.setStyle(style)
-            messagesRV.setScrollDownControllerListener { show ->
-                scrollDownIcon.isVisible = show
-            }
-        })
+        if (style.enableScrollDownButton) {
+            addView(ScrollToDownView(context).also { toDownView ->
+                scrollDownIcon = toDownView
+                scrollDownIcon?.setStyle(style)
+                messagesRV.setScrollDownControllerListener { show ->
+                    scrollDownIcon?.isVisible = show
+                }
+            })
+        }
 
         messagesRV.setSwipeToReplyListener { item ->
             (item as? MessageItem)?.message?.let { message ->
@@ -233,7 +235,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
         messagesRV.setMessageListener(defaultClickListeners)
 
-        scrollDownIcon.setOnClickListener {
+        scrollDownIcon?.setOnClickListener {
             clickListeners.onScrollToDownClick(it as ScrollToDownView)
         }
     }
@@ -606,7 +608,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun setUnreadCount(unreadCount: Int) {
-        scrollDownIcon.setUnreadCount(unreadCount)
+        scrollDownIcon?.setUnreadCount(unreadCount)
     }
 
     internal fun setOnWindowFocusChangeListener(listener: (Boolean) -> Unit) {

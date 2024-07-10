@@ -55,6 +55,9 @@
             <flag name="italic" value="2" />
         </attr>
 
+        <attr name="sceytUiEnableScrollDownButton" format="boolean"/>
+        <attr name="sceytUiEnableDateSeparator" format="boolean"/>
+
         <!--Background color -->
         <attr name="sceytUiMessageListBackgroundColor" format="reference|color" />
 
