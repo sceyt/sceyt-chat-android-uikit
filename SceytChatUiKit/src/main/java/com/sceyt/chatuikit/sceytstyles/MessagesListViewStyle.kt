@@ -28,6 +28,8 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @param unreadMessagesTextColor Color for the unread messages separator text, default is [SceytChatUIKitTheme.textSecondaryColor]
  * @param unreadMessagesBackendColor Background color for the unread messages separator, default is [SceytChatUIKitTheme.surface1Color]
  * @param messageItemStyle Style for the message item view
+ * @param enableScrollDownButton Enable scroll down button, default is true
+ * @param enableDateSeparator Enable date separator, default is true
  **/
 data class MessagesListViewStyle(
         @ColorInt val backgroundColor: Int,
@@ -44,6 +46,8 @@ data class MessagesListViewStyle(
         @ColorInt val unreadMessagesTextColor: Int,
         @ColorInt val unreadMessagesBackendColor: Int,
         val messageItemStyle: MessageItemStyle,
+        val enableScrollDownButton: Boolean,
+        val enableDateSeparator: Boolean,
 ) {
     companion object {
         @JvmField
@@ -94,6 +98,9 @@ data class MessagesListViewStyle(
             val unreadMessagesTextColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorTextColor,
                 context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
 
+            val enableScrollDownButton = typedArray.getBoolean(R.styleable.MessagesListView_sceytUiEnableScrollDownButton, true)
+            val enableDateSeparator = typedArray.getBoolean(R.styleable.MessagesListView_sceytUiEnableDateSeparator, true)
+
             typedArray.recycle()
 
             return MessagesListViewStyle(
@@ -109,7 +116,9 @@ data class MessagesListViewStyle(
                 unreadMessagesSeparatorTextStyle = unreadMessagesSeparatorTextStyle,
                 unreadMessagesTextColor = unreadMessagesTextColor,
                 unreadMessagesBackendColor = unreadMessagesBackgroundColor,
-                messageItemStyle = messageItemStyle
+                messageItemStyle = messageItemStyle,
+                enableScrollDownButton = enableScrollDownButton,
+                enableDateSeparator = enableDateSeparator
             ).apply {
                 styleCustomizer.apply(context, this)
                 currentStyle = this

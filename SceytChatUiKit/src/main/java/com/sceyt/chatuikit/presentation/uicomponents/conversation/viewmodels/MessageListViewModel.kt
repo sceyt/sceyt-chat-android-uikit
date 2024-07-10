@@ -591,7 +591,8 @@ class MessageListViewModel(
     internal suspend fun mapToMessageListItem(
             data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
             compareMessage: SceytMessage? = null,
-            ignoreUnreadMessagesSeparator: Boolean = false
+            ignoreUnreadMessagesSeparator: Boolean = false,
+            enableDateSeparator: Boolean
     ): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
@@ -605,7 +606,7 @@ class MessageListViewModel(
                 if (index > 0)
                     prevMessage = data.getOrNull(index - 1)
 
-                if (shouldShowDate(sceytMessage, prevMessage))
+                if (enableDateSeparator && shouldShowDate(sceytMessage, prevMessage))
                     messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.tid))
 
                 val messageItem = MessageListItem.MessageItem(initMessageInfoData(sceytMessage, prevMessage, true))

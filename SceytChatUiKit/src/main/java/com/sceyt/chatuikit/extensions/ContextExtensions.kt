@@ -78,9 +78,7 @@ fun Context.asComponentActivity(): ComponentActivity {
     return when (this) {
         is ComponentActivity -> return this
         is ContextWrapper -> {
-            if (baseContext is ComponentActivity)
-                baseContext as ComponentActivity
-            else throw RuntimeException("Context should be ComponentActivity but was $this")
+            baseContext.asComponentActivity()
         }
 
         else -> throw RuntimeException("Context should be ComponentActivity but was $this")
@@ -91,9 +89,7 @@ fun Context.maybeComponentActivity(): ComponentActivity? {
     return when (this) {
         is ComponentActivity -> return this
         is ContextWrapper -> {
-            if (baseContext is ComponentActivity)
-                baseContext as ComponentActivity
-            else null
+            baseContext.maybeComponentActivity()
         }
 
         else -> null
@@ -104,9 +100,7 @@ fun Context.asActivity(): Activity {
     return when (this) {
         is Activity -> return this
         is ContextWrapper -> {
-            if (baseContext is Activity)
-                baseContext as Activity
-            else throw RuntimeException("Context should be Activity but was $this")
+            baseContext.asActivity()
         }
 
         else -> throw RuntimeException("Context should be Activity but was $this")
@@ -117,9 +111,7 @@ fun Context.asFragmentActivity(): FragmentActivity {
     return when (this) {
         is FragmentActivity -> return this
         is ContextWrapper -> {
-            if (baseContext is FragmentActivity)
-                baseContext as FragmentActivity
-            else throw RuntimeException("Context should be FragmentActivity but was $this")
+            baseContext.asFragmentActivity()
         }
 
         else -> throw RuntimeException("Context should be FragmentActivity but was $this")
