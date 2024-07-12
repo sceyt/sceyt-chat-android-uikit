@@ -43,7 +43,6 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.permissionIgnored
 import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.screenWidthPx
-import com.sceyt.chatuikit.extensions.setTint
 import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.presentation.common.SceytDialog
@@ -478,8 +477,12 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
             })
     }
 
-    private val requestVoicePermissionLauncher = if (isInEditMode) null else context.maybeComponentActivity()?.initPermissionLauncher {
-        onVoicePermissionResult(it)
+    private val requestVoicePermissionLauncher = if (isInEditMode) null else context.maybeComponentActivity()?.run {
+        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            initPermissionLauncher {
+                onVoicePermissionResult(it)
+            }
+        } else null
     }
 
     private fun onVoicePermissionResult(isGranted: Boolean) {

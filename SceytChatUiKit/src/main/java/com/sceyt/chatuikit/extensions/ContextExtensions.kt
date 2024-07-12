@@ -96,6 +96,17 @@ fun Context.maybeComponentActivity(): ComponentActivity? {
     }
 }
 
+fun Context.maybeFragmentActivity(): FragmentActivity? {
+    return when (this) {
+        is FragmentActivity -> return this
+        is ContextWrapper -> {
+            baseContext.maybeFragmentActivity()
+        }
+
+        else -> null
+    }
+}
+
 fun Context.asActivity(): Activity {
     return when (this) {
         is Activity -> return this

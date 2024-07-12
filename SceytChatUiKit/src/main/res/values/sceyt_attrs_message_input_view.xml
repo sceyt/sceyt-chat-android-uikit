@@ -12,5 +12,10 @@
         <attr name="sceytMessageInputHintTextColor" format="reference|color" />
         <attr name="sceytMessageInputRootBackgroundColor" format="reference|color" />
         <attr name="sceytMessageInputBackgroundColor" format="reference|color" />
+        <attr name="sceytMessageInputSendIconBackgroundColor" format="reference|color" />
+        <attr name="sceytMessageInputEnableVoiceRecord" format="boolean" />
+        <attr name="sceytMessageInputEnableSendAttachment" format="boolean" />
+        <attr name="sceytMessageInputEnableMention" format="boolean" />
+        <attr name="sceytMessageInputEnableLinkPreview" format="boolean" />
     </declare-styleable>
 </resources>

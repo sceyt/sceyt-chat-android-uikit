@@ -157,7 +157,7 @@ data class MessageItemStyle(
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_file_filled)
 
             val voiceAttachmentIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiVoiceAttachmentIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_voice)
+                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_voice_white)
 
             val linkAttachmentIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiLinkAttachmentIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_link_attachment)

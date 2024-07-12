@@ -15,7 +15,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.withResumed
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asFragmentActivity
@@ -46,12 +46,12 @@ import java.util.UUID
 
 class ChooseAttachmentHelper {
     private lateinit var context: Context
-    private var requestCameraPermissionLauncher: ActivityResultLauncher<String>
-    private var requestVideoCameraPermissionLauncher: ActivityResultLauncher<String>
-    private var requestSceytGalleryPermissionLauncher: ActivityResultLauncher<String>
-    private var takePhotoLauncher: ActivityResultLauncher<Uri>
-    private var takeVideoLauncher: ActivityResultLauncher<Uri>
-    private var addAttachmentLauncher: ActivityResultLauncher<Intent>
+    private var requestCameraPermissionLauncher: ActivityResultLauncher<String>? = null
+    private var requestVideoCameraPermissionLauncher: ActivityResultLauncher<String>? = null
+    private var requestSceytGalleryPermissionLauncher: ActivityResultLauncher<String>? = null
+    private var takePhotoLauncher: ActivityResultLauncher<Uri>? = null
+    private var takeVideoLauncher: ActivityResultLauncher<Uri>? = null
+    private var addAttachmentLauncher: ActivityResultLauncher<Intent>? = null
     private var allowMultiple: Boolean = true
     private var onlyImages: Boolean = true
     private var sceytGalleryFilter = GalleryMediaPicker.PickerFilterType.All
@@ -66,6 +66,9 @@ class ChooseAttachmentHelper {
         with(activity) {
             this@ChooseAttachmentHelper.context = activity
             scope = activity.lifecycleScope
+
+            if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED))
+                return
 
             requestCameraPermissionLauncher = initPermissionLauncher {
                 onCameraPermissionResult(it)
@@ -97,10 +100,13 @@ class ChooseAttachmentHelper {
             scope = fragment.lifecycleScope
 
             lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                lifecycle.withResumed {
                     this@ChooseAttachmentHelper.context = requireContext()
                 }
             }
+
+            if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED))
+                return
 
             requestCameraPermissionLauncher = initPermissionLauncher {
                 onCameraPermissionResult(it)
@@ -132,14 +138,14 @@ class ChooseAttachmentHelper {
         takePictureCb = result
         if (context.checkAndAskPermissions(requestCameraPermissionLauncher,
                     Manifest.permission.CAMERA)) {
-            takePhotoLauncher.launch(getPhotoFileUri())
+            takePhotoLauncher?.launch(getPhotoFileUri())
         }
     }
 
     fun takeVideo(result: (uri: String) -> Unit) {
         takeVideoCb = result
         if (context.checkAndAskPermissions(requestVideoCameraPermissionLauncher, Manifest.permission.CAMERA)) {
-            takeVideoLauncher.launch(getVideoFileUri())
+            takeVideoLauncher?.launch(getVideoFileUri())
         }
     }
 
@@ -263,14 +269,14 @@ class ChooseAttachmentHelper {
 
     private fun onCameraPermissionResult(isGranted: Boolean) {
         if (isGranted) {
-            takePhotoLauncher.launch(getPhotoFileUri())
+            takePhotoLauncher?.launch(getPhotoFileUri())
         } else if (context.permissionIgnored(Manifest.permission.CAMERA))
             showPermissionDeniedDialog(R.string.sceyt_camera_permission_disabled_title, R.string.sceyt_camera_permission_disabled_desc)
     }
 
     private fun onVideoCameraPermissionResult(isGranted: Boolean) {
         if (isGranted) {
-            takeVideoLauncher.launch(getVideoFileUri())
+            takeVideoLauncher?.launch(getVideoFileUri())
         } else if (context.permissionIgnored(Manifest.permission.CAMERA))
             showPermissionDeniedDialog(R.string.sceyt_camera_permission_disabled_title, R.string.sceyt_camera_permission_disabled_desc)
     }
@@ -287,7 +293,7 @@ class ChooseAttachmentHelper {
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, allowMultiple)
         if (onlyImages)
             intent.type = "image/*"
-        addAttachmentLauncher.launch(intent)
+        addAttachmentLauncher?.launch(intent)
     }
 
     private fun openSceytGalleryPicker(pickerListener: GalleryMediaPicker.PickerListener? = GalleryMediaPicker.pickerListener,
@@ -318,7 +324,7 @@ class ChooseAttachmentHelper {
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, allowMultiple)
         intent.putExtra(Intent.EXTRA_LOCAL_ONLY, false)
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        addAttachmentLauncher.launch(intent)
+        addAttachmentLauncher?.launch(intent)
     }
 
     fun setSaveUrlsPlace(savePathsTo: MutableSet<String>) {
