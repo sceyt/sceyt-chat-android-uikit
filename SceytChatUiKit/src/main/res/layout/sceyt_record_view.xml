@@ -212,7 +212,7 @@
             android:background="@drawable/sceyt_bg_circle"
             android:padding="7dp"
             android:tint="@color/sceyt_color_on_primary"
-            app:srcCompat="@drawable/sceyt_ic_voice" />
+            app:srcCompat="@drawable/sceyt_ic_voice_white" />
 
     </androidx.cardview.widget.CardView>
 

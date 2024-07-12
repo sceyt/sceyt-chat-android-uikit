@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.uicomponents.messageinput
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.text.Editable
 import android.text.TextWatcher
@@ -35,6 +34,7 @@ import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.chatuikit.extensions.asComponentActivity
+import com.sceyt.chatuikit.extensions.asFragmentActivity
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.empty
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -115,7 +115,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
     private var inputState = Voice
     private var disabledInputByGesture: Boolean = false
-    private var enableMention: Boolean = true
     private var voiceMessageRecorderView: SceytVoiceMessageRecorderView? = null
     private var mentionUserContainer: MentionUserContainer? = null
     private var inputTextWatcher: TextWatcher? = null
@@ -124,7 +123,14 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private val linkDetailsProvider by lazy { SingleLinkDetailsProvider(context, getScope()) }
     private val audioRecorderHelper: AudioRecorderHelper by lazy { AudioRecorderHelper(getScope(), context) }
     internal var needMessagesListViewStyleCallback: () -> MessagesListViewStyle? = { null }
-
+    private var editOrReplyMessageFragment: EditOrReplyMessageFragment? = null
+    private var linkPreviewFragment: LinkPreviewFragment? = null
+    var enableVoiceRecord = true
+        private set
+    var enableSendAttachment = true
+        private set
+    var enableMention = true
+        private set
     var isInputHidden = false
         private set
     var isInMultiSelectMode = false
@@ -154,28 +160,27 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         with(binding) {
             applyStyle()
             setOnClickListeners()
-            if (!isInEditMode) {
-                voiceRecordPresenter.setStyle(style)
-                linkPreviewFragment.setStyle(style)
-                editOrReplyMessageFragment.setClickListener(clickListeners)
-                linkPreviewFragment.setClickListener(clickListeners)
-            }
+            voiceRecordPresenter.setStyle(style)
+
             addInoutListeners()
             determineInputState()
             addInputTextWatcher()
             setupAttachmentsList()
-            // Init SceytVoiceMessageRecorderView outside of post, because it's using permission launcher
-            val voiceRecorderView = SceytVoiceMessageRecorderView(context).also { it.setStyle(style) }
-            post {
-                onStateChanged(inputState)
-                (parent as? ViewGroup)?.let { parentView ->
-                    val index = parentView.indexOfChild(this@MessageInputView)
-                    parentView.addView(voiceRecorderView.apply {
-                        setRecordingListener()
-                        voiceMessageRecorderView = this
-                        voiceMessageRecorderView?.setRecorderHeight(binding.layoutInput.height)
-                        isVisible = canShowRecorderView()
-                    }, index + 1, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+            if (enableVoiceRecord) {
+                // Init SceytVoiceMessageRecorderView outside of post, because it's using permission launcher
+                val voiceRecorderView = SceytVoiceMessageRecorderView(context).also { it.setStyle(style) }
+                post {
+                    initFragments()
+                    onStateChanged(inputState)
+                    (parent as? ViewGroup)?.let { parentView ->
+                        val index = parentView.indexOfChild(this@MessageInputView)
+                        parentView.addView(voiceRecorderView.apply {
+                            setRecordingListener()
+                            voiceMessageRecorderView = this
+                            voiceMessageRecorderView?.setRecorderHeight(binding.layoutInput.height)
+                            isVisible = canShowRecorderView()
+                        }, index + 1, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+                    }
                 }
             }
         }
@@ -185,11 +190,23 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         return (findViewTreeLifecycleOwner() ?: context.asComponentActivity()).lifecycleScope
     }
 
-    private val editOrReplyMessageFragment
-        get() = binding.layoutReplyOrEditMessage.getFragment<EditOrReplyMessageFragment>()
+    private fun initFragments() {
+        val fragmentManager = context.asFragmentActivity().supportFragmentManager
+        fragmentManager.commit {
+            add(R.id.layoutReplyOrEditMessage, EditOrReplyMessageFragment().also {
+                editOrReplyMessageFragment = it
+            })
+            add(R.id.layoutLinkPreview, LinkPreviewFragment().also {
+                linkPreviewFragment = it
+            })
+        }
+        if (!isInEditMode) {
+            linkPreviewFragment?.setStyle(style)
+            editOrReplyMessageFragment?.setClickListener(clickListeners)
+            linkPreviewFragment?.setClickListener(clickListeners)
+        }
+    }
 
-    private val linkPreviewFragment
-        get() = binding.layoutLinkPreview.getFragment<LinkPreviewFragment>()
 
     private fun addInputTextWatcher() {
         inputTextWatcher = binding.messageInput.doAfterTextChanged { text ->
@@ -218,7 +235,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun hideAndReleaseLinkPreview() {
         linkDetails = null
-        linkPreviewFragment.hideLinkDetails {
+        linkPreviewFragment?.hideLinkDetails {
             binding.layoutLinkPreview.isVisible = false
             return@hideLinkDetails Unit
         }
@@ -238,11 +255,11 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             linkDetailsProvider.cancel()
         } else {
             linkDetails = null
-            linkPreviewFragment.hideLinkDetailsWithTimeout()
+            linkPreviewFragment?.hideLinkDetailsWithTimeout()
             linkDetailsProvider.loadLinkDetails(text.toString(), detailsCallback = {
                 if (it != null) {
                     binding.layoutLinkPreview.isVisible = true
-                    linkPreviewFragment.showLinkDetails(it)
+                    linkPreviewFragment?.showLinkDetails(it)
                     linkDetails = it
                 } else hideAndReleaseLinkPreview()
             }, imageSizeCallback = { size ->
@@ -416,7 +433,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageInput.hint = style.inputHintText
         messageInput.setHintTextColor(style.inputHintTextColor)
         messageInput.setBackgroundTint(style.inputBackgroundColor)
-        icSendMessage.setBackgroundTint(colorAccent)
+        icSendMessage.setBackgroundTint(style.sendIconBackgroundColor)
         btnJoin.setTextColor(colorAccent)
         btnJoin.setBackgroundTintColorRes(SceytChatUIKit.theme.surface1Color)
         rvAttachments.setBackgroundColor(backgroundColor)
@@ -425,15 +442,21 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         layoutInputSearchResult.icDown.setTint(colorAccent)
         layoutInputSearchResult.icUp.setTint(colorAccent)
         layoutInputSearchResult.tvResult.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        if (isInEditMode)
-            icSendMessage.setImageDrawable(style.voiceRecordIcon)
+        enableVoiceRecord = style.enableVoiceRecord
+        enableSendAttachment = style.enableSendAttachment
+        enableMention = style.enableMention
+        icAddAttachments.isVisible = enableSendAttachment
+        if (isInEditMode) {
+            icSendMessage.setImageDrawable(if (enableVoiceRecord)
+                style.voiceRecordIcon else style.sendMessageIcon)
+        }
     }
 
     private fun determineInputState() {
         if (!isEnabledInput() || isInMultiSelectMode || isInSearchMode || isInEditMode)
             return
 
-        val showVoiceIcon = binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
+        val showVoiceIcon = enableVoiceRecord && binding.messageInput.text?.trim().isNullOrEmpty() && allAttachments.isEmpty()
                 && !binding.voiceRecordPresenter.isShowing && !isEditingMessage()
         val newState = if (showVoiceIcon) Voice else Text
         if (inputState != newState)
@@ -441,7 +464,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         inputState = newState
 
         binding.icSendMessage.isInvisible = showVoiceIcon
-        binding.icAddAttachments.isVisible = !isEditingMessage()
+        binding.icAddAttachments.isVisible = enableSendAttachment && !isEditingMessage()
         binding.viewAttachments.isVisible = allAttachments.isNotEmpty()
         if (showVoiceIcon) {
             showVoiceRecorder()
@@ -482,7 +505,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun closeReplyOrEditView(readyCb: (() -> Unit?)? = null) {
         if (replyMessage == null && editMessage == null)
             readyCb?.invoke()
-        else editOrReplyMessageFragment.close {
+        else editOrReplyMessageFragment?.close {
             binding.layoutReplyOrEditMessage.isVisible = false
             readyCb?.invoke()
         }
@@ -491,7 +514,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun closeLinkDetailsView(readyCb: (() -> Unit?)? = null) {
         if (linkDetails == null)
             readyCb?.invoke()
-        else linkPreviewFragment.hideLinkDetails {
+        else linkPreviewFragment?.hideLinkDetails {
             binding.layoutLinkPreview.isVisible = false
             readyCb?.invoke()
         }
@@ -570,7 +593,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             if (!initWithDraft)
                 initInputWithEditMessage(message)
             binding.layoutReplyOrEditMessage.isVisible = true
-            editOrReplyMessageFragment.editMessage(message)
+            editOrReplyMessageFragment?.editMessage(message)
             if (!initWithDraft)
                 updateDraftMessage()
         }
@@ -581,7 +604,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             editMessage = null
             replyMessage = message.clone()
             binding.layoutReplyOrEditMessage.isVisible = true
-            editOrReplyMessageFragment.replyMessage(message, needMessagesListViewStyleCallback())
+            editOrReplyMessageFragment?.replyMessage(message, needMessagesListViewStyleCallback())
 
             if (!initWithDraft) {
                 context.showSoftInput(binding.messageInput)
@@ -985,7 +1008,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 editMessage?.let { editMessage(it, initWithDraft = true) }
                 linkDetails?.let {
                     binding.layoutLinkPreview.isVisible = true
-                    linkPreviewFragment.showLinkDetails(it)
+                    linkPreviewFragment?.showLinkDetails(it)
                 }
                 determineInputState()
             }
