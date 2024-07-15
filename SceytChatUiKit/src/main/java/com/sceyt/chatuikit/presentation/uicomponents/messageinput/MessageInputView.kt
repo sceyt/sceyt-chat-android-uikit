@@ -35,6 +35,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.asFragmentActivity
+import com.sceyt.chatuikit.extensions.checkIfInsideFragment
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.empty
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -161,7 +162,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
             applyStyle()
             setOnClickListeners()
             voiceRecordPresenter.setStyle(style)
-
+            initFragments()
             addInoutListeners()
             determineInputState()
             addInputTextWatcher()
@@ -170,7 +171,6 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
                 // Init SceytVoiceMessageRecorderView outside of post, because it's using permission launcher
                 val voiceRecorderView = SceytVoiceMessageRecorderView(context).also { it.setStyle(style) }
                 post {
-                    initFragments()
                     onStateChanged(inputState)
                     (parent as? ViewGroup)?.let { parentView ->
                         val index = parentView.indexOfChild(this@MessageInputView)
@@ -190,20 +190,19 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         return (findViewTreeLifecycleOwner() ?: context.asComponentActivity()).lifecycleScope
     }
 
-    private fun initFragments() {
-        val fragmentManager = context.asFragmentActivity().supportFragmentManager
+    private fun initFragments() = post {
+        val fragmentManager = checkIfInsideFragment()?.childFragmentManager
+                ?: context.asFragmentActivity().supportFragmentManager
         fragmentManager.commit {
             add(R.id.layoutReplyOrEditMessage, EditOrReplyMessageFragment().also {
+                it.setClickListener(clickListeners)
                 editOrReplyMessageFragment = it
             })
             add(R.id.layoutLinkPreview, LinkPreviewFragment().also {
+                it.setClickListener(clickListeners)
+                it.setStyle(style)
                 linkPreviewFragment = it
             })
-        }
-        if (!isInEditMode) {
-            linkPreviewFragment?.setStyle(style)
-            editOrReplyMessageFragment?.setClickListener(clickListeners)
-            linkPreviewFragment?.setClickListener(clickListeners)
         }
     }
 
