@@ -15,6 +15,8 @@ import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
@@ -40,6 +42,8 @@ class SceytChatUIFacade(
         val channelMemberInteractor: ChannelMemberInteractor,
         val userInteractor: UserInteractor,
         val attachmentInteractor: AttachmentInteractor,
+        val messageReactionInteractor: MessageReactionInteractor,
+        val messageMarkerInteractor: MessageMarkerInteractor
 ) : SceytKoinComponent {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var clientUserId: String? = null
