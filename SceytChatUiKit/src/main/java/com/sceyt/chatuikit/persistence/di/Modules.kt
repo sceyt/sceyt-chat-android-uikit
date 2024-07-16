@@ -99,7 +99,7 @@ internal val interactorModule = module {
     single<MessageReactionInteractor> { get<PersistenceMiddleWareImpl>() }
     single<ChannelMemberInteractor> { get<PersistenceMiddleWareImpl>() }
     single<UserInteractor> { get<PersistenceMiddleWareImpl>() }
-    single<SceytChatUIFacade> { SceytChatUIFacade(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<SceytChatUIFacade> { SceytChatUIFacade(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 }
 
 internal val logicModule = module {
