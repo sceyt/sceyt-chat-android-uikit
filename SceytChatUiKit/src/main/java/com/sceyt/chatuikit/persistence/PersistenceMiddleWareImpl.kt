@@ -541,13 +541,13 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return reactionsLogic.getMessageReactionsDbByKey(messageId, key)
     }
 
-    override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int): SceytResponse<SceytMessage> {
-        return reactionsLogic.addReaction(channelId, messageId, key, score)
+    override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int,
+                                     reason: String, enforceUnique: Boolean): SceytResponse<SceytMessage> {
+        return reactionsLogic.addReaction(channelId, messageId, key, score, reason, enforceUnique)
     }
 
-    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String,
-                                        isPending: Boolean): SceytResponse<SceytMessage> {
-        return reactionsLogic.deleteReaction(channelId, messageId, scoreKey, isPending)
+    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
+        return reactionsLogic.deleteReaction(channelId, messageId, scoreKey)
     }
 
     override suspend fun getMessageMarkers(messageId: Long, name: String, offset: Int, limit: Int): SceytResponse<List<SceytMarker>> {
