@@ -170,7 +170,7 @@
         app:layout_constraintBottom_toBottomOf="parent" />
 
     <include
-        android:id="@+id/layoutCloseInput"
+        android:id="@+id/layoutInputCover"
         layout="@layout/sceyt_disable_message_input"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
