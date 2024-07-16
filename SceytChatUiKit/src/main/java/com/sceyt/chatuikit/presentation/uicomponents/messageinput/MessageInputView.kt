@@ -493,7 +493,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         isInputHidden = show
         binding.btnJoin.isVisible = show
         binding.layoutInput.isVisible = !disabledInputByGesture && !show
-        binding.layoutCloseInput.root.isVisible = disabledInputByGesture && !show
+        binding.layoutInputCover.root.isVisible = disabledInputByGesture && !show
         voiceMessageRecorderView?.isVisible = canShowRecorderView()
     }
 
@@ -521,9 +521,10 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun hideInputWithMessage(message: String, @DrawableRes startIcon: Int) {
         with(binding) {
-            layoutCloseInput.apply {
+            layoutInputCover.apply {
                 tvMessage.text = message
                 icStateIcon.setImageResource(startIcon)
+                icStateIcon.isVisible = startIcon != 0
                 root.isVisible = true
             }
             layoutInput.isInvisible = true
@@ -540,7 +541,7 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
         else
             binding.layoutInput.isVisible = true
 
-        binding.layoutCloseInput.root.isVisible = false
+        binding.layoutInputCover.root.isVisible = false
         determineInputState()
     }
 
@@ -787,6 +788,8 @@ class MessageInputView @JvmOverloads constructor(context: Context, attrs: Attrib
     fun isRecording() = voiceMessageRecorderView?.isRecording == true
 
     fun getComposedMessage() = binding.messageInput.text
+
+    fun getInputCover() = binding.layoutInputCover
 
     val inputEditText: EditText get() = binding.messageInput
 
