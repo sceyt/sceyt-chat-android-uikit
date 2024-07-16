@@ -11,7 +11,6 @@ sealed class ReactionEvent {
 
     data class RemoveReaction(
             val message: SceytMessage,
-            val scoreKey: String,
-            val isPending: Boolean
+            val scoreKey: String
     ) : ReactionEvent()
 }

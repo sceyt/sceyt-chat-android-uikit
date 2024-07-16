@@ -915,6 +915,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onRemoveReaction(reactionItem: ReactionItem.Reaction) {
-        reactionEventListener?.invoke(ReactionEvent.RemoveReaction(reactionItem.message, reactionItem.reaction.key, reactionItem.isPending))
+        reactionEventListener?.invoke(ReactionEvent.RemoveReaction(reactionItem.message, reactionItem.reaction.key))
     }
 }

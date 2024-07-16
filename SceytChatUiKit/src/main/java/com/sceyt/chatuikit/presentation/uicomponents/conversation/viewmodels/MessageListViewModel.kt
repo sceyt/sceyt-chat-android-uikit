@@ -444,17 +444,19 @@ class MessageListViewModel(
     }
 
     @SuppressWarnings("WeakerAccess")
-    fun addReaction(message: SceytMessage, scoreKey: String) {
+    fun addReaction(message: SceytMessage, scoreKey: String, score: Int,
+                    reason: String, enforceUnique: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messageReactionInteractor.addReaction(channel.id, message.id, scoreKey, 1)
+            val response = messageReactionInteractor.addReaction(channel.id, message.id, scoreKey,
+                score, reason, enforceUnique)
             notifyPageStateWithResponse(response, showError = false)
         }
     }
 
     @SuppressWarnings("WeakerAccess")
-    fun deleteReaction(message: SceytMessage, scoreKey: String, isPending: Boolean) {
+    fun deleteReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messageReactionInteractor.deleteReaction(channel.id, message.id, scoreKey, isPending)
+            val response = messageReactionInteractor.deleteReaction(channel.id, message.id, scoreKey)
             notifyPageStateWithResponse(response, showError = false)
         }
     }
@@ -715,11 +717,11 @@ class MessageListViewModel(
     internal fun onReactionEvent(event: ReactionEvent) {
         when (event) {
             is ReactionEvent.AddReaction -> {
-                addReaction(event.message, event.scoreKey)
+                addReaction(event.message, event.scoreKey, 1, "", false)
             }
 
             is ReactionEvent.RemoveReaction -> {
-                deleteReaction(event.message, event.scoreKey, event.isPending)
+                deleteReaction(event.message, event.scoreKey)
             }
         }
     }
