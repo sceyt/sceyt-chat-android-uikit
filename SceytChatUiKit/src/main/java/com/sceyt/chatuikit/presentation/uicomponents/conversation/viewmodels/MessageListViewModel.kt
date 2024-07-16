@@ -444,8 +444,8 @@ class MessageListViewModel(
     }
 
     @SuppressWarnings("WeakerAccess")
-    fun addReaction(message: SceytMessage, scoreKey: String, score: Int,
-                    reason: String, enforceUnique: Boolean) {
+    fun addReaction(message: SceytMessage, scoreKey: String, score: Int = 1,
+                    reason: String = "", enforceUnique: Boolean = false) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = messageReactionInteractor.addReaction(channel.id, message.id, scoreKey,
                 score, reason, enforceUnique)
