@@ -16,12 +16,13 @@ class SceytPageStateView @JvmOverloads constructor(context: Context, attrs: Attr
     : FrameLayout(context, attrs, defStyleAttr) {
 
     private val layoutInflater by lazy { LayoutInflater.from(context) }
-
     private var loadingStateView: View? = null
     private var emptyStateView: View? = null
     private var emptySearchStateView: View? = null
 
     private fun inflateView(@LayoutRes id: Int): View {
+        if (isInEditMode)
+            return layoutInflater.inflate(id, this, false)
         val viewDataBinding = DataBindingUtil.inflate<ViewDataBinding>(layoutInflater, id, this, false)
         return viewDataBinding?.root ?: layoutInflater.inflate(id, this, false)
     }
