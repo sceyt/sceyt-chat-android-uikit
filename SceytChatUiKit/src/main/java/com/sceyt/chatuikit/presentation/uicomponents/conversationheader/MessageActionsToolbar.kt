@@ -18,8 +18,9 @@ import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListener.ToolbarActionsVisibilityListener
 
-class MessageActionsToolbar @JvmOverloads constructor(context: Context, attributeSet: AttributeSet? = null, defStyleAttr: Int = 0)
-    : Toolbar(context, attributeSet, defStyleAttr) {
+class MessageActionsToolbar @JvmOverloads constructor(
+        context: Context, attributeSet: AttributeSet? = null, defStyleAttr: Int = 0
+) : Toolbar(context, attributeSet, defStyleAttr) {
 
     private var itemClickListener: ((MenuItem) -> Unit)? = null
     private var visibilityInitializer: ToolbarActionsVisibilityListener? = null

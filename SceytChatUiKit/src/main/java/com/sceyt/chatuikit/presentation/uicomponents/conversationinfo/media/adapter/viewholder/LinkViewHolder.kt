@@ -18,7 +18,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adap
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 
-class LinkViewHolder(private var binding: SceytItemChannelLinkBinding,
+class LinkViewHolder(private val binding: SceytItemChannelLinkBinding,
                      private val linkPreview: LinkPreviewHelper?,
                      private val clickListener: AttachmentClickListenersImpl
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, {}) {

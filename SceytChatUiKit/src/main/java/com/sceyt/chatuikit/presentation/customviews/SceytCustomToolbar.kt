@@ -4,9 +4,9 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.widget.FrameLayout
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -17,7 +17,7 @@ class SceytCustomToolbar @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0
-) : FrameLayout(context, attrs, defStyleAttr) {
+) : ConstraintLayout(context, attrs, defStyleAttr) {
 
     private lateinit var binding: SceytCustomToolbarBinding
     private var navigationIconId = R.drawable.sceyt_ic_arrow_back
@@ -43,7 +43,7 @@ class SceytCustomToolbar @JvmOverloads constructor(
     }
 
     private fun setupViews() {
-        binding = SceytCustomToolbarBinding.inflate(LayoutInflater.from(context), this, true)
+        binding = SceytCustomToolbarBinding.inflate(LayoutInflater.from(context), this)
         with(binding) {
             tvTitle.apply {
                 setTextColor(titleColor)

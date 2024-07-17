@@ -21,6 +21,7 @@ import androidx.core.view.marginLeft
 import androidx.core.view.marginRight
 import androidx.core.view.marginTop
 import androidx.core.widget.doAfterTextChanged
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.AppBarLayout
 import com.sceyt.chat.models.message.DeliveryStatus
@@ -68,8 +69,9 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.Date
 
-class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : AppBarLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners,
+class ConversationHeaderView @JvmOverloads constructor(
+        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : AppBarLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners,
         HeaderEventsListener.EventListeners, HeaderUIElementsListener.ElementsListeners {
 
     private val binding: SceytConversationHeaderViewBinding
@@ -451,13 +453,17 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         enablePresence = enable
     }
 
-    private val conversationInfoLauncher = if (isInEditMode) null else context.maybeComponentActivity()?.registerForActivityResult(StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.getBooleanExtra(SceytConversationInfoActivity.ACTION_SEARCH_MESSAGES, false)?.let { search ->
-                if (search)
-                    showSearchMessagesBar(MessageCommandEvent.SearchMessages(true))
+    private val conversationInfoLauncher = if (isInEditMode) null else context.maybeComponentActivity()?.run {
+        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            registerForActivityResult(StartActivityForResult()) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    result.data?.getBooleanExtra(SceytConversationInfoActivity.ACTION_SEARCH_MESSAGES, false)?.let { search ->
+                        if (search)
+                            showSearchMessagesBar(MessageCommandEvent.SearchMessages(true))
+                    }
+                }
             }
-        }
+        } else null
     }
 
     //Event listeners

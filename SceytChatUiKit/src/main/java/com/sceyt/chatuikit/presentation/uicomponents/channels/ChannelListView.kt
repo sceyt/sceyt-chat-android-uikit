@@ -3,8 +3,8 @@ package com.sceyt.chatuikit.presentation.uicomponents.channels
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ContextThemeWrapper
+import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.user.User
@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.databinding.SceytChannelListViewBinding
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
@@ -38,8 +39,8 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
     : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners,
         ChannelPopupClickListeners.PopupClickListeners {
 
+    private val binding: SceytChannelListViewBinding
     private var channelsRV: ChannelsRV
-    private var pageStateView: SceytPageStateView? = null
     private var defaultClickListeners: ChannelClickListenersImpl
     private var clickListeners = ChannelClickListenersImpl(this)
     private var popupClickListeners = ChannelPopupClickListenersImpl(this)
@@ -48,24 +49,21 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
     private val style: ChannelListViewStyle
 
     init {
+        binding = SceytChannelListViewBinding.inflate(LayoutInflater.from(context), this)
         style = ChannelListViewStyle.Builder(context, attrs).build()
         if (background == null)
             setBackgroundColor(style.backgroundColor)
 
-        channelsRV = ChannelsRV(context).also { it.setStyle(style) }
+        channelsRV = binding.channelsRV.also { it.setStyle(style) }
         channelsRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
         channelsRV.clipToPadding = clipToPadding
         setPadding(0, 0, 0, 0)
 
-        addView(channelsRV, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-
-        if (!isInEditMode)
-            addView(SceytPageStateView(context).also {
-                pageStateView = it
-                it.setLoadingStateView(style.loadingState)
-                it.setEmptyStateView(style.emptyState)
-                it.setEmptySearchStateView(style.emptySearchState)
-            })
+        binding.pageStateView.apply {
+            setLoadingStateView(style.loadingState)
+            setEmptyStateView(style.emptyState)
+            setEmptySearchStateView(style.emptySearchState)
+        }
 
         defaultClickListeners = object : ChannelClickListenersImpl() {
             override fun onChannelClick(item: ChannelListItem.ChannelItem) {
@@ -98,7 +96,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
             channelsRV.sortByAndSetNewData(SceytChatUIKit.config.sortChannelsBy, newData)
         } ?: channelsRV.setData(arrayListOf(channelItem))
 
-        pageStateView?.updateState(PageState.Nothing)
+        binding.pageStateView.updateState(PageState.Nothing)
     }
 
     internal fun channelUpdated(channel: SceytChannel?): ChannelDiff? {
@@ -141,7 +139,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
     internal fun deleteChannel(channelId: Long?, searchQuery: String) {
         channelsRV.deleteChannel(channelId ?: return)
         if (channelsRV.getData().isNullOrEmpty())
-            pageStateView?.updateState(PageState.StateEmpty(searchQuery))
+            binding.pageStateView.updateState(PageState.StateEmpty(searchQuery))
     }
 
     internal fun userBlocked(data: List<User>?) {
@@ -155,7 +153,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     internal fun updateStateView(state: PageState) {
-        pageStateView?.updateState(state, channelsRV.isEmpty(), enableErrorSnackBar = false)
+        binding.pageStateView.updateState(state, channelsRV.isEmpty(), enableErrorSnackBar = false)
     }
 
     private fun showChannelActionsPopup(view: View, item: ChannelListItem.ChannelItem) {
@@ -276,7 +274,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
     /**
      * @return The inner [SceytPageStateView] .
      */
-    fun getPageStateView() = pageStateView
+    fun getPageStateView() = binding.pageStateView
 
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {

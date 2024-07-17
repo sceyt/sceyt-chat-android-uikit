@@ -99,8 +99,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
-class MessageInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : ConstraintLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners,
+class MessageInputView @JvmOverloads constructor(
+        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : ConstraintLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners,
         SelectFileTypePopupClickListeners.ClickListeners, InputEventsListener.InputEventListeners {
 
     private lateinit var attachmentsAdapter: AttachmentsAdapter

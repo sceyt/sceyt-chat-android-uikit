@@ -14,9 +14,10 @@ import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 
-class ScrollToDownView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : ConstraintLayout(context, attrs, defStyleAttr) {
-    private var binding: ScrollToBottomViewBinding
+class ScrollToDownView @JvmOverloads constructor(
+        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : ConstraintLayout(context, attrs, defStyleAttr) {
+    private val binding: ScrollToBottomViewBinding
     private var changeVisibilityWithAnim = true
 
     init {
