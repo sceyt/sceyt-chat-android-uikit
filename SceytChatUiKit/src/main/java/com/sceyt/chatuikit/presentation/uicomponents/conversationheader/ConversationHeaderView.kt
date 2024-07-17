@@ -10,7 +10,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.annotation.MenuRes
@@ -23,6 +22,7 @@ import androidx.core.view.marginRight
 import androidx.core.view.marginTop
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.appbar.AppBarLayout
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
@@ -69,7 +69,7 @@ import kotlinx.coroutines.launch
 import java.util.Date
 
 class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners,
+    : AppBarLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners,
         HeaderEventsListener.EventListeners, HeaderUIElementsListener.ElementsListeners {
 
     private val binding: SceytConversationHeaderViewBinding
@@ -94,12 +94,13 @@ class ConversationHeaderView @JvmOverloads constructor(context: Context, attrs: 
         private set
 
     init {
-        binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this, true)
+        binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this)
         style = ConversationHeaderStyle.Builder(context, attrs).build()
         init()
     }
 
     private fun init() {
+        stateListAnimator = null
         with(binding) {
             applyStyle()
             layoutToolbarRoot.layoutTransition = LayoutTransition().apply {
