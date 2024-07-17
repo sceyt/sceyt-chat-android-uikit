@@ -2,11 +2,9 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.Gravity
 import android.view.LayoutInflater
-import android.view.ViewGroup
 import android.view.animation.AnimationUtils
-import android.widget.FrameLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -17,28 +15,17 @@ import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 
 class ScrollToDownView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr) {
+    : ConstraintLayout(context, attrs, defStyleAttr) {
     private var binding: ScrollToBottomViewBinding
     private var changeVisibilityWithAnim = true
 
     init {
-        binding = ScrollToBottomViewBinding.inflate(LayoutInflater.from(context), this, true)
-        if (!isInEditMode) {
-            isVisible = false
-        }
-        setGravity()
+        binding = ScrollToBottomViewBinding.inflate(LayoutInflater.from(context), this)
     }
 
     internal fun setStyle(style: MessagesListViewStyle) {
         binding.unreadCount.setBackgroundTint(style.downScrollerUnreadCountColor)
         binding.fabNext.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
-    }
-
-    private fun setGravity() {
-        val params = LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            gravity = Gravity.BOTTOM or Gravity.END
-        }
-        layoutParams = params
     }
 
     private fun setVisibilityWithAnim(visible: Boolean) {
