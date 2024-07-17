@@ -43,7 +43,7 @@ class SceytChannelsFragment : Fragment() {
         mViewModel.bind(binding.searchView)
 
         binding.searchView.post {
-            binding.channelListView.getPageStateView()?.setMargins(bottom = binding.searchView.height)
+            binding.channelListView.getPageStateView().setMargins(bottom = binding.searchView.height)
         }
     }
 
