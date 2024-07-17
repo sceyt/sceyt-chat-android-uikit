@@ -17,10 +17,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-class StickyDateHeaderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr) {
+class StickyDateHeaderView @JvmOverloads constructor(
+        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : FrameLayout(context, attrs, defStyleAttr) {
 
-    private var binding: SceytItemMessageDateSeparatorBinding
+    private val binding: SceytItemMessageDateSeparatorBinding
     private var showAnimation: ValueAnimator? = null
     private var hideAnimation: ValueAnimator? = null
     private val lifecycleScope by lazy { getLifecycleScope() }

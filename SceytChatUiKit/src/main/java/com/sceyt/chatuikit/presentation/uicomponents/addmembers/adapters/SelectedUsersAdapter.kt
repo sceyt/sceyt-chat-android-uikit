@@ -24,7 +24,9 @@ class SelectedUsersAdapter(private val users: ArrayList<UserItem.User>,
         holder.bind(users[position])
     }
 
-    inner class SelectedUserViewHolder(private val binding: SceytItemSelectedUserBinding) : BaseViewHolder<UserItem.User>(binding.root) {
+    inner class SelectedUserViewHolder(
+            private val binding: SceytItemSelectedUserBinding
+    ) : BaseViewHolder<UserItem.User>(binding.root) {
 
         init {
             binding.applyStyle()

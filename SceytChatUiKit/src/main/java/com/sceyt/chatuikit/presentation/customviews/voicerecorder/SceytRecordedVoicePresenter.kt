@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View.OnClickListener
-import android.widget.FrameLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -24,15 +24,16 @@ import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.chatuikit.sceytstyles.MessageInputStyle
 import java.io.File
 
-class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr) {
+class SceytRecordedVoicePresenter @JvmOverloads constructor(
+        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : ConstraintLayout(context, attrs, defStyleAttr) {
 
     private val binding: SceytRecordedVoicePresenterBinding
     var isShowing = false
         private set
 
     init {
-        binding = SceytRecordedVoicePresenterBinding.inflate(LayoutInflater.from(context), this, true)
+        binding = SceytRecordedVoicePresenterBinding.inflate(LayoutInflater.from(context), this)
     }
 
     fun init(file: File, audioMetadata: AudioMetadata, listener: RecordedVoicePresentListeners? = null) {
@@ -114,6 +115,7 @@ class SceytRecordedVoicePresenter @JvmOverloads constructor(context: Context, at
 
     internal fun setStyle(style: MessageInputStyle) {
         with(binding) {
+            root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.backgroundColor))
             icSendMessage.setImageDrawable(style.sendMessageIcon)
             voiceRecordDuration.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
             icSendMessage.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
