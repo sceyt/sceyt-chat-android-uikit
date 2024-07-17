@@ -561,9 +561,7 @@ class MessageInputView @JvmOverloads constructor(
             (parent as? ViewGroup)?.addView(MentionUserContainer(context).apply {
                 mentionUserContainer = initWithMessageInputView(this@MessageInputView).also {
                     setUserClickListener {
-                        val name = (SceytChatUIKit.mentionUserNameFormatter?.format(it.user)
-                                ?: it.getPresentableName()).notAutoCorrectable()
-                        binding.messageInput.replaceTextWithMention(name, it.id)
+                      clickListeners.onSelectedUserToMentionClick(it)
                     }
                 }
             })
@@ -973,6 +971,12 @@ class MessageInputView @JvmOverloads constructor(
 
     override fun onScrollToPreviousMessageClick() {
         messageInputActionCallback?.scrollToPrev()
+    }
+
+    override fun onSelectedUserToMentionClick(member: SceytMember) {
+        val name = (SceytChatUIKit.mentionUserNameFormatter?.format(member.user)
+                ?: member.getPresentableName()).notAutoCorrectable()
+        binding.messageInput.replaceTextWithMention(name, member.id)
     }
 
     override fun onMultiselectModeListener(isMultiselectMode: Boolean) {
