@@ -58,5 +58,5 @@ data class SceytChatUIKitTheme(
 
         var avatarColors: List<String> = listOf("#4F6AFF"),
 
-        var defaultReactions: List<String> = listOf("\uD83D\uDE0E", "\uD83D\uDE02", "\uD83D\uDC4C", "\uD83D\uDE0D", "\uD83D\uDC4D", "\uD83D\uDE0F")
+        var defaultReactions: List<String> = listOf("😎", "😂", "👌", "😍", "👍", "😏")
 )

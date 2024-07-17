@@ -70,7 +70,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messageActionBridge.setMessagesListView(messagesListView)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
     if (channel.isSelf())
-        messagesListView.getPageStateView()?.setEmptyStateView(messagesListView.style.emptyStateSelfChannel)
+        messagesListView.getPageStateView().setEmptyStateView(messagesListView.style.emptyStateSelfChannel)
 
     clearPreparingThumbs()
 
