@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners
 
 import android.view.View
+import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
 
 sealed interface MessageInputClickListeners {
@@ -49,6 +50,10 @@ sealed interface MessageInputClickListeners {
         fun onScrollToPreviousMessageClick()
     }
 
+    fun interface SelectedUserToMentionClickListener : MessageInputClickListeners {
+        fun onSelectedUserToMentionClick(member: SceytMember)
+    }
+
     /** Use this if you want to implement all callbacks */
     interface ClickListeners :
             SendMsgClickListener,
@@ -61,5 +66,6 @@ sealed interface MessageInputClickListeners {
             VoiceLongClickListener,
             ClearChatClickListener,
             ScrollToNextMessageClickListener,
-            ScrollToPreviousMessageClickListener
+            ScrollToPreviousMessageClickListener,
+            SelectedUserToMentionClickListener
 }
