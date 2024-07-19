@@ -306,10 +306,8 @@ internal class PersistenceMessagesLogicImpl(
         createChannelAndSendMessageMutex.withLock {
             val channelId = channel.id
             channel.lastMessage = message.toSceytUiMessage()
-            SceytLog.i("experimentChannel", "channelId $channelId")
             channelCache.getRealChannelIdWithPendingChannelId(channelId)?.let {
                 message.channelId = it
-                SceytLog.i("experimentChannel", "found in cash $it")
                 return sendMessageImpl(it, message, false, isPendingMessage, isUploadedAttachments)
             }
 
@@ -317,14 +315,11 @@ internal class PersistenceMessagesLogicImpl(
                 is SceytResponse.Success -> {
                     val newChannelId = response.data?.id ?: 0L
                     message.channelId = newChannelId
-                    SceytLog.i("experimentChannel", "send new message: ${message.channelId}")
                     return sendMessageImpl(newChannelId, message, false, isPendingMessage, isUploadedAttachments)
                 }
 
                 is SceytResponse.Error -> {
                     channelCache.addPendingChannel(channel)
-                    SceytLog.e("experimentChannel", "created new channel failed ${response.exception?.message}")
-
                     return callbackFlow {
                         if (!isPendingMessage && !isUploadedAttachments)
                             emitTmpMessageAndStore(channelId, message, this.channel)
