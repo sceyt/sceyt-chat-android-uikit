@@ -623,7 +623,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         })
     }
 
-    fun setuserNameFormatter(builder: (User) -> String) {
+    fun setUserNameFormatter(builder: (User) -> String) {
         messagesRV.getViewHolderFactory().setUserNameFormatter(builder)
     }
 
@@ -631,7 +631,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.getViewHolderFactory().setNeedMediaDataCallback(callBack)
     }
 
-    fun scrollToMessage(msgId: Long, highlight: Boolean, offset: Int = 0, awaitToScroll: (() -> Unit)? = null) {
+    fun scrollToMessage(msgId: Long, highlight: Boolean, offset: Int = 0, awaitToScroll: ((Boolean) -> Unit)? = null) {
         safeScrollTo {
             messagesRV.getData().findIndexed { it is MessageItem && it.message.id == msgId }?.let {
                 val (position, item) = it
@@ -640,21 +640,24 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
                 if (highlight || awaitToScroll != null) {
                     messagesRV.awaitToScrollFinish(position, callback = {
-                        (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
-                        awaitToScroll?.invoke()
+                        if (highlight)
+                            (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                        awaitToScroll?.invoke(true)
                     })
                 }
-            } ?: run { awaitToScroll?.invoke() }
+            } ?: run { awaitToScroll?.invoke(false) }
         }
     }
 
-    fun scrollToPosition(position: Int, highlight: Boolean, offset: Int = 0, awaitToScroll: (() -> Unit)? = null) {
+    fun scrollToPosition(position: Int, highlight: Boolean, offset: Int = 0, awaitToScroll: ((Boolean) -> Unit)? = null) {
         safeScrollTo {
             (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
 
             if (highlight || awaitToScroll != null) {
                 messagesRV.awaitToScrollFinish(position, callback = {
-                    (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                    if (highlight)
+                        (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                    awaitToScroll?.invoke(true)
                 })
             }
         }
