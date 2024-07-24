@@ -41,11 +41,19 @@ class MessagesCache {
         )
         val messageUpdatedFlow: SharedFlow<Pair<Long, List<SceytMessage>>> = messageUpdatedFlow_
 
+        // Pair<channelId, messagesDeletionDate>
         private val messagesClearedFlow_ = MutableSharedFlow<Pair<Long, Long>>(
             extraBufferCapacity = 30,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val messagesClearedFlow: SharedFlow<Pair<Long, Long>> = messagesClearedFlow_
+
+        // Pair<channelId, tid>
+        private val messagesHardDeletedFlow_ = MutableSharedFlow<Pair<Long, Long>>(
+            extraBufferCapacity = 30,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val messagesHardDeletedFlow: SharedFlow<Pair<Long, Long>> = messagesHardDeletedFlow_
     }
 
 
@@ -110,8 +118,7 @@ class MessagesCache {
             getMessagesMap(channelId)?.values
                 ?.filter { it.deliveryStatus != DeliveryStatus.Pending }
                 ?.map { it.tid }?.forEach {
-                    cachedMessages.remove(it)
-                    deleteMessage(channelId, it)
+                    cachedMessages[channelId]?.remove(it)
                 }
         }
     }
@@ -147,9 +154,10 @@ class MessagesCache {
         }
     }
 
-    fun deleteMessage(channelId: Long, tid: Long) {
+    fun hardDeleteMessage(channelId: Long, tid: Long) {
         synchronized(lock) {
             cachedMessages[channelId]?.remove(tid)
+            messagesHardDeletedFlow_.tryEmit(Pair(channelId, tid))
         }
     }
 

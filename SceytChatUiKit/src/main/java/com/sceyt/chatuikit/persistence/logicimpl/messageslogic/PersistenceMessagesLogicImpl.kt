@@ -3,6 +3,10 @@ package com.sceyt.chatuikit.persistence.logicimpl.messageslogic
 import android.content.Context
 import androidx.work.await
 import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.models.message.DeleteMessageType
+import com.sceyt.chat.models.message.DeleteMessageType.DeleteForEveryone
+import com.sceyt.chat.models.message.DeleteMessageType.DeleteForMe
+import com.sceyt.chat.models.message.DeleteMessageType.DeleteHard
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
@@ -67,7 +71,6 @@ import com.sceyt.chatuikit.persistence.mappers.isLink
 import com.sceyt.chatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
-import com.sceyt.chatuikit.persistence.mappers.toMessageEntity
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiMessage
@@ -170,13 +173,25 @@ internal class PersistenceMessagesLogicImpl(
         messagesCache.updateMessagesStatus(data.channel.id, data.status, *updatedMessages.map { it.tid }.toLongArray())
     }
 
-    override suspend fun onMessageEditedOrDeleted(data: SceytMessage) = withContext(dispatcherIO) {
-        val selfReactions = reactionDao.getSelfReactionsByMessageId(data.id, myId.toString())
-        data.userReactions = selfReactions.map { it.toSceytReaction() }.toTypedArray()
-        messageDao.updateMessage(data.toMessageEntity(false))
-        messagesCache.messageUpdated(data.channelId, data)
-        if (data.state == MessageState.Deleted)
-            deletedPayloads(data.id, data.tid)
+    override suspend fun onMessageEditedOrDeleted(message: SceytMessage) = withContext(dispatcherIO) {
+        when (message.state) {
+            MessageState.Unmodified -> return@withContext
+            MessageState.Edited, MessageState.Moderated -> {
+                val selfReactions = reactionDao.getSelfReactionsByMessageId(message.id, myId.toString())
+                message.userReactions = selfReactions.map { it.toSceytReaction() }.toTypedArray()
+                messagesCache.messageUpdated(message.channelId, message)
+            }
+
+            MessageState.Deleted -> {
+                messagesCache.messageUpdated(message.channelId, message)
+                deletedPayloads(message.id, message.tid)
+            }
+
+            MessageState.DeletedHard -> {
+                messageDao.deleteMessageByTid(message.tid)
+                messagesCache.hardDeleteMessage(message.channelId, message.tid)
+            }
+        }
     }
 
     override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
@@ -558,7 +573,12 @@ internal class PersistenceMessagesLogicImpl(
                     }
 
                     MessageState.Deleted -> {
-                        deleteMessageImpl(channelId, stateDb.entity.messageId, stateDb.entity.deleteOnlyForMe)
+                        val type = if (stateDb.entity.deleteOnlyForMe) DeleteForMe else DeleteForEveryone
+                        deleteMessageImpl(channelId, stateDb.entity.messageId, type)
+                    }
+
+                    MessageState.DeletedHard -> {
+                        deleteMessageImpl(channelId, stateDb.entity.messageId, DeleteHard)
                     }
 
                     else -> return@values
@@ -601,13 +621,13 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     override suspend fun deleteMessage(channelId: Long, message: SceytMessage,
-                                       onlyForMe: Boolean): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
+                                       deleteType: DeleteMessageType): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
         if (message.deliveryStatus == DeliveryStatus.Pending) {
             val clonedMessage = message.clone().apply {
                 state = MessageState.Deleted
             }
             messageDao.deleteMessageByTid(message.tid)
-            messagesCache.deleteMessage(channelId, message.tid)
+            messagesCache.hardDeleteMessage(channelId, message.tid)
             persistenceChannelsLogic.onMessageEditedOrDeleted(clonedMessage)
             SendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString())
             message.attachments?.firstOrNull()?.let {
@@ -618,14 +638,32 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         // Insert pending message state
-        pendingMessageStateDao.insert(PendingMessageStateEntity(message.id, channelId, MessageState.Deleted, null, onlyForMe))
+        val onlyForMe: Boolean
+        val state: MessageState
+        when (deleteType) {
+            DeleteHard -> {
+                onlyForMe = false
+                state = MessageState.DeletedHard
+            }
+
+            DeleteForEveryone -> {
+                onlyForMe = false
+                state = MessageState.Deleted
+            }
+
+            DeleteForMe -> {
+                onlyForMe = true
+                state = MessageState.Deleted
+            }
+        }
+        pendingMessageStateDao.insert(PendingMessageStateEntity(message.id, channelId, state, null, onlyForMe))
 
         // Update message state in db and cache
-        val deletedMessage = message.clone().apply { state = MessageState.Deleted }
+        val deletedMessage = message.clone().apply { this.state = state }
         onMessageEditedOrDeleted(deletedMessage)
         persistenceChannelsLogic.onMessageEditedOrDeleted(deletedMessage)
 
-        return@withContext deleteMessageImpl(channelId, message.id, onlyForMe)
+        return@withContext deleteMessageImpl(channelId, message.id, deleteType)
     }
 
     private suspend fun editMessageImpl(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage> {
@@ -638,8 +676,8 @@ internal class PersistenceMessagesLogicImpl(
         return response
     }
 
-    private suspend fun deleteMessageImpl(channelId: Long, messageId: Long, onlyForMe: Boolean): SceytResponse<SceytMessage> {
-        val response = messagesRepository.deleteMessage(channelId, messageId, onlyForMe)
+    private suspend fun deleteMessageImpl(channelId: Long, messageId: Long, deleteType: DeleteMessageType): SceytResponse<SceytMessage> {
+        val response = messagesRepository.deleteMessage(channelId, messageId, deleteType)
         if (response is SceytResponse.Success) {
             response.data?.let { resultMessage ->
                 pendingMessageStateDao.deleteByMessageId(resultMessage.id)

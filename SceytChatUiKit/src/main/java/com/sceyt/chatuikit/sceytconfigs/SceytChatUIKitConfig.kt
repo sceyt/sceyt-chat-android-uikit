@@ -13,7 +13,8 @@ data class SceytChatUIKitConfig(
         @IntRange(from = 1, to = 50) var maxMultiselectMessagesCount: Int = 30,
         val sortChannelsBy: ChannelSortType = ChannelSortType.ByLastMsg,
         val presenceStatusText: String = "",
-        val uploadNotificationClickHandleData: UploadNotificationClickHandleData? = null
+        val uploadNotificationClickHandleData: UploadNotificationClickHandleData? = null,
+        val hardDeleteMessageForAll: Boolean = false
 )
 
 enum class ChannelSortType {
