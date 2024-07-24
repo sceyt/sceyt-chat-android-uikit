@@ -71,6 +71,9 @@ import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
+import com.sceyt.chatuikit.presentation.extensions.isDeleted
+import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
+import com.sceyt.chatuikit.presentation.extensions.isHardDeleted
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.chatuikit.pushes.RemoteMessageData
@@ -232,7 +235,8 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun onMessageEditedOrDeleted(message: SceytMessage) {
-        if (message.state == MessageState.Deleted) {
+        val state = message.state
+        if (state.isDeletedOrHardDeleted()) {
             chatUserReactionDao.deleteChannelMessageUserReaction(message.channelId, message.id)
             channelsCache.removeChannelMessageReactions(message.channelId, message.id)
         }
@@ -246,7 +250,7 @@ internal class PersistenceChannelsLogicImpl(
                         channelsCache.updateLastMessage(message.channelId, message)
                 }
             } ?: run {
-                if (message.deliveryStatus == DeliveryStatus.Pending && message.state == MessageState.Deleted)
+                if (state.isHardDeleted() || message.deliveryStatus == DeliveryStatus.Pending && state.isDeleted())
                     deleteMessage(message.channelId, message)
                 else {
                     channel.lastMessage = message

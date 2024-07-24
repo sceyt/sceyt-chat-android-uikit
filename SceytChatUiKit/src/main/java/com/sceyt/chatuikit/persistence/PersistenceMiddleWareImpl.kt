@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.persistence
 
 import com.sceyt.chat.models.member.Member
+import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.settings.UserSettings
@@ -401,8 +402,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     override suspend fun deleteMessage(channelId: Long, message: SceytMessage,
-                                       onlyForMe: Boolean): SceytResponse<SceytMessage> {
-        return messagesLogic.deleteMessage(channelId, message, onlyForMe)
+                                       deleteType: DeleteMessageType): SceytResponse<SceytMessage> {
+        return messagesLogic.deleteMessage(channelId, message, deleteType)
     }
 
     override suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {

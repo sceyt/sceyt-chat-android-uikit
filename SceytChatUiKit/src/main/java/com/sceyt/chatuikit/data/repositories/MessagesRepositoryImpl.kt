@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.data.repositories
 
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.SearchQueryOperator
+import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListFilterKey
 import com.sceyt.chat.models.message.MessageListMarker
@@ -245,9 +246,9 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
-    override suspend fun deleteMessage(channelId: Long, messageId: Long, onlyForMe: Boolean): SceytResponse<SceytMessage> {
+    override suspend fun deleteMessage(channelId: Long, messageId: Long, deleteType: DeleteMessageType): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).deleteMessage(messageId, onlyForMe, object : MessageCallback {
+            ChannelOperator.build(channelId).deleteMessage(messageId, deleteType, object : MessageCallback {
                 override fun onResult(msg: Message) {
                     continuation.safeResume(SceytResponse.Success(msg.toSceytUiMessage()))
                 }

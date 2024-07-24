@@ -9,6 +9,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.ConnectionState
+import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
@@ -373,12 +374,19 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    MessagesCache.messagesClearedFlow.filter { it.first == channel.id }.onEach { pair ->
-        val date = pair.second
-        messagesListView.deleteAllMessagesBefore {
-            it.getMessageCreatedAt() <= date && (it !is MessageItem || it.message.deliveryStatus != DeliveryStatus.Pending)
-        }
-    }.launchIn(viewModelScope)
+    MessagesCache.messagesClearedFlow
+        .filter { (channelId, _) -> channelId == channel.id }
+        .onEach { (_, date) ->
+            messagesListView.deleteAllMessagesBefore {
+                it.getMessageCreatedAt() <= date && (it !is MessageItem || it.message.deliveryStatus != DeliveryStatus.Pending)
+            }
+        }.launchIn(viewModelScope)
+
+    MessagesCache.messagesHardDeletedFlow
+        .filter { (channelId, _) -> channelId == channel.id }
+        .onEach { (_, tid) ->
+            messagesListView.forceDeleteMessageByTid(tid)
+        }.launchIn(viewModelScope)
 
     loadMessagesFlow
         .onEach(::initMessagesResponse)
@@ -465,13 +473,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
         }
     })
-
-    checkMessageForceDeleteLiveData.observe(lifecycleOwner) {
-        if (it is SceytResponse.Success) {
-            if (it.data?.deliveryStatus == DeliveryStatus.Pending && it.data.state == MessageState.Deleted)
-                messagesListView.forceDeleteMessageByTid(it.data.tid)
-        }
-    }
 
     suspend fun onMessage(message: SceytMessage) {
         if (hasNext || hasNextDb) return
@@ -619,7 +620,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messagesListView.setMessageCommandEventListener {
         when (val event = it) {
             is MessageCommandEvent.DeleteMessage -> {
-                deleteMessages(event.message.toList(), event.onlyForMe)
+                val type = if (event.onlyForMe)
+                    DeleteMessageType.DeleteForMe
+                else {
+                    if (SceytChatUIKit.config.hardDeleteMessageForAll)
+                        DeleteMessageType.DeleteHard else DeleteMessageType.DeleteForEveryone
+                }
+                deleteMessages(event.message.toList(), type)
             }
 
             is MessageCommandEvent.EditMessage -> {

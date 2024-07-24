@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.work.ExistingWorkPolicy
+import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
@@ -479,17 +480,16 @@ class MessageListViewModel(
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
-    fun deleteMessage(message: SceytMessage, onlyForMe: Boolean) {
+    fun deleteMessage(message: SceytMessage, deleteType: DeleteMessageType) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messageInteractor.deleteMessage(channel.id, message, onlyForMe)
+            val response = messageInteractor.deleteMessage(channel.id, message, deleteType)
             _messageForceDeleteLiveData.postValue(response)
         }
     }
 
-    fun deleteMessages(message: List<SceytMessage>, onlyForMe: Boolean) {
+    fun deleteMessages(message: List<SceytMessage>, deleteType: DeleteMessageType) {
         message.forEach {
-            deleteMessage(it, onlyForMe)
+            deleteMessage(it, deleteType)
         }
     }
 

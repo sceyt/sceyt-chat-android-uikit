@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.persistence.repositories
 
+import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
@@ -37,7 +38,7 @@ interface MessagesRepository {
                             tmpMessageCb: ((Message) -> Unit)? = null): SceytResponse<SceytMessage>
 
     suspend fun deleteMessage(channelId: Long, messageId: Long,
-                              onlyForMe: Boolean): SceytResponse<SceytMessage>
+                              deleteType: DeleteMessageType): SceytResponse<SceytMessage>
 
     suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage>
     suspend fun markMessageAs(channelId: Long, marker: MarkerTypeEnum, vararg id: Long): SceytResponse<MessageListMarker>

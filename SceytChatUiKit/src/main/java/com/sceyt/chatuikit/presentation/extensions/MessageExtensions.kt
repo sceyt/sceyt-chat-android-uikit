@@ -164,3 +164,9 @@ fun SceytAttachment?.checkLoadedFileIsCorrect(loadedFile: File): File? {
 }
 
 fun SceytMessage.isPending() = deliveryStatus == DeliveryStatus.Pending
+
+fun MessageState.isDeletedOrHardDeleted() = this == MessageState.Deleted || this == MessageState.DeletedHard
+
+fun MessageState.isDeleted() = this == MessageState.Deleted
+
+fun MessageState.isHardDeleted() = this == MessageState.DeletedHard

@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.persistence.logic
 
+import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData
@@ -20,16 +21,17 @@ interface PersistenceMessagesLogic {
     suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>, sendDeliveryMarker: Boolean = true)
     suspend fun onFcmMessage(data: RemoteMessageData)
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
-    suspend fun onMessageEditedOrDeleted(data: SceytMessage)
+    suspend fun onMessageEditedOrDeleted(message: SceytMessage)
     suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
-                                 limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
-
-    suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
-                                 limit: Int,
+                                 limit: Int, loadKey: LoadKeyData,
                                  ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
 
+    suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
+                                 offset: Int, limit: Int, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
+
     suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
-                                 limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean, ignoreServer: Boolean): Flow<PaginationResponse<SceytMessage>>
+                                 limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean,
+                                 ignoreServer: Boolean): Flow<PaginationResponse<SceytMessage>>
 
     suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int,
                                    loadKey: LoadKeyData,
@@ -47,21 +49,31 @@ interface PersistenceMessagesLogic {
                                  replyInThread: Boolean): SyncNearMessagesResult
 
     suspend fun onSyncedChannels(channels: List<SceytChannel>)
-    suspend fun getMessagesByType(channelId: Long, lastMessageId: Long, type: String): SceytResponse<List<SceytMessage>>
+    suspend fun getMessagesByType(channelId: Long, lastMessageId: Long,
+                                  type: String): SceytResponse<List<SceytMessage>>
+
     suspend fun sendMessage(channelId: Long, message: Message)
     suspend fun sendMessages(channelId: Long, messages: List<Message>)
     suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
     suspend fun sendSharedFileMessage(channelId: Long, message: Message)
     suspend fun sendFrowardMessages(channelId: Long, vararg messageToSend: Message): SceytResponse<Boolean>
-    suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage>
+    suspend fun sendMessageWithUploadedAttachments(channelId: Long,
+                                                   message: Message): SceytResponse<SceytMessage>
+
     suspend fun sendPendingMessages(channelId: Long)
     suspend fun sendAllPendingMessages()
     suspend fun sendAllPendingMarkers()
     suspend fun sendAllPendingMessageStateUpdates()
-    suspend fun markMessagesAs(channelId: Long, marker: MarkerTypeEnum, vararg ids: Long): List<SceytResponse<MessageListMarker>>
-    suspend fun addMessagesMarker(channelId: Long, marker: String, vararg ids: Long): List<SceytResponse<MessageListMarker>>
+    suspend fun markMessagesAs(channelId: Long, marker: MarkerTypeEnum,
+                               vararg ids: Long): List<SceytResponse<MessageListMarker>>
+
+    suspend fun addMessagesMarker(channelId: Long, marker: String,
+                                  vararg ids: Long): List<SceytResponse<MessageListMarker>>
+
     suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage>
-    suspend fun deleteMessage(channelId: Long, message: SceytMessage, onlyForMe: Boolean): SceytResponse<SceytMessage>
+    suspend fun deleteMessage(channelId: Long, message: SceytMessage,
+                              deleteType: DeleteMessageType): SceytResponse<SceytMessage>
+
     suspend fun getMessageDbById(messageId: Long): SceytMessage?
     suspend fun getMessageDbByTid(tid: Long): SceytMessage?
     suspend fun getMessagesDbByTid(tIds: List<Long>): List<SceytMessage>
