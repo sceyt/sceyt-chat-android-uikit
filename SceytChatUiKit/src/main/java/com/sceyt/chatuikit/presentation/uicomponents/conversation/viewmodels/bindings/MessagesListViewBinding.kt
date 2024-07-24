@@ -623,7 +623,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 val type = if (event.onlyForMe)
                     DeleteMessageType.DeleteForMe
                 else {
-                    if (SceytChatUIKit.config.hardDeleteMessageForAll)
+                    if (SceytChatUIKit.config.shouldHardDeleteMessageForAll)
                         DeleteMessageType.DeleteHard else DeleteMessageType.DeleteForEveryone
                 }
                 deleteMessages(event.message.toList(), type)
