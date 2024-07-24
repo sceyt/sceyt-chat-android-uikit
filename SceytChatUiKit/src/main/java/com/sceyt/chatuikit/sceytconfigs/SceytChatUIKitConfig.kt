@@ -14,7 +14,7 @@ data class SceytChatUIKitConfig(
         val sortChannelsBy: ChannelSortType = ChannelSortType.ByLastMsg,
         val presenceStatusText: String = "",
         val uploadNotificationClickHandleData: UploadNotificationClickHandleData? = null,
-        val hardDeleteMessageForAll: Boolean = false
+        val shouldHardDeleteMessageForAll: Boolean = false
 )
 
 enum class ChannelSortType {
