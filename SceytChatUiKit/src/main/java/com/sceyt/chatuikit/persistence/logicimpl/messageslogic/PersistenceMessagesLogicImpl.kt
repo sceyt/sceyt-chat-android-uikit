@@ -71,6 +71,7 @@ import com.sceyt.chatuikit.persistence.mappers.isLink
 import com.sceyt.chatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
+import com.sceyt.chatuikit.persistence.mappers.toMessageEntity
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiMessage
@@ -180,10 +181,12 @@ internal class PersistenceMessagesLogicImpl(
                 val selfReactions = reactionDao.getSelfReactionsByMessageId(message.id, myId.toString())
                 message.userReactions = selfReactions.map { it.toSceytReaction() }.toTypedArray()
                 messagesCache.messageUpdated(message.channelId, message)
+                messageDao.updateMessage(message.toMessageEntity(false))
             }
 
             MessageState.Deleted -> {
                 messagesCache.messageUpdated(message.channelId, message)
+                messageDao.updateMessage(message.toMessageEntity(false))
                 deletedPayloads(message.id, message.tid)
             }
 
