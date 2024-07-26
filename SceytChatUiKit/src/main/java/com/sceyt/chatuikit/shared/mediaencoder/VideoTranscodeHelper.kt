@@ -1,32 +1,31 @@
 package com.sceyt.chatuikit.shared.mediaencoder
 
-import android.app.Application
+import android.content.Context
 import android.net.Uri
 import com.abedelazizshe.lightcompressorlibrary.CompressionListener
 import com.abedelazizshe.lightcompressorlibrary.VideoQuality
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.persistence.extensions.TranscodeQuality
 import com.sceyt.chatuikit.shared.mediaencoder.TranscodeResultEnum.Cancelled
 import com.sceyt.chatuikit.shared.mediaencoder.TranscodeResultEnum.Failure
 import com.sceyt.chatuikit.shared.mediaencoder.TranscodeResultEnum.Progress
 import com.sceyt.chatuikit.shared.mediaencoder.TranscodeResultEnum.Start
 import com.sceyt.chatuikit.shared.mediaencoder.TranscodeResultEnum.Success
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.koin.core.component.inject
 import java.io.File
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.resume
 
-object VideoTranscodeHelper : SceytKoinComponent {
-    private val application by inject<Application>()
+object VideoTranscodeHelper {
     private var pendingTranscodeQue: ConcurrentLinkedQueue<PendingTranscodeData> = ConcurrentLinkedQueue()
 
     @Volatile
     private var currentTranscodePath: String? = null
 
-    suspend fun transcodeAsResult(destination: File, path: String, quality: VideoQuality = VideoQuality.MEDIUM): VideoTranscodeData {
+    suspend fun transcodeAsResult(context: Context, destination: File, path: String,
+                                  quality: TranscodeQuality = TranscodeQuality.Medium): VideoTranscodeData {
         return suspendCancellableCoroutine {
-            checkAndTranscode(destination, path, quality) { data ->
+            checkAndTranscode(context, destination, path, quality.toVideoQuality()) { data ->
                 when (data.resultType) {
                     Cancelled -> it.resume(VideoTranscodeData(Cancelled))
                     Failure -> {
@@ -41,18 +40,20 @@ object VideoTranscodeHelper : SceytKoinComponent {
         }
     }
 
-    fun transcodeAsResultWithCallback(destination: File, path: String, quality: VideoQuality = VideoQuality.MEDIUM,
+    fun transcodeAsResultWithCallback(context: Context, destination: File, path: String,
+                                      quality: TranscodeQuality = TranscodeQuality.Medium,
                                       callback: (VideoTranscodeData) -> Unit) {
-        checkAndTranscode(destination, path, quality, callback)
+        checkAndTranscode(context, destination, path, quality.toVideoQuality(), callback)
     }
 
-    private fun checkAndTranscode(destination: File, filePath: String, quality: VideoQuality = VideoQuality.MEDIUM,
+    private fun checkAndTranscode(context: Context, destination: File, filePath: String,
+                                  quality: VideoQuality = VideoQuality.MEDIUM,
                                   callback: (VideoTranscodeData) -> Unit) {
 
         if (currentTranscodePath == null) {
             currentTranscodePath = filePath
             CustomVideoCompressor.start(
-                context = application,
+                context = context,
                 srcUri = Uri.parse(filePath),
                 destPath = destination.absolutePath,
                 configureWith = CustomConfiguration(
@@ -64,12 +65,12 @@ object VideoTranscodeHelper : SceytKoinComponent {
                 listener = object : CompressionListener {
                     override fun onCancelled() {
                         callback(VideoTranscodeData(Cancelled))
-                        uploadNext()
+                        uploadNext(context)
                     }
 
                     override fun onFailure(failureMessage: String) {
                         callback(VideoTranscodeData(Failure, failureMessage))
-                        uploadNext()
+                        uploadNext(context)
                     }
 
                     override fun onProgress(percent: Float) {
@@ -82,7 +83,7 @@ object VideoTranscodeHelper : SceytKoinComponent {
 
                     override fun onSuccess() {
                         callback(VideoTranscodeData(Success))
-                        uploadNext()
+                        uploadNext(context)
                     }
                 },
             )
@@ -94,11 +95,11 @@ object VideoTranscodeHelper : SceytKoinComponent {
         }
     }
 
-    private fun uploadNext() {
+    private fun uploadNext(context: Context) {
         currentTranscodePath = null
         if (pendingTranscodeQue.isEmpty()) return
         pendingTranscodeQue.poll()?.let {
-            checkAndTranscode(it.destination, it.filePath, it.quality, it.callback)
+            checkAndTranscode(context, it.destination, it.filePath, it.quality, it.callback)
         }
     }
 
@@ -111,6 +112,16 @@ object VideoTranscodeHelper : SceytKoinComponent {
                 pendingTranscodeQue.remove(it)
             }
         }
+    }
+}
+
+private fun TranscodeQuality.toVideoQuality(): VideoQuality {
+    return when (this) {
+        TranscodeQuality.VeryHigh -> VideoQuality.VERY_HIGH
+        TranscodeQuality.High -> VideoQuality.HIGH
+        TranscodeQuality.Medium -> VideoQuality.MEDIUM
+        TranscodeQuality.Low -> VideoQuality.LOW
+        TranscodeQuality.VeryLow -> VideoQuality.VERY_LOW
     }
 }
 
