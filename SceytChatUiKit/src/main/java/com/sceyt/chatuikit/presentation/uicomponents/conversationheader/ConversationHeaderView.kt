@@ -519,12 +519,12 @@ class ConversationHeaderView @JvmOverloads constructor(
     //Click listeners
     override fun onAvatarClick(view: View) {
         if (::channel.isInitialized)
-            conversationInfoLauncher?.let { SceytConversationInfoActivity.startWithLauncher(context, channel, it) }
+            conversationInfoLauncher?.let { SceytConversationInfoActivity.startHandleSearchClick(context, channel, it) }
     }
 
     override fun onToolbarClick(view: View) {
         if (::channel.isInitialized)
-            conversationInfoLauncher?.let { SceytConversationInfoActivity.startWithLauncher(context, channel, it) }
+            conversationInfoLauncher?.let { SceytConversationInfoActivity.startHandleSearchClick(context, channel, it) }
     }
 
     override fun onBackClick(view: View) {

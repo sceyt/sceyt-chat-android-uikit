@@ -29,6 +29,7 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener,
     protected lateinit var style: ConversationInfoStyle
         private set
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
+    private var enableSearchMessages: Boolean = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentInfoMembersByRoleBinding.inflate(layoutInflater, container, false)
@@ -47,6 +48,7 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener,
 
     private fun getBundleArguments() {
         channel = requireNotNull(arguments?.parcelable(ChannelLinksFragment.CHANNEL))
+        enableSearchMessages = arguments?.getBoolean(ENABLE_SEARCH_MESSAGES) ?: false
     }
 
     private fun initViews() {
@@ -71,8 +73,14 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener,
             if (channel.isDirect() || (channel.isPublic() && !isOwnerOrAdmin)) {
                 groupChannelAdmins.isVisible = false
                 groupChannelMembers.isVisible = false
+
+                if (!enableSearchMessages)
+                    root.isVisible = false
+
                 return
             }
+
+            searchMessages.isVisible = enableSearchMessages
 
             members.text = if (channel.isPublic())
                 getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
@@ -104,12 +112,14 @@ open class InfoMembersByRoleButtonsFragment : Fragment(), ChannelUpdateListener,
     }
 
     companion object {
+        private const val ENABLE_SEARCH_MESSAGES = "ENABLE_SEARCH_MESSAGES"
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(channel: SceytChannel): InfoMembersByRoleButtonsFragment {
+        fun newInstance(channel: SceytChannel, enableSearchMessages: Boolean): InfoMembersByRoleButtonsFragment {
             val fragment = InfoMembersByRoleButtonsFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)
+                putBoolean(ENABLE_SEARCH_MESSAGES, enableSearchMessages)
             }
             return fragment
         }
