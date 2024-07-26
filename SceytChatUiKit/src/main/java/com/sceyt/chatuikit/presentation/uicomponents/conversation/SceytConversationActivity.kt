@@ -62,11 +62,11 @@ open class SceytConversationActivity : AppCompatActivity() {
     private fun ConversationHeaderView.initHeaderView() {
         setCustomClickListener(object : HeaderClickListenersImpl(this) {
             override fun onAvatarClick(view: View) {
-                SceytConversationInfoActivity.startWithLauncher(this@SceytConversationActivity, channel, conversationInfoLauncher)
+                SceytConversationInfoActivity.startHandleSearchClick(this@SceytConversationActivity, channel, conversationInfoLauncher)
             }
 
             override fun onToolbarClick(view: View) {
-                SceytConversationInfoActivity.startWithLauncher(this@SceytConversationActivity, channel, conversationInfoLauncher)
+                SceytConversationInfoActivity.startHandleSearchClick(this@SceytConversationActivity, channel, conversationInfoLauncher)
             }
         })
     }
