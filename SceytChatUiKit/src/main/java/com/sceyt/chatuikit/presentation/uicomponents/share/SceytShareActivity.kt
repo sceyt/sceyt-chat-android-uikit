@@ -29,10 +29,10 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 open class SceytShareActivity : SceytShareableActivity() {
-    private lateinit var binding: SceytActivityShareBinding
+    protected lateinit var binding: SceytActivityShareBinding
     protected val viewModel: ShareViewModel by viewModels()
-    private val sharedUris = ArrayList<Uri>()
-    private var body: String? = null
+    protected val sharedUris = ArrayList<Uri>()
+    protected var body: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +48,7 @@ open class SceytShareActivity : SceytShareableActivity() {
         binding.applyStyle()
     }
 
-    private fun getDataFromIntent() {
+    protected open fun getDataFromIntent() {
         when {
             Intent.ACTION_SEND == intent.action -> {
                 if (intent.parcelable<Parcelable>(Intent.EXTRA_STREAM) != null) {
@@ -79,7 +79,7 @@ open class SceytShareActivity : SceytShareableActivity() {
         }
     }
 
-    private fun SceytActivityShareBinding.initViews() {
+    protected open fun SceytActivityShareBinding.initViews() {
         determinateShareBtnState()
 
         toolbar.setNavigationIconClickListener {
@@ -93,12 +93,12 @@ open class SceytShareActivity : SceytShareableActivity() {
         }
     }
 
-    private fun SceytActivityShareBinding.applyStyle() {
+    protected open fun SceytActivityShareBinding.applyStyle() {
         btnShare.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
         toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
     }
 
-    protected fun sendTextMessage() {
+    protected open fun sendTextMessage() {
         viewModel.sendTextMessage(channelIds = selectedChannels.toLongArray(), body = body.toString())
             .onEach {
                 when (it) {
@@ -111,7 +111,7 @@ open class SceytShareActivity : SceytShareableActivity() {
             }.launchIn(lifecycleScope)
     }
 
-    protected fun sendFilesMessage() {
+    protected open fun sendFilesMessage() {
         val messageBody = (binding.messageInput.text ?: "").trim().toString()
         viewModel.sendFilesMessage(channelIds = selectedChannels.toLongArray(), uris = sharedUris, messageBody)
             .onEach {
@@ -125,7 +125,7 @@ open class SceytShareActivity : SceytShareableActivity() {
             }.launchIn(lifecycleScope)
     }
 
-    protected fun determinateShareBtnState() {
+    protected open fun determinateShareBtnState() {
         with(binding.btnShare) {
             if (enableNext()) {
                 alpha = 1f
