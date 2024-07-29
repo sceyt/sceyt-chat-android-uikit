@@ -21,9 +21,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 open class SceytForwardActivity : SceytShareableActivity() {
-    private lateinit var binding: SceytActivityForwardBinding
+    protected lateinit var binding: SceytActivityForwardBinding
     protected val viewModel: ForwardViewModel by viewModels()
-    private lateinit var forwardMessages: List<SceytMessage>
+    protected lateinit var forwardMessages: List<SceytMessage>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,11 +39,11 @@ open class SceytForwardActivity : SceytShareableActivity() {
         binding.applyStyle()
     }
 
-    private fun getDataFromIntent() {
+    protected open fun getDataFromIntent() {
         forwardMessages = requireNotNull(intent?.parcelableArrayList(FORWARD_MESSAGES_KEY))
     }
 
-    private fun SceytActivityForwardBinding.initViews() {
+    protected open fun SceytActivityForwardBinding.initViews() {
         determinateBtnState()
 
         toolbar.setNavigationIconClickListener {
@@ -57,12 +57,12 @@ open class SceytForwardActivity : SceytShareableActivity() {
         }
     }
 
-    private fun SceytActivityForwardBinding.applyStyle() {
+    protected open fun SceytActivityForwardBinding.applyStyle() {
         btnForward.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
         toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
     }
 
-    protected fun sendForwardMessage(markOwnMessageAsForwarded: Boolean) {
+    protected open fun sendForwardMessage(markOwnMessageAsForwarded: Boolean) {
         viewModel.sendForwardMessage(channelIds = selectedChannels.toLongArray(), markOwnMessageAsForwarded, forwardMessages)
             .onEach {
                 when (it) {
@@ -75,7 +75,7 @@ open class SceytForwardActivity : SceytShareableActivity() {
             }.launchIn(lifecycleScope)
     }
 
-    protected fun determinateBtnState() {
+    protected open fun determinateBtnState() {
         with(binding.btnForward) {
             if (enableNext()) {
                 alpha = 1f
