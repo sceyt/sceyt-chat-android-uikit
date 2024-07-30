@@ -234,6 +234,14 @@ fun Context.keepScreenOn(): PowerManager.WakeLock {
 
 fun LifecycleOwner.isResumed() = lifecycle.currentState == Lifecycle.State.RESUMED
 
+fun doSafe(action: () -> Unit) {
+    try {
+        action()
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
+
 inline fun activityLifecycleCallbacks(
         crossinline onActivityCreated: (activity: Activity, savedInstanceState: Bundle?) -> Unit = { _, _ -> },
         crossinline onActivityStarted: (activity: Activity) -> Unit = { _ -> },
