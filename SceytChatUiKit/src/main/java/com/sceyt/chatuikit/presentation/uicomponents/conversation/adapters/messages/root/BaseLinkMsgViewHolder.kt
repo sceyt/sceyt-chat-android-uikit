@@ -21,7 +21,6 @@ import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setTextAndVisibility
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.viewholders.OutLinkMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
@@ -35,11 +34,11 @@ abstract class BaseLinkMsgViewHolder(
         displayedListener: ((MessageListItem) -> Unit)? = null,
         userNameFormatter: UserNameFormatter? = null,
 ) : BaseMsgViewHolder(view, style, messageListeners, displayedListener, userNameFormatter) {
-    private var linkPreviewContainerBinding: SceytMessageLinkPreviewContainerBinding? = null
-    private val maxSize by lazy {
+    protected var linkPreviewContainerBinding: SceytMessageLinkPreviewContainerBinding? = null
+    protected open val maxSize by lazy {
         bubbleMaxWidth - dpToPx(28f) //(2*8 preview container + 2*6 root paddings ) is margins
     }
-    private val minSize = maxSize / 3
+    protected open val minSize get() = maxSize / 3
 
 
     fun loadLinkPreview(message: SceytMessage, attachment: SceytAttachment?, viewStub: ViewStub) {
@@ -61,7 +60,10 @@ abstract class BaseLinkMsgViewHolder(
         }
     }
 
-    private fun setLinkInfo(data: LinkPreviewDetails?, message: SceytMessage, attachment: SceytAttachment, viewStub: ViewStub) {
+    protected open fun setLinkInfo(data: LinkPreviewDetails?,
+                                   message: SceytMessage,
+                                   attachment: SceytAttachment,
+                                   viewStub: ViewStub) {
         if (data == null || data.link != attachment.url) {
             viewStub.isVisible = false
             return
@@ -115,7 +117,7 @@ abstract class BaseLinkMsgViewHolder(
         }
     }
 
-    private fun setImageSize(image: View, details: LinkPreviewDetails?) {
+    protected open fun setImageSize(image: View, details: LinkPreviewDetails?) {
         if (details?.imageWidth == null || details.imageHeight == null
                 || details.imageWidth == 0 || details.imageHeight == 0) {
             image.isVisible = false
@@ -132,7 +134,7 @@ abstract class BaseLinkMsgViewHolder(
         image.isVisible = true
     }
 
-    private fun SceytMessageLinkPreviewContainerBinding.applyStyle() {
+    protected open fun SceytMessageLinkPreviewContainerBinding.applyStyle() {
         val color = if ((messageListItem as MessageListItem.MessageItem).message.incoming)
             style.incLinkPreviewBackgroundColor
         else style.outLinkPreviewBackgroundColor
