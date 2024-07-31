@@ -250,6 +250,7 @@ abstract class BaseMsgViewHolder(private val view: View,
 
                     else -> {
                         imageAttachment.isVisible = false
+                        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
                         icFile.setImageDrawable(style.fileAttachmentIcon)
                         icFile.isVisible = true
                     }

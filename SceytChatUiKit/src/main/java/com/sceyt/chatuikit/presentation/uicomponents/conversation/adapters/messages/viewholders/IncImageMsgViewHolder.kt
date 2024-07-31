@@ -102,8 +102,10 @@ class IncImageMsgViewHolder(
             if (diff.replyCountChanged)
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
-            if (diff.filesChanged)
+            if (diff.filesChanged) {
                 initAttachment()
+                setImageTopCorners(fileImage)
+            }
 
             if (diff.reactionsChanged)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)

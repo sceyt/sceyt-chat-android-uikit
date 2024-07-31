@@ -8,6 +8,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.core.view.marginLeft
+import com.google.android.material.imageview.ShapeableImageView
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.calculateScaleWidthHeight
@@ -115,6 +116,20 @@ abstract class BaseMediaMessageViewHolder(
 
     protected open fun isValidThumb(thumbData: ThumbData?): Boolean {
         return thumbData?.size == getThumbSize() && thumbData.key == ThumbFor.MessagesLisView.value
+    }
+
+    protected open fun setImageTopCorners(fileImage: ShapeableImageView) {
+        val message = fileItem.sceytMessage
+        val corner = (if (message.isForwarded || message.body.isNotBlank() || message.isReplied) {
+            dpToPx(5f)
+        } else dpToPx(18f)).toFloat()
+
+        fileImage.setShapeAppearanceModel(
+            fileImage.shapeAppearanceModel.toBuilder()
+                .setTopLeftCornerSize(corner)
+                .setTopRightCornerSize(corner)
+                .build()
+        )
     }
 
     open fun getThumbSize(): Size {
