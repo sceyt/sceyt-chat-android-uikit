@@ -20,4 +20,12 @@ data class UserEntity(
         val presence: Presence? = null,
         val activityStatus: UserState? = null,
         val blocked: Boolean = false
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        return (other as? UserEntity)?.id == id
+    }
+
+    override fun hashCode(): Int {
+        return id.hashCode()
+    }
+}

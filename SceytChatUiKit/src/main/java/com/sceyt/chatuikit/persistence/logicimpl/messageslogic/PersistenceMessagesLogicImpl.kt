@@ -976,7 +976,7 @@ internal class PersistenceMessagesLogicImpl(
                                          unListAll: Boolean = false): List<SceytMessage> {
         if (list.isNullOrEmpty()) return emptyList()
         val pendingStates = pendingMessageStateDao.getAll()
-        val usersDb = arrayListOf<UserEntity>()
+        val usersDb = mutableSetOf<UserEntity>()
         val messagesDb = arrayListOf<MessageDb>()
         val parentMessagesDb = arrayListOf<MessageDb>()
 
@@ -992,6 +992,9 @@ internal class PersistenceMessagesLogicImpl(
                     }
                 }
             }
+            message.mentionedUsers?.let {
+                usersDb.addAll(it.map { user -> user.toUserEntity() })
+            }
         }
         messageDao.upsertMessages(messagesDb)
         if (parentMessagesDb.isNotEmpty())
@@ -1003,7 +1006,7 @@ internal class PersistenceMessagesLogicImpl(
                 usersDb.addAll(users.map { it.toUserEntity() })
         }
 
-        userDao.insertUsers(usersDb)
+        userDao.insertUsers(usersDb.toList())
 
         return list
     }
