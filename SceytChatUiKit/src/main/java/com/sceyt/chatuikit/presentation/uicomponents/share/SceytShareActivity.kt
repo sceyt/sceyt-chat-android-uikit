@@ -58,7 +58,7 @@ open class SceytShareActivity : SceytShareableActivity() {
                         sharedUris.add(uri)
                     }
                 } else if (intent.getCharSequenceExtra(Intent.EXTRA_TEXT) != null) {
-                    binding.messageInput.isVisible = false
+                    hideInputOnSharingText()
                     body = intent.getCharSequenceExtra(Intent.EXTRA_TEXT) as String
                 } else finishSharingAction()
             }
@@ -91,6 +91,10 @@ open class SceytShareActivity : SceytShareableActivity() {
         btnShare.setOnClickListener {
             onShareClick()
         }
+    }
+
+    protected open fun hideInputOnSharingText() {
+        binding.messageInput.isVisible = false
     }
 
     protected open fun SceytActivityShareBinding.applyStyle() {
