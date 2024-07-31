@@ -218,15 +218,17 @@ abstract class BaseMsgViewHolder(private val view: View,
             }
 
             tvMessageBody.text = parent?.getFormattedBody(itemView.context)
-            imageAttachment.isVisible = if (parent?.attachments.isNullOrEmpty()) {
-                false
+            if (parent?.attachments.isNullOrEmpty()) {
+                imageAttachment.isVisible = false
+                icFile.isVisible = false
             } else {
                 val attachment = parent?.attachments?.getOrNull(0)
                 icMsgBodyStartIcon.isVisible = attachment?.type == AttachmentTypeEnum.Voice.value()
                 when {
                     attachment?.type.isEqualsVideoOrImage() -> {
                         loadReplyMessageImageOrObserveToDownload(attachment, imageAttachment)
-                        true
+                        imageAttachment.isVisible = true
+                        icFile.isVisible = false
                     }
 
                     attachment?.type == AttachmentTypeEnum.Voice.value() -> {
@@ -236,17 +238,20 @@ abstract class BaseMsgViewHolder(private val view: View,
                                 SceytChatUIKit.theme.iconSecondaryColor else SceytChatUIKit.theme.accentColor
                             setTintColorRes(tint)
                         }
-                        false
+                        imageAttachment.isVisible = false
+                        icFile.isVisible = false
                     }
 
                     attachment?.type == AttachmentTypeEnum.Link.value() -> {
                         loadLinkImage(attachment, imageAttachment)
-                        true
+                        imageAttachment.isVisible = true
+                        icFile.isVisible = false
                     }
 
                     else -> {
-                        imageAttachment.setImageDrawable(style.fileAttachmentIcon)
-                        true
+                        imageAttachment.isVisible = false
+                        icFile.setImageDrawable(style.fileAttachmentIcon)
+                        icFile.isVisible = true
                     }
                 }
             }
