@@ -43,12 +43,12 @@ abstract class BaseMediaMessageViewHolder(
     protected val viewHolderHelper by lazy { AttachmentViewHolderHelper(itemView) }
     protected lateinit var fileItem: FileListItem
     protected var resizedImageSize: Size? = null
-    private val maxSize by lazy {
+    protected open val maxSize by lazy {
         bubbleMaxWidth - dpToPx(4f) //4f is margins
     }
-    private val minSize = maxSize / 3
+    protected open val minSize get() = maxSize / 3
     protected var isAttachedToWindow = true
-    private var addedLister = false
+    protected var addedLister = false
 
     @CallSuper
     override fun bind(item: MessageListItem, diff: MessageDiff) {
@@ -60,7 +60,7 @@ abstract class BaseMediaMessageViewHolder(
         viewHolderHelper.bind(fileItem, resizedImageSize)
     }
 
-    protected fun initAttachment() {
+    protected open fun initAttachment() {
         setListener()
 
         viewHolderHelper.transferData?.let {
@@ -71,7 +71,7 @@ abstract class BaseMediaMessageViewHolder(
         }
     }
 
-    protected fun setImageSize(fileImage: View) {
+    protected open fun setImageSize(fileImage: View) {
         val layoutBubble = (layoutBubble as? ConstraintLayout) ?: return
         val size = calculateScaleWidthHeight(maxSize, minSize, imageWidth = fileItem.size?.width
                 ?: maxSize,
@@ -92,7 +92,7 @@ abstract class BaseMediaMessageViewHolder(
         }
     }
 
-    protected fun requestThumb() {
+    protected open fun requestThumb() {
         itemView.post {
             if (fileItem.file.filePath.isNullOrBlank()) return@post
             val thumbData = ThumbData(ThumbFor.MessagesLisView.value, getThumbSize())
@@ -100,11 +100,11 @@ abstract class BaseMediaMessageViewHolder(
         }
     }
 
-    protected fun getFileItem(item: MessageListItem.MessageItem): FileListItem? {
+    protected open fun getFileItem(item: MessageListItem.MessageItem): FileListItem? {
         return item.message.files?.find { it.file.type != AttachmentTypeEnum.Link.value() }
     }
 
-    protected fun setVideoDuration(tvDuration: TextView) {
+    protected open fun setVideoDuration(tvDuration: TextView) {
         with(tvDuration) {
             fileItem.duration?.let {
                 text = DateTimeUtil.secondsToTime(it)
@@ -113,7 +113,7 @@ abstract class BaseMediaMessageViewHolder(
         }
     }
 
-    protected fun isValidThumb(thumbData: ThumbData?): Boolean {
+    protected open fun isValidThumb(thumbData: ThumbData?): Boolean {
         return thumbData?.size == getThumbSize() && thumbData.key == ThumbFor.MessagesLisView.value
     }
 
