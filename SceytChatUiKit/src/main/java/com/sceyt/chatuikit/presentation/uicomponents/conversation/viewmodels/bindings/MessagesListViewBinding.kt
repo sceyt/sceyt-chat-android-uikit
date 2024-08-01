@@ -463,9 +463,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     messagesListView.getData().forEach { listItem ->
                         (listItem as? MessageItem)?.message?.let { message ->
                             if (data.messageIds.contains(message.id)) {
-                                message.userMarkers = message.userMarkers?.toMutableSet()?.apply {
+                                listItem.message = message.copy(userMarkers = message.userMarkers?.toMutableSet()?.apply {
                                     add(SceytMarker(message.id, user, data.name, data.createdAt))
-                                }?.toTypedArray()
+                                }?.toTypedArray())
                             }
                         }
                     }
@@ -651,11 +651,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     return@setMessageCommandEventListener
                 }
 
-                event.message.isSelected = !wasSelected
-                messagesListView.updateMessageSelection(event.message)
+                val message = event.message.copy(isSelected = !wasSelected)
+                messagesListView.updateMessageSelection(message)
 
                 if (wasSelected) {
-                    selectedMessagesMap.remove(event.message.tid)
+                    selectedMessagesMap.remove(message.tid)
                     if (selectedMessagesMap.isEmpty()) {
                         messageActionBridge.hideMessageActions()
                         messagesListView.cancelMultiSelectMode()
@@ -663,7 +663,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         messageActionBridge.showMessageActions(*selectedMessagesMap.values.toTypedArray())
                     }
                 } else {
-                    selectedMessagesMap[event.message.tid] = event.message
+                    selectedMessagesMap[message.tid] = message
                     messageActionBridge.showMessageActions(*selectedMessagesMap.values.toTypedArray())
                     messagesListView.setMultiSelectableMode()
                 }

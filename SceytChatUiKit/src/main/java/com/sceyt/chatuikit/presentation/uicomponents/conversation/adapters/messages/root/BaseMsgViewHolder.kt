@@ -370,7 +370,9 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
 
         reactionsAdapter = ReactionsAdapter(
-            ReactionViewHolderFactory(itemView.context, messageListeners)).also {
+            ReactionViewHolderFactory(itemView.context, onReactionClickListener = { view, reaction ->
+                messageListeners?.onReactionClick(view, reaction, item.message)
+            })).also {
             it.submitList(reactions)
         }
 

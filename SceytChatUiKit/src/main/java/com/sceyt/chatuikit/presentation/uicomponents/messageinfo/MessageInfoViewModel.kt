@@ -97,7 +97,7 @@ class MessageInfoViewModel(
     private fun onMessageStatusChange(data: MessageStatusChangeData) {
         viewModelScope.launch(Dispatchers.Default) {
             if ((message?.deliveryStatus ?: DeliveryStatus.Pending) < data.status)
-                message?.deliveryStatus = data.status
+                message = message?.copy(deliveryStatus = data.status)
 
             when (data.status) {
                 DeliveryStatus.Displayed -> {
@@ -252,9 +252,9 @@ class MessageInfoViewModel(
     }
 
     private fun initMessageFiles(sceytMessage: SceytMessage): SceytMessage {
-        return sceytMessage.apply {
-            files = attachments?.map { it.toFileListItem(this) }
-        }
+        return sceytMessage.copy(
+            files = sceytMessage.attachments?.map { it.toFileListItem(sceytMessage) }
+        )
     }
 
     fun getMessageAttachmentSizeIfExist(message: SceytMessage): Long? {

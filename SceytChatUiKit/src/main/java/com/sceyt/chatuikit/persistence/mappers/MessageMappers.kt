@@ -224,12 +224,9 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         autoDeleteAt = autoDeleteAt,
         forwardingDetails = forwardingDetails,
         pendingReactions = null,
-        bodyAttributes = bodyAttributes?.toList()
-    ).apply {
-        isGroup?.let {
-            this.isGroup = it
-        }
-    }
+        bodyAttributes = bodyAttributes?.toList(),
+        isGroup = isGroup ?: false
+    )
 }
 
 fun SceytMessage.toMessage(): Message {

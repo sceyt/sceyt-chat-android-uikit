@@ -602,29 +602,31 @@ class MessageListViewModel(
 
         withContext(Dispatchers.Default) {
             var unreadLineMessage: MessageListItem.UnreadMessagesSeparatorItem? = null
-            data.forEachIndexed { index, sceytMessage ->
-                sceytMessage.isSelected = selectedMessagesMap.containsKey(sceytMessage.tid)
+            data.forEachIndexed { index, message ->
                 var prevMessage = compareMessage
                 if (index > 0)
                     prevMessage = data.getOrNull(index - 1)
 
-                if (enableDateSeparator && shouldShowDate(sceytMessage, prevMessage))
-                    messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.tid))
+                if (enableDateSeparator && shouldShowDate(message, prevMessage))
+                    messageItems.add(MessageListItem.DateSeparatorItem(message.createdAt, message.tid))
 
-                val messageItem = MessageListItem.MessageItem(initMessageInfoData(sceytMessage, prevMessage, true))
+                var messageWithData = initMessageInfoData(message, prevMessage, true)
+                val isSelected = selectedMessagesMap.containsKey(message.tid)
 
-                if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
-                    messageItem.message.apply {
-                        shouldShowAvatarAndName = incoming && isGroup && showSenderAvatarAndNameIfNeeded
-                        disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
-                    }
+                if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L
+                        && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
+
+                    messageWithData = messageWithData.copy(
+                        shouldShowAvatarAndName = messageWithData.incoming && isGroup && showSenderAvatarAndNameIfNeeded,
+                        disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded,
+                    )
                     if (!ignoreUnreadMessagesSeparator)
-                        messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
+                        messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(message.createdAt, pinnedLastReadMessageId).also {
                             unreadLineMessage = it
                         })
                 }
 
-                messageItems.add(messageItem)
+                messageItems.add(MessageListItem.MessageItem(messageWithData.copy(isSelected = isSelected)))
             }
 
             if (hasNext)
@@ -640,14 +642,15 @@ class MessageListViewModel(
 
     internal fun initMessageInfoData(sceytMessage: SceytMessage, prevMessage: SceytMessage? = null,
                                      initNameAndAvatar: Boolean = false): SceytMessage {
-        return sceytMessage.apply {
-            isGroup = this@MessageListViewModel.isGroup
-            files = attachments?.map { it.toFileListItem(this) }
-            if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
-                shouldShowAvatarAndName = shouldShowAvatarAndName(this, prevMessage)
-            disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
-            messageReactions = initReactionsItems(this)
-        }
+        return sceytMessage.copy(
+            isGroup = this@MessageListViewModel.isGroup,
+            files = sceytMessage.attachments?.map { it.toFileListItem(sceytMessage) },
+            shouldShowAvatarAndName = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
+                shouldShowAvatarAndName(sceytMessage, prevMessage)
+            else sceytMessage.shouldShowAvatarAndName,
+            disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded,
+            messageReactions = initReactionsItems(sceytMessage),
+        )
     }
 
     internal fun checkMaybeHesNext(response: PaginationResponse.DBResponse<SceytMessage>): Boolean {
@@ -669,7 +672,7 @@ class MessageListViewModel(
             ReactionItem.Reaction(SceytReactionTotal(it.key, it.score.toInt(),
                 message.userReactions?.find { reaction ->
                     reaction.key == it.key && reaction.user?.id == myId
-                } != null), message, false)
+                } != null), message.tid, false)
         }?.toMutableList()
 
         if (!pendingReactions.isNullOrEmpty() && reactionItems != null) {
@@ -690,7 +693,10 @@ class MessageListViewModel(
                     }
                 } ?: run {
                     if (pendingReaction.isAdd)
-                        reactionItems.add(ReactionItem.Reaction(SceytReactionTotal(pendingReaction.key, pendingReaction.score, true), message, true))
+                        reactionItems.add(ReactionItem.Reaction(
+                            reaction = SceytReactionTotal(pendingReaction.key, pendingReaction.score, true),
+                            messageTid = message.tid,
+                            isPending = true))
                 }
             }
         }

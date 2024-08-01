@@ -14,9 +14,9 @@ class ReactionPopupClickListenersImpl(view: MessagesListView) : ReactionPopupCli
         addReaction?.onAddReaction(message, key)
     }
 
-    override fun onRemoveReaction(reactionItem: ReactionItem.Reaction) {
-        defaultListeners.onRemoveReaction(reactionItem)
-        removeReactionListener?.onRemoveReaction(reactionItem)
+    override fun onRemoveReaction(message: SceytMessage, reactionItem: ReactionItem.Reaction) {
+        defaultListeners.onRemoveReaction(message, reactionItem)
+        removeReactionListener?.onRemoveReaction(message, reactionItem)
     }
 
 
@@ -26,9 +26,11 @@ class ReactionPopupClickListenersImpl(view: MessagesListView) : ReactionPopupCli
                 addReaction = listener
                 removeReactionListener = listener
             }
+
             is ReactionPopupClickListeners.AddReaction -> {
                 addReaction = listener
             }
+
             is ReactionPopupClickListeners.RemoveReaction -> {
                 removeReactionListener = listener
             }

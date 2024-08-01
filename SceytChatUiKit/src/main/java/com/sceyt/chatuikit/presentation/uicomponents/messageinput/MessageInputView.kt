@@ -587,7 +587,7 @@ class MessageInputView @JvmOverloads constructor(
     internal fun editMessage(message: SceytMessage, initWithDraft: Boolean) {
         checkIfRecordingAndConfirm {
             replyMessage = null
-            editMessage = message.clone()
+            editMessage = message
             determineInputState()
             if (!initWithDraft)
                 initInputWithEditMessage(message)
@@ -601,7 +601,7 @@ class MessageInputView @JvmOverloads constructor(
     internal fun replyMessage(message: SceytMessage, initWithDraft: Boolean) {
         checkIfRecordingAndConfirm {
             editMessage = null
-            replyMessage = message.clone()
+            replyMessage = message
             binding.layoutReplyOrEditMessage.isVisible = true
             editOrReplyMessageFragment?.replyMessage(message, needMessagesListViewStyleCallback())
 
