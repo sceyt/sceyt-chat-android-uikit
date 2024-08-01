@@ -108,31 +108,35 @@ class MessageToSendHelper(private val context: Context) {
         val linkAttachment = getLinkAttachmentFromBody(body, linkDetails)
             ?.toSceytAttachment(message.tid, TransferState.Uploaded, linkPreviewDetails = linkDetails)
 
-        message.body = body.toString()
-
-        if (linkAttachment != null) {
+        val attachments = if (linkAttachment != null) {
             if (message.attachments.isNullOrEmpty())
-                message.attachments = arrayOf(linkAttachment)
+                arrayOf(linkAttachment)
             else {
-                val existLinkIndex = message.attachments?.indexOfFirst {
+                val existLinkIndex = message.attachments.indexOfFirst {
                     it.type == AttachmentTypeEnum.Link.value()
                 }
 
-                if (existLinkIndex == -1 || existLinkIndex == null) {
-                    message.attachments = (message.attachments ?: arrayOf()).plus(linkAttachment)
-                } else
-                    message.attachments?.set(existLinkIndex, linkAttachment)
+                if (existLinkIndex == -1) {
+                    message.attachments.plus(linkAttachment)
+                } else {
+                    val oldLinkAttachments = message.attachments
+                    oldLinkAttachments[existLinkIndex] = linkAttachment
+                    oldLinkAttachments
+                }
             }
         } else // remove link attachment if exist, because message should contain only one link attachment
-            message.attachments = message.attachments?.filter {
+            message.attachments?.filter {
                 it.type != AttachmentTypeEnum.Link.value()
             }?.toTypedArray()
 
-        val data = getMentionUsersAndAttributes(body)
-        message.mentionedUsers = data.second
-        message.bodyAttributes = data.first
+        val (bodyAttributes, mentionedUsers) = getMentionUsersAndAttributes(body)
+        val editedMessage = message.copy(
+            body = body.toString(),
+            attachments = attachments,
+            bodyAttributes = bodyAttributes,
+            mentionedUsers = mentionedUsers)
 
-        messageInputActionCallback?.sendEditMessage(message, linkDetails)
+        messageInputActionCallback?.sendEditMessage(editedMessage, linkDetails)
         return true
     }
 

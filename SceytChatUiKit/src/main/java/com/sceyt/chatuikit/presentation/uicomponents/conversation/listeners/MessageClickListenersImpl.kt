@@ -63,14 +63,14 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         addReactionClickListener?.onAddReactionClick(view, message)
     }
 
-    override fun onReactionClick(view: View, item: ReactionItem.Reaction) {
-        defaultListeners?.onReactionClick(view, item)
-        reactionClickListener?.onReactionClick(view, item)
+    override fun onReactionClick(view: View, item: ReactionItem.Reaction, message: SceytMessage) {
+        defaultListeners?.onReactionClick(view, item, message)
+        reactionClickListener?.onReactionClick(view, item, message)
     }
 
-    override fun onReactionLongClick(view: View, item: ReactionItem.Reaction) {
-        defaultListeners?.onReactionLongClick(view, item)
-        reactionLongClickListener?.onReactionLongClick(view, item)
+    override fun onReactionLongClick(view: View, item: ReactionItem.Reaction, message: SceytMessage) {
+        defaultListeners?.onReactionLongClick(view, item, message)
+        reactionLongClickListener?.onReactionLongClick(view, item, message)
     }
 
     override fun onAttachmentClick(view: View, item: FileListItem) {

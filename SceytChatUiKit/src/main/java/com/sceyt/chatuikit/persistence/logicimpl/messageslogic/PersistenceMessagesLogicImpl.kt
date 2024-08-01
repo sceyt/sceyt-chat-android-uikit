@@ -179,9 +179,9 @@ internal class PersistenceMessagesLogicImpl(
             MessageState.Unmodified -> return@withContext
             MessageState.Edited, MessageState.Moderated -> {
                 val selfReactions = reactionDao.getSelfReactionsByMessageId(message.id, myId.toString())
-                message.userReactions = selfReactions.map { it.toSceytReaction() }.toTypedArray()
-                messagesCache.messageUpdated(message.channelId, message)
-                messageDao.updateMessage(message.toMessageEntity(false))
+                val updateMsg = message.copy(userReactions = selfReactions.map { it.toSceytReaction() }.toTypedArray())
+                messagesCache.messageUpdated(updateMsg.channelId, updateMsg)
+                messageDao.updateMessage(updateMsg.toMessageEntity(false))
             }
 
             MessageState.Deleted -> {
@@ -373,10 +373,10 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun sendFrowardMessages(channelId: Long, vararg messageToSend: Message): SceytResponse<Boolean> = withContext(dispatcherIO) {
         // At first save messages to db and emit them to UI as outgoing message
         messageToSend.forEach {
-            val tmpMessage = it.toSceytUiMessage().apply {
-                createdAt = System.currentTimeMillis()
+            val tmpMessage = it.toSceytUiMessage().copy(
+                createdAt = System.currentTimeMillis(),
                 user = ClientWrapper.currentUser ?: User(preference.getUserId())
-            }
+            )
             MessageEventsObserver.emitOutgoingMessage(tmpMessage)
             insertTmpMessageToDb(tmpMessage)
             it.attachments?.forEach { attachment ->
@@ -453,11 +453,12 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private fun tmpMessageToSceytMessage(channelId: Long, message: Message): SceytMessage {
-        val tmpMessage = message.toSceytUiMessage().apply {
-            createdAt = System.currentTimeMillis()
-            user = ClientWrapper.currentUser ?: User(preference.getUserId())
-            this.channelId = channelId
-            attachments?.map {
+        val sceytMessage = message.toSceytUiMessage()
+        val tmpMessage = sceytMessage.copy(
+            createdAt = System.currentTimeMillis(),
+            user = ClientWrapper.currentUser ?: User(preference.getUserId()),
+            channelId = channelId,
+            attachments = sceytMessage.attachments?.map {
                 it.transferState = TransferState.WaitingToUpload
                 it.progressPercent = 0f
                 val isLink = it.isLink()
@@ -465,8 +466,9 @@ internal class PersistenceMessagesLogicImpl(
                     it.addAttachmentMetadata(context)
                 else if (isLink)
                     it.linkPreviewDetails = it.getLinkPreviewDetails()
-            }
-        }
+                it
+            }?.toTypedArray()
+        )
         return tmpMessage
     }
 
@@ -608,10 +610,8 @@ internal class PersistenceMessagesLogicImpl(
 
         val isPending = message.deliveryStatus == DeliveryStatus.Pending
 
-        updateMessage(message.clone().apply {
-            if (!isPending)
-                state = MessageState.Edited
-        })
+        updateMessage(message.copy(state = if (!isPending)
+            MessageState.Edited else message.state))
 
         if (isPending)
             return@withContext SceytResponse.Success(message)
@@ -626,9 +626,7 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun deleteMessage(channelId: Long, message: SceytMessage,
                                        deleteType: DeleteMessageType): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
         if (message.deliveryStatus == DeliveryStatus.Pending) {
-            val clonedMessage = message.clone().apply {
-                state = MessageState.Deleted
-            }
+            val clonedMessage = message.copy(state = MessageState.Deleted)
             messageDao.deleteMessageByTid(message.tid)
             messagesCache.hardDeleteMessage(channelId, message.tid)
             persistenceChannelsLogic.onMessageEditedOrDeleted(clonedMessage)
@@ -662,7 +660,7 @@ internal class PersistenceMessagesLogicImpl(
         pendingMessageStateDao.insert(PendingMessageStateEntity(message.id, channelId, state, null, onlyForMe))
 
         // Update message state in db and cache
-        val deletedMessage = message.clone().apply { this.state = state }
+        val deletedMessage = message.copy(state = state)
         onMessageEditedOrDeleted(deletedMessage)
         persistenceChannelsLogic.onMessageEditedOrDeleted(deletedMessage)
 
@@ -980,8 +978,11 @@ internal class PersistenceMessagesLogicImpl(
         val messagesDb = arrayListOf<MessageDb>()
         val parentMessagesDb = arrayListOf<MessageDb>()
 
-        for (message in list) {
-            updateMessageStatesWithPendingStates(message, pendingStates)
+        val mutableList = list.toMutableList()
+        for ((index, message) in list.withIndex()) {
+            updateMessageStatesWithPendingStates(message, pendingStates)?.let { updatedMessage ->
+                mutableList[index] = updatedMessage
+            }
             messagesDb.add(message.toMessageDb(unListAll))
             if (includeParents) {
                 message.parentMessage?.let { parent ->
@@ -1008,14 +1009,14 @@ internal class PersistenceMessagesLogicImpl(
 
         userDao.insertUsers(usersDb.toList())
 
-        return list
+        return mutableList
     }
 
-    private fun updateMessageStatesWithPendingStates(message: SceytMessage, pendingStates: List<PendingMessageStateEntity>) {
-        pendingStates.find { it.messageId == message.id }?.let {
-            message.state = it.state
-            if (it.state == MessageState.Edited && !it.editBody.isNullOrBlank())
-                message.body = it.editBody
+    private fun updateMessageStatesWithPendingStates(message: SceytMessage, pendingStates: List<PendingMessageStateEntity>): SceytMessage? {
+        return pendingStates.find { it.messageId == message.id }?.let {
+            val body = if (it.state == MessageState.Edited && !it.editBody.isNullOrBlank())
+                it.editBody else message.body
+            message.copy(body = body, state = it.state)
         }
     }
 

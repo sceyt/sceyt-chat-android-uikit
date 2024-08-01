@@ -536,7 +536,7 @@ internal class PersistenceChannelsLogicImpl(
 
             val newChannelId = newChannel.id
             // Set new channel last message to pending channel last message with new channel id
-            newChannel.lastMessage = channel.lastMessage?.apply { channelId = newChannelId }
+            newChannel.lastMessage = channel.lastMessage?.copy(channelId = newChannelId)
 
             channelDao.deleteChannelAndLinks(pendingChannelId)
             channelDao.insertChannelAndLinks(newChannel.toChannelEntity(), newChannel.members?.map {

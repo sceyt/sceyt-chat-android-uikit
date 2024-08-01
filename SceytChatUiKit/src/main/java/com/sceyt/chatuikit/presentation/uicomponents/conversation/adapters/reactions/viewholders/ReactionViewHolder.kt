@@ -1,18 +1,19 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.viewholders
 
+import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemReactionBinding
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionsAdapter
 
 class ReactionViewHolder(private val binding: SceytItemReactionBinding,
-                         private val messageListeners: MessageClickListeners.ClickListeners?) : RecyclerView.ViewHolder(binding.root) {
+                         private val onReactionClickListener: (View, ReactionItem.Reaction) -> Unit) : RecyclerView.ViewHolder(binding.root) {
 
     private lateinit var reactionItem: ReactionItem.Reaction
 
     init {
         binding.root.setOnClickListener {
-            messageListeners?.onReactionClick(it, reactionItem)
+            onReactionClickListener(it, reactionItem)
         }
     }
 
@@ -20,7 +21,9 @@ class ReactionViewHolder(private val binding: SceytItemReactionBinding,
         if (data !is ReactionItem.Reaction) return
         reactionItem = data
         if (shouldShowCount) {
-            val count = data.message.messageReactions?.sumOf { it.reaction.score } ?: 0
+            val count = (bindingAdapter as? ReactionsAdapter)?.currentList?.sumOf {
+                it.reaction.score
+            } ?: 0
             binding.reactionView.setCountAndSmile(count, data.reaction.key)
         } else
             binding.reactionView.setSmileText(data.reaction.key, true)

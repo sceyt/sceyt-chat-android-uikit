@@ -48,7 +48,7 @@ class FragmentReactedUsers : Fragment(), SceytKoinComponent {
     }
 
     private fun initViewModel() {
-        viewModel.loadReactIonsLiveData.observe(viewLifecycleOwner) {
+        viewModel.loadReactionsLiveData.observe(viewLifecycleOwner) {
             when (it) {
                 is PaginationResponse.DBResponse -> {
                     if (!viewModel.checkIgnoreDatabasePagingResponse(it)) {

@@ -34,11 +34,11 @@ sealed interface MessageClickListeners {
     }
 
     fun interface ReactionClickListener : MessageClickListeners {
-        fun onReactionClick(view: View, item: ReactionItem.Reaction)
+        fun onReactionClick(view: View, item: ReactionItem.Reaction, message: SceytMessage)
     }
 
     fun interface ReactionLongClickListener : MessageClickListeners {
-        fun onReactionLongClick(view: View, item: ReactionItem.Reaction)
+        fun onReactionLongClick(view: View, item: ReactionItem.Reaction, message: SceytMessage)
     }
 
     fun interface AttachmentClickListener : MessageClickListeners {

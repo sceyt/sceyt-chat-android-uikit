@@ -71,7 +71,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
         val reactionsItems = reactions.map {
             val reactionItem = message.messageReactions?.find { data -> data.reaction.key == it }
             val containsSelf = reactionItem?.reaction?.containsSelf ?: false
-            ReactionItem.Reaction(SceytReactionTotal(it, containsSelf = containsSelf), message, reactionItem?.isPending
+            ReactionItem.Reaction(SceytReactionTotal(it, containsSelf = containsSelf), message.tid, reactionItem?.isPending
                     ?: false)
         }.run {
             if ((message.messageReactions?.size ?: 0) < SceytChatUIKit.config.maxSelfReactionsSize)

@@ -22,7 +22,7 @@ class ReactionsInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val messageReactionsMiddleWare by inject<PersistenceReactionsLogic>()
 
     private val _loadReactIonsLiveData = MutableLiveData<PaginationResponse<SceytReaction>>()
-    val loadReactIonsLiveData: LiveData<PaginationResponse<SceytReaction>> = _loadReactIonsLiveData
+    val loadReactionsLiveData: LiveData<PaginationResponse<SceytReaction>> = _loadReactIonsLiveData
 
 
     fun getReactions(messageId: Long, offset: Int, key: String, loadKey: LoadKeyData? = null, ignoreDb: Boolean = false) {

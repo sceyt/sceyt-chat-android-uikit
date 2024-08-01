@@ -147,7 +147,7 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
                 val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
-                channel.lastMessage = message?.clone()
+                channel.lastMessage = message?.copy()
                 channelUpdated(channel, needSort, ChannelUpdatedType.LastMessage)
             }
         }
@@ -157,7 +157,7 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
                 val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
-                channel.lastMessage = message.clone()
+                channel.lastMessage = message.copy()
                 channel.lastDisplayedMessageId = message.id
                 channelUpdated(channel, needSort, ChannelUpdatedType.LastMessage)
             }

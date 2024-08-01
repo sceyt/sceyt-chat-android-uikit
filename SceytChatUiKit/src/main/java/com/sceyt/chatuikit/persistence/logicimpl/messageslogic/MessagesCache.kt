@@ -79,16 +79,16 @@ class MessagesCache {
         synchronized(lock) {
             val missingMessages = mutableListOf<SceytMessage>()
             messages.forEach {
-                initMessagePayLoads(channelId, it)
+                val updatedMessage = initMessagePayLoads(channelId, it)
                 val old = getMessageByTid(channelId, it.tid)
-                val hasDiff = old?.diffContent(it)?.hasDifference() ?: false
+                val hasDiff = old?.diffContent(updatedMessage)?.hasDifference() ?: false
                 if (hasDiff)
-                    emitMessageUpdated(channelId, it)
+                    emitMessageUpdated(channelId, updatedMessage)
 
-                updateMessage(channelId, it, false)
+                updateMessage(channelId, updatedMessage, false)
 
                 if (old == null)
-                    missingMessages.add(it)
+                    missingMessages.add(updatedMessage)
             }
 
             return missingMessages
@@ -103,7 +103,7 @@ class MessagesCache {
 
     fun get(channelId: Long, tid: Long): SceytMessage? {
         synchronized(lock) {
-            return getMessageByTid(channelId, tid)?.clone()
+            return getMessageByTid(channelId, tid)
         }
     }
 
@@ -125,7 +125,7 @@ class MessagesCache {
 
     fun getSorted(channelId: Long): List<SceytMessage> {
         synchronized(lock) {
-            return getMessagesMap(channelId)?.values?.sortedWith(MessageComparator())?.map { it.clone() }
+            return getMessagesMap(channelId)?.values?.sortedWith(MessageComparator())
                     ?: emptyList()
         }
     }
@@ -145,8 +145,7 @@ class MessagesCache {
             tIds.forEach {
                 getMessageByTid(channelId, it)?.let { message ->
                     if (message.deliveryStatus < status) {
-                        message.deliveryStatus = status
-                        updatesMessages.add(message)
+                        updatesMessages.add(message.copy(deliveryStatus = status))
                     }
                 }
             }
@@ -187,7 +186,7 @@ class MessagesCache {
     }
 
     private fun emitMessageUpdated(channelId: Long, vararg message: SceytMessage) {
-        messageUpdatedFlow_.tryEmit(Pair(channelId, message.map { it.clone() }))
+        messageUpdatedFlow_.tryEmit(Pair(channelId, message.toList()))
     }
 
     private fun getMessagesMap(channelId: Long): HashMap<Long, SceytMessage>? {
@@ -204,9 +203,8 @@ class MessagesCache {
 
     private fun updateMessage(channelId: Long, message: SceytMessage, initPayloads: Boolean) {
         cachedMessages[channelId]?.let {
-            if (initPayloads)
-                initMessagePayLoads(channelId, message)
-            it[message.tid] = message
+            it[message.tid] = if (initPayloads)
+                initMessagePayLoads(channelId, message) else message
         } ?: run {
             cachedMessages[channelId] = hashMapOf(message.tid to message)
         }
@@ -217,11 +215,11 @@ class MessagesCache {
     }
 
     /** Set message attachments and pending reactions from cash, which saved in local db.*/
-    private fun initMessagePayLoads(channelId: Long, messageToUpdate: SceytMessage) {
-        setPayloads(channelId, messageToUpdate)
+    private fun initMessagePayLoads(channelId: Long, messageToUpdate: SceytMessage): SceytMessage {
+        return setPayloads(channelId, messageToUpdate)
     }
 
-    private fun setPayloads(channelId: Long, messageToUpdate: SceytMessage) {
+    private fun setPayloads(channelId: Long, messageToUpdate: SceytMessage): SceytMessage {
         fun setPayloadsImpl(message: SceytMessage): SceytMessage? {
             val cashedMessage = getMessageByTid(channelId, message.tid)
             val attachmentPayLoadData = getAttachmentPayLoads(cashedMessage)
@@ -241,7 +239,7 @@ class MessagesCache {
         val needToAddReactions = messageToUpdate.pendingReactions?.toSet() ?: emptySet()
         pendingReactions.removeAll(needToAddReactions)
         pendingReactions.addAll(needToAddReactions)
-        messageToUpdate.pendingReactions = pendingReactions.toList()
+        return messageToUpdate.copy(pendingReactions = pendingReactions.toList())
     }
 
     private fun updateAttachmentsPayLoads(payloadData: List<AttachmentPayLoadData>?,
@@ -303,16 +301,17 @@ class MessagesCache {
                                    vararg messages: SceytMessage): Boolean {
         var detectedDiff = false
         messages.forEach {
-            initMessagePayLoads(channelId, it)
+            val updateMessage = initMessagePayLoads(channelId, it)
             if (!detectedDiff || checkDiffAndNotifyUpdate) {
-                val old = getMessageByTid(channelId, it.tid)
-                val hasDiff = old?.diffContent(it)?.hasDifference() ?: includeNotExistToDiff
+                val old = getMessageByTid(channelId, updateMessage.tid)
+                val hasDiff = old?.diffContent(updateMessage)?.hasDifference()
+                        ?: includeNotExistToDiff
                 if (!detectedDiff)
                     detectedDiff = hasDiff
                 if (checkDiffAndNotifyUpdate && hasDiff)
-                    emitMessageUpdated(channelId, it)
+                    emitMessageUpdated(channelId, updateMessage)
             }
-            updateMessage(channelId, it, false)
+            updateMessage(channelId, updateMessage, false)
         }
         return detectedDiff
     }
@@ -414,8 +413,8 @@ class MessagesCache {
                         remove(reactionData)
                     }
                 }
-                it.pendingReactions = newReactions?.toList()
-                it
+                val message = it.copy(pendingReactions = newReactions?.toList())
+                cachedMessages[channelId]?.put(tid, message)
             }
         }
     }

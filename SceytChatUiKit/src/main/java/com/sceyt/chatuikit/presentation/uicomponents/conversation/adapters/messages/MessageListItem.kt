@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.mess
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 
 sealed class MessageListItem {
-    data class MessageItem(val message: SceytMessage) : MessageListItem()
+    data class MessageItem(var message: SceytMessage) : MessageListItem()
     data class DateSeparatorItem(val createdAt: Long, val msgTid: Long) : MessageListItem()
     data class UnreadMessagesSeparatorItem(val createdAt: Long, val msgId: Long) : MessageListItem()
     data object LoadingPrevItem : MessageListItem()
