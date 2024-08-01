@@ -316,6 +316,11 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
         }
     }
 
+    fun setMinProgress(@FloatRange(from = 0.0, to = 100.0) minProgress: Float) {
+        this.minProgress = minProgress
+        invalidate()
+    }
+
     fun getProgressAnim() = updateProgressAnim
 
     private fun setVisibleWithAnim() {

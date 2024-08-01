@@ -94,7 +94,9 @@ fun Context.checkAndAskPermissions(activityResultLauncher: ActivityResultLaunche
     } else {
         for (perm in permissions) {
             if (!hasPermissions(perm)) {
-                activityResultLauncher?.launch(perm)
+                activityResultLauncher?.launch(perm) ?: run {
+                    (this as? Activity)?.requestPermissionsSafety(*permissions, requestCode = 0)
+                }
                 break
             }
         }

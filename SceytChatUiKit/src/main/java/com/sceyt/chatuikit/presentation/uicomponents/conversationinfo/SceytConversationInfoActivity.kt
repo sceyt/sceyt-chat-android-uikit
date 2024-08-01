@@ -597,7 +597,8 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
     protected open fun getChannelSettingsFragment(channel: SceytChannel): Fragment? = InfoSettingsFragment.newInstance(channel)
 
     //Members by role buttons
-    protected open fun getChannelMembersByRoleFragment(channel: SceytChannel): Fragment? = InfoMembersByRoleButtonsFragment.newInstance(channel)
+    protected open fun getChannelMembersByRoleFragment(channel: SceytChannel): Fragment? =
+            InfoMembersByRoleButtonsFragment.newInstance(channel, intent.getBooleanExtra(ENABLE_SEARCH_MESSAGES, false))
 
     //Additional info
     protected open fun getChannelAdditionalInfoFragment(channel: SceytChannel): Fragment? = null
@@ -637,16 +638,19 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
     companion object {
         const val CHANNEL = "CHANNEL"
         const val ACTION_SEARCH_MESSAGES = "ACTION_SEARCH_MESSAGES"
+        private const val ENABLE_SEARCH_MESSAGES = "ACTION_SEARCH_MESSAGES"
 
         fun launch(context: Context, channel: SceytChannel) {
             context.launchActivity<SceytConversationInfoActivity>(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold) {
                 putExtra(CHANNEL, channel)
+                putExtra(ENABLE_SEARCH_MESSAGES, false)
             }
         }
 
-        fun startWithLauncher(context: Context, channel: SceytChannel, launcher: ActivityResultLauncher<Intent>) {
+        fun startHandleSearchClick(context: Context, channel: SceytChannel, launcher: ActivityResultLauncher<Intent>) {
             val intent = context.createIntent<SceytConversationInfoActivity>().apply {
                 putExtra(CHANNEL, channel)
+                putExtra(ENABLE_SEARCH_MESSAGES, true)
             }
             val animOptions = ActivityOptionsCompat.makeCustomAnimation(context, R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
             launcher.launch(intent, animOptions)

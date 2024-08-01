@@ -93,8 +93,17 @@ internal class PersistenceUsersLogicImpl(
         return profileRepo.uploadAvatar(avatarUrl)
     }
 
-    override suspend fun updateProfile(firstName: String?, lastName: String?, avatarUri: String?): SceytResponse<User> {
-        val response = profileRepo.updateProfile(firstName, lastName, avatarUri)
+    override suspend fun updateProfile(firstName: String?, lastName: String?,
+                                       avatarUri: String?, metaData: String?): SceytResponse<User> {
+        val request = User.setProfileRequest().apply {
+            avatarUri?.let { uri ->
+                setAvatar(uri)
+            }
+            setFirstName(firstName ?: "")
+            setLastName(lastName ?: "")
+            setMetadata(metaData ?: "")
+        }
+        val response = profileRepo.updateProfile(request)
 
         if (response is SceytResponse.Success) {
             response.data?.let {

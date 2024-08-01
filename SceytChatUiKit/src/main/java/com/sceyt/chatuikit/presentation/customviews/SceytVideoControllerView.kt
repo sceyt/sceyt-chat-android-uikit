@@ -18,10 +18,10 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytVideoControllerViewBinding
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 
-
-class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr) {
-    private var binding: SceytVideoControllerViewBinding
+class SceytVideoControllerView @JvmOverloads constructor(
+        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : FrameLayout(context, attrs, defStyleAttr) {
+    private val binding: SceytVideoControllerViewBinding
     private var playDrawable: Drawable?
     private var pauseDrawable: Drawable?
     private var isPlaying = false
@@ -36,7 +36,7 @@ class SceytVideoControllerView @JvmOverloads constructor(context: Context, attrs
     private var cornerSize = 0
 
     init {
-        binding = SceytVideoControllerViewBinding.inflate(LayoutInflater.from(context), this, true)
+        binding = SceytVideoControllerViewBinding.inflate(LayoutInflater.from(context), this)
 
         val a = context.obtainStyledAttributes(attrs, R.styleable.SceytVideoControllerView)
         showPlayPauseButton = a.getBoolean(R.styleable.SceytVideoControllerView_sceytVideoControllerShowPlayPause, showPlayPauseButton)

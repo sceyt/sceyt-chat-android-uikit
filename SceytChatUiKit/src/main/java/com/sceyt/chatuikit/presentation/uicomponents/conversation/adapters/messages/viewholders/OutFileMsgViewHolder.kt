@@ -105,7 +105,7 @@ class OutFileMsgViewHolder(
             if (diff.filesChanged)
                 initAttachment()
 
-            if (diff.reactionsChanged)
+            if (diff.reactionsChanged || diff.edited)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
             if (diff.replyContainerChanged)

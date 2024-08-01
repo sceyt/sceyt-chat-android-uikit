@@ -68,7 +68,7 @@ class IncTextMsgViewHolder(
                 if (diff.replyCountChanged)
                     setReplyCount(tvReplyCount, toReplyLine, item)
 
-                if (diff.reactionsChanged)
+                if (diff.reactionsChanged || diff.edited)
                     setOrUpdateReactions(item, rvReactions, viewPool)
 
                 if (diff.replyContainerChanged)

@@ -5,11 +5,13 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
+import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytSearchViewBinding
+import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -24,15 +26,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
-class SearchChannelInputView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr), SearchInputClickListeners.ClickListeners,
+class SearchChannelInputView @JvmOverloads constructor(
+        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : ConstraintLayout(context, attrs, defStyleAttr), SearchInputClickListeners.ClickListeners,
         SearchInputEventListeners.EventListeners, SceytKoinComponent {
 
     private companion object {
         private const val TYPING_DEBOUNCE_MS = 300L
     }
 
-    private var binding: SceytSearchViewBinding
+    private val binding: SceytSearchViewBinding
     private val style: SearchChannelInputStyle
     private val debounceInitDelegate = lazy { DebounceHelper(TYPING_DEBOUNCE_MS, this) }
     private val debounceHelper by debounceInitDelegate
@@ -49,7 +52,7 @@ class SearchChannelInputView @JvmOverloads constructor(context: Context, attrs: 
     private var disableDebouncedSearchDuringTyping = false
 
     init {
-        binding = SceytSearchViewBinding.inflate(LayoutInflater.from(context), this, true)
+        binding = SceytSearchViewBinding.inflate(LayoutInflater.from(context), this)
         style = SearchChannelInputStyle.Builder(context, attrs).build()
         init()
     }
@@ -96,11 +99,12 @@ class SearchChannelInputView @JvmOverloads constructor(context: Context, attrs: 
         input.setHintTextColor(style.hintTextColor)
 
         disableDebouncedSearchDuringTyping = style.disableDebouncedSearch
+        root.background = context.getCompatDrawable(R.drawable.sceyt_bg_corners_10)
         root.setBackgroundTint(style.backgroundColor)
     }
 
     private fun handleClearClick() {
-        binding.input.setText("")
+        binding.input.text = null
         if (disableDebouncedSearchDuringTyping)
             eventListeners.onSearchSubmitted("")
     }
@@ -134,7 +138,7 @@ class SearchChannelInputView @JvmOverloads constructor(context: Context, attrs: 
     }
 
     fun clearSearchAndFocus() {
-        binding.input.setText("")
+        binding.input.text = null
         binding.input.clearFocus()
     }
 

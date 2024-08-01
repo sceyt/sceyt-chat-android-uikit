@@ -207,3 +207,5 @@ internal fun String.toDeliveryStatus(): DeliveryStatus? {
         else -> null
     }
 }
+
+const val empty = ""

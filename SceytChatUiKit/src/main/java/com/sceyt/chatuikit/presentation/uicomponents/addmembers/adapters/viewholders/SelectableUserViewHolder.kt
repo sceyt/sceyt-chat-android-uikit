@@ -13,8 +13,10 @@ import com.sceyt.chatuikit.presentation.uicomponents.addmembers.adapters.UserIte
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
-class SelectableUserViewHolder(private val binding: SceytItemSelectUserBinding,
-                               private val itemClickListener: SelectableUsersAdapter.ClickListener) : BaseViewHolder<UserItem>(binding.root) {
+class SelectableUserViewHolder(
+        private val binding: SceytItemSelectUserBinding,
+        private val itemClickListener: SelectableUsersAdapter.ClickListener
+) : BaseViewHolder<UserItem>(binding.root) {
     private lateinit var bindItem: UserItem.User
 
     init {

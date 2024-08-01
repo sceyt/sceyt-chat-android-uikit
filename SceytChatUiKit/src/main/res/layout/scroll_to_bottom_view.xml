@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
     <FrameLayout
+        android:id="@+id/layoutScrollToBottom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
@@ -19,8 +21,8 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/fabNext"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
             android:background="@drawable/sceyt_bg_circle_with_stroke"
             android:scaleType="center"
             app:srcCompat="@drawable/sceyt_ic_arrow_down" />
@@ -32,9 +34,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginStart="28dp"
-        android:layout_marginTop="5dp"
-        android:background="@drawable/sceyt_bg_corners_30"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="-7dp"
+        android:background="@drawable/sceyt_bg_circle"
         android:elevation="2dp"
         android:includeFontPadding="false"
         android:maxLength="3"
@@ -42,12 +44,12 @@
         android:paddingVertical="2dp"
         android:singleLine="true"
         android:textColor="@color/sceyt_color_on_primary"
-        android:textSize="@dimen/extraSmallTextSize"
+        android:textSize="@dimen/tinyTextSize"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="4"
+        app:layout_constraintTop_toTopOf="@+id/layoutScrollToBottom"
+        tools:text="9"
         tools:visibility="visible" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</merge>

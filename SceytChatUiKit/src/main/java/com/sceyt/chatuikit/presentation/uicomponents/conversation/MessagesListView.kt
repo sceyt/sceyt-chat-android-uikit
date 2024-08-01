@@ -5,13 +5,13 @@ import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.util.Predicate
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
+import com.sceyt.chatuikit.databinding.SceytMessagesListViewBinding
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.awaitAnimationEnd
@@ -49,7 +50,6 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.common.KeyboardEventListener
-import com.sceyt.chatuikit.presentation.customviews.SceytPageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.openFile
@@ -77,12 +77,11 @@ import com.sceyt.chatuikit.presentation.uicomponents.mediaview.SceytMediaActivit
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
+    : ConstraintLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
         MessageActionsViewClickListeners.ActionsViewClickListeners, ReactionPopupClickListeners.PopupClickListeners {
 
+    private val binding: SceytMessagesListViewBinding
     private var messagesRV: MessagesRV
-    private var scrollDownIcon: ScrollToDownView
-    private var pageStateView: SceytPageStateView? = null
     private lateinit var defaultClickListeners: MessageClickListenersImpl
     private lateinit var clickListeners: MessageClickListenersImpl
     internal lateinit var messageActionsViewClickListeners: MessageActionsViewClickListenersImpl
@@ -98,41 +97,35 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         private set
 
     init {
+        binding = SceytMessagesListViewBinding.inflate(LayoutInflater.from(context), this)
         style = MessagesListViewStyle.Builder(context, attrs).build()
 
         if (background == null)
             setBackgroundColor(style.backgroundColor)
 
-        messagesRV = MessagesRV(context).also { it.setStyle(style) }
+        messagesRV = binding.rvMessages.also { it.setStyle(style) }
         messagesRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
         messagesRV.clipToPadding = clipToPadding
         setPadding(0, 0, 0, 0)
 
-        addView(messagesRV, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-
-        addView(ScrollToDownView(context).also { toDownView ->
-            scrollDownIcon = toDownView
-            scrollDownIcon.setStyle(style)
-            messagesRV.setScrollDownControllerListener { show ->
-                scrollDownIcon.isVisible = show
-            }
-        })
+        messagesRV.setScrollDownControllerListener { show ->
+            binding.scrollDownIcon.isVisible = show && style.enableScrollDownButton
+        }
 
         messagesRV.setSwipeToReplyListener { item ->
             (item as? MessageItem)?.message?.let { message ->
                 messageCommandEventListener?.invoke(MessageCommandEvent.Reply(message))
             }
         }
-
-        if (!isInEditMode)
-            addView(SceytPageStateView(context).also {
-                pageStateView = it
-                it.setLoadingStateView(style.loadingState)
-                it.setEmptyStateView(style.emptyState)
-            })
+        binding.scrollDownIcon.setStyle(style)
+        binding.pageStateView.setLoadingStateView(style.loadingState)
+        binding.pageStateView.setEmptyStateView(style.emptyState)
 
         initClickListeners()
         addKeyBoardListener()
+
+        if (isInEditMode)
+            binding.scrollDownIcon.isVisible = style.enableScrollDownButton
     }
 
     private fun initClickListeners() {
@@ -233,7 +226,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
         messagesRV.setMessageListener(defaultClickListeners)
 
-        scrollDownIcon.setOnClickListener {
+        binding.scrollDownIcon.setOnClickListener {
             clickListeners.onScrollToDownClick(it as ScrollToDownView)
         }
     }
@@ -369,7 +362,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun setMessagesList(data: List<MessageListItem>, force: Boolean = false) {
         messagesRV.setData(data, force)
         if (data.isNotEmpty())
-            pageStateView?.updateState(PageState.Nothing)
+            binding.pageStateView.updateState(PageState.Nothing)
     }
 
     internal fun addNextPageMessages(data: List<MessageListItem>) {
@@ -435,7 +428,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (updateMessage.deliveryStatus == DeliveryStatus.Pending && updateMessage.state == MessageState.Deleted) {
             messagesRV.deleteMessageByTid(updateMessage.tid)
             if (messagesRV.isEmpty())
-                pageStateView?.updateState(PageState.StateEmpty())
+                binding.pageStateView.updateState(PageState.StateEmpty())
             return
         }
         val data = messagesRV.getData()
@@ -463,7 +456,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     internal fun forceDeleteMessageByTid(tid: Long) {
         messagesRV.deleteMessageByTid(tid)
         if (messagesRV.isEmpty())
-            pageStateView?.updateState(PageState.StateEmpty())
+            binding.pageStateView.updateState(PageState.StateEmpty())
     }
 
     internal fun updateReaction(data: SceytMessage) {
@@ -478,7 +471,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateViewState(state: PageState, enableErrorSnackBar: Boolean = true) {
-        pageStateView?.updateState(state, messagesRV.isEmpty(), enableErrorSnackBar = enableErrorSnackBar)
+        binding.pageStateView.updateState(state, messagesRV.isEmpty(), enableErrorSnackBar = enableErrorSnackBar)
     }
 
     internal fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
@@ -606,7 +599,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun setUnreadCount(unreadCount: Int) {
-        scrollDownIcon.setUnreadCount(unreadCount)
+        binding.scrollDownIcon.setUnreadCount(unreadCount)
     }
 
     internal fun setOnWindowFocusChangeListener(listener: (Boolean) -> Unit) {
@@ -630,7 +623,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         })
     }
 
-    fun setuserNameFormatter(builder: (User) -> String) {
+    fun setUserNameFormatter(builder: (User) -> String) {
         messagesRV.getViewHolderFactory().setUserNameFormatter(builder)
     }
 
@@ -638,7 +631,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.getViewHolderFactory().setNeedMediaDataCallback(callBack)
     }
 
-    fun scrollToMessage(msgId: Long, highlight: Boolean, offset: Int = 0, awaitToScroll: (() -> Unit)? = null) {
+    fun scrollToMessage(msgId: Long, highlight: Boolean, offset: Int = 0, awaitToScroll: ((Boolean) -> Unit)? = null) {
         safeScrollTo {
             messagesRV.getData().findIndexed { it is MessageItem && it.message.id == msgId }?.let {
                 val (position, item) = it
@@ -647,21 +640,24 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
                 if (highlight || awaitToScroll != null) {
                     messagesRV.awaitToScrollFinish(position, callback = {
-                        (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
-                        awaitToScroll?.invoke()
+                        if (highlight)
+                            (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                        awaitToScroll?.invoke(true)
                     })
                 }
-            } ?: run { awaitToScroll?.invoke() }
+            } ?: run { awaitToScroll?.invoke(false) }
         }
     }
 
-    fun scrollToPosition(position: Int, highlight: Boolean, offset: Int = 0, awaitToScroll: (() -> Unit)? = null) {
+    fun scrollToPosition(position: Int, highlight: Boolean, offset: Int = 0, awaitToScroll: ((Boolean) -> Unit)? = null) {
         safeScrollTo {
             (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
 
             if (highlight || awaitToScroll != null) {
                 messagesRV.awaitToScrollFinish(position, callback = {
-                    (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                    if (highlight)
+                        (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                    awaitToScroll?.invoke(true)
                 })
             }
         }
@@ -726,7 +722,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun getMessagesRecyclerView() = messagesRV
 
-    fun getPageStateView() = pageStateView
+    fun getPageStateView() = binding.pageStateView
 
     fun isLastCompletelyItemDisplaying() = messagesRV.isLastCompletelyItemDisplaying()
 
@@ -913,6 +909,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onRemoveReaction(reactionItem: ReactionItem.Reaction) {
-        reactionEventListener?.invoke(ReactionEvent.RemoveReaction(reactionItem.message, reactionItem.reaction.key, reactionItem.isPending))
+        reactionEventListener?.invoke(ReactionEvent.RemoveReaction(reactionItem.message, reactionItem.reaction.key))
     }
 }
