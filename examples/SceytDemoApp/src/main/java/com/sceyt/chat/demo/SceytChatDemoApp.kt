@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytConversationActivity
 import com.sceyt.chatuikit.sceytconfigs.SceytChatUIKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UploadNotificationClickHandleData
-import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
+import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.sceytstyles.StyleCustomizer
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
@@ -47,13 +47,11 @@ class SceytChatDemoApp : Application() {
             clientId = UUID.randomUUID().toString(),
             enableDatabase = true)
 
-        MessagesListViewStyle.styleCustomizer = StyleCustomizer { context, style ->
+        MessageItemStyle.styleCustomizer = StyleCustomizer { context, style ->
             style.copy(
-                messageItemStyle = style.messageItemStyle.copy(
-                    outBubbleColor = context.getCompatColor(R.color.sceyt_color_bg_out_message),
-                    outLinkPreviewBackgroundColor = context.getCompatColor(R.color.sceyt_color_bg_out_link_preview),
-                    outReplyBackgroundColor = context.getCompatColor(R.color.sceyt_color_bg_out_link_preview),
-                )
+                outBubbleColor = context.getCompatColor(R.color.sceyt_color_bg_out_message),
+                outLinkPreviewBackgroundColor = context.getCompatColor(R.color.sceyt_color_bg_out_link_preview),
+                outReplyBackgroundColor = context.getCompatColor(R.color.sceyt_color_bg_out_link_preview),
             )
         }
 
