@@ -105,7 +105,7 @@
     <string name="sceyt_gallery">معرض الصور</string>
     <string name="sceyt_this_unsupported_file_format">تنسيق الملف هذا غير مدعوم</string>
     <string name="sceyt_unsupported_file_format">تنسيق الملف غير مدعوم</string>
-    <string name="sceyt_max_select_count_should_be">يجب أن يكون الحد الأقصى لعدد التحديدات أقل من</string>
+    <string name="sceyt_you_can_select_max">يجب أن يكون الحد الأقصى لعدد التحديدات أقل من</string>
     <string name="sceyt_video">فيديو</string>
     <string name="sceyt_image">الصورة</string>
     <string name="sceyt_voice">صوت</string>

@@ -24,7 +24,7 @@ import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 
-class VoiceViewHolder(private var binding: SceytItemChannelVoiceBinding,
+class VoiceViewHolder(private val binding: SceytItemChannelVoiceBinding,
                       private val clickListener: AttachmentClickListenersImpl,
                       private val userNameFormatter: UserNameFormatter?,
                       private val needMediaDataCallback: (NeedMediaInfoData) -> Unit

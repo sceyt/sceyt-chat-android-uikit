@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.persistence
 
 import com.sceyt.chat.models.member.Member
+import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.settings.UserSettings
@@ -401,8 +402,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     override suspend fun deleteMessage(channelId: Long, message: SceytMessage,
-                                       onlyForMe: Boolean): SceytResponse<SceytMessage> {
-        return messagesLogic.deleteMessage(channelId, message, onlyForMe)
+                                       deleteType: DeleteMessageType): SceytResponse<SceytMessage> {
+        return messagesLogic.deleteMessage(channelId, message, deleteType)
     }
 
     override suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage> {
@@ -506,8 +507,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return usersLogic.uploadAvatar(avatarUrl)
     }
 
-    override suspend fun updateProfile(firsName: String?, lastName: String?, avatarUrl: String?): SceytResponse<User> {
-        return usersLogic.updateProfile(firsName, lastName, avatarUrl)
+    override suspend fun updateProfile(firsName: String?, lastName: String?,
+                                       avatarUrl: String?,
+                                       metadata: String?): SceytResponse<User> {
+        return usersLogic.updateProfile(firsName, lastName, avatarUrl, metadata)
     }
 
     override suspend fun setPresenceState(presenceState: PresenceState): SceytResponse<Boolean> {
@@ -539,13 +542,13 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return reactionsLogic.getMessageReactionsDbByKey(messageId, key)
     }
 
-    override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int): SceytResponse<SceytMessage> {
-        return reactionsLogic.addReaction(channelId, messageId, key, score)
+    override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int,
+                                     reason: String, enforceUnique: Boolean): SceytResponse<SceytMessage> {
+        return reactionsLogic.addReaction(channelId, messageId, key, score, reason, enforceUnique)
     }
 
-    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String,
-                                        isPending: Boolean): SceytResponse<SceytMessage> {
-        return reactionsLogic.deleteReaction(channelId, messageId, scoreKey, isPending)
+    override suspend fun deleteReaction(channelId: Long, messageId: Long, scoreKey: String): SceytResponse<SceytMessage> {
+        return reactionsLogic.deleteReaction(channelId, messageId, scoreKey)
     }
 
     override suspend fun getMessageMarkers(messageId: Long, name: String, offset: Int, limit: Int): SceytResponse<List<SceytMarker>> {

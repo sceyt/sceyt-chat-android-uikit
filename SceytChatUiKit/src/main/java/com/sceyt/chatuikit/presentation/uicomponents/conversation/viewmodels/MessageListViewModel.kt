@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.work.ExistingWorkPolicy
+import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
@@ -444,17 +445,19 @@ class MessageListViewModel(
     }
 
     @SuppressWarnings("WeakerAccess")
-    fun addReaction(message: SceytMessage, scoreKey: String) {
+    fun addReaction(message: SceytMessage, scoreKey: String, score: Int = 1,
+                    reason: String = "", enforceUnique: Boolean = false) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messageReactionInteractor.addReaction(channel.id, message.id, scoreKey, 1)
+            val response = messageReactionInteractor.addReaction(channel.id, message.id, scoreKey,
+                score, reason, enforceUnique)
             notifyPageStateWithResponse(response, showError = false)
         }
     }
 
     @SuppressWarnings("WeakerAccess")
-    fun deleteReaction(message: SceytMessage, scoreKey: String, isPending: Boolean) {
+    fun deleteReaction(message: SceytMessage, scoreKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messageReactionInteractor.deleteReaction(channel.id, message.id, scoreKey, isPending)
+            val response = messageReactionInteractor.deleteReaction(channel.id, message.id, scoreKey)
             notifyPageStateWithResponse(response, showError = false)
         }
     }
@@ -477,17 +480,16 @@ class MessageListViewModel(
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
-    fun deleteMessage(message: SceytMessage, onlyForMe: Boolean) {
+    fun deleteMessage(message: SceytMessage, deleteType: DeleteMessageType) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messageInteractor.deleteMessage(channel.id, message, onlyForMe)
+            val response = messageInteractor.deleteMessage(channel.id, message, deleteType)
             _messageForceDeleteLiveData.postValue(response)
         }
     }
 
-    fun deleteMessages(message: List<SceytMessage>, onlyForMe: Boolean) {
+    fun deleteMessages(message: List<SceytMessage>, deleteType: DeleteMessageType) {
         message.forEach {
-            deleteMessage(it, onlyForMe)
+            deleteMessage(it, deleteType)
         }
     }
 
@@ -591,7 +593,8 @@ class MessageListViewModel(
     internal suspend fun mapToMessageListItem(
             data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
             compareMessage: SceytMessage? = null,
-            ignoreUnreadMessagesSeparator: Boolean = false
+            ignoreUnreadMessagesSeparator: Boolean = false,
+            enableDateSeparator: Boolean
     ): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
@@ -605,7 +608,7 @@ class MessageListViewModel(
                 if (index > 0)
                     prevMessage = data.getOrNull(index - 1)
 
-                if (shouldShowDate(sceytMessage, prevMessage))
+                if (enableDateSeparator && shouldShowDate(sceytMessage, prevMessage))
                     messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.tid))
 
                 val messageItem = MessageListItem.MessageItem(initMessageInfoData(sceytMessage, prevMessage, true))
@@ -718,7 +721,7 @@ class MessageListViewModel(
             }
 
             is ReactionEvent.RemoveReaction -> {
-                deleteReaction(event.message, event.scoreKey, event.isPending)
+                deleteReaction(event.message, event.scoreKey)
             }
         }
     }

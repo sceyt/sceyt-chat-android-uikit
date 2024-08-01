@@ -178,19 +178,22 @@ internal class PersistenceReactionsLogicImpl(
             reactionDao.getReactionsByMsgIdAndKey(messageId, key).map { it.toSceytReaction() }
     }
 
-    override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int): SceytResponse<SceytMessage> {
+    override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int,
+                                     reason: String, enforceUnique: Boolean): SceytResponse<SceytMessage> {
         reactionUpdateMutex.withLock {
-            val wasPending = insertPendingReactionToDbAndGetWasPending(channelId, messageId, key, true)
+            val wasPending = insertPendingReactionToDbAndGetWasPending(channelId, messageId, key,
+                reason, enforceUnique, true)
             if (wasPending)
                 return SceytResponse.Success(null)
 
-            return addReactionImpl(channelId, messageId, key, score, true)
+            return addReactionImpl(channelId, messageId, key, reason, score, enforceUnique, emitUpdate = true)
         }
     }
 
-    override suspend fun deleteReaction(channelId: Long, messageId: Long, key: String, isPending: Boolean): SceytResponse<SceytMessage> {
+    override suspend fun deleteReaction(channelId: Long, messageId: Long, key: String): SceytResponse<SceytMessage> {
         reactionUpdateMutex.withLock {
-            val wasPending = insertPendingReactionToDbAndGetWasPending(channelId, messageId, key, false)
+            val wasPending = insertPendingReactionToDbAndGetWasPending(channelId, messageId, key,
+                "", enforceUnique = true, isAdd = false)
             if (wasPending)
                 return SceytResponse.Success(null)
 
@@ -210,17 +213,25 @@ internal class PersistenceReactionsLogicImpl(
 
     private suspend fun sendPendingReactionsSync(channelId: Long, reactions: List<PendingReactionEntity>) {
         reactions.groupBy { it.messageId }.forEach { (messageId, reactions) ->
-            reactions.forEachIndexed { index, pendingReactionEntity ->
-                if (pendingReactionEntity.isAdd) {
-                    addReactionImpl(channelId, messageId, pendingReactionEntity.key, pendingReactionEntity.score, index == reactions.lastIndex)
+            reactions.forEachIndexed { index, entity ->
+                if (entity.isAdd) {
+                    addReactionImpl(channelId = channelId,
+                        messageId = messageId,
+                        key = entity.key,
+                        reason = entity.reason,
+                        score = entity.score,
+                        enforceUnique = entity.enforceUnique,
+                        emitUpdate = index == reactions.lastIndex)
                 } else
-                    deleteReactionImpl(channelId, messageId, pendingReactionEntity.key, index == reactions.lastIndex)
+                    deleteReactionImpl(channelId, messageId, entity.key, index == reactions.lastIndex)
             }
         }
     }
 
-    private suspend fun addReactionImpl(channelId: Long, messageId: Long, key: String, score: Int, emitUpdate: Boolean): SceytResponse<SceytMessage> {
-        val response = reactionsRepository.addReaction(channelId, messageId, key, score)
+    private suspend fun addReactionImpl(channelId: Long, messageId: Long, key: String,
+                                        reason: String, score: Int, enforceUnique: Boolean,
+                                        emitUpdate: Boolean): SceytResponse<SceytMessage> {
+        val response = reactionsRepository.addReaction(channelId, messageId, key, score, reason, enforceUnique)
         if (response is SceytResponse.Success) {
             response.data?.let { resultMessage ->
                 resultMessage.userReactions?.let {
@@ -287,7 +298,12 @@ internal class PersistenceReactionsLogicImpl(
         return response
     }
 
-    private suspend fun insertPendingReactionToDbAndGetWasPending(channelId: Long, messageId: Long, key: String, isAdd: Boolean): Boolean {
+    private suspend fun insertPendingReactionToDbAndGetWasPending(channelId: Long,
+                                                                  messageId: Long,
+                                                                  key: String,
+                                                                  reason: String,
+                                                                  enforceUnique: Boolean,
+                                                                  isAdd: Boolean): Boolean {
         val messageDb = messageDao.getMessageById(messageId) ?: return false
         val pendingReactions = messageDb.pendingReactions?.toArrayList() ?: arrayListOf()
         var wasPending = false
@@ -303,7 +319,9 @@ internal class PersistenceReactionsLogicImpl(
             }
         } else {
             val entity = PendingReactionEntity(messageId = messageId, channelId = channelId, key = key,
-                score = 1, createdAt = System.currentTimeMillis(), isAdd = isAdd, incomingMsg = messageDb.messageEntity.incoming, count = 1)
+                score = 1, reason = reason, enforceUnique = enforceUnique,
+                createdAt = System.currentTimeMillis(), isAdd = isAdd,
+                incomingMsg = messageDb.messageEntity.incoming, count = 1)
             pendingReactions.add(entity)
             pendingReactionEntity = entity
         }

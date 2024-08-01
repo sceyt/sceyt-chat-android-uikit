@@ -57,6 +57,7 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
     private val screenHeight by lazy { screenHeightPx() }
     private val peekHeight by lazy { screenHeight / 1.5 }
     private var maxSelectCount: Int = MAX_SELECT_MEDIA_COUNT
+    private var filterType: PickerFilterType = PickerFilterType.All
     private lateinit var style: GalleryPickerStyle
     private val imagesAdapter by lazy {
         GalleryMediaAdapter(initGalleryViewHolderFactory(), style)
@@ -64,10 +65,6 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        checkPermissions {
-            if (it) LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this)
-        }
 
         savedInstanceState?.getStringArray(STATE_SELECTION)?.let {
             selectedMediaPaths = it.filter { path -> path.isNotNullOrBlank() }.toMutableSet()
@@ -79,6 +76,14 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
 
         arguments?.getInt(MAX_SELECTION_COUNT)?.let {
             maxSelectCount = it
+        }
+
+        arguments?.getInt(FILTER_TYPE)?.let {
+            filterType = PickerFilterType.entries[it]
+        }
+
+        checkPermissions {
+            if (it) LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this)
         }
     }
 
@@ -144,7 +149,7 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
     private fun SceytGaleryMediaPickerBinding.initViews() {
         btnNext.setOnClickListener {
             pickerListener?.onSelect(selectedMedia.map {
-                SelectedMediaData(it.contentUri, it.realPath)
+                SelectedMediaData(it.contentUri, it.realPath, it.mediaType)
             })
             pickerListener = null
             dismissSafety()
@@ -164,7 +169,7 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
     private fun onMediaClick(mediaItem: MediaItem, position: Int) {
         val item = mediaItem.media
         if (selectedMedia.size == maxSelectCount && item.selected.not()) {
-            Toast.makeText(requireContext(), "${context?.getString(R.string.sceyt_max_select_count_should_be)} " +
+            Toast.makeText(requireContext(), "${context?.getString(R.string.sceyt_you_can_select_max)} " +
                     "$maxSelectCount", Toast.LENGTH_SHORT).show()
             return
         }
@@ -212,16 +217,22 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
             MediaStore.Video.Media.DURATION
         )
         val sortOrder = MediaStore.Video.Media.DATE_ADDED + " DESC"
-
-        val selection = (MediaStore.Files.FileColumns.MEDIA_TYPE + "="
-                + MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE
-                + " OR "
-                + MediaStore.Files.FileColumns.MEDIA_TYPE + "="
-                + MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO)
-
+        val selection = getSelection(filterType)
         val queryUri = MediaStore.Files.getContentUri("external")
 
         return CursorLoader(requireContext(), queryUri, projection, selection, null, sortOrder)
+    }
+
+    private fun getSelection(filter: PickerFilterType): String {
+        val selectionImage = MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE
+        val selectionVideo = MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO
+        val selectionAll = "$selectionImage OR $selectionVideo"
+
+        return when (filter) {
+            PickerFilterType.All -> selectionAll
+            PickerFilterType.Image -> selectionImage
+            PickerFilterType.Video -> selectionVideo
+        }
     }
 
     override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor?) {
@@ -285,7 +296,8 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
                     val realPath = cursor.getString(columnDataIndex)
                     val isWrong = !File(realPath).exists()
 
-                    val model = MediaData(contentUri, realPath, isWrong)
+                    val mediaType = if (isImage) MediaType.Image else MediaType.Video
+                    val model = MediaData(contentUri, realPath, isWrong, mediaType = mediaType)
                     val mediaItem = if (isImage) MediaItem.Image(model) else MediaItem.Video(model, videoDuration)
                     mediaItem.media.selected = checkSelectedItems(mediaItem)
 
@@ -316,7 +328,13 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
     }
 
     data class SelectedMediaData(val contentUri: Uri,
-                                 val realPath: String)
+                                 val realPath: String,
+                                 val mediaType: MediaType)
+
+    enum class MediaType {
+        Image,
+        Video
+    }
 
     fun interface PickerListener {
         fun onSelect(items: List<SelectedMediaData>)
@@ -331,16 +349,26 @@ class GalleryMediaPicker : BottomSheetDialogFragment(), LoaderManager.LoaderCall
         private const val CHUNK_SIZE = 150
         private const val STATE_SELECTION = "stateSelection"
         private const val MAX_SELECTION_COUNT = "maxSelectionCount"
+        private const val FILTER_TYPE = "filterType"
         const val MAX_SELECT_MEDIA_COUNT = 20
 
         var pickerListener: PickerListener? = null
 
-        fun instance(maxSelectCount: Int = MAX_SELECT_MEDIA_COUNT, vararg selections: String): GalleryMediaPicker {
+        fun instance(maxSelectCount: Int = MAX_SELECT_MEDIA_COUNT,
+                     fileFilter: PickerFilterType = PickerFilterType.All,
+                     vararg selections: String): GalleryMediaPicker {
             return GalleryMediaPicker().apply {
                 arguments = bundleOf(
                     STATE_SELECTION to selections,
+                    FILTER_TYPE to fileFilter.ordinal,
                     MAX_SELECTION_COUNT to maxSelectCount)
             }
         }
+    }
+
+    enum class PickerFilterType {
+        All,
+        Image,
+        Video
     }
 }

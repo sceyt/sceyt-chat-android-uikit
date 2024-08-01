@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
+import androidx.annotation.OptIn
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.media3.common.Player
@@ -11,10 +12,24 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.DefaultTimeBar
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytMediaItemVideoBinding
+import com.sceyt.chatuikit.extensions.doSafe
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
-import com.sceyt.chatuikit.persistence.filetransfer.TransferState.*
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Downloaded
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Downloading
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.ErrorDownload
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.ErrorUpload
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.FilePathChanged
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PauseDownload
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PauseUpload
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PendingDownload
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PendingUpload
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Preparing
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.ThumbLoaded
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploaded
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.OnMediaClickCallback
@@ -48,29 +63,31 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
         initVideoController()
     }
 
+    @OptIn(UnstableApi::class)
     @SuppressLint("ClickableViewAccessibility")
     private fun initVideoController() {
-        @UnstableApi
-        binding.videoView.controllerHideOnTouch = false
+        doSafe { binding.videoView.controllerHideOnTouch = false }
         var isPlayingBeforePause = false
-        with(binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)) {
-            applySystemWindowInsetsMargin(applyBottom = true, userDefaultMargins = false)
-            findViewById<DefaultTimeBar>(R.id.exo_progress)?.setOnTouchListener { _, event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        isPlayingBeforePause = playerHelper?.isPlaying() ?: false
-                        playerHelper?.pausePlayer()
-                    }
+        binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)?.let { videoTimeContainer ->
+            with(videoTimeContainer) {
+                applySystemWindowInsetsMargin(applyBottom = true, userDefaultMargins = false)
+                findViewById<DefaultTimeBar>(R.id.exo_progress)?.setOnTouchListener { _, event ->
+                    when (event.action) {
+                        MotionEvent.ACTION_DOWN -> {
+                            isPlayingBeforePause = playerHelper?.isPlaying() ?: false
+                            playerHelper?.pausePlayer()
+                        }
 
-                    MotionEvent.ACTION_UP -> if (isPlayingBeforePause) {
-                        playerHelper?.resumePlayer()
-                        initWakeLock()
+                        MotionEvent.ACTION_UP -> if (isPlayingBeforePause) {
+                            playerHelper?.resumePlayer()
+                            initWakeLock()
+                        }
                     }
+                    false
                 }
-                false
+                isVisible = ((context as? SceytMediaActivity)?.isShowMediaDetail() ?: true)
+                videoController = this
             }
-            isVisible = ((context as? SceytMediaActivity)?.isShowMediaDetail() ?: true)
-            videoController = this
         }
 
         videoController?.findViewById<View>(R.id.exo_play_pause)?.setOnTouchListener { _, event ->

@@ -14,6 +14,8 @@ import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.isAppInDarkMode
+import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
+import com.sceyt.chatuikit.theme.MessageBodyFormatter
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
@@ -40,6 +42,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @param voiceAttachmentIcon Icon for the voice attachment, default is [R.drawable.sceyt_ic_voice]
  * @param linkAttachmentIcon Icon for the link attachment, default is [R.drawable.sceyt_ic_link_attachment]
  * @param swipeReplyIcon Icon for the swipe reply, default is [R.drawable.sceyt_is_reply_swipe]
+ * @param replyMessageBodyFormatter Formatter for the reply message body, default is [MessageBodyFormatter] that returns the formatted body of the message
  * */
 data class MessageItemStyle(
         @ColorInt val incBubbleColor: Int,
@@ -66,7 +69,8 @@ data class MessageItemStyle(
         val fileAttachmentIcon: Drawable?,
         val voiceAttachmentIcon: Drawable?,
         val linkAttachmentIcon: Drawable?,
-        val swipeReplyIcon: Drawable?
+        val swipeReplyIcon: Drawable?,
+        val replyMessageBodyFormatter: MessageBodyFormatter
 ) {
 
     companion object {
@@ -157,13 +161,18 @@ data class MessageItemStyle(
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_file_filled)
 
             val voiceAttachmentIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiVoiceAttachmentIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_voice)
+                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_voice_white)
 
             val linkAttachmentIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiLinkAttachmentIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_link_attachment)
 
             val swipeReplyIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiSwipeReplyIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_is_reply_swipe)
+
+            val replyMessageBodyFormatter = MessageBodyFormatter { context, message ->
+                message.getFormattedBody(context)
+            }
+
             typedArray.recycle()
 
             return MessageItemStyle(
@@ -191,7 +200,8 @@ data class MessageItemStyle(
                 fileAttachmentIcon = fileAttachmentIcon,
                 voiceAttachmentIcon = voiceAttachmentIcon,
                 linkAttachmentIcon = linkAttachmentIcon,
-                swipeReplyIcon = swipeReplyIcon
+                swipeReplyIcon = swipeReplyIcon,
+                replyMessageBodyFormatter = replyMessageBodyFormatter
             ).let { styleCustomizer.apply(context, it) }
         }
     }

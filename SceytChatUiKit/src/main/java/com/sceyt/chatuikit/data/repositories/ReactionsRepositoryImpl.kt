@@ -73,18 +73,20 @@ class ReactionsRepositoryImpl : ReactionsRepository {
             .build()
     }
 
-    override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int): SceytResponse<SceytMessage> {
+    override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int,
+                                     reason: String, enforceUnique: Boolean): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
-            ChannelOperator.build(channelId).addReactionWithMessageId(messageId, key, score.toShort(), "", false, object : MessageCallback {
-                override fun onResult(message: Message?) {
-                    continuation.safeResume(SceytResponse.Success(message?.toSceytUiMessage()))
-                }
+            ChannelOperator.build(channelId).addReactionWithMessageId(messageId, key,
+                score.toShort(), reason, enforceUnique, object : MessageCallback {
+                    override fun onResult(message: Message?) {
+                        continuation.safeResume(SceytResponse.Success(message?.toSceytUiMessage()))
+                    }
 
-                override fun onError(error: SceytException?) {
-                    continuation.safeResume(SceytResponse.Error(error))
-                    SceytLog.e(TAG, "addReaction error: ${error?.message}")
-                }
-            })
+                    override fun onError(error: SceytException?) {
+                        continuation.safeResume(SceytResponse.Error(error))
+                        SceytLog.e(TAG, "addReaction error: ${error?.message}")
+                    }
+                })
         }
     }
 

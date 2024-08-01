@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners
 
 import android.view.View
+import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.MessageInputView
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CancelLinkPreviewClickListener
@@ -11,6 +12,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clic
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.RemoveAttachmentClickListener
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.ScrollToNextMessageClickListener
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.ScrollToPreviousMessageClickListener
+import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.SelectedUserToMentionClickListener
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.SendAttachmentClickListener
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.SendMsgClickListener
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.VoiceClickListener
@@ -29,6 +31,7 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
     private var clearChatClickListener: ClearChatClickListener? = null
     private var scrollToNextMessageClickListener: ScrollToNextMessageClickListener? = null
     private var scrollToPreviousMessageClickListener: ScrollToPreviousMessageClickListener? = null
+    private var onSelectUserToMentionClickListener: SelectedUserToMentionClickListener? = null
 
     override fun onSendMsgClick(view: View) {
         defaultListeners.onSendMsgClick(view)
@@ -85,6 +88,11 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
         scrollToPreviousMessageClickListener?.onScrollToPreviousMessageClick()
     }
 
+    override fun onSelectedUserToMentionClick(member: SceytMember) {
+        defaultListeners.onSelectedUserToMentionClick(member)
+        onSelectUserToMentionClickListener?.onSelectedUserToMentionClick(member)
+    }
+
     fun setListener(listener: MessageInputClickListeners) {
         when (listener) {
             is ClickListeners -> {
@@ -98,6 +106,7 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
                 clearChatClickListener = listener
                 scrollToNextMessageClickListener = listener
                 scrollToPreviousMessageClickListener = listener
+                onSelectUserToMentionClickListener = listener
             }
 
             is SendMsgClickListener -> {
@@ -139,8 +148,13 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
             is ScrollToNextMessageClickListener -> {
                 scrollToNextMessageClickListener = listener
             }
+
             is ScrollToPreviousMessageClickListener -> {
                 scrollToPreviousMessageClickListener = listener
+            }
+
+            is SelectedUserToMentionClickListener -> {
+                onSelectUserToMentionClickListener = listener
             }
         }
     }

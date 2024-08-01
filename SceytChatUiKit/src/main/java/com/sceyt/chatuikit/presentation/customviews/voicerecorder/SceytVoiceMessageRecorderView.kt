@@ -22,7 +22,7 @@ import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.view.animation.LinearInterpolator
 import android.view.animation.OvershootInterpolator
-import android.widget.FrameLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
@@ -43,7 +43,6 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.permissionIgnored
 import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.screenWidthPx
-import com.sceyt.chatuikit.extensions.setTint
 import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.presentation.common.SceytDialog
@@ -52,8 +51,9 @@ import java.util.Timer
 import java.util.TimerTask
 import kotlin.math.abs
 
-class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr) {
+class SceytVoiceMessageRecorderView @JvmOverloads constructor(
+        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : ConstraintLayout(context, attrs, defStyleAttr) {
 
     private lateinit var binding: SceytRecordViewBinding
     private val animBlink by lazy { AnimationUtils.loadAnimation(context, R.anim.sceyt_anim_blink) }
@@ -84,8 +84,8 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
     }
 
     private fun init() {
-        binding = SceytRecordViewBinding.inflate(LayoutInflater.from(context), this, true)
-        binding.root.layoutTransition = LayoutTransition().apply { setDuration(200) }
+        binding = SceytRecordViewBinding.inflate(LayoutInflater.from(context), this)
+        layoutTransition = LayoutTransition().apply { setDuration(200) }
 
         post {
             context.maybeComponentActivity()?.lifecycle?.addObserver(lifecycleEventObserver)
@@ -134,7 +134,7 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
                         isLocked = false
                     } else {
                         if (!context.checkAndAskPermissions(requestVoicePermissionLauncher, Manifest.permission.RECORD_AUDIO)
-                                || binding.root.layoutTransition.isRunning)
+                                || layoutTransition.isRunning)
                             return@OnTouchListener false
 
                         cancelOffset = screenWidthPx() / 2.8f
@@ -478,8 +478,12 @@ class SceytVoiceMessageRecorderView @JvmOverloads constructor(context: Context, 
             })
     }
 
-    private val requestVoicePermissionLauncher = if (isInEditMode) null else context.maybeComponentActivity()?.initPermissionLauncher {
-        onVoicePermissionResult(it)
+    private val requestVoicePermissionLauncher = if (isInEditMode) null else context.maybeComponentActivity()?.run {
+        if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            initPermissionLauncher {
+                onVoicePermissionResult(it)
+            }
+        } else null
     }
 
     private fun onVoicePermissionResult(isGranted: Boolean) {

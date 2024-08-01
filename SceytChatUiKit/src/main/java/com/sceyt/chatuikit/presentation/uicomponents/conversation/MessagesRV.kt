@@ -179,7 +179,9 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 mAdapter = it
             }
             scheduleLayoutAnimation()
-            StickyDateHeaderUpdater(this, parent as ViewGroup, mAdapter, style)
+
+            if (style.enableDateSeparator)
+                StickyDateHeaderUpdater(this, parent as ViewGroup, mAdapter, style)
 
             val swipeController = MessageSwipeController(context, style.messageItemStyle) { position ->
                 Handler(Looper.getMainLooper()).postDelayed({

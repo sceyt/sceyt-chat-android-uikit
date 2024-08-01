@@ -26,7 +26,6 @@ import com.sceyt.chatuikit.persistence.dao.PendingReactionDao
 import com.sceyt.chatuikit.persistence.dao.ReactionDao
 import com.sceyt.chatuikit.persistence.dao.UserDao
 import com.sceyt.chatuikit.persistence.entity.FileChecksumEntity
-import com.sceyt.chatuikit.persistence.entity.pendings.PendingMarkerEntity
 import com.sceyt.chatuikit.persistence.entity.UserEntity
 import com.sceyt.chatuikit.persistence.entity.channel.ChannelEntity
 import com.sceyt.chatuikit.persistence.entity.channel.ChatUserReactionEntity
@@ -40,11 +39,12 @@ import com.sceyt.chatuikit.persistence.entity.messages.LoadRangeEntity
 import com.sceyt.chatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.entity.messages.MentionUserMessageLink
 import com.sceyt.chatuikit.persistence.entity.messages.MessageEntity
-import com.sceyt.chatuikit.persistence.entity.pendings.PendingReactionEntity
 import com.sceyt.chatuikit.persistence.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.entity.messages.UserMarkerLink
+import com.sceyt.chatuikit.persistence.entity.pendings.PendingMarkerEntity
 import com.sceyt.chatuikit.persistence.entity.pendings.PendingMessageStateEntity
+import com.sceyt.chatuikit.persistence.entity.pendings.PendingReactionEntity
 
 @Database(entities = [
     ChannelEntity::class,
@@ -67,7 +67,7 @@ import com.sceyt.chatuikit.persistence.entity.pendings.PendingMessageStateEntity
     LinkDetailsEntity::class,
     LoadRangeEntity::class,
     UserMarkerLink::class
-], version = 11, autoMigrations = [
+], version = 12, autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
     AutoMigration(from = 3, to = 4, spec = SceytDatabase.AutoMigrationSpec3to4::class),
@@ -78,6 +78,7 @@ import com.sceyt.chatuikit.persistence.entity.pendings.PendingMessageStateEntity
     AutoMigration(from = 8, to = 9),
     AutoMigration(from = 9, to = 10),
     AutoMigration(from = 10, to = 11, spec = SceytDatabase.AutoMigrationSpec10To11::class),
+    AutoMigration(from = 11, to = 12),
 ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)

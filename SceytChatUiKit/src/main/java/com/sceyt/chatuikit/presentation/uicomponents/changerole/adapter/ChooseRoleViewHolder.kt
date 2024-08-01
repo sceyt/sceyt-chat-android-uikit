@@ -4,8 +4,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemChooseRoleBinding
 
 class ChooseRoleViewHolder(private val binding: SceytItemChooseRoleBinding,
-                           private val clickListener: ChooseRoleAdapter.ChooseRoleListener) :
-        RecyclerView.ViewHolder(binding.root) {
+                           private val clickListener: ChooseRoleAdapter.ChooseRoleListener
+) : RecyclerView.ViewHolder(binding.root) {
 
     fun bindTo(roleItem: RoleItem) {
         with(binding) {

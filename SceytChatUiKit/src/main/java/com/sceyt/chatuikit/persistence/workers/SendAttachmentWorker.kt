@@ -96,8 +96,8 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                     continue
 
                 val payload = payloads.find { it.payLoadEntity.messageTid == attachment.messageTid }?.payLoadEntity
-                if (payload?.transferState == TransferState.Uploaded && payload.url.isNotNullOrBlank()) {
-                    val transferData = payload.toTransferData(TransferState.Uploaded)
+                if (payload != null && (payload.transferState == TransferState.Uploaded || payload.url.isNotNullOrBlank())) {
+                    val transferData = payload.toTransferData(TransferState.Uploaded, 100f)
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                     return Pair(true, payload.url)
                 } else {

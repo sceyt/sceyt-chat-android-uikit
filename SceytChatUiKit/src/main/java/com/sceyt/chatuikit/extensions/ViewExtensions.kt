@@ -26,6 +26,7 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.marginEnd
 import androidx.core.view.marginStart
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -203,4 +204,42 @@ fun TextPaint.getStaticLayout(title: CharSequence, includePadding: Boolean, text
             .setLineSpacing(0f, 1f)
             .setIncludePad(includePadding).build()
     } else StaticLayout(title, this, textWidth, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, includePadding)
+}
+
+fun View.checkIfInsideFragment(): Fragment? {
+    // Check if the context is an activity
+    return context.maybeFragmentActivity()?.let {
+        findFragment(it)
+    }
+}
+
+private fun View.findFragment(activity: FragmentActivity): Fragment? {
+    val fragmentManager = activity.supportFragmentManager
+
+    // Traverse all fragments and find the one that contains this view
+    fragmentManager.fragments.forEach { fragment ->
+        if (isViewInFragment(this, fragment)) {
+            return fragment
+        }
+    }
+    return null
+}
+
+private fun isViewInFragment(view: View, fragment: Fragment): Boolean {
+    val fragmentView = fragment.view
+    return fragmentView != null && isViewInHierarchy(view, fragmentView)
+}
+
+private fun isViewInHierarchy(view: View, parent: View): Boolean {
+    if (view == parent) {
+        return true
+    }
+    if (parent is ViewGroup) {
+        for (i in 0 until parent.childCount) {
+            if (isViewInHierarchy(view, parent.getChildAt(i))) {
+                return true
+            }
+        }
+    }
+    return false
 }

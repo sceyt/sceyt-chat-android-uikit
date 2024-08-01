@@ -9,6 +9,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.ConnectionState
+import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
@@ -70,7 +71,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messageActionBridge.setMessagesListView(messagesListView)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
     if (channel.isSelf())
-        messagesListView.getPageStateView()?.setEmptyStateView(messagesListView.style.emptyStateSelfChannel)
+        messagesListView.getPageStateView().setEmptyStateView(messagesListView.style.emptyStateSelfChannel)
 
     clearPreparingThumbs()
 
@@ -184,32 +185,36 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytMessage>) {
+        val enableDateSeparator = messagesListView.style.enableDateSeparator
         if (response.offset == 0) {
             messagesListView.setMessagesList(mapToMessageListItem(data = response.data,
-                hasNext = response.hasNext, hasPrev = response.hasPrev), true)
+                hasNext = response.hasNext, hasPrev = response.hasPrev,
+                enableDateSeparator = enableDateSeparator), true)
         } else {
             when (response.loadType) {
                 LoadPrev -> {
                     messagesListView.addPrevPageMessages(mapToMessageListItem(data = response.data,
-                        hasNext = response.hasNext, hasPrev = response.hasPrev))
+                        hasNext = response.hasNext, hasPrev = response.hasPrev,
+                        enableDateSeparator = enableDateSeparator))
                 }
 
                 LoadNext -> {
                     val hasNext = checkMaybeHesNext(response)
                     val compareMessage = getCompareMessage(response.loadType, response.data)
                     messagesListView.addNextPageMessages(mapToMessageListItem(data = response.data,
-                        hasNext = hasNext, hasPrev = response.hasPrev, compareMessage))
+                        hasNext = hasNext, hasPrev = response.hasPrev, compareMessage,
+                        enableDateSeparator = enableDateSeparator))
                 }
 
                 LoadNear -> {
                     val hasNext = checkMaybeHesNext(response)
                     messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = hasNext,
-                        hasPrev = response.hasPrev), true)
+                        hasPrev = response.hasPrev, enableDateSeparator = enableDateSeparator), true)
                 }
 
                 LoadNewest -> {
                     messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = response.hasNext,
-                        hasPrev = response.hasPrev), true)
+                        hasPrev = response.hasPrev, enableDateSeparator = enableDateSeparator), true)
                 }
             }
         }
@@ -227,7 +232,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     val newMessages = mapToMessageListItem(data = dataToMap,
                         hasNext = response.hasNext,
                         hasPrev = response.hasPrev,
-                        compareMessage = getCompareMessage(response.loadType, dataToMap))
+                        compareMessage = getCompareMessage(response.loadType, dataToMap),
+                        enableDateSeparator = messagesListView.style.enableDateSeparator)
 
                     if (response.dbResultWasEmpty) {
                         if (response.loadType == LoadNear)
@@ -302,7 +308,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 if (newMessages.isNotEmpty()) {
                     val isLastDisplaying = messagesListView.isLastCompletelyItemDisplaying()
                     messagesListView.addNextPageMessages(mapToMessageListItem(data = newMessages,
-                        hasNext = false, hasPrev = false, messagesListView.getLastMessage()?.message))
+                        hasNext = false, hasPrev = false, messagesListView.getLastMessage()?.message,
+                        enableDateSeparator = messagesListView.style.enableDateSeparator))
                     if (isLastDisplaying)
                         messagesListView.scrollToLastMessage()
 
@@ -346,7 +353,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     val compareMessage = getCompareMessage(LoadNear, data.missingMessages)
 
                     items.addAll(mapToMessageListItem(data = data.missingMessages, hasNext = false, hasPrev = false,
-                        compareMessage, ignoreUnreadMessagesSeparator = true))
+                        compareMessage, ignoreUnreadMessagesSeparator = true,
+                        enableDateSeparator = messagesListView.style.enableDateSeparator))
 
                     items.sortBy { item -> item.getMessageCreatedAt() }
                     val filtered = mutableSetOf(*items.toTypedArray())
@@ -366,12 +374,19 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    MessagesCache.messagesClearedFlow.filter { it.first == channel.id }.onEach { pair ->
-        val date = pair.second
-        messagesListView.deleteAllMessagesBefore {
-            it.getMessageCreatedAt() <= date && (it !is MessageItem || it.message.deliveryStatus != DeliveryStatus.Pending)
-        }
-    }.launchIn(viewModelScope)
+    MessagesCache.messagesClearedFlow
+        .filter { (channelId, _) -> channelId == channel.id }
+        .onEach { (_, date) ->
+            messagesListView.deleteAllMessagesBefore {
+                it.getMessageCreatedAt() <= date && (it !is MessageItem || it.message.deliveryStatus != DeliveryStatus.Pending)
+            }
+        }.launchIn(viewModelScope)
+
+    MessagesCache.messagesHardDeletedFlow
+        .filter { (channelId, _) -> channelId == channel.id }
+        .onEach { (_, tid) ->
+            messagesListView.forceDeleteMessageByTid(tid)
+        }.launchIn(viewModelScope)
 
     loadMessagesFlow
         .onEach(::initMessagesResponse)
@@ -459,20 +474,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     })
 
-    checkMessageForceDeleteLiveData.observe(lifecycleOwner) {
-        if (it is SceytResponse.Success) {
-            if (it.data?.deliveryStatus == DeliveryStatus.Pending && it.data.state == MessageState.Deleted)
-                messagesListView.forceDeleteMessageByTid(it.data.tid)
-        }
-    }
-
     suspend fun onMessage(message: SceytMessage) {
         if (hasNext || hasNextDb) return
         val initMessage = mapToMessageListItem(
             data = arrayListOf(message),
             hasNext = false,
             hasPrev = false,
-            compareMessage = messagesListView.getLastMessage()?.message)
+            compareMessage = messagesListView.getLastMessage()?.message,
+            enableDateSeparator = messagesListView.style.enableDateSeparator)
 
         if (notFoundMessagesToUpdate.containsKey(message.tid)) {
             notFoundMessagesToUpdate.remove(message.tid)?.let {
@@ -611,7 +620,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     messagesListView.setMessageCommandEventListener {
         when (val event = it) {
             is MessageCommandEvent.DeleteMessage -> {
-                deleteMessages(event.message.toList(), event.onlyForMe)
+                val type = if (event.onlyForMe)
+                    DeleteMessageType.DeleteForMe
+                else {
+                    if (SceytChatUIKit.config.shouldHardDeleteMessageForAll)
+                        DeleteMessageType.DeleteHard else DeleteMessageType.DeleteForEveryone
+                }
+                deleteMessages(event.message.toList(), type)
             }
 
             is MessageCommandEvent.EditMessage -> {

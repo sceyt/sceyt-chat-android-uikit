@@ -5,14 +5,14 @@ import android.util.Size
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
+import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.decodeByteArrayToBitmap
 import com.sceyt.chatuikit.extensions.getMimeTypeTakeFirstPart
 import com.sceyt.chatuikit.extensions.toByteArraySafety
-import com.sceyt.chatuikit.data.constants.SceytConstants
-import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.persistence.entity.FileChecksumEntity
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentEntity
@@ -90,11 +90,11 @@ fun AttachmentDb.toAttachmentPayLoad(messageStatus: MessageEntity): AttachmentPa
     }
 }
 
-fun AttachmentPayLoadEntity.toTransferData(default: TransferState): TransferData {
+fun AttachmentPayLoadEntity.toTransferData(state: TransferState, progress: Float = 0f): TransferData {
     return TransferData(
         messageTid = messageTid,
-        state = transferState ?: default,
-        progressPercent = 0f,
+        state = state,
+        progressPercent = progress,
         url = url,
         filePath = filePath
     )

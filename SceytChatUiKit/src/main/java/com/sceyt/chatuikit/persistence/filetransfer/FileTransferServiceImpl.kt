@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.ErrorUpload
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PauseDownload
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PauseUpload
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PendingDownload
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import java.util.concurrent.ConcurrentHashMap
@@ -85,7 +86,7 @@ internal class FileTransferServiceImpl(private var context: Context,
 
     override fun findOrCreateTransferTask(attachment: SceytAttachment): TransferTask {
         val isUploading: Boolean = when (attachment.transferState) {
-            PendingDownload, Downloading, Downloaded, PauseDownload, ErrorDownload -> false
+            PendingDownload, Downloading, Downloaded, PauseDownload, ErrorDownload, Uploaded -> false
             else -> true
         }
         return tasksMap[attachment.messageTid.toString()] ?: run {

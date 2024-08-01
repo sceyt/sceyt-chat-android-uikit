@@ -23,6 +23,10 @@ data class PendingReactionEntity(
         @ColumnInfo(name = "reaction_key", index = true)
         val key: String,
         val score: Int,
+        @ColumnInfo(defaultValue = "")
+        val reason: String,
+        @ColumnInfo(defaultValue = "false")
+        val enforceUnique: Boolean,
         val count: Long,
         val channelId: Long,
         val isAdd: Boolean,
