@@ -105,7 +105,7 @@ class OutVideoMsgViewHolder(
                 setImageTopCorners(imageThumb)
             }
 
-            if (diff.reactionsChanged)
+            if (diff.reactionsChanged || diff.edited)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
             if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
