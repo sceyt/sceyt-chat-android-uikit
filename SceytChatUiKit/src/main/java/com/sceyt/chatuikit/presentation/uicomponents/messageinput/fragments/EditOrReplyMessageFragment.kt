@@ -29,6 +29,7 @@ import com.sceyt.chatuikit.presentation.extensions.isTextMessage
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners.CancelReplyMessageViewClickListener
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
+import com.sceyt.chatuikit.sceytstyles.MessageInputStyle
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.utils.ViewUtil
@@ -72,7 +73,7 @@ open class EditOrReplyMessageFragment : Fragment() {
         }
     }
 
-    open fun replyMessage(message: SceytMessage, style: MessagesListViewStyle?) {
+    open fun replyMessage(message: SceytMessage, inputStyle: MessageInputStyle, style: MessagesListViewStyle?) {
         val messageItemStyle = style?.messageItemStyle
                 ?: MessageItemStyle.Builder(requireContext(), null).build()
         with(binding ?: return) {
@@ -93,9 +94,7 @@ open class EditOrReplyMessageFragment : Fragment() {
                 loadReplyMessageImage(message.attachments, messageItemStyle)
             } else layoutImage.isVisible = false
 
-            tvMessageBody.text = if (message.isTextMessage())
-                MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message)
-            else message.getFormattedBody(root.context)
+            tvMessageBody.text = inputStyle.replyMessageBodyFormatter.format(requireContext(), message)
         }
     }
 

@@ -119,9 +119,10 @@ data class MessagesListViewStyle(
                 messageItemStyle = messageItemStyle,
                 enableScrollDownButton = enableScrollDownButton,
                 enableDateSeparator = enableDateSeparator
-            ).apply {
-                styleCustomizer.apply(context, this)
-                currentStyle = this
+            ).let { style ->
+                styleCustomizer.apply(context, style).also {
+                    currentStyle = it
+                }
             }
         }
     }
