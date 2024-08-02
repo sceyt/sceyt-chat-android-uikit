@@ -30,6 +30,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
+import com.sceyt.chatuikit.data.copy
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
@@ -342,7 +343,9 @@ class ConversationHeaderView @JvmOverloads constructor(
         if (::channel.isInitialized.not() || channel.isGroup || enablePresence.not()) return
         channel.getPeer()?.let { member ->
             if (member.user.id == user.id) {
-                member.user = user
+                channel = channel.copy(members = channel.members?.map {
+                    if (it.user.id == user.id) it.copy(user = user.copy()) else it
+                })
                 if (!typingUsersHelper.isTyping)
                     uiElementsListeners.onSubTitle(binding.subTitle, channel, replyMessage, isReplyInThread)
             }

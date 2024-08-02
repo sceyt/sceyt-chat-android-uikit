@@ -277,13 +277,13 @@ class ChannelsCache {
     fun updateChannelPeer(id: Long, user: User) {
         synchronized(lock) {
             cachedData[id]?.let { channel ->
-                channel.members?.find { member -> member.user.id == user.id }?.let {
-                    val oldUser = it.user
-                    if (oldUser.diff(user).hasDifference()) {
-                        it.user = user.copy()
-                        channelUpdated(channel, false, ChannelUpdatedType.Presence)
+                val updatedChannel = channel.copy(
+                    members = channel.members?.map { member ->
+                        if (member.user.id == user.id) member.copy(user = user.copy())
+                        else member
                     }
-                }
+                )
+                channelUpdated(updatedChannel, false, ChannelUpdatedType.Presence)
             }
         }
     }
