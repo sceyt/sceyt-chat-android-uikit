@@ -6,12 +6,12 @@ import com.vanniktech.ui.Parcelize
 
 @Parcelize
 data class SceytReaction(
-        var id: Long,
+        val id: Long,
         val messageId: Long,
         val key: String,
-        var score: Int,
+        val score: Int,
         val reason: String,
         val createdAt: Long,
-        var user: User?,
-        var pending: Boolean
+        val user: User?,
+        val pending: Boolean
 ) : Parcelable
