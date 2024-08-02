@@ -3,14 +3,13 @@ package com.sceyt.chatuikit.data.models.channels
 import android.os.Parcelable
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.User
-import com.sceyt.chatuikit.data.copy
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class SceytMember(
-        var role: Role,
-        var user: User,
-) : Parcelable, Cloneable {
+        val role: Role,
+        val user: User,
+) : Parcelable {
 
     constructor(user: User) : this(Role("participant"), user)
 
@@ -28,9 +27,5 @@ data class SceytMember(
 
     override fun hashCode(): Int {
         return javaClass.hashCode()
-    }
-
-    public override fun clone(): SceytMember {
-        return SceytMember(role = Role(role.name), user = user.copy())
     }
 }

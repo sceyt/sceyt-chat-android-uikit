@@ -11,6 +11,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
+import com.sceyt.chatuikit.data.copy
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytChannelListViewBinding
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
@@ -142,8 +143,14 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
         data?.forEach { user ->
             channelsRV.getChannels()?.find {
                 it.channel.isDirect() && it.channel.getPeer()?.id == user.id
-            }?.let {
-                it.channel.getPeer()?.user = user
+            }?.let { channelItem ->
+                val channel = channelItem.channel
+                channelItem.channel = channel.copy(
+                    members = channel.members?.map { member ->
+                        if (member.id == user.id) member.copy(user = user.copy())
+                        else member
+                    }
+                )
             }
         }
     }

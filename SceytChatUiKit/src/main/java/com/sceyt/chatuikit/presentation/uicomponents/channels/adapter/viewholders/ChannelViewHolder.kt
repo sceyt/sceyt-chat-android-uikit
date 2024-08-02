@@ -150,7 +150,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
             val fromText = when {
                 message.incoming -> {
-                    val from = channel.lastMessage?.user
+                    val from = channel.lastMessage.user
                     val userFirstName = from?.let {
                         userNameFormatter?.format(from)
                                 ?: from.getPresentableNameCheckDeleted(context)
@@ -339,11 +339,11 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         val lastMsgCreatedAt = when {
             channel.draftMessage != null -> {
                 shouldShowStatus = false
-                channel.draftMessage?.createdAt
+                channel.draftMessage.createdAt
             }
 
             channel.lastMessage != null -> {
-                val lastMessageCreatedAt = channel.lastMessage?.createdAt ?: 0L
+                val lastMessageCreatedAt = channel.lastMessage.createdAt
                 val lastReactionCreatedAt = channel.newReactions?.maxByOrNull { it.id }?.createdAt
                         ?: 0
                 if (lastReactionCreatedAt > lastMessageCreatedAt)

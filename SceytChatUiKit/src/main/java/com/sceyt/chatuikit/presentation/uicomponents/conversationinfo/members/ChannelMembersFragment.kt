@@ -102,12 +102,12 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
         super.onAttach(context)
         addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.parcelableArrayList<SceytMember>(SceytAddMembersActivity.SELECTED_USERS)?.let { users ->
+                result.data?.parcelableArrayList<SceytMember>(SceytAddMembersActivity.SELECTED_USERS)?.let { data ->
                     if (memberType == MemberTypeEnum.Admin) {
-                        users.map { it.role = Role(RoleTypeEnum.Admin.toString()) }
+                        val users = data.map { it.copy(role = Role(RoleTypeEnum.Admin.toString())) }
                         changeRole(*users.toTypedArray())
                     }
-                    addMembersToChannel(users)
+                    addMembersToChannel(data)
                 }
             }
         }
@@ -192,9 +192,10 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
     }
 
     private fun updateMemberRole(newRole: String, pair: Pair<Int, MemberItem>) {
-        val member = (pair.second as MemberItem.Member).member
-        member.role = Role(newRole)
-        membersAdapter?.notifyItemChanged(pair.first, MemberItemPayloadDiff.NOT_CHANGED_STATE.apply {
+        val (index, item) = pair
+        val member = (item as MemberItem.Member).member.copy(role = Role(newRole))
+        item.member = member
+        membersAdapter?.notifyItemChanged(index, MemberItemPayloadDiff.NOT_CHANGED_STATE.apply {
             roleChanged = true
         })
     }
