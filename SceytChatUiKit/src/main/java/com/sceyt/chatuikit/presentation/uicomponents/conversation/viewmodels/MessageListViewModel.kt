@@ -226,9 +226,8 @@ class MessageListViewModel(
             .filter { it.first == channel.id }
             .onEach { data ->
                 val newChannelId = data.second.id
-                channel.id = newChannelId
+                channel = channel.copy(id = newChannelId, pending = false)
                 conversationId = newChannelId
-                channel.pending = false
             }.launchIn(viewModelScope)
 
         onNewOutGoingMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
@@ -779,19 +778,19 @@ class MessageListViewModel(
         when (eventData.eventType) {
             ChannelMembersEventEnum.Added -> {
                 channelMembers.addAll(sceytMembers)
-                channel.apply {
-                    members = channelMembers
-                    memberCount += sceytMembers.size
-                }
+                channel = channel.copy(
+                    members = channelMembers,
+                    memberCount = channel.memberCount + sceytMembers.size
+                )
                 _onChannelMemberAddedOrKickedLiveData.postValue(channel)
             }
 
             ChannelMembersEventEnum.Kicked -> {
                 channelMembers.removeAll(sceytMembers)
-                channel.apply {
-                    members = channelMembers
-                    memberCount -= sceytMembers.size
-                }
+                channel = channel.copy(
+                    members = channelMembers,
+                    memberCount = channel.memberCount - sceytMembers.size
+                )
                 _onChannelMemberAddedOrKickedLiveData.postValue(channel)
             }
 
