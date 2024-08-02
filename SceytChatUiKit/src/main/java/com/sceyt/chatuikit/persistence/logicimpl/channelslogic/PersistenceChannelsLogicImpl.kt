@@ -836,8 +836,10 @@ internal class PersistenceChannelsLogicImpl(
 
     private suspend fun initPendingLastMessageBeforeInsert(channel: SceytChannel): SceytChannel {
         val messageTIds = channelDao.getChannelLastMessageTid(channel.id) ?: return channel
-        val pendingLastMessages = messageDao.getPendingMessageByTid(messageTIds)
-        return channel.copy(lastMessage = pendingLastMessages?.toSceytMessage())
+        messageDao.getPendingMessageByTid(messageTIds)?.let { pendingLastMessage ->
+            return channel.copy(lastMessage = pendingLastMessage.toSceytMessage())
+        }
+        return channel
     }
 
     private suspend fun deleteChannelDb(channelId: Long) {
