@@ -148,12 +148,12 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
         }
 
         viewModel.muteUnMuteLiveData.observe(this) {
-            channel.muted = it.muted
+            channel = channel.copy(muted = it.muted)
             onMutedOrUnMutedChannel(it)
         }
 
         viewModel.pinUnpinLiveData.observe(this) {
-            channel.pinnedAt = it.pinnedAt
+            channel = channel.copy(pinnedAt = it.pinnedAt)
             onPinnedOrUnPinnedChannel(it)
         }
 
@@ -285,7 +285,7 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
         viewModel.addMembersToChannel(channel.id, members as ArrayList)
     }
 
-    protected fun getChannel() = channel.clone()
+    protected fun getChannel() = channel
 
     protected open fun getBinding() = binding
 

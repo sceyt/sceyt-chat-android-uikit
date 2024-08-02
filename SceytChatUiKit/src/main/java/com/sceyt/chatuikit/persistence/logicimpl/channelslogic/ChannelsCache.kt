@@ -7,7 +7,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.differs.diff
-import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelsComparatorDescBy
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -86,7 +85,7 @@ class ChannelsCache {
 
     fun addPendingChannel(channel: SceytChannel) {
         synchronized(lock) {
-            pendingChannelsData[channel.id] = channel.clone()
+            pendingChannelsData[channel.id] = channel
             if (channel.lastMessage != null)
                 channelAdded(channel)
         }
@@ -100,19 +99,19 @@ class ChannelsCache {
 
     fun getSorted(): List<SceytChannel> {
         synchronized(lock) {
-            return cachedData.values.sortedWith(ChannelsComparatorDescBy()).map { it.clone() }
+            return cachedData.values.sortedWith(ChannelsComparatorDescBy())
         }
     }
 
     fun getData(): List<SceytChannel> {
         synchronized(lock) {
-            return cachedData.values.map { it.clone() }
+            return cachedData.values.toList()
         }
     }
 
     fun get(channelId: Long): SceytChannel? {
         synchronized(lock) {
-            return cachedData[channelId]?.clone() ?: pendingChannelsData[channelId]?.clone()
+            return cachedData[channelId] ?: pendingChannelsData[channelId]
         }
     }
 
@@ -128,7 +127,7 @@ class ChannelsCache {
                 val cachedChannel = cachedData[it.id] ?: pendingChannelsData[it.id]
                 if (cachedChannel == null) {
                     if (!it.pending) {
-                        cachedData[it.id] = it.clone()
+                        cachedData[it.id] = it
                         channelAdded(it)
                     }
                 } else {
@@ -147,8 +146,9 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
                 val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
-                channel.lastMessage = message?.copy()
-                channelUpdated(channel, needSort, ChannelUpdatedType.LastMessage)
+                val updatedChannel = channel.copy(lastMessage = message)
+                cachedData[channelId] = updatedChannel
+                channelUpdated(updatedChannel, needSort, ChannelUpdatedType.LastMessage)
             }
         }
     }
@@ -157,9 +157,11 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
                 val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
-                channel.lastMessage = message.copy()
-                channel.lastDisplayedMessageId = message.id
-                channelUpdated(channel, needSort, ChannelUpdatedType.LastMessage)
+                val updatedChannel = channel.copy(
+                    lastMessage = message,
+                    lastDisplayedMessageId = message.id)
+                cachedData[channelId] = updatedChannel
+                channelUpdated(updatedChannel, needSort, ChannelUpdatedType.LastMessage)
             }
         }
     }
@@ -167,13 +169,16 @@ class ChannelsCache {
     fun clearedHistory(channelId: Long) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
-                channel.lastMessage = null
-                channel.newMessageCount = 0
-                channel.newMentionCount = 0
-                channel.newReactedMessageCount = 0
-                channel.newReactions = null
-                channel.pendingReactions = null
-                channelUpdated(channel, true, ChannelUpdatedType.ClearedHistory)
+                val updatedChannel = channel.copy(
+                    lastMessage = null,
+                    newMessageCount = 0,
+                    newMentionCount = 0,
+                    newReactedMessageCount = 0,
+                    newReactions = null,
+                    pendingReactions = null
+                )
+                cachedData[channelId] = updatedChannel
+                channelUpdated(updatedChannel, true, ChannelUpdatedType.ClearedHistory)
             }
         }
     }
@@ -181,12 +186,12 @@ class ChannelsCache {
     fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long = 0) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
-                if (muted) {
-                    channel.muted = true
-                    channel.mutedTill = muteUntil
-                } else channel.muted = false
-
-                channelUpdated(channel, false, ChannelUpdatedType.MuteState)
+                val updatedChannel = channel.copy(
+                    muted = muted,
+                    mutedTill = if (muted) muteUntil else 0
+                )
+                cachedData[channelId] = updatedChannel
+                channelUpdated(updatedChannel, false, ChannelUpdatedType.MuteState)
             }
         }
     }
@@ -194,8 +199,9 @@ class ChannelsCache {
     fun updatePinState(channelId: Long, pinnedAt: Long?) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
-                channel.pinnedAt = pinnedAt
-                channelUpdated(channel, true, ChannelUpdatedType.PinnedAt)
+                val updatedChannel = channel.copy(pinnedAt = pinnedAt)
+                cachedData[channelId] = updatedChannel
+                channelUpdated(updatedChannel, true, ChannelUpdatedType.PinnedAt)
             }
         }
     }
@@ -203,9 +209,9 @@ class ChannelsCache {
     fun updateUnreadCount(channelId: Long, count: Int) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
-                channel.newMessageCount = count.toLong()
-                channel.unread = false
-                channelUpdated(channel, false, ChannelUpdatedType.UnreadCount)
+                val updatedChannel = channel.copy(newMessageCount = count.toLong(), unread = false)
+                cachedData[channelId] = updatedChannel
+                channelUpdated(updatedChannel, false, ChannelUpdatedType.UnreadCount)
             }
         }
     }
@@ -228,28 +234,29 @@ class ChannelsCache {
             // Removing pending channel
             pendingChannelsData.remove(pendingChannelId)
             // Adding already created channel to cache
-            cachedData[newChannel.id] = newChannel.clone()
+            cachedData[newChannel.id] = newChannel
             // Adding pending channel id with real channel id for future getting real channel id by pending channel id
             fromPendingToRealChannelsData[pendingChannelId] = newChannel.id
             // Emitting to flow
-            pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel.clone()))
+            pendingChannelCreatedFlow_.tryEmit(Pair(pendingChannelId, newChannel))
         }
     }
 
     private fun channelUpdated(channel: SceytChannel, needSort: Boolean, type: ChannelUpdatedType) {
-        channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel.clone(), needSort, type))
+        channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel, needSort, type))
     }
 
     private fun channelAdded(channel: SceytChannel) {
-        channelAddedFlow_.tryEmit(channel.clone())
+        channelAddedFlow_.tryEmit(channel)
     }
 
     fun updateMembersCount(channel: SceytChannel) {
         var found = false
         synchronized(lock) {
             cachedData[channel.id]?.let {
-                it.memberCount = channel.memberCount
-                channelUpdated(it, false, ChannelUpdatedType.Members)
+                val updatedChannel = it.copy(memberCount = channel.memberCount)
+                cachedData[channel.id] = updatedChannel
+                channelUpdated(updatedChannel, false, ChannelUpdatedType.Members)
                 found = true
             }
         }
@@ -260,8 +267,9 @@ class ChannelsCache {
     fun updateChannelDraftMessage(channelId: Long, draftMessage: DraftMessage?) {
         synchronized(lock) {
             cachedData[channelId]?.let {
-                it.draftMessage = draftMessage?.copy()
-                channelDraftMessageChangesFlow_.tryEmit(it.clone())
+                val updatedChannel = it.copy(draftMessage = draftMessage)
+                cachedData[channelId] = updatedChannel
+                channelDraftMessageChangesFlow_.tryEmit(updatedChannel)
             }
         }
     }
@@ -283,11 +291,9 @@ class ChannelsCache {
     fun removeChannelMessageReactions(channelId: Long, messageId: Long) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
-                channel.newReactions?.filter { it.messageId == messageId }?.let {
-                    channel.newReactions = channel.newReactions?.toArrayList()?.apply {
-                        removeAll(it.toSet())
-                    }
-                }
+                val filteredReactions = channel.newReactions?.filter { it.messageId != messageId }
+                val updatedChannel = channel.copy(newReactions = filteredReactions)
+                cachedData[channelId] = updatedChannel
             }
         }
     }
@@ -295,7 +301,7 @@ class ChannelsCache {
     fun channelLastReactionLoaded(channelId: Long) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
-                channelReactionMsgLoadedFlow_.tryEmit(channel.clone())
+                channelReactionMsgLoadedFlow_.tryEmit(channel)
             }
         }
     }
@@ -303,9 +309,12 @@ class ChannelsCache {
     fun onChannelMarkedAsReadOrUnread(channel: SceytChannel) {
         synchronized(lock) {
             cachedData[channel.id]?.let {
-                it.unread = channel.unread
-                it.newMessageCount = channel.newMessageCount
-                channelUpdated(it, false, ChannelUpdatedType.Updated)
+                val updatedChannel = it.copy(
+                    unread = channel.unread,
+                    newMessageCount = channel.newMessageCount
+                )
+                cachedData[channel.id] = updatedChannel
+                channelUpdated(updatedChannel, false, ChannelUpdatedType.Updated)
             }
         }
     }
@@ -324,16 +333,16 @@ class ChannelsCache {
 
     private fun putAndCheckHasDiff(channel: SceytChannel): ChannelDiff {
         val old = cachedData[channel.id]
-        cachedData[channel.id] = channel.clone()
+        cachedData[channel.id] = channel
         return old?.diff(channel) ?: ChannelDiff.DEFAULT
     }
 
     private fun putToCache(vararg channel: SceytChannel) {
         channel.groupBy { it.pending }.forEach { group ->
             if (group.key)
-                pendingChannelsData.putAll(group.value.map { it.clone() }.associateBy { channel -> channel.id })
+                pendingChannelsData.putAll(group.value.associateBy { channel -> channel.id })
             else
-                cachedData.putAll(group.value.map { it.clone() }.associateBy { channel -> channel.id })
+                cachedData.putAll(group.value.associateBy { channel -> channel.id })
         }
     }
 

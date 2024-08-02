@@ -104,7 +104,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         when (it) {
             is SceytResponse.Success -> {
                 messageInputView.joinSuccess()
-                channel.members = it.data?.members
+                channel = channel.copy(members = it.data?.members)
             }
 
             is SceytResponse.Error -> customToastSnackBar(messageInputView, it.message.toString())
@@ -151,7 +151,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         .filter { it.channel.id == channel.id }
         .onEach {
             val wasJoined = channel.userRole.isNotNullOrBlank()
-            channel = it.channel.clone()
+            channel = it.channel
             if (channel.userRole.isNotNullOrBlank()) {
                 if (!wasJoined)
                     messageInputView.joinSuccess()

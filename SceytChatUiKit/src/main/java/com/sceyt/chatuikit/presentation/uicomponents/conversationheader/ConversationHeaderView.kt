@@ -266,8 +266,7 @@ class ConversationHeaderView @JvmOverloads constructor(
                 }
 
                 else -> {
-                    val subjAndSUrl = channel.getSubjectAndAvatarUrl()
-                    avatar.setNameAndImageUrl(subjAndSUrl.first, subjAndSUrl.second,
+                    avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl,
                         if (isGroup) 0 else SceytChatUIKit.theme.userDefaultAvatar)
                 }
             }
