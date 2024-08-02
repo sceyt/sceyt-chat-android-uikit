@@ -10,7 +10,7 @@ sealed class ReactionItem : SelectableItem(), Parcelable {
     @Parcelize
     data class Reaction(val reaction: SceytReactionTotal,
                         val messageTid: Long,
-                        var isPending: Boolean) : ReactionItem()
+                        val isPending: Boolean) : ReactionItem()
 
     @Parcelize
     data class Other(val message: SceytMessage) : ReactionItem()
