@@ -35,8 +35,10 @@ import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.data.toFileListItem
+import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
+import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -672,22 +674,28 @@ class MessageListViewModel(
                 message.userReactions?.find { reaction ->
                     reaction.key == it.key && reaction.user?.id == myId
                 } != null), message.tid, false)
-        }?.toMutableList()
+        }?.toArrayList()
 
         if (!pendingReactions.isNullOrEmpty() && reactionItems != null) {
             pendingReactions.forEach { pendingReaction ->
-                reactionItems.find { it.reaction.key == pendingReaction.key }?.let { item ->
+                reactionItems.findIndexed { it.reaction.key == pendingReaction.key }?.let { (index, item) ->
+                    val reaction = item.reaction
                     if (pendingReaction.isAdd) {
-                        item.reaction.score += pendingReaction.score
-                        item.reaction.containsSelf = true
-                        item.isPending = true
+                        reactionItems[index] = item.copy(
+                            reaction = reaction.copy(
+                                score = reaction.score + pendingReaction.score,
+                                containsSelf = true),
+                            isPending = true)
                     } else {
-                        item.reaction.score -= pendingReaction.score
-                        if (item.reaction.score <= 0)
+                        val score = reaction.score - pendingReaction.score
+                        if (score <= 0)
                             reactionItems.remove(item)
                         else {
-                            item.reaction.containsSelf = false
-                            item.isPending = false
+                            reactionItems[index] = item.copy(
+                                reaction = reaction.copy(
+                                    score = reaction.score - pendingReaction.score,
+                                    containsSelf = false),
+                                isPending = false)
                         }
                     }
                 } ?: run {
