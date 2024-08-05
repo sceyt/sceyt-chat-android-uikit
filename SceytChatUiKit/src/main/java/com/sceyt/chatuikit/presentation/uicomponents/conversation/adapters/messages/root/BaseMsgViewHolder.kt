@@ -63,7 +63,6 @@ import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
 import com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
 import com.sceyt.chatuikit.presentation.customviews.SceytToReplyLineView
-import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.presentation.extensions.setConversationMessageDateAndStatusIcon
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -194,7 +193,8 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     // Invoke this method after invoking setOrUpdateReactions, to calculate the final width of the layout bubble
     protected fun setReplyMessageContainer(message: SceytMessage, viewStub: ViewStub, calculateWith: Boolean = true) {
-        if (!message.isReplied) {
+        val parent = message.parentMessage
+        if (!message.isReplied || parent == null) {
             viewStub.isVisible = false
             return
         }
@@ -207,22 +207,21 @@ abstract class BaseMsgViewHolder(private val view: View,
                 it.view.backgroundTintList = ColorStateList.valueOf(style.replyMessageLineColor)
             }
         with(replyMessageContainerBinding ?: return) {
-            val parent = message.parentMessage
-            tvName.text = getSenderName(parent?.user)
-            if (parent?.state == MessageState.Deleted) {
+            tvName.text = getSenderName(parent.user)
+            if (parent.state == MessageState.Deleted) {
                 tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.ITALIC)
                 tvMessageBody.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
             } else {
                 tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.NORMAL)
                 tvMessageBody.setTextColor(style.bodyTextColor)
             }
+            tvMessageBody.text = style.replyMessageBodyFormatter.format(context, parent)
 
-            tvMessageBody.text = parent?.getFormattedBody(itemView.context)
-            if (parent?.attachments.isNullOrEmpty()) {
+            if (parent.attachments.isNullOrEmpty()) {
                 imageAttachment.isVisible = false
                 icFile.isVisible = false
             } else {
-                val attachment = parent?.attachments?.getOrNull(0)
+                val attachment = parent.attachments?.getOrNull(0)
                 icMsgBodyStartIcon.isVisible = attachment?.type == AttachmentTypeEnum.Voice.value()
                 when {
                     attachment?.type.isEqualsVideoOrImage() -> {
