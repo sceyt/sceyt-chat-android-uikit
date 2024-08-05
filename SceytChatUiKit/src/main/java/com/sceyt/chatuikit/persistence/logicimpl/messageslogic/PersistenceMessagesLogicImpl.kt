@@ -949,11 +949,11 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun getNearMessagesDb(channelId: Long, messageId: Long, offset: Int, limit: Int): LoadNearData<MessageDb> {
-        val data = messageDao.getNearMessages(channelId, messageId, limit)
+        var data = messageDao.getNearMessages(channelId, messageId, limit)
         val messages = data.data
 
         if (offset == 0)
-            data.data = getPendingMessagesAndAddToList(channelId, messages)
+            data = data.copy(data = getPendingMessagesAndAddToList(channelId, messages))
 
         return data
     }
