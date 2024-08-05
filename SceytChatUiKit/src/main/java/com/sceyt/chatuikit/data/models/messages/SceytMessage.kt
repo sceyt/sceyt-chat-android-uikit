@@ -50,7 +50,6 @@ data class SceytMessage(
         val isSelected: Boolean = false
 ) : Parcelable, Cloneable {
 
-
     val isForwarded get() = (forwardingDetails?.messageId ?: 0L) > 0L
 
     // todo reply in thread

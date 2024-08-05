@@ -221,7 +221,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                 imageAttachment.isVisible = false
                 icFile.isVisible = false
             } else {
-                val attachment = parent.attachments?.getOrNull(0)
+                val attachment = parent.attachments.getOrNull(0)
                 icMsgBodyStartIcon.isVisible = attachment?.type == AttachmentTypeEnum.Voice.value()
                 when {
                     attachment?.type.isEqualsVideoOrImage() -> {
