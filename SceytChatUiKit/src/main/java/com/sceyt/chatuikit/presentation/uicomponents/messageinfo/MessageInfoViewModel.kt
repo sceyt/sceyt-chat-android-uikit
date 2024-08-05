@@ -88,8 +88,9 @@ class MessageInfoViewModel(
                         if (this is SceytResponse.Success) this.data else null
                     })?.let { message ->
 
-                this@MessageInfoViewModel.message = initMessageFiles(message)
-                _messageFlow.tryEmit(message)
+                val fillMessage = initMessageFiles(message)
+                this@MessageInfoViewModel.message = fillMessage
+                _messageFlow.tryEmit(fillMessage)
             }
         }
     }
