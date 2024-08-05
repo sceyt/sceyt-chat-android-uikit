@@ -460,12 +460,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 viewModelScope.launch(Dispatchers.Default) {
                     val user = ClientWrapper.currentUser ?: User(SceytChatUIKit.chatUIFacade.myId
                             ?: return@launch)
-                    messagesListView.getData().forEach { listItem ->
+                    val messages = messagesListView.getData()
+                    messages.forEachIndexed { index, listItem ->
                         (listItem as? MessageItem)?.message?.let { message ->
                             if (data.messageIds.contains(message.id)) {
-                                listItem.message = message.copy(userMarkers = message.userMarkers?.toMutableSet()?.apply {
+                                val updatedItem = listItem.copy(message = message.copy(userMarkers = message.userMarkers?.toMutableSet()?.apply {
                                     add(SceytMarker(message.id, user, data.name, data.createdAt))
-                                }?.toTypedArray())
+                                }?.toTypedArray()))
+                                messagesListView.updateItemAt(index, updatedItem)
                             }
                         }
                     }

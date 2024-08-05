@@ -146,6 +146,10 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
         notifyItemRangeInserted(messages.lastIndex, filteredItems.size)
     }
 
+    fun updateItemAt(index: Int, updatedItem: MessageItem) {
+        messages[index] = updatedItem
+    }
+
     fun notifyUpdate(messages: List<MessageListItem>, recyclerView: RecyclerView) {
         updateJob?.cancel()
         updateJob = recyclerView.context.asComponentActivity().lifecycleScope.launch {

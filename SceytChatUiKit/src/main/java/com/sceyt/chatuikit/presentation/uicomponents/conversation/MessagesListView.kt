@@ -381,12 +381,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateMessage(message: SceytMessage): Boolean {
         var foundToUpdate = false
-        for ((index, item) in messagesRV.getData().withIndex()) {
+        val data = messagesRV.getData()
+        for ((index, item) in data.withIndex()) {
             if (item is MessageItem && item.message.tid == message.tid) {
-                val newMessage = item.message.getUpdateMessage(message)
-                val diff = item.message.diff(newMessage)
-                item.message = newMessage
-                updateItem(index, item, diff)
+                val updatedItem = item.copy(message = item.message.getUpdateMessage(message))
+                val diff = item.message.diff(updatedItem.message)
+                messagesRV.updateItemAt(index, updatedItem)
+                updateItem(index, updatedItem, diff)
                 foundToUpdate = true
                 break
             }
@@ -395,10 +396,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateMessageSelection(message: SceytMessage) {
-        for ((index, item) in messagesRV.getData().withIndex()) {
+        val data = messagesRV.getData()
+        for ((index, item) in data.withIndex()) {
             if (item is MessageItem && item.message.tid == message.tid) {
-                item.message = item.message.copy(isSelected = message.isSelected)
-                updateItem(index, item, MessageDiff.DEFAULT_FALSE.copy(selectionChanged = true))
+                val updatedItem = item.copy(message = item.message.copy(isSelected = message.isSelected))
+                messagesRV.updateItemAt(index, updatedItem)
+                updateItem(index, updatedItem, MessageDiff.DEFAULT_FALSE.copy(selectionChanged = true))
                 break
             }
         }
@@ -428,22 +431,22 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         val data = messagesRV.getData().toMutableList()
         data.findIndexed { it is MessageItem && it.message.id == updateMessage.id }?.let { (index, item) ->
             val message = (item as MessageItem).message
-            val updatedMessage = message.getUpdateMessage(updateMessage)
-            item.message = updatedMessage
+            val updatedItem = item.copy(message = message.getUpdateMessage(updateMessage))
+            messagesRV.updateItemAt(index, updatedItem)
 
             if (updateMessage.state == MessageState.Deleted && message.state != MessageState.Deleted)
                 messagesRV.adapter?.notifyItemChanged(index)
             else
-                updateItem(index, item, message.diff(item.message))
+                updateItem(index, updatedItem, message.diff(updatedItem.message))
         }
 
         // Check reply message to update
         data.filter { it is MessageItem && it.message.parentMessage?.id == updateMessage.id }.forEach { item ->
-            data.findIndexed { it is MessageItem && it.message.id == (item as MessageItem).message.id }?.let {
-                val oldMessage = (it.second as MessageItem).message
-                val message = oldMessage.copy(parentMessage = updateMessage)
-                (it.second as MessageItem).message = message
-                updateItem(it.first, it.second, oldMessage.diff(message))
+            data.findIndexed { it is MessageItem && it.message.id == (item as MessageItem).message.id }?.let { (index, msg) ->
+                val oldMessage = (msg as MessageItem).message
+                val updatedItem = msg.copy(message = oldMessage.copy(parentMessage = updateMessage))
+                messagesRV.updateItemAt(index, updatedItem)
+                updateItem(index, updatedItem, oldMessage.diff(updatedItem.message))
             }
         }
     }
@@ -454,15 +457,17 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             binding.pageStateView.updateState(PageState.StateEmpty())
     }
 
-    internal fun updateReaction(data: SceytMessage) {
-        messagesRV.getData().findIndexed { it is MessageItem && it.message.id == data.id }?.let { (index, item) ->
+    internal fun updateReaction(sceytMessage: SceytMessage) {
+        val data = messagesRV.getData()
+        data.findIndexed { it is MessageItem && it.message.id == sceytMessage.id }?.let { (index, item) ->
             val message = (item as MessageItem).message
-            item.message = message.copy(
-                reactionTotals = data.reactionTotals,
-                userReactions = data.userReactions,
-                messageReactions = data.messageReactions
-            )
-            updateItem(index, item, message.diff(item.message))
+            val updatedItem = item.copy(message = message.copy(
+                reactionTotals = sceytMessage.reactionTotals,
+                userReactions = sceytMessage.userReactions,
+                messageReactions = sceytMessage.messageReactions
+            ))
+            messagesRV.updateItemAt(index, updatedItem)
+            updateItem(index, updatedItem, message.diff(updatedItem.message))
         }
     }
 
@@ -478,8 +483,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     if (item.message.id == id) {
                         val oldMessage = item.message
                         if (item.message.deliveryStatus < status) {
-                            item.message = item.message.copy(deliveryStatus = status)
-                            updateItem(index, item, oldMessage.diff(item.message))
+                            val updatedItem = item.copy(message = item.message.copy(deliveryStatus = status))
+                            messagesRV.updateItemAt(index, updatedItem)
+                            updateItem(index, item, oldMessage.diff(updatedItem.message))
                         }
                         break
                     }
@@ -523,30 +529,24 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun messageSendFailed(tid: Long) {
-        messagesRV.getData().findIndexed { it is MessageItem && it.message.tid == tid }?.let { (index, item) ->
+        val data = messagesRV.getData()
+        data.findIndexed { it is MessageItem && it.message.tid == tid }?.let { (index, item) ->
             val message = (item as MessageItem).message
-            item.message = message.copy(deliveryStatus = DeliveryStatus.Pending)
-            updateItem(index, item, message.diff(item.message))
+            val updatedItem = item.copy(message = item.message.copy(deliveryStatus = DeliveryStatus.Pending))
+            messagesRV.updateItemAt(index, updatedItem)
+            updateItem(index, updatedItem, message.diff(updatedItem.message))
         }
     }
 
     internal fun updateReplyCount(replyMessage: SceytMessage?) {
-        messagesRV.getData().findIndexed {
+        val data = messagesRV.getData()
+        data.findIndexed {
             it is MessageItem && it.message.id == replyMessage?.parentMessage?.id
         }?.let { (index, item) ->
             val message = (item as MessageItem).message
-            item.message = message.copy(replyCount = message.replyCount + 1)
-            updateItem(index, item, message.diff(item.message))
-        }
-    }
-
-    internal fun newReplyMessage(messageId: Long?) {
-        messagesRV.getData().findIndexed {
-            it is MessageItem && it.message.id == messageId
-        }?.let { (index, item) ->
-            val message = (item as MessageItem).message
-            item.message = message.copy(replyCount = message.replyCount + 1)
-            updateItem(index, item, message.diff(item.message))
+            val updatedItem = item.copy(message = item.message.copy(replyCount = message.replyCount + 1))
+            messagesRV.updateItemAt(index, updatedItem)
+            updateItem(index, item, message.diff(updatedItem.message))
         }
     }
 
@@ -689,10 +689,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 (holder as? BaseMsgViewHolder)?.cancelSelectableState()
             }
         }
-        messagesRV.getData().forEach { item ->
+        val data = messagesRV.getData()
+        data.forEachIndexed { index, item ->
             if (item is MessageItem)
-                item.message = item.message.copy(isSelected = false)
+                messagesRV.updateItemAt(index, item.copy(message = item.message.copy(isSelected = false)))
         }
+    }
+
+    fun updateItemAt(index: Int, item: MessageItem) {
+        messagesRV.updateItemAt(index, item)
     }
 
     fun setMultiselectDestination(map: Map<Long, SceytMessage>) {
