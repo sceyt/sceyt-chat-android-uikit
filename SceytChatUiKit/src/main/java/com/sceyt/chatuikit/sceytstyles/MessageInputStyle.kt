@@ -8,7 +8,11 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
+import com.sceyt.chatuikit.presentation.extensions.isTextMessage
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.MessageInputView
+import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
+import com.sceyt.chatuikit.theme.MessageBodyFormatter
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
@@ -26,6 +30,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @param inputHintTextColor Color for the input hint text, default is [SceytChatUIKitTheme.textFootnoteColor]
  * @param inputBackgroundColor Background color for the input view, default is [SceytChatUIKitTheme.surface1Color]
  * @param inputHintText Hint text for the input, default is [R.string.sceyt_write_a_message]
+ * @param replyMessageBodyFormatter Formatter for the reply message body, default is [MessageBodyFormatter] that returns the formatted body of the message
  * */
 data class MessageInputStyle(
         var attachmentIcon: Drawable?,
@@ -40,7 +45,8 @@ data class MessageInputStyle(
         @ColorInt var inputTextColor: Int,
         @ColorInt var inputHintTextColor: Int,
         @ColorInt var inputBackgroundColor: Int,
-        var inputHintText: String
+        var inputHintText: String,
+        val replyMessageBodyFormatter: MessageBodyFormatter
 ) {
 
     companion object {
@@ -100,6 +106,12 @@ data class MessageInputStyle(
             val enableMention = typedArray.getBoolean(R.styleable.MessageInputView_sceytMessageInputEnableMention,
                 true)
 
+            val replyMessageBodyFormatter = MessageBodyFormatter { context, message ->
+                if (message.isTextMessage())
+                    MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message)
+                else message.getFormattedBody(context)
+            }
+
             typedArray.recycle()
 
             return MessageInputStyle(
@@ -115,7 +127,8 @@ data class MessageInputStyle(
                 sendIconBackgroundColor = sendIconBackgroundColor,
                 enableVoiceRecord = enableVoiceRecord,
                 enableSendAttachment = enableSendAttachment,
-                enableMention = enableMention
+                enableMention = enableMention,
+                replyMessageBodyFormatter = replyMessageBodyFormatter
             ).let { styleCustomizer.apply(context, it) }
         }
     }

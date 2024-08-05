@@ -561,7 +561,7 @@ class MessageInputView @JvmOverloads constructor(
             (parent as? ViewGroup)?.addView(MentionUserContainer(context).apply {
                 mentionUserContainer = initWithMessageInputView(this@MessageInputView).also {
                     setUserClickListener {
-                      clickListeners.onSelectedUserToMentionClick(it)
+                        clickListeners.onSelectedUserToMentionClick(it)
                     }
                 }
             })
@@ -603,7 +603,7 @@ class MessageInputView @JvmOverloads constructor(
             editMessage = null
             replyMessage = message
             binding.layoutReplyOrEditMessage.isVisible = true
-            editOrReplyMessageFragment?.replyMessage(message, needMessagesListViewStyleCallback())
+            editOrReplyMessageFragment?.replyMessage(message, style, needMessagesListViewStyleCallback())
 
             if (!initWithDraft) {
                 context.showSoftInput(binding.messageInput)

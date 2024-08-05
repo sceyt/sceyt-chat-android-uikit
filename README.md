@@ -43,7 +43,7 @@ This will enable your project to use libraries from Maven Central.
 
 ```groovy
 dependencies {
-    implementation 'com.sceyt:sceyt-chat-android-uikit:1.6.3'
+    implementation 'com.sceyt:sceyt-chat-android-uikit:1.6.4'
 }
 ```
 ## Usage
