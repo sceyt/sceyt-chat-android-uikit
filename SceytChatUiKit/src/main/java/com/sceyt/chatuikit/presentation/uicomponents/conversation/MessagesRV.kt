@@ -350,4 +350,9 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     fun getMessagesAdapter() = if (::mAdapter.isInitialized) mAdapter else null
+
+    fun updateItemAt(index: Int, updatedItem: MessageListItem.MessageItem) {
+        if (::mAdapter.isInitialized)
+            mAdapter.updateItemAt(index, updatedItem)
+    }
 }
