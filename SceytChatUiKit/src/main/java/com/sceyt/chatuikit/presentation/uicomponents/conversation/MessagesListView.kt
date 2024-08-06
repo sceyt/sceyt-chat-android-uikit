@@ -36,7 +36,6 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.differs.diff
-import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
@@ -260,21 +259,28 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun showModifyReactionsPopup(view: View, message: SceytMessage): PopupReactions? {
         if (message.deliveryStatus == DeliveryStatus.Pending) return null
-        val reactions = message.messageReactions?.map { it.reaction.key }?.toArrayList()
-                ?: arrayListOf()
-        if (reactions.size < SceytChatUIKit.config.maxSelfReactionsSize)
-            reactions.addAll(SceytChatUIKit.theme.defaultReactions.minus(reactions.toSet())
-                .take(SceytChatUIKit.config.maxSelfReactionsSize - reactions.size))
+        val maxSize = SceytChatUIKit.config.maxSelfReactionsSize
+        val reactions = message.messageReactions
+            ?.sortedByDescending { it.reaction.containsSelf }
+            ?.map { it.reaction.key }
+            ?.toMutableList() ?: mutableListOf()
 
-        return PopupReactions(context).showPopup(view, message, reactions, object : PopupReactionsAdapter.OnItemClickListener {
-            override fun onReactionClick(reaction: ReactionItem.Reaction) {
-                this@MessagesListView.onAddOrRemoveReaction(reaction, message)
-            }
+        if (reactions.size < maxSize) {
+            reactions.addAll(SceytChatUIKit.theme.defaultReactions
+                .minus(reactions.toSet())
+                .take(maxSize - reactions.size))
+        }
 
-            override fun onAddClick() {
-                onAddReactionClick(view, message)
-            }
-        }).also {
+        return PopupReactions(context).showPopup(view, message, reactions.take(maxSize),
+            object : PopupReactionsAdapter.OnItemClickListener {
+                override fun onReactionClick(reaction: ReactionItem.Reaction) {
+                    this@MessagesListView.onAddOrRemoveReaction(reaction, message)
+                }
+
+                override fun onAddClick() {
+                    onAddReactionClick(view, message)
+                }
+            }).also {
             reactionsPopupWindow = it
             it.setOnDismissListener {
                 Handler(Looper.getMainLooper()).postDelayed({ reactionsPopupWindow = null }, 100)
@@ -381,12 +387,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateMessage(message: SceytMessage): Boolean {
         var foundToUpdate = false
+        SceytLog.i(TAG, "Message updated: id ${message.id}, tid ${message.tid}," +
+                " body ${message.body}, deliveryStatus ${message.deliveryStatus}")
         val data = messagesRV.getData()
         for ((index, item) in data.withIndex()) {
             if (item is MessageItem && item.message.tid == message.tid) {
                 val updatedItem = item.copy(message = item.message.getUpdateMessage(message))
                 val diff = item.message.diff(updatedItem.message)
                 messagesRV.updateItemAt(index, updatedItem)
+                SceytLog.i(TAG, "Found to update: id ${item.message.id}, tid ${item.message.tid}," +
+                        " diff ${diff.statusChanged}, newStatus ${message.deliveryStatus}, index $index, size ${messagesRV.getData().size}")
                 updateItem(index, updatedItem, diff)
                 foundToUpdate = true
                 break
