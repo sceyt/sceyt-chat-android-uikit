@@ -357,10 +357,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun updateItem(index: Int, item: MessageListItem, diff: MessageDiff) {
         val message = (item as? MessageItem)?.message ?: return
         (messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMsgViewHolder)?.let {
-            SceytLog.i("StatusIssueTag", "updateItem: found by itemId: ${item.getItemId()}, msgId-> ${message.id}, diff ${diff.statusChanged}")
+            SceytLog.i("StatusIssueTag", "updateItem: found by itemId: ${item.getItemId()}, msgId-> ${message.id}, diff ${diff.statusChanged}, status ${message.deliveryStatus}")
             it.bind(item, diff)
         } ?: run {
-            SceytLog.i("StatusIssueTag", "updateItem: notifyItemChanged by index $index, diff ${diff.statusChanged}, msgId-> ${message.id}")
+            SceytLog.i("StatusIssueTag", "updateItem: notifyItemChanged by index $index, diff ${diff.statusChanged}, msgId-> ${message.id}, status ${message.deliveryStatus}")
             messagesRV.adapter?.notifyItemChanged(index, diff)
         }
     }
@@ -484,25 +484,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun updateViewState(state: PageState, enableErrorSnackBar: Boolean = true) {
         binding.pageStateView.updateState(state, messagesRV.isEmpty(), enableErrorSnackBar = enableErrorSnackBar)
-    }
-
-    internal fun updateMessagesStatus(status: DeliveryStatus, ids: MutableList<Long>) {
-        val data = messagesRV.getData()
-        ids.forEach { id ->
-            for ((index: Int, item: MessageListItem) in data.withIndex()) {
-                if (item is MessageItem) {
-                    if (item.message.id == id) {
-                        val oldMessage = item.message
-                        if (item.message.deliveryStatus < status) {
-                            val updatedItem = item.copy(message = item.message.copy(deliveryStatus = status))
-                            messagesRV.updateItemAt(index, updatedItem)
-                            updateItem(index, item, oldMessage.diff(updatedItem.message))
-                        }
-                        break
-                    }
-                }
-            }
-        }
     }
 
     internal fun updateProgress(data: TransferData, updateRecycler: Boolean) {
