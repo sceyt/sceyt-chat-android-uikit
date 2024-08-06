@@ -394,14 +394,14 @@ class MessageListViewModel(
         _onScrollToReplyMessageLiveData.postValue(message.parentMessage ?: return)
     }
 
-    fun prepareToPauseOrResumeUpload(item: FileListItem) {
-        val defaultState = if (!item.sceytMessage.incoming && item.sceytMessage.deliveryStatus == DeliveryStatus.Pending
-                && !item.sceytMessage.isForwarded)
+    fun prepareToPauseOrResumeUpload(item: FileListItem, message: SceytMessage) {
+        val defaultState = if (!message.incoming && message.deliveryStatus == DeliveryStatus.Pending
+                && !message.isForwarded)
             PendingUpload else PendingDownload
 
         when (val state = item.file.transferState ?: return) {
             PendingUpload, ErrorUpload -> {
-                SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid, channel.id)
+                SendAttachmentWorkManager.schedule(application, item.file.messageTid, channel.id)
             }
 
             PendingDownload, ErrorDownload -> {
@@ -411,34 +411,35 @@ class MessageListViewModel(
             PauseDownload -> {
                 val task = fileTransferService.findTransferTask(item.file)
                 if (task != null)
-                    fileTransferService.resume(item.sceytMessage.tid, item.file, state)
+                    fileTransferService.resume(item.file.messageTid, item.file, state)
                 else fileTransferService.download(item.file, FileTransferHelper.createTransferTask(item.file, false))
             }
 
             PauseUpload -> {
+                val messageTid = item.file.messageTid
                 val task = fileTransferService.findTransferTask(item.file)
                 if (task != null)
-                    fileTransferService.resume(item.sceytMessage.tid, item.file, state)
+                    fileTransferService.resume(messageTid, item.file, state)
                 else {
                     // Update transfer state to Uploading, otherwise SendAttachmentWorkManager will
                     // not start uploading.
                     viewModelScope.launch(Dispatchers.IO) {
                         attachmentInteractor.updateTransferDataByMsgTid(TransferData(
-                            item.sceytMessage.tid, item.file.progressPercent
+                            messageTid, item.file.progressPercent
                                     ?: 0f, Uploading, item.file.filePath, item.file.url))
                     }
 
-                    SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid, channel.id, ExistingWorkPolicy.REPLACE)
+                    SendAttachmentWorkManager.schedule(application, messageTid, channel.id, ExistingWorkPolicy.REPLACE)
                 }
             }
 
             Uploading, Downloading, Preparing, FilePathChanged, WaitingToUpload -> {
-                fileTransferService.pause(item.sceytMessage.tid, item.file, state)
+                fileTransferService.pause(item.file.messageTid, item.file, state)
             }
 
             Uploaded, Downloaded, ThumbLoaded -> {
                 val transferData = TransferData(
-                    item.sceytMessage.tid, item.file.progressPercent ?: 0f,
+                    item.file.messageTid, item.file.progressPercent ?: 0f,
                     item.file.transferState ?: defaultState, item.file.filePath, item.file.url)
                 FileTransferHelper.emitAttachmentTransferUpdate(transferData)
             }
@@ -645,7 +646,7 @@ class MessageListViewModel(
                                      initNameAndAvatar: Boolean = false): SceytMessage {
         return sceytMessage.copy(
             isGroup = this@MessageListViewModel.isGroup,
-            files = sceytMessage.attachments?.map { it.toFileListItem(sceytMessage) },
+            files = sceytMessage.attachments?.map { it.toFileListItem() },
             shouldShowAvatarAndName = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
                 shouldShowAvatarAndName(sceytMessage, prevMessage)
             else sceytMessage.shouldShowAvatarAndName,

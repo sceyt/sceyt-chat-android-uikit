@@ -200,6 +200,6 @@ fun SceytMessage.getUpdateMessage(message: SceytMessage): SceytMessage {
         pendingReactions = message.pendingReactions,
         bodyAttributes = message.bodyAttributes,
         messageReactions = message.messageReactions,
-        files = message.files?.map { it.sceytMessage = this; it }
+        files = message.files
     )
 }

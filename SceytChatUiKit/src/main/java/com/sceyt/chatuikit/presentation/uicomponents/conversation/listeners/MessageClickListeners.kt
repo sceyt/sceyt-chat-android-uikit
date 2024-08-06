@@ -42,11 +42,11 @@ sealed interface MessageClickListeners {
     }
 
     fun interface AttachmentClickListener : MessageClickListeners {
-        fun onAttachmentClick(view: View, item: FileListItem)
+        fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage)
     }
 
     fun interface AttachmentLongClickListener : MessageClickListeners {
-        fun onAttachmentLongClick(view: View, item: FileListItem)
+        fun onAttachmentLongClick(view: View, item: FileListItem, message: SceytMessage)
     }
 
     fun interface MentionClickListener : MessageClickListeners {
@@ -54,7 +54,7 @@ sealed interface MessageClickListeners {
     }
 
     fun interface AttachmentLoaderClickListener : MessageClickListeners {
-        fun onAttachmentLoaderClick(view: View, item: FileListItem)
+        fun onAttachmentLoaderClick(view: View, item: FileListItem, message: SceytMessage)
     }
 
     fun interface LinkClickListener : MessageClickListeners {

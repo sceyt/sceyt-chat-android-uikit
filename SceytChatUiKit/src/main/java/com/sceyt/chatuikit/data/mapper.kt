@@ -6,7 +6,6 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 
 
@@ -19,12 +18,12 @@ fun SceytMember.toMember(): Member {
     return Member(role, user)
 }
 
-fun SceytAttachment.toFileListItem(message: SceytMessage): FileListItem {
+fun SceytAttachment.toFileListItem(): FileListItem {
     return when (type) {
-        AttachmentTypeEnum.Image.value() -> FileListItem.Image(this, message)
-        AttachmentTypeEnum.Video.value() -> FileListItem.Video(this, message)
-        AttachmentTypeEnum.Voice.value() -> FileListItem.Voice(this, message)
-        else -> FileListItem.File(this, message)
+        AttachmentTypeEnum.Image.value() -> FileListItem.Image(this)
+        AttachmentTypeEnum.Video.value() -> FileListItem.Video(this)
+        AttachmentTypeEnum.Voice.value() -> FileListItem.Voice(this)
+        else -> FileListItem.File(this)
     }
 }
 

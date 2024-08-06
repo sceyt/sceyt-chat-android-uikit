@@ -164,22 +164,22 @@ open class MessageInfoFragment : Fragment() {
 
     protected open fun getMessageInfoViewProvider(): MessageInfoViewProvider {
         return MessageInfoViewProvider(requireContext()).also { provider ->
-            provider.setMessageListener(MessageClickListeners.AttachmentClickListener { _, item ->
-                onAttachmentClick(item)
+            provider.setMessageListener(MessageClickListeners.AttachmentClickListener { _, item, message ->
+                onAttachmentClick(item, message)
             })
 
             provider.setNeedMediaDataCallback { viewModel.needMediaInfo(it) }
         }
     }
 
-    protected open fun onAttachmentClick(item: FileListItem) {
+    protected open fun onAttachmentClick(item: FileListItem, message: SceytMessage) {
         when (item) {
             is FileListItem.Image -> {
-                SceytMediaActivity.openMediaView(requireContext(), item.file, item.sceytMessage.user, item.message.channelId)
+                SceytMediaActivity.openMediaView(requireContext(), item.file, message.user, message.channelId)
             }
 
             is FileListItem.Video -> {
-                SceytMediaActivity.openMediaView(requireContext(), item.file, item.sceytMessage.user, item.message.channelId)
+                SceytMediaActivity.openMediaView(requireContext(), item.file, message.user, message.channelId)
             }
 
             else -> item.file.openFile(requireContext())

@@ -102,8 +102,10 @@ class OutAttachmentsMsgViewHolder(
 
                 setRecycledViewPool(viewPoolFiles)
                 itemAnimator = null
-                adapter = MessageFilesAdapter(attachments,
-                    FilesViewHolderFactory(context = context, messageListeners, needMediaDataCallback).apply {
+                adapter = MessageFilesAdapter(
+                    message = message,
+                    files = attachments,
+                    viewHolderFactory = FilesViewHolderFactory(context = context, messageListeners, needMediaDataCallback).apply {
                         setStyle(style)
                     }).also { filedAdapter = it }
             }

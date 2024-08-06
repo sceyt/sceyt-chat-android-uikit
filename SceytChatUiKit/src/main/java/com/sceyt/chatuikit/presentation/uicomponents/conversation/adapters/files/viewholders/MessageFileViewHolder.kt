@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders
 
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytMessageFileItemBinding
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -33,26 +34,26 @@ class MessageFileViewHolder(
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
+) : BaseMessageFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
 
     init {
         binding.applyStyle()
 
         binding.root.setOnClickListener {
-            messageListeners?.onAttachmentClick(it, fileItem)
+            messageListeners?.onAttachmentClick(it, fileItem, message)
         }
 
         binding.root.setOnLongClickListener {
-            messageListeners?.onAttachmentLongClick(it, fileItem)
+            messageListeners?.onAttachmentLongClick(it, fileItem, message)
             return@setOnLongClickListener true
         }
 
         binding.loadProgress.setOnClickListener {
-            messageListeners?.onAttachmentLoaderClick(it, fileItem)
+            messageListeners?.onAttachmentLoaderClick(it, fileItem, message)
         }
     }
 
-    override fun bind(item: FileListItem) {
+    override fun bind(item: FileListItem, message: SceytMessage) {
         super.bind(item)
         val file = (item as? FileListItem.File)?.file ?: return
         setListener()

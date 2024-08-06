@@ -106,6 +106,9 @@ abstract class BaseMsgViewHolder(private val view: View,
             highlight()
     }
 
+    protected val requireMessageItem get() = messageListItem as MessageListItem.MessageItem
+    protected val requireMessage get() = (messageListItem as MessageListItem.MessageItem).message
+
     /** The Pair's param ViewGroup is layout bubble, the param Boolean when true, that mean the
      *  layout bubble with will resize depend reactions. */
     open val layoutBubbleConfig: Pair<ViewGroup, Boolean>? = null
