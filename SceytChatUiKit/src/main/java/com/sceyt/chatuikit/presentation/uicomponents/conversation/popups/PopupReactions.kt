@@ -74,7 +74,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
             ReactionItem.Reaction(SceytReactionTotal(it, containsSelf = containsSelf), message, reactionItem?.isPending
                     ?: false)
         }.run {
-            if ((message.messageReactions?.size ?: 0) < SceytChatUIKit.config.maxSelfReactionsSize)
+            if ((message.userReactions?.size ?: 0) < SceytChatUIKit.config.maxSelfReactionsSize)
                 plus(ReactionItem.Other(message))
             else this
         }

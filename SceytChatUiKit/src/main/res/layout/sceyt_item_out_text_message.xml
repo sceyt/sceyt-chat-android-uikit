@@ -125,7 +125,6 @@
         android:layout_marginBottom="2dp"
         android:layout="@layout/sceyt_message_reactions_recycler_view"
         android:visibility="gone"
-        app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
         app:layout_constraintHorizontal_bias="0"

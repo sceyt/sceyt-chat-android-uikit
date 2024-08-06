@@ -7,7 +7,16 @@ import com.sceyt.chatuikit.presentation.common.SelectableItem
 sealed class ReactionItem : SelectableItem() {
     data class Reaction(val reaction: SceytReactionTotal,
                         val message: SceytMessage,
-                        var isPending: Boolean) : ReactionItem()
+                        var isPending: Boolean) : ReactionItem() {
+
+        override fun equals(other: Any?): Boolean {
+            return (other as Reaction).reaction == reaction
+        }
+
+        override fun hashCode(): Int {
+            return reaction.hashCode()
+        }
+    }
 
     data class Other(val message: SceytMessage) : ReactionItem()
 }
