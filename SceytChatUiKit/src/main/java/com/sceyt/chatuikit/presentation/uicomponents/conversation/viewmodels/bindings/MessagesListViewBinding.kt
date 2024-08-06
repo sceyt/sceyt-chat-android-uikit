@@ -690,7 +690,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
             is MessageCommandEvent.AttachmentLoaderClick -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    prepareToPauseOrResumeUpload(event.item)
+                    prepareToPauseOrResumeUpload(event.item, event.message)
                 }
             }
 
@@ -743,9 +743,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             onMessageDisplayed(it)
     }
 
-    messagesListView.setVoicePlayPauseListener { fileItem, playing ->
+    messagesListView.setVoicePlayPauseListener { _, message, playing ->
         if (playing)
-            onVocePlaying(fileItem.sceytMessage)
+            onVocePlaying(message)
     }
 }
 

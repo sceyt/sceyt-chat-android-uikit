@@ -101,7 +101,7 @@ class IncAttachmentsMsgViewHolder(
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
 
     private fun setFilesAdapter(message: SceytMessage) {
-        val attachments = ArrayList(message.files ?: return)
+        val attachments = message.files ?: return
 
         initFilesRecyclerView(message, binding.rvFiles)
 
@@ -111,7 +111,7 @@ class IncAttachmentsMsgViewHolder(
 
                 setRecycledViewPool(viewPoolFiles)
                 itemAnimator = null
-                adapter = MessageFilesAdapter(attachments,
+                adapter = MessageFilesAdapter(message, attachments,
                     FilesViewHolderFactory(context = context, messageListeners, needMediaDataCallback).apply {
                         setStyle(style)
                     }).also { filedAdapter = it }

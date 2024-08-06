@@ -181,15 +181,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
 
-            override fun onAttachmentClick(view: View, item: FileListItem) {
-                checkMaybeInMultiSelectMode(view, item.sceytMessage) {
-                    clickListeners.onAttachmentClick(view, item)
+            override fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage) {
+                checkMaybeInMultiSelectMode(view, message) {
+                    clickListeners.onAttachmentClick(view, item, message)
                 }
             }
 
-            override fun onAttachmentLongClick(view: View, item: FileListItem) {
-                checkMaybeInMultiSelectMode(view, item.sceytMessage) {
-                    clickListeners.onAttachmentLongClick(view, item)
+            override fun onAttachmentLongClick(view: View, item: FileListItem, message: SceytMessage) {
+                checkMaybeInMultiSelectMode(view, message) {
+                    clickListeners.onAttachmentLongClick(view, item, message)
                 }
             }
 
@@ -197,9 +197,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 clickListeners.onMentionClick(view, userId)
             }
 
-            override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
-                checkMaybeInMultiSelectMode(view, item.sceytMessage) {
-                    clickListeners.onAttachmentLoaderClick(view, item)
+            override fun onAttachmentLoaderClick(view: View, item: FileListItem, message: SceytMessage) {
+                checkMaybeInMultiSelectMode(view, message) {
+                    clickListeners.onAttachmentLoaderClick(view, item, message)
                 }
             }
 
@@ -339,8 +339,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             reactionClickListeners.onAddReaction(message, reaction.reaction.key)
     }
 
-    private fun onAttachmentLoaderClick(item: FileListItem) {
-        messageCommandEventListener?.invoke(MessageCommandEvent.AttachmentLoaderClick(item))
+    private fun onAttachmentLoaderClick(item: FileListItem, message: SceytMessage) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.AttachmentLoaderClick(message, item))
     }
 
     private fun showAddEmojiDialog(message: SceytMessage) {
@@ -565,7 +565,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.setMessageDisplayedListener(listener)
     }
 
-    internal fun setVoicePlayPauseListener(listener: (FileListItem, playing: Boolean) -> Unit) {
+    internal fun setVoicePlayPauseListener(listener: (FileListItem, SceytMessage, playing: Boolean) -> Unit) {
         messagesRV.setVoicePlayPauseListener(listener)
     }
 
@@ -821,30 +821,30 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             showReactionActionsPopup(view, item, message)
     }
 
-    override fun onAttachmentClick(view: View, item: FileListItem) {
+    override fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage) {
         when (item) {
             is FileListItem.Image -> {
-                SceytMediaActivity.openMediaView(context, item.file, item.sceytMessage.user, item.message.channelId)
+                SceytMediaActivity.openMediaView(context, item.file, message.user, message.channelId)
             }
 
             is FileListItem.Video -> {
-                SceytMediaActivity.openMediaView(context, item.file, item.sceytMessage.user, item.message.channelId)
+                SceytMediaActivity.openMediaView(context, item.file, message.user, message.channelId)
             }
 
             else -> item.file.openFile(context)
         }
     }
 
-    override fun onAttachmentLongClick(view: View, item: FileListItem) {
-        clickListeners.onMessageLongClick(view, MessageItem(item.sceytMessage))
+    override fun onAttachmentLongClick(view: View, item: FileListItem, message: SceytMessage) {
+        clickListeners.onMessageLongClick(view, MessageItem(message))
     }
 
     override fun onMentionClick(view: View, userId: String) {
         messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(view, userId))
     }
 
-    override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
-        onAttachmentLoaderClick(item)
+    override fun onAttachmentLoaderClick(view: View, item: FileListItem, message: SceytMessage) {
+        onAttachmentLoaderClick(item, message)
     }
 
     override fun onLinkClick(view: View, item: MessageItem) {

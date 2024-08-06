@@ -254,7 +254,7 @@ class MessageInfoViewModel(
 
     private fun initMessageFiles(sceytMessage: SceytMessage): SceytMessage {
         return sceytMessage.copy(
-            files = sceytMessage.attachments?.map { it.toFileListItem(sceytMessage) }
+            files = sceytMessage.attachments?.map { it.toFileListItem() }
         )
     }
 

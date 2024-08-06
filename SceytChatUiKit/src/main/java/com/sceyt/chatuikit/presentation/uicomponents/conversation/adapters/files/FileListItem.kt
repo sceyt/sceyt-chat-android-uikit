@@ -2,34 +2,26 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.file
 
 import android.os.Parcelable
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import kotlinx.parcelize.Parcelize
 
 
 sealed class FileListItem : AttachmentDataItem, Parcelable {
-    lateinit var sceytMessage: SceytMessage
 
     private constructor() : super()
 
-    constructor(file: SceytAttachment, sceytMessage: SceytMessage) : super(file) {
-        this.sceytMessage = sceytMessage
-    }
+    constructor(file: SceytAttachment) : super(file)
 
     @Parcelize
-    data class File(val attachment: SceytAttachment,
-                    val message: SceytMessage) : FileListItem(attachment, message)
+    data class File(val attachment: SceytAttachment) : FileListItem(attachment)
 
     @Parcelize
-    data class Image(val attachment: SceytAttachment,
-                     val message: SceytMessage) : FileListItem(attachment, message)
+    data class Image(val attachment: SceytAttachment) : FileListItem(attachment)
 
     @Parcelize
-    data class Video(val attachment: SceytAttachment,
-                     val message: SceytMessage) : FileListItem(attachment, message)
+    data class Video(val attachment: SceytAttachment) : FileListItem(attachment)
 
     @Parcelize
-    data class Voice(val attachment: SceytAttachment,
-                     val message: SceytMessage) : FileListItem(attachment, message)
+    data class Voice(val attachment: SceytAttachment) : FileListItem(attachment)
 
     @Parcelize
     data object LoadingMoreItem : FileListItem()

@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getFirstVisibleItemPosition
@@ -287,7 +288,7 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         viewHolderFactory.setMessageDisplayedListener(listener)
     }
 
-    fun setVoicePlayPauseListener(listener: (FileListItem, playing: Boolean) -> Unit) {
+    fun setVoicePlayPauseListener(listener: (FileListItem, SceytMessage, playing: Boolean) -> Unit) {
         viewHolderFactory.setVoicePlayPauseListener(listener)
     }
 
