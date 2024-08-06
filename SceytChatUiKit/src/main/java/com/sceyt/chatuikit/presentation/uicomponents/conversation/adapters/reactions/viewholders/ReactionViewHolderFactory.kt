@@ -2,14 +2,13 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reac
 
 import android.content.Context
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemReactionBinding
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 
 class ReactionViewHolderFactory(context: Context,
-                                private val onReactionClickListener: (View, ReactionItem.Reaction) -> Unit) {
+                                private val onReactionClickListener: MessageClickListeners.ReactionClickListener?) {
 
     private val layoutInflater = LayoutInflater.from(context)
 
