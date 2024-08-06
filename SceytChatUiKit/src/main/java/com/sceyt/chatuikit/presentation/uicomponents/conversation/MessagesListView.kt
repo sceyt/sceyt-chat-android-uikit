@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.databinding.SceytMessagesListViewBinding
+import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.awaitAnimationEnd
 import com.sceyt.chatuikit.extensions.awaitToScrollFinish
@@ -611,6 +612,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     internal fun getMessageCommandEventListener() = messageCommandEventListener
 
+    internal fun updateItemAt(index: Int, item: MessageItem) {
+        messagesRV.updateItemAt(index, item)
+    }
+
     fun hideLoadingPrev() {
         messagesRV.hideLoadingPrevItem()
     }
@@ -704,10 +709,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             if (item is MessageItem)
                 messagesRV.updateItemAt(index, item.copy(message = item.message.copy(isSelected = false)))
         }
-    }
-
-    fun updateItemAt(index: Int, item: MessageItem) {
-        messagesRV.updateItemAt(index, item)
     }
 
     fun setMultiselectDestination(map: Map<Long, SceytMessage>) {
