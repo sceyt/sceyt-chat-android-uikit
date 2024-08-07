@@ -1,8 +1,11 @@
 package com.sceyt.chatuikit.sceytconfigs
 
 import androidx.annotation.IntRange
+import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.logger.SceytLogLevel
+import com.sceyt.chatuikit.logger.SceytLogger
 
-data class SceytChatUIKitConfig(
+class SceytChatUIKitConfig(
         @IntRange(1, 50) val channelsLoadSize: Int = 20,
         @IntRange(1, 50) val channelMembersLoadSize: Int = 30,
         @IntRange(1, 50) val usersLoadSize: Int = 30,
@@ -14,8 +17,13 @@ data class SceytChatUIKitConfig(
         val sortChannelsBy: ChannelSortType = ChannelSortType.ByLastMsg,
         val presenceStatusText: String = "",
         val uploadNotificationClickHandleData: UploadNotificationClickHandleData? = null,
-        val shouldHardDeleteMessageForAll: Boolean = false
-)
+        val shouldHardDeleteMessageForAll: Boolean = false,
+) {
+
+    fun setLogger(logLevel: SceytLogLevel, logger: SceytLogger) {
+        SceytLog.setLogger(logLevel, logger)
+    }
+}
 
 enum class ChannelSortType {
     ByLastMsg,

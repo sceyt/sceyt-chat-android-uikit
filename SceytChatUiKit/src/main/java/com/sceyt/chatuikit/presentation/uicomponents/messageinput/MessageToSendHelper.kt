@@ -22,6 +22,7 @@ import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toMetadata
 import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
+import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.actionlisteners.InputActionsListener
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MentionAnnotation
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper
@@ -29,8 +30,8 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyl
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyler
 import java.io.File
 
-class MessageToSendHelper(private val context: Context) {
-    private var messageInputActionCallback: MessageInputView.MessageInputActionCallback? = null
+class MessageToSendHelper(private val context: Context,
+                          private val listeners: InputActionsListener.InputActionListeners) {
 
     fun sendMessage(allAttachments: List<Attachment>, body: CharSequence?, editMessage: SceytMessage?,
                     replyMessage: SceytMessage?, replyThreadMessageId: Long?, linkDetails: LinkPreviewDetails?) {
@@ -50,10 +51,10 @@ class MessageToSendHelper(private val context: Context) {
 
                     messages.add(message)
                 }
-                messageInputActionCallback?.sendMessages(messages, linkDetails)
+                listeners.sendMessages(messages, linkDetails)
             } else {
                 val attachment = if (link != null) arrayOf(link) else arrayOf()
-                messageInputActionCallback?.sendMessage(buildMessage(replacedBody, attachment, true,
+                listeners.sendMessage(buildMessage(replacedBody, attachment, true,
                     replyMessage, replyThreadMessageId), linkDetails)
             }
         }
@@ -132,7 +133,7 @@ class MessageToSendHelper(private val context: Context) {
         message.mentionedUsers = data.second
         message.bodyAttributes = data.first
 
-        messageInputActionCallback?.sendEditMessage(message, linkDetails)
+        listeners.sendEditMessage(message, linkDetails)
         return true
     }
 
@@ -195,9 +196,5 @@ class MessageToSendHelper(private val context: Context) {
                 .build()
         }
         return null
-    }
-
-    fun setInputActionCallback(callback: MessageInputView.MessageInputActionCallback) {
-        messageInputActionCallback = callback
     }
 }
