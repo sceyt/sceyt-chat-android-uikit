@@ -40,6 +40,7 @@ import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.filetransfer.ThumbFor
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
+import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Downloaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PauseUpload
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PendingUpload
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Preparing
@@ -74,6 +75,8 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.popups.PopupRe
 import com.sceyt.chatuikit.presentation.uicomponents.forward.SceytForwardActivity
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : ConstraintLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -487,8 +490,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun updateProgress(data: TransferData, updateRecycler: Boolean) {
-        val messages = messagesRV.getData()
-        ArrayList(messages).findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let { (index, it) ->
+        val messages = ArrayList(messagesRV.getData())
+        messages.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let { (index, it) ->
             val predicate: (SceytAttachment) -> Boolean = when (data.state) {
                 Uploading, PendingUpload, PauseUpload, Uploaded, Preparing, WaitingToUpload -> { attachment ->
                     attachment.messageTid == data.messageTid
@@ -517,6 +520,19 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
             if (updateRecycler)
                 updateItem(index, it, MessageDiff.DEFAULT_FALSE.copy(filesChanged = true))
+        }
+
+        if (data.state == Downloaded) {
+            messages.findIndexed { item ->
+                item is MessageItem && item.message.parentMessage?.tid == data.messageTid
+            }?.let { (index, item) ->
+                (item as MessageItem).message.parentMessage?.attachments?.find { it.url == data.url }?.let {
+                    it.filePath = data.filePath
+
+                    if (updateRecycler)
+                        updateItem(index, item, MessageDiff.DEFAULT_FALSE.copy(replyCountChanged = true))
+                }
+            }
         }
     }
 

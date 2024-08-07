@@ -7,16 +7,16 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-data class SceytAttachment(
+class SceytAttachment(
         val id: Long?,
         val messageId: Long,
         val messageTid: Long,
         val userId: String?,
         val name: String,
         val type: String,
+        val createdAt: Long,
         var metadata: String?,
         var fileSize: Long,
-        val createdAt: Long,
         var url: String?,
         var filePath: String?,
         var transferState: TransferState?,
@@ -26,8 +26,22 @@ data class SceytAttachment(
 ) : Parcelable, Cloneable {
 
     public override fun clone(): SceytAttachment {
-        return SceytAttachment(id, messageId, messageTid, userId, name, type, metadata, fileSize,
-            createdAt, url, filePath, transferState, progressPercent, originalFilePath, linkPreviewDetails?.copy())
+        return SceytAttachment(
+            id = id,
+            messageId = messageId,
+            messageTid = messageTid,
+            userId = userId,
+            name = name,
+            type = type,
+            createdAt = createdAt,
+            metadata = metadata,
+            fileSize = fileSize,
+            url = url,
+            filePath = filePath,
+            transferState = transferState,
+            progressPercent = progressPercent,
+            originalFilePath = originalFilePath,
+            linkPreviewDetails = linkPreviewDetails?.copy())
     }
 
     override fun equals(other: Any?): Boolean {
