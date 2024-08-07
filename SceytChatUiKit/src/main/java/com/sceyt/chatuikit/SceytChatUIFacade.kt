@@ -8,7 +8,6 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.SceytDatabase
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
@@ -44,7 +43,7 @@ class SceytChatUIFacade(
         val attachmentInteractor: AttachmentInteractor,
         val messageReactionInteractor: MessageReactionInteractor,
         val messageMarkerInteractor: MessageMarkerInteractor
-) : SceytKoinComponent {
+) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var clientUserId: String? = null
 
@@ -98,8 +97,9 @@ class SceytChatUIFacade(
     }
 
     fun logOut(unregisterPushCallback: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
-        clearData()
+        sceytSyncManager.cancelSync()
         WorkManager.getInstance(context).cancelAllWork()
+        clearData()
         ClientWrapper.currentUser = null
         clientUserId = null
         ChatClient.getClient().unregisterPushToken(object : ActionCallback {
