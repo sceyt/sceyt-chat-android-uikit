@@ -11,7 +11,7 @@ data class SceytAttachment(
         val id: Long?,
         val messageId: Long,
         val messageTid: Long,
-        var userId: String?,
+        val userId: String?,
         val name: String,
         val type: String,
         var metadata: String?,
