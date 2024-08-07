@@ -55,6 +55,7 @@ import com.sceyt.chatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.entity.pendings.PendingMarkerEntity
 import com.sceyt.chatuikit.persistence.entity.pendings.PendingMessageStateEntity
+import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState
@@ -978,7 +979,7 @@ internal class PersistenceMessagesLogicImpl(
         val messagesDb = arrayListOf<MessageDb>()
         val parentMessagesDb = arrayListOf<MessageDb>()
 
-        val mutableList = list.toMutableList()
+        val mutableList = list.toArrayList()
         for ((index, message) in list.withIndex()) {
             updateMessageStatesWithPendingStates(message, pendingStates)?.let { updatedMessage ->
                 mutableList[index] = updatedMessage
