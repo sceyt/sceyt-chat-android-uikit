@@ -24,6 +24,7 @@ import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.MessageInputView
+import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.MessageInputActionCallback
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mention
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MentionUserHelper.getValueData
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MentionValidatorWatcher
@@ -169,7 +170,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
         }
     }
 
-    messageInputView.setInputActionsCallback(object : MessageInputView.MessageInputActionCallback {
+    messageInputView.setInputActionsCallback(object : MessageInputActionCallback {
         override fun sendMessage(message: Message, linkDetails: LinkPreviewDetails?) {
             this@bind.sendMessage(message)
             upsertLinkPreviewData(linkDetails)
@@ -186,7 +187,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
             upsertLinkPreviewData(linkDetails)
         }
 
-        override fun typing(typing: Boolean) {
+        override fun sendTyping(typing: Boolean) {
             sendTypingEvent(typing)
         }
 
