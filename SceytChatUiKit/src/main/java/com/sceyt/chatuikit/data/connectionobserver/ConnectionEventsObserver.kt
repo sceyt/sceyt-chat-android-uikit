@@ -27,7 +27,6 @@ object ConnectionEventsObserver {
     val isConnected get() = connectionState == ConnectionState.Connected
 
     private val onChangedConnectStatusFlow_: MutableSharedFlow<ConnectionStateData> = MutableSharedFlow(
-        replay = 1,
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val onChangedConnectStatusFlow = onChangedConnectStatusFlow_.asSharedFlow()
