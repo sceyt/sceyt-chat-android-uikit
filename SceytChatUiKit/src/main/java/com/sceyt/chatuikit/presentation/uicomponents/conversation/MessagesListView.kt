@@ -76,6 +76,8 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.popups.PopupRe
 import com.sceyt.chatuikit.presentation.uicomponents.forward.SceytForwardActivity
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : ConstraintLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
@@ -487,7 +489,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.pageStateView.updateState(state, messagesRV.isEmpty(), enableErrorSnackBar = enableErrorSnackBar)
     }
 
-    internal fun updateProgress(data: TransferData, updateRecycler: Boolean) {
+    internal suspend fun updateProgress(data: TransferData, updateRecycler: Boolean) {
         val messages = ArrayList(messagesRV.getData())
         messages.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let { (index, item) ->
             val message = (item as? MessageItem)?.message ?: return
@@ -538,7 +540,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                         }
                     )))
 
-                    runOnMainThread {
+                    withContext(Dispatchers.Main) {
                         updateAdapterItem(index, updatedItem, MessageDiff.DEFAULT_FALSE.copy(replyContainerChanged = true))
                     }
                 }

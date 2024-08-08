@@ -89,7 +89,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messagesListView.post {
                 if (needToUpdateTransferAfterOnResume.isNotEmpty()) {
                     needToUpdateTransferAfterOnResume.values.forEach { data ->
-                        messagesListView.updateProgress(data, true)
+                        viewModelScope.launch(Dispatchers.Default) {
+                            messagesListView.updateProgress(data, true)
+                        }
                     }
                     needToUpdateTransferAfterOnResume.clear()
                 }
