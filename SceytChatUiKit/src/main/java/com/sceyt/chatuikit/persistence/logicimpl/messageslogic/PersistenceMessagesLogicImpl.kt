@@ -180,7 +180,7 @@ internal class PersistenceMessagesLogicImpl(
             MessageState.Unmodified -> return@withContext
             MessageState.Edited, MessageState.Moderated -> {
                 val selfReactions = reactionDao.getSelfReactionsByMessageId(message.id, myId.toString())
-                val updateMsg = message.copy(userReactions = selfReactions.map { it.toSceytReaction() }.toTypedArray())
+                val updateMsg = message.copy(userReactions = selfReactions.map { it.toSceytReaction() })
                 messagesCache.messageUpdated(updateMsg.channelId, updateMsg)
                 messageDao.updateMessage(updateMsg.toMessageEntity(false))
             }
@@ -286,10 +286,11 @@ internal class PersistenceMessagesLogicImpl(
         if (response is SceytResponse.Success) {
             val tIds = getMessagesTid(response.data)
             val payloads = attachmentDao.getAllAttachmentPayLoadsByMsgTid(*tIds.toLongArray())
-            response.data?.forEach {
-                findAndUpdateAttachmentPayLoads(it, payloads)
-                it.parentMessage?.let { parent -> findAndUpdateAttachmentPayLoads(parent, payloads) }
-            }
+            return@withContext SceytResponse.Success(response.data?.map {
+                val parentMsg = it.parentMessage?.let { message -> findAndUpdateAttachmentPayLoads(message, payloads) }
+                val msg = findAndUpdateAttachmentPayLoads(it, payloads)
+                msg.copy(parentMessage = parentMsg)
+            })
         }
         return@withContext response
     }
@@ -460,15 +461,21 @@ internal class PersistenceMessagesLogicImpl(
             user = ClientWrapper.currentUser ?: User(preference.getUserId()),
             channelId = channelId,
             attachments = sceytMessage.attachments?.map {
-                it.transferState = TransferState.WaitingToUpload
-                it.progressPercent = 0f
                 val isLink = it.isLink()
+                var metadata = it.metadata
+                var linkPreviewDetails = it.linkPreviewDetails
                 if (!it.existThumb() && !isLink)
-                    it.addAttachmentMetadata(context)
+                    metadata = it.addAttachmentMetadata(context)
                 else if (isLink)
-                    it.linkPreviewDetails = it.getLinkPreviewDetails()
-                it
-            }?.toTypedArray()
+                    linkPreviewDetails = it.getLinkPreviewDetails()
+
+                it.copy(
+                    transferState = TransferState.WaitingToUpload,
+                    progressPercent = 0f,
+                    metadata = metadata,
+                    linkPreviewDetails = linkPreviewDetails
+                )
+            }
         )
         return tmpMessage
     }
@@ -900,9 +907,10 @@ internal class PersistenceMessagesLogicImpl(
             hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb, dbResultWasEmpty = dbResultWasEmpty)
     }
 
-    private fun findAndUpdateAttachmentPayLoads(message: SceytMessage, payloads: List<AttachmentPayLoadDb>) {
+    private fun findAndUpdateAttachmentPayLoads(message: SceytMessage, payloads: List<AttachmentPayLoadDb>): SceytMessage {
         payloads.filter { payLoad -> payLoad.payLoadEntity.messageTid == message.tid }.let { entity ->
-            message.attachments?.forEach { attachment ->
+            val attachments = message.attachments?.toMutableList() ?: return message
+            attachments.forEachIndexed { index, attachment ->
                 val predicate: (AttachmentPayLoadDb) -> Boolean = if (attachment.url.isNotNullOrBlank()) {
                     { entity.any { it.payLoadEntity.url == attachment.url } }
                 } else {
@@ -911,14 +919,17 @@ internal class PersistenceMessagesLogicImpl(
 
                 payloads.find(predicate)?.let {
                     with(it.payLoadEntity) {
-                        attachment.transferState = transferState
-                        attachment.progressPercent = progressPercent
-                        attachment.filePath = filePath
-                        attachment.url = url
+                        attachments[index] = attachment.copy(
+                            transferState = transferState,
+                            progressPercent = progressPercent,
+                            filePath = filePath,
+                            url = url,
+                            linkPreviewDetails = it.linkPreviewDetails?.toLinkPreviewDetails(attachment.isHiddenLinkDetails())
+                        )
                     }
-                    attachment.linkPreviewDetails = it.linkPreviewDetails?.toLinkPreviewDetails(attachment.isHiddenLinkDetails())
                 }
             }
+            return message.copy(attachments = attachments)
         }
     }
 

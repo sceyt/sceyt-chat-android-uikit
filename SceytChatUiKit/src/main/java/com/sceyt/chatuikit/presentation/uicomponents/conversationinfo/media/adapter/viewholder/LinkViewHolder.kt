@@ -49,12 +49,12 @@ class LinkViewHolder(private val binding: SceytItemChannelLinkBinding,
 
     private fun SceytItemChannelLinkBinding.setLinkInfo(data: LinkPreviewDetails?, attachment: SceytAttachment) {
         if (data == null || viewHolderHelper.isFileItemInitialized.not() || data.link != attachment.url || data.hideDetails) {
-            tvLinkName.text = ""
+            tvLinkName.text = null
             tvLinkName.isVisible = false
             tvLinkDescription.isVisible = false
             setDefaultStateLinkImage()
         } else {
-            attachment.linkPreviewDetails = data
+            fileItem.file = attachment.copy(linkPreviewDetails = data)
             tvLinkName.apply {
                 text = data.title?.trim()
                 isVisible = data.title.isNullOrBlank().not()

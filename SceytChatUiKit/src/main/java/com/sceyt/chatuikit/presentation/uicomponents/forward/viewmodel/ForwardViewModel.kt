@@ -49,7 +49,7 @@ class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
     }.flowOn(Dispatchers.IO)
 
 
-    private fun initAttachments(list: Array<SceytAttachment>?): List<Attachment> {
+    private fun initAttachments(list: List<SceytAttachment>?): List<Attachment> {
         return list?.map {
             Attachment.Builder(it.filePath ?: "", it.url, it.type)
                 .withTid(ClientWrapper.generateTid())

@@ -72,9 +72,9 @@ class MessageToSendHelper(private val context: Context,
             .initRelyMessage(replyMessage, replyThreadMessageId)
 
         if (withMentionedUsers) {
-            val data = getMentionUsersAndAttributes(body)
-            message.setMentionedUsers(data.second)
-            message.setBodyAttributes(data.first.toTypedArray())
+            val (bodyAttributes, mentionedUsers) = getMentionUsersAndAttributes(body)
+            message.setMentionedUsers(mentionedUsers.toTypedArray())
+            message.setBodyAttributes(bodyAttributes.toTypedArray())
         }
 
         return message.build()
@@ -111,7 +111,7 @@ class MessageToSendHelper(private val context: Context,
 
         val attachments = if (linkAttachment != null) {
             if (message.attachments.isNullOrEmpty())
-                arrayOf(linkAttachment)
+                listOf(linkAttachment)
             else {
                 val existLinkIndex = message.attachments.indexOfFirst {
                     it.type == AttachmentTypeEnum.Link.value()
@@ -120,7 +120,7 @@ class MessageToSendHelper(private val context: Context,
                 if (existLinkIndex == -1) {
                     message.attachments.plus(linkAttachment)
                 } else {
-                    val oldLinkAttachments = message.attachments
+                    val oldLinkAttachments = message.attachments.toArrayList()
                     oldLinkAttachments[existLinkIndex] = linkAttachment
                     oldLinkAttachments
                 }
@@ -128,7 +128,7 @@ class MessageToSendHelper(private val context: Context,
         } else // remove link attachment if exist, because message should contain only one link attachment
             message.attachments?.filter {
                 it.type != AttachmentTypeEnum.Link.value()
-            }?.toTypedArray()
+            }
 
         val (bodyAttributes, mentionedUsers) = getMentionUsersAndAttributes(body)
         val editedMessage = message.copy(
@@ -141,15 +141,15 @@ class MessageToSendHelper(private val context: Context,
         return true
     }
 
-    private fun getMentionUsersAndAttributes(body: CharSequence): Pair<List<BodyAttribute>, Array<User>> {
+    private fun getMentionUsersAndAttributes(body: CharSequence): Pair<List<BodyAttribute>, List<User>> {
         val bodyAttributes = arrayListOf<BodyAttribute>()
-        var mentionUsers = arrayOf<User>()
+        var mentionUsers = listOf<User>()
         val mentions = MentionAnnotation.getMentionsFromAnnotations(body)
         val styling = BodyStyler.getStyling(body)
         val attributes = initBodyAttributes(styling, mentions)
         if (attributes.isNotEmpty()) {
             bodyAttributes.addAll(attributes)
-            mentionUsers = mentions.map { createEmptyUser(it.recipientId, it.name) }.toTypedArray()
+            mentionUsers = mentions.map { createEmptyUser(it.recipientId, it.name) }
         }
         return Pair(bodyAttributes, mentionUsers)
     }
