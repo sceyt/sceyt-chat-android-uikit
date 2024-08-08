@@ -18,7 +18,6 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.graphics.drawable.toBitmap
-import androidx.core.graphics.toColorInt
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chatuikit.R
@@ -134,7 +133,7 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private fun getAvatarRandomColor(): Int {
         val colors = SceytChatUIKit.theme.avatarColors
-        return colors[abs((fullName ?: "").hashCode()) % colors.size].toColorInt()
+        return colors[abs((fullName ?: "").hashCode()) % colors.size]
     }
 
     @Suppress("DEPRECATION")

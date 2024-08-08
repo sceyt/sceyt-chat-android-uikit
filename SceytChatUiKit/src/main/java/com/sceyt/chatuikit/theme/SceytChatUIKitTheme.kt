@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.theme
 
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.core.graphics.toColorInt
 import com.sceyt.chatuikit.R
 
 data class SceytChatUIKitTheme(
@@ -56,7 +57,7 @@ data class SceytChatUIKitTheme(
         @DrawableRes
         val notesAvatar: Int = R.drawable.sceyt_ic_notes_with_paddings,
 
-        val avatarColors: List<String> = listOf("#4F6AFF"),
+        val avatarColors: List<Int> = listOf("#4F6AFF".toColorInt(), "#B463E7".toColorInt()),
 
         val defaultReactions: List<String> = listOf("😎", "😂", "👌", "😍", "👍", "😏"),
 )
