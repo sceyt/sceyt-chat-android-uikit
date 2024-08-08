@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.vie
 import android.app.Application
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
@@ -11,8 +12,10 @@ import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
+import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -22,6 +25,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
+import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
@@ -36,6 +40,7 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
     private val attachmentLogic: PersistenceAttachmentLogic by inject()
     private val fileTransferService: FileTransferService by inject()
     private val application: Application by inject()
+    private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
     private val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
 
     private val _filesFlow = MutableSharedFlow<List<ChannelFileItem>>(
@@ -47,6 +52,9 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
         extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val loadMoreFilesFlow: SharedFlow<List<ChannelFileItem>> = _loadMoreFilesFlow
+
+    private val _linkPreviewLiveData = MutableLiveData<LinkPreviewDetails>()
+    val linkPreviewLiveData = _linkPreviewLiveData.asLiveData()
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -198,6 +206,18 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
             is NeedMediaInfoData.NeedThumb -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     fileTransferService.getThumb(attachment.messageTid, attachment, data.thumbData)
+                }
+            }
+
+            is NeedMediaInfoData.NeedLinkPreview -> {
+                if (data.onlyCheckMissingData && attachment.linkPreviewDetails != null) {
+                    linkPreviewHelper.checkMissedData(attachment.linkPreviewDetails) {
+                        _linkPreviewLiveData.postValue(it)
+                    }
+                } else {
+                    linkPreviewHelper.getPreview(attachment, true, successListener = {
+                        _linkPreviewLiveData.postValue(it)
+                    })
                 }
             }
         }

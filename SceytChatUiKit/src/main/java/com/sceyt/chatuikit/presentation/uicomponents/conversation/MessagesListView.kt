@@ -19,6 +19,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
@@ -32,7 +33,6 @@ import com.sceyt.chatuikit.extensions.getFragmentManager
 import com.sceyt.chatuikit.extensions.isLastCompletelyItemDisplaying
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.openLink
-import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.setClipboard
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
@@ -49,6 +49,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
+import com.sceyt.chatuikit.persistence.mappers.isLink
 import com.sceyt.chatuikit.presentation.common.KeyboardEventListener
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -525,7 +526,9 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             }
 
             if (updateRecycler)
-                updateItem(index, item, MessageDiff.DEFAULT_FALSE.copy(filesChanged = true))
+                withContext(Dispatchers.Main) {
+                    updateItem(index, item, MessageDiff.DEFAULT_FALSE.copy(filesChanged = true))
+                }
         }
 
         if (data.state == TransferState.Downloaded) {
@@ -543,6 +546,26 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     withContext(Dispatchers.Main) {
                         updateAdapterItem(index, updatedItem, MessageDiff.DEFAULT_FALSE.copy(replyContainerChanged = true))
                     }
+                }
+            }
+        }
+    }
+
+    internal suspend fun updateLinkPreview(linkPreviewDetails: LinkPreviewDetails) {
+        val messages = ArrayList(messagesRV.getData())
+        messages.forEachIndexed { itemIndex, item ->
+            val message = (item as? MessageItem)?.message ?: return@forEachIndexed
+            val attachments = message.attachments?.toMutableList() ?: return@forEachIndexed
+            val predicate: (SceytAttachment) -> Boolean = { attachment ->
+                attachment.isLink() && attachment.url == linkPreviewDetails.link
+            }
+
+            attachments.findIndexed(predicate)?.let { (index, foundAttachmentFile) ->
+                val updatedAttachment = foundAttachmentFile.copy(linkPreviewDetails = linkPreviewDetails)
+                attachments[index] = updatedAttachment
+                val updatedItem = item.copy(message = message.copy(attachments = attachments))
+                withContext(Dispatchers.Main) {
+                    updateAdapterItem(itemIndex, updatedItem, MessageDiff.DEFAULT_FALSE.copy(filesChanged = true))
                 }
             }
         }
