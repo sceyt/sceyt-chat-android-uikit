@@ -132,10 +132,10 @@ class MessagesCache {
 
     fun messageUpdated(channelId: Long, vararg message: SceytMessage) {
         synchronized(lock) {
-            message.forEach {
+            val messages = message.map {
                 updateMessage(channelId, it, true)
             }
-            emitMessageUpdated(channelId, *message)
+            emitMessageUpdated(channelId, *messages.toTypedArray())
         }
     }
 
@@ -179,8 +179,7 @@ class MessagesCache {
     fun upsertNotifyUpdateAnyway(channelId: Long, vararg message: SceytMessage) {
         synchronized(lock) {
             message.forEach {
-                updateMessage(channelId, it, true)
-                emitMessageUpdated(channelId, it)
+                emitMessageUpdated(channelId, updateMessage(channelId, it, true))
             }
         }
     }
@@ -201,13 +200,16 @@ class MessagesCache {
         }
     }
 
-    private fun updateMessage(channelId: Long, message: SceytMessage, initPayloads: Boolean) {
+    private fun updateMessage(channelId: Long, message: SceytMessage, initPayloads: Boolean): SceytMessage {
+        var updatedMessage: SceytMessage = message
         cachedMessages[channelId]?.let {
-            it[message.tid] = if (initPayloads)
-                initMessagePayLoads(channelId, message) else message
+            if (initPayloads)
+                updatedMessage = initMessagePayLoads(channelId, message)
+            it[message.tid] = updatedMessage
         } ?: run {
             cachedMessages[channelId] = hashMapOf(message.tid to message)
         }
+        return updatedMessage
     }
 
     private fun getMessageByTid(channelId: Long, tid: Long): SceytMessage? {
@@ -220,31 +222,32 @@ class MessagesCache {
     }
 
     private fun setPayloads(channelId: Long, messageToUpdate: SceytMessage): SceytMessage {
-        fun setPayloadsImpl(message: SceytMessage): SceytMessage? {
+        fun setPayloadsImpl(message: SceytMessage): SceytMessage {
             val cashedMessage = getMessageByTid(channelId, message.tid)
             val attachmentPayLoadData = getAttachmentPayLoads(cashedMessage)
             val attachmentsLinkDetails = getAttachmentLinkDetails(cashedMessage)
-            val attachments = updateAttachmentsPayLoads(attachmentPayLoadData, attachmentsLinkDetails, message)
-            return cashedMessage?.copy(attachments = attachments?.toList())
+            val attachments = getUpdatedAttachmentsWithPayLoads(attachmentPayLoadData, attachmentsLinkDetails, message)
+            return message.copy(attachments = attachments?.toList())
         }
 
-        val cashedMessage = setPayloadsImpl(messageToUpdate)
+        var updatedMessage = setPayloadsImpl(messageToUpdate)
         // Set payloads for parent message
         messageToUpdate.parentMessage?.let {
-            if (it.id != 0L)
-                setPayloadsImpl(it)
+            if (it.id != 0L) {
+                updatedMessage = updatedMessage.copy(parentMessage = setPayloadsImpl(it))
+            }
         }
 
-        val pendingReactions = cashedMessage?.pendingReactions?.toMutableSet() ?: mutableSetOf()
+        val pendingReactions = updatedMessage.pendingReactions?.toMutableSet() ?: mutableSetOf()
         val needToAddReactions = messageToUpdate.pendingReactions?.toSet() ?: emptySet()
         pendingReactions.removeAll(needToAddReactions)
         pendingReactions.addAll(needToAddReactions)
-        return messageToUpdate.copy(pendingReactions = pendingReactions.toList())
+        return updatedMessage.copy(pendingReactions = pendingReactions.toList())
     }
 
-    private fun updateAttachmentsPayLoads(payloadData: List<AttachmentPayLoadData>?,
-                                          attachmentsLinkDetails: List<LinkPreviewDetails>?,
-                                          message: SceytMessage): List<SceytAttachment>? {
+    private fun getUpdatedAttachmentsWithPayLoads(payloadData: List<AttachmentPayLoadData>?,
+                                                  attachmentsLinkDetails: List<LinkPreviewDetails>?,
+                                                  message: SceytMessage): List<SceytAttachment>? {
         val updateAttachments = message.attachments?.toMutableList() ?: return null
         val updateLinkDetails = attachmentsLinkDetails?.run { ArrayList(this) }
         payloadData?.filter { payLoad -> payLoad.messageTid == message.tid }?.let { data ->
