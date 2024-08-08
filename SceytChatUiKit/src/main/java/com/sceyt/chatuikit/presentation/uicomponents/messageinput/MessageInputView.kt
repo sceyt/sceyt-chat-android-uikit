@@ -70,6 +70,9 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.attac
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.fragments.EditOrReplyMessageFragment
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.fragments.LinkPreviewFragment
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.link.SingleLinkDetailsProvider
+import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.MessageInputActionCallback
+import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.actionlisteners.InputActionsListener
+import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.actionlisteners.InputActionsListenerImpl
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.MessageInputClickListenersImpl
@@ -102,7 +105,8 @@ import java.io.File
 class MessageInputView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners,
-        SelectFileTypePopupClickListeners.ClickListeners, InputEventsListener.InputEventListeners {
+        SelectFileTypePopupClickListeners.ClickListeners, InputEventsListener.InputEventListeners,
+        InputActionsListener.InputActionListeners {
 
     private lateinit var attachmentsAdapter: AttachmentsAdapter
     private var allAttachments = mutableListOf<Attachment>()
@@ -110,6 +114,7 @@ class MessageInputView @JvmOverloads constructor(
     private var style: MessageInputStyle
     private var clickListeners = MessageInputClickListenersImpl(this)
     private var eventListeners = InputEventsListenerImpl(this)
+    private var actionListeners = InputActionsListenerImpl(this)
     private var selectFileTypePopupClickListeners = SelectFileTypePopupClickListenersImpl(this)
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
     private val typingDebounceHelper by lazy { DebounceHelper(100, getScope()) }
@@ -121,7 +126,7 @@ class MessageInputView @JvmOverloads constructor(
     private var mentionUserContainer: MentionUserContainer? = null
     private var inputTextWatcher: TextWatcher? = null
     private var messageInputActionCallback: MessageInputActionCallback? = null
-    private val messageToSendHelper by lazy { MessageToSendHelper(context) }
+    private val messageToSendHelper by lazy { MessageToSendHelper(context, actionListeners) }
     private val linkDetailsProvider by lazy { SingleLinkDetailsProvider(context, getScope()) }
     private val audioRecorderHelper: AudioRecorderHelper by lazy { AudioRecorderHelper(getScope(), context) }
     internal var needMessagesListViewStyleCallback: () -> MessagesListViewStyle? = { null }
@@ -223,11 +228,11 @@ class MessageInputView @JvmOverloads constructor(
         typingTimeoutJob?.cancel()
         typingTimeoutJob = MainScope().launch {
             delay(2000)
-            messageInputActionCallback?.typing(false)
+            actionListeners.sendTyping(false)
         }
 
         typingDebounceHelper.submit {
-            messageInputActionCallback?.typing(text.isNullOrBlank().not())
+            actionListeners.sendTyping(text.isNullOrBlank().not())
             updateDraftMessage()
             tryToLoadLinkPreview(text)
         }
@@ -245,7 +250,7 @@ class MessageInputView @JvmOverloads constructor(
         val replyOrEditMessage = replyMessage ?: editMessage
         val isReply = replyMessage != null
         with(binding.messageInput) {
-            messageInputActionCallback?.updateDraftMessage(text, mentions, styling, replyOrEditMessage, isReply)
+            actionListeners.updateDraftMessage(text, mentions, styling, replyOrEditMessage, isReply)
         }
     }
 
@@ -691,7 +696,7 @@ class MessageInputView @JvmOverloads constructor(
         }
     }
 
-    internal fun setInitialStateSearchMessagesResult() {
+    private fun setInitialStateSearchMessagesResult() {
         with(binding.layoutInputSearchResult) {
             tvResult.text = empty
             icDown.isEnabled = false
@@ -699,9 +704,8 @@ class MessageInputView @JvmOverloads constructor(
         }
     }
 
-    fun setInputActionsCallback(callback: MessageInputActionCallback) {
+    internal fun setInputActionsCallback(callback: MessageInputActionCallback) {
         messageInputActionCallback = callback
-        messageToSendHelper.setInputActionCallback(callback)
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -792,31 +796,24 @@ class MessageInputView @JvmOverloads constructor(
 
     val inputEditText: EditText get() = binding.messageInput
 
-    interface MessageInputActionCallback {
-        fun sendMessage(message: Message, linkDetails: LinkPreviewDetails?)
-        fun sendMessages(message: List<Message>, linkDetails: LinkPreviewDetails?)
-        fun sendEditMessage(message: SceytMessage, linkDetails: LinkPreviewDetails?)
-        fun typing(typing: Boolean)
-        fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, styling: List<BodyStyleRange>?,
-                               replyOrEditMessage: SceytMessage?, isReply: Boolean)
-
-        fun mention(query: String)
-        fun join()
-        fun clearChat()
-        fun scrollToNext()
-        fun scrollToPrev()
-    }
-
     fun setClickListener(listener: MessageInputClickListeners) {
         clickListeners.setListener(listener)
     }
 
-    fun setUserNameFormatter(builder: UserNameFormatter) {
-        userNameFormatter = builder
-    }
-
     fun setCustomClickListener(listener: MessageInputClickListenersImpl) {
         clickListeners = listener
+    }
+
+    fun setActionListener(listener: InputActionsListener) {
+        actionListeners.setListener(listener)
+    }
+
+    fun setCustomActionListener(listener: InputActionsListenerImpl) {
+        actionListeners = listener
+    }
+
+    fun setUserNameFormatter(builder: UserNameFormatter) {
+        userNameFormatter = builder
     }
 
     @Suppress("unused")
@@ -955,6 +952,27 @@ class MessageInputView @JvmOverloads constructor(
         val iconResId = if (state == Voice) style.voiceRecordIcon
         else style.sendMessageIcon
         binding.icSendMessage.setImageDrawable(iconResId)
+    }
+
+    // Input actions listeners
+    override fun sendMessage(message: Message, linkDetails: LinkPreviewDetails?) {
+        messageInputActionCallback?.sendMessage(message, linkDetails)
+    }
+
+    override fun sendMessages(message: List<Message>, linkDetails: LinkPreviewDetails?) {
+        messageInputActionCallback?.sendMessages(message, linkDetails)
+    }
+
+    override fun sendEditMessage(message: SceytMessage, linkDetails: LinkPreviewDetails?) {
+        messageInputActionCallback?.sendEditMessage(message, linkDetails)
+    }
+
+    override fun sendTyping(typing: Boolean) {
+        messageInputActionCallback?.sendTyping(typing)
+    }
+
+    override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+        messageInputActionCallback?.updateDraftMessage(text, mentionUserIds, styling, replyOrEditMessage, isReply)
     }
 
     override fun onMentionUsersListener(query: String) {
