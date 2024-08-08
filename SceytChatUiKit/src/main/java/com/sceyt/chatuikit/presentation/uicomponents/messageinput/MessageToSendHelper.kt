@@ -31,7 +31,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyl
 import java.io.File
 
 class MessageToSendHelper(private val context: Context,
-                          private val listeners: InputActionsListener.InputActionListeners) {
+                          private val listeners: InputActionsListener.InputActionListeners?) {
 
     fun sendMessage(allAttachments: List<Attachment>, body: CharSequence?, editMessage: SceytMessage?,
                     replyMessage: SceytMessage?, replyThreadMessageId: Long?, linkDetails: LinkPreviewDetails?) {
@@ -51,10 +51,10 @@ class MessageToSendHelper(private val context: Context,
 
                     messages.add(message)
                 }
-                listeners.sendMessages(messages, linkDetails)
+                listeners?.sendMessages(messages, linkDetails)
             } else {
                 val attachment = if (link != null) arrayOf(link) else arrayOf()
-                listeners.sendMessage(buildMessage(replacedBody, attachment, true,
+                listeners?.sendMessage(buildMessage(replacedBody, attachment, true,
                     replyMessage, replyThreadMessageId), linkDetails)
             }
         }
@@ -133,7 +133,7 @@ class MessageToSendHelper(private val context: Context,
         message.mentionedUsers = data.second
         message.bodyAttributes = data.first
 
-        listeners.sendEditMessage(message, linkDetails)
+        listeners?.sendEditMessage(message, linkDetails)
         return true
     }
 
