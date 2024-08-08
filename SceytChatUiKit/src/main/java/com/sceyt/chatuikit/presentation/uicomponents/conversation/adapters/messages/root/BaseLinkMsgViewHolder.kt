@@ -20,19 +20,19 @@ import com.sceyt.chatuikit.extensions.glideRequestListener
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setTextAndVisibility
 import com.sceyt.chatuikit.extensions.setTextColorRes
+import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
-import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 abstract class BaseLinkMsgViewHolder(
-        private val linkPreview: LinkPreviewHelper,
         view: View,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners? = null,
         displayedListener: ((MessageListItem) -> Unit)? = null,
         userNameFormatter: UserNameFormatter? = null,
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseMsgViewHolder(view, style, messageListeners, displayedListener, userNameFormatter) {
     protected var linkPreviewContainerBinding: SceytMessageLinkPreviewContainerBinding? = null
     protected open val maxSize by lazy {
@@ -47,16 +47,11 @@ abstract class BaseLinkMsgViewHolder(
 
         if (previewDetails == null) {
             setLinkInfo(null, message, attachment, viewStub)
-            linkPreview.getPreview(attachment, true, successListener = {
-                attachment.linkPreviewDetails = it
-                setLinkInfo(it, message, attachment, viewStub)
-            })
+            needMediaDataCallback(NeedMediaInfoData.NeedLinkPreview(attachment, false))
         } else {
             setLinkInfo(previewDetails, message, attachment, viewStub)
-            linkPreview.checkMissedData(previewDetails) {
-                attachment.linkPreviewDetails = it
-                setLinkInfo(it, message, attachment, viewStub)
-            }
+            if (previewDetails.imageUrl != null && previewDetails.imageWidth == null)
+                needMediaDataCallback(NeedMediaInfoData.NeedLinkPreview(attachment, true))
         }
     }
 

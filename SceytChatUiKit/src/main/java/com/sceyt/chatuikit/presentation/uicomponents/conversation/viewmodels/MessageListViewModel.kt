@@ -18,7 +18,6 @@ import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.chatuikit.data.messageeventobserver.MessageEventsObserver
-import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
@@ -30,6 +29,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -77,6 +77,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mentio
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.chatuikit.services.SceytSyncManager
+import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -113,6 +114,7 @@ class MessageListViewModel(
     private val application: Application by inject()
     private val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
+    private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
     internal val messageActionBridge by lazy { MessageActionBridge() }
@@ -157,6 +159,9 @@ class MessageListViewModel(
 
     private val _syncCenteredMessageLiveData = MutableLiveData<SyncNearMessagesResult>()
     val syncCenteredMessageLiveData: LiveData<SyncNearMessagesResult> = _syncCenteredMessageLiveData
+
+    private val _linkPreviewLiveData = MutableLiveData<LinkPreviewDetails>()
+    val linkPreviewLiveData = _linkPreviewLiveData.asLiveData()
 
 
     // Message events
@@ -748,6 +753,18 @@ class MessageListViewModel(
             is NeedMediaInfoData.NeedThumb -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     fileTransferService.getThumb(attachment.messageTid, attachment, data.thumbData)
+                }
+            }
+
+            is NeedMediaInfoData.NeedLinkPreview -> {
+                if (data.onlyCheckMissingData && attachment.linkPreviewDetails != null) {
+                    linkPreviewHelper.checkMissedData(attachment.linkPreviewDetails) {
+                        _linkPreviewLiveData.postValue(it)
+                    }
+                } else {
+                    linkPreviewHelper.getPreview(attachment, true, successListener = {
+                        _linkPreviewLiveData.postValue(it)
+                    })
                 }
             }
         }

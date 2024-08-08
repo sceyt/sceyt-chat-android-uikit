@@ -8,9 +8,9 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.getImageBitmapWithGlideWithTimeout
 import com.sceyt.chatuikit.extensions.toBase64
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.shared.utils.BitmapUtil
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
@@ -85,8 +85,8 @@ class LinkPreviewHelper : SceytKoinComponent {
     }
 
     fun checkMissedData(details: LinkPreviewDetails, successListener: PreviewCallback.Success? = null) {
-        scope.launch(Dispatchers.IO) {
-            if (details.imageUrl != null && details.imageWidth == null) {
+        if (details.imageUrl != null && details.imageWidth == null) {
+            scope.launch(Dispatchers.IO) {
                 val bitmap = getImageBitmapWithGlideWithTimeout(context, details.imageUrl)
                 if (bitmap != null) {
                     details.imageWidth = bitmap.width

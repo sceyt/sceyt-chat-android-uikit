@@ -22,7 +22,7 @@ data class SceytAttachment(
         val transferState: TransferState?,
         val progressPercent: Float?,
         val originalFilePath: String?,
-        var linkPreviewDetails: LinkPreviewDetails?
+        val linkPreviewDetails: LinkPreviewDetails?
 ) : Parcelable, Cloneable {
 
     public override fun clone(): SceytAttachment {
