@@ -224,8 +224,8 @@ class MessagesCache {
             val cashedMessage = getMessageByTid(channelId, message.tid)
             val attachmentPayLoadData = getAttachmentPayLoads(cashedMessage)
             val attachmentsLinkDetails = getAttachmentLinkDetails(cashedMessage)
-            updateAttachmentsPayLoads(attachmentPayLoadData, attachmentsLinkDetails, message)
-            return cashedMessage
+            val attachments = updateAttachmentsPayLoads(attachmentPayLoadData, attachmentsLinkDetails, message)
+            return cashedMessage?.copy(attachments = attachments?.toList())
         }
 
         val cashedMessage = setPayloadsImpl(messageToUpdate)
@@ -244,16 +244,17 @@ class MessagesCache {
 
     private fun updateAttachmentsPayLoads(payloadData: List<AttachmentPayLoadData>?,
                                           attachmentsLinkDetails: List<LinkPreviewDetails>?,
-                                          message: SceytMessage) {
+                                          message: SceytMessage): List<SceytAttachment>? {
+        val updateAttachments = message.attachments?.toMutableList() ?: return null
         val updateLinkDetails = attachmentsLinkDetails?.run { ArrayList(this) }
         payloadData?.filter { payLoad -> payLoad.messageTid == message.tid }?.let { data ->
-            message.attachments?.forEach { attachment ->
+            message.attachments.forEachIndexed { index, attachment ->
                 if (attachment.type == AttachmentTypeEnum.Link.value()) {
                     updateLinkDetails?.find { it.url == attachment.url }?.let {
-                        attachment.linkPreviewDetails = it
+                        updateAttachments[index] = attachment.copy(linkPreviewDetails = it)
                         updateLinkDetails.remove(it)
                     }
-                    return@forEach
+                    return@forEachIndexed
                 }
                 val predicate: (AttachmentPayLoadData) -> Boolean = if (attachment.url.isNotNullOrBlank()) {
                     { data.any { it.url == attachment.url } }
@@ -261,18 +262,22 @@ class MessagesCache {
                     { data.any { it.filePath == attachment.filePath } }
                 }
                 data.find(predicate)?.let {
-                    attachment.transferState = it.transferState
-                    attachment.progressPercent = it.progressPercent
-                    attachment.filePath = it.filePath
-                    attachment.url = it.url
+                    updateAttachments[index] = attachment.copy(
+                        transferState = it.transferState,
+                        progressPercent = it.progressPercent,
+                        filePath = it.filePath,
+                        url = it.url
+                    )
                 }
             }
         }
         updateLinkDetails?.forEach { linkDetails ->
-            message.attachments?.find { it.url == linkDetails.link }?.let {
-                it.linkPreviewDetails = linkDetails
+            updateAttachments.indexOfFirst { it.url == linkDetails.link }.takeIf { it != -1 }?.let {
+                val item = updateAttachments[it]
+                updateAttachments[it] = item.copy(linkPreviewDetails = linkDetails)
             }
         }
+        return updateAttachments
     }
 
     private fun getAttachmentPayLoads(cashedMessage: SceytMessage?): List<AttachmentPayLoadData>? {
@@ -326,28 +331,35 @@ class MessagesCache {
 
     fun updateAttachmentTransferData(updateDate: TransferData) {
         synchronized(lock) {
-            fun update(attachment: SceytAttachment) {
-                attachment.transferState = updateDate.state
-                attachment.progressPercent = updateDate.progressPercent
-                attachment.filePath = updateDate.filePath
-                attachment.url = updateDate.url
+            fun update(attachment: SceytAttachment): SceytAttachment {
+                return attachment.copy(
+                    transferState = updateDate.state,
+                    progressPercent = updateDate.progressPercent,
+                    filePath = updateDate.filePath,
+                    url = updateDate.url
+                )
             }
 
             cachedMessages.values.forEach { messageHashMap ->
                 messageHashMap[updateDate.messageTid]?.let { message ->
-                    message.attachments?.forEach att@{ attachment ->
+                    val attachments = message.attachments?.toMutableList() ?: return@let
+                    attachments.forEachIndexed att@{ index, attachment ->
                         if (attachment.type == AttachmentTypeEnum.Link.value())
                             return@att
 
                         when (updateDate.state) {
                             PendingUpload, Uploading, Uploaded, ErrorUpload, PauseUpload, Preparing, WaitingToUpload -> {
-                                if (attachment.filePath == updateDate.filePath)
-                                    update(attachment)
+                                if (attachment.filePath == updateDate.filePath) {
+                                    attachments[index] = update(attachment)
+                                    messageHashMap[updateDate.messageTid] = message.copy(attachments = attachments)
+                                }
                             }
 
                             Downloading, Downloaded, PendingDownload, ErrorDownload, PauseDownload -> {
-                                if (attachment.url == updateDate.url)
-                                    update(attachment)
+                                if (attachment.url == updateDate.url) {
+                                    attachments[index] = update(attachment)
+                                    messageHashMap[updateDate.messageTid] = message.copy(attachments = attachments)
+                                }
                             }
 
                             FilePathChanged, ThumbLoaded -> return
@@ -362,11 +374,15 @@ class MessagesCache {
         synchronized(lock) {
             cachedMessages.values.forEach { messageHashMap ->
                 messageHashMap[messageTid]?.let { message ->
-                    message.attachments?.forEach att@{ attachment ->
+                    val attachments = message.attachments?.toMutableList() ?: return@let
+                    attachments.forEachIndexed att@{ index, attachment ->
                         if (attachment.type == AttachmentTypeEnum.Link.value())
                             return@att
-                        attachment.filePath = path
-                        attachment.metadata = metadata
+                        attachments[index] = attachment.copy(
+                            filePath = path,
+                            metadata = metadata
+                        )
+                        messageHashMap[messageTid] = message.copy(attachments = attachments)
                     }
                 }
             }
@@ -375,8 +391,16 @@ class MessagesCache {
 
     fun updateAttachmentLinkDetails(data: LinkPreviewDetails) {
         synchronized(lock) {
-            getAllAttachmentsWithLink(data.link).forEach { attachment ->
-                attachment.linkPreviewDetails = data
+            return getAllAttachmentsWithLink(data.link).forEach { attachment ->
+                cachedMessages.entries.forEach { (_, messageHashMap) ->
+                    messageHashMap[attachment.messageTid]?.let { message ->
+                        val attachments = message.attachments?.toMutableList() ?: return@let
+                        attachments.indexOf(attachment).takeIf { it != -1 }?.let { index ->
+                            attachments[index] = attachment.copy(linkPreviewDetails = data)
+                            messageHashMap[attachment.messageTid] = message.copy(attachments = attachments)
+                        }
+                    }
+                }
             }
         }
     }

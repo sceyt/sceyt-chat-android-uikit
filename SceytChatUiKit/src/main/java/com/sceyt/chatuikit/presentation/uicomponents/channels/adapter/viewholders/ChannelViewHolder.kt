@@ -138,7 +138,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
         val message = channel.lastMessage
         if (message == null) {
-            textView.text = ""
+            textView.text = null
             return
         }
         if (message.state == MessageState.Deleted) {
@@ -225,7 +225,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
             val draft = context.getString(R.string.sceyt_draft)
             val text = SpannableStringBuilder("$draft: ").apply {
                 append(MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(draftMessage.message.toString(),
-                    draftMessage.mentionUsers?.toTypedArray(), draftMessage.bodyAttributes))
+                    draftMessage.mentionUsers, draftMessage.bodyAttributes))
                 setSpan(ForegroundColorSpan(context.getCompatColor(SceytChatUIKit.theme.errorColor)), 0, draft.length + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
             textView.text = text
@@ -306,6 +306,7 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
         }
     }
 
+    @SuppressLint("SetTextI18n")
     open fun setChannelMarkedUsUnread(channel: SceytChannel, textView: TextView) {
         if (channel.newMessageCount > 0) return
         if (channel.unread)

@@ -466,7 +466,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                             if (data.messageIds.contains(message.id)) {
                                 val updatedItem = listItem.copy(message = message.copy(userMarkers = message.userMarkers?.toMutableSet()?.apply {
                                     add(SceytMarker(message.id, user, data.name, data.createdAt))
-                                }?.toTypedArray()))
+                                }?.toList()))
                                 messagesListView.updateItemAt(index, updatedItem)
                             }
                         }

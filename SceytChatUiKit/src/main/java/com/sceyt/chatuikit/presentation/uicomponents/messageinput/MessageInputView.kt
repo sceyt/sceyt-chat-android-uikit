@@ -628,10 +628,10 @@ class MessageInputView @JvmOverloads constructor(
         binding.messageInput.removeTextChangedListener(inputTextWatcher)
         with(binding.messageInput) {
             body = MessageBodyStyleHelper.buildWithMentionsAndAttributes(context, body.toString(),
-                draftMessage.mentionUsers?.toTypedArray(), draftMessage.bodyAttributes)
+                draftMessage.mentionUsers, draftMessage.bodyAttributes)
 
             if (!draftMessage.mentionUsers.isNullOrEmpty()) {
-                val data = MentionUserHelper.getMentionsIndexed(draftMessage.bodyAttributes, draftMessage.mentionUsers.toTypedArray())
+                val data = MentionUserHelper.getMentionsIndexed(draftMessage.bodyAttributes, draftMessage.mentionUsers)
                 body = MentionAnnotation.setMentionAnnotations(body, data)
             }
             setTextAndMoveSelectionEnd(body)

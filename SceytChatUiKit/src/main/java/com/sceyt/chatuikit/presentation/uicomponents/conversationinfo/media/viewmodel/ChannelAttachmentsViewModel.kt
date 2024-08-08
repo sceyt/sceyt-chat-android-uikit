@@ -139,8 +139,6 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
     }
 
     private fun prepareToPauseOrResumeUpload(item: SceytAttachment, channelId: Long) {
-        val defaultState = TransferState.PendingDownload
-
         when (val state = item.transferState ?: return) {
             TransferState.PendingUpload, TransferState.ErrorUpload -> {
                 SendAttachmentWorkManager.schedule(application, item.messageTid, channelId)
@@ -181,7 +179,8 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
             TransferState.Uploaded, TransferState.Downloaded, TransferState.ThumbLoaded -> {
                 val transferData = TransferData(
                     item.messageTid, item.progressPercent ?: 0f,
-                    item.transferState ?: defaultState, item.filePath, item.url)
+                    item.transferState, item.filePath, item.url)
+
                 FileTransferHelper.emitAttachmentTransferUpdate(transferData)
             }
         }

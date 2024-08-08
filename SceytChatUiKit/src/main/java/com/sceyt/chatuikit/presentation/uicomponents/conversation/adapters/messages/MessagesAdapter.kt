@@ -147,7 +147,11 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
     }
 
     fun updateItemAt(index: Int, updatedItem: MessageItem) {
-        messages[index] = updatedItem
+        try {
+            messages[index] = updatedItem
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun notifyUpdate(messages: List<MessageListItem>, recyclerView: RecyclerView) {
