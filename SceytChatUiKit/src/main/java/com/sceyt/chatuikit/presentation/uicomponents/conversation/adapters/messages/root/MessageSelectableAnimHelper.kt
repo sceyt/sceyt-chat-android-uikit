@@ -26,11 +26,7 @@ class MessageSelectableAnimHelper(private var viewHolder: RecyclerView.ViewHolde
                 ?: false
         if (isMultiSelectableMode && !message.isPending()) {
             view.isVisible = true
-            val isSelected = message.isSelected
-
-            if (view is CheckBox) {
-                view.isChecked = isSelected
-            } else view.isSelected = isSelected
+            setCheckedState(view, message.isSelected)
 
             view.updateLayoutParams<MarginLayoutParams> {
                 marginStart = checkBoxSize / 2
@@ -45,10 +41,7 @@ class MessageSelectableAnimHelper(private var viewHolder: RecyclerView.ViewHolde
     fun setSelectableState(view: View?, item: MessageListItem) {
         view ?: return
         val message = (item as? MessageListItem.MessageItem)?.message ?: return
-        val isSelected = message.isSelected
-        if (view is CheckBox) {
-            view.isChecked = isSelected
-        } else view.isSelected = isSelected
+        setCheckedState(view, message.isSelected)
 
         if (!view.isVisible)
             view.updateLayoutParams<MarginLayoutParams> {
@@ -66,7 +59,7 @@ class MessageSelectableAnimHelper(private var viewHolder: RecyclerView.ViewHolde
         animation?.start()
     }
 
-    fun cancelSelectableState(view: View?) {
+    fun cancelSelectableState(view: View?, onAnimEnd: (() -> Unit)? = null) {
         (view ?: return).isVisible = true
         animation?.cancel()
         animation = ObjectAnimator.ofFloat(view.marginStart.toFloat(), -checkBoxSize.toFloat())
@@ -78,7 +71,14 @@ class MessageSelectableAnimHelper(private var viewHolder: RecyclerView.ViewHolde
         animation?.addListener(onEnd = {
             if (view.marginStart == -checkBoxSize)
                 view.isVisible = false
+            onAnimEnd?.invoke()
         })
         animation?.start()
+    }
+
+    private fun setCheckedState(view: View, isChecked: Boolean) {
+        if (view is CheckBox) {
+            view.isChecked = isChecked
+        } else view.isSelected = isChecked
     }
 }

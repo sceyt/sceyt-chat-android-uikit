@@ -85,14 +85,16 @@ internal class FileTransferLogicImpl(
                 return
             }
 
+            var uploadAttachment = attachment
             checkAndResizeMessageAttachments(context, attachment, checksum, task) {
                 if (it.isSuccess) {
                     it.getOrNull()?.let { path ->
                         task.updateFileLocationCallback?.onUpdateFileLocation(path)
+                        uploadAttachment = uploadAttachment.copy(filePath = path)
                     }
                 } else SceytLog.i("resizeResult", "Couldn't resize sharing file with reason ${it.exceptionOrNull()}")
 
-                uploadSharedAttachment(attachment, task)
+                uploadSharedAttachment(uploadAttachment, task)
             }
         }
         sharingFilesPath.add(data)
@@ -250,7 +252,7 @@ internal class FileTransferLogicImpl(
             uploadNext()
             return
         }
-
+        var uploadAttachment = attachment
         checkAndResizeMessageAttachments(context, attachment, checksum, transferTask) {
             // Check if task was paused
             if (pausedTasksMap[attachment.messageTid] != null) {
@@ -261,14 +263,15 @@ internal class FileTransferLogicImpl(
             if (it.isSuccess) {
                 it.getOrNull()?.let { path ->
                     transferTask.updateFileLocationCallback?.onUpdateFileLocation(path)
+                    uploadAttachment = uploadAttachment.copy(filePath = path)
                 }
             } else SceytLog.i("resizeResult", "Couldn't resize file with reason ${it.exceptionOrNull()}")
 
-            ChatClient.getClient().upload(attachment.filePath, object : ProgressCallback {
+            ChatClient.getClient().upload(uploadAttachment.filePath, object : ProgressCallback {
                 override fun onResult(progress: Float) {
                     if (progress == 1f) return
                     transferTask.progressCallback?.onProgress(TransferData(transferTask.messageTid,
-                        progress * 100, Uploading, attachment.filePath, null))
+                        progress * 100, Uploading, uploadAttachment.filePath, null))
                 }
 
                 override fun onError(exception: SceytException?) {

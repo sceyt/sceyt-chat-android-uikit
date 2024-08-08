@@ -106,6 +106,10 @@ abstract class BaseMsgViewHolder(private val view: View,
             highlight()
     }
 
+    fun itemUpdated(item: MessageListItem) {
+        messageListItem = item
+    }
+
     protected val requireMessageItem get() = messageListItem as MessageListItem.MessageItem
     protected val requireMessage get() = (messageListItem as MessageListItem.MessageItem).message
 
@@ -314,12 +318,6 @@ abstract class BaseMsgViewHolder(private val view: View,
 
         if (path.isNullOrBlank()) {
             imageAttachment.setImageDrawable(placeHolder)
-            FileTransferHelper.onTransferUpdatedLiveData.observe(context.asComponentActivity()) {
-                if (it.state == TransferState.Downloaded && it.messageTid == attachment.messageTid) {
-                    attachment.filePath = it.filePath
-                    loadImage(it.filePath)
-                }
-            }
         } else loadImage(path)
     }
 
@@ -533,8 +531,8 @@ abstract class BaseMsgViewHolder(private val view: View,
         selectableAnimHelper.setSelectableState(selectMessageView, messageListItem)
     }
 
-    open fun cancelSelectableState() {
-        selectableAnimHelper.cancelSelectableState(selectMessageView)
+    open fun cancelSelectableState(onAnimEnd: (() -> Unit)? = null) {
+        selectableAnimHelper.cancelSelectableState(selectMessageView, onAnimEnd)
     }
 
     open fun highlight() {
