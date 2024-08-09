@@ -324,10 +324,17 @@ class MessagesCache {
         return detectedDiff
     }
 
-    private fun getAllAttachmentsWithLink(link: String): List<SceytAttachment> {
-        return cachedMessages.values.flatMap { messageHashMap ->
-            messageHashMap.values.flatMap {
-                it.attachments?.filter { attachment -> attachment.url == link } ?: emptyList()
+    private fun updateAllAttachments(predicate: (SceytAttachment) -> Boolean,
+                                     updater: SceytAttachment.() -> SceytAttachment) {
+        cachedMessages.values.forEach { messageHashMap ->
+            for ((key, value) in messageHashMap.entries) {
+                val newAttachments = value.attachments?.toMutableList()?.apply {
+                    forEachIndexed { index, attachment ->
+                        if (predicate(attachment))
+                            set(index, attachment.updater())
+                    }
+                }
+                messageHashMap[key] = value.copy(attachments = newAttachments)
             }
         }
     }
@@ -394,34 +401,25 @@ class MessagesCache {
 
     fun updateAttachmentLinkDetails(data: LinkPreviewDetails) {
         synchronized(lock) {
-            return getAllAttachmentsWithLink(data.link).forEach { attachment ->
-                cachedMessages.entries.forEach { (_, messageHashMap) ->
-                    messageHashMap[attachment.messageTid]?.let { message ->
-                        val attachments = message.attachments?.toMutableList() ?: return@let
-                        attachments.indexOf(attachment).takeIf { it != -1 }?.let { index ->
-                            attachments[index] = attachment.copy(linkPreviewDetails = data)
-                            messageHashMap[attachment.messageTid] = message.copy(attachments = attachments)
-                        }
-                    }
-                }
-            }
+            updateAllAttachments(predicate = { it.url == data.link }, updater = {
+                copy(linkPreviewDetails = data)
+            })
         }
     }
 
     fun updateLinkDetailsSize(link: String, width: Int, height: Int) {
         synchronized(lock) {
-            getAllAttachmentsWithLink(link).forEach { attachment ->
-                attachment.linkPreviewDetails?.imageWidth = width
-                attachment.linkPreviewDetails?.imageHeight = height
-            }
+            updateAllAttachments(predicate = { it.url == link }, updater = {
+                copy(linkPreviewDetails = linkPreviewDetails?.copy(imageWidth = width, imageHeight = height))
+            })
         }
     }
 
     fun updateThumb(link: String, thumb: String) {
         synchronized(lock) {
-            getAllAttachmentsWithLink(link).forEach { attachment ->
-                attachment.linkPreviewDetails?.thumb = thumb
-            }
+            updateAllAttachments(predicate = { it.url == link }, updater = {
+                copy(linkPreviewDetails = linkPreviewDetails?.copy(thumb = thumb))
+            })
         }
     }
 
