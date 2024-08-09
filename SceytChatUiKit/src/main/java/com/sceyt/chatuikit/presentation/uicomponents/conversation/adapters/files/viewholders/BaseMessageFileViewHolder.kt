@@ -11,7 +11,7 @@ abstract class BaseMessageFileViewHolder<Item : AttachmentDataItem>(
 ) : BaseFileViewHolder<Item>(itemView, needMediaDataCallback) {
     protected lateinit var message: SceytMessage
 
-    override fun bind(item: Item) {
+    final override fun bind(item: Item) {
         throw Exception("Use bind(item: FileListItem, message: SceytMessage) instead")
     }
 
