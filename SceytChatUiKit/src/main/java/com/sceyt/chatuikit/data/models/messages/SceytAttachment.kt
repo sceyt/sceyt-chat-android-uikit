@@ -23,26 +23,7 @@ data class SceytAttachment(
         val progressPercent: Float?,
         val originalFilePath: String?,
         val linkPreviewDetails: LinkPreviewDetails?
-) : Parcelable, Cloneable {
-
-    public override fun clone(): SceytAttachment {
-        return SceytAttachment(
-            id = id,
-            messageId = messageId,
-            messageTid = messageTid,
-            userId = userId,
-            name = name,
-            type = type,
-            createdAt = createdAt,
-            metadata = metadata,
-            fileSize = fileSize,
-            url = url,
-            filePath = filePath,
-            transferState = transferState,
-            progressPercent = progressPercent,
-            originalFilePath = originalFilePath,
-            linkPreviewDetails = linkPreviewDetails?.copy())
-    }
+) : Parcelable {
 
     override fun equals(other: Any?): Boolean {
         if (other !is SceytAttachment) return false
