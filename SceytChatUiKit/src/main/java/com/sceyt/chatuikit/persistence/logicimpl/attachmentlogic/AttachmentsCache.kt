@@ -51,7 +51,7 @@ class AttachmentsCache {
 
     fun get(type: String, messageTid: Long): SceytAttachment? {
         synchronized(lock) {
-            return cachedAttachments[type]?.get(messageTid)?.clone()
+            return cachedAttachments[type]?.get(messageTid)
         }
     }
 
@@ -75,7 +75,7 @@ class AttachmentsCache {
                 filteredAttachments.sortedBy { it.id }
             }
 
-            return sortedAttachments.map { it.clone() }
+            return sortedAttachments
         }
     }
 
@@ -208,7 +208,7 @@ class AttachmentsCache {
     }
 
     private fun emitAttachmentUpdated(vararg message: SceytAttachment) {
-        attachmentUpdatedFlow_.tryEmit(message.map { it.clone() })
+        attachmentUpdatedFlow_.tryEmit(message.toList())
     }
 
     private fun putAndCheckHasDiff(includeNotExistToDiff: Boolean, vararg attachments: SceytAttachment): Boolean {
