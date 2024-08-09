@@ -53,20 +53,19 @@ class LinkPreviewHelper : SceytKoinComponent {
             when (val response = attachmentLogic.getLinkPreviewData(link)) {
                 is SceytResponse.Error -> errorListener?.error(response.message)
                 is SceytResponse.Success -> {
-                    val details = response.data ?: run {
+                    var details = response.data ?: run {
                         errorListener?.error(null)
                         return@launch
                     }
                     if (requireFullData && details.imageUrl != null && details.imageWidth == null) {
                         val bitmap = getImageBitmapWithGlideWithTimeout(context, details.imageUrl)
                         if (bitmap != null) {
-                            details.imageWidth = bitmap.width
-                            details.imageHeight = bitmap.height
+                            details = details.copy(imageWidth = bitmap.width, imageHeight = bitmap.height)
                             // update link image size
                             attachmentLogic.updateLinkDetailsSize(link, Size(bitmap.width, bitmap.height))
                             val thumb = getImageThumb(bitmap)
                             thumb?.let {
-                                details.thumb = it
+                                details = details.copy(thumb = it)
                                 // update link thumb
                                 attachmentLogic.updateLinkDetailsThumb(link, it)
                             }
@@ -89,19 +88,18 @@ class LinkPreviewHelper : SceytKoinComponent {
             scope.launch(Dispatchers.IO) {
                 val bitmap = getImageBitmapWithGlideWithTimeout(context, details.imageUrl)
                 if (bitmap != null) {
-                    details.imageWidth = bitmap.width
-                    details.imageHeight = bitmap.height
+                    var detailsToUpdate = details.copy(imageWidth = bitmap.width, imageHeight = bitmap.height)
                     // update link image size
                     attachmentLogic.updateLinkDetailsSize(details.link, Size(bitmap.width, bitmap.height))
                     val thumb = getImageThumb(bitmap)
                     thumb?.let {
-                        details.thumb = it
+                        detailsToUpdate = detailsToUpdate.copy(thumb = it)
                         // update link thumb
                         attachmentLogic.updateLinkDetailsThumb(details.link, it)
                     }
 
                     withContext(Dispatchers.Main) {
-                        successListener?.success(details)
+                        successListener?.success(detailsToUpdate)
                     }
                 }
             }

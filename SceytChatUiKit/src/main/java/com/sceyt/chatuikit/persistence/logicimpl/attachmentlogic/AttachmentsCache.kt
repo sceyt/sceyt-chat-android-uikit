@@ -145,10 +145,14 @@ class AttachmentsCache {
 
     fun updateLinkDetailsSize(link: String, width: Int, height: Int) {
         synchronized(lock) {
-            cachedAttachments[AttachmentTypeEnum.Link.value()]?.values?.forEach { attachment ->
+            cachedAttachments[AttachmentTypeEnum.Link.value()]?.entries?.forEach { entry ->
+                val (_, attachment) = entry
                 if (attachment.url == link) {
-                    attachment.linkPreviewDetails?.imageWidth = width
-                    attachment.linkPreviewDetails?.imageHeight = height
+                    val linkPreviewDetails = attachment.linkPreviewDetails?.copy(
+                        imageWidth = width,
+                        imageHeight = height
+                    )
+                    entry.setValue(attachment.copy(linkPreviewDetails = linkPreviewDetails))
                 }
             }
         }
@@ -156,9 +160,12 @@ class AttachmentsCache {
 
     fun updateThumb(link: String, thumb: String) {
         synchronized(lock) {
-            cachedAttachments[AttachmentTypeEnum.Link.value()]?.values?.forEach { attachment ->
-                if (attachment.url == link)
-                    attachment.linkPreviewDetails?.thumb = thumb
+            cachedAttachments[AttachmentTypeEnum.Link.value()]?.entries?.forEach { entry ->
+                val (_, attachment) = entry
+                if (attachment.url == link) {
+                    val linkPreviewDetails = attachment.linkPreviewDetails?.copy(thumb = thumb)
+                    entry.setValue(attachment.copy(linkPreviewDetails = linkPreviewDetails))
+                }
             }
         }
     }
