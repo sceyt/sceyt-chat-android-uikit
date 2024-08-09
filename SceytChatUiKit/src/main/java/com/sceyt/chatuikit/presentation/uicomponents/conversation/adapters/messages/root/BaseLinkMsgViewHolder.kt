@@ -118,9 +118,9 @@ abstract class BaseLinkMsgViewHolder(
             image.isVisible = false
             return
         }
-        val size = calculateScaleWidthHeight(maxSize, minSize, imageWidth = details.imageWidth
-                ?: maxSize,
-            imageHeight = details.imageHeight ?: maxSize)
+        val size = calculateScaleWidthHeight(maxSize, minSize,
+            imageWidth = details.imageWidth,
+            imageHeight = details.imageHeight)
 
         image.updateLayoutParams<ViewGroup.LayoutParams> {
             width = maxSize
