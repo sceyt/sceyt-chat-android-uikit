@@ -41,8 +41,8 @@ fun LinkPreviewDetails.toMetadata(): String? {
     val data = hashMapOf<String, Any>()
     data[SceytConstants.Thumb] = thumb ?: ""
     if (imageWidth != null && imageHeight != null) {
-        data[SceytConstants.Width] = imageWidth!!
-        data[SceytConstants.Height] = imageHeight!!
+        data[SceytConstants.Width] = imageWidth
+        data[SceytConstants.Height] = imageHeight
     }
 
     data[SceytConstants.Description] = description ?: ""
