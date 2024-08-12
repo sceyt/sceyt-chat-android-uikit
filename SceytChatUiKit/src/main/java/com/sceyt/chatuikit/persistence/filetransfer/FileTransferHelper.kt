@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.persistence.mappers.getUpsertSizeMetadata
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
@@ -177,7 +178,7 @@ object FileTransferHelper : SceytKoinComponent {
             transferData.copy(fileLoadedSize = size.first, fileTotalSize = size.second)
         } ?: transferData
 
-        runOnMainThread {
+        scope.launch(Dispatchers.Main) {
             onTransferUpdatedLiveData_.value = data
         }
     }
