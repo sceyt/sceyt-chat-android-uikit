@@ -8,13 +8,14 @@ import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
-import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isPublic
+import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
+import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
+import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.events.ChannelEvent
@@ -29,6 +30,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     private val channelInteractor: ChannelInteractor by inject()
     private val channelMemberInteractor: ChannelMemberInteractor by inject()
+    private val userInteractor: UserInteractor by inject()
     private var getChannelsJog: Job? = null
     val selectedChannels = mutableSetOf<Long>()
 
@@ -122,14 +124,14 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun blockUser(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMemberInteractor.blockUnBlockUser(userId, true)
+            val response = userInteractor.blockUnBlockUser(userId, true)
             _blockUserLiveData.postValue(response)
         }
     }
 
     fun unBlockUser(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMemberInteractor.blockUnBlockUser(userId, false)
+            val response = userInteractor.blockUnBlockUser(userId, false)
             _blockUserLiveData.postValue(response)
         }
     }

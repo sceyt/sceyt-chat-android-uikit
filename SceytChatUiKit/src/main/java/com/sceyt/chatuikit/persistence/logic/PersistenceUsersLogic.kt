@@ -24,4 +24,5 @@ interface PersistenceUsersLogic {
     suspend fun muteNotifications(muteUntil: Long): SceytResponse<Boolean>
     suspend fun unMuteNotifications(): SceytResponse<Boolean>
     suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>)
+    suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>>
 }
