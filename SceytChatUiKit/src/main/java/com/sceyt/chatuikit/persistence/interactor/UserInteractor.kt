@@ -23,4 +23,5 @@ interface UserInteractor {
     suspend fun getSettings(): SceytResponse<UserSettings>
     suspend fun muteNotifications(muteUntil: Long): SceytResponse<Boolean>
     suspend fun unMuteNotifications(): SceytResponse<Boolean>
+    suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>>
 }

@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
 import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventEnum
@@ -20,7 +19,6 @@ import com.sceyt.chatuikit.persistence.dao.MessageDao
 import com.sceyt.chatuikit.persistence.dao.UserDao
 import com.sceyt.chatuikit.persistence.entity.UserEntity
 import com.sceyt.chatuikit.persistence.entity.channel.UserChatLink
-import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.toChannel
@@ -29,15 +27,12 @@ import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toSceytMember
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
-import com.sceyt.chatuikit.persistence.repositories.UsersRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import org.koin.core.component.inject
 
 internal class PersistenceMembersLogicImpl(
         private val channelsRepository: ChannelsRepository,
-        private val usersRepository: UsersRepository,
         private val channelDao: ChannelDao,
         private val rangeDao: LoadRangeDao,
         private val messageDao: MessageDao,
@@ -45,7 +40,6 @@ internal class PersistenceMembersLogicImpl(
         private val usersDao: UserDao,
         private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent {
 
-    private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
     private val channelMembersLoadSize get() = SceytChatUIKit.config.channelMembersLoadSize
 
     override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
@@ -239,20 +233,6 @@ internal class PersistenceMembersLogicImpl(
         if (response is SceytResponse.Success) {
             channelDao.deleteUserChatLinks(channelId, memberId)
             response.data?.let { channelsCache.updateMembersCount(it) }
-        }
-
-        return response
-    }
-
-    override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>> {
-        val response = if (block) {
-            usersRepository.blockUser(userId)
-        } else
-            usersRepository.unblockUser(userId)
-
-        if (response is SceytResponse.Success) {
-            usersDao.blockUnBlockUser(userId, block)
-            persistenceChannelsLogic.blockUnBlockUser(userId, block)
         }
 
         return response
