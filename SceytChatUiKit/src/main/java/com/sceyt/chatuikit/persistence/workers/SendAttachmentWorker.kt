@@ -36,7 +36,6 @@ import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
-import com.sceyt.chatuikit.persistence.filetransfer.TransferData.Companion.withPrettySizes
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
@@ -88,73 +87,74 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
     private val channelLogic: PersistenceChannelsLogic by inject()
     private val fileChecksumDao: FileChecksumDao by inject()
 
-    private suspend fun checkToUploadAttachmentsBeforeSend(tmpMessage: SceytMessage, isSharing: Boolean): Pair<Boolean, String?> {
+    private suspend fun checkToUploadAttachmentsBeforeSend(tmpMessage: SceytMessage, isSharing: Boolean): kotlin.Result<List<SceytAttachment>> {
         val payloads = attachmentLogic.getAllPayLoadsByMsgTid(tmpMessage.tid)
-        tmpMessage.attachments?.let { attachments ->
-            for (attachment in attachments) {
-                if (attachment.type == AttachmentTypeEnum.Link.value())
+        val attachments = tmpMessage.attachments?.toMutableList()
+                ?: return kotlin.Result.failure(Exception("Attachments not found"))
+
+        for ((index, attachment) in attachments.withIndex()) {
+            if (attachment.type == AttachmentTypeEnum.Link.value())
+                continue
+
+            val payload = payloads.find { it.payLoadEntity.messageTid == attachment.messageTid }?.payLoadEntity
+            if (payload != null && (payload.transferState == TransferState.Uploaded || payload.url.isNotNullOrBlank())) {
+                val transferData = payload.toTransferData(TransferState.Uploaded, 100f)
+                attachmentLogic.updateAttachmentWithTransferData(transferData)
+                attachments[index] = attachment.copy(url = payload.url)
+                return kotlin.Result.success(attachments)
+            } else {
+                val filePath = attachment.originalFilePath ?: attachment.filePath
+                if (filePath.isNullOrEmpty()) {
+                    SceytLog.i(TAG, "Skip uploading a file path is null or empty")
                     continue
-
-                val payload = payloads.find { it.payLoadEntity.messageTid == attachment.messageTid }?.payLoadEntity
-                if (payload != null && (payload.transferState == TransferState.Uploaded || payload.url.isNotNullOrBlank())) {
-                    val transferData = payload.toTransferData(TransferState.Uploaded, 100f)
-                    attachmentLogic.updateAttachmentWithTransferData(transferData)
-                    return Pair(true, payload.url)
-                } else {
-
-                    val filePath = attachment.originalFilePath ?: attachment.filePath
-
-                    if (filePath.isNullOrEmpty()) {
-                        SceytLog.i(TAG, "Skip uploading a file path is null or empty")
-                        continue
-                    }
-
-                    val checksum = FileChecksumCalculator.calculateFileChecksum(filePath)
-
-                    if (checksum != null) {
-                        val checksumEntity = FileChecksumEntity(checksum, null, null, attachment.metadata, attachment.fileSize)
-                        fileChecksumDao.insert(checksumEntity)
-                    }
-
-                    val result = suspendCancellableCoroutine { continuation ->
-                        if (attachment.transferState != TransferState.PauseUpload) {
-
-                            val transferData = TransferData(tmpMessage.tid, attachment.progressPercent
-                                    ?: 0f, TransferState.WaitingToUpload,
-                                attachment.filePath, attachment.url).withPrettySizes(attachment.fileSize)
-
-                            FileTransferHelper.emitAttachmentTransferUpdate(transferData)
-
-                            runBlocking {
-                                attachmentLogic.updateAttachmentWithTransferData(transferData)
-                            }
-
-                            uploadFile(attachment, continuation, isSharing)
-                        }
-                    }
-
-                    if (result.first && result.second.isNotNullOrBlank() && checksum != null)
-                        fileChecksumDao.updateUrl(checksum, result.second)
-
-                    return result
                 }
+
+                val checksum = FileChecksumCalculator.calculateFileChecksum(filePath)
+
+                if (checksum != null) {
+                    val checksumEntity = FileChecksumEntity(checksum, null, null, attachment.metadata, attachment.fileSize)
+                    fileChecksumDao.insert(checksumEntity)
+                }
+
+                val (success, url) = suspendCancellableCoroutine { continuation ->
+                    if (attachment.transferState != TransferState.PauseUpload) {
+
+                        val transferData = TransferData(tmpMessage.tid, attachment.progressPercent
+                                ?: 0f, TransferState.WaitingToUpload,
+                            attachment.filePath, attachment.url)
+
+                        FileTransferHelper.emitAttachmentTransferUpdate(transferData, attachment.fileSize)
+
+                        runBlocking {
+                            attachmentLogic.updateAttachmentWithTransferData(transferData)
+                        }
+
+                        uploadFile(attachment, continuation, isSharing)
+                    }
+                }
+
+                if (success && url.isNotNullOrBlank()) {
+                    if (checksum != null)
+                        fileChecksumDao.updateUrl(checksum, url)
+                    attachments[index] = attachment.copy(url = url)
+                    return kotlin.Result.success(attachments)
+                } else
+                    return kotlin.Result.failure(Exception("Could not upload file"))
             }
-            return Pair(false, "Could not find any attachment to upload")
-        } ?: return Pair(false, "Attachments are empty")
+        }
+        return kotlin.Result.failure(Exception("Could not find any attachment to upload"))
     }
 
     private fun uploadFile(attachment: SceytAttachment, continuation: CancellableContinuation<Pair<Boolean, String?>>, isSharing: Boolean) {
         if (isSharing) {
             fileTransferService.uploadSharedFile(attachment, FileTransferHelper.createTransferTask(attachment, true).also { task ->
                 task.addOnCompletionListener(this.toString(), listener = { success: Boolean, url: String? ->
-                    attachment.url = url
                     continuation.safeResume(Pair(success, url))
                 })
             })
         } else {
             fileTransferService.upload(attachment, FileTransferHelper.createTransferTask(attachment, true).also { task ->
                 task.addOnCompletionListener(this.toString(), listener = { success: Boolean, url: String? ->
-                    attachment.url = url
                     continuation.safeResume(Pair(success, url))
                 })
             })
@@ -174,10 +174,11 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         startForeground(tmpMessage.channelId)
 
         val result = checkToUploadAttachmentsBeforeSend(tmpMessage, isSharing)
-        return if (result.first && result.second.isNotNullOrBlank() && !isStopped) {
+        return if (result.isSuccess && !isStopped) {
+            val messageToSend  = tmpMessage.copy(attachments = result.getOrThrow()).toMessage()
 
             ConnectionEventsObserver.awaitToConnectSceyt()
-            val response = messageLogic.sendMessageWithUploadedAttachments(tmpMessage.channelId, tmpMessage.toMessage())
+            val response = messageLogic.sendMessageWithUploadedAttachments(tmpMessage.channelId, messageToSend)
             if (response is SceytResponse.Success) {
                 response.data?.let {
                     messageLogic.attachmentSuccessfullySent(it)

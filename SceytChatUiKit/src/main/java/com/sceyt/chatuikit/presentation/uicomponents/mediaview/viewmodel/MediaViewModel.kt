@@ -6,10 +6,10 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
-import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
+import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.adapter.MediaItem
 import kotlinx.coroutines.Dispatchers
@@ -125,6 +125,8 @@ class MediaViewModel : BaseViewModel(), SceytKoinComponent {
                     fileTransferService.getThumb(attachment.messageTid, attachment, data.thumbData)
                 }
             }
+
+            is NeedMediaInfoData.NeedLinkPreview -> return
         }
     }
 

@@ -1,5 +1,7 @@
 package com.sceyt.chatuikit.presentation.uicomponents.messageinfo
 
+import android.app.Application
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.SceytException
@@ -10,15 +12,19 @@ import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
 import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.toFileListItem
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
+import com.sceyt.chatuikit.persistence.mappers.isLink
+import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.BufferOverflow
@@ -54,14 +60,19 @@ class MessageInfoViewModel(
     private val markerInteractor: MessageMarkerInteractor by inject()
     private val messageInteractor: MessageInteractor by inject()
     private val fileTransferService: FileTransferService by inject()
+    private val application: Application by inject()
+    private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
 
     private val _uiState = MutableStateFlow<UIState>(UIState.Loading)
     val uiState = _uiState.asStateFlow()
 
-    private val _messageFlow = MutableSharedFlow<SceytMessage>(
+    private val _initMessageViewFlow = MutableSharedFlow<SceytMessage>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val messageFlow = _messageFlow.asSharedFlow()
+    val initMessageViewFlow = _initMessageViewFlow.asSharedFlow()
+
+    private val _linkPreviewLiveData = MutableLiveData<SceytMessage>()
+    val linkPreviewLiveData = _linkPreviewLiveData.asLiveData()
 
     private val limit = 100
     private var message: SceytMessage? = null
@@ -90,7 +101,7 @@ class MessageInfoViewModel(
 
                 val fillMessage = initMessageFiles(message)
                 this@MessageInfoViewModel.message = fillMessage
-                _messageFlow.tryEmit(fillMessage)
+                _initMessageViewFlow.tryEmit(fillMessage)
             }
         }
     }
@@ -258,6 +269,21 @@ class MessageInfoViewModel(
         )
     }
 
+    private fun onLinkPreview(linkPreviewDetails: LinkPreviewDetails) {
+        val state = _uiState.value
+        if (state is UIState.Success) {
+            var message = state.message ?: return
+            message = message.copy(
+                attachments = message.attachments?.map {
+                    if (it.isLink() && it.url == linkPreviewDetails.link)
+                        it.copy(linkPreviewDetails = linkPreviewDetails)
+                    else it
+                }
+            )
+            _linkPreviewLiveData.postValue(message)
+        }
+    }
+
     fun getMessageAttachmentSizeIfExist(message: SceytMessage): Long? {
         return message.attachments?.find {
             it.type != AttachmentTypeEnum.Link.value() && it.type != AttachmentTypeEnum.File.value()
@@ -276,6 +302,18 @@ class MessageInfoViewModel(
             is NeedMediaInfoData.NeedThumb -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     fileTransferService.getThumb(attachment.messageTid, attachment, data.thumbData)
+                }
+            }
+
+            is NeedMediaInfoData.NeedLinkPreview -> {
+                if (data.onlyCheckMissingData && attachment.linkPreviewDetails != null) {
+                    linkPreviewHelper.checkMissedData(attachment.linkPreviewDetails) {
+                        onLinkPreview(it)
+                    }
+                } else {
+                    linkPreviewHelper.getPreview(attachment, true, successListener = {
+                        onLinkPreview(it)
+                    })
                 }
             }
         }

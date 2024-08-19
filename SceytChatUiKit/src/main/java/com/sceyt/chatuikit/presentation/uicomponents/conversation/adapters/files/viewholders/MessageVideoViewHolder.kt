@@ -53,7 +53,7 @@ class MessageVideoViewHolder(
     }
 
     override fun bind(item: FileListItem, message: SceytMessage) {
-        super.bind(item)
+        super.bind(item, message)
         /* binding.parentLayout.clipToOutline = true
          binding.videoView.isVisible = false*/
         setVideoDuration()

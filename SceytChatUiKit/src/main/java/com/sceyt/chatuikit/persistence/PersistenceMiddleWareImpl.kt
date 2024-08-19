@@ -274,10 +274,6 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return membersLogic.filterOnlyMembersByIds(channelId, ids)
     }
 
-    override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>> {
-        return membersLogic.blockUnBlockUser(userId, block)
-    }
-
     override suspend fun changeChannelOwner(channelId: Long, newOwnerId: String): SceytResponse<SceytChannel> {
         return membersLogic.changeChannelOwner(channelId, newOwnerId)
     }
@@ -531,6 +527,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     override suspend fun unMuteNotifications(): SceytResponse<Boolean> {
         return usersLogic.unMuteNotifications()
+    }
+
+    override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>> {
+        return usersLogic.blockUnBlockUser(userId, block)
     }
 
     override suspend fun loadReactions(messageId: Long, offset: Int, key: String,

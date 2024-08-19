@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.persistence.interactor
 
 import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -11,7 +10,6 @@ import kotlinx.coroutines.flow.Flow
 interface ChannelMemberInteractor {
     suspend fun changeChannelOwner(channelId: Long, newOwnerId: String): SceytResponse<SceytChannel>
     suspend fun changeChannelMemberRole(channelId: Long, vararg member: SceytMember): SceytResponse<SceytChannel>
-    suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>>
     suspend fun addMembersToChannel(channelId: Long, members: List<Member>): SceytResponse<SceytChannel>
     suspend fun blockAndDeleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel>
     suspend fun deleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel>

@@ -107,7 +107,7 @@ internal val logicModule = module {
     single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     single<PersistenceMessageMarkerLogic> { PersistenceMessageMarkerLogicImpl(get(), get(), get()) }
     single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get()) }

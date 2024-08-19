@@ -7,21 +7,22 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemOutLinkMessageBinding
 import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseLinkMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
-import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 class OutLinkMsgViewHolder(
         private val binding: SceytItemOutLinkMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
-        linkPreview: LinkPreviewHelper,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        userNameFormatter: UserNameFormatter?
-) : BaseLinkMsgViewHolder(linkPreview, binding.root, style, messageListeners, userNameFormatter = userNameFormatter) {
+        userNameFormatter: UserNameFormatter?,
+        needMediaDataCallback: (NeedMediaInfoData) -> Unit,
+) : BaseLinkMsgViewHolder(binding.root, style, messageListeners,
+    userNameFormatter = userNameFormatter, needMediaDataCallback = needMediaDataCallback) {
 
     init {
         with(binding) {

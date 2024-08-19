@@ -127,8 +127,8 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
                     it.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                         override fun getSpanSize(position: Int): Int {
                             return when (adapter.getItemViewType(position)) {
-                                ChannelAttachmentViewHolderFactory.ItemType.Loading.ordinal -> 3
-                                ChannelAttachmentViewHolderFactory.ItemType.MediaDate.ordinal -> 3
+                                ChannelAttachmentViewHolderFactory.ItemType.Loading.ordinal -> getSpanCount()
+                                ChannelAttachmentViewHolderFactory.ItemType.MediaDate.ordinal -> getSpanCount()
                                 else -> 1
                             }
                         }

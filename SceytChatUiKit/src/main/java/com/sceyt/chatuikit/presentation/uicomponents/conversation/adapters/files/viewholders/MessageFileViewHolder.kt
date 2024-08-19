@@ -54,7 +54,7 @@ class MessageFileViewHolder(
     }
 
     override fun bind(item: FileListItem, message: SceytMessage) {
-        super.bind(item)
+        super.bind(item, message)
         val file = (item as? FileListItem.File)?.file ?: return
         setListener()
 

@@ -79,7 +79,7 @@ class AttachmentViewHolderHelper(itemView: View) {
             if (isValidThumb(data.thumbData))
                 fileItem.thumbPath = data.filePath
         } else {
-            fileItem.file.updateWithTransferData(data)
+            fileItem.file = fileItem.file.getUpdatedWithTransferData(data)
             transferData = data
         }
         return true
