@@ -96,8 +96,8 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
 
         getBundleArguments()
         initViewModel()
-        binding?.initViews()
-        binding?.applyStyle()
+        initViews()
+        applyStyle()
         setChannelDetails(channel)
         viewModel.getChannelFromServer(channel.id)
         setupPagerAdapter(binding?.viewPager, binding?.tabLayout)
@@ -170,8 +170,8 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
             viewModel.observeUserPresenceUpdate(channel)
     }
 
-    private fun SceytActivityConversationInfoBinding.initViews() {
-        (layoutDetails.layoutParams as? CollapsingToolbarLayout.LayoutParams)?.let {
+    private fun initViews() {
+        (binding?.layoutDetails?.layoutParams as? CollapsingToolbarLayout.LayoutParams)?.let {
             it.collapseMode = getLayoutDetailsCollapseMode()
         }
     }
@@ -631,14 +631,15 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
         overrideTransitions(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right, false)
     }
 
-    private fun SceytActivityConversationInfoBinding.applyStyle() {
-        val theme = SceytChatUIKit.theme
-        root.setBackgroundColor(getCompatColor(theme.backgroundColorTertiary))
-        toolbar.setBackgroundColor(getCompatColor(theme.primaryColor))
-        viewTopTabLayout.setBackgroundTintColorRes(theme.borderColor)
-        underlineTab.setBackgroundTintColorRes(theme.borderColor)
-        tabLayout.setBackgroundColor(getCompatColor(theme.backgroundColorSections))
-        tabLayout.setTabTextColors(getCompatColor(theme.textSecondaryColor), getCompatColor(theme.textPrimaryColor))
+    protected open fun applyStyle() {
+        with(binding ?: return) {
+            val theme = SceytChatUIKit.theme
+            root.setBackgroundColor(getCompatColor(theme.backgroundColorTertiary))
+            viewTopTabLayout.setBackgroundTintColorRes(theme.borderColor)
+            underlineTab.setBackgroundTintColorRes(theme.borderColor)
+            tabLayout.setBackgroundColor(getCompatColor(theme.backgroundColorSections))
+            tabLayout.setTabTextColors(getCompatColor(theme.textSecondaryColor), getCompatColor(theme.textPrimaryColor))
+        }
     }
 
     companion object {

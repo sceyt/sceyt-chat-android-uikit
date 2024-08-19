@@ -89,7 +89,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messagesListView.post {
                 if (needToUpdateTransferAfterOnResume.isNotEmpty()) {
                     needToUpdateTransferAfterOnResume.values.forEach { data ->
-                        messagesListView.updateProgress(data, true)
+                        viewModelScope.launch(Dispatchers.Default) {
+                            messagesListView.updateProgress(data, true)
+                        }
                     }
                     needToUpdateTransferAfterOnResume.clear()
                 }
@@ -466,7 +468,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                             if (data.messageIds.contains(message.id)) {
                                 val updatedItem = listItem.copy(message = message.copy(userMarkers = message.userMarkers?.toMutableSet()?.apply {
                                     add(SceytMarker(message.id, user, data.name, data.createdAt))
-                                }?.toTypedArray()))
+                                }?.toList()))
                                 messagesListView.updateItemAt(index, updatedItem)
                             }
                         }
@@ -573,6 +575,12 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 messagesListView.updateProgress(it, false)
             } else
                 needToUpdateTransferAfterOnResume[it.messageTid] = it
+        }
+    }.launchIn(viewModelScope)
+
+    linkPreviewLiveData.asFlow().onEach {
+        viewModelScope.launch(Dispatchers.Default) {
+            messagesListView.updateLinkPreview(it)
         }
     }.launchIn(viewModelScope)
 

@@ -24,7 +24,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adap
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.viewholder.VoiceViewHolder
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
-import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 open class ChannelAttachmentViewHolderFactory(context: Context,
                                               protected val style: ConversationInfoMediaStyle) {
@@ -35,8 +34,6 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
     protected var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
         private set
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
-    protected var linkPreviewHelper: LinkPreviewHelper? = null
-        private set
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<ChannelFileItem> {
         return when (viewType) {
@@ -77,8 +74,8 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
 
     open fun createLinkViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         return LinkViewHolder(
-            SceytItemChannelLinkBinding.inflate(layoutInflater, parent, false), linkPreviewHelper,
-            clickListeners)
+            SceytItemChannelLinkBinding.inflate(layoutInflater, parent, false),
+            clickListeners, needMediaDataCallback)
     }
 
     open fun createMediaDateViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
@@ -120,10 +117,6 @@ open class ChannelAttachmentViewHolderFactory(context: Context,
 
     fun setUserNameFormatter(formatter: UserNameFormatter) {
         userNameFormatter = formatter
-    }
-
-    fun setLinkPreviewHelper(helper: LinkPreviewHelper) {
-        linkPreviewHelper = helper
     }
 
     protected fun getNeedMediaDataCallback() = needMediaDataCallback

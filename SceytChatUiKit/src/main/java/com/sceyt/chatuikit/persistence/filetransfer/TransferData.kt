@@ -6,16 +6,10 @@ data class TransferData(
         var state: TransferState,
         var filePath: String?,
         val url: String?,
-        val thumbData: ThumbData? = null
+        val thumbData: ThumbData? = null,
+        val fileLoadedSize: String? = null,
+        val fileTotalSize: String? = null
 ) {
-    var fileLoadedSize: String? = null
-    var fileTotalSize: String? = null
-
-    override fun toString(): String {
-        return "messageTid $messageTid, progressPercent $progressPercent, state $state, filePath $filePath," +
-                " url$url thumbData $thumbData fileLoadedSize $fileLoadedSize fileTotalSize $fileTotalSize"
-    }
-
     fun isCalculatedLoadedSize() = !fileLoadedSize.isNullOrBlank() && !fileTotalSize.isNullOrBlank()
 
     fun isTransferring() = state == TransferState.Downloading || state == TransferState.Uploading || state == TransferState.Preparing
@@ -24,10 +18,10 @@ data class TransferData(
 
         fun TransferData.withPrettySizes(fileSize: Long): TransferData {
             FileTransferHelper.getFilePrettySizes(fileSize, progressPercent).run {
-                fileLoadedSize = first
-                fileTotalSize = second
+                return copy(
+                    fileLoadedSize = first,
+                    fileTotalSize = second)
             }
-            return this
         }
     }
 }

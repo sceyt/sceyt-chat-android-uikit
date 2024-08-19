@@ -83,9 +83,14 @@ open class MessageInfoFragment : Fragment() {
             }
         }.launchIn(lifecycleScope)
 
-        viewModel.messageFlow.onEach {
+        viewModel.initMessageViewFlow.onEach {
             onMessage(it)
         }.launchIn(lifecycleScope)
+
+
+        viewModel.linkPreviewLiveData.observe(viewLifecycleOwner) {
+            messageViewProvider.updateMessage(it)
+        }
     }
 
     protected open fun onUiStateSuccess(it: UIState.Success) {

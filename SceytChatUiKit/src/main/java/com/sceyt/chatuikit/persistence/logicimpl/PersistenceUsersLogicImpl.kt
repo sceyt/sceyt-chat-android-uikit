@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.dao.UserDao
 import com.sceyt.chatuikit.persistence.extensions.safeResume
+import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
 import com.sceyt.chatuikit.persistence.mappers.toUser
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
@@ -21,13 +22,15 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.koin.core.component.inject
 
 internal class PersistenceUsersLogicImpl(
         private val userDao: UserDao,
         private val userRepository: UsersRepository,
         private val profileRepo: ProfileRepository,
-        private val preference: SceytSharedPreference
+        private val preference: SceytSharedPreference,
 ) : PersistenceUsersLogic, SceytKoinComponent {
+    private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
 
     override suspend fun loadUsers(query: String): SceytResponse<List<User>> {
         val response = userRepository.loadUsers(query)
@@ -162,6 +165,20 @@ internal class PersistenceUsersLogicImpl(
 
     override suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>) {
         userDao.updateUsers(users.map { it.user.toUserEntity() })
+    }
+
+    override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>> {
+        val response = if (block) {
+            userRepository.blockUser(userId)
+        } else
+            userRepository.unblockUser(userId)
+
+        if (response is SceytResponse.Success) {
+            userDao.blockUnBlockUser(userId, block)
+            persistenceChannelsLogic.blockUnBlockUser(userId, block)
+        }
+
+        return response
     }
 
     private suspend fun updateCurrentUser() {

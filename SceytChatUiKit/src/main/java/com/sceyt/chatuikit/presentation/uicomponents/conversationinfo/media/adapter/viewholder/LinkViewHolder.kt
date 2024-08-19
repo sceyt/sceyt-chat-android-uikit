@@ -12,15 +12,16 @@ import com.sceyt.chatuikit.databinding.SceytItemChannelLinkBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.glideRequestListener
+import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
-import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
-import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 
 
-class LinkViewHolder(private val binding: SceytItemChannelLinkBinding,
-                     private val linkPreview: LinkPreviewHelper?,
-                     private val clickListener: AttachmentClickListenersImpl
+class LinkViewHolder(
+        private val binding: SceytItemChannelLinkBinding,
+        private val clickListener: AttachmentClickListeners.AttachmentClickListener,
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, {}) {
 
     init {
@@ -38,23 +39,26 @@ class LinkViewHolder(private val binding: SceytItemChannelLinkBinding,
             root.layoutTransition?.setAnimateParentHierarchy(false)
 
             tvLinkUrl.text = attachment.url
-            if (attachment.linkPreviewDetails == null) {
+            val previewDetails  =attachment.linkPreviewDetails
+            if (previewDetails == null) {
                 setLinkInfo(null, attachment)
-                linkPreview?.getPreview(attachment, true, successListener = {
-                    setLinkInfo(it, attachment)
-                })
-            } else setLinkInfo(attachment.linkPreviewDetails, attachment)
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedLinkPreview(attachment, false))
+            } else {
+                setLinkInfo(previewDetails, attachment)
+                if (previewDetails.imageUrl != null && previewDetails.imageWidth == null)
+                    needMediaDataCallback(NeedMediaInfoData.NeedLinkPreview(attachment, true))
+            }
         }
     }
 
     private fun SceytItemChannelLinkBinding.setLinkInfo(data: LinkPreviewDetails?, attachment: SceytAttachment) {
         if (data == null || viewHolderHelper.isFileItemInitialized.not() || data.link != attachment.url || data.hideDetails) {
-            tvLinkName.text = ""
+            tvLinkName.text = null
             tvLinkName.isVisible = false
             tvLinkDescription.isVisible = false
             setDefaultStateLinkImage()
         } else {
-            attachment.linkPreviewDetails = data
+            fileItem.file = attachment.copy(linkPreviewDetails = data)
             tvLinkName.apply {
                 text = data.title?.trim()
                 isVisible = data.title.isNullOrBlank().not()

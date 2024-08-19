@@ -68,6 +68,15 @@ class ChannelMediaAdapter(
             notifyItemRangeInserted(attachments.size - updatedItems.size, updatedItems.size)
     }
 
+    fun updateItemAt(index: Int, item: ChannelFileItem) {
+        try {
+            attachments[index] = item
+            notifyItemChanged(index, Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     private fun checkMaybeShouldRemoveDateItem(itemsToAdd: List<ChannelFileItem>): List<ChannelFileItem> {
         return attachments.findLast { it is ChannelFileItem.MediaDate }?.let { date1 ->
             itemsToAdd.find { item -> item is ChannelFileItem.MediaDate }?.let { date2 ->

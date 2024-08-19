@@ -98,6 +98,7 @@ open class SceytShareActivity : SceytShareableActivity() {
     }
 
     protected open fun SceytActivityShareBinding.applyStyle() {
+        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.backgroundColor))
         btnShare.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
         toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
     }
