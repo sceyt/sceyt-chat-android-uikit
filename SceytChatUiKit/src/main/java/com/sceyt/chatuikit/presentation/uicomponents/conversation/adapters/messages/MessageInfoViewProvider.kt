@@ -30,10 +30,8 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.Mess
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
-import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 open class MessageInfoViewProvider(private val context: Context) {
-    protected val linkPreview: LinkPreviewHelper = LinkPreviewHelper(context)
     protected val viewPoolReactions = RecyclerView.RecycledViewPool()
     protected var clickListeners = MessageClickListenersImpl()
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
@@ -72,8 +70,8 @@ open class MessageInfoViewProvider(private val context: Context) {
     private fun createOutLinkMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMsgViewHolder {
         viewStub.layoutResource = layoutId
         val binding = SceytItemOutLinkMessageBinding.bind(viewStub.inflate())
-        return OutLinkMsgViewHolder(binding, viewPoolReactions, linkPreview,
-            messageItemStyle, clickListeners, userNameFormatter)
+        return OutLinkMsgViewHolder(binding, viewPoolReactions,
+            messageItemStyle, clickListeners, userNameFormatter, needMediaDataCallback)
     }
 
     private fun createOutVoiceMsgViewHolder(viewStub: ViewStub, layoutId: Int): BaseMsgViewHolder {
@@ -142,6 +140,10 @@ open class MessageInfoViewProvider(private val context: Context) {
 
     fun updateMessageStatus(message: SceytMessage) {
         viewHolder?.bind(MessageListItem.MessageItem(message), MessageDiff.DEFAULT_FALSE.copy(statusChanged = true))
+    }
+
+    fun updateMessage(message: SceytMessage) {
+        viewHolder?.bind(MessageListItem.MessageItem(message), MessageDiff.DEFAULT)
     }
 
     fun setNeedMediaDataCallback(callback: (NeedMediaInfoData) -> Unit) {

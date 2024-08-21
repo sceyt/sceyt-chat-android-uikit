@@ -72,9 +72,9 @@ class MessageToSendHelper(private val context: Context,
             .initRelyMessage(replyMessage, replyThreadMessageId)
 
         if (withMentionedUsers) {
-            val data = getMentionUsersAndAttributes(body)
-            message.setMentionedUsers(data.second)
-            message.setBodyAttributes(data.first.toTypedArray())
+            val (bodyAttributes, mentionedUsers) = getMentionUsersAndAttributes(body)
+            message.setMentionedUsers(mentionedUsers.toTypedArray())
+            message.setBodyAttributes(bodyAttributes.toTypedArray())
         }
 
         return message.build()
@@ -109,43 +109,47 @@ class MessageToSendHelper(private val context: Context,
         val linkAttachment = getLinkAttachmentFromBody(body, linkDetails)
             ?.toSceytAttachment(message.tid, TransferState.Uploaded, linkPreviewDetails = linkDetails)
 
-        message.body = body.toString()
-
-        if (linkAttachment != null) {
+        val attachments = if (linkAttachment != null) {
             if (message.attachments.isNullOrEmpty())
-                message.attachments = arrayOf(linkAttachment)
+                listOf(linkAttachment)
             else {
-                val existLinkIndex = message.attachments?.indexOfFirst {
+                val existLinkIndex = message.attachments.indexOfFirst {
                     it.type == AttachmentTypeEnum.Link.value()
                 }
 
-                if (existLinkIndex == -1 || existLinkIndex == null) {
-                    message.attachments = (message.attachments ?: arrayOf()).plus(linkAttachment)
-                } else
-                    message.attachments?.set(existLinkIndex, linkAttachment)
+                if (existLinkIndex == -1) {
+                    message.attachments.plus(linkAttachment)
+                } else {
+                    val oldLinkAttachments = message.attachments.toArrayList()
+                    oldLinkAttachments[existLinkIndex] = linkAttachment
+                    oldLinkAttachments
+                }
             }
         } else // remove link attachment if exist, because message should contain only one link attachment
-            message.attachments = message.attachments?.filter {
+            message.attachments?.filter {
                 it.type != AttachmentTypeEnum.Link.value()
-            }?.toTypedArray()
+            }
 
-        val data = getMentionUsersAndAttributes(body)
-        message.mentionedUsers = data.second
-        message.bodyAttributes = data.first
+        val (bodyAttributes, mentionedUsers) = getMentionUsersAndAttributes(body)
+        val editedMessage = message.copy(
+            body = body.toString(),
+            attachments = attachments,
+            bodyAttributes = bodyAttributes,
+            mentionedUsers = mentionedUsers)
 
-        listeners?.sendEditMessage(message, linkDetails)
+        listeners?.sendEditMessage(editedMessage, linkDetails)
         return true
     }
 
-    private fun getMentionUsersAndAttributes(body: CharSequence): Pair<List<BodyAttribute>, Array<User>> {
+    private fun getMentionUsersAndAttributes(body: CharSequence): Pair<List<BodyAttribute>, List<User>> {
         val bodyAttributes = arrayListOf<BodyAttribute>()
-        var mentionUsers = arrayOf<User>()
+        var mentionUsers = listOf<User>()
         val mentions = MentionAnnotation.getMentionsFromAnnotations(body)
         val styling = BodyStyler.getStyling(body)
         val attributes = initBodyAttributes(styling, mentions)
         if (attributes.isNotEmpty()) {
             bodyAttributes.addAll(attributes)
-            mentionUsers = mentions.map { createEmptyUser(it.recipientId, it.name) }.toTypedArray()
+            mentionUsers = mentions.map { createEmptyUser(it.recipientId, it.name) }
         }
         return Pair(bodyAttributes, mentionUsers)
     }

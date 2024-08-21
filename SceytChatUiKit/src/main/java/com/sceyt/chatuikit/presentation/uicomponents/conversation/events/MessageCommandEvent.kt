@@ -44,6 +44,7 @@ sealed interface MessageCommandEvent {
     ) : MessageCommandEvent
 
     data class AttachmentLoaderClick(
+            val message: SceytMessage,
             val item: FileListItem
     ) : MessageCommandEvent
 

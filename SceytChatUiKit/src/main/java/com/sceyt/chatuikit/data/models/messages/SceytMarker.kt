@@ -6,11 +6,11 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class SceytMarker(
-        var messageId: Long,
+        val messageId: Long,
         val userId: String,
-        var user: User?,
-        var name: String,
-        var createdAt: Long,
+        val user: User?,
+        val name: String,
+        val createdAt: Long,
 ) : Parcelable {
 
     constructor(messageId: Long, user: User, name: String, createdAt: Long) : this(messageId, user.id, user, name, createdAt)

@@ -11,6 +11,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
+import com.sceyt.chatuikit.data.copy
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytChannelListViewBinding
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
@@ -67,15 +68,15 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
 
         defaultClickListeners = object : ChannelClickListenersImpl() {
             override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-                clickListeners.onChannelClick(item.copy(channel = item.channel.clone()))
+                clickListeners.onChannelClick(item.copy(channel = item.channel))
             }
 
             override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {
-                clickListeners.onChannelLongClick(view, item.copy(channel = item.channel.clone()))
+                clickListeners.onChannelLongClick(view, item.copy(channel = item.channel))
             }
 
             override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
-                clickListeners.onAvatarClick(item.copy(channel = item.channel.clone()))
+                clickListeners.onAvatarClick(item.copy(channel = item.channel))
             }
         }
         channelsRV.setChannelListener(defaultClickListeners)
@@ -100,39 +101,35 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     internal fun channelUpdated(channel: SceytChannel?): ChannelDiff? {
-        channelsRV.getChannelIndexed(channel?.id ?: return null)?.let { pair ->
-            val channelItem = pair.second
-            val oldChannel = channelItem.channel.clone()
+        channelsRV.getChannelIndexed(channel?.id ?: return null)?.let { (index, channelItem) ->
+            val oldChannel = channelItem.channel
             channelItem.channel = channel
             val diff = oldChannel.diff(channel)
-            channelsRV.adapter?.notifyItemChanged(pair.first, diff)
+            channelsRV.adapter?.notifyItemChanged(index, diff)
             return diff
         }
         return null
     }
 
     internal fun channelUpdatedWithDiff(channel: SceytChannel, diff: ChannelDiff) {
-        channelsRV.getChannelIndexed(channel.id)?.let { pair ->
-            val channelItem = pair.second
+        channelsRV.getChannelIndexed(channel.id)?.let { (index, channelItem) ->
             channelItem.channel = channel
-            channelsRV.adapter?.notifyItemChanged(pair.first, diff)
+            channelsRV.adapter?.notifyItemChanged(index, diff)
         }
     }
 
-    fun replaceChannel(first: Long, second: SceytChannel) {
-        channelsRV.getChannelIndexed(first)?.let { pair ->
-            val channelItem = pair.second
-            channelItem.channel = second.clone()
+    fun replaceChannel(pendingChannelId: Long, channel: SceytChannel) {
+        channelsRV.getChannelIndexed(pendingChannelId)?.let { (_, channelItem) ->
+            channelItem.channel = channel
         }
     }
 
     internal fun onTyping(data: ChannelTypingEventData) {
-        channelsRV.getChannelIndexed(data.channel.id)?.let { pair ->
-            val channelItem = pair.second
-            val oldChannel = channelItem.channel.clone()
+        channelsRV.getChannelIndexed(data.channel.id)?.let { (index, channelItem) ->
+            val oldChannel = channelItem.channel
             channelItem.channel.typingData = data
             val diff = oldChannel.diff(channelItem.channel)
-            channelsRV.adapter?.notifyItemChanged(pair.first, diff)
+            channelsRV.adapter?.notifyItemChanged(index, diff)
         }
     }
 
@@ -146,8 +143,14 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
         data?.forEach { user ->
             channelsRV.getChannels()?.find {
                 it.channel.isDirect() && it.channel.getPeer()?.id == user.id
-            }?.let {
-                it.channel.getPeer()?.user = user
+            }?.let { channelItem ->
+                val channel = channelItem.channel
+                channelItem.channel = channel.copy(
+                    members = channel.members?.map { member ->
+                        if (member.id == user.id) member.copy(user = user.copy())
+                        else member
+                    }
+                )
             }
         }
     }

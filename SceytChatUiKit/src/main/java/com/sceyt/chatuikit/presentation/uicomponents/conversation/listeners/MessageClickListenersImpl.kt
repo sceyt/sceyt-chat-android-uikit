@@ -63,24 +63,24 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         addReactionClickListener?.onAddReactionClick(view, message)
     }
 
-    override fun onReactionClick(view: View, item: ReactionItem.Reaction) {
-        defaultListeners?.onReactionClick(view, item)
-        reactionClickListener?.onReactionClick(view, item)
+    override fun onReactionClick(view: View, item: ReactionItem.Reaction, message: SceytMessage) {
+        defaultListeners?.onReactionClick(view, item, message)
+        reactionClickListener?.onReactionClick(view, item, message)
     }
 
-    override fun onReactionLongClick(view: View, item: ReactionItem.Reaction) {
-        defaultListeners?.onReactionLongClick(view, item)
-        reactionLongClickListener?.onReactionLongClick(view, item)
+    override fun onReactionLongClick(view: View, item: ReactionItem.Reaction, message: SceytMessage) {
+        defaultListeners?.onReactionLongClick(view, item, message)
+        reactionLongClickListener?.onReactionLongClick(view, item, message)
     }
 
-    override fun onAttachmentClick(view: View, item: FileListItem) {
-        defaultListeners?.onAttachmentClick(view, item)
-        attachmentClickListener?.onAttachmentClick(view, item)
+    override fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage) {
+        defaultListeners?.onAttachmentClick(view, item, message)
+        attachmentClickListener?.onAttachmentClick(view, item, message)
     }
 
-    override fun onAttachmentLongClick(view: View, item: FileListItem) {
-        defaultListeners?.onAttachmentLongClick(view, item)
-        attachmentLongClickListener?.onAttachmentLongClick(view, item)
+    override fun onAttachmentLongClick(view: View, item: FileListItem, message: SceytMessage) {
+        defaultListeners?.onAttachmentLongClick(view, item, message)
+        attachmentLongClickListener?.onAttachmentLongClick(view, item, message)
     }
 
     override fun onMentionClick(view: View, userId: String) {
@@ -88,9 +88,9 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         mentionUserClickListener?.onMentionClick(view, userId)
     }
 
-    override fun onAttachmentLoaderClick(view: View, item: FileListItem) {
-        defaultListeners?.onAttachmentLoaderClick(view, item)
-        attachmentLoaderClickListener?.onAttachmentLoaderClick(view, item)
+    override fun onAttachmentLoaderClick(view: View, item: FileListItem, message: SceytMessage) {
+        defaultListeners?.onAttachmentLoaderClick(view, item, message)
+        attachmentLoaderClickListener?.onAttachmentLoaderClick(view, item, message)
     }
 
     override fun onLinkClick(view: View, item: MessageListItem.MessageItem) {

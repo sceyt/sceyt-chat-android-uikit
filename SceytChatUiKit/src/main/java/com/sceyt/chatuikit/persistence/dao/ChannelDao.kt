@@ -118,6 +118,9 @@ interface ChannelDao {
     @Query("select lastMessageTid from channels where chat_id in (:ids)")
     suspend fun getChannelsLastMessageTIds(ids: List<Long>): List<Long>
 
+    @Query("select lastMessageTid from channels where chat_id = :id")
+    suspend fun getChannelLastMessageTid(id: Long): Long?
+
     @Transaction
     @Query("select sum(newMessageCount) from channels")
     fun getTotalUnreadCountAsFlow(): Flow<Int?>

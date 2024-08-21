@@ -89,7 +89,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messagesListView.post {
                 if (needToUpdateTransferAfterOnResume.isNotEmpty()) {
                     needToUpdateTransferAfterOnResume.values.forEach { data ->
-                        messagesListView.updateProgress(data, true)
+                        viewModelScope.launch(Dispatchers.Default) {
+                            messagesListView.updateProgress(data, true)
+                        }
                     }
                     needToUpdateTransferAfterOnResume.clear()
                 }
@@ -460,12 +462,14 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 viewModelScope.launch(Dispatchers.Default) {
                     val user = ClientWrapper.currentUser ?: User(SceytChatUIKit.chatUIFacade.myId
                             ?: return@launch)
-                    messagesListView.getData().forEach { listItem ->
+                    val messages = messagesListView.getData()
+                    messages.forEachIndexed { index, listItem ->
                         (listItem as? MessageItem)?.message?.let { message ->
                             if (data.messageIds.contains(message.id)) {
-                                message.userMarkers = message.userMarkers?.toMutableSet()?.apply {
+                                val updatedItem = listItem.copy(message = message.copy(userMarkers = message.userMarkers?.toMutableSet()?.apply {
                                     add(SceytMarker(message.id, user, data.name, data.createdAt))
-                                }?.toTypedArray()
+                                }?.toList()))
+                                messagesListView.updateItemAt(index, updatedItem)
                             }
                         }
                     }
@@ -565,16 +569,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
           messagesListView.newReplyMessage(it.parentMessage?.id)
       }.launchIn(viewModelScope)
   */
-    onMessageStatusFlow.onEach {
-        messagesListView.updateMessagesStatus(it.status, it.marker.messageIds)
-    }.launchIn(viewModelScope)
-
     onTransferUpdatedLiveData.asFlow().onEach {
         viewModelScope.launch(Dispatchers.Default) {
             if (lifecycleOwner.isResumed()) {
                 messagesListView.updateProgress(it, false)
             } else
                 needToUpdateTransferAfterOnResume[it.messageTid] = it
+        }
+    }.launchIn(viewModelScope)
+
+    linkPreviewLiveData.asFlow().onEach {
+        viewModelScope.launch(Dispatchers.Default) {
+            messagesListView.updateLinkPreview(it)
         }
     }.launchIn(viewModelScope)
 
@@ -651,11 +657,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     return@setMessageCommandEventListener
                 }
 
-                event.message.isSelected = !wasSelected
-                messagesListView.updateMessageSelection(event.message)
+                val message = event.message.copy(isSelected = !wasSelected)
+                messagesListView.updateMessageSelection(message)
 
                 if (wasSelected) {
-                    selectedMessagesMap.remove(event.message.tid)
+                    selectedMessagesMap.remove(message.tid)
                     if (selectedMessagesMap.isEmpty()) {
                         messageActionBridge.hideMessageActions()
                         messagesListView.cancelMultiSelectMode()
@@ -663,7 +669,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                         messageActionBridge.showMessageActions(*selectedMessagesMap.values.toTypedArray())
                     }
                 } else {
-                    selectedMessagesMap[event.message.tid] = event.message
+                    selectedMessagesMap[message.tid] = message
                     messageActionBridge.showMessageActions(*selectedMessagesMap.values.toTypedArray())
                     messagesListView.setMultiSelectableMode()
                 }
@@ -688,7 +694,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
             is MessageCommandEvent.AttachmentLoaderClick -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    prepareToPauseOrResumeUpload(event.item)
+                    prepareToPauseOrResumeUpload(event.item, event.message)
                 }
             }
 
@@ -741,9 +747,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             onMessageDisplayed(it)
     }
 
-    messagesListView.setVoicePlayPauseListener { fileItem, playing ->
+    messagesListView.setVoicePlayPauseListener { _, message, playing ->
         if (playing)
-            onVocePlaying(fileItem.sceytMessage)
+            onVocePlaying(message)
     }
 }
 

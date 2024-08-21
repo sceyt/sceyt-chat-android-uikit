@@ -11,7 +11,8 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
-class FilesViewHolderFactory(context: Context, private val messageListeners: MessageClickListeners.ClickListeners?,
+class FilesViewHolderFactory(context: Context,
+                             private val messageListeners: MessageClickListeners.ClickListeners?,
                              private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) {
 
     private val layoutInflater = LayoutInflater.from(context)
@@ -21,7 +22,7 @@ class FilesViewHolderFactory(context: Context, private val messageListeners: Mes
         this.style = style
     }
 
-    fun createViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<FileListItem> {
+    fun createViewHolder(parent: ViewGroup, viewType: Int): BaseMessageFileViewHolder<FileListItem> {
         return when (viewType) {
             FileViewType.File.ordinal -> {
                 MessageFileViewHolder(SceytMessageFileItemBinding.inflate(layoutInflater, parent, false),

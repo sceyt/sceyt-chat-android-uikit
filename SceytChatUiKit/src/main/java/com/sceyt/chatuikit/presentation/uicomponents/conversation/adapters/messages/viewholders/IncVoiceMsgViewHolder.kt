@@ -8,6 +8,7 @@ import com.masoudss.lib.WaveformSeekBar
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemIncVoiceMessageBinding
 import com.sceyt.chatuikit.extensions.TAG_REF
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
@@ -55,7 +56,7 @@ class IncVoiceMsgViewHolder(
         displayedListener: ((MessageListItem) -> Unit)?,
         userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-        private val voicePlayPauseListener: ((FileListItem, playing: Boolean) -> Unit)?
+        private val voicePlayPauseListener: ((FileListItem, SceytMessage, playing: Boolean) -> Unit)?
 ) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, userNameFormatter, needMediaDataCallback) {
     private var currentPlaybackSpeed: PlaybackSpeed = PlaybackSpeed.X1
         set(value) {
@@ -69,11 +70,11 @@ class IncVoiceMsgViewHolder(
             setMessageItemStyle()
 
             root.setOnClickListener {
-                messageListeners.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
+                messageListeners.onMessageClick(it, requireMessageItem)
             }
 
             root.setOnLongClickListener {
-                messageListeners.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+                messageListeners.onMessageLongClick(it, requireMessageItem)
                 return@setOnLongClickListener true
             }
 
@@ -84,7 +85,7 @@ class IncVoiceMsgViewHolder(
             }
 
             loadProgress.setOnClickListener {
-                messageListeners.onAttachmentLoaderClick(it, FileListItem.File(fileItem.file, (messageListItem as MessageListItem.MessageItem).message))
+                messageListeners.onAttachmentLoaderClick(it, fileItem, requireMessage)
             }
 
             playPauseButton.setOnClickListener {
@@ -213,7 +214,7 @@ class IncVoiceMsgViewHolder(
                 if (!checkIsValid(filePath)) return
                 runOnMainThread {
                     setPlayButtonIcon(playing, binding.playPauseButton)
-                    voicePlayPauseListener?.invoke(fileItem, playing)
+                    voicePlayPauseListener?.invoke(fileItem, requireMessage, playing)
                 }
             }
 

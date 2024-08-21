@@ -22,6 +22,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventData
+import com.sceyt.chatuikit.data.copy
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Broadcast
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Direct
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Group
@@ -33,6 +34,7 @@ import com.sceyt.chatuikit.databinding.SceytActivityConversationInfoBinding
 import com.sceyt.chatuikit.extensions.TAG_NAME
 import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.launchActivity
@@ -45,6 +47,7 @@ import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPublic
+import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.channels.dialogs.ChannelActionConfirmationWithDialog
@@ -93,8 +96,8 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
 
         getBundleArguments()
         initViewModel()
-        binding?.initViews()
-        binding?.applyStyle()
+        initViews()
+        applyStyle()
         setChannelDetails(channel)
         viewModel.getChannelFromServer(channel.id)
         setupPagerAdapter(binding?.viewPager, binding?.tabLayout)
@@ -148,12 +151,12 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
         }
 
         viewModel.muteUnMuteLiveData.observe(this) {
-            channel.muted = it.muted
+            channel = channel.copy(muted = it.muted)
             onMutedOrUnMutedChannel(it)
         }
 
         viewModel.pinUnpinLiveData.observe(this) {
-            channel.pinnedAt = it.pinnedAt
+            channel = channel.copy(pinnedAt = it.pinnedAt)
             onPinnedOrUnPinnedChannel(it)
         }
 
@@ -167,8 +170,8 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
             viewModel.observeUserPresenceUpdate(channel)
     }
 
-    private fun SceytActivityConversationInfoBinding.initViews() {
-        (layoutDetails.layoutParams as? CollapsingToolbarLayout.LayoutParams)?.let {
+    private fun initViews() {
+        (binding?.layoutDetails?.layoutParams as? CollapsingToolbarLayout.LayoutParams)?.let {
             it.collapseMode = getLayoutDetailsCollapseMode()
         }
     }
@@ -285,7 +288,7 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
         viewModel.addMembersToChannel(channel.id, members as ArrayList)
     }
 
-    protected fun getChannel() = channel.clone()
+    protected fun getChannel() = channel
 
     protected open fun getBinding() = binding
 
@@ -473,10 +476,13 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
     }
 
     protected open fun onBlockedOrUnblockedUser(users: List<User>) {
-        val peer = channel.getPeer()
-        users.find { user -> user.id == peer?.id }?.let { user ->
-            peer?.user = user
+        val members = channel.members?.toArrayList() ?: return
+        users.forEach { user ->
+            members.findIndexed { it.id == user.id }?.let { (index, member) ->
+                members[index] = member.copy(user = user.copy())
+            }
         }
+        channel = channel.copy(members = members)
     }
 
     protected open fun onMuteUnMuteClick(sceytChannel: SceytChannel, mute: Boolean) {
@@ -625,14 +631,15 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
         overrideTransitions(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right, false)
     }
 
-    private fun SceytActivityConversationInfoBinding.applyStyle() {
-        val theme = SceytChatUIKit.theme
-        root.setBackgroundColor(getCompatColor(theme.backgroundColorTertiary))
-        toolbar.setBackgroundColor(getCompatColor(theme.primaryColor))
-        viewTopTabLayout.setBackgroundTintColorRes(theme.borderColor)
-        underlineTab.setBackgroundTintColorRes(theme.borderColor)
-        tabLayout.setBackgroundColor(getCompatColor(theme.backgroundColorSections))
-        tabLayout.setTabTextColors(getCompatColor(theme.textSecondaryColor), getCompatColor(theme.textPrimaryColor))
+    protected open fun applyStyle() {
+        with(binding ?: return) {
+            val theme = SceytChatUIKit.theme
+            root.setBackgroundColor(getCompatColor(theme.backgroundColorTertiary))
+            viewTopTabLayout.setBackgroundTintColorRes(theme.borderColor)
+            underlineTab.setBackgroundTintColorRes(theme.borderColor)
+            tabLayout.setBackgroundColor(getCompatColor(theme.backgroundColorSections))
+            tabLayout.setTabTextColors(getCompatColor(theme.textSecondaryColor), getCompatColor(theme.textPrimaryColor))
+        }
     }
 
     companion object {

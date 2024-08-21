@@ -10,7 +10,7 @@ sealed interface ReactionPopupClickListeners {
     }
 
     fun interface RemoveReaction : ReactionPopupClickListeners {
-        fun onRemoveReaction(reactionItem: ReactionItem.Reaction)
+        fun onRemoveReaction(message: SceytMessage, reactionItem: ReactionItem.Reaction)
     }
 
     /** Use this if you want to implement all callbacks */

@@ -18,7 +18,6 @@ import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventData
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
 import com.sceyt.chatuikit.data.messageeventobserver.MessageEventsObserver
-import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
@@ -30,13 +29,16 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.data.toFileListItem
+import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
+import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
@@ -75,6 +77,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mentio
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.chatuikit.services.SceytSyncManager
+import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -111,6 +114,7 @@ class MessageListViewModel(
     private val application: Application by inject()
     private val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
+    private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
     internal val messageActionBridge by lazy { MessageActionBridge() }
@@ -156,13 +160,15 @@ class MessageListViewModel(
     private val _syncCenteredMessageLiveData = MutableLiveData<SyncNearMessagesResult>()
     val syncCenteredMessageLiveData: LiveData<SyncNearMessagesResult> = _syncCenteredMessageLiveData
 
+    private val _linkPreviewLiveData = MutableLiveData<LinkPreviewDetails>()
+    val linkPreviewLiveData = _linkPreviewLiveData.asLiveData()
+
 
     // Message events
     val onNewMessageFlow: Flow<SceytMessage>
     val onNewOutGoingMessageFlow: Flow<SceytMessage>
 
     //val onNewThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
-    val onMessageStatusFlow: Flow<MessageStatusChangeData>
 
     // val onOutGoingThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
     val onTransferUpdatedLiveData: LiveData<TransferData>
@@ -203,9 +209,6 @@ class MessageListViewModel(
               .filter { it.first.id == channel.id && it.second.replyInThread }
               .mapNotNull { initMessageInfoData(it.second) }*/
 
-        onMessageStatusFlow = ChannelEventsObserver.onMessageStatusFlow
-            .filter { it.channel.id == channel.id }
-
         onChannelEventFlow = ChannelEventsObserver.onChannelEventFlow
             .filter { it.channelId == channel.id }
 
@@ -226,9 +229,8 @@ class MessageListViewModel(
             .filter { it.first == channel.id }
             .onEach { data ->
                 val newChannelId = data.second.id
-                channel.id = newChannelId
+                channel = channel.copy(id = newChannelId, pending = false)
                 conversationId = newChannelId
-                channel.pending = false
             }.launchIn(viewModelScope)
 
         onNewOutGoingMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
@@ -393,14 +395,14 @@ class MessageListViewModel(
         _onScrollToReplyMessageLiveData.postValue(message.parentMessage ?: return)
     }
 
-    fun prepareToPauseOrResumeUpload(item: FileListItem) {
-        val defaultState = if (!item.sceytMessage.incoming && item.sceytMessage.deliveryStatus == DeliveryStatus.Pending
-                && !item.sceytMessage.isForwarded)
+    fun prepareToPauseOrResumeUpload(item: FileListItem, message: SceytMessage) {
+        val defaultState = if (!message.incoming && message.deliveryStatus == DeliveryStatus.Pending
+                && !message.isForwarded)
             PendingUpload else PendingDownload
 
         when (val state = item.file.transferState ?: return) {
             PendingUpload, ErrorUpload -> {
-                SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid, channel.id)
+                SendAttachmentWorkManager.schedule(application, item.file.messageTid, channel.id)
             }
 
             PendingDownload, ErrorDownload -> {
@@ -410,34 +412,35 @@ class MessageListViewModel(
             PauseDownload -> {
                 val task = fileTransferService.findTransferTask(item.file)
                 if (task != null)
-                    fileTransferService.resume(item.sceytMessage.tid, item.file, state)
+                    fileTransferService.resume(item.file.messageTid, item.file, state)
                 else fileTransferService.download(item.file, FileTransferHelper.createTransferTask(item.file, false))
             }
 
             PauseUpload -> {
+                val messageTid = item.file.messageTid
                 val task = fileTransferService.findTransferTask(item.file)
                 if (task != null)
-                    fileTransferService.resume(item.sceytMessage.tid, item.file, state)
+                    fileTransferService.resume(messageTid, item.file, state)
                 else {
                     // Update transfer state to Uploading, otherwise SendAttachmentWorkManager will
                     // not start uploading.
                     viewModelScope.launch(Dispatchers.IO) {
                         attachmentInteractor.updateTransferDataByMsgTid(TransferData(
-                            item.sceytMessage.tid, item.file.progressPercent
+                            messageTid, item.file.progressPercent
                                     ?: 0f, Uploading, item.file.filePath, item.file.url))
                     }
 
-                    SendAttachmentWorkManager.schedule(application, item.sceytMessage.tid, channel.id, ExistingWorkPolicy.REPLACE)
+                    SendAttachmentWorkManager.schedule(application, messageTid, channel.id, ExistingWorkPolicy.REPLACE)
                 }
             }
 
             Uploading, Downloading, Preparing, FilePathChanged, WaitingToUpload -> {
-                fileTransferService.pause(item.sceytMessage.tid, item.file, state)
+                fileTransferService.pause(item.file.messageTid, item.file, state)
             }
 
             Uploaded, Downloaded, ThumbLoaded -> {
                 val transferData = TransferData(
-                    item.sceytMessage.tid, item.file.progressPercent ?: 0f,
+                    item.file.messageTid, item.file.progressPercent ?: 0f,
                     item.file.transferState ?: defaultState, item.file.filePath, item.file.url)
                 FileTransferHelper.emitAttachmentTransferUpdate(transferData)
             }
@@ -602,29 +605,31 @@ class MessageListViewModel(
 
         withContext(Dispatchers.Default) {
             var unreadLineMessage: MessageListItem.UnreadMessagesSeparatorItem? = null
-            data.forEachIndexed { index, sceytMessage ->
-                sceytMessage.isSelected = selectedMessagesMap.containsKey(sceytMessage.tid)
+            data.forEachIndexed { index, message ->
                 var prevMessage = compareMessage
                 if (index > 0)
                     prevMessage = data.getOrNull(index - 1)
 
-                if (enableDateSeparator && shouldShowDate(sceytMessage, prevMessage))
-                    messageItems.add(MessageListItem.DateSeparatorItem(sceytMessage.createdAt, sceytMessage.tid))
+                if (enableDateSeparator && shouldShowDate(message, prevMessage))
+                    messageItems.add(MessageListItem.DateSeparatorItem(message.createdAt, message.tid))
 
-                val messageItem = MessageListItem.MessageItem(initMessageInfoData(sceytMessage, prevMessage, true))
+                var messageWithData = initMessageInfoData(message, prevMessage, true)
+                val isSelected = selectedMessagesMap.containsKey(message.tid)
 
-                if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
-                    messageItem.message.apply {
-                        shouldShowAvatarAndName = incoming && isGroup && showSenderAvatarAndNameIfNeeded
-                        disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
-                    }
+                if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L
+                        && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
+
+                    messageWithData = messageWithData.copy(
+                        shouldShowAvatarAndName = messageWithData.incoming && isGroup && showSenderAvatarAndNameIfNeeded,
+                        disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded,
+                    )
                     if (!ignoreUnreadMessagesSeparator)
-                        messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(sceytMessage.createdAt, pinnedLastReadMessageId).also {
+                        messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(message.createdAt, pinnedLastReadMessageId).also {
                             unreadLineMessage = it
                         })
                 }
 
-                messageItems.add(messageItem)
+                messageItems.add(MessageListItem.MessageItem(messageWithData.copy(isSelected = isSelected)))
             }
 
             if (hasNext)
@@ -640,14 +645,15 @@ class MessageListViewModel(
 
     internal fun initMessageInfoData(sceytMessage: SceytMessage, prevMessage: SceytMessage? = null,
                                      initNameAndAvatar: Boolean = false): SceytMessage {
-        return sceytMessage.apply {
-            isGroup = this@MessageListViewModel.isGroup
-            files = attachments?.map { it.toFileListItem(this) }
-            if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
-                shouldShowAvatarAndName = shouldShowAvatarAndName(this, prevMessage)
-            disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded
-            messageReactions = initReactionsItems(this)
-        }
+        return sceytMessage.copy(
+            isGroup = this@MessageListViewModel.isGroup,
+            files = sceytMessage.attachments?.map { it.toFileListItem() },
+            shouldShowAvatarAndName = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
+                shouldShowAvatarAndName(sceytMessage, prevMessage)
+            else sceytMessage.shouldShowAvatarAndName,
+            disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded,
+            messageReactions = initReactionsItems(sceytMessage),
+        )
     }
 
     internal fun checkMaybeHesNext(response: PaginationResponse.DBResponse<SceytMessage>): Boolean {
@@ -669,28 +675,37 @@ class MessageListViewModel(
             ReactionItem.Reaction(SceytReactionTotal(it.key, it.score.toInt(),
                 message.userReactions?.find { reaction ->
                     reaction.key == it.key && reaction.user?.id == myId
-                } != null), message, false)
-        }?.toMutableList()
+                } != null), message.tid, false)
+        }?.toArrayList()
 
         if (!pendingReactions.isNullOrEmpty() && reactionItems != null) {
             pendingReactions.forEach { pendingReaction ->
-                reactionItems.find { it.reaction.key == pendingReaction.key }?.let { item ->
+                reactionItems.findIndexed { it.reaction.key == pendingReaction.key }?.let { (index, item) ->
+                    val reaction = item.reaction
                     if (pendingReaction.isAdd) {
-                        item.reaction.score += pendingReaction.score
-                        item.reaction.containsSelf = true
-                        item.isPending = true
+                        reactionItems[index] = item.copy(
+                            reaction = reaction.copy(
+                                score = reaction.score + pendingReaction.score,
+                                containsSelf = true),
+                            isPending = true)
                     } else {
-                        item.reaction.score -= pendingReaction.score
-                        if (item.reaction.score <= 0)
+                        val score = reaction.score - pendingReaction.score
+                        if (score <= 0)
                             reactionItems.remove(item)
                         else {
-                            item.reaction.containsSelf = false
-                            item.isPending = false
+                            reactionItems[index] = item.copy(
+                                reaction = reaction.copy(
+                                    score = reaction.score - pendingReaction.score,
+                                    containsSelf = false),
+                                isPending = false)
                         }
                     }
                 } ?: run {
                     if (pendingReaction.isAdd)
-                        reactionItems.add(ReactionItem.Reaction(SceytReactionTotal(pendingReaction.key, pendingReaction.score, true), message, true))
+                        reactionItems.add(ReactionItem.Reaction(
+                            reaction = SceytReactionTotal(pendingReaction.key, pendingReaction.score, true),
+                            messageTid = message.tid,
+                            isPending = true))
                 }
             }
         }
@@ -740,6 +755,18 @@ class MessageListViewModel(
                     fileTransferService.getThumb(attachment.messageTid, attachment, data.thumbData)
                 }
             }
+
+            is NeedMediaInfoData.NeedLinkPreview -> {
+                if (data.onlyCheckMissingData && attachment.linkPreviewDetails != null) {
+                    linkPreviewHelper.checkMissedData(attachment.linkPreviewDetails) {
+                        _linkPreviewLiveData.postValue(it)
+                    }
+                } else {
+                    linkPreviewHelper.getPreview(attachment, true, successListener = {
+                        _linkPreviewLiveData.postValue(it)
+                    })
+                }
+            }
         }
     }
 
@@ -773,19 +800,19 @@ class MessageListViewModel(
         when (eventData.eventType) {
             ChannelMembersEventEnum.Added -> {
                 channelMembers.addAll(sceytMembers)
-                channel.apply {
-                    members = channelMembers
-                    memberCount += sceytMembers.size
-                }
+                channel = channel.copy(
+                    members = channelMembers,
+                    memberCount = channel.memberCount + sceytMembers.size
+                )
                 _onChannelMemberAddedOrKickedLiveData.postValue(channel)
             }
 
             ChannelMembersEventEnum.Kicked -> {
                 channelMembers.removeAll(sceytMembers)
-                channel.apply {
-                    members = channelMembers
-                    memberCount -= sceytMembers.size
-                }
+                channel = channel.copy(
+                    members = channelMembers,
+                    memberCount = channel.memberCount - sceytMembers.size
+                )
                 _onChannelMemberAddedOrKickedLiveData.postValue(channel)
             }
 

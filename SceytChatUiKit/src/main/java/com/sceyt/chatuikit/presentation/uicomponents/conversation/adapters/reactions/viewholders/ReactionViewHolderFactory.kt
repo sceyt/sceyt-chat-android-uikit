@@ -8,12 +8,12 @@ import com.sceyt.chatuikit.databinding.SceytItemReactionBinding
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 
 class ReactionViewHolderFactory(context: Context,
-                                private val messageListeners: MessageClickListeners.ClickListeners?) {
+                                private val onReactionClickListener: MessageClickListeners.ReactionClickListener?) {
 
     private val layoutInflater = LayoutInflater.from(context)
 
     fun createViewHolder(parent: ViewGroup): RecyclerView.ViewHolder {
         return ReactionViewHolder(SceytItemReactionBinding.inflate(layoutInflater, parent, false),
-            messageListeners)
+            onReactionClickListener)
     }
 }

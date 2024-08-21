@@ -58,6 +58,7 @@ open class SceytForwardActivity : SceytShareableActivity() {
     }
 
     protected open fun SceytActivityForwardBinding.applyStyle() {
+        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.backgroundColor))
         btnForward.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
         toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
     }
