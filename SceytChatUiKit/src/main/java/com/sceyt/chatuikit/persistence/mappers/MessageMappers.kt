@@ -119,8 +119,10 @@ fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
     }, null)
 }
 
-private fun MessageEntity.parentMessageToSceytMessage(attachments: Array<SceytAttachment>?,
-                                                      from: User?, mentionedUsers: Array<User>?) = SceytMessage(
+private fun MessageEntity.parentMessageToSceytMessage(
+        attachments: Array<SceytAttachment>?,
+        from: User?, mentionedUsers: Array<User>?
+) = SceytMessage(
     id = id ?: 0,
     tid = tid,
     channelId = channelId,
@@ -282,7 +284,10 @@ fun DraftMessageDb.toDraftMessage() = DraftMessage(
     bodyAttributes = draftMessageEntity.styleRanges
 )
 
-fun DraftMessageEntity.toDraftMessage(mentionUsers: List<User>?, replyMessage: SceytMessage?) = DraftMessage(
+fun DraftMessageEntity.toDraftMessage(
+        mentionUsers: List<User>?,
+        replyMessage: SceytMessage?
+) = DraftMessage(
     chatId = chatId,
     message = message,
     createdAt = createdAt,
