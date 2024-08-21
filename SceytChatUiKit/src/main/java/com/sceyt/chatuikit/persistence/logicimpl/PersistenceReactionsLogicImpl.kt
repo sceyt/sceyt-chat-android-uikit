@@ -326,9 +326,7 @@ internal class PersistenceReactionsLogicImpl(
             pendingReactionEntity = entity
         }
 
-        messageDb.pendingReactions = pendingReactions
-        val message = messageDb.toSceytMessage()
-
+        val message = messageDb.copy(pendingReactions = pendingReactions).toSceytMessage()
         messagesCache.messageUpdated(channelId, message)
         ChatReactionMessagesCache.addMessage(message)
 
