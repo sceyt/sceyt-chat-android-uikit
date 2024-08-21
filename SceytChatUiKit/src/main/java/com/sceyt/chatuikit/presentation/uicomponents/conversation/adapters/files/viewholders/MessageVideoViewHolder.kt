@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.file
 
 import android.util.Size
 import androidx.core.view.isVisible
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytMessageVideoItemBinding
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.filetransfer.ThumbFor
@@ -32,27 +33,27 @@ class MessageVideoViewHolder(
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
-) : BaseFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
+) : BaseMessageFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
 
     init {
         binding.applyStyle()
 
         binding.root.setOnClickListener {
-            messageListeners?.onAttachmentClick(it, fileItem)
+            messageListeners?.onAttachmentClick(it, fileItem, message)
         }
 
         binding.root.setOnLongClickListener {
-            messageListeners?.onAttachmentLongClick(it, fileItem)
+            messageListeners?.onAttachmentLongClick(it, fileItem, message)
             return@setOnLongClickListener true
         }
 
         binding.loadProgress.setOnClickListener {
-            messageListeners?.onAttachmentLoaderClick(it, fileItem)
+            messageListeners?.onAttachmentLoaderClick(it, fileItem, message)
         }
     }
 
-    override fun bind(item: FileListItem) {
-        super.bind(item)
+    override fun bind(item: FileListItem, message: SceytMessage) {
+        super.bind(item, message)
         /* binding.parentLayout.clipToOutline = true
          binding.videoView.isVisible = false*/
         setVideoDuration()

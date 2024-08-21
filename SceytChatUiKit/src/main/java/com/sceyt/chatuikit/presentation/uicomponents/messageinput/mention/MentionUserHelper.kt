@@ -15,7 +15,6 @@ import com.google.gson.Gson
 import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.SceytChatUIKit.userNameFormatter
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
@@ -34,7 +33,7 @@ object MentionUserHelper {
     }
 
     fun buildWithMentionedUsers(context: Context, body: CharSequence, attributes: List<BodyAttribute>?,
-                                mentionUsers: Array<User>?, @ColorRes colorId: Int = SceytChatUIKit.theme.accentColor,
+                                mentionUsers: List<User>?, @ColorRes colorId: Int = SceytChatUIKit.theme.accentColor,
                                 mentionClickListener: ((String) -> Unit)? = null): CharSequence {
         val data = attributes?.filter { it.type == MENTION }
                 ?: return body
@@ -69,7 +68,7 @@ object MentionUserHelper {
     }
 
     fun buildOnlyBoldNamesWithMentionedUsers(spannableBody: CharSequence, attributes: List<BodyAttribute>?,
-                                             mentionUsers: Array<User>?): CharSequence {
+                                             mentionUsers: List<User>?): CharSequence {
         return try {
             val data = attributes?.filter { it.type == MENTION } ?: return spannableBody
             val newBody = SpannableStringBuilder(spannableBody)
@@ -85,7 +84,7 @@ object MentionUserHelper {
         }
     }
 
-    fun updateBodyWithUsers(body: String, attributes: List<BodyAttribute>?, mentionUsers: Array<User>?): String {
+    fun updateBodyWithUsers(body: String, attributes: List<BodyAttribute>?, mentionUsers: List<User>?): String {
         val data = attributes?.filter { it.type == MENTION } ?: return body
         val newBody = SpannableStringBuilder(body)
         data.sortedByDescending { it.offset }.forEach {
@@ -94,7 +93,7 @@ object MentionUserHelper {
         return newBody.toString()
     }
 
-    fun getMentionsIndexed(attributes: List<BodyAttribute>?, mentionUsers: Array<User>?): List<Mention> {
+    fun getMentionsIndexed(attributes: List<BodyAttribute>?, mentionUsers: List<User>?): List<Mention> {
         val list = arrayListOf<Mention>()
         val data = attributes?.filter { it.type == MENTION } ?: return list
 
@@ -107,7 +106,7 @@ object MentionUserHelper {
         return list
     }
 
-    private fun setNewBodyWithName(mentionUsers: Array<User>?, newBody: SpannableStringBuilder,
+    private fun setNewBodyWithName(mentionUsers: List<User>?, newBody: SpannableStringBuilder,
                                    item: BodyAttribute): String {
         val mentionUser = mentionUsers?.find { mentionUser -> mentionUser.id == item.metadata }
         var name = mentionUser?.let { user ->

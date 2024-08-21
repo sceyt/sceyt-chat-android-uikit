@@ -6,6 +6,7 @@ import android.net.Uri
 import android.util.Log
 import android.util.Size
 import com.sceyt.chat.models.attachment.Attachment
+import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
@@ -15,7 +16,6 @@ import com.sceyt.chatuikit.extensions.getStringOrNull
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.toBase64
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.shared.utils.BitmapUtil
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
@@ -41,8 +41,8 @@ fun LinkPreviewDetails.toMetadata(): String? {
     val data = hashMapOf<String, Any>()
     data[SceytConstants.Thumb] = thumb ?: ""
     if (imageWidth != null && imageHeight != null) {
-        data[SceytConstants.Width] = imageWidth!!
-        data[SceytConstants.Height] = imageHeight!!
+        data[SceytConstants.Width] = imageWidth
+        data[SceytConstants.Height] = imageHeight
     }
 
     data[SceytConstants.Description] = description ?: ""
@@ -52,24 +52,25 @@ fun LinkPreviewDetails.toMetadata(): String? {
     return createMetadata(null, data)
 }
 
-fun SceytAttachment.upsertSizeMetadata(size: Size?) {
-    try {
+fun SceytAttachment.getUpsertSizeMetadata(size: Size?): String? {
+    return try {
         val obj = if (metadata.isNullOrBlank()) JSONObject()
         else JSONObject(metadata.toString())
         size?.let {
             obj.put(SceytConstants.Width, it.width)
             obj.put(SceytConstants.Height, it.height)
         }
-        metadata = obj.toString()
+        return obj.toString()
     } catch (t: Throwable) {
         Log.e(TAG, "Could not parse malformed JSON: \"" + metadata.toString() + "\"")
+        null
     }
 }
 
-fun SceytAttachment.addAttachmentMetadata(context: Context) {
-    getBlurredBytesAndSizeAsString(context, metadata, filePath, type)?.let {
-        metadata = it
-    } ?: run { metadata = metadata ?: "" }
+fun SceytAttachment.addAttachmentMetadata(context: Context): String {
+    return getBlurredBytesAndSizeAsString(context, metadata, filePath, type) ?: run {
+        metadata ?: ""
+    }
 }
 
 fun getBlurredBytesAndSizeAsString(context: Context, metadata: String?, filePath: String?, type: String): String? {

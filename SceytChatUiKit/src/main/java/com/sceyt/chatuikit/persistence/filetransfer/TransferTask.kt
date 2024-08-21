@@ -2,16 +2,17 @@ package com.sceyt.chatuikit.persistence.filetransfer
 
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 
-data class TransferTask(
-        val attachment: SceytAttachment,
+class TransferTask(
+        var attachment: SceytAttachment,
         val messageTid: Long,
         var state: TransferState?,
-        val progressCallback: ProgressUpdateCallback,
-        val preparingCallback: PreparingCallback,
-        val resumePauseCallback: ResumePauseCallback,
-        val resultCallback: TransferResultCallback,
-        val updateFileLocationCallback: UpdateFileLocationCallback,
-        val thumbCallback: ThumbCallback) {
+) {
+    var progressCallback: ProgressUpdateCallback? = null
+    var preparingCallback: PreparingCallback? = null
+    var resumePauseCallback: ResumePauseCallback? = null
+    var resultCallback: TransferResultCallback? = null
+    var updateFileLocationCallback: UpdateFileLocationCallback? = null
+    var thumbCallback: ThumbCallback? = null
 
     val onCompletionListeners: HashMap<String, (success: Boolean, url: String?) -> Unit> by lazy { hashMapOf() }
 

@@ -111,7 +111,7 @@ open class EditOrReplyMessageFragment : Fragment() {
         this.clickListeners = clickListeners
     }
 
-    protected open fun loadReplyMessageImage(attachments: Array<SceytAttachment>?, style: MessageItemStyle) {
+    protected open fun loadReplyMessageImage(attachments: List<SceytAttachment>?, style: MessageItemStyle) {
         if (attachments.isNullOrEmpty()) {
             binding?.layoutImage?.isVisible = false
             return
@@ -141,11 +141,9 @@ open class EditOrReplyMessageFragment : Fragment() {
                 }
             } else {
                 val attachment = links[0]
-                if (attachment.linkPreviewDetails != null && attachment.linkPreviewDetails?.imageUrl != null) {
-                    loadImage(style, imageAttachment, attachment.metadata,
-                        attachment.linkPreviewDetails?.imageUrl, style.linkAttachmentIcon)
-                } else
-                    imageAttachment.setImageDrawable(style.linkAttachmentIcon)
+                attachment.linkPreviewDetails?.imageUrl?.let {
+                    loadImage(style, imageAttachment, attachment.metadata, it)
+                } ?: imageAttachment.setImageDrawable(style.linkAttachmentIcon)
             }
         }
     }

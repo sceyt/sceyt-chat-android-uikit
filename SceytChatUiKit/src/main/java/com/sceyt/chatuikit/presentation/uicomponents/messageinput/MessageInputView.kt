@@ -592,7 +592,7 @@ class MessageInputView @JvmOverloads constructor(
     internal fun editMessage(message: SceytMessage, initWithDraft: Boolean) {
         checkIfRecordingAndConfirm {
             replyMessage = null
-            editMessage = message.clone()
+            editMessage = message
             determineInputState()
             if (!initWithDraft)
                 initInputWithEditMessage(message)
@@ -606,7 +606,7 @@ class MessageInputView @JvmOverloads constructor(
     internal fun replyMessage(message: SceytMessage, initWithDraft: Boolean) {
         checkIfRecordingAndConfirm {
             editMessage = null
-            replyMessage = message.clone()
+            replyMessage = message
             binding.layoutReplyOrEditMessage.isVisible = true
             editOrReplyMessageFragment?.replyMessage(message, style, needMessagesListViewStyleCallback())
 
@@ -628,10 +628,10 @@ class MessageInputView @JvmOverloads constructor(
         binding.messageInput.removeTextChangedListener(inputTextWatcher)
         with(binding.messageInput) {
             body = MessageBodyStyleHelper.buildWithMentionsAndAttributes(context, body.toString(),
-                draftMessage.mentionUsers?.toTypedArray(), draftMessage.bodyAttributes)
+                draftMessage.mentionUsers, draftMessage.bodyAttributes)
 
             if (!draftMessage.mentionUsers.isNullOrEmpty()) {
-                val data = MentionUserHelper.getMentionsIndexed(draftMessage.bodyAttributes, draftMessage.mentionUsers.toTypedArray())
+                val data = MentionUserHelper.getMentionsIndexed(draftMessage.bodyAttributes, draftMessage.mentionUsers)
                 body = MentionAnnotation.setMentionAnnotations(body, data)
             }
             setTextAndMoveSelectionEnd(body)

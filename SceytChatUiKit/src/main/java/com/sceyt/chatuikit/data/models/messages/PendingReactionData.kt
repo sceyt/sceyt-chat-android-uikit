@@ -6,12 +6,12 @@ import com.vanniktech.ui.Parcelize
 @Parcelize
 data class PendingReactionData(
         val messageId: Long,
-        var key: String,
-        var score: Int,
-        var count: Long,
-        var createdAt: Long,
-        var isAdd: Boolean,
-        var incomingMsg: Boolean
+        val key: String,
+        val score: Int,
+        val count: Long,
+        val createdAt: Long,
+        val isAdd: Boolean,
+        val incomingMsg: Boolean
 ) : Parcelable {
 
     override fun equals(other: Any?): Boolean {

@@ -13,7 +13,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelLinksBinding
+import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
@@ -34,7 +36,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adap
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
-import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import kotlinx.coroutines.launch
 
 open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
@@ -83,6 +84,8 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             viewModel.loadMoreFilesFlow.collect(::onMoreLinksList)
         }
 
+        viewModel.linkPreviewLiveData.observe(viewLifecycleOwner, ::onLinkPreview)
+
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
     }
 
@@ -112,7 +115,7 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(
                 requireContext(), style
             ).also {
-                it.setLinkPreviewHelper(LinkPreviewHelper(requireContext(), lifecycleScope))
+                it.setNeedMediaDataCallback { data -> viewModel.needMediaInfo(data) }
 
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                     onLinkClick(item.file.url)
@@ -138,6 +141,14 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     open fun onMoreLinksList(list: List<ChannelFileItem>) {
         mediaAdapter?.addNewItems(list)
+    }
+
+    open fun onLinkPreview(previewDetails: LinkPreviewDetails) {
+        val data = mediaAdapter?.getData() ?: return
+        data.findIndexed { it.isMediaItem() && it.file.url == previewDetails.link }?.let { (index, item) ->
+            item.file = item.file.copy(linkPreviewDetails = previewDetails)
+            mediaAdapter?.updateItemAt(index, item)
+        }
     }
 
     open fun onPageStateChange(pageState: PageState) {

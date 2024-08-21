@@ -6,15 +6,18 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.customviews.SceytVideoControllerView
-import com.sceyt.chatuikit.presentation.root.BaseViewHolder
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseMessageFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
 import com.sceyt.chatuikit.shared.utils.MyDiffUtil
 
-class MessageFilesAdapter(private var files: ArrayList<FileListItem>,
-                          private var viewHolderFactory: FilesViewHolderFactory
-) : RecyclerView.Adapter<BaseViewHolder<FileListItem>>() {
+class MessageFilesAdapter(
+        private val message: SceytMessage,
+        private var files: List<FileListItem>,
+        private var viewHolderFactory: FilesViewHolderFactory
+) : RecyclerView.Adapter<BaseMessageFileViewHolder<FileListItem>>() {
 
     val videoControllersList = arrayListOf<SceytVideoControllerView>()
 
@@ -22,12 +25,12 @@ class MessageFilesAdapter(private var files: ArrayList<FileListItem>,
         observeToAppLifeCycle()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<FileListItem> {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMessageFileViewHolder<FileListItem> {
         return viewHolderFactory.createViewHolder(parent, viewType)
     }
 
-    override fun onBindViewHolder(holder: BaseViewHolder<FileListItem>, position: Int) {
-        holder.bind(files[position])
+    override fun onBindViewHolder(holder: BaseMessageFileViewHolder<FileListItem>, position: Int) {
+        holder.bind(files[position], message)
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -38,12 +41,12 @@ class MessageFilesAdapter(private var files: ArrayList<FileListItem>,
         return files.size
     }
 
-    override fun onViewAttachedToWindow(holder: BaseViewHolder<FileListItem>) {
+    override fun onViewAttachedToWindow(holder: BaseMessageFileViewHolder<FileListItem>) {
         super.onViewAttachedToWindow(holder)
         holder.onViewAttachedToWindow()
     }
 
-    override fun onViewDetachedFromWindow(holder: BaseViewHolder<FileListItem>) {
+    override fun onViewDetachedFromWindow(holder: BaseMessageFileViewHolder<FileListItem>) {
         super.onViewDetachedFromWindow(holder)
         holder.onViewDetachedFromWindow()
     }

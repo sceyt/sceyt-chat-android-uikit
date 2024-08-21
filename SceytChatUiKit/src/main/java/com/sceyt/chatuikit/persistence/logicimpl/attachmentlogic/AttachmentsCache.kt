@@ -4,9 +4,9 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentPayLoadData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.persistence.differs.diffBetweenServerData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState
-import com.sceyt.chatuikit.persistence.differs.diffBetweenServerData
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -51,7 +51,7 @@ class AttachmentsCache {
 
     fun get(type: String, messageTid: Long): SceytAttachment? {
         synchronized(lock) {
-            return cachedAttachments[type]?.get(messageTid)?.clone()
+            return cachedAttachments[type]?.get(messageTid)
         }
     }
 
@@ -75,7 +75,7 @@ class AttachmentsCache {
                 filteredAttachments.sortedBy { it.id }
             }
 
-            return sortedAttachments.map { it.clone() }
+            return sortedAttachments
         }
     }
 
@@ -98,11 +98,13 @@ class AttachmentsCache {
 
     fun updateAttachmentTransferData(updateDate: TransferData) {
         synchronized(lock) {
-            fun update(attachment: SceytAttachment) {
-                attachment.transferState = updateDate.state
-                attachment.progressPercent = updateDate.progressPercent
-                attachment.filePath = updateDate.filePath
-                attachment.url = updateDate.url
+            fun update(attachment: SceytAttachment): SceytAttachment {
+                return attachment.copy(
+                    transferState = updateDate.state,
+                    progressPercent = updateDate.progressPercent,
+                    filePath = updateDate.filePath,
+                    url = updateDate.url
+                )
             }
 
             cachedAttachments.values.forEach {
@@ -113,15 +115,15 @@ class AttachmentsCache {
                     when (updateDate.state) {
                         TransferState.PendingUpload, TransferState.Uploading, TransferState.Uploaded,
                         TransferState.ErrorUpload, TransferState.PauseUpload, TransferState.Preparing,
-                        TransferState.WaitingToUpload -> {
-                            if (attachment.filePath == updateDate.filePath)
-                                update(attachment)
-                        }
+                        TransferState.WaitingToUpload ->
+                            if (attachment.filePath == updateDate.filePath) {
+                                it[updateDate.messageTid] = update(attachment)
+                            }
 
                         TransferState.Downloading, TransferState.Downloaded, TransferState.PendingDownload,
                         TransferState.ErrorDownload, TransferState.PauseDownload -> {
                             if (attachment.url == updateDate.url)
-                                update(attachment)
+                                it[updateDate.messageTid] = update(attachment)
                         }
 
                         TransferState.FilePathChanged, TransferState.ThumbLoaded -> return
@@ -133,19 +135,24 @@ class AttachmentsCache {
 
     fun updateAttachmentLinkDetails(data: LinkPreviewDetails) {
         synchronized(lock) {
-            cachedAttachments[AttachmentTypeEnum.Link.value()]?.values?.forEach { attachment ->
+            val map = cachedAttachments[AttachmentTypeEnum.Link.value()] ?: return
+            map.entries.forEach { (key, attachment) ->
                 if (attachment.url == data.link)
-                    attachment.linkPreviewDetails = data
+                    map[key] = attachment.copy(linkPreviewDetails = data)
             }
         }
     }
 
     fun updateLinkDetailsSize(link: String, width: Int, height: Int) {
         synchronized(lock) {
-            cachedAttachments[AttachmentTypeEnum.Link.value()]?.values?.forEach { attachment ->
+            cachedAttachments[AttachmentTypeEnum.Link.value()]?.entries?.forEach { entry ->
+                val (_, attachment) = entry
                 if (attachment.url == link) {
-                    attachment.linkPreviewDetails?.imageWidth = width
-                    attachment.linkPreviewDetails?.imageHeight = height
+                    val linkPreviewDetails = attachment.linkPreviewDetails?.copy(
+                        imageWidth = width,
+                        imageHeight = height
+                    )
+                    entry.setValue(attachment.copy(linkPreviewDetails = linkPreviewDetails))
                 }
             }
         }
@@ -153,23 +160,27 @@ class AttachmentsCache {
 
     fun updateThumb(link: String, thumb: String) {
         synchronized(lock) {
-            cachedAttachments[AttachmentTypeEnum.Link.value()]?.values?.forEach { attachment ->
-                if (attachment.url == link)
-                    attachment.linkPreviewDetails?.thumb = thumb
+            cachedAttachments[AttachmentTypeEnum.Link.value()]?.entries?.forEach { entry ->
+                val (_, attachment) = entry
+                if (attachment.url == link) {
+                    val linkPreviewDetails = attachment.linkPreviewDetails?.copy(thumb = thumb)
+                    entry.setValue(attachment.copy(linkPreviewDetails = linkPreviewDetails))
+                }
             }
         }
     }
 
     /** Set attachment data from cash, which saved in local db.*/
-    private fun initMessagePayLoads(attachmentToUpdate: SceytAttachment) {
-        setPayloads(attachmentToUpdate)
+    private fun initMessagePayLoads(attachmentToUpdate: SceytAttachment): SceytAttachment {
+        return setPayloads(attachmentToUpdate)
     }
 
-    private fun setPayloads(attachmentToUpdate: SceytAttachment) {
-        val cashedAttachment = get(attachmentToUpdate.type, attachmentToUpdate.messageTid) ?: return
+    private fun setPayloads(attachmentToUpdate: SceytAttachment): SceytAttachment {
+        val cashedAttachment = get(attachmentToUpdate.type, attachmentToUpdate.messageTid)
+                ?: return attachmentToUpdate
         val attachmentPayLoadData = getAttachmentPayLoads(cashedAttachment)
-        attachmentToUpdate.linkPreviewDetails = cashedAttachment.linkPreviewDetails
-        updateAttachmentsPayLoads(attachmentPayLoadData, attachmentToUpdate)
+        val linkPreviewDetails = cashedAttachment.linkPreviewDetails
+        return updateAttachmentsPayLoads(attachmentPayLoadData, attachmentToUpdate, linkPreviewDetails)
     }
 
     private fun getAttachmentPayLoads(cashedAttachment: SceytAttachment?): AttachmentPayLoadData? {
@@ -183,31 +194,36 @@ class AttachmentsCache {
         )
     }
 
-    private fun updateAttachmentsPayLoads(data: AttachmentPayLoadData?, attachment: SceytAttachment) {
-        if (attachment.type == AttachmentTypeEnum.Link.value() || data == null) return
-        attachment.transferState = data.transferState
-        attachment.progressPercent = data.progressPercent
-        attachment.filePath = data.filePath
-        attachment.url = data.url
+    private fun updateAttachmentsPayLoads(data: AttachmentPayLoadData?,
+                                          attachment: SceytAttachment,
+                                          linkPreviewDetails: LinkPreviewDetails?): SceytAttachment {
+        if (attachment.type == AttachmentTypeEnum.Link.value() || data == null) return attachment
+        return attachment.copy(
+            transferState = data.transferState,
+            progressPercent = data.progressPercent,
+            filePath = data.filePath,
+            url = data.url,
+            linkPreviewDetails = linkPreviewDetails
+        )
     }
 
     private fun emitAttachmentUpdated(vararg message: SceytAttachment) {
-        attachmentUpdatedFlow_.tryEmit(message.map { it.clone() })
+        attachmentUpdatedFlow_.tryEmit(message.toList())
     }
 
     private fun putAndCheckHasDiff(includeNotExistToDiff: Boolean, vararg attachments: SceytAttachment): Boolean {
         var detectedDiff = false
         attachments.forEach {
-            initMessagePayLoads(it)
+            val attachment = initMessagePayLoads(it)
             if (!detectedDiff) {
-                val old = cachedAttachments[it.type]?.get(it.messageTid)
-                detectedDiff = old?.diffBetweenServerData(it)?.hasDifference()
+                val old = cachedAttachments[attachment.type]?.get(attachment.messageTid)
+                detectedDiff = old?.diffBetweenServerData(attachment)?.hasDifference()
                         ?: includeNotExistToDiff
             }
-            cachedAttachments[it.type]?.let { map ->
-                map[it.messageTid] = it
+            cachedAttachments[attachment.type]?.let { map ->
+                map[attachment.messageTid] = attachment
             } ?: run {
-                cachedAttachments[it.type] = hashMapOf(it.messageTid to it)
+                cachedAttachments[attachment.type] = hashMapOf(attachment.messageTid to attachment)
             }
         }
         return detectedDiff

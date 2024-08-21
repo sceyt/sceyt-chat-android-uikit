@@ -59,6 +59,7 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: SceytD
         dateStatusView.setDateAndStatusIcon(text = dateText,
             drawable = null,
             edited = edited,
+            editedText = style.editedMessageStateText,
             ignoreHighlight = false)
         return
     }
@@ -91,12 +92,12 @@ private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
 fun SceytMessage.getFormattedBody(context: Context): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
-        attachments.isNullOrEmpty() || attachments?.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
+        attachments.isNullOrEmpty() || attachments.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
             MessageBodyStyleHelper.buildWithMentionsAndAttributes(context, this)
         }
 
-        attachments?.size == 1 -> {
-            attachments?.getOrNull(0)?.getShowName(context, body)
+        attachments.size == 1 -> {
+            attachments.getOrNull(0)?.getShowName(context, body)
         }
 
         else -> context.getString(R.string.sceyt_file)
@@ -107,12 +108,12 @@ fun SceytMessage.getFormattedBody(context: Context): SpannableString {
 fun SceytMessage.getFormattedLastMessageBody(context: Context): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
-        attachments.isNullOrEmpty() || attachments?.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
+        attachments.isNullOrEmpty() || attachments.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
             MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(this)
         }
 
-        attachments?.size == 1 -> {
-            attachments?.getOrNull(0)?.getShowName(context, body)
+        attachments.size == 1 -> {
+            attachments.getOrNull(0)?.getShowName(context, body)
         }
 
         else -> context.getString(R.string.sceyt_file)
@@ -170,3 +171,35 @@ fun MessageState.isDeletedOrHardDeleted() = this == MessageState.Deleted || this
 fun MessageState.isDeleted() = this == MessageState.Deleted
 
 fun MessageState.isHardDeleted() = this == MessageState.DeletedHard
+
+fun SceytMessage.getUpdateMessage(message: SceytMessage): SceytMessage {
+    return copy(
+        id = message.id,
+        tid = message.tid,
+        channelId = message.channelId,
+        body = message.body,
+        type = message.type,
+        metadata = message.metadata,
+        //createdAt = message.createdAt
+        updatedAt = message.updatedAt,
+        incoming = message.incoming,
+        isTransient = message.isTransient,
+        silent = message.silent,
+        deliveryStatus = message.deliveryStatus,
+        state = message.state,
+        user = message.user,
+        attachments = message.attachments,
+        userReactions = message.userReactions,
+        reactionTotals = message.reactionTotals,
+        markerTotals = message.markerTotals,
+        userMarkers = message.userMarkers,
+        mentionedUsers = message.mentionedUsers,
+        parentMessage = message.parentMessage,
+        replyCount = message.replyCount,
+        autoDeleteAt = message.autoDeleteAt,
+        pendingReactions = message.pendingReactions,
+        bodyAttributes = message.bodyAttributes,
+        messageReactions = message.messageReactions,
+        files = message.files
+    )
+}

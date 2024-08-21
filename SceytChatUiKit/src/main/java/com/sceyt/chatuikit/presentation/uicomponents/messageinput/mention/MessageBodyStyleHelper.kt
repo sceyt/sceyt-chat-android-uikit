@@ -21,7 +21,7 @@ object MessageBodyStyleHelper {
         return buildWithMentionsAndAttributes(context, message.body, message.mentionedUsers, message.bodyAttributes)
     }
 
-    fun buildWithMentionsAndAttributes(context: Context, body: CharSequence, mentionUsers: Array<User>?, bodyAttributes: List<BodyAttribute>?): CharSequence {
+    fun buildWithMentionsAndAttributes(context: Context, body: CharSequence, mentionUsers: List<User>?, bodyAttributes: List<BodyAttribute>?): CharSequence {
         return appendStyle(context, body, bodyAttributes, mentionUsers)
     }
 
@@ -29,12 +29,12 @@ object MessageBodyStyleHelper {
         return buildOnlyBoldMentionsAndStylesWithAttributes(message.body, message.mentionedUsers, message.bodyAttributes)
     }
 
-    fun buildOnlyBoldMentionsAndStylesWithAttributes(body: CharSequence, mentionUsers: Array<User>?, bodyAttributes: List<BodyAttribute>?): CharSequence {
+    fun buildOnlyBoldMentionsAndStylesWithAttributes(body: CharSequence, mentionUsers: List<User>?, bodyAttributes: List<BodyAttribute>?): CharSequence {
         return appendStyleOnlyWithBoldMentions(body, bodyAttributes, mentionUsers)
     }
 
 
-    private fun appendStyle(context: Context, body: CharSequence, list: List<BodyAttribute>?, mentionUsers: Array<User>?): CharSequence {
+    private fun appendStyle(context: Context, body: CharSequence, list: List<BodyAttribute>?, mentionUsers: List<User>?): CharSequence {
         list ?: return body
         val group = list.groupBy { it.type == BodyAttributeType.Mention.toString() }
         var spannableString = appStyle(body, group[false])
@@ -46,7 +46,7 @@ object MessageBodyStyleHelper {
         return spannableString
     }
 
-    private fun appendStyleOnlyWithBoldMentions(body: CharSequence, list: List<BodyAttribute>?, mentionUsers: Array<User>?): CharSequence {
+    private fun appendStyleOnlyWithBoldMentions(body: CharSequence, list: List<BodyAttribute>?, mentionUsers: List<User>?): CharSequence {
         list ?: return body
         val group = list.groupBy { it.type == BodyAttributeType.Mention.toString() }
         var spannableString = appStyle(body, group[false])

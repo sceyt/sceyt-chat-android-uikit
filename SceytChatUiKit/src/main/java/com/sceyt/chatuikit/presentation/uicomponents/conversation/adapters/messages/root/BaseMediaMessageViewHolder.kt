@@ -84,7 +84,7 @@ abstract class BaseMediaMessageViewHolder(
         constraintSet.constrainMinWidth(fileImage.id, size.width)
         constraintSet.applyTo(layoutBubble)
 
-        val message = fileItem.sceytMessage
+        val message = requireMessage
         with(fileImage) {
             val defaultMargin = marginLeft
             if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName || message.body.isNotNullOrBlank()) {
@@ -119,7 +119,7 @@ abstract class BaseMediaMessageViewHolder(
     }
 
     protected open fun setImageTopCorners(fileImage: ShapeableImageView) {
-        val message = fileItem.sceytMessage
+        val message = requireMessage
         val corner = (if (message.isForwarded || message.body.isNotBlank() || message.isReplied) {
             dpToPx(5f)
         } else dpToPx(18f)).toFloat()

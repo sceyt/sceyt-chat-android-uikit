@@ -11,24 +11,19 @@ data class SceytAttachment(
         val id: Long?,
         val messageId: Long,
         val messageTid: Long,
-        var userId: String?,
+        val userId: String?,
         val name: String,
         val type: String,
-        var metadata: String?,
-        var fileSize: Long,
+        val metadata: String?,
+        val fileSize: Long,
         val createdAt: Long,
-        var url: String?,
-        var filePath: String?,
-        var transferState: TransferState?,
-        var progressPercent: Float?,
-        var originalFilePath: String?,
-        var linkPreviewDetails: LinkPreviewDetails?
-) : Parcelable, Cloneable {
-
-    public override fun clone(): SceytAttachment {
-        return SceytAttachment(id, messageId, messageTid, userId, name, type, metadata, fileSize,
-            createdAt, url, filePath, transferState, progressPercent, originalFilePath, linkPreviewDetails?.copy())
-    }
+        val url: String?,
+        val filePath: String?,
+        val transferState: TransferState?,
+        val progressPercent: Float?,
+        val originalFilePath: String?,
+        val linkPreviewDetails: LinkPreviewDetails?
+) : Parcelable {
 
     override fun equals(other: Any?): Boolean {
         if (other !is SceytAttachment) return false
@@ -44,10 +39,12 @@ data class SceytAttachment(
         return javaClass.hashCode()
     }
 
-    fun updateWithTransferData(data: TransferData) {
-        transferState = data.state
-        progressPercent = data.progressPercent
-        url = data.url
-        filePath = data.filePath
+    fun getUpdatedWithTransferData(data: TransferData): SceytAttachment {
+        return copy(
+            transferState = data.state,
+            progressPercent = data.progressPercent,
+            url = data.url,
+            filePath = data.filePath
+        )
     }
 }

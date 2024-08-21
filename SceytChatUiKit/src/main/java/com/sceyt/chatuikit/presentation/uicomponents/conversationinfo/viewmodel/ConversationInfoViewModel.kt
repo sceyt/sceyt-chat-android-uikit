@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
+import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.services.SceytPresenceChecker
@@ -33,6 +34,7 @@ import org.koin.core.component.inject
 class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val channelInteractor by inject<ChannelInteractor>()
     private val channelMemberInteractor by inject<ChannelMemberInteractor>()
+    private val userInteractor by inject<UserInteractor>()
 
     private val _channelLiveData = MutableLiveData<SceytChannel>()
     val channelLiveData: LiveData<SceytChannel> = _channelLiveData
@@ -154,14 +156,14 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun blockUser(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMemberInteractor.blockUnBlockUser(userId, true)
+            val response = userInteractor.blockUnBlockUser(userId, true)
             notifyResponseAndPageState(_blockUnblockUserLiveData, response)
         }
     }
 
     fun unblockUser(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelMemberInteractor.blockUnBlockUser(userId, false)
+            val response = userInteractor.blockUnBlockUser(userId, false)
             notifyResponseAndPageState(_blockUnblockUserLiveData, response)
         }
     }

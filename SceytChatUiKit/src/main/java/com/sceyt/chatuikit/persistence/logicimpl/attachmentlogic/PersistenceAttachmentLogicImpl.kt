@@ -92,25 +92,32 @@ internal class PersistenceAttachmentLogicImpl(
         return loadAttachments(loadType = LoadNear, conversationId, attachmentId, types, loadKeyData, offset, ignoreDb)
     }
 
-    override suspend fun updateAttachmentIdAndMessageId(message: SceytMessage) {
+    override suspend fun updateAttachmentIdAndMessageId(message: SceytMessage) = withContext(Dispatchers.IO) {
         message.attachments?.forEach { attachment ->
             attachmentDao.updateAttachmentIdAndMessageId(attachment.id, message.id, message.tid, attachment.url)
         }
+        Unit
     }
 
     override suspend fun updateTransferDataByMsgTid(data: TransferData) {
         messagesCache.updateAttachmentTransferData(data)
-        attachmentDao.updateAttachmentTransferDataByMsgTid(data.messageTid, data.progressPercent, data.state)
+        withContext(Dispatchers.IO) {
+            attachmentDao.updateAttachmentTransferDataByMsgTid(data.messageTid, data.progressPercent, data.state)
+        }
     }
 
     override suspend fun updateAttachmentWithTransferData(data: TransferData) {
         messagesCache.updateAttachmentTransferData(data)
-        attachmentDao.updateAttachmentAndPayLoad(data)
+        withContext(Dispatchers.IO) {
+            attachmentDao.updateAttachmentAndPayLoad(data)
+        }
     }
 
     override suspend fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String, fileSize: Long, metadata: String?) {
         messagesCache.updateAttachmentFilePathAndMeta(messageTid, newPath, metadata)
-        attachmentDao.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
+        withContext(Dispatchers.IO) {
+            attachmentDao.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
+        }
     }
 
     override suspend fun getFileChecksumData(filePath: String?): FileChecksumData? {
@@ -157,6 +164,10 @@ internal class PersistenceAttachmentLogicImpl(
         linkDao.updateThumb(link, thumb)
         messagesCache.updateThumb(link, thumb)
         attachmentsCache.updateThumb(link, thumb)
+    }
+
+    override fun onTransferProgressPercentUpdated(transferData: TransferData) {
+        messagesCache.updateAttachmentTransferData(transferData)
     }
 
     private fun loadAttachments(loadType: PaginationResponse.LoadType, conversationId: Long, attachmentId: Long,
@@ -353,9 +364,9 @@ internal class PersistenceAttachmentLogicImpl(
                 linkPreviewDetails = it.linkPreviewDetails?.toLinkPreviewDetails(attachment.isHiddenLinkDetails())
             }
 
-            sceytAttachments.add(attachment.toSceytAttachment(messageTid, transferState, progress, linkPreviewDetails).apply {
-                this.filePath = filePath
-            })
+            sceytAttachments.add(attachment.toSceytAttachment(messageTid, transferState, progress, linkPreviewDetails).copy(
+                filePath = filePath
+            ))
         }
         return Pair(sceytAttachments, missedMsgIds)
     }

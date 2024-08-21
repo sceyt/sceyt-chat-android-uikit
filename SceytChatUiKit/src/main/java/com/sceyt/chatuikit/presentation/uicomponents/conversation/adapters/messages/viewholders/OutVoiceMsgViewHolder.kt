@@ -7,6 +7,7 @@ import com.masoudss.lib.WaveformSeekBar
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemOutVoiceMessageBinding
 import com.sceyt.chatuikit.extensions.TAG_REF
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
@@ -55,7 +56,7 @@ class OutVoiceMsgViewHolder(
         private val messageListeners: MessageClickListeners.ClickListeners?,
         userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-        private val voicePlayPauseListener: ((FileListItem, playing: Boolean) -> Unit)?,
+        private val voicePlayPauseListener: ((FileListItem, SceytMessage, playing: Boolean) -> Unit)?,
 ) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, userNameFormatter = userNameFormatter, needMediaDataCallback = needMediaDataCallback) {
     private var lastFilePath: String? = ""
 
@@ -85,7 +86,7 @@ class OutVoiceMsgViewHolder(
             }
 
             loadProgress.setOnClickListener {
-                messageListeners?.onAttachmentLoaderClick(it, FileListItem.File(fileItem.file, (messageListItem as MessageItem).message))
+                messageListeners?.onAttachmentLoaderClick(it, fileItem, requireMessage)
             }
 
             playPauseButton.setOnClickListener {
@@ -207,7 +208,7 @@ class OutVoiceMsgViewHolder(
                 if (!checkIsValid(filePath)) return
                 runOnMainThread {
                     setPlayButtonIcon(playing, binding.playPauseButton)
-                    voicePlayPauseListener?.invoke(fileItem, playing)
+                    voicePlayPauseListener?.invoke(fileItem, requireMessage, playing)
                 }
             }
 

@@ -7,6 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.chatuikit.extensions.findIndexed
@@ -99,7 +100,9 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
             val prevMessage = prevItem.message
             if (prevItem.message.isGroup) {
                 val prevIndex = messages.indexOf(prevItem)
-                prevMessage.shouldShowAvatarAndName = prevMessage.incoming && prevMessage.user?.id != newItem.message.user?.id
+                messages[prevIndex] = prevItem.copy(
+                    message = prevMessage.copy(shouldShowAvatarAndName = prevMessage.incoming
+                            && prevMessage.user?.id != newItem.message.user?.id))
                 notifyItemChanged(prevIndex, Unit)
             }
 
@@ -141,6 +144,14 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
 
         messages.addAll(filteredItems)
         notifyItemRangeInserted(messages.lastIndex, filteredItems.size)
+    }
+
+    fun updateItemAt(index: Int, updatedItem: MessageItem) {
+        try {
+            messages[index] = updatedItem
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun notifyUpdate(messages: List<MessageListItem>, recyclerView: RecyclerView) {
@@ -210,22 +221,27 @@ class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
     }
 
     fun removeUnreadMessagesSeparator() {
-        messages.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
-            messages.removeAt(it.first)
-            notifyItemRemoved(it.first)
-
+        messages.findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let { (index, _) ->
+            messages.removeAt(index)
+            notifyItemRemoved(index)
             // Hide avatar and name after removing unread separator, if the previous message is from the same user
-            messages.getOrNull(it.first)?.let { item ->
+            messages.getOrNull(index)?.let { item ->
                 if (item is MessageItem && item.message.shouldShowAvatarAndName) {
-                    messages.getOrNull(it.first - 1)?.let { prevItem ->
-                        if (prevItem is MessageItem && prevItem.message.shouldShowAvatarAndName && prevItem.message.user?.id == item.message.user?.id) {
-                            item.message.shouldShowAvatarAndName = false
-                            notifyItemChanged(it.first, Unit)
+                    messages.getOrNull(index - 1)?.let { prevItem ->
+                        if (prevItem is MessageItem && prevItem.message.user?.id == item.message.user?.id
+                                && !shouldShowDate(item.message, prevItem.message)) {
+
+                            messages[index] = item.copy(message = item.message.copy(shouldShowAvatarAndName = false))
+                            notifyItemChanged(index, Unit)
                         }
                     }
                 }
             }
         }
+    }
+
+    private fun shouldShowDate(sceytMessage: SceytMessage, prevMessage: SceytMessage): Boolean {
+        return !DateTimeUtil.isSameDay(sceytMessage.createdAt, prevMessage.createdAt)
     }
 
     fun sort(recyclerView: RecyclerView) {

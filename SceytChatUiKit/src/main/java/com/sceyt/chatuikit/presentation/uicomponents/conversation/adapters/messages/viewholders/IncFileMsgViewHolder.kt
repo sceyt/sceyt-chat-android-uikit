@@ -48,33 +48,33 @@ class IncFileMsgViewHolder(
             setMessageItemStyle()
 
             root.setOnClickListener {
-                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onMessageClick(it, requireMessageItem)
             }
 
             root.setOnLongClickListener {
-                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onMessageLongClick(it, requireMessageItem)
                 return@setOnLongClickListener true
             }
 
             messageBody.doOnLongClick {
-                messageListeners?.onMessageLongClick(it, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onMessageLongClick(it, requireMessageItem)
             }
 
             messageBody.doOnClickWhenNoLink {
-                messageListeners?.onMessageClick(it, messageListItem as MessageListItem.MessageItem)
+                messageListeners?.onMessageClick(it, requireMessageItem)
             }
 
             viewHandleClick.setOnClickListener {
-                messageListeners?.onAttachmentClick(it, fileItem)
+                messageListeners?.onAttachmentClick(it, fileItem, requireMessage)
             }
 
             viewHandleClick.setOnLongClickListener {
-                messageListeners?.onAttachmentLongClick(it, fileItem)
+                messageListeners?.onAttachmentLongClick(it, fileItem, requireMessage)
                 return@setOnLongClickListener true
             }
 
             loadProgress.setOnClickListener {
-                messageListeners?.onAttachmentLoaderClick(it, fileItem)
+                messageListeners?.onAttachmentLoaderClick(it, fileItem, requireMessage)
             }
         }
     }

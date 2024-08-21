@@ -5,11 +5,11 @@ import android.graphics.Bitmap
 import android.util.Size
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.extractLinks
 import com.sceyt.chatuikit.extensions.getImageBitmapWithGlideWithTimeout
 import com.sceyt.chatuikit.extensions.isValidUrl
 import com.sceyt.chatuikit.extensions.toBase64
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.shared.utils.BitmapUtil
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
@@ -71,8 +71,6 @@ class SingleLinkDetailsProvider : SceytKoinComponent {
                         return@launch
                     }
 
-                    linkPreviewDetails.imageWidth = bitmap.width
-                    linkPreviewDetails.imageHeight = bitmap.height
                     withContext(Dispatchers.Main) {
                         imageSizeCallback(Size(bitmap.width, bitmap.height))
                     }
@@ -80,7 +78,6 @@ class SingleLinkDetailsProvider : SceytKoinComponent {
                     if (linkPreviewDetails.thumb == null) {
                         val thumb = getImageThumb(bitmap)
                         thumb?.let {
-                            linkPreviewDetails.thumb = it
                             withContext(Dispatchers.Main) {
                                 thumbCallback.invoke(it)
                             }

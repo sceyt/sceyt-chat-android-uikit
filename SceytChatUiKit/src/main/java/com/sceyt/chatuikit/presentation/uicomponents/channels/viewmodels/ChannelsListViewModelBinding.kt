@@ -148,14 +148,14 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
         .onEach(::createJobToAddNewChannelWithOnResumed)
         .launchIn(viewModelScope)
 
-    ChannelsCache.pendingChannelCreatedFlow.onEach { data ->
-        channelListView.replaceChannel(data.first, data.second)
+    ChannelsCache.pendingChannelCreatedFlow.onEach { (pendingChannelId, newChannel) ->
+        channelListView.replaceChannel(pendingChannelId, newChannel)
         if (!lifecycleOwner.isResumed()) {
-            newAddedChannelJobs[data.first]?.let {
+            newAddedChannelJobs[pendingChannelId]?.let {
                 it.cancel()
-                newAddedChannelJobs.remove(data.first)
+                newAddedChannelJobs.remove(pendingChannelId)
             }
-            createJobToAddNewChannelWithOnResumed(data.second)
+            createJobToAddNewChannelWithOnResumed(newChannel)
         }
     }.launchIn(viewModelScope)
 

@@ -64,7 +64,7 @@ open class MessageViewHolderFactory(context: Context) {
     private lateinit var messageItemStyle: MessagesListViewStyle
     private var clickListeners = MessageClickListenersImpl()
     private var displayedListener: ((MessageListItem) -> Unit)? = null
-    private var voicePlayPauseListener: ((FileListItem, playing: Boolean) -> Unit)? = null
+    private var voicePlayPauseListener: ((FileListItem, SceytMessage, playing: Boolean) -> Unit)? = null
     private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
 
@@ -112,13 +112,14 @@ open class MessageViewHolderFactory(context: Context) {
     open fun createIncLinkMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncLinkMsgViewHolder(
             SceytItemIncLinkMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, linkPreview, messageItemStyle.messageItemStyle, clickListeners, displayedListener, userNameFormatter)
+            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners,
+            displayedListener, userNameFormatter, needMediaDataCallback)
     }
 
     open fun createOutLinkMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutLinkMsgViewHolder(
             SceytItemOutLinkMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, linkPreview, messageItemStyle.messageItemStyle, clickListeners, userNameFormatter)
+            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, userNameFormatter, needMediaDataCallback)
     }
 
     open fun createIncVoiceMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
@@ -262,7 +263,7 @@ open class MessageViewHolderFactory(context: Context) {
         displayedListener = listener
     }
 
-    fun setVoicePlayPauseListener(listener: (FileListItem, playing: Boolean) -> Unit) {
+    fun setVoicePlayPauseListener(listener: (FileListItem, SceytMessage, playing: Boolean) -> Unit) {
         voicePlayPauseListener = listener
     }
 
