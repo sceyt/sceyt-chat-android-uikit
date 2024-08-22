@@ -61,6 +61,12 @@ abstract class BaseMediaMessageViewHolder(
         viewHolderHelper.bind(fileItem, resizedImageSize)
     }
 
+    @CallSuper
+    override fun itemUpdated(item: MessageListItem) {
+        super.itemUpdated(item)
+        fileItem = getFileItem(item as MessageListItem.MessageItem) ?: return
+    }
+
     protected open fun initAttachment() {
         setListener()
 

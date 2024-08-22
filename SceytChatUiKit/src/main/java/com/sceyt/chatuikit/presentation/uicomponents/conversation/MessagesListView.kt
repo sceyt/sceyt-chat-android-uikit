@@ -519,7 +519,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                         val updatedAttachment = sceytAttachment.getUpdatedWithTransferData(data)
                         attachments[attachmentIndex] = updatedAttachment
                         foundAttachmentFile?.file = updatedAttachment
-                        messagesRV.updateItemAt(index, item.copy(message = message.copy(attachments = attachments)))
+                        val updatedItem = item.copy(message = message.copy(attachments = attachments))
+                        updateAdapterItemNotifyVisible(index, updatedItem)
                         break
                     }
                 }
