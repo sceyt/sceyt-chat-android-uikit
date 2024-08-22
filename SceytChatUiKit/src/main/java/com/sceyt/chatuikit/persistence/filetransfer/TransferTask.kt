@@ -10,7 +10,8 @@ class TransferTask(
     var progressCallback: ProgressUpdateCallback? = null
     var preparingCallback: PreparingCallback? = null
     var resumePauseCallback: ResumePauseCallback? = null
-    var resultCallback: TransferResultCallback? = null
+    var uploadResultCallback: TransferResultCallback? = null
+    var downloadCallback: TransferResultCallback? = null
     var updateFileLocationCallback: UpdateFileLocationCallback? = null
     var thumbCallback: ThumbCallback? = null
 

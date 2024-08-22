@@ -147,13 +147,13 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
 
     private fun uploadFile(attachment: SceytAttachment, continuation: CancellableContinuation<Pair<Boolean, String?>>, isSharing: Boolean) {
         if (isSharing) {
-            fileTransferService.uploadSharedFile(attachment, FileTransferHelper.createTransferTask(attachment, true).also { task ->
+            fileTransferService.uploadSharedFile(attachment, FileTransferHelper.createTransferTask(attachment).also { task ->
                 task.addOnCompletionListener(this.toString(), listener = { success: Boolean, url: String? ->
                     continuation.safeResume(Pair(success, url))
                 })
             })
         } else {
-            fileTransferService.upload(attachment, FileTransferHelper.createTransferTask(attachment, true).also { task ->
+            fileTransferService.upload(attachment, FileTransferHelper.createTransferTask(attachment).also { task ->
                 task.addOnCompletionListener(this.toString(), listener = { success: Boolean, url: String? ->
                     continuation.safeResume(Pair(success, url))
                 })

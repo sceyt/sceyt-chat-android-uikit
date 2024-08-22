@@ -9,7 +9,6 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
-import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
@@ -41,7 +40,7 @@ object FileTransferHelper : SceytKoinComponent {
     private val onTransferUpdatedLiveData_ = MutableLiveData<TransferData>()
     val onTransferUpdatedLiveData: LiveData<TransferData> = onTransferUpdatedLiveData_
 
-    fun createTransferTask(attachment: SceytAttachment, isFromUpload: Boolean): TransferTask {
+    fun createTransferTask(attachment: SceytAttachment): TransferTask {
         return TransferTask(
             attachment = attachment,
             messageTid = attachment.messageTid,
@@ -49,8 +48,8 @@ object FileTransferHelper : SceytKoinComponent {
             progressCallback = getProgressUpdateCallback()
             preparingCallback = getPreparingCallback()
             resumePauseCallback = getResumePauseCallback()
-            resultCallback = if (isFromUpload) getUploadResultCallback()
-            else getDownloadResultCallback()
+            uploadResultCallback = getUploadResultCallback()
+            downloadCallback = getDownloadResultCallback()
             updateFileLocationCallback = getUpdateFileLocationCallback()
             thumbCallback = getThumbCallback()
         }

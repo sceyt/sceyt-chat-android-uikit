@@ -153,14 +153,14 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
             }
 
             TransferState.PendingDownload, TransferState.ErrorDownload -> {
-                fileTransferService.download(item, FileTransferHelper.createTransferTask(item, false))
+                fileTransferService.download(item, FileTransferHelper.createTransferTask(item))
             }
 
             TransferState.PauseDownload -> {
                 val task = fileTransferService.findTransferTask(item)
                 if (task != null)
                     fileTransferService.resume(item.messageTid, item, state)
-                else fileTransferService.download(item, FileTransferHelper.createTransferTask(item, false))
+                else fileTransferService.download(item, FileTransferHelper.createTransferTask(item))
             }
 
             TransferState.PauseUpload -> {

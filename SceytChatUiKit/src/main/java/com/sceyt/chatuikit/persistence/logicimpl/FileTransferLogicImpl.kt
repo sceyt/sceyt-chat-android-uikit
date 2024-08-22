@@ -79,7 +79,7 @@ internal class FileTransferLogicImpl(
             if (uploaded && url != null) {
                 sharingFilesPath.add(data)
                 getAppropriateTasks(task).forEach { transferTask ->
-                    transferTask.resultCallback?.onResult(SceytResponse.Success(url))
+                    transferTask.uploadResultCallback?.onResult(SceytResponse.Success(url))
                 }
                 removeFromSharingPath(attachment.originalFilePath)
                 return
@@ -105,7 +105,7 @@ internal class FileTransferLogicImpl(
         val file = attachment.checkLoadedFileIsCorrect(loadedFile)
 
         if (file != null) {
-            task.resultCallback?.onResult(SceytResponse.Success(file.path))
+            task.downloadCallback?.onResult(SceytResponse.Success(file.path))
         } else {
             val downloadMapKey = attachment.url + attachment.messageTid
             if (downloadingUrlMap[downloadMapKey] != null) return
@@ -129,9 +129,9 @@ internal class FileTransferLogicImpl(
                 .setCallback { e, result ->
                     if (result == null && e != null) {
                         loadedFile.delete()
-                        task.resultCallback?.onResult(SceytResponse.Error(SceytException(0, e.message)))
+                        task.downloadCallback?.onResult(SceytResponse.Error(SceytException(0, e.message)))
                     } else
-                        task.resultCallback?.onResult(SceytResponse.Success(result.path))
+                        task.downloadCallback?.onResult(SceytResponse.Success(result.path))
 
                     downloadingUrlMap.remove(downloadMapKey)
                 }
@@ -248,7 +248,7 @@ internal class FileTransferLogicImpl(
 
         val (uploaded, url) = checkMaybeAlreadyUploadedWithAnotherMessage(checksum, transferTask)
         if (uploaded && url != null) {
-            transferTask.resultCallback?.onResult(SceytResponse.Success(url))
+            transferTask.uploadResultCallback?.onResult(SceytResponse.Success(url))
             uploadNext()
             return
         }
@@ -276,17 +276,17 @@ internal class FileTransferLogicImpl(
 
                 override fun onError(exception: SceytException?) {
                     Log.e(TAG, "Error upload file ${exception?.message}")
-                    transferTask.resultCallback?.onResult(SceytResponse.Error(exception))
+                    transferTask.uploadResultCallback?.onResult(SceytResponse.Error(exception))
                 }
             }, object : UrlCallback {
                 override fun onResult(p0: String?) {
-                    transferTask.resultCallback?.onResult(SceytResponse.Success(p0))
+                    transferTask.uploadResultCallback?.onResult(SceytResponse.Success(p0))
                     uploadNext()
                 }
 
                 override fun onError(exception: SceytException?) {
                     Log.e(TAG, "Error upload file ${exception?.message}")
-                    transferTask.resultCallback?.onResult(SceytResponse.Error(exception))
+                    transferTask.uploadResultCallback?.onResult(SceytResponse.Error(exception))
                     uploadNext()
                 }
             })
@@ -306,21 +306,21 @@ internal class FileTransferLogicImpl(
 
             override fun onError(exception: SceytException?) {
                 getAppropriateTasks(transferTask).forEach { task ->
-                    task.resultCallback?.onResult(SceytResponse.Error(exception))
+                    task.uploadResultCallback?.onResult(SceytResponse.Error(exception))
                 }
                 removeFromSharingPath(attachment.originalFilePath)
             }
         }, object : UrlCallback {
             override fun onResult(p0: String?) {
                 getAppropriateTasks(transferTask).forEach { task ->
-                    task.resultCallback?.onResult(SceytResponse.Success(p0))
+                    task.uploadResultCallback?.onResult(SceytResponse.Success(p0))
                 }
                 removeFromSharingPath(attachment.originalFilePath)
             }
 
             override fun onError(exception: SceytException?) {
                 getAppropriateTasks(transferTask).forEach { task ->
-                    task.resultCallback?.onResult(SceytResponse.Error(exception))
+                    task.uploadResultCallback?.onResult(SceytResponse.Error(exception))
                 }
                 removeFromSharingPath(attachment.originalFilePath)
             }

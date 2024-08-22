@@ -406,14 +406,14 @@ class MessageListViewModel(
             }
 
             PendingDownload, ErrorDownload -> {
-                fileTransferService.download(item.file, FileTransferHelper.createTransferTask(item.file, false))
+                fileTransferService.download(item.file, FileTransferHelper.createTransferTask(item.file))
             }
 
             PauseDownload -> {
                 val task = fileTransferService.findTransferTask(item.file)
                 if (task != null)
                     fileTransferService.resume(item.file.messageTid, item.file, state)
-                else fileTransferService.download(item.file, FileTransferHelper.createTransferTask(item.file, false))
+                else fileTransferService.download(item.file, FileTransferHelper.createTransferTask(item.file))
             }
 
             PauseUpload -> {
