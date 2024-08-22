@@ -103,7 +103,8 @@ abstract class BaseMsgViewHolder(private val view: View,
             highlight()
     }
 
-    fun itemUpdated(item: MessageListItem) {
+    @CallSuper
+    open fun itemUpdated(item: MessageListItem) {
         messageListItem = item
     }
 
