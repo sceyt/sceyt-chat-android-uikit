@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.data.models.messages
 
 import android.os.Parcelable
-import com.vanniktech.ui.Parcelize
+import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class PendingReactionData(

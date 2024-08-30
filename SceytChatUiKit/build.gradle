@@ -84,8 +84,8 @@ dependencies {
 
 
     // Overriding the version of the library
-    api libs.gson
-    api libs.okio
+    implementation libs.gson
+    implementation libs.okio
 
     // Instrumented Unit Tests
     androidTestImplementation libs.junit.ktx

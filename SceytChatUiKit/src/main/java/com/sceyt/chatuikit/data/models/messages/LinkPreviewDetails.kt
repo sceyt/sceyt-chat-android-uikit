@@ -1,6 +1,6 @@
 package com.sceyt.chatuikit.data.models.messages
 
-import com.vanniktech.ui.Parcelable
+import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
