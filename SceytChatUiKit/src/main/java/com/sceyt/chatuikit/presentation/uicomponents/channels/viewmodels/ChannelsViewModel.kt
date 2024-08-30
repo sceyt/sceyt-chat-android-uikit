@@ -14,7 +14,6 @@ import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
-import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
@@ -27,9 +26,7 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
-
     private val channelInteractor: ChannelInteractor by inject()
-    private val channelMemberInteractor: ChannelMemberInteractor by inject()
     private val userInteractor: UserInteractor by inject()
     private var getChannelsJog: Job? = null
     val selectedChannels = mutableSetOf<Long>()
@@ -89,8 +86,9 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         if (filteredChannels.isEmpty())
             return emptyList()
 
-        val channelItems: List<ChannelListItem>
-        channelItems = filteredChannels.map { item -> ChannelListItem.ChannelItem(item) }
+        val channelItems: List<ChannelListItem> = filteredChannels.map {
+            item -> ChannelListItem.ChannelItem(item)
+        }
 
         if (hasNext)
             (channelItems as ArrayList).add(ChannelListItem.LoadingMoreItem)
