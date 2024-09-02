@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 
 class SceytChannelsFragment : Fragment() {
     private lateinit var binding: SceytFragmentChannelsBinding
-    private val mViewModel: ChannelsViewModel by viewModels()
+    private val viewModel: ChannelsViewModel by viewModels()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelsBinding.inflate(inflater, container, false)
@@ -39,8 +39,8 @@ class SceytChannelsFragment : Fragment() {
         initViews()
         binding.applyStyle()
 
-        mViewModel.bind(binding.channelListView, viewLifecycleOwner)
-        mViewModel.bind(binding.searchView)
+        viewModel.bind(binding.channelListView, viewLifecycleOwner)
+        viewModel.bind(binding.searchView)
 
         binding.searchView.post {
             binding.channelListView.getPageStateView().setMargins(bottom = binding.searchView.height)
