@@ -41,23 +41,10 @@ object SceytChatUIKit : SceytKoinComponent {
     val chatUIFacade: SceytChatUIFacade by inject()
     var theme: SceytChatUIKitTheme by lazyVar { SceytChatUIKitTheme() }
     var config: SceytChatUIKitConfig by lazyVar { SceytChatUIKitConfig() }
+    val formatters: SceytChatUIKitFormatters by lazy { SceytChatUIKitFormatters() }
 
     @JvmField
     var messageTransformer: MessageTransformer? = null
-
-    var userNameFormatter: UserNameFormatter? = null
-        set(value) {
-            field = value
-            if (mentionUserNameFormatter == null)
-                mentionUserNameFormatter = value
-        }
-
-    @JvmField
-    var mentionUserNameFormatter: UserNameFormatter? = null
-
-    @JvmField
-    var userPresenceDateFormatter = UserPresenceDateFormatter()
-
 
     fun initialize(
             appContext: Context,

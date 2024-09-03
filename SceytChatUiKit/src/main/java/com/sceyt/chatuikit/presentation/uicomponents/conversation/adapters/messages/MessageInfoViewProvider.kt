@@ -35,7 +35,7 @@ open class MessageInfoViewProvider(private val context: Context) {
     protected val viewPoolReactions = RecyclerView.RecycledViewPool()
     protected var clickListeners = MessageClickListenersImpl()
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
-    protected var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
+    protected var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
     protected var viewHolder: BaseMsgViewHolder? = null
     protected val messageItemStyle: MessageItemStyle by lazy { getMessageListViewStyle() }

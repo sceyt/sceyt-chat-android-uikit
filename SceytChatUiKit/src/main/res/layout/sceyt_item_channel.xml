@@ -35,10 +35,10 @@
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/avatar"
         app:layout_constraintEnd_toEndOf="@id/avatar"
-        app:sceytOnlineViewChangeVisibilityWithAnim="true"
-        app:sceytOnlineViewIndicatorColor="@color/sceyt_color_green"
-        app:sceytOnlineViewStrokeColor="@color/sceyt_color_background"
-        app:sceytOnlineViewStrokeWidth="1.5dp"
+        app:sceytUiOnlineViewChangeVisibilityWithAnim="true"
+        app:sceytUiOnlineViewIndicatorColor="@color/sceyt_color_green"
+        app:sceytUiOnlineViewStrokeColor="@color/sceyt_color_background"
+        app:sceytUiOnlineViewStrokeWidth="1.5dp"
         tools:visibility="visible" />
 
     <androidx.appcompat.widget.AppCompatTextView

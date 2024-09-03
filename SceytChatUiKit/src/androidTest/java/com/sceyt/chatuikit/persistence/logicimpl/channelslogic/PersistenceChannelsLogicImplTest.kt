@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
-import com.sceyt.chat.models.channel.Builder
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.CreateChannelRequest
 import com.sceyt.chat.models.channel.DeleteChannelRequest
@@ -94,11 +93,12 @@ class PersistenceChannelsLogicImplTest {
 
 
     private fun initCreateChannelRequest(channelData: CreateChannelData): CreateChannelRequest {
-        return Builder(channelData.channelType)
+        return CreateChannelRequest.Builder(channelData.channelType)
             .withMembers(channelData.members)
             .withUri(channelData.uri)
             .withAvatarUrl(channelData.avatarUrl)
             .withSubject(channelData.subject)
             .withMetadata(channelData.metadata)
+            .build()
     }
 }

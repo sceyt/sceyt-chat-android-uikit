@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytSearchableToolbarTitle="@string/sceyt_forward_message" />
+        app:sceytUiSearchableToolbarTitle="@string/sceyt_forward_message" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvChannels"

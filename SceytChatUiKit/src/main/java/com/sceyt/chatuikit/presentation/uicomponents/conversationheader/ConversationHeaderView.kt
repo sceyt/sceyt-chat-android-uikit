@@ -70,7 +70,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.Date
 
-@Suppress("unused")
+@Suppress("MemberVisibilityCanBePrivate")
 class ConversationHeaderView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : AppBarLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners,
@@ -85,7 +85,7 @@ class ConversationHeaderView @JvmOverloads constructor(
     private var replyMessage: SceytMessage? = null
     private var isReplyInThread: Boolean = false
     private var isGroup = false
-    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
+    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
     private var enablePresence: Boolean = true
     private val typingUsersHelper by lazy { initTypingUsersHelper() }
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
@@ -450,7 +450,7 @@ class ConversationHeaderView @JvmOverloads constructor(
         }
     }
 
-    fun getToolbarMenu() = binding.headerToolbar.menu
+    fun getToolbarMenu(): Menu = binding.headerToolbar.menu
 
     fun enableDisableToShowPresence(enable: Boolean) {
         enablePresence = enable

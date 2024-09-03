@@ -17,7 +17,7 @@ open class ChannelViewHolderFactory(context: Context) {
     protected open val channelClickListenersImpl = ChannelClickListenersImpl()
     protected lateinit var channelStyle: ChannelListViewStyle
     private var attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)? = null
-    var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
+    var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
         private set
 
     internal fun setStyle(channelStyle: ChannelListViewStyle) {

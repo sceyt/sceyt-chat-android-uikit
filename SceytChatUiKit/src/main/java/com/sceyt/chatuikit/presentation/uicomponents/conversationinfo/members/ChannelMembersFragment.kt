@@ -331,7 +331,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
         SceytDialog.showSceytDialog(requireContext(), R.string.sceyt_revoke_admin_title, R.string.sceyt_revoke_admin_desc, R.string.sceyt_revoke, positiveCb = {
             revokeAdmin(member)
         }).apply {
-            val name = SceytChatUIKit.userNameFormatter?.format(member.user)
+            val name = SceytChatUIKit.formatters.userNameFormatter?.format(member.user)
                     ?: member.user.getPresentableNameCheckDeleted(requireContext())
             val desc = String.format(getString(R.string.sceyt_revoke_admin_desc), name)
             val nameFromIndex = desc.lastIndexOf(name)
@@ -361,7 +361,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
         SceytDialog.showSceytDialog(requireContext(), titleId = titleId, positiveBtnTitleId = R.string.sceyt_remove, positiveCb = {
             viewModel.kickMember(channel.id, member.id, false)
         }).apply {
-            val name = SceytChatUIKit.userNameFormatter?.format(member.user)
+            val name = SceytChatUIKit.formatters.userNameFormatter?.format(member.user)
                     ?: member.user.getPresentableNameCheckDeleted(requireContext())
 
             val desc = String.format(getString(descId), name)

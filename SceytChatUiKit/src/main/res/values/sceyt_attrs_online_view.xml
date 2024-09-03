@@ -2,9 +2,9 @@
 <resources>
 
     <declare-styleable name="SceytOnlineView">
-        <attr name="sceytOnlineViewStrokeColor" format="reference|color" />
-        <attr name="sceytOnlineViewIndicatorColor" format="reference|color" />
-        <attr name="sceytOnlineViewStrokeWidth" format="dimension" />
-        <attr name="sceytOnlineViewChangeVisibilityWithAnim" format="boolean" />
+        <attr name="sceytUiOnlineViewStrokeColor" format="reference|color" />
+        <attr name="sceytUiOnlineViewIndicatorColor" format="reference|color" />
+        <attr name="sceytUiOnlineViewStrokeWidth" format="dimension" />
+        <attr name="sceytUiOnlineViewChangeVisibilityWithAnim" format="boolean" />
     </declare-styleable>
 </resources>

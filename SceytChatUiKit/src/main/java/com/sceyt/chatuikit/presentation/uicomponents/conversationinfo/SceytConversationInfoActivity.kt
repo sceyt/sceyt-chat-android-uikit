@@ -358,7 +358,7 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
         if (!icon.isNullOrBlank()) {
             val title = if (channel.isDirect()) {
                 val user = channel.getPeer()?.user
-                if (user != null) SceytChatUIKit.userNameFormatter?.format(user)
+                if (user != null) SceytChatUIKit.formatters.userNameFormatter?.format(user)
                         ?: user.getPresentableName() else null
             } else channel.subject
 

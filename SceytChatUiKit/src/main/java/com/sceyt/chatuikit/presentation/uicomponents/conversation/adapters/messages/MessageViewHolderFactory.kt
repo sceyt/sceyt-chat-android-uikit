@@ -53,11 +53,8 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.Mess
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
-import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 
 open class MessageViewHolderFactory(context: Context) {
-
-    protected val linkPreview: LinkPreviewHelper = LinkPreviewHelper(context)
     protected val viewPoolReactions = RecyclerView.RecycledViewPool()
     protected val viewPoolFiles = RecyclerView.RecycledViewPool()
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
@@ -65,7 +62,7 @@ open class MessageViewHolderFactory(context: Context) {
     private var clickListeners = MessageClickListenersImpl()
     private var displayedListener: ((MessageListItem) -> Unit)? = null
     private var voicePlayPauseListener: ((FileListItem, SceytMessage, playing: Boolean) -> Unit)? = null
-    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
+    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
 
     internal fun setStyle(style: MessagesListViewStyle) {

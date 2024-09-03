@@ -219,7 +219,7 @@ object DateTimeUtil {
             val hoursDiff = TimeUnit.MILLISECONDS.toHours(now.timeInMillis - date2.timeInMillis).toInt().absoluteValue
             val minDiff = TimeUnit.MILLISECONDS.toMinutes(now.timeInMillis - date2.timeInMillis).toInt().absoluteValue
 
-            val dateFormatter = SceytChatUIKit.userPresenceDateFormatter
+            val dateFormatter = SceytChatUIKit.formatters.userPresenceDateFormatter
             return when {
                 yearsDiff > 0 -> {
                     getDateText(date, dateFormatter.olderThisYear(context, date))
@@ -281,14 +281,14 @@ object DateTimeUtil {
 
         return if (hours > 0)
             if (hours > 9)
-                String.format("%02d:%02d:%02d", hours, minutes, seconds)
+                String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
             else
-                String.format("%d:%02d:%02d", hours, minutes, seconds)
+                String.format(Locale.getDefault(), "%d:%02d:%02d", hours, minutes, seconds)
         else
             if (minutes > 9)
-                String.format("%02d:%02d", minutes, seconds)
+                String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
             else
-                String.format("%d:%02d", minutes, seconds)
+                String.format(Locale.getDefault(), "%d:%02d", minutes, seconds)
     }
 
     fun secondsToTime(seconds: Long): String {

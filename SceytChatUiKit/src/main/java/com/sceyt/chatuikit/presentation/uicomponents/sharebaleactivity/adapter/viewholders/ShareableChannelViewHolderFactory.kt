@@ -13,10 +13,11 @@ import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelC
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 
+@Suppress("MemberVisibilityCanBePrivate")
 open class ShareableChannelViewHolderFactory(context: Context) {
-    protected val layoutInflater = LayoutInflater.from(context)
+    protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     protected val channelClickListenersImpl = ChannelClickListenersImpl()
-    var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
+    var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
         private set
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {

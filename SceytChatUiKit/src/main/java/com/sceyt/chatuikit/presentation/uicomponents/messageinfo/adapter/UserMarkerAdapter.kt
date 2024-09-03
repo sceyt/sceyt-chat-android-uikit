@@ -41,7 +41,7 @@ class UserMarkerAdapter : ListAdapter<SceytMarker, UserMarkerAdapter.SimpleUserV
         fun bind(marker: SceytMarker) {
             with(binding) {
                 val user = marker.user ?: User(marker.userId)
-                val name = SceytChatUIKit.userNameFormatter?.format(user)
+                val name = SceytChatUIKit.formatters.userNameFormatter?.format(user)
                         ?: user.getPresentableName()
                 avatar.setNameAndImageUrl(name, user.avatarURL)
                 userName.text = name

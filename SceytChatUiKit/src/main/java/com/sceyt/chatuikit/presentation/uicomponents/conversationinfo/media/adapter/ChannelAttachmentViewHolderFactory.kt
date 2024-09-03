@@ -25,13 +25,14 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adap
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 
-open class ChannelAttachmentViewHolderFactory(context: Context,
-                                              protected val style: ConversationInfoMediaStyle) {
-
+open class ChannelAttachmentViewHolderFactory(
+        context: Context,
+        protected val style: ConversationInfoMediaStyle
+) {
     protected val layoutInflater = LayoutInflater.from(context)
     protected var clickListeners = AttachmentClickListenersImpl()
         private set
-    protected var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
+    protected var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
         private set
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
 

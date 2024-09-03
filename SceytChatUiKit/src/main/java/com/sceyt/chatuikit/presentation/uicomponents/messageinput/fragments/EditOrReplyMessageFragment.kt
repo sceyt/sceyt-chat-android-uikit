@@ -37,7 +37,7 @@ import com.sceyt.chatuikit.shared.utils.ViewUtil
 open class EditOrReplyMessageFragment : Fragment() {
     protected var binding: SceytFragmentEditOrReplyMessageBinding? = null
     protected var clickListeners: CancelReplyMessageViewClickListener? = null
-    protected var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
+    protected var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentEditOrReplyMessageBinding.inflate(inflater, container, false).also {

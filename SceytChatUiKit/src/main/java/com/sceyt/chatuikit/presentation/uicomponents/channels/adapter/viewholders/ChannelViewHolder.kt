@@ -48,11 +48,13 @@ import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.text.NumberFormat
 import java.util.Locale
 
-open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
-                             private val channelStyle: ChannelListViewStyle,
-                             private var listeners: ChannelClickListeners.ClickListeners,
-                             private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)? = null,
-                             private val userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter) : BaseChannelViewHolder(binding.root) {
+open class ChannelViewHolder(
+        private val binding: SceytItemChannelBinding,
+        private val channelStyle: ChannelListViewStyle,
+        private var listeners: ChannelClickListeners.ClickListeners,
+        private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)? = null,
+        private val userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
+) : BaseChannelViewHolder(binding.root) {
 
     protected var isSelf = false
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
@@ -197,8 +199,9 @@ open class ChannelViewHolder(private val binding: SceytItemChannelBinding,
 
             val reactUserName = when {
                 channel.isGroup -> {
-                    val name = lastReaction.user?.let { SceytChatUIKit.userNameFormatter?.format(it) }
-                            ?: lastReaction.user?.getPresentableNameWithYou(context)
+                    val name = lastReaction.user?.let {
+                        SceytChatUIKit.formatters.userNameFormatter?.format(it)
+                    } ?: lastReaction.user?.getPresentableNameWithYou(context)
                     "$name ${reactedWord.lowercase()}"
                 }
 

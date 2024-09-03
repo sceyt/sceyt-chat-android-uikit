@@ -21,7 +21,7 @@ import com.sceyt.chatuikit.extensions.notAutoCorrectable
 
 object MentionUserHelper {
     const val MENTION = "mention"
-    private val userNameFormatter get() = SceytChatUIKit.mentionUserNameFormatter
+    private val userNameFormatter get() = SceytChatUIKit.formatters.mentionUserNameFormatter
 
     fun initMentionAttributes(mentionUsers: List<Mention>): List<BodyAttribute>? {
         if (mentionUsers.isEmpty()) return null

@@ -25,10 +25,10 @@ class SceytOnlineView @JvmOverloads constructor(context: Context, attrs: Attribu
     init {
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SceytOnlineView)
-            strokeColor = a.getColor(R.styleable.SceytOnlineView_sceytOnlineViewStrokeColor, strokeColor)
-            indicatorColor = a.getColor(R.styleable.SceytOnlineView_sceytOnlineViewIndicatorColor, indicatorColor)
-            strokeWidth = a.getDimensionPixelSize(R.styleable.SceytOnlineView_sceytOnlineViewStrokeWidth, strokeWidth)
-            changeVisibilityWithAnim = a.getBoolean(R.styleable.SceytOnlineView_sceytOnlineViewChangeVisibilityWithAnim, changeVisibilityWithAnim)
+            strokeColor = a.getColor(R.styleable.SceytOnlineView_sceytUiOnlineViewStrokeColor, strokeColor)
+            indicatorColor = a.getColor(R.styleable.SceytOnlineView_sceytUiOnlineViewIndicatorColor, indicatorColor)
+            strokeWidth = a.getDimensionPixelSize(R.styleable.SceytOnlineView_sceytUiOnlineViewStrokeWidth, strokeWidth)
+            changeVisibilityWithAnim = a.getBoolean(R.styleable.SceytOnlineView_sceytUiOnlineViewChangeVisibilityWithAnim, changeVisibilityWithAnim)
             a.recycle()
         }
         init()
