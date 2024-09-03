@@ -107,6 +107,12 @@ class MessagesCache {
         }
     }
 
+    fun getChannelMessages(channelId: Long): List<SceytMessage>? {
+        synchronized(lock) {
+            return cachedMessages[channelId]?.values?.toList()
+        }
+    }
+
     fun clear() {
         synchronized(lock) {
             cachedMessages.clear()

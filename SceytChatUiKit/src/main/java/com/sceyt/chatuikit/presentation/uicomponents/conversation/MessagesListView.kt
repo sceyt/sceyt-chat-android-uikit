@@ -80,6 +80,7 @@ import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+@Suppress("Unused", "MemberVisibilityCanBePrivate")
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : ConstraintLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
         MessageActionsViewClickListeners.ActionsViewClickListeners, ReactionPopupClickListeners.PopupClickListeners {
@@ -952,7 +953,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onReplyMessageInThreadClick(message: SceytMessage) {
-        // Override and add your logic if you want
+        messageCommandEventListener?.invoke(MessageCommandEvent.ReplyInThread(message))
     }
 
 

@@ -52,6 +52,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.messageslogic.MessagesCache
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.LoadKeyType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.MessagesListView
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
@@ -105,21 +106,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         else ChannelsCache.currentChannelId = null
     }
 
-    if (channel.unread)
-        markChannelAsRead(channel.id)
-
-    // If userRole is null or empty, get channel again to update channel
-    if (channel.userRole.isNullOrEmpty())
-        getChannel(channel.id)
-
-    if (channel.lastDisplayedMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
-            || channel.lastDisplayedMessageId == channel.lastMessage?.id)
-        loadPrevMessages(channel.lastMessage?.id ?: 0, 0)
-    else {
-        pinnedLastReadMessageId = channel.lastDisplayedMessageId
-        loadNearMessages(pinnedLastReadMessageId, LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue), false)
-    }
-
     messagesListView.setUnreadCount(channel.newMessageCount.toInt())
 
     messagesListView.setNeedDownloadListener {
@@ -133,21 +119,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     checkEnableDisableActions(channel)
-
-    suspend fun getCompareMessage(loadType: PaginationResponse.LoadType,
-                                  proportion: List<SceytMessage>): SceytMessage? = withContext(Dispatchers.Default) {
-        if (proportion.isEmpty()) return@withContext null
-        val proportionFirstId = proportion.first().id
-        return@withContext when (loadType) {
-            LoadNext, LoadNewest, LoadNear -> {
-                (messagesListView.getData().lastOrNull {
-                    it is MessageItem && it.message.id < proportionFirstId
-                } as? MessageItem)?.message
-            }
-
-            LoadPrev -> null
-        }
-    }
 
     fun checkToHildeLoadingMoreItemByLoadType(loadType: PaginationResponse.LoadType) {
         when {
@@ -186,74 +157,52 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytMessage>) {
-        val enableDateSeparator = messagesListView.style.enableDateSeparator
+    fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytMessage>, data: List<MessageListItem>) {
         if (response.offset == 0) {
-            messagesListView.setMessagesList(mapToMessageListItem(data = response.data,
-                hasNext = response.hasNext, hasPrev = response.hasPrev,
-                enableDateSeparator = enableDateSeparator), true)
+            messagesListView.setMessagesList(data, true)
         } else {
             when (response.loadType) {
                 LoadPrev -> {
-                    messagesListView.addPrevPageMessages(mapToMessageListItem(data = response.data,
-                        hasNext = response.hasNext, hasPrev = response.hasPrev,
-                        enableDateSeparator = enableDateSeparator))
+                    messagesListView.addPrevPageMessages(data)
                 }
 
                 LoadNext -> {
-                    val hasNext = checkMaybeHesNext(response)
-                    val compareMessage = getCompareMessage(response.loadType, response.data)
-                    messagesListView.addNextPageMessages(mapToMessageListItem(data = response.data,
-                        hasNext = hasNext, hasPrev = response.hasPrev, compareMessage,
-                        enableDateSeparator = enableDateSeparator))
+                    messagesListView.addNextPageMessages(data)
                 }
 
                 LoadNear -> {
-                    val hasNext = checkMaybeHesNext(response)
-                    messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = hasNext,
-                        hasPrev = response.hasPrev, enableDateSeparator = enableDateSeparator), true)
+                    messagesListView.setMessagesList(data, true)
                 }
 
                 LoadNewest -> {
-                    messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = response.hasNext,
-                        hasPrev = response.hasPrev, enableDateSeparator = enableDateSeparator), true)
+                    messagesListView.setMessagesList(data, true)
                 }
             }
         }
         checkToScrollAfterResponse(response)
     }
 
-    suspend fun initPaginationServerResponse(response: PaginationResponse.ServerResponse<SceytMessage>) {
+    fun initPaginationServerResponse(
+            response: PaginationResponse.ServerResponse<SceytMessage>,
+            data: List<MessageListItem>
+    ) {
         when (response.data) {
             is SceytResponse.Success -> {
-                if (response.hasDiff) {
-                    val dataToMap = if (response.dbResultWasEmpty) {
-                        response.data.data ?: return
-                    } else response.cacheData
-
-                    val newMessages = mapToMessageListItem(data = dataToMap,
-                        hasNext = response.hasNext,
-                        hasPrev = response.hasPrev,
-                        compareMessage = getCompareMessage(response.loadType, dataToMap),
-                        enableDateSeparator = messagesListView.style.enableDateSeparator)
-
+                if (response.hasDiff || messagesListView.getData().isEmpty()) {
                     if (response.dbResultWasEmpty) {
                         if (response.loadType == LoadNear)
-                            messagesListView.setMessagesList(newMessages, true)
+                            messagesListView.setMessagesList(data, true)
                         else {
                             if (response.loadType == LoadNext || response.loadType == LoadNewest)
-                                messagesListView.addNextPageMessages(newMessages)
-                            else messagesListView.addPrevPageMessages(newMessages)
+                                messagesListView.addNextPageMessages(data)
+                            else messagesListView.addPrevPageMessages(data)
                         }
                     } else
-                        messagesListView.setMessagesList(newMessages, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
+                        messagesListView.setMessagesList(data, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
                 } else
                     checkToHildeLoadingMoreItemByLoadType(response.loadType)
 
                 checkToScrollAfterResponse(response)
-
-                loadPrevOffsetId = response.data.data?.firstOrNull()?.id ?: 0
-                loadNextOffsetId = response.data.data?.lastOrNull()?.id ?: 0
             }
 
             is SceytResponse.Error -> {
@@ -266,10 +215,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    suspend fun initMessagesResponse(response: PaginationResponse<SceytMessage>) {
+    fun initMessagesResponse(pagingResponse: Pair<PaginationResponse<SceytMessage>, List<MessageListItem>>) {
+        val (response, data) = pagingResponse
         when (response) {
-            is PaginationResponse.DBResponse -> initPaginationDbResponse(response)
-            is PaginationResponse.ServerResponse -> initPaginationServerResponse(response)
+            is PaginationResponse.DBResponse -> initPaginationDbResponse(response, data)
+            is PaginationResponse.ServerResponse -> initPaginationServerResponse(response, data)
             else -> return
         }
     }
@@ -709,6 +659,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                             SceytConversationInfoActivity.launch(event.view.context, response.data)
                         }
                 }
+            }
+
+            is MessageCommandEvent.ReplyInThread -> {
+
             }
         }
     }

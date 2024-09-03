@@ -84,7 +84,7 @@ abstract class BaseLinkMsgViewHolder(
                     it.file.type == AttachmentTypeEnum.Link.value()
                 }?.blurredThumb?.toDrawable(context.resources)
 
-                Glide.with(context)
+                Glide.with(context.applicationContext)
                     .load(data.imageUrl)
                     .override(data.imageWidth ?: maxSize, data.imageHeight ?: maxSize)
                     .placeholder(thumb)
