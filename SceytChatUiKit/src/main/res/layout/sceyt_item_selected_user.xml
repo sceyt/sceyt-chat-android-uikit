@@ -16,7 +16,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar" />
+        app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icRemove"
@@ -36,9 +36,9 @@
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@id/avatar"
         app:layout_constraintEnd_toEndOf="@id/avatar"
-        app:sceytOnlineViewIndicatorColor="@color/sceyt_color_green"
-        app:sceytOnlineViewStrokeColor="@color/sceyt_color_background"
-        app:sceytOnlineViewStrokeWidth="1dp" />
+        app:sceytUiOnlineViewIndicatorColor="@color/sceyt_color_green"
+        app:sceytUiOnlineViewStrokeColor="@color/sceyt_color_background"
+        app:sceytUiOnlineViewStrokeWidth="1dp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/userName"

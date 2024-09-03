@@ -49,13 +49,13 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         var enableRipple = true
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SceytAvatarView)
-            isGroup = a.getBoolean(R.styleable.SceytAvatarView_sceytAvatarViewIsGroup, false)
-            fullName = a.getString(R.styleable.SceytAvatarView_sceytAvatarViewFullName)
-            imageUrl = a.getString(R.styleable.SceytAvatarView_sceytAvatarViewImageUrl)
-            textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytAvatarViewTextSize, textSize)
-            avatarBackgroundColor = a.getColor(R.styleable.SceytAvatarView_sceytAvatarColor, 0)
-            defaultAvatarResId = a.getResourceId(R.styleable.SceytAvatarView_sceytAvatarDefaultIcon, defaultAvatarResId)
-            enableRipple = a.getBoolean(R.styleable.SceytAvatarView_sceytAvatarEnableRipple, true)
+            isGroup = a.getBoolean(R.styleable.SceytAvatarView_sceytUiAvatarViewIsGroup, false)
+            fullName = a.getString(R.styleable.SceytAvatarView_sceytUiAvatarViewFullName)
+            imageUrl = a.getString(R.styleable.SceytAvatarView_sceytUiAvatarViewImageUrl)
+            textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytUiAvatarViewTextSize, textSize)
+            avatarBackgroundColor = a.getColor(R.styleable.SceytAvatarView_sceytUiAvatarColor, 0)
+            defaultAvatarResId = a.getResourceId(R.styleable.SceytAvatarView_sceytUiAvatarDefaultIcon, defaultAvatarResId)
+            enableRipple = a.getBoolean(R.styleable.SceytAvatarView_sceytUiAvatarEnableRipple, true)
             a.recycle()
         }
         scaleType = ScaleType.CENTER_CROP

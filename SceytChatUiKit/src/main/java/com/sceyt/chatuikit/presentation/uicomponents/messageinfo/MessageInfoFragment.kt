@@ -30,6 +30,7 @@ import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
+@Suppress("MemberVisibilityCanBePrivate")
 open class MessageInfoFragment : Fragment() {
     protected var binding: SceytFragmentMessageInfoBinding? = null
     protected var messageId: Long = 0

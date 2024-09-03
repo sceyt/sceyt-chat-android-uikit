@@ -47,27 +47,27 @@ data class ConversationHeaderStyle(
         fun build(): ConversationHeaderStyle {
             val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ConversationHeaderView)
 
-            val backgroundColor = typedArray.getColor(R.styleable.ConversationHeaderView_sceytConvHeaderBackground,
+            val backgroundColor = typedArray.getColor(R.styleable.ConversationHeaderView_sceytUiConvHeaderBackground,
                 context.getCompatColor(SceytChatUIKit.theme.primaryColor))
 
-            val backIcon = typedArray.getDrawable(R.styleable.ConversationHeaderView_sceytConvHeaderBackIcon)
+            val backIcon = typedArray.getDrawable(R.styleable.ConversationHeaderView_sceytUiConvHeaderBackIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back)
 
-            val titleColor = typedArray.getColor(R.styleable.ConversationHeaderView_sceytConvHeaderTitleColor,
+            val titleColor = typedArray.getColor(R.styleable.ConversationHeaderView_sceytUiConvHeaderTitleColor,
                 context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
 
-            val subTitleColor = typedArray.getColor(R.styleable.ConversationHeaderView_sceytConvHeaderSubTitleColor,
+            val subTitleColor = typedArray.getColor(R.styleable.ConversationHeaderView_sceytUiConvHeaderSubTitleColor,
                 context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
 
-            val underlineColor = typedArray.getColor(R.styleable.ConversationHeaderView_sceytConvHeaderUnderlineColor,
+            val underlineColor = typedArray.getColor(R.styleable.ConversationHeaderView_sceytUiConvHeaderUnderlineColor,
                 context.getCompatColor(SceytChatUIKit.theme.borderColor))
 
-            val enableUnderline = typedArray.getBoolean(R.styleable.ConversationHeaderView_sceytConvHeaderEnableUnderline, true)
+            val enableUnderline = typedArray.getBoolean(R.styleable.ConversationHeaderView_sceytUiConvHeaderEnableUnderline, true)
 
-            val menuStyle = typedArray.getResourceId(R.styleable.ConversationHeaderView_sceytConvHeaderToolbarMenuStyle,
+            val menuStyle = typedArray.getResourceId(R.styleable.ConversationHeaderView_sceytUiConvHeaderToolbarMenuStyle,
                 R.style.SceytPopupMenuStyle)
 
-            val menuTitleAppearance = typedArray.getResourceId(R.styleable.ConversationHeaderView_sceytConvHeaderToolbarMenuTitleAppearance,
+            val menuTitleAppearance = typedArray.getResourceId(R.styleable.ConversationHeaderView_sceytUiConvHeaderToolbarMenuTitleAppearance,
                 R.style.SceytMenuTitleAppearance)
 
             typedArray.recycle()

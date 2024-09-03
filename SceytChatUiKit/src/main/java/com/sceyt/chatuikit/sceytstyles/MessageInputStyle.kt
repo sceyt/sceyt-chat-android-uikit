@@ -60,50 +60,50 @@ data class MessageInputStyle(
     ) {
         fun build(): MessageInputStyle {
             val typedArray = context.obtainStyledAttributes(attrs, R.styleable.MessageInputView)
-            val attachmentIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytMessageInputAttachmentIcon)
+            val attachmentIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputAttachmentIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_upload_file)?.apply {
                         mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
                     }
 
-            val sendMessageIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytMessageInputSendIcon)
+            val sendMessageIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputSendIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_send_message)
 
-            val voiceRecordIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytMessageInputVoiceRecordIcon)
+            val voiceRecordIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_voice_white)
 
-            val sendVoiceMessageIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytMessageInputSendVoiceRecordIcon)
+            val sendVoiceMessageIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputSendVoiceRecordIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_up)?.apply {
                         mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.textOnPrimaryColor))
                     }
 
 
-            val linkIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytMessageInputLinkIcon)
+            val linkIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputLinkIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_link)?.apply {
                         mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
                     }
 
-            val inputTextColor = typedArray.getColor(R.styleable.MessageInputView_sceytMessageInputTextColor,
+            val inputTextColor = typedArray.getColor(R.styleable.MessageInputView_sceytUiMessageInputTextColor,
                 context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
 
-            val inputHintTextColor = typedArray.getColor(R.styleable.MessageInputView_sceytMessageInputHintTextColor,
+            val inputHintTextColor = typedArray.getColor(R.styleable.MessageInputView_sceytUiMessageInputHintTextColor,
                 context.getCompatColor(SceytChatUIKit.theme.textFootnoteColor))
 
-            val inputHintText = typedArray.getString(R.styleable.MessageInputView_sceytMessageInputHintText)
+            val inputHintText = typedArray.getString(R.styleable.MessageInputView_sceytUiMessageInputHintText)
                     ?: context.getString(R.string.sceyt_write_a_message)
 
-            val inputBackgroundColor = typedArray.getColor(R.styleable.MessageInputView_sceytMessageInputBackgroundColor,
+            val inputBackgroundColor = typedArray.getColor(R.styleable.MessageInputView_sceytUiMessageInputBackgroundColor,
                 context.getCompatColor(SceytChatUIKit.theme.surface1Color))
 
-            val sendIconBackgroundColor = typedArray.getColor(R.styleable.MessageInputView_sceytMessageInputSendIconBackgroundColor,
+            val sendIconBackgroundColor = typedArray.getColor(R.styleable.MessageInputView_sceytUiMessageInputSendIconBackgroundColor,
                 context.getCompatColor(SceytChatUIKit.theme.accentColor))
 
-            val enableVoiceRecord = typedArray.getBoolean(R.styleable.MessageInputView_sceytMessageInputEnableVoiceRecord,
+            val enableVoiceRecord = typedArray.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableVoiceRecord,
                 true)
 
-            val enableSendAttachment = typedArray.getBoolean(R.styleable.MessageInputView_sceytMessageInputEnableSendAttachment,
+            val enableSendAttachment = typedArray.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableSendAttachment,
                 true)
 
-            val enableMention = typedArray.getBoolean(R.styleable.MessageInputView_sceytMessageInputEnableMention,
+            val enableMention = typedArray.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableMention,
                 true)
 
             val replyMessageBodyFormatter = MessageBodyFormatter { context, message ->

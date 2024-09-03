@@ -782,7 +782,7 @@ class MessageListViewModel(
         )
     }
 
-    internal fun checkMaybeHesNext(response: PaginationResponse.DBResponse<SceytMessage>): Boolean {
+    private fun checkMaybeHesNext(response: PaginationResponse.DBResponse<SceytMessage>): Boolean {
         var hasNext = response.hasNext
         if (!hasNext) {
             response.data.lastOrNull()?.let { lastMsg ->

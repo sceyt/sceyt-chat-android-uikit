@@ -102,6 +102,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
+@Suppress("MemberVisibilityCanBePrivate")
 class MessageInputView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners,
@@ -119,7 +120,7 @@ class MessageInputView @JvmOverloads constructor(
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
     private val typingDebounceHelper by lazy { DebounceHelper(100, getScope()) }
     private var typingTimeoutJob: Job? = null
-    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
+    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
     private var inputState = Voice
     private var disabledInputByGesture: Boolean = false
     private var voiceMessageRecorderView: SceytVoiceMessageRecorderView? = null
@@ -992,7 +993,7 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     override fun onSelectedUserToMentionClick(member: SceytMember) {
-        val name = (SceytChatUIKit.mentionUserNameFormatter?.format(member.user)
+        val name = (SceytChatUIKit.formatters.mentionUserNameFormatter?.format(member.user)
                 ?: member.getPresentableName()).notAutoCorrectable()
         binding.messageInput.replaceTextWithMention(name, member.id)
     }

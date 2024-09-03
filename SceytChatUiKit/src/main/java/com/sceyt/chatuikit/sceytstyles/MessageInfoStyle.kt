@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.presentation.uicomponents.messageinfo.MessageInfoFragment
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**

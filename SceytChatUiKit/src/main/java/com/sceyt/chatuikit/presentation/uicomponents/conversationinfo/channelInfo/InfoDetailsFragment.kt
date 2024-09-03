@@ -144,7 +144,7 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener, Conversation
     open fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
         if (isSelf) return
         val user = presenceUser.user
-        val userName = SceytChatUIKit.userNameFormatter?.format(user)
+        val userName = SceytChatUIKit.formatters.userNameFormatter?.format(user)
                 ?: user.getPresentableName()
         binding.avatar.setNameAndImageUrl(userName, user.avatarURL, channel.getDefaultAvatar())
     }

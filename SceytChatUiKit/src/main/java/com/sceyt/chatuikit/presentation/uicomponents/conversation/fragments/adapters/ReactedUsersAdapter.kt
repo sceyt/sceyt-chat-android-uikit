@@ -12,7 +12,9 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 
-class ReactedUsersAdapter(private var clickListener: OnItemClickListener) : ListAdapter<ReactedUserItem, BaseViewHolder<ReactedUserItem>>(DIFF_UTIL) {
+class ReactedUsersAdapter(
+        private var clickListener: OnItemClickListener
+) : ListAdapter<ReactedUserItem, BaseViewHolder<ReactedUserItem>>(DIFF_UTIL) {
 
     companion object {
         val DIFF_UTIL = object : DiffUtil.ItemCallback<ReactedUserItem>() {
@@ -61,7 +63,9 @@ class ReactedUsersAdapter(private var clickListener: OnItemClickListener) : List
         return currentList.size
     }
 
-    inner class UsersViewHolder(val binding: SceytItemReactedUserBinding) : BaseViewHolder<ReactedUserItem>(binding.root) {
+    inner class UsersViewHolder(
+            private val binding: SceytItemReactedUserBinding
+    ) : BaseViewHolder<ReactedUserItem>(binding.root) {
 
         init {
             binding.applyStyle()
@@ -70,7 +74,7 @@ class ReactedUsersAdapter(private var clickListener: OnItemClickListener) : List
         override fun bind(item: ReactedUserItem) {
             with(binding) {
                 val user: User? = (item as ReactedUserItem.Item).reaction.user
-                val userPresentableName = user?.let { SceytChatUIKit.userNameFormatter?.format(it) }
+                val userPresentableName = user?.let { SceytChatUIKit.formatters.userNameFormatter?.format(it) }
                         ?: user?.getPresentableName()
                 avatar.setNameAndImageUrl(userPresentableName, user?.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
                 userName.text = userPresentableName

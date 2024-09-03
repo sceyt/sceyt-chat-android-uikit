@@ -2,13 +2,13 @@
 <resources>
 
     <declare-styleable name="SceytAvatarView">
-        <attr name="sceytAvatarViewImageUrl" format="string" />
-        <attr name="sceytAvatarViewFullName" format="string" />
-        <attr name="sceytAvatarViewIsGroup" format="boolean" />
-        <attr name="sceytAvatarViewTextSize" format="dimension|integer" />
-        <attr name="sceytAvatarColor" format="color|reference" />
-        <attr name="sceytAvatarDefaultIcon" format="reference" />
-        <attr name="sceytAvatarEnableRipple" format="boolean" />
+        <attr name="sceytUiAvatarViewImageUrl" format="string" />
+        <attr name="sceytUiAvatarViewFullName" format="string" />
+        <attr name="sceytUiAvatarViewIsGroup" format="boolean" />
+        <attr name="sceytUiAvatarViewTextSize" format="dimension|integer" />
+        <attr name="sceytUiAvatarColor" format="color|reference" />
+        <attr name="sceytUiAvatarDefaultIcon" format="reference" />
+        <attr name="sceytUiAvatarEnableRipple" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="SceytToReplyLineView">

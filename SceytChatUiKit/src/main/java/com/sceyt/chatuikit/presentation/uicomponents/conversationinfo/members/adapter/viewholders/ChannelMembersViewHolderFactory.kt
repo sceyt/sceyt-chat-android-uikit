@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 open class ChannelMembersViewHolderFactory(context: Context) {
     private val layoutInflater = LayoutInflater.from(context)
     private val clickListeners = MemberClickListenersImpl()
-    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
+    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseMemberViewHolder {
         return when (viewType) {

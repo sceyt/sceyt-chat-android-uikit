@@ -15,9 +15,9 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytAvatarEnableRipple="false"
-        app:sceytAvatarViewFullName="Art d"
-        app:sceytAvatarViewTextSize="15sp" />
+        app:sceytUiAvatarEnableRipple="false"
+        app:sceytUiAvatarViewFullName="Art d"
+        app:sceytUiAvatarViewTextSize="15sp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/userName"

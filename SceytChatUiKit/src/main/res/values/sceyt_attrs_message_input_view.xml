@@ -2,20 +2,20 @@
 <resources>
 
     <declare-styleable name="MessageInputView">
-        <attr name="sceytMessageInputAttachmentIcon" format="reference" />
-        <attr name="sceytMessageInputSendIcon" format="reference" />
-        <attr name="sceytMessageInputVoiceRecordIcon" format="reference" />
-        <attr name="sceytMessageInputSendVoiceRecordIcon" format="reference" />
-        <attr name="sceytMessageInputLinkIcon" format="reference" />
-        <attr name="sceytMessageInputHintText" format="string" localization="suggested" />
-        <attr name="sceytMessageInputTextColor" format="reference|color" />
-        <attr name="sceytMessageInputHintTextColor" format="reference|color" />
-        <attr name="sceytMessageInputRootBackgroundColor" format="reference|color" />
-        <attr name="sceytMessageInputBackgroundColor" format="reference|color" />
-        <attr name="sceytMessageInputSendIconBackgroundColor" format="reference|color" />
-        <attr name="sceytMessageInputEnableVoiceRecord" format="boolean" />
-        <attr name="sceytMessageInputEnableSendAttachment" format="boolean" />
-        <attr name="sceytMessageInputEnableMention" format="boolean" />
-        <attr name="sceytMessageInputEnableLinkPreview" format="boolean" />
+        <attr name="sceytUiMessageInputAttachmentIcon" format="reference" />
+        <attr name="sceytUiMessageInputSendIcon" format="reference" />
+        <attr name="sceytUiMessageInputVoiceRecordIcon" format="reference" />
+        <attr name="sceytUiMessageInputSendVoiceRecordIcon" format="reference" />
+        <attr name="sceytUiMessageInputLinkIcon" format="reference" />
+        <attr name="sceytUiMessageInputHintText" format="string" localization="suggested" />
+        <attr name="sceytUiMessageInputTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputHintTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputRootBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputSendIconBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputEnableVoiceRecord" format="boolean" />
+        <attr name="sceytUiMessageInputEnableSendAttachment" format="boolean" />
+        <attr name="sceytUiMessageInputEnableMention" format="boolean" />
+        <attr name="sceytUiMessageInputEnableLinkPreview" format="boolean" />
     </declare-styleable>
 </resources>

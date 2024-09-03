@@ -178,7 +178,7 @@ open class SceytMediaActivity : AppCompatActivity(), OnMediaClickCallback {
     private fun loadMediaDetail(item: MediaItem) {
         currentItem = item
         val name = item.data.user?.let {
-            SceytChatUIKit.userNameFormatter?.format(it) ?: it.getPresentableName()
+            SceytChatUIKit.formatters.userNameFormatter?.format(it) ?: it.getPresentableName()
         }
         binding.tvTitle.text = name ?: ""
         binding.tvDate.text = DateTimeUtil.getDateTimeString(item.data.attachment.createdAt, "dd.MM.yy, HH:mm")

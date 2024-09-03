@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytSearchableToolbarTitle="@string/sceyt_add_members" />
+        app:sceytUiSearchableToolbarTitle="@string/sceyt_add_members" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvSelectedUsers"

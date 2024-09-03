@@ -24,7 +24,7 @@ class HeaderTypingUsersHelper(
     private val typingCancelHelper by lazy { TypingCancelHelper() }
     private var typingTextBuilder: ((SceytMember) -> String)? = null
     private val _typingUsers by lazy { mutableSetOf<SceytMember>() }
-    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.userNameFormatter
+    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
     private val debounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
     private var updateTypingJob: Job? = null
     var isTyping: Boolean = false
