@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.data.repositories
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.SearchQueryOperator
-import com.sceyt.chat.models.channel.Builder
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelListQuery
 import com.sceyt.chat.models.channel.ChannelQueryParam
@@ -182,8 +181,9 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     override suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel> {
         return suspendCancellableCoroutine { continuation ->
-            Builder(ChannelTypeEnum.Direct.getString())
+            CreateChannelRequest.Builder(ChannelTypeEnum.Direct.getString())
                 .withMembers(arrayListOf(Member(Role("Admin"), user)))
+                .build()
                 .execute(object : ChannelCallback {
                     override fun onResult(channel: Channel) {
                         continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
@@ -231,12 +231,13 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     }
 
     private fun initCreateChannelRequest(channelData: CreateChannelData): CreateChannelRequest? {
-        return Builder(channelData.channelType)
+        return CreateChannelRequest.Builder(channelData.channelType)
             .withMembers(channelData.members)
             .withUri(channelData.uri)
             .withAvatarUrl(channelData.avatarUrl)
             .withSubject(channelData.subject)
             .withMetadata(channelData.metadata)
+            .build()
     }
 
     override suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel> {

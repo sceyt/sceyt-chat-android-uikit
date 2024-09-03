@@ -70,6 +70,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.Date
 
+@Suppress("unused")
 class ConversationHeaderView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : AppBarLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners,
@@ -506,6 +507,7 @@ class ConversationHeaderView @JvmOverloads constructor(
         newSelectedMessage?.let { message ->
             val isPending = message.deliveryStatus == DeliveryStatus.Pending
             menu.findItem(R.id.sceyt_reply).isVisible = isSingleMessage && !isPending
+            //menu.findItem(R.id.sceyt_reply_in_thread).isVisible = isSingleMessage && !isPending
             menu.findItem(R.id.sceyt_forward).isVisible = !isPending
             menu.findItem(R.id.sceyt_edit_message).isVisible = isSingleMessage && !message.incoming && message.body.isNotNullOrBlank()
             menu.findItem(R.id.sceyt_message_info).isVisible = isSingleMessage && !message.incoming && !isPending

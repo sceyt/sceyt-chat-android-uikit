@@ -35,6 +35,10 @@ sealed interface MessageCommandEvent {
             val message: SceytMessage,
     ) : MessageCommandEvent
 
+    data class ReplyInThread(
+            val message: SceytMessage,
+    ) : MessageCommandEvent
+
     data class ScrollToDown(
             val view: ScrollToDownView
     ) : MessageCommandEvent

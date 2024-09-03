@@ -91,6 +91,10 @@ object ChannelEventsObserver : ChannelEventManager.AllEventManagers {
                 eventManager.onChannelEvent(ChannelEventData(channel?.toSceytUiChannel(), ChannelEventEnum.Created))
             }
 
+            override fun onThreadCreated(channel: Channel?) {
+
+            }
+
             override fun onChannelDeleted(channelId: Long) {
                 val data = ChannelEventData(null, ChannelEventEnum.Deleted, channelId)
                 eventManager.onChannelEvent(data)

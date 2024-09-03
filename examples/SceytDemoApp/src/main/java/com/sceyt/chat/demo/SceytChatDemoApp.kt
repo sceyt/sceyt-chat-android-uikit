@@ -41,7 +41,8 @@ class SceytChatDemoApp : Application() {
         ChatClient.setEnableNetworkAwarenessReconnection(true)
         ChatClient.setEnableNetworkChangeDetection(true)
 
-        SceytChatUIKit.initialize(this,
+        SceytChatUIKit.initialize(
+            appContext = this,
             apiUrl = BuildConfig.API_URL,
             appId = BuildConfig.APP_ID,
             clientId = UUID.randomUUID().toString(),
