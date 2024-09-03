@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytCustomToolbarBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 
-class SceytCustomToolbar @JvmOverloads constructor(
+class SceytToolbar @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0
@@ -29,13 +29,13 @@ class SceytCustomToolbar @JvmOverloads constructor(
 
     init {
         if (attrs != null) {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.SceytCustomToolbar)
-            navigationIconId = typedArray.getResourceId(R.styleable.SceytCustomToolbar_navigationIcon, navigationIconId)
-            menuIconId = typedArray.getResourceId(R.styleable.SceytCustomToolbar_menuIcon, menuIconId)
-            title = typedArray.getString(R.styleable.SceytCustomToolbar_title) ?: title
-            iconsTint = typedArray.getColor(R.styleable.SceytCustomToolbar_iconsTint, iconsTint)
-            titleColor = typedArray.getColor(R.styleable.SceytCustomToolbar_titleTextColor, titleColor)
-            enableDivider = typedArray.getBoolean(R.styleable.SceytCustomToolbar_enableDivider, enableDivider)
+            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.SceytToolbar)
+            navigationIconId = typedArray.getResourceId(R.styleable.SceytToolbar_sceytUiToolbarNavigationIcon, navigationIconId)
+            menuIconId = typedArray.getResourceId(R.styleable.SceytToolbar_sceytUiToolbarMenuIcon, menuIconId)
+            title = typedArray.getString(R.styleable.SceytToolbar_sceytUiToolbarTitle) ?: title
+            iconsTint = typedArray.getColor(R.styleable.SceytToolbar_sceytUiToolbarIconsTint, iconsTint)
+            titleColor = typedArray.getColor(R.styleable.SceytToolbar_sceytUiToolbarTitleTextColor, titleColor)
+            enableDivider = typedArray.getBoolean(R.styleable.SceytToolbar_sceytUiToolbarEnableDivider, enableDivider)
             typedArray.recycle()
         }
 

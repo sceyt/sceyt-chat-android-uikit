@@ -24,8 +24,11 @@ import com.sceyt.chatuikit.extensions.scaleAndAlphaAnim
 import kotlin.math.max
 import kotlin.math.min
 
-class SceytCircularProgressView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : View(context, attrs, defStyleAttr) {
+class SceytCircularProgressView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : View(context, attrs, defStyleAttr) {
 
     private lateinit var progressPaint: Paint
     private lateinit var trackPaint: Paint
@@ -66,18 +69,20 @@ class SceytCircularProgressView @JvmOverloads constructor(context: Context, attr
     init {
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SceytCircularProgressView)
-            progressColor = a.getColor(R.styleable.SceytCircularProgressView_progressColor, progressColor)
-            trackColor = a.getColor(R.styleable.SceytCircularProgressView_trackColor, trackColor)
-            minProgress = a.getFloat(R.styleable.SceytCircularProgressView_minProgress, minProgress)
-            progress = a.getFloat(R.styleable.SceytCircularProgressView_progress, minProgress)
-            roundedProgress = a.getBoolean(R.styleable.SceytCircularProgressView_roundedProgress, roundedProgress)
-            centerIcon = a.getDrawable(R.styleable.SceytCircularProgressView_centerIcon)
-            rotateAnimEnabled = a.getBoolean(R.styleable.SceytCircularProgressView_rotateAnimEnabled, rotateAnimEnabled)
-            enableProgressDownAnimation = a.getBoolean(R.styleable.SceytCircularProgressView_enableProgressDownAnimation, enableProgressDownAnimation)
-            iconTintColor = a.getColor(R.styleable.SceytCircularProgressView_iconTint, iconTintColor)
-            bgColor = a.getColor(R.styleable.SceytCircularProgressView_backgroundColor, 0)
-            iconSizeInPercent = getNormalizedPercent(a.getFloat(R.styleable.SceytCircularProgressView_iconSizeInPercent, iconSizeInPercent))
-            val trackThickness = a.getDimensionPixelSize(R.styleable.SceytCircularProgressView_trackThickness, 0)
+            progressColor = a.getColor(R.styleable.SceytCircularProgressView_sceytUiProgressColor, progressColor)
+            trackColor = a.getColor(R.styleable.SceytCircularProgressView_sceytUiProgressTrackColor, trackColor)
+            minProgress = a.getFloat(R.styleable.SceytCircularProgressView_sceytUiProgressMinProgress, minProgress)
+            progress = a.getFloat(R.styleable.SceytCircularProgressView_sceytUiProgressValue, minProgress)
+            roundedProgress = a.getBoolean(R.styleable.SceytCircularProgressView_sceytUiProgressRoundedProgress, roundedProgress)
+            centerIcon = a.getDrawable(R.styleable.SceytCircularProgressView_sceytUiProgressCenterIcon)
+            rotateAnimEnabled = a.getBoolean(R.styleable.SceytCircularProgressView_sceytUiProgressRotateAnimEnabled, rotateAnimEnabled)
+            enableProgressDownAnimation = a.getBoolean(R.styleable.SceytCircularProgressView_sceytUiProgressEnableProgressDownAnimation,
+                enableProgressDownAnimation)
+            iconTintColor = a.getColor(R.styleable.SceytCircularProgressView_sceytUiProgressIconTint, iconTintColor)
+            bgColor = a.getColor(R.styleable.SceytCircularProgressView_sceytUiProgressBackgroundColor, 0)
+            iconSizeInPercent = getNormalizedPercent(a.getFloat(R.styleable.SceytCircularProgressView_sceytUiProgressIconSizeInPercent,
+                iconSizeInPercent))
+            val trackThickness = a.getDimensionPixelSize(R.styleable.SceytCircularProgressView_sceytUiProgressTrackThickness, 0)
             if (trackThickness > 0)
                 this.trackThickness = trackThickness.toFloat()
             a.recycle()

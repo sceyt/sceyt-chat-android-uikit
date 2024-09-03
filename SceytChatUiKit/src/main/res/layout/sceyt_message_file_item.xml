@@ -23,14 +23,14 @@
         android:layout_height="0dp"
         android:padding="1dp"
         android:visibility="gone"
-        app:iconSizeInPercent="65"
+        app:sceytUiProgressIconSizeInPercent="65"
         app:layout_constraintBottom_toBottomOf="@+id/icFile"
         app:layout_constraintEnd_toEndOf="@id/icFile"
         app:layout_constraintStart_toStartOf="@+id/icFile"
         app:layout_constraintTop_toTopOf="@+id/icFile"
-        app:minProgress="2"
-        app:progressColor="@color/sceyt_color_on_primary"
-        app:trackColor="@android:color/transparent" />
+        app:sceytUiProgressMinProgress="2"
+        app:sceytUiProgressColor="@color/sceyt_color_on_primary"
+        app:sceytUiProgressTrackColor="@android:color/transparent" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvFileName"

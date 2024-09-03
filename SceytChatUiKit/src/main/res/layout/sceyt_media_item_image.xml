@@ -21,17 +21,17 @@
         android:layout_height="wrap_content"
         android:padding="3dp"
         android:visibility="gone"
-        app:backgroundColor="@color/sceyt_progress_bg_color"
-        app:iconSizeInPercent="65"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintWidth_percent=".16"
-        app:minProgress="2"
-        app:progressColor="@color/sceyt_color_on_primary"
-        app:rotateAnimEnabled="false"
-        app:trackColor="@android:color/transparent"
+        app:sceytUiProgressRotateAnimEnabled="false"
+        app:sceytUiProgressBackgroundColor="@color/sceyt_progress_bg_color"
+        app:sceytUiProgressColor="@color/sceyt_color_on_primary"
+        app:sceytUiProgressIconSizeInPercent="65"
+        app:sceytUiProgressMinProgress="2"
+        app:sceytUiProgressTrackColor="@android:color/transparent"
         tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
