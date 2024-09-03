@@ -6,14 +6,14 @@
     android:layout_height="match_parent"
     tools:context=".presentation.uicomponents.createchat.createchannel.SceytCreateChannelActivity">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytCustomToolbar
+    <com.sceyt.chatuikit.presentation.customviews.SceytToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:title="@string/sceyt_new_channel"
-        app:titleTextColor="@color/sceyt_color_text_primary" />
+        app:sceytUiToolbarTitle="@string/sceyt_new_channel"
+        app:sceytUiToolbarTitleTextColor="@color/sceyt_color_text_primary" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragment_container"

@@ -7,14 +7,14 @@
     android:background="@color/sceyt_color_background"
     tools:context=".presentation.uicomponents.conversationinfo.editchannel.EditChannelFragment">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytCustomToolbar
+    <com.sceyt.chatuikit.presentation.customviews.SceytToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:title="@string/sceyt_edit_channel"
-        app:titleTextColor="@color/sceyt_color_text_primary" />
+        app:sceytUiToolbarTitle="@string/sceyt_edit_channel"
+        app:sceytUiToolbarTitleTextColor="@color/sceyt_color_text_primary" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
