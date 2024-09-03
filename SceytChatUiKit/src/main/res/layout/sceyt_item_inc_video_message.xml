@@ -24,8 +24,8 @@
         app:layout_constraintStart_toEndOf="@+id/selectView"
         app:layout_constraintTop_toTopOf="@+id/layoutDetails"
         app:layout_goneMarginStart="12dp"
-        app:sceytUiAvatarViewTextSize="15sp"
-        tools:sceytUiAvatarViewFullName="Ar"
+        app:sceytUiAvatarTextSize="15sp"
+        tools:sceytUiAvatarFullName="Ar"
         tools:visibility="visible" />
 
     <com.sceyt.chatuikit.presentation.customviews.SceytToReplyLineView
@@ -137,9 +137,9 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/messageBody"
-            app:sceytVideoControllerCornerSize="18dp"
-            app:sceytVideoControllerEnablePlayPauseClick="false"
-            app:sceytVideoControllerPlayPauseSize="@dimen/messageProgressSize"
+            app:sceytUiVideoControllerCornerSize="18dp"
+            app:sceytUiVideoControllerEnablePlayPauseClick="false"
+            app:sceytUiVideoControllerPlayPauseSize="@dimen/messageProgressSize"
             app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize17"
             tools:layout_height="200dp"
             tools:sceytVideoControllerImage="@tools:sample/backgrounds/scenic"
@@ -220,12 +220,12 @@
             android:layout_marginBottom="7dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/imageThumb"
-            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_text_secondary"
-            app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
-            app:sceytDateStatusViewFirstStatus="false"
-            app:sceytDateStatusViewHighlighted="true"
-            app:sceytDateStatusViewStatusIconSize="15.5dp"
-            tools:sceytDateStatusViewDateText="00:37" />
+            app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
+            app:sceytUiDateStatusDateTextSize="@dimen/tinyTextSize"
+            app:sceytUiDateStatusFirstStatus="false"
+            app:sceytUiDateStatusHighlighted="true"
+            app:sceytUiDateStatusStatusIconSize="15.5dp"
+            tools:sceytUiDateStatusDateText="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

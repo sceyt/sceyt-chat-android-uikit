@@ -26,8 +26,8 @@
         app:layout_constraintStart_toEndOf="@+id/checkbox"
         app:layout_constraintTop_toTopOf="parent"
         app:sceytUiAvatarEnableRipple="false"
-        app:sceytUiAvatarViewFullName="Art d"
-        app:sceytUiAvatarViewTextSize="15sp" />
+        app:sceytUiAvatarFullName="Art d"
+        app:sceytUiAvatarTextSize="15sp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/userName"

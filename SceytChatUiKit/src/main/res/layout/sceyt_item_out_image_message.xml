@@ -27,7 +27,7 @@
         app:layout_constraintBottom_toBottomOf="@id/tvReplyCount"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/layoutDetails"
-        app:sceytToReplyLineViewToLeft="true"
+        app:sceytUiToReplyLineToLeft="true"
         tools:visibility="visible" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -134,14 +134,14 @@
             android:layout_marginBottom="7dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_text_secondary"
-            app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
-            app:sceytDateStatusViewFirstStatus="false"
-            app:sceytDateStatusViewHighlighted="true"
-            app:sceytDateStatusViewStatusIconMargin="5dp"
-            app:sceytDateStatusViewStatusIconSize="15.5dp"
-            tools:sceytDateStatusViewDateText="00:37"
-            tools:sceytDateStatusViewStatusIcon="@drawable/sceyt_ic_status_delivered" />
+            app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
+            app:sceytUiDateStatusDateTextSize="@dimen/tinyTextSize"
+            app:sceytUiDateStatusFirstStatus="false"
+            app:sceytUiDateStatusHighlighted="true"
+            app:sceytUiDateStatusStatusIconMargin="5dp"
+            app:sceytUiDateStatusStatusIconSize="15.5dp"
+            tools:sceytUiDateStatusDateText="00:37"
+            tools:sceytUiDateStatusStatusIcon="@drawable/sceyt_ic_status_delivered" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

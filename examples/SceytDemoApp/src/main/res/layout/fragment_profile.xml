@@ -91,8 +91,8 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar"
-                    app:sceytUiAvatarViewTextSize="@dimen/extraLargeTextSize"
-                    tools:sceytUiAvatarViewFullName="User name" />
+                    app:sceytUiAvatarTextSize="@dimen/extraLargeTextSize"
+                    tools:sceytUiAvatarFullName="User name" />
 
                 <androidx.appcompat.widget.AppCompatImageView
                     android:id="@+id/icEditPhoto"

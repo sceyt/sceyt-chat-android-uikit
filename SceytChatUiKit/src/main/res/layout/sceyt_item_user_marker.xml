@@ -17,8 +17,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar"
         app:sceytUiAvatarEnableRipple="false"
-        app:sceytUiAvatarViewFullName="Art d"
-        app:sceytUiAvatarViewTextSize="15sp" />
+        app:sceytUiAvatarFullName="Art d"
+        app:sceytUiAvatarTextSize="15sp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/userName"

@@ -58,16 +58,16 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     init {
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SceytDateStatusView)
-            statusDrawable = a.getDrawable(R.styleable.SceytDateStatusView_sceytDateStatusViewStatusIcon)?.mutate()
-            dateText = a.getString(R.styleable.SceytDateStatusView_sceytDateStatusViewDateText)
+            statusDrawable = a.getDrawable(R.styleable.SceytDateStatusView_sceytUiDateStatusStatusIcon)?.mutate()
+            dateText = a.getString(R.styleable.SceytDateStatusView_sceytUiDateStatusDateText)
                     ?: dateText
-            textSize = a.getDimensionPixelSize(R.styleable.SceytDateStatusView_sceytDateStatusViewDateTextSize, textSize)
-            textColor = a.getColor(R.styleable.SceytDateStatusView_sceytDateStatusViewDateTextColor, textColor)
-            statusIconMargin = a.getDimensionPixelSize(R.styleable.SceytDateStatusView_sceytDateStatusViewStatusIconMargin, statusIconMargin)
-            statusIconSize = a.getDimensionPixelSize(R.styleable.SceytDateStatusView_sceytDateStatusViewStatusIconSize, 0)
-            firstStatusIcon = a.getBoolean(R.styleable.SceytDateStatusView_sceytDateStatusViewFirstStatus, firstStatusIcon)
-            ignoreRtl = a.getBoolean(R.styleable.SceytDateStatusView_sceytDateStatusViewIgnoreRtl, ignoreRtl)
-            isHighlighted = a.getBoolean(R.styleable.SceytDateStatusView_sceytDateStatusViewHighlighted, isHighlighted)
+            textSize = a.getDimensionPixelSize(R.styleable.SceytDateStatusView_sceytUiDateStatusDateTextSize, textSize)
+            textColor = a.getColor(R.styleable.SceytDateStatusView_sceytUiDateStatusDateTextColor, textColor)
+            statusIconMargin = a.getDimensionPixelSize(R.styleable.SceytDateStatusView_sceytUiDateStatusStatusIconMargin, statusIconMargin)
+            statusIconSize = a.getDimensionPixelSize(R.styleable.SceytDateStatusView_sceytUiDateStatusStatusIconSize, 0)
+            firstStatusIcon = a.getBoolean(R.styleable.SceytDateStatusView_sceytUiDateStatusFirstStatus, firstStatusIcon)
+            ignoreRtl = a.getBoolean(R.styleable.SceytDateStatusView_sceytUiDateStatusIgnoreRtl, ignoreRtl)
+            isHighlighted = a.getBoolean(R.styleable.SceytDateStatusView_sceytUiDateStatusHighlighted, isHighlighted)
             getPaddingsFromAttr(a)
             a.recycle()
         }

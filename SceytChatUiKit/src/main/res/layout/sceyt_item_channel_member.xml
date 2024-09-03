@@ -14,8 +14,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:sceytUiAvatarEnableRipple="false"
-        app:sceytUiAvatarViewTextSize="16dp"
-        tools:sceytUiAvatarViewFullName="Art d" />
+        app:sceytUiAvatarTextSize="16dp"
+        tools:sceytUiAvatarFullName="Art d" />
 
     <com.sceyt.chatuikit.presentation.customviews.SceytOnlineView
         android:id="@+id/onlineStatus"
