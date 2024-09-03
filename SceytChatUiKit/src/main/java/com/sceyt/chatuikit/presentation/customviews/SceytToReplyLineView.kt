@@ -26,10 +26,10 @@ class SceytToReplyLineView @JvmOverloads constructor(context: Context, attrs: At
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.SceytToReplyLineView)
-        isToLeft = a.getBoolean(R.styleable.SceytToReplyLineView_sceytToReplyLineViewToLeft, false)
-        strokeColor = a.getColor(R.styleable.SceytToReplyLineView_sceytToReplyLineViewStrokeColor, strokeColor)
-        connectedViewTopId = a.getResourceId(R.styleable.SceytToReplyLineView_sceytToReplyLineViewConnectedViewTop, 0)
-        connectedViewBottomId = a.getResourceId(R.styleable.SceytToReplyLineView_sceytToReplyLineViewConnectedViewBottom, 0)
+        isToLeft = a.getBoolean(R.styleable.SceytToReplyLineView_sceytUiToReplyLineToLeft, false)
+        strokeColor = a.getColor(R.styleable.SceytToReplyLineView_sceytUiToReplyLineStrokeColor, strokeColor)
+        connectedViewTopId = a.getResourceId(R.styleable.SceytToReplyLineView_sceytUiToReplyLineConnectedViewTop, 0)
+        connectedViewBottomId = a.getResourceId(R.styleable.SceytToReplyLineView_sceytUiToReplyLineConnectedViewBottom, 0)
         a.recycle()
     }
 

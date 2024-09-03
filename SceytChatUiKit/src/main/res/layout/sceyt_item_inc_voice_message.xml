@@ -24,8 +24,8 @@
         app:layout_constraintStart_toEndOf="@+id/selectView"
         app:layout_constraintTop_toTopOf="@+id/layoutDetails"
         app:layout_goneMarginStart="12dp"
-        app:sceytUiAvatarViewTextSize="15sp"
-        tools:sceytUiAvatarViewFullName="Ar"
+        app:sceytUiAvatarTextSize="15sp"
+        tools:sceytUiAvatarFullName="Ar"
         tools:visibility="visible" />
 
     <com.sceyt.chatuikit.presentation.customviews.SceytToReplyLineView
@@ -197,11 +197,11 @@
             android:paddingHorizontal="6dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="parent"
-            app:sceytDateStatusViewDateTextColor="@color/sceyt_color_text_secondary"
-            app:sceytDateStatusViewDateTextSize="@dimen/tinyTextSize"
-            app:sceytDateStatusViewFirstStatus="false"
-            app:sceytDateStatusViewStatusIconSize="15.5dp"
-            tools:sceytDateStatusViewDateText="00:37" />
+            app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
+            app:sceytUiDateStatusDateTextSize="@dimen/tinyTextSize"
+            app:sceytUiDateStatusFirstStatus="false"
+            app:sceytUiDateStatusStatusIconSize="15.5dp"
+            tools:sceytUiDateStatusDateText="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -39,17 +39,17 @@ class SceytVideoControllerView @JvmOverloads constructor(
         binding = SceytVideoControllerViewBinding.inflate(LayoutInflater.from(context), this)
 
         val a = context.obtainStyledAttributes(attrs, R.styleable.SceytVideoControllerView)
-        showPlayPauseButton = a.getBoolean(R.styleable.SceytVideoControllerView_sceytVideoControllerShowPlayPause, showPlayPauseButton)
-        playPauseButtonSize = a.getDimensionPixelSize(R.styleable.SceytVideoControllerView_sceytVideoControllerPlayPauseSize, playPauseButtonSize)
-        playDrawable = a.getDrawable(R.styleable.SceytVideoControllerView_sceytVideoControllerPauseIcon)
+        showPlayPauseButton = a.getBoolean(R.styleable.SceytVideoControllerView_sceytUiVideoControllerShowPlayPause, showPlayPauseButton)
+        playPauseButtonSize = a.getDimensionPixelSize(R.styleable.SceytVideoControllerView_sceytUiVideoControllerPlayPauseSize, playPauseButtonSize)
+        playDrawable = a.getDrawable(R.styleable.SceytVideoControllerView_sceytUiVideoControllerPauseIcon)
                 ?: context.getCompatDrawable(R.drawable.sceyt_ic_play)
-        pauseDrawable = a.getDrawable(R.styleable.SceytVideoControllerView_sceytVideoControllerPauseIcon)
+        pauseDrawable = a.getDrawable(R.styleable.SceytVideoControllerView_sceytUiVideoControllerPauseIcon)
                 ?: context.getCompatDrawable(R.drawable.sceyt_ic_pause)
-        cornerSize = a.getDimensionPixelSize(R.styleable.SceytVideoControllerView_sceytVideoControllerCornerSize, cornerSize)
-        a.getDrawable(R.styleable.SceytVideoControllerView_sceytVideoControllerImage)?.let {
+        cornerSize = a.getDimensionPixelSize(R.styleable.SceytVideoControllerView_sceytUiVideoControllerCornerSize, cornerSize)
+        a.getDrawable(R.styleable.SceytVideoControllerView_sceytUiVideoControllerImage)?.let {
             setImageThumb(it)
         }
-        val enablePlayPauseClick = a.getBoolean(R.styleable.SceytVideoControllerView_sceytVideoControllerEnablePlayPauseClick, true)
+        val enablePlayPauseClick = a.getBoolean(R.styleable.SceytVideoControllerView_sceytUiVideoControllerEnablePlayPauseClick, true)
         a.recycle()
 
         binding.applyStyle()

@@ -31,9 +31,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytVideoControllerCornerSize="18dp"
-        app:sceytVideoControllerEnablePlayPauseClick="false"
-        app:sceytVideoControllerPlayPauseSize="@dimen/messageProgressSize"
         app:shapeAppearanceOverlay="@style/SceytShapeAppearanceOverlay.CornerSize17"
         tools:src="@tools:sample/backgrounds/scenic" />
 

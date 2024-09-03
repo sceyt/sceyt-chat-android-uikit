@@ -49,10 +49,10 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
         var enableRipple = true
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.SceytAvatarView)
-            isGroup = a.getBoolean(R.styleable.SceytAvatarView_sceytUiAvatarViewIsGroup, false)
-            fullName = a.getString(R.styleable.SceytAvatarView_sceytUiAvatarViewFullName)
-            imageUrl = a.getString(R.styleable.SceytAvatarView_sceytUiAvatarViewImageUrl)
-            textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytUiAvatarViewTextSize, textSize)
+            isGroup = a.getBoolean(R.styleable.SceytAvatarView_sceytUiAvatarIsGroup, false)
+            fullName = a.getString(R.styleable.SceytAvatarView_sceytUiAvatarFullName)
+            imageUrl = a.getString(R.styleable.SceytAvatarView_sceytUiAvatarImageUrl)
+            textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytUiAvatarTextSize, textSize)
             avatarBackgroundColor = a.getColor(R.styleable.SceytAvatarView_sceytUiAvatarColor, 0)
             defaultAvatarResId = a.getResourceId(R.styleable.SceytAvatarView_sceytUiAvatarDefaultIcon, defaultAvatarResId)
             enableRipple = a.getBoolean(R.styleable.SceytAvatarView_sceytUiAvatarEnableRipple, true)

@@ -16,8 +16,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:sceytUiAvatarEnableRipple="false"
-        app:sceytUiAvatarViewTextSize="15sp"
-        tools:sceytUiAvatarViewFullName="Art d" />
+        app:sceytUiAvatarTextSize="15sp"
+        tools:sceytUiAvatarFullName="Art d" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/userName"
@@ -42,7 +42,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytReactionViewSmileTextSize="24sp"
-        tools:sceytReactionViewSmileText="😍" />
+        app:sceytUiReactionSmileTextSize="24sp"
+        tools:sceytUiReactionSmileText="😍" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

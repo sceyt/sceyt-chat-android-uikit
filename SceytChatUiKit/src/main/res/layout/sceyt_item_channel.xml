@@ -98,14 +98,14 @@
         android:layout_marginEnd="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/channelTitle"
-        app:sceytDateStatusViewDateTextColor="@color/sceyt_color_text_secondary"
-        app:sceytDateStatusViewDateTextSize="13sp"
-        app:sceytDateStatusViewFirstStatus="true"
-        app:sceytDateStatusViewIgnoreRtl="true"
-        app:sceytDateStatusViewStatusIconMargin="4dp"
-        app:sceytDateStatusViewStatusIconSize="16dp"
-        tools:sceytDateStatusViewDateText="12:28"
-        tools:sceytDateStatusViewStatusIcon="@drawable/sceyt_ic_status_delivered" />
+        app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
+        app:sceytUiDateStatusDateTextSize="13sp"
+        app:sceytUiDateStatusFirstStatus="true"
+        app:sceytUiDateStatusIgnoreRtl="true"
+        app:sceytUiDateStatusStatusIconMargin="4dp"
+        app:sceytUiDateStatusStatusIconSize="16dp"
+        tools:sceytUiDateStatusDateText="12:28"
+        tools:sceytUiDateStatusStatusIcon="@drawable/sceyt_ic_status_delivered" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icPinned"
