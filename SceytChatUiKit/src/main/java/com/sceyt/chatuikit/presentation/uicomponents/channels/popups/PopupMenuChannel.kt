@@ -10,8 +10,11 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 
-class PopupMenuChannel(context: Context, anchor: View, private var channel: SceytChannel)
-    : PopupMenu(context, anchor, Gravity.END) {
+open class PopupMenuChannel(
+        context: Context,
+        anchor: View,
+        private var channel: SceytChannel
+) : PopupMenu(context, anchor, Gravity.END) {
 
     @SuppressLint("RestrictedApi")
     override fun show() {

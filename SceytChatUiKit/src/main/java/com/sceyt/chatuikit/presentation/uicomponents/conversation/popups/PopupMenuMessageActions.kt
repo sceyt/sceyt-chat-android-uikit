@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 
-class PopupMenuMessage(private val context: Context, anchor: View, private var message: SceytMessage) : PopupMenu(context, anchor) {
+class PopupMenuMessageActions(private val context: Context, anchor: View, private var message: SceytMessage) : PopupMenu(context, anchor) {
 
     @SuppressLint("RestrictedApi")
     override fun show() {

@@ -46,15 +46,15 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     // Loading prev properties
     private var needLoadPrevMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
-    private var richToStartInvoked = false
-    private var richToPrefetchDistanceToLoadPrevInvoked = false
-    private var richToStartListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
+    private var reachToStartInvoked = false
+    private var reachToPrefetchDistanceToLoadPrevInvoked = false
+    private var reachToStartListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
 
     // Loading next properties
     private var needLoadNextMessagesListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
-    private var richToEndInvoked = false
-    private var richToPrefetchDistanceToLoadNextInvoked = false
-    private var richToEndListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
+    private var reachToEndInvoked = false
+    private var reachToPrefetchDistanceToLoadNextInvoked = false
+    private var reachToEndListener: ((offset: Int, message: MessageListItem?) -> Unit)? = null
 
     private var showHideDownScroller: ((show: Boolean) -> Unit)? = null
     private var swipeToReplyListener: ((MessageListItem) -> Unit)? = null
@@ -104,21 +104,21 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         val firstVisiblePosition = getFirstVisibleItemPosition()
         if (firstVisiblePosition <= SceytChatUIKit.config.messagesLoadSize / 2 && dy < 0) {
             if (firstVisiblePosition == 0) {
-                if (!richToStartInvoked) {
+                if (!reachToStartInvoked) {
                     val skip = mAdapter.getSkip()
                     val firstItem = mAdapter.getFirstMessageItem()
-                    richToStartInvoked = true
-                    richToPrefetchDistanceToLoadPrevInvoked = true
-                    richToStartListener?.invoke(skip, firstItem)
+                    reachToStartInvoked = true
+                    reachToPrefetchDistanceToLoadPrevInvoked = true
+                    reachToStartListener?.invoke(skip, firstItem)
                     needLoadPrevMessagesListener?.invoke(skip, firstItem)
                 }
-            } else richToStartInvoked = false
+            } else reachToStartInvoked = false
 
-            if (!richToPrefetchDistanceToLoadPrevInvoked) {
-                richToPrefetchDistanceToLoadPrevInvoked = true
+            if (!reachToPrefetchDistanceToLoadPrevInvoked) {
+                reachToPrefetchDistanceToLoadPrevInvoked = true
                 needLoadPrevMessagesListener?.invoke(mAdapter.getSkip(), mAdapter.getFirstMessageItem())
             }
-        } else richToPrefetchDistanceToLoadPrevInvoked = false
+        } else reachToPrefetchDistanceToLoadPrevInvoked = false
     }
 
     private fun checkNeedLoadNext(dy: Int) {
@@ -128,21 +128,21 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
         if (mAdapter.itemCount - lastVisiblePosition <= SceytChatUIKit.config.messagesLoadSize / 2 && dy > 0) {
             if (lastVisiblePosition == mAdapter.itemCount - 1) {
-                if (!richToEndInvoked) {
+                if (!reachToEndInvoked) {
                     val skip = mAdapter.getSkip()
                     val lastSentItem = getLastSentItem()
-                    richToEndInvoked = true
-                    richToPrefetchDistanceToLoadNextInvoked = true
-                    richToEndListener?.invoke(skip, lastSentItem)
+                    reachToEndInvoked = true
+                    reachToPrefetchDistanceToLoadNextInvoked = true
+                    reachToEndListener?.invoke(skip, lastSentItem)
                     needLoadNextMessagesListener?.invoke(skip, lastSentItem)
                 }
-            } else richToEndInvoked = false
+            } else reachToEndInvoked = false
 
-            if (!richToPrefetchDistanceToLoadNextInvoked) {
-                richToPrefetchDistanceToLoadNextInvoked = true
+            if (!reachToPrefetchDistanceToLoadNextInvoked) {
+                reachToPrefetchDistanceToLoadNextInvoked = true
                 needLoadNextMessagesListener?.invoke(mAdapter.getSkip(), getLastSentItem())
             }
-        } else richToPrefetchDistanceToLoadNextInvoked = false
+        } else reachToPrefetchDistanceToLoadNextInvoked = false
     }
 
     private fun getLastSentItem() = mAdapter.getLastMessageBy {
@@ -272,12 +272,12 @@ class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
         needLoadNextMessagesListener = listener
     }
 
-    fun setRichToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        richToStartListener = listener
+    fun setreachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        reachToStartListener = listener
     }
 
-    fun setRichToEndListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        richToEndListener = listener
+    fun setreachToEndListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+        reachToEndListener = listener
     }
 
     fun setMessageListener(listener: MessageClickListeners) {

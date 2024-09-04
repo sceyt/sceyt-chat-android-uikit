@@ -24,14 +24,16 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.react
 import java.lang.Integer.max
 import kotlin.math.min
 
-class PopupReactions(private var context: Context) : PopupWindow(context) {
+open class PopupReactions(
+        private var context: Context
+) : PopupWindow(context) {
     private lateinit var binding: SceytPopupAddReactionBinding
     private val defaultClickListener: PopupReactionsAdapter.OnItemClickListener by lazy { initClickListener() }
     private var clickListener: PopupReactionsAdapter.OnItemClickListener? = null
 
-    fun showPopup(anchorView: View, message: SceytMessage,
-                  reactions: List<String> = SceytChatUIKit.theme.defaultReactions,
-                  clickListener: PopupReactionsAdapter.OnItemClickListener): PopupReactions {
+    open fun showPopup(anchorView: View, message: SceytMessage,
+                       reactions: List<String> = SceytChatUIKit.theme.defaultReactions,
+                       clickListener: PopupReactionsAdapter.OnItemClickListener): PopupReactions {
         this.clickListener = clickListener
 
         val reversed = !message.incoming && !context.isRtl()
@@ -66,8 +68,8 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
         return this
     }
 
-    private fun setAdapter(reversed: Boolean, message: SceytMessage, reactions: List<String>,
-                           clickListener: PopupReactionsAdapter.OnItemClickListener) {
+    protected open fun setAdapter(reversed: Boolean, message: SceytMessage, reactions: List<String>,
+                                  clickListener: PopupReactionsAdapter.OnItemClickListener) {
         val reactionsItems = reactions.map {
             val reactionItem = message.messageReactions?.find { data -> data.reaction.key == it }
             val containsSelf = reactionItem?.reaction?.containsSelf ?: false
@@ -85,7 +87,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
         }
     }
 
-    private fun initClickListener(): PopupReactionsAdapter.OnItemClickListener {
+    protected open fun initClickListener(): PopupReactionsAdapter.OnItemClickListener {
         return object : PopupReactionsAdapter.OnItemClickListener {
             override fun onReactionClick(reaction: ReactionItem.Reaction) {
                 dismiss()
@@ -99,7 +101,7 @@ class PopupReactions(private var context: Context) : PopupWindow(context) {
         }
     }
 
-    private fun SceytPopupAddReactionBinding.applyStyle() {
+    protected open fun SceytPopupAddReactionBinding.applyStyle() {
         cardView.setCardBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
     }
 }

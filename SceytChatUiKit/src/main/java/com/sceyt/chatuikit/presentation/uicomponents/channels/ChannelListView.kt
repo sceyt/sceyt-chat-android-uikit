@@ -174,6 +174,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
                 }
                 false
             }
+            popup.show()
         } else
             ChatActionsDialog.newInstance(context, item.channel).also {
                 it.setChooseTypeCb { action ->
@@ -196,7 +197,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
      * showing channel item.
      */
     internal fun setReachToEndListener(listener: (offset: Int, lastChannel: SceytChannel?) -> Unit) {
-        channelsRV.setRichToEndListeners(listener)
+        channelsRV.setReachToEndListeners(listener)
     }
 
     /**

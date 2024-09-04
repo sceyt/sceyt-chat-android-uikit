@@ -10,7 +10,7 @@
         android:layout_height="match_parent" />
 
     <com.sceyt.chatuikit.presentation.uicomponents.conversation.ScrollToDownView
-        android:id="@+id/scrollDownIcon"
+        android:id="@+id/scrollDownView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"

@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.sceytstyles
 
 import android.content.Context
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import androidx.annotation.FontRes
@@ -9,6 +10,7 @@ import androidx.annotation.LayoutRes
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.MessagesListView
 import com.sceyt.chatuikit.sceytconfigs.dateformaters.MessageDateSeparatorFormatter
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
@@ -19,6 +21,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @param emptyStateSelfChannel Layout resource for the empty state view for self channel, default is [R.layout.sceyt_messages_empty_state_self_channel]
  * @param loadingState Layout resource for the loading state view, default is [R.layout.sceyt_loading_state]
  * @param downScrollerUnreadCountColor Color for the unread count in the down scroller, default is [SceytChatUIKitTheme.accentColor]
+ * @param downScrollerIcon Icon for the down scroller, default is [R.drawable.sceyt_scroll_down_button]
  * @param dateSeparatorDateFormat Date format for the date separator item, default is [MessageDateSeparatorFormatter]
  * @param dateSeparatorTextFont Font for the date separator item text, default is -1
  * @param dateSeparatorTextStyle Style for the date separator item text, default is [Typeface.NORMAL]
@@ -37,6 +40,7 @@ data class MessagesListViewStyle(
         @LayoutRes val emptyStateSelfChannel: Int,
         @LayoutRes val loadingState: Int,
         @ColorInt val downScrollerUnreadCountColor: Int,
+        val downScrollerIcon: Drawable?,
         val dateSeparatorDateFormat: MessageDateSeparatorFormatter = MessageDateSeparatorFormatter(),
         @FontRes val dateSeparatorTextFont: Int = -1,
         val dateSeparatorTextStyle: Int = Typeface.NORMAL,
@@ -80,6 +84,9 @@ data class MessagesListViewStyle(
             val downScrollerUnreadCountColor = typedArray.getColor(R.styleable.MessagesListView_sceytUiDownScrollerUnreadCountColor,
                 context.getCompatColor(SceytChatUIKit.theme.accentColor))
 
+            val downScrollerIcon = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiDownScrollerIcon)
+                    ?: context.getCompatDrawable(R.drawable.sceyt_scroll_down_button)
+
             val dateSeparatorTextFont: Int = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextFont, -1)
 
             val dateSeparatorTextStyle: Int = typedArray.getInt(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextStyle, Typeface.NORMAL)
@@ -109,6 +116,7 @@ data class MessagesListViewStyle(
                 emptyStateSelfChannel = emptyStateSelfChannel,
                 loadingState = loadingState,
                 downScrollerUnreadCountColor = downScrollerUnreadCountColor,
+                downScrollerIcon = downScrollerIcon,
                 dateSeparatorTextFont = dateSeparatorTextFont,
                 dateSeparatorTextStyle = dateSeparatorTextStyle,
                 dateSeparatorItemBackgroundColor = dateSeparatorItemBackgroundColor,

@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 
-class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
+open class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogChannelActionsBinding
     private var listener: ((ActionsEnum) -> Unit)? = null
     private lateinit var channel: SceytChannel
@@ -40,7 +40,7 @@ class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogN
         }
     }
 
-    private fun setData(channel: SceytChannel) {
+    protected open fun setData(channel: SceytChannel) {
         this.channel = channel
     }
 
@@ -48,7 +48,7 @@ class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogN
         listener = cb
     }
 
-    private fun SceytDialogChannelActionsBinding.initView() {
+    protected open fun SceytDialogChannelActionsBinding.initView() {
         pin.setOnClickListener {
             listener?.invoke(ActionsEnum.Pin)
             dismiss()
@@ -90,7 +90,7 @@ class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogN
         }
     }
 
-    private fun SceytDialogChannelActionsBinding.setIconsVisibility() {
+    protected open fun SceytDialogChannelActionsBinding.setIconsVisibility() {
         val isSelf = channel.isSelf()
         markAsRead.isVisible = channel.unread
         markAsUnRead.isVisible = !channel.unread
@@ -106,7 +106,7 @@ class ChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogN
         Pin, UnPin, MarkAsRead, MarkAsUnRead, Mute, UnMute, Leave, Delete
     }
 
-    private fun SceytDialogChannelActionsBinding.applyStyle() {
+    protected open fun SceytDialogChannelActionsBinding.applyStyle() {
         val texts = listOf(pin, unPin, markAsRead, markAsUnRead, mute, unMute)
         setTextViewsDrawableColor(texts, context.getCompatColor(SceytChatUIKit.theme.accentColor))
         setTextViewsTextColor(texts, context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
