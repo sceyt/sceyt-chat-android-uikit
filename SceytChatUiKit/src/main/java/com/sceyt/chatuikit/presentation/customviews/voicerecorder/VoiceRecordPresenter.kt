@@ -8,7 +8,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.databinding.SceytRecordedVoicePresenterBinding
+import com.sceyt.chatuikit.databinding.SceytVoiceRecordPresenterBinding
 import com.sceyt.chatuikit.extensions.TAG_REF
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -24,16 +24,18 @@ import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.chatuikit.sceytstyles.MessageInputStyle
 import java.io.File
 
-class SceytRecordedVoicePresenter @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+class VoiceRecordPresenter @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
 
-    private val binding: SceytRecordedVoicePresenterBinding
+    private val binding: SceytVoiceRecordPresenterBinding
     var isShowing = false
         private set
 
     init {
-        binding = SceytRecordedVoicePresenterBinding.inflate(LayoutInflater.from(context), this)
+        binding = SceytVoiceRecordPresenterBinding.inflate(LayoutInflater.from(context), this)
     }
 
     fun init(file: File, audioMetadata: AudioMetadata, listener: RecordedVoicePresentListeners? = null) {

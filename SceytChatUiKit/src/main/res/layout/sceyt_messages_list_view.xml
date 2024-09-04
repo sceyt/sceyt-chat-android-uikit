@@ -17,7 +17,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytPageStateView
+    <com.sceyt.chatuikit.presentation.customviews.PageStateView
         android:id="@+id/pageStateView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

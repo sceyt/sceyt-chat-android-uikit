@@ -58,8 +58,8 @@ import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.customviews.voicerecorder.AudioMetadata
 import com.sceyt.chatuikit.presentation.customviews.voicerecorder.RecordingListener
-import com.sceyt.chatuikit.presentation.customviews.voicerecorder.SceytRecordedVoicePresenter
-import com.sceyt.chatuikit.presentation.customviews.voicerecorder.SceytVoiceMessageRecorderView
+import com.sceyt.chatuikit.presentation.customviews.voicerecorder.VoiceRecordPresenter
+import com.sceyt.chatuikit.presentation.customviews.voicerecorder.VoiceMessageRecorderView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
 import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.GalleryMediaPicker
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.InputState.Text
@@ -123,7 +123,7 @@ class MessageInputView @JvmOverloads constructor(
     private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
     private var inputState = Voice
     private var disabledInputByGesture: Boolean = false
-    private var voiceMessageRecorderView: SceytVoiceMessageRecorderView? = null
+    private var voiceMessageRecorderView: VoiceMessageRecorderView? = null
     private var mentionUserContainer: MentionUserContainer? = null
     private var inputTextWatcher: TextWatcher? = null
     private var messageInputActionCallback: MessageInputActionCallback? = null
@@ -176,7 +176,7 @@ class MessageInputView @JvmOverloads constructor(
             setupAttachmentsList()
             if (enableVoiceRecord) {
                 // Init SceytVoiceMessageRecorderView outside of post, because it's using permission launcher
-                val voiceRecorderView = SceytVoiceMessageRecorderView(context).also { it.setStyle(style) }
+                val voiceRecorderView = VoiceMessageRecorderView(context).also { it.setStyle(style) }
                 post {
                     onStateChanged(inputState)
                     (parent as? ViewGroup)?.let { parentView ->
@@ -367,7 +367,7 @@ class MessageInputView @JvmOverloads constructor(
 
     private fun canShowRecorderView() = !disabledInputByGesture && !isInputHidden && inputState == Voice
 
-    private fun SceytVoiceMessageRecorderView.setRecordingListener() {
+    private fun VoiceMessageRecorderView.setRecordingListener() {
         setListener(object : RecordingListener {
             override fun onRecordingStarted() {
                 val directoryToSaveRecording = context.filesDir.path + "/Audio"
@@ -404,7 +404,7 @@ class MessageInputView @JvmOverloads constructor(
     private fun showRecordPreview(file: File?, amplitudes: Array<Int>, duration: Int) {
         file ?: return
         val metadata = AudioMetadata(amplitudes.toIntArray(), duration)
-        binding.voiceRecordPresenter.init(file, metadata, object : SceytRecordedVoicePresenter.RecordedVoicePresentListeners {
+        binding.voiceRecordPresenter.init(file, metadata, object : VoiceRecordPresenter.RecordedVoicePresentListeners {
             override fun onDeleteVoiceRecord() {
                 file.deleteOnExit()
                 finishRecording()

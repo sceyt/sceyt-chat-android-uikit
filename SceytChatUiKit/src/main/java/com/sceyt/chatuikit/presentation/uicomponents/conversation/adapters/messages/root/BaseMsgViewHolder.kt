@@ -57,9 +57,9 @@ import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
-import com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
-import com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
-import com.sceyt.chatuikit.presentation.customviews.SceytToReplyLineView
+import com.sceyt.chatuikit.presentation.customviews.AvatarView
+import com.sceyt.chatuikit.presentation.customviews.DateStatusView
+import com.sceyt.chatuikit.presentation.customviews.ToReplyLineView
 import com.sceyt.chatuikit.presentation.extensions.setConversationMessageDateAndStatusIcon
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -176,7 +176,7 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     @SuppressLint("SetTextI18n")
-    protected open fun setReplyCount(tvReplyCount: TextView, toReplyLine: SceytToReplyLineView, item: MessageListItem.MessageItem) {
+    protected open fun setReplyCount(tvReplyCount: TextView, toReplyLine: ToReplyLineView, item: MessageListItem.MessageItem) {
         val replyCount = item.message.replyCount
         if (replyCount > 0) {
             tvReplyCount.text = "$replyCount ${itemView.context.getString(R.string.sceyt_replies)}"
@@ -190,7 +190,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
-    protected open fun setMessageStatusAndDateText(message: SceytMessage, messageDate: SceytDateStatusView) {
+    protected open fun setMessageStatusAndDateText(message: SceytMessage, messageDate: DateStatusView) {
         val isEdited = message.state == MessageState.Edited
         val dateText = getDateTimeString(message.createdAt)
         message.setConversationMessageDateAndStatusIcon(messageDate, style, dateText, isEdited)
@@ -332,7 +332,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         } else imageAttachment.setImageDrawable(style.linkAttachmentIcon)
     }
 
-    protected open fun setMessageUserAvatarAndName(avatarView: SceytAvatarView, tvName: TextView, message: SceytMessage) {
+    protected open fun setMessageUserAvatarAndName(avatarView: AvatarView, tvName: TextView, message: SceytMessage) {
         if (!message.isGroup || message.disabledShowAvatarAndName) return
 
         if (message.shouldShowAvatarAndName) {
@@ -420,7 +420,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
-    protected open fun setMessageDateDependAttachments(messageDate: SceytDateStatusView, attachments: List<FileListItem>?) {
+    protected open fun setMessageDateDependAttachments(messageDate: DateStatusView, attachments: List<FileListItem>?) {
         messageDate.apply {
             val lastAttachment = attachments?.lastOrNull()
             val needHighlight = lastAttachment is FileListItem.Image || lastAttachment is FileListItem.Video

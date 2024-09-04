@@ -23,7 +23,7 @@ import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
-import com.sceyt.chatuikit.presentation.customviews.SceytPageStateView
+import com.sceyt.chatuikit.presentation.customviews.PageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem.Companion.getData
@@ -43,7 +43,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     protected var binding: SceytFragmentChannelMediaBinding? = null
     protected open var mediaAdapter: ChannelMediaAdapter? = null
     protected open val mediaType = listOf("image", "video")
-    protected open var pageStateView: SceytPageStateView? = null
+    protected open var pageStateView: PageStateView? = null
     protected lateinit var viewModel: ChannelAttachmentsViewModel
     protected lateinit var style: ConversationInfoMediaStyle
         private set
@@ -90,7 +90,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     private fun addPageStateView() {
-        binding?.root?.addView(SceytPageStateView(requireContext()).apply {
+        binding?.root?.addView(PageStateView(requireContext()).apply {
             setEmptyStateView(R.layout.sceyt_empty_state).also {
                 it.findViewById<TextView>(R.id.empty_state_title).text = getString(R.string.sceyt_no_media_items_yet)
             }

@@ -17,13 +17,13 @@ import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
+import com.sceyt.chatuikit.presentation.customviews.DateStatusView
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import java.io.File
 
-fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView,
+fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: DateStatusView,
                                                      channelStyle: ChannelListViewStyle,
                                                      dateText: String, edited: Boolean, shouldShowStatus: Boolean) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || !shouldShowStatus) {
@@ -51,7 +51,7 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: SceytDateSt
 }
 
 
-fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: SceytDateStatusView,
+fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: DateStatusView,
                                                           style: MessageItemStyle,
                                                           dateText: String,
                                                           edited: Boolean) {

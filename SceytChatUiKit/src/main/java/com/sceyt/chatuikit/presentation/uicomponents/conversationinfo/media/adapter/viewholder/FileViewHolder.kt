@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState
-import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
+import com.sceyt.chatuikit.presentation.customviews.CircularProgressView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListenersImpl
@@ -49,7 +49,7 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
             needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
     }
 
-    override val loadingProgressView: SceytCircularProgressView
+    override val loadingProgressView: CircularProgressView
         get() = binding.loadProgress
 
     private fun SceytItemChannelFileBinding.applyStyle() {

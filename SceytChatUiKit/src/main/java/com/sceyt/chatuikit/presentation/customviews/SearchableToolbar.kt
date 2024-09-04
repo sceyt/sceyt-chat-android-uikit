@@ -16,8 +16,10 @@ import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
 
-class SceytSearchableToolbar @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+class SearchableToolbar @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
     private val binding: SceytLayoutSearchableToolbarBinding
     private var isSearchMode: Boolean = false
@@ -34,16 +36,16 @@ class SceytSearchableToolbar @JvmOverloads constructor(
     private var titleTextSize: Int
 
     init {
-        val a = context.obtainStyledAttributes(attrs, R.styleable.SceytSearchableToolbar)
-        toolbarTitle = a.getString(R.styleable.SceytSearchableToolbar_sceytUiSearchableToolbarTitle)
-        titleColor = a.getColor(R.styleable.SceytSearchableToolbar_sceytUiSearchableToolbarTitleColor, context.getCompatColor(R.color.sceyt_color_text_primary))
-        titleTextSize = a.getDimensionPixelSize(R.styleable.SceytSearchableToolbar_sceytUiSearchableToolbarTitleTextSize,
+        val a = context.obtainStyledAttributes(attrs, R.styleable.SearchableToolbar)
+        toolbarTitle = a.getString(R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitle)
+        titleColor = a.getColor(R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitleColor, context.getCompatColor(R.color.sceyt_color_text_primary))
+        titleTextSize = a.getDimensionPixelSize(R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitleTextSize,
             context.resources.getDimension(R.dimen.bigTextSize).toInt())
-        enableSearch = a.getBoolean(R.styleable.SceytSearchableToolbar_sceytUiSearchableToolbarEnableSearch, enableSearch)
-        searchIcon = a.getResourceId(R.styleable.SceytSearchableToolbar_sceytUiSearchableToolbarSearchIcon, R.drawable.sceyt_ic_search)
-        backIcon = a.getResourceId(R.styleable.SceytSearchableToolbar_sceytUiSearchableToolbarBackIcon, R.drawable.sceyt_ic_arrow_back)
-        clearIcon = a.getResourceId(R.styleable.SceytSearchableToolbar_sceytUiSearchableToolbarClearIcon, R.drawable.sceyt_ic_cancel)
-        iconsTint = a.getColor(R.styleable.SceytSearchableToolbar_sceytUiSearchableToolbarIconsTint, iconsTint)
+        enableSearch = a.getBoolean(R.styleable.SearchableToolbar_sceytUiSearchableToolbarEnableSearch, enableSearch)
+        searchIcon = a.getResourceId(R.styleable.SearchableToolbar_sceytUiSearchableToolbarSearchIcon, R.drawable.sceyt_ic_search)
+        backIcon = a.getResourceId(R.styleable.SearchableToolbar_sceytUiSearchableToolbarBackIcon, R.drawable.sceyt_ic_arrow_back)
+        clearIcon = a.getResourceId(R.styleable.SearchableToolbar_sceytUiSearchableToolbarClearIcon, R.drawable.sceyt_ic_cancel)
+        iconsTint = a.getColor(R.styleable.SearchableToolbar_sceytUiSearchableToolbarIconsTint, iconsTint)
         a.recycle()
 
         binding = SceytLayoutSearchableToolbarBinding.inflate(LayoutInflater.from(context), this)

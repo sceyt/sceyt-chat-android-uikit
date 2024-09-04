@@ -29,9 +29,11 @@ import com.sceyt.chatuikit.extensions.processEmojiCompat
 import com.sceyt.chatuikit.extensions.roundUp
 import kotlin.math.abs
 
-
-class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : AppCompatImageView(context, attrs, defStyleAttr) {
+class AvatarView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : AppCompatImageView(context, attrs, defStyleAttr) {
     private var isGroup = false
     private var fullName: String? = null
     private var imageUrl: String? = null
@@ -48,14 +50,14 @@ class SceytAvatarView @JvmOverloads constructor(context: Context, attrs: Attribu
     init {
         var enableRipple = true
         attrs?.let {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.SceytAvatarView)
-            isGroup = a.getBoolean(R.styleable.SceytAvatarView_sceytUiAvatarIsGroup, false)
-            fullName = a.getString(R.styleable.SceytAvatarView_sceytUiAvatarFullName)
-            imageUrl = a.getString(R.styleable.SceytAvatarView_sceytUiAvatarImageUrl)
-            textSize = a.getDimensionPixelSize(R.styleable.SceytAvatarView_sceytUiAvatarTextSize, textSize)
-            avatarBackgroundColor = a.getColor(R.styleable.SceytAvatarView_sceytUiAvatarColor, 0)
-            defaultAvatarResId = a.getResourceId(R.styleable.SceytAvatarView_sceytUiAvatarDefaultIcon, defaultAvatarResId)
-            enableRipple = a.getBoolean(R.styleable.SceytAvatarView_sceytUiAvatarEnableRipple, true)
+            val a = context.obtainStyledAttributes(attrs, R.styleable.AvatarView)
+            isGroup = a.getBoolean(R.styleable.AvatarView_sceytUiAvatarIsGroup, false)
+            fullName = a.getString(R.styleable.AvatarView_sceytUiAvatarFullName)
+            imageUrl = a.getString(R.styleable.AvatarView_sceytUiAvatarImageUrl)
+            textSize = a.getDimensionPixelSize(R.styleable.AvatarView_sceytUiAvatarTextSize, textSize)
+            avatarBackgroundColor = a.getColor(R.styleable.AvatarView_sceytUiAvatarColor, 0)
+            defaultAvatarResId = a.getResourceId(R.styleable.AvatarView_sceytUiAvatarDefaultIcon, defaultAvatarResId)
+            enableRipple = a.getBoolean(R.styleable.AvatarView_sceytUiAvatarEnableRipple, true)
             a.recycle()
         }
         scaleType = ScaleType.CENTER_CROP

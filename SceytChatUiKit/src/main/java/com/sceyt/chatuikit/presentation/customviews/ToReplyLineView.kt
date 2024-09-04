@@ -12,8 +12,11 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.dpToPxAsFloat
 import com.sceyt.chatuikit.extensions.getCompatColor
 
-class SceytToReplyLineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : View(context, attrs, defStyleAttr) {
+class ToReplyLineView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : View(context, attrs, defStyleAttr) {
     private var path = Path()
     private var paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val strokeWidth = dpToPxAsFloat(1.8f)
@@ -25,11 +28,11 @@ class SceytToReplyLineView @JvmOverloads constructor(context: Context, attrs: At
     private var connectedViewBottomHalfHeight = 0f
 
     init {
-        val a = context.obtainStyledAttributes(attrs, R.styleable.SceytToReplyLineView)
-        isToLeft = a.getBoolean(R.styleable.SceytToReplyLineView_sceytUiToReplyLineToLeft, false)
-        strokeColor = a.getColor(R.styleable.SceytToReplyLineView_sceytUiToReplyLineStrokeColor, strokeColor)
-        connectedViewTopId = a.getResourceId(R.styleable.SceytToReplyLineView_sceytUiToReplyLineConnectedViewTop, 0)
-        connectedViewBottomId = a.getResourceId(R.styleable.SceytToReplyLineView_sceytUiToReplyLineConnectedViewBottom, 0)
+        val a = context.obtainStyledAttributes(attrs, R.styleable.ToReplyLineView)
+        isToLeft = a.getBoolean(R.styleable.ToReplyLineView_sceytUiToReplyLineToLeft, false)
+        strokeColor = a.getColor(R.styleable.ToReplyLineView_sceytUiToReplyLineStrokeColor, strokeColor)
+        connectedViewTopId = a.getResourceId(R.styleable.ToReplyLineView_sceytUiToReplyLineConnectedViewTop, 0)
+        connectedViewBottomId = a.getResourceId(R.styleable.ToReplyLineView_sceytUiToReplyLineConnectedViewBottom, 0)
         a.recycle()
     }
 

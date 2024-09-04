@@ -5,7 +5,7 @@ import android.view.MenuItem
 import android.widget.TextView
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
+import com.sceyt.chatuikit.presentation.customviews.AvatarView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
 
@@ -28,7 +28,7 @@ open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUI
         subTitleListener?.onSubTitle(subjectTextView, channel, replyMessage, replyInThread)
     }
 
-    override fun onAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean) {
+    override fun onAvatar(avatar: AvatarView, channel: SceytChannel, replyInThread: Boolean) {
         defaultListeners.onAvatar(avatar, channel, replyInThread)
         avatarListener?.onAvatar(avatar, channel, replyInThread)
     }

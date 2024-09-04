@@ -28,9 +28,11 @@ import com.sceyt.chatuikit.extensions.isRtl
 import kotlin.math.absoluteValue
 import kotlin.math.min
 
-
-class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : View(context, attrs, defStyleAttr) {
+class DateStatusView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : View(context, attrs, defStyleAttr) {
     private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private lateinit var textBoundsRect: Rect
     private lateinit var iconBoundsRect: Rect
@@ -57,17 +59,17 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
 
     init {
         attrs?.let {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.SceytDateStatusView)
-            statusDrawable = a.getDrawable(R.styleable.SceytDateStatusView_sceytUiDateStatusStatusIcon)?.mutate()
-            dateText = a.getString(R.styleable.SceytDateStatusView_sceytUiDateStatusDateText)
+            val a = context.obtainStyledAttributes(attrs, R.styleable.DateStatusView)
+            statusDrawable = a.getDrawable(R.styleable.DateStatusView_sceytUiDateStatusStatusIcon)?.mutate()
+            dateText = a.getString(R.styleable.DateStatusView_sceytUiDateStatusDateText)
                     ?: dateText
-            textSize = a.getDimensionPixelSize(R.styleable.SceytDateStatusView_sceytUiDateStatusDateTextSize, textSize)
-            textColor = a.getColor(R.styleable.SceytDateStatusView_sceytUiDateStatusDateTextColor, textColor)
-            statusIconMargin = a.getDimensionPixelSize(R.styleable.SceytDateStatusView_sceytUiDateStatusStatusIconMargin, statusIconMargin)
-            statusIconSize = a.getDimensionPixelSize(R.styleable.SceytDateStatusView_sceytUiDateStatusStatusIconSize, 0)
-            firstStatusIcon = a.getBoolean(R.styleable.SceytDateStatusView_sceytUiDateStatusFirstStatus, firstStatusIcon)
-            ignoreRtl = a.getBoolean(R.styleable.SceytDateStatusView_sceytUiDateStatusIgnoreRtl, ignoreRtl)
-            isHighlighted = a.getBoolean(R.styleable.SceytDateStatusView_sceytUiDateStatusHighlighted, isHighlighted)
+            textSize = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusDateTextSize, textSize)
+            textColor = a.getColor(R.styleable.DateStatusView_sceytUiDateStatusDateTextColor, textColor)
+            statusIconMargin = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusStatusIconMargin, statusIconMargin)
+            statusIconSize = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusStatusIconSize, 0)
+            firstStatusIcon = a.getBoolean(R.styleable.DateStatusView_sceytUiDateStatusFirstStatus, firstStatusIcon)
+            ignoreRtl = a.getBoolean(R.styleable.DateStatusView_sceytUiDateStatusIgnoreRtl, ignoreRtl)
+            isHighlighted = a.getBoolean(R.styleable.DateStatusView_sceytUiDateStatusHighlighted, isHighlighted)
             getPaddingsFromAttr(a)
             a.recycle()
         }
@@ -78,24 +80,24 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         /** For highlighted state.
          *  After removing state, need to set initial paddings.*/
         paddings = IntArray(4)
-        val padding = typedArray.getDimensionPixelSize(R.styleable.SceytDateStatusView_android_padding, 0)
+        val padding = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_padding, 0)
         if (padding != 0) {
             paddings.forEachIndexed { i, _ ->
                 paddings[i] = padding
             }
         } else {
             // padding start
-            paddings[0] = typedArray.getDimensionPixelSize(R.styleable.SceytDateStatusView_android_paddingStart,
-                typedArray.getDimensionPixelSize(R.styleable.SceytDateStatusView_android_paddingHorizontal, 0))
+            paddings[0] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingStart,
+                typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingHorizontal, 0))
             // padding top
-            paddings[1] = typedArray.getDimensionPixelSize(R.styleable.SceytDateStatusView_android_paddingTop,
-                typedArray.getDimensionPixelSize(R.styleable.SceytDateStatusView_android_paddingVertical, 0))
+            paddings[1] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingTop,
+                typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingVertical, 0))
             // padding end
-            paddings[2] = typedArray.getDimensionPixelSize(R.styleable.SceytDateStatusView_android_paddingEnd,
-                typedArray.getDimensionPixelSize(R.styleable.SceytDateStatusView_android_paddingHorizontal, 0))
+            paddings[2] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingEnd,
+                typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingHorizontal, 0))
             // padding bottom
-            paddings[3] = typedArray.getDimensionPixelSize(R.styleable.SceytDateStatusView_android_paddingBottom,
-                typedArray.getDimensionPixelSize(R.styleable.SceytDateStatusView_android_paddingVertical, 0))
+            paddings[3] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingBottom,
+                typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingVertical, 0))
         }
     }
 
@@ -334,13 +336,13 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
     }
 
     inner class BuildStyle {
-        private var statusIconSize: Int = this@SceytDateStatusView.statusIconSize
+        private var statusIconSize: Int = this@DateStatusView.statusIconSize
         private var statusIcon: Drawable? = null
         private var dateText: String = ""
-        private var dateTextColor: Int = this@SceytDateStatusView.textColor
-        private var isEdited: Boolean = this@SceytDateStatusView.isEdited
-        private var editedText: String = this@SceytDateStatusView.editedText
-        private var editedTextStyle: Int = this@SceytDateStatusView.editedTextStyle
+        private var dateTextColor: Int = this@DateStatusView.textColor
+        private var isEdited: Boolean = this@DateStatusView.isEdited
+        private var editedText: String = this@DateStatusView.editedText
+        private var editedTextStyle: Int = this@DateStatusView.editedTextStyle
         private var ignoreHighlight: Boolean = false
 
         fun setStatusIconSize(size: Int): BuildStyle {
@@ -384,13 +386,13 @@ class SceytDateStatusView @JvmOverloads constructor(context: Context, attrs: Att
         }
 
         fun build() {
-            this@SceytDateStatusView.statusIconSize = statusIconSize
-            this@SceytDateStatusView.statusDrawable = statusIcon?.mutate()
-            this@SceytDateStatusView.textColor = dateTextColor
-            this@SceytDateStatusView.editedText = editedText
-            this@SceytDateStatusView.isEdited = isEdited
-            this@SceytDateStatusView.editedTextStyle = editedTextStyle
-            this@SceytDateStatusView.dateText = dateText
+            this@DateStatusView.statusIconSize = statusIconSize
+            this@DateStatusView.statusDrawable = statusIcon?.mutate()
+            this@DateStatusView.textColor = dateTextColor
+            this@DateStatusView.editedText = editedText
+            this@DateStatusView.isEdited = isEdited
+            this@DateStatusView.editedTextStyle = editedTextStyle
+            this@DateStatusView.dateText = dateText
 
 
             init()

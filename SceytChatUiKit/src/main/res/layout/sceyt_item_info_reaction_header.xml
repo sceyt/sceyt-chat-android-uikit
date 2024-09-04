@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:paddingHorizontal="2dp">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytReactionView
+    <com.sceyt.chatuikit.presentation.customviews.ReactionView
         android:id="@+id/reaction"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

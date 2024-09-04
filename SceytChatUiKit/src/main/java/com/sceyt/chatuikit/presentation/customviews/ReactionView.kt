@@ -23,8 +23,11 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-class SceytReactionView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : View(context, attrs, defStyleAttr) {
+class ReactionView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : View(context, attrs, defStyleAttr) {
     private lateinit var countTextBoundsRect: Rect
     private lateinit var smileTextPaint: TextPaint
     private lateinit var countTextPaint: TextPaint
@@ -54,27 +57,27 @@ class SceytReactionView @JvmOverloads constructor(context: Context, attrs: Attri
 
     init {
         attrs?.let {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.SceytReactionView)
-            innerPadding = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytUiReactionInnerPadding, 0)
+            val a = context.obtainStyledAttributes(attrs, R.styleable.ReactionView)
+            innerPadding = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionInnerPadding, 0)
             if (innerPadding == 0) {
-                innerPaddingVertical = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytUiReactionInnerPaddingVertical, 0)
-                innerPaddingHorizontal = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytUiReactionInnerPaddingHorizontal, 0)
+                innerPaddingVertical = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionInnerPaddingVertical, 0)
+                innerPaddingHorizontal = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionInnerPaddingHorizontal, 0)
             }
-            reactionBackgroundColor = a.getColor(R.styleable.SceytReactionView_sceytUiReactionBackgroundColor, reactionBackgroundColor)
-            countMargin = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytUiReactionCountTextMargin, countMargin)
-            smileTextSize = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytUiReactionSmileTextSize, smileTextSize)
-            countTextSize = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytUiReactionCountTextSize, countTextSize)
-            countTetColor = a.getColor(R.styleable.SceytReactionView_sceytUiReactionCountTextColor, countTetColor)
-            strokeColor = a.getColor(R.styleable.SceytReactionView_sceytUiReactionStrokeColor, strokeColor)
-            enableStroke = a.getBoolean(R.styleable.SceytReactionView_sceytUiReactionEnableStroke, enableStroke)
+            reactionBackgroundColor = a.getColor(R.styleable.ReactionView_sceytUiReactionBackgroundColor, reactionBackgroundColor)
+            countMargin = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionCountTextMargin, countMargin)
+            smileTextSize = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionSmileTextSize, smileTextSize)
+            countTextSize = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionCountTextSize, countTextSize)
+            countTetColor = a.getColor(R.styleable.ReactionView_sceytUiReactionCountTextColor, countTetColor)
+            strokeColor = a.getColor(R.styleable.ReactionView_sceytUiReactionStrokeColor, strokeColor)
+            enableStroke = a.getBoolean(R.styleable.ReactionView_sceytUiReactionEnableStroke, enableStroke)
             if (enableStroke)
-                strikeWidth = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytUiReactionStrokeWidth, 0)
-            cornerRadius = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytUiReactionStrokeCornerRadius, cornerRadius)
-            smileTitle = a.getString(R.styleable.SceytReactionView_sceytUiReactionSmileText)
+                strikeWidth = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionStrokeWidth, 0)
+            cornerRadius = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionStrokeCornerRadius, cornerRadius)
+            smileTitle = a.getString(R.styleable.ReactionView_sceytUiReactionSmileText)
                     ?: smileTitle
-            countTitle = a.getString(R.styleable.SceytReactionView_sceytUiReactionCountText)
+            countTitle = a.getString(R.styleable.ReactionView_sceytUiReactionCountText)
                     ?: countTitle
-            counterTextMinWidth = a.getDimensionPixelSize(R.styleable.SceytReactionView_sceytUiReactionCountTextMinWidth, 0)
+            counterTextMinWidth = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionCountTextMinWidth, 0)
             a.recycle()
         }
         init()

@@ -51,10 +51,11 @@ import java.util.Timer
 import java.util.TimerTask
 import kotlin.math.abs
 
-class SceytVoiceMessageRecorderView @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+class VoiceMessageRecorderView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
-
     private lateinit var binding: SceytRecordViewBinding
     private val animBlink by lazy { AnimationUtils.loadAnimation(context, R.anim.sceyt_anim_blink) }
     private val animJump by lazy { AnimationUtils.loadAnimation(context, R.anim.sceyt_anim_jump) }

@@ -12,9 +12,11 @@ import androidx.databinding.ViewDataBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.presentation.root.PageState
 
-class SceytPageStateView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr) {
-
+class PageStateView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : FrameLayout(context, attrs, defStyleAttr) {
     private val layoutInflater by lazy { LayoutInflater.from(context) }
     private var loadingStateView: View? = null
     private var emptyStateView: View? = null

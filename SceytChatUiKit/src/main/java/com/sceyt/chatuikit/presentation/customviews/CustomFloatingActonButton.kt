@@ -7,8 +7,11 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 
-class SceytCustomFloatingActonButton @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FloatingActionButton(context, attrs, defStyleAttr) {
+class CustomFloatingActonButton @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : FloatingActionButton(context, attrs, defStyleAttr) {
 
     private var isEnabledClick: Boolean = isClickable
     private var localClickListener: OnClickListener? = null

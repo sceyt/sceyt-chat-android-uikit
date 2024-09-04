@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
-import com.sceyt.chatuikit.presentation.customviews.SceytVideoControllerView
+import com.sceyt.chatuikit.presentation.customviews.VideoControllerView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseMessageFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
 import com.sceyt.chatuikit.shared.utils.MyDiffUtil
@@ -19,7 +19,7 @@ class MessageFilesAdapter(
         private var viewHolderFactory: FilesViewHolderFactory
 ) : RecyclerView.Adapter<BaseMessageFileViewHolder<FileListItem>>() {
 
-    val videoControllersList = arrayListOf<SceytVideoControllerView>()
+    val videoControllersList = arrayListOf<VideoControllerView>()
 
     init {
         observeToAppLifeCycle()

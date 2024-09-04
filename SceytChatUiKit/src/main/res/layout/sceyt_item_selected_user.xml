@@ -8,7 +8,7 @@
     android:paddingEnd="5dp"
     android:paddingBottom="6dp">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
+    <com.sceyt.chatuikit.presentation.customviews.AvatarView
         android:id="@+id/avatar"
         android:layout_width="56dp"
         android:layout_height="56dp"
@@ -28,7 +28,7 @@
         app:layout_constraintTop_toTopOf="@+id/avatar"
         app:srcCompat="@drawable/sceyt_ic_remove" />
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytOnlineView
+    <com.sceyt.chatuikit.presentation.customviews.OnlineView
         android:id="@+id/onlineStatus"
         android:layout_width="12dp"
         android:layout_height="12dp"

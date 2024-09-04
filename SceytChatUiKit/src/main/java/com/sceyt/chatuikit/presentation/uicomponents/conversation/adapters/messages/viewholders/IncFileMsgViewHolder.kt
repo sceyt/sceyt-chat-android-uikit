@@ -26,7 +26,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
-import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
+import com.sceyt.chatuikit.presentation.customviews.CircularProgressView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -167,7 +167,7 @@ class IncFileMsgViewHolder(
         }
     }
 
-    override val loadingProgressView: SceytCircularProgressView
+    override val loadingProgressView: CircularProgressView
         get() = binding.loadProgress
 
     override fun setMaxWidth() {

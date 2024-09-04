@@ -21,7 +21,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
-import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
+import com.sceyt.chatuikit.presentation.customviews.CircularProgressView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
@@ -133,7 +133,7 @@ class MessageVideoViewHolder(
 
     override fun needThumbFor() = ThumbFor.MessagesLisView
 
-    override val loadingProgressView: SceytCircularProgressView
+    override val loadingProgressView: CircularProgressView
         get() = binding.loadProgress
 
     /* private fun initializePlayer(mediaPath: String?) {

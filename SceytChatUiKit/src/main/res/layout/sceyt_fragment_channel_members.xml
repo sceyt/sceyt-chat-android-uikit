@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/sceyt_color_background">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytSearchableToolbar
+    <com.sceyt.chatuikit.presentation.customviews.SearchableToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

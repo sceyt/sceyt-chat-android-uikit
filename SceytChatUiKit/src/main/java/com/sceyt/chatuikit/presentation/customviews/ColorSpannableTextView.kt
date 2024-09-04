@@ -10,8 +10,11 @@ import androidx.annotation.ColorRes
 import androidx.appcompat.widget.AppCompatTextView
 import com.sceyt.chatuikit.extensions.getCompatColor
 
-class SceytColorSpannableTextView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : AppCompatTextView(context, attrs, defStyleAttr) {
+class ColorSpannableTextView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : AppCompatTextView(context, attrs, defStyleAttr) {
     private var spanColorId: Int = 0
     private var fromIndex: Int = 0
     private var toIndex: Int = 0
@@ -21,11 +24,11 @@ class SceytColorSpannableTextView @JvmOverloads constructor(context: Context, at
 
 
     inner class BuildSpannable {
-        private var spanColorId: Int = this@SceytColorSpannableTextView.spanColorId
-        private var fromIndex: Int = this@SceytColorSpannableTextView.fromIndex
-        private var toIndex: Int = this@SceytColorSpannableTextView.toIndex
-        private var flag: Int = this@SceytColorSpannableTextView.flag
-        private var spanString: SpannableString = this@SceytColorSpannableTextView.spanString
+        private var spanColorId: Int = this@ColorSpannableTextView.spanColorId
+        private var fromIndex: Int = this@ColorSpannableTextView.fromIndex
+        private var toIndex: Int = this@ColorSpannableTextView.toIndex
+        private var flag: Int = this@ColorSpannableTextView.flag
+        private var spanString: SpannableString = this@ColorSpannableTextView.spanString
 
         fun setForegroundColorId(@ColorRes colorId: Int): BuildSpannable {
             spanColorId = colorId
