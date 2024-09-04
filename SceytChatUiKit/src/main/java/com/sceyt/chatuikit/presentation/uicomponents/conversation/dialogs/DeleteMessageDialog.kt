@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytDialogDeleteMessageBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 
-class DeleteMessageDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle) {
+open class DeleteMessageDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle) {
     private lateinit var binding: SceytDialogDeleteMessageBinding
     private var positiveClickListener: ((Boolean) -> Unit)? = null
     private var deleteMessageCount: Int = 1
@@ -25,7 +25,7 @@ class DeleteMessageDialog(context: Context) : Dialog(context, R.style.SceytDialo
         window?.setWindowAnimations(R.style.SceytDialogWindowAnimation)
     }
 
-    private fun SceytDialogDeleteMessageBinding.initView() {
+    protected open fun SceytDialogDeleteMessageBinding.initView() {
         if (deleteMessageCount > 1) {
             textTitle.text = context.getString(R.string.sceyt_delete_messages_title)
             textDescription.text = context.getString(R.string.sceyt_delete_messages_body)
@@ -63,7 +63,7 @@ class DeleteMessageDialog(context: Context) : Dialog(context, R.style.SceytDialo
         return this
     }
 
-    private fun SceytDialogDeleteMessageBinding.applyStyle() {
+    protected open fun SceytDialogDeleteMessageBinding.applyStyle() {
         buttonDelete.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
         buttonCancel.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
         textTitle.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))

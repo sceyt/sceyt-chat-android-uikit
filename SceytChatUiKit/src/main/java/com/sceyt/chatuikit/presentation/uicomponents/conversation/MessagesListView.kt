@@ -71,7 +71,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.Mess
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListenersImpl
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.ReactionPopupClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.ReactionPopupClickListenersImpl
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.popups.PopupMenuMessage
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.popups.PopupMenuMessageActions
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.popups.PopupReactions
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.popups.PopupReactionsAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.forward.SceytForwardActivity
@@ -114,7 +114,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         setPadding(0, 0, 0, 0)
 
         messagesRV.setScrollDownControllerListener { show ->
-            binding.scrollDownIcon.isVisible = show && style.enableScrollDownButton
+            binding.scrollDownView.isVisible = show && style.enableScrollDownButton
         }
 
         messagesRV.setSwipeToReplyListener { item ->
@@ -122,7 +122,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 messageCommandEventListener?.invoke(MessageCommandEvent.Reply(message))
             }
         }
-        binding.scrollDownIcon.setStyle(style)
+        binding.scrollDownView.setStyle(style)
         binding.pageStateView.setLoadingStateView(style.loadingState)
         binding.pageStateView.setEmptyStateView(style.emptyState)
 
@@ -130,7 +130,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         addKeyBoardListener()
 
         if (isInEditMode)
-            binding.scrollDownIcon.isVisible = style.enableScrollDownButton
+            binding.scrollDownView.isVisible = style.enableScrollDownButton
     }
 
     private fun initClickListeners() {
@@ -231,7 +231,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
         messagesRV.setMessageListener(defaultClickListeners)
 
-        binding.scrollDownIcon.setOnClickListener {
+        binding.scrollDownView.setOnClickListener {
             clickListeners.onScrollToDownClick(it as ScrollToDownView)
         }
     }
@@ -313,7 +313,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showMessageActionsPopup(view: View, message: SceytMessage) {
-        val popup = PopupMenuMessage(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message)
+        val popup = PopupMenuMessageActions(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message)
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_edit_message -> messageActionsViewClickListeners.onEditMessageClick(message)
@@ -612,7 +612,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        messagesRV.setRichToStartListener(listener)
+        messagesRV.setreachToStartListener(listener)
     }
 
     internal fun setMessageReactionsEventListener(listener: (ReactionEvent) -> Unit) {
@@ -633,7 +633,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun setUnreadCount(unreadCount: Int) {
-        binding.scrollDownIcon.setUnreadCount(unreadCount)
+        binding.scrollDownView.setUnreadCount(unreadCount)
     }
 
     internal fun setOnWindowFocusChangeListener(listener: (Boolean) -> Unit) {

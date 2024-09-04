@@ -28,11 +28,14 @@ import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : RecyclerView(context, attrs, defStyleAttr) {
+class ChannelsRV @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : RecyclerView(context, attrs, defStyleAttr) {
 
-    private lateinit var mAdapter: ChannelsAdapter
-    private var richToEndListener: ((offset: Int, lastChannel: SceytChannel?) -> Unit)? = null
+    private var mAdapter: ChannelsAdapter? = null
+    private var reachToEndListener: ((offset: Int, lastChannel: SceytChannel?) -> Unit)? = null
     private var viewHolderFactory = ChannelViewHolderFactory(context)
 
     init {
@@ -51,22 +54,23 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private fun addOnScrollListener() {
         post {
             addRVScrollListener { _: RecyclerView, _: Int, _: Int ->
-                checkRichToEnd()
+                checkReachToEnd()
             }
         }
     }
 
-    private fun checkRichToEnd() {
-        if (isLastItemDisplaying() && mAdapter.itemCount != 0)
-            richToEndListener?.invoke(mAdapter.getSkip(), mAdapter.getChannels().lastOrNull()?.channel)
+    private fun checkReachToEnd() {
+        val adapter = mAdapter ?: return
+        if (isLastItemDisplaying() && adapter.itemCount != 0)
+            reachToEndListener?.invoke(adapter.getSkip(), adapter.getChannels().lastOrNull()?.channel)
     }
 
     fun setData(channels: List<ChannelListItem>) {
-        if (::mAdapter.isInitialized.not()) {
+        if (mAdapter == null) {
             adapter = ChannelsAdapter(SyncArrayList(channels), viewHolderFactory)
                 .also { mAdapter = it }
         } else {
-            mAdapter.notifyUpdate(channels, this)
+            mAdapter?.notifyUpdate(channels, this)
             awaitAnimationEnd {
                 if (isFirstItemDisplaying())
                     scrollToPosition(0)
@@ -76,69 +80,64 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 it.lifecycleScope.launch {
                     it.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                         delay(500)
-                        checkRichToEnd()
+                        checkReachToEnd()
                     }
                 }
             }
         }
     }
 
-    fun isEmpty() = ::mAdapter.isInitialized.not() || mAdapter.getSkip() == 0
+    fun isEmpty(): Boolean {
+        return (mAdapter?.getSkip() ?: return true) == 0
+    }
 
     override fun getAdapter(): ChannelsAdapter? {
-        return if (::mAdapter.isInitialized) {
-            mAdapter
-        } else null
+        return mAdapter
     }
 
     fun addNewChannels(channels: List<ChannelListItem>) {
-        if (::mAdapter.isInitialized.not())
+        if (mAdapter == null)
             setData(channels)
         else
-            mAdapter.addList(channels as MutableList<ChannelListItem>)
+            mAdapter?.addList(channels as MutableList<ChannelListItem>)
     }
 
     fun deleteChannel(id: Long) {
-        if (::mAdapter.isInitialized)
-            mAdapter.deleteChannel(id)
+        mAdapter?.deleteChannel(id)
     }
 
     fun getChannels(): List<ChannelListItem.ChannelItem>? {
-        return if (::mAdapter.isInitialized) mAdapter.getChannels() else null
+        return mAdapter?.getChannels()
     }
 
     fun getData(): List<ChannelListItem>? {
-        return if (::mAdapter.isInitialized) mAdapter.getData() else null
+        return mAdapter?.getData()
     }
 
     fun getChannelIndexed(channelId: Long): Pair<Int, ChannelListItem.ChannelItem>? {
-        return if (::mAdapter.isInitialized)
-            mAdapter.getData().findIndexed { it is ChannelListItem.ChannelItem && it.channel.id == channelId }?.let {
-                return@let Pair(it.first, it.second as ChannelListItem.ChannelItem)
-            }
-        else null
+        return mAdapter?.getData()?.findIndexed { it is ChannelListItem.ChannelItem && it.channel.id == channelId }?.let {
+            return@let Pair(it.first, it.second as ChannelListItem.ChannelItem)
+        }
     }
 
     fun getDirectChannelByUserIdIndexed(userId: String): Pair<Int, ChannelListItem.ChannelItem>? {
-        return if (::mAdapter.isInitialized)
-            mAdapter.getData().findIndexed {
-                it is ChannelListItem.ChannelItem && it.channel.isDirect()
-                        && it.channel.getPeer()?.id == userId
-            }?.let {
-                return@let Pair(it.first, it.second as ChannelListItem.ChannelItem)
-            }
-        else null
+        return mAdapter?.getData()?.findIndexed {
+            it is ChannelListItem.ChannelItem && it.channel.isDirect()
+                    && it.channel.getPeer()?.id == userId
+        }?.let {
+            return@let Pair(it.first, it.second as ChannelListItem.ChannelItem)
+        }
     }
 
     /** Call this function to customise ChannelViewHolderFactory and set your own.
      * Note: Call this function before initialising channels adapter.*/
     fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
-        check(::mAdapter.isInitialized.not()) { "Adapter was already initialized, please set ChannelViewHolderFactory first" }
+        check(mAdapter == null) { "Adapter was already initialized, please set ChannelViewHolderFactory first" }
         viewHolderFactory = factory
     }
 
-    fun setRichToEndListeners(listener: (offset: Int, lastChannel: SceytChannel?) -> Unit) {
-        richToEndListener = listener
+    fun setReachToEndListeners(listener: (offset: Int, lastChannel: SceytChannel?) -> Unit) {
+        reachToEndListener = listener
     }
 
     fun setAttachDetachListeners(listener: (ChannelListItem?, attached: Boolean) -> Unit) {
@@ -150,7 +149,7 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     fun sortBy(sortChannelsBy: ChannelSortType = SceytChatUIKit.config.sortChannelsBy) {
-        sortAndUpdate(sortChannelsBy, mAdapter.getData())
+        sortAndUpdate(sortChannelsBy, mAdapter?.getData() ?: return)
     }
 
     fun sortByAndSetNewData(sortChannelsBy: ChannelSortType, data: List<ChannelListItem>) {
@@ -158,7 +157,7 @@ class ChannelsRV @JvmOverloads constructor(context: Context, attrs: AttributeSet
     }
 
     fun hideLoadingMore() {
-        if (::mAdapter.isInitialized) mAdapter.removeLoading()
+        mAdapter?.removeLoading()
     }
 
     fun getViewHolderFactory() = viewHolderFactory

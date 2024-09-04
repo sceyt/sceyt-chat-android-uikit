@@ -75,6 +75,7 @@
         <attr name="sceytUiDifferentSenderMessageDistance" format="dimension" />
 
         <attr name="sceytUiDownScrollerUnreadCountColor" format="reference|color" />
+        <attr name="sceytUiDownScrollerIcon" format="reference" />
 
         <attr name="sceytUiMediaLoaderColor" format="reference|color" />
         <attr name="sceytUiVideoDurationIcon" format="reference" />
