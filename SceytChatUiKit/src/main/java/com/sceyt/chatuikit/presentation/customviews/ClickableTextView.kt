@@ -14,7 +14,7 @@ import androidx.appcompat.widget.AppCompatTextView
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 
 
-class SceytClickableTextView @JvmOverloads constructor(
+class ClickableTextView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0

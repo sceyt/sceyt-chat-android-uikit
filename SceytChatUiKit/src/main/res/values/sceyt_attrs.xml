@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <declare-styleable name="SceytAvatarView">
+    <declare-styleable name="AvatarView">
         <attr name="sceytUiAvatarImageUrl" format="string" />
         <attr name="sceytUiAvatarFullName" format="string" />
         <attr name="sceytUiAvatarIsGroup" format="boolean" />
@@ -11,14 +11,14 @@
         <attr name="sceytUiAvatarEnableRipple" format="boolean" />
     </declare-styleable>
 
-    <declare-styleable name="SceytToReplyLineView">
+    <declare-styleable name="ToReplyLineView">
         <attr name="sceytUiToReplyLineToLeft" format="boolean" />
         <attr name="sceytUiToReplyLineStrokeColor" format="reference|color" />
         <attr name="sceytUiToReplyLineConnectedViewTop" format="reference" />
         <attr name="sceytUiToReplyLineConnectedViewBottom" format="reference" />
     </declare-styleable>
 
-    <declare-styleable name="SceytDateStatusView">
+    <declare-styleable name="DateStatusView">
         <attr name="sceytUiDateStatusStatusIcon" format="reference" />
         <attr name="sceytUiDateStatusStatusIconSize" format="dimension" />
         <attr name="sceytUiDateStatusStatusIconMargin" format="dimension" />
@@ -37,7 +37,7 @@
         <attr name="android:paddingHorizontal" format="dimension" />
     </declare-styleable>
 
-    <declare-styleable name="SceytReactionView">
+    <declare-styleable name="ReactionView">
         <attr name="sceytUiReactionInnerPadding" format="integer|dimension" />
         <attr name="sceytUiReactionInnerPaddingHorizontal" format="integer|dimension" />
         <attr name="sceytUiReactionInnerPaddingVertical" format="integer|dimension" />
@@ -55,7 +55,7 @@
         <attr name="sceytUiReactionCountTextMinWidth" format="integer|dimension" />
     </declare-styleable>
 
-    <declare-styleable name="SceytVideoControllerView">
+    <declare-styleable name="VideoControllerView">
         <attr name="sceytUiVideoControllerShowPlayPause" format="boolean" />
         <attr name="sceytUiVideoControllerPlayPauseSize" format="integer|dimension" />
         <attr name="sceytUiVideoControllerPlayIcon" format="reference" />
@@ -66,7 +66,7 @@
 
     </declare-styleable>
 
-    <declare-styleable name="SceytCircularProgressView">
+    <declare-styleable name="CircularProgressView">
         <attr name="sceytUiProgressColor" format="color" />
         <attr name="sceytUiProgressTrackColor" format="color" />
         <attr name="sceytUiProgressValue" format="float" />
@@ -82,7 +82,7 @@
 
     </declare-styleable>
 
-    <declare-styleable name="SceytToolbar">
+    <declare-styleable name="CustomToolbar">
         <attr name="sceytUiToolbarTitle" format="string" />
         <attr name="sceytUiToolbarTitleTextColor" format="color|reference" />
         <attr name="sceytUiToolbarNavigationIcon" format="reference" />

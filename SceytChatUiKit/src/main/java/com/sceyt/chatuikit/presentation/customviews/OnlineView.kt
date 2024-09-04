@@ -11,8 +11,11 @@ import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.scaleAndAlphaAnim
 
-class SceytOnlineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : View(context, attrs, defStyleAttr) {
+class OnlineView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : View(context, attrs, defStyleAttr) {
     private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val indicatorPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var strokeColor = Color.BLACK
@@ -24,11 +27,11 @@ class SceytOnlineView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     init {
         attrs?.let {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.SceytOnlineView)
-            strokeColor = a.getColor(R.styleable.SceytOnlineView_sceytUiOnlineViewStrokeColor, strokeColor)
-            indicatorColor = a.getColor(R.styleable.SceytOnlineView_sceytUiOnlineViewIndicatorColor, indicatorColor)
-            strokeWidth = a.getDimensionPixelSize(R.styleable.SceytOnlineView_sceytUiOnlineViewStrokeWidth, strokeWidth)
-            changeVisibilityWithAnim = a.getBoolean(R.styleable.SceytOnlineView_sceytUiOnlineViewChangeVisibilityWithAnim, changeVisibilityWithAnim)
+            val a = context.obtainStyledAttributes(attrs, R.styleable.OnlineView)
+            strokeColor = a.getColor(R.styleable.OnlineView_sceytUiOnlineViewStrokeColor, strokeColor)
+            indicatorColor = a.getColor(R.styleable.OnlineView_sceytUiOnlineViewIndicatorColor, indicatorColor)
+            strokeWidth = a.getDimensionPixelSize(R.styleable.OnlineView_sceytUiOnlineViewStrokeWidth, strokeWidth)
+            changeVisibilityWithAnim = a.getBoolean(R.styleable.OnlineView_sceytUiOnlineViewChangeVisibilityWithAnim, changeVisibilityWithAnim)
             a.recycle()
         }
         init()
@@ -38,7 +41,7 @@ class SceytOnlineView @JvmOverloads constructor(context: Context, attrs: Attribu
         with(strokePaint) {
             flags = Paint.ANTI_ALIAS_FLAG
             color = strokeColor
-            strokeWidth = this@SceytOnlineView.strokeWidth.toFloat()
+            strokeWidth = this@OnlineView.strokeWidth.toFloat()
             style = Paint.Style.STROKE
         }
         with(indicatorPaint) {

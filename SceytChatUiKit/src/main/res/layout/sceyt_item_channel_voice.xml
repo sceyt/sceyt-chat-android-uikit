@@ -63,7 +63,7 @@
         app:layout_goneMarginEnd="0dp"
         tools:text="02:34" />
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
+    <com.sceyt.chatuikit.presentation.customviews.CircularProgressView
         android:id="@+id/loadProgress"
         android:layout_width="35dp"
         android:layout_height="35dp"

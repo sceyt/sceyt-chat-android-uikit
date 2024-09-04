@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context="com.sceyt.chatuikit.presentation.uicomponents.forward.SceytForwardActivity">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytSearchableToolbar
+    <com.sceyt.chatuikit.presentation.customviews.SearchableToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

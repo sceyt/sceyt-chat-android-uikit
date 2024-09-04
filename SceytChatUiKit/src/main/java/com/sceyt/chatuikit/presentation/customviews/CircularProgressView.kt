@@ -24,12 +24,11 @@ import com.sceyt.chatuikit.extensions.scaleAndAlphaAnim
 import kotlin.math.max
 import kotlin.math.min
 
-class SceytCircularProgressView @JvmOverloads constructor(
+class CircularProgressView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
-
     private lateinit var progressPaint: Paint
     private lateinit var trackPaint: Paint
     private lateinit var backgroundPaint: Paint
@@ -68,21 +67,21 @@ class SceytCircularProgressView @JvmOverloads constructor(
 
     init {
         attrs?.let {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.SceytCircularProgressView)
-            progressColor = a.getColor(R.styleable.SceytCircularProgressView_sceytUiProgressColor, progressColor)
-            trackColor = a.getColor(R.styleable.SceytCircularProgressView_sceytUiProgressTrackColor, trackColor)
-            minProgress = a.getFloat(R.styleable.SceytCircularProgressView_sceytUiProgressMinProgress, minProgress)
-            progress = a.getFloat(R.styleable.SceytCircularProgressView_sceytUiProgressValue, minProgress)
-            roundedProgress = a.getBoolean(R.styleable.SceytCircularProgressView_sceytUiProgressRoundedProgress, roundedProgress)
-            centerIcon = a.getDrawable(R.styleable.SceytCircularProgressView_sceytUiProgressCenterIcon)
-            rotateAnimEnabled = a.getBoolean(R.styleable.SceytCircularProgressView_sceytUiProgressRotateAnimEnabled, rotateAnimEnabled)
-            enableProgressDownAnimation = a.getBoolean(R.styleable.SceytCircularProgressView_sceytUiProgressEnableProgressDownAnimation,
+            val a = context.obtainStyledAttributes(attrs, R.styleable.CircularProgressView)
+            progressColor = a.getColor(R.styleable.CircularProgressView_sceytUiProgressColor, progressColor)
+            trackColor = a.getColor(R.styleable.CircularProgressView_sceytUiProgressTrackColor, trackColor)
+            minProgress = a.getFloat(R.styleable.CircularProgressView_sceytUiProgressMinProgress, minProgress)
+            progress = a.getFloat(R.styleable.CircularProgressView_sceytUiProgressValue, minProgress)
+            roundedProgress = a.getBoolean(R.styleable.CircularProgressView_sceytUiProgressRoundedProgress, roundedProgress)
+            centerIcon = a.getDrawable(R.styleable.CircularProgressView_sceytUiProgressCenterIcon)
+            rotateAnimEnabled = a.getBoolean(R.styleable.CircularProgressView_sceytUiProgressRotateAnimEnabled, rotateAnimEnabled)
+            enableProgressDownAnimation = a.getBoolean(R.styleable.CircularProgressView_sceytUiProgressEnableProgressDownAnimation,
                 enableProgressDownAnimation)
-            iconTintColor = a.getColor(R.styleable.SceytCircularProgressView_sceytUiProgressIconTint, iconTintColor)
-            bgColor = a.getColor(R.styleable.SceytCircularProgressView_sceytUiProgressBackgroundColor, 0)
-            iconSizeInPercent = getNormalizedPercent(a.getFloat(R.styleable.SceytCircularProgressView_sceytUiProgressIconSizeInPercent,
+            iconTintColor = a.getColor(R.styleable.CircularProgressView_sceytUiProgressIconTint, iconTintColor)
+            bgColor = a.getColor(R.styleable.CircularProgressView_sceytUiProgressBackgroundColor, 0)
+            iconSizeInPercent = getNormalizedPercent(a.getFloat(R.styleable.CircularProgressView_sceytUiProgressIconSizeInPercent,
                 iconSizeInPercent))
-            val trackThickness = a.getDimensionPixelSize(R.styleable.SceytCircularProgressView_sceytUiProgressTrackThickness, 0)
+            val trackThickness = a.getDimensionPixelSize(R.styleable.CircularProgressView_sceytUiProgressTrackThickness, 0)
             if (trackThickness > 0)
                 this.trackThickness = trackThickness.toFloat()
             a.recycle()
@@ -174,7 +173,7 @@ class SceytCircularProgressView @JvmOverloads constructor(
             if ((updateProgressAnim == null || updateProgressAnim?.isRunning != true)) {
                 updateProgressAnim = ValueAnimator.ofFloat(angle, newAngel).apply {
                     addUpdateListener { animation ->
-                        this@SceytCircularProgressView.angle = (animation.animatedValue as Float)
+                        this@CircularProgressView.angle = (animation.animatedValue as Float)
                         if (rotateAnimEnabled.not())
                             invalidate()
                     }

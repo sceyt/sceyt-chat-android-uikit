@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytCustomToolbarBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 
-class SceytToolbar @JvmOverloads constructor(
+class CustomToolbar @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0
@@ -29,13 +29,13 @@ class SceytToolbar @JvmOverloads constructor(
 
     init {
         if (attrs != null) {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.SceytToolbar)
-            navigationIconId = typedArray.getResourceId(R.styleable.SceytToolbar_sceytUiToolbarNavigationIcon, navigationIconId)
-            menuIconId = typedArray.getResourceId(R.styleable.SceytToolbar_sceytUiToolbarMenuIcon, menuIconId)
-            title = typedArray.getString(R.styleable.SceytToolbar_sceytUiToolbarTitle) ?: title
-            iconsTint = typedArray.getColor(R.styleable.SceytToolbar_sceytUiToolbarIconsTint, iconsTint)
-            titleColor = typedArray.getColor(R.styleable.SceytToolbar_sceytUiToolbarTitleTextColor, titleColor)
-            enableDivider = typedArray.getBoolean(R.styleable.SceytToolbar_sceytUiToolbarEnableDivider, enableDivider)
+            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.CustomToolbar)
+            navigationIconId = typedArray.getResourceId(R.styleable.CustomToolbar_sceytUiToolbarNavigationIcon, navigationIconId)
+            menuIconId = typedArray.getResourceId(R.styleable.CustomToolbar_sceytUiToolbarMenuIcon, menuIconId)
+            title = typedArray.getString(R.styleable.CustomToolbar_sceytUiToolbarTitle) ?: title
+            iconsTint = typedArray.getColor(R.styleable.CustomToolbar_sceytUiToolbarIconsTint, iconsTint)
+            titleColor = typedArray.getColor(R.styleable.CustomToolbar_sceytUiToolbarTitleTextColor, titleColor)
+            enableDivider = typedArray.getBoolean(R.styleable.CustomToolbar_sceytUiToolbarEnableDivider, enableDivider)
             typedArray.recycle()
         }
 

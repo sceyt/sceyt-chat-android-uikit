@@ -7,7 +7,7 @@
     android:fitsSystemWindows="true"
     tools:context=".presentation.uicomponents.conversationinfo.photopreview.SceytPhotoPreviewActivity">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytToolbar
+    <com.sceyt.chatuikit.presentation.customviews.CustomToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

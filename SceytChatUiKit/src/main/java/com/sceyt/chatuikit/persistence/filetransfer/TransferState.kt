@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
-import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
+import com.sceyt.chatuikit.presentation.customviews.CircularProgressView
 
 enum class TransferState {
     PendingUpload,
@@ -38,7 +38,7 @@ enum class TransferState {
     ThumbLoaded
 }
 
-fun SceytCircularProgressView.getProgressWithState(state: TransferState, progressPercent: Float = 0f) {
+fun CircularProgressView.getProgressWithState(state: TransferState, progressPercent: Float = 0f) {
     when (state) {
         PendingUpload, ErrorUpload, PauseUpload -> {
             release()

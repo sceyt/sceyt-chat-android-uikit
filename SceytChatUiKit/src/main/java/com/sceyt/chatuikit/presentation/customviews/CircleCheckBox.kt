@@ -13,9 +13,11 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 
-class SceytCircleCheckBox @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : AppCompatCheckBox(context, attrs, defStyleAttr) {
+class CircleCheckBox @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : AppCompatCheckBox(context, attrs, defStyleAttr) {
 
     init {
         buttonDrawable = createStateListDrawable()

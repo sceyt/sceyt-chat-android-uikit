@@ -17,7 +17,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
+    <com.sceyt.chatuikit.presentation.customviews.AvatarView
         android:id="@+id/avatar"
         android:layout_width="@dimen/_45sdp"
         android:layout_height="@dimen/_45sdp"
@@ -27,7 +27,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytOnlineView
+    <com.sceyt.chatuikit.presentation.customviews.OnlineView
         android:id="@+id/onlineStatus"
         android:layout_width="14dp"
         android:layout_height="14dp"
@@ -62,7 +62,7 @@
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="Title" />
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytColorSpannableTextView
+    <com.sceyt.chatuikit.presentation.customviews.ColorSpannableTextView
         android:id="@+id/lastMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -91,7 +91,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/channelTitle" />
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
+    <com.sceyt.chatuikit.presentation.customviews.DateStatusView
         android:id="@+id/dateStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

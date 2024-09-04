@@ -31,9 +31,9 @@ import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChatReactionMessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
-import com.sceyt.chatuikit.presentation.customviews.SceytColorSpannableTextView
-import com.sceyt.chatuikit.presentation.customviews.SceytDateStatusView
-import com.sceyt.chatuikit.presentation.customviews.SceytOnlineView
+import com.sceyt.chatuikit.presentation.customviews.ColorSpannableTextView
+import com.sceyt.chatuikit.presentation.customviews.DateStatusView
+import com.sceyt.chatuikit.presentation.customviews.OnlineView
 import com.sceyt.chatuikit.presentation.extensions.getAttachmentIconAsString
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.presentation.extensions.getFormattedLastMessageBody
@@ -166,7 +166,7 @@ open class ChannelViewHolder(
                 else -> "${context.getString(R.string.sceyt_your_last_message)}: "
             }
 
-            (textView as SceytColorSpannableTextView).buildSpannable()
+            (textView as ColorSpannableTextView).buildSpannable()
                 .append(fromText)
                 .append(message.getAttachmentIconAsString(channelStyle))
                 .append(body)
@@ -279,13 +279,13 @@ open class ChannelViewHolder(
                 0 else SceytChatUIKit.theme.userDefaultAvatar)
     }
 
-    open fun setLastMessageStatusAndDate(channel: SceytChannel, dateStatusView: SceytDateStatusView) {
+    open fun setLastMessageStatusAndDate(channel: SceytChannel, dateStatusView: DateStatusView) {
         val data = getDateData(channel)
         val shouldShowStatus = data.second
         channel.lastMessage.setChannelMessageDateAndStatusIcon(dateStatusView, channelStyle, data.first, false, shouldShowStatus)
     }
 
-    open fun setOnlineStatus(channel: SceytChannel?, onlineStatus: SceytOnlineView) {
+    open fun setOnlineStatus(channel: SceytChannel?, onlineStatus: OnlineView) {
         val isOnline = !isSelf && channel?.isDirect() == true &&
                 channel.getPeer()?.user?.presence?.state == PresenceState.Online
         onlineStatus.isVisible = isOnline

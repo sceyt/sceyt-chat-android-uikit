@@ -19,7 +19,7 @@ import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
-import com.sceyt.chatuikit.presentation.customviews.SceytPageStateView
+import com.sceyt.chatuikit.presentation.customviews.PageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
@@ -275,7 +275,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
     fun getChannelsRv() = channelsRV
 
     /**
-     * @return The inner [SceytPageStateView] .
+     * @return The inner [PageStateView] .
      */
     fun getPageStateView() = binding.pageStateView
 

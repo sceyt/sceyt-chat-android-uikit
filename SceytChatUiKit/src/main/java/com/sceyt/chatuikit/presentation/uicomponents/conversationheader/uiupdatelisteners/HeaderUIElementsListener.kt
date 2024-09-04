@@ -6,7 +6,7 @@ import android.widget.TextView
 import androidx.annotation.MenuRes
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
+import com.sceyt.chatuikit.presentation.customviews.AvatarView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 
 sealed interface HeaderUIElementsListener {
@@ -20,7 +20,7 @@ sealed interface HeaderUIElementsListener {
     }
 
     fun interface AvatarListener : HeaderUIElementsListener {
-        fun onAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean)
+        fun onAvatar(avatar: AvatarView, channel: SceytChannel, replyInThread: Boolean)
     }
 
     interface ActionsMenuListener : HeaderUIElementsListener {

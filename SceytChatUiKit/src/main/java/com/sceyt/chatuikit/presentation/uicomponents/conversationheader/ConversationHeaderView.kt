@@ -53,7 +53,7 @@ import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
-import com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
+import com.sceyt.chatuikit.presentation.customviews.AvatarView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
@@ -257,7 +257,7 @@ class ConversationHeaderView @JvmOverloads constructor(
         textView.isVisible = !typingUsersHelper.isTyping
     }
 
-    private fun setAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
+    private fun setAvatar(avatar: AvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
         binding.avatar.isVisible = !replyInThread
         if (!replyInThread) {
             when {
@@ -487,7 +487,7 @@ class ConversationHeaderView @JvmOverloads constructor(
         setChannelSubTitle(subjectTextView, channel, replyMessage, replyInThread)
     }
 
-    override fun onAvatar(avatar: SceytAvatarView, channel: SceytChannel, replyInThread: Boolean) {
+    override fun onAvatar(avatar: AvatarView, channel: SceytChannel, replyInThread: Boolean) {
         setAvatar(avatar, channel, replyInThread)
     }
 

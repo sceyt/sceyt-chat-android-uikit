@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
-import com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
+import com.sceyt.chatuikit.presentation.customviews.AvatarView
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholders.BaseChannelViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
@@ -61,7 +61,7 @@ open class ShareableChannelViewHolder(private val binding: SceytItemShareChannel
         }
     }
 
-    open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: SceytAvatarView) {
+    open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: AvatarView) {
         if (channel.isPeerDeleted()) {
             binding.avatar.setImageUrl(null, SceytChatUIKit.theme.deletedUserAvatar)
         } else

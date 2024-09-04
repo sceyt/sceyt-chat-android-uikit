@@ -24,7 +24,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferData
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PauseDownload
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PendingDownload
 import com.sceyt.chatuikit.persistence.filetransfer.getProgressWithState
-import com.sceyt.chatuikit.presentation.customviews.SceytCircularProgressView
+import com.sceyt.chatuikit.presentation.customviews.CircularProgressView
 import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -146,7 +146,7 @@ abstract class BaseMediaMessageViewHolder(
 
     open val fileContainer: View? = null
 
-    abstract val loadingProgressView: SceytCircularProgressView
+    abstract val loadingProgressView: CircularProgressView
 
     open fun updateState(data: TransferData, isOnBind: Boolean = false) {
         val isTransferring = data.isTransferring()

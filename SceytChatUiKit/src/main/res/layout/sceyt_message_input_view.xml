@@ -113,7 +113,7 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <com.sceyt.chatuikit.presentation.customviews.voicerecorder.SceytRecordedVoicePresenter
+    <com.sceyt.chatuikit.presentation.customviews.voicerecorder.VoiceRecordPresenter
         android:id="@+id/voiceRecordPresenter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

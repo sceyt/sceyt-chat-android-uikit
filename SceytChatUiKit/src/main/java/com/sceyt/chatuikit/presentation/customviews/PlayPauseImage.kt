@@ -7,8 +7,11 @@ import androidx.appcompat.widget.AppCompatImageView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.getString
 
-class SceytCustomPlayPauseImage @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : AppCompatImageView(context, attrs, defStyleAttr) {
+class PlayPauseImage @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : AppCompatImageView(context, attrs, defStyleAttr) {
 
     @SuppressLint("PrivateResource")
     override fun setContentDescription(contentDescription: CharSequence?) {

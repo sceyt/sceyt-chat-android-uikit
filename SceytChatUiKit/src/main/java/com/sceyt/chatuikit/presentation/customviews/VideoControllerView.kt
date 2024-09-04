@@ -18,8 +18,10 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytVideoControllerViewBinding
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 
-class SceytVideoControllerView @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+class VideoControllerView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
     private val binding: SceytVideoControllerViewBinding
     private var playDrawable: Drawable?
@@ -38,18 +40,18 @@ class SceytVideoControllerView @JvmOverloads constructor(
     init {
         binding = SceytVideoControllerViewBinding.inflate(LayoutInflater.from(context), this)
 
-        val a = context.obtainStyledAttributes(attrs, R.styleable.SceytVideoControllerView)
-        showPlayPauseButton = a.getBoolean(R.styleable.SceytVideoControllerView_sceytUiVideoControllerShowPlayPause, showPlayPauseButton)
-        playPauseButtonSize = a.getDimensionPixelSize(R.styleable.SceytVideoControllerView_sceytUiVideoControllerPlayPauseSize, playPauseButtonSize)
-        playDrawable = a.getDrawable(R.styleable.SceytVideoControllerView_sceytUiVideoControllerPauseIcon)
+        val a = context.obtainStyledAttributes(attrs, R.styleable.VideoControllerView)
+        showPlayPauseButton = a.getBoolean(R.styleable.VideoControllerView_sceytUiVideoControllerShowPlayPause, showPlayPauseButton)
+        playPauseButtonSize = a.getDimensionPixelSize(R.styleable.VideoControllerView_sceytUiVideoControllerPlayPauseSize, playPauseButtonSize)
+        playDrawable = a.getDrawable(R.styleable.VideoControllerView_sceytUiVideoControllerPauseIcon)
                 ?: context.getCompatDrawable(R.drawable.sceyt_ic_play)
-        pauseDrawable = a.getDrawable(R.styleable.SceytVideoControllerView_sceytUiVideoControllerPauseIcon)
+        pauseDrawable = a.getDrawable(R.styleable.VideoControllerView_sceytUiVideoControllerPauseIcon)
                 ?: context.getCompatDrawable(R.drawable.sceyt_ic_pause)
-        cornerSize = a.getDimensionPixelSize(R.styleable.SceytVideoControllerView_sceytUiVideoControllerCornerSize, cornerSize)
-        a.getDrawable(R.styleable.SceytVideoControllerView_sceytUiVideoControllerImage)?.let {
+        cornerSize = a.getDimensionPixelSize(R.styleable.VideoControllerView_sceytUiVideoControllerCornerSize, cornerSize)
+        a.getDrawable(R.styleable.VideoControllerView_sceytUiVideoControllerImage)?.let {
             setImageThumb(it)
         }
-        val enablePlayPauseClick = a.getBoolean(R.styleable.SceytVideoControllerView_sceytUiVideoControllerEnablePlayPauseClick, true)
+        val enablePlayPauseClick = a.getBoolean(R.styleable.VideoControllerView_sceytUiVideoControllerEnablePlayPauseClick, true)
         a.recycle()
 
         binding.applyStyle()
