@@ -27,10 +27,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MessagesAdapter(private var messages: SyncArrayList<MessageListItem>,
-                      private val viewHolderFactory: MessageViewHolderFactory,
-                      private val style: MessagesListViewStyle) :
-        RecyclerView.Adapter<BaseMsgViewHolder>(), StickyHeaderInterface {
+class MessagesAdapter(
+        private var messages: SyncArrayList<MessageListItem>,
+        private val viewHolderFactory: MessageViewHolderFactory,
+        private val style: MessagesListViewStyle
+) : RecyclerView.Adapter<BaseMsgViewHolder>(), StickyHeaderInterface {
     private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
     private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
     private val debounceHelper by lazy { DebounceHelper(300) }

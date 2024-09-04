@@ -35,9 +35,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
-class MessagesRV @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : RecyclerView(context, attrs, defStyleAttr) {
-
+class MessagesRV @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : RecyclerView(context, attrs, defStyleAttr) {
     private lateinit var mAdapter: MessagesAdapter
     private var viewHolderFactory = MessageViewHolderFactory(context)
     private var messageSwipeController: MessageSwipeController? = null

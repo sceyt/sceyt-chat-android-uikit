@@ -58,8 +58,8 @@ import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.customviews.voicerecorder.AudioMetadata
 import com.sceyt.chatuikit.presentation.customviews.voicerecorder.RecordingListener
-import com.sceyt.chatuikit.presentation.customviews.voicerecorder.VoiceRecordPresenter
 import com.sceyt.chatuikit.presentation.customviews.voicerecorder.VoiceMessageRecorderView
+import com.sceyt.chatuikit.presentation.customviews.voicerecorder.VoiceRecordPresenter
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
 import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.GalleryMediaPicker
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.InputState.Text
@@ -124,7 +124,7 @@ class MessageInputView @JvmOverloads constructor(
     private var inputState = Voice
     private var disabledInputByGesture: Boolean = false
     private var voiceMessageRecorderView: VoiceMessageRecorderView? = null
-    private var mentionUserContainer: MentionUserContainer? = null
+    private var mentionUsersView: MentionUsersView? = null
     private var inputTextWatcher: TextWatcher? = null
     private var messageInputActionCallback: MessageInputActionCallback? = null
     private val messageToSendHelper by lazy { MessageToSendHelper(context, actionListeners) }
@@ -563,9 +563,9 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     private fun initMentionUsersContainer() {
-        if (mentionUserContainer == null)
-            (parent as? ViewGroup)?.addView(MentionUserContainer(context).apply {
-                mentionUserContainer = initWithMessageInputView(this@MessageInputView).also {
+        if (mentionUsersView == null)
+            (parent as? ViewGroup)?.addView(MentionUsersView(context).apply {
+                mentionUsersView = initWithMessageInputView(this@MessageInputView).also {
                     setUserClickListener {
                         clickListeners.onSelectedUserToMentionClick(it)
                     }
@@ -836,9 +836,9 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     fun setMentionList(data: List<SceytMember>) {
-        if (data.isEmpty() && mentionUserContainer == null) return
+        if (data.isEmpty() && mentionUsersView == null) return
         initMentionUsersContainer()
-        mentionUserContainer?.setMentionList(data.toSet().take(30))
+        mentionUsersView?.setMentionList(data.toSet().take(30))
     }
 
     fun setCustomEditOrReplyMessageFragment(fragment: EditOrReplyMessageFragment, fragmentManager: FragmentManager) {
@@ -857,7 +857,7 @@ class MessageInputView @JvmOverloads constructor(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        mentionUserContainer?.onInputSizeChanged(h)
+        mentionUsersView?.onInputSizeChanged(h)
     }
 
     override fun onSendMsgClick(view: View) {

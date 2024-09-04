@@ -21,7 +21,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.metio
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.metions.UsersAdapter
 import com.sceyt.chatuikit.shared.utils.ViewUtil
 
-class MentionUserContainer @JvmOverloads constructor(
+class MentionUsersView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0
@@ -34,7 +34,7 @@ class MentionUserContainer @JvmOverloads constructor(
     var recyclerView: RecyclerView? = null
         private set
 
-    fun initWithMessageInputView(view: MessageInputView): MentionUserContainer {
+    fun initWithMessageInputView(view: MessageInputView): MentionUsersView {
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         addView(RecyclerView(context).apply {
             layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0).apply {
