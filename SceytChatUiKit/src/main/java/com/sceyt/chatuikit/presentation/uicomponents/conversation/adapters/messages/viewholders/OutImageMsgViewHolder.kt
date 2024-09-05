@@ -39,7 +39,8 @@ class OutImageMsgViewHolder(
         private val messageListeners: MessageClickListeners.ClickListeners?,
         userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, userNameFormatter = userNameFormatter, needMediaDataCallback = needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, style, messageListeners,
+    userNameFormatter = userNameFormatter, needMediaDataCallback = needMediaDataCallback) {
 
     init {
         with(binding) {

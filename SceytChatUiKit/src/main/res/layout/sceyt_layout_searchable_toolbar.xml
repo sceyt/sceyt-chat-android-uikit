@@ -52,7 +52,7 @@
         android:padding="10dp"
         android:singleLine="true"
         android:textColor="@color/sceyt_color_text_primary"
-        android:textColorHint="@color/sceyt_color_hint"
+        android:textColorHint="@color/sceyt_color_text_footnote"
         android:visibility="gone"
         app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toStartOf="@id/icClear"

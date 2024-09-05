@@ -84,7 +84,7 @@
                         android:hint="@string/sceyt_hint_channel_subject"
                         android:maxLines="2"
                         android:textColor="@color/sceyt_color_text_primary"
-                        android:textColorHint="@color/sceyt_color_hint"
+                        android:textColorHint="@color/sceyt_color_text_footnote"
                         android:textSize="@dimen/bigTextSize"
                         app:layout_constraintBottom_toBottomOf="@+id/avatar"
                         app:layout_constraintEnd_toEndOf="parent"
