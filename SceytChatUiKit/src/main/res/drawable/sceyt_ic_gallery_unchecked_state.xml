@@ -5,7 +5,7 @@
     android:viewportHeight="24">
   <path
       android:pathData="M12,12m-11,0a11,11 0,1 1,22 0a11,11 0,1 1,-22 0"
-      android:fillColor="#17191C"
+      android:fillColor="@color/sceyt_color_overlay_background"
       android:fillAlpha="0.2"/>
   <path
       android:strokeWidth="1"
