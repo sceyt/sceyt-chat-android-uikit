@@ -81,7 +81,7 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
                         cornerRadius = dpToPx(30f).toFloat()
                         setStroke(3, getCompatColor(SceytChatUIKit.theme.borderColor))
                     }
-                    setTextColor(getCompatColor(SceytChatUIKit.theme.textOnPrimaryColor))
+                    setTextColor(getCompatColor(SceytChatUIKit.theme.onPrimaryColor))
                 } else {
                     background = GradientDrawable().apply {
                         color = ColorStateList.valueOf(Color.TRANSPARENT)

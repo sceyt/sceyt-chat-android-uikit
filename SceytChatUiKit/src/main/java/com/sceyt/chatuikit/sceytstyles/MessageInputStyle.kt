@@ -73,7 +73,7 @@ data class MessageInputStyle(
 
             val sendVoiceMessageIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputSendVoiceRecordIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_up)?.apply {
-                        mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.textOnPrimaryColor))
+                        mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor))
                     }
 
 

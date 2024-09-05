@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.uicomponents.createchat.createchannel.f
 import android.animation.LayoutTransition
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -190,8 +191,8 @@ class ChannelDetailsFragment : Fragment() {
 
             val file = File(requireContext().cacheDir.path, System.currentTimeMillis().toString())
             val options = UCrop.Options()
-            options.setToolbarColor(requireContext().getCompatColor(R.color.sceyt_color_black))
-            options.setStatusBarColor(requireContext().getCompatColor(R.color.sceyt_color_black))
+            options.setToolbarColor(Color.BLACK)
+            options.setStatusBarColor(Color.BLACK)
             options.setCircleDimmedLayer(true)
             options.setShowCropGrid(false)
             options.setShowCropFrame(false)

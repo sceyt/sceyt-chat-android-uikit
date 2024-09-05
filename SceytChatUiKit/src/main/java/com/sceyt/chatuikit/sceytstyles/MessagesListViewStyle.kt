@@ -92,10 +92,10 @@ data class MessagesListViewStyle(
             val dateSeparatorTextStyle: Int = typedArray.getInt(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextStyle, Typeface.NORMAL)
 
             val dateSeparatorItemBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiDateSeparatorItemBackgroundColor,
-                context.getCompatColor(SceytChatUIKit.theme.overlayBackground2Color))
+                context.getCompatColor(SceytChatUIKit.theme.overlayBackgroundColor))
 
             val dateSeparatorItemTextColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextColor,
-                context.getCompatColor(SceytChatUIKit.theme.textOnPrimaryColor))
+                context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor))
 
             val unreadMessagesSeparatorTextStyle: Int = typedArray.getInt(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorTextStyle, Typeface.NORMAL)
 

@@ -4,6 +4,7 @@ import android.animation.LayoutTransition
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.viewModels
@@ -155,8 +156,8 @@ class SceytCreateGroupActivity : AppCompatActivity() {
 
             val file = File(cacheDir.path, System.currentTimeMillis().toString())
             val options = UCrop.Options()
-            options.setToolbarColor(getCompatColor(R.color.sceyt_color_black))
-            options.setStatusBarColor(getCompatColor(R.color.sceyt_color_black))
+            options.setToolbarColor(Color.BLACK)
+            options.setStatusBarColor(Color.BLACK)
             options.setCircleDimmedLayer(true)
             options.setShowCropGrid(false)
             options.setShowCropFrame(false)

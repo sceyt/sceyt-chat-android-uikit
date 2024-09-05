@@ -152,7 +152,7 @@ data class MessageItemStyle(
             val messageEditedTextStyle: Int = typedArray.getInt(R.styleable.MessagesListView_sceytUiMessageEditedTextStyle, Typeface.ITALIC)
 
             val mediaLoaderColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiMediaLoaderColor,
-                context.getCompatColor(SceytChatUIKit.theme.textOnPrimaryColor))
+                context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor))
 
             val videoDurationIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiVideoDurationIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_video)

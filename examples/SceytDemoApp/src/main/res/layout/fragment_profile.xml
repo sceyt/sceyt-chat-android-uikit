@@ -135,7 +135,7 @@
                     android:maxLines="2"
                     android:paddingVertical="5dp"
                     android:textColor="@color/sceyt_color_text_primary"
-                    android:textColorHint="@color/sceyt_color_hint"
+                    android:textColorHint="@color/sceyt_color_text_footnote"
                     android:textSize="@dimen/bigTextSize"
                     app:layout_constraintBottom_toTopOf="@+id/tvStatus"
                     app:layout_constraintEnd_toEndOf="parent"

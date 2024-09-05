@@ -126,7 +126,7 @@ open class EditOrReplyMessageFragment : Fragment() {
                 val attachment = others[0]
                 when {
                     attachment.type.isEqualsVideoOrImage() -> {
-                        loadImage(style, imageAttachment, attachment.metadata, attachment.filePath)
+                        loadImage(imageAttachment, attachment.metadata, attachment.filePath)
                     }
 
                     attachment.type == AttachmentTypeEnum.Voice.value() -> {
@@ -142,22 +142,25 @@ open class EditOrReplyMessageFragment : Fragment() {
             } else {
                 val attachment = links[0]
                 attachment.linkPreviewDetails?.imageUrl?.let {
-                    loadImage(style, imageAttachment, attachment.metadata, it)
+                    loadImage(imageAttachment, attachment.metadata, it, style.linkAttachmentIcon)
                 } ?: imageAttachment.setImageDrawable(style.linkAttachmentIcon)
             }
         }
     }
 
-    private fun loadImage(style: MessageItemStyle,
-                          imageAttachment: ImageView, metadata: String?,
-                          path: String?, defaultPlaceHolder: Drawable? = null) {
+    private fun loadImage(imageAttachment: ImageView,
+                          metadata: String?,
+                          path: String?,
+                          defaultPlaceHolder: Drawable? = null,
+                          error: Drawable? = null
+    ) {
         val placeHolder = getThumbFromMetadata(metadata)?.toDrawable(requireContext().resources)
             ?.mutate() ?: defaultPlaceHolder
         Glide.with(requireContext())
             .load(path)
             .placeholder(placeHolder)
             .override(100)
-            .error(style.linkAttachmentIcon)
+            .error(error)
             .into(imageAttachment)
     }
 
