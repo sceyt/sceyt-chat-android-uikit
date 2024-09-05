@@ -602,7 +602,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 val maxCount = SceytChatUIKit.config.maxMultiselectMessagesCount
 
                 if (!wasSelected && selectedMessagesMap.size >= maxCount) {
-                    val errorMessage = String.format(messagesListView.getString(R.string.sceyt_rich_max_message_select_count, maxCount.toString()))
+                    val errorMessage = String.format(messagesListView.getString(R.string.sceyt_reach_max_message_select_count, maxCount.toString()))
                     customToastSnackBar(messagesListView, errorMessage)
                     return@setMessageCommandEventListener
                 }
