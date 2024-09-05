@@ -1,6 +1,6 @@
 package com.sceyt.chatuikit.data.models
 
-sealed class PaginationResponse<T> {
+sealed interface PaginationResponse<T> {
 
     /**
      * @param data is items from database.
@@ -16,7 +16,7 @@ sealed class PaginationResponse<T> {
             val hasPrev: Boolean = false,
             val loadType: LoadType = LoadType.LoadNext,
             val query: String = "",
-    ) : PaginationResponse<T>()
+    ) : PaginationResponse<T>
 
     /**
      * @param data is items from server.
@@ -43,11 +43,11 @@ sealed class PaginationResponse<T> {
             val ignoredDb: Boolean,
             val dbResultWasEmpty: Boolean = false,
             val query: String = "",
-    ) : PaginationResponse<T>()
+    ) : PaginationResponse<T>
 
 
     /** Default value */
-    class Nothing<T> : PaginationResponse<T>()
+    class Nothing<T> : PaginationResponse<T>
 
     enum class LoadType {
         LoadPrev, LoadNext, LoadNear, LoadNewest

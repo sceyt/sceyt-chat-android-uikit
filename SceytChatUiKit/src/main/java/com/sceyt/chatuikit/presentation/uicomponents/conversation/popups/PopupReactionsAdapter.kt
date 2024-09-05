@@ -43,7 +43,7 @@ class PopupReactionsAdapter(private var data: List<ReactionItem>,
             val reaction = (item as ReactionItem.Reaction).reaction
             binding.emojiView.setSmileText(reaction.key)
             if (item.reaction.containsSelf)
-                binding.emojiView.setReactionBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSecondary))
+                binding.emojiView.setReactionBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.surface2Color))
             else
                 binding.emojiView.setReactionBackgroundColor(Color.TRANSPARENT)
 
@@ -66,7 +66,7 @@ class PopupReactionsAdapter(private var data: List<ReactionItem>,
 
         private fun SceytItemPopupAddReactionBinding.applyStyle() {
             addEmoji.setColorFilter(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-            addEmoji.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSecondary))
+            addEmoji.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.surface2Color))
         }
     }
 

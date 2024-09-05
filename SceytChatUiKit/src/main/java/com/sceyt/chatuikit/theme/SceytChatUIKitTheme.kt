@@ -17,8 +17,6 @@ data class SceytChatUIKitTheme(
         @ColorRes
         val backgroundColorSecondary: Int = R.color.sceyt_color_background_secondary,
         @ColorRes
-        val backgroundColorTertiary: Int = R.color.sceyt_color_background_tertiary,
-        @ColorRes
         val backgroundColorSections: Int = R.color.sceyt_color_background_sections,
         @ColorRes
         val surface1Color: Int = R.color.sceyt_color_surface_1,
