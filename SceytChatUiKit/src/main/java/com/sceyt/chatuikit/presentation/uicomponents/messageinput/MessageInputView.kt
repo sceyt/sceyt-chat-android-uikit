@@ -426,6 +426,7 @@ class MessageInputView @JvmOverloads constructor(
                 AttachmentChooseType.Photo -> selectFileTypePopupClickListeners.onTakePhotoClick()
                 AttachmentChooseType.Video -> selectFileTypePopupClickListeners.onTakeVideoClick()
                 AttachmentChooseType.File -> selectFileTypePopupClickListeners.onFileClick()
+                AttachmentChooseType.Location -> selectFileTypePopupClickListeners.onLocationClick()
             }
         }.show()
     }
@@ -947,6 +948,10 @@ class MessageInputView @JvmOverloads constructor(
         chooseAttachmentHelper?.chooseMultipleFiles(allowMultiple = true) {
             addAttachment(*it.toTypedArray())
         }
+    }
+
+    override fun onLocationClick() {
+        chooseAttachmentHelper?.openLocationPreview()
     }
 
     override fun onInputStateChanged(sendImage: ImageView, state: InputState) {

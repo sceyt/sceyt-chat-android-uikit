@@ -6,6 +6,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clic
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.SelectFileTypePopupClickListeners.GalleryClickListener
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.SelectFileTypePopupClickListeners.TakePhotoClickListener
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.SelectFileTypePopupClickListeners.TakeVideoClickListener
+import com.sceyt.chatuikit.presentation.uicomponents.messageinput.listeners.clicklisteners.SelectFileTypePopupClickListeners.LocationClickListener
 
 open class SelectFileTypePopupClickListenersImpl(view: MessageInputView) : ClickListeners {
     private var defaultListeners: ClickListeners = view
@@ -13,6 +14,7 @@ open class SelectFileTypePopupClickListenersImpl(view: MessageInputView) : Click
     private var takePhotoClickListener: TakePhotoClickListener? = null
     private var takeVideoClickListener: TakeVideoClickListener? = null
     private var fileClickListener: FileClickListener? = null
+    private var locationClickListener: LocationClickListener? = null
 
 
     override fun onGalleryClick() {
@@ -35,6 +37,11 @@ open class SelectFileTypePopupClickListenersImpl(view: MessageInputView) : Click
         fileClickListener?.onFileClick()
     }
 
+    override fun onLocationClick() {
+        defaultListeners.onLocationClick()
+        locationClickListener?.onLocationClick()
+    }
+
     fun setListener(listener: SelectFileTypePopupClickListeners) {
         when (listener) {
             is ClickListeners -> {
@@ -53,6 +60,9 @@ open class SelectFileTypePopupClickListenersImpl(view: MessageInputView) : Click
             }
             is FileClickListener -> {
                 fileClickListener = listener
+            }
+            is LocationClickListener -> {
+                locationClickListener = listener
             }
         }
     }

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.sceyt.chatuikit.presentation.customviews.CustomToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?android:attr/actionBarSize"
+        android:background="@color/sceyt_color_primary"
+        app:layout_constraintTop_toTopOf="parent"
+        app:sceytUiToolbarTitle="@string/sceyt_location"
+        app:sceytUiToolbarTitleTextColor="@color/sceyt_color_text_primary" />
+
+    <View
+        android:id="@+id/map_fragment"
+        android:background="@color/sceyt_color_gray"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toTopOf="@id/ll_location_info"/>
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/ll_location_info"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        android:background="@color/sceyt_color_primary"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tv_location"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/sceyt_ic_gallery"
+            android:drawablePadding="15dp"
+            android:gravity="center_vertical"
+            android:includeFontPadding="false"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="10dp"
+            android:layout_marginVertical="@dimen/_8sdp"
+            android:textColor="@color/sceyt_color_text_primary"
+            android:textSize="@dimen/_12ssp"
+            android:text="Kiev Institute of Law" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_share_location"
+            style="@style/SceytButtonAppearance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="@dimen/_8sdp"
+            android:layout_marginHorizontal="@dimen/_16sdp"
+            android:text="@string/sceyt_share_location"
+            android:textSize="@dimen/_12ssp"
+            android:textColor="@color/sceyt_color_primary"
+            android:backgroundTint="@color/sceyt_color_accent"
+            android:paddingVertical="12dp"
+            android:layout_gravity="center"
+            app:cornerRadius="8dp" />
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

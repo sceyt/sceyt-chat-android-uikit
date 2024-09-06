@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asFragmentActivity
 import com.sceyt.chatuikit.extensions.checkAndAskPermissions
 import com.sceyt.chatuikit.extensions.copyFile
+import com.sceyt.chatuikit.extensions.gerPermissionsForLocation
 import com.sceyt.chatuikit.extensions.getFileUriWithProvider
 import com.sceyt.chatuikit.extensions.getPermissionsForMangeStorage
 import com.sceyt.chatuikit.extensions.initAttachmentLauncher
@@ -34,6 +35,7 @@ import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.GalleryMediaPicker
 import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.GalleryMediaPicker.Companion.MAX_SELECT_MEDIA_COUNT
+import com.sceyt.chatuikit.presentation.uicomponents.locationpreview.LocationPreviewActivity
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.chatuikit.shared.utils.FileUtil
 import kotlinx.coroutines.CoroutineScope
@@ -49,6 +51,7 @@ class ChooseAttachmentHelper {
     private var requestCameraPermissionLauncher: ActivityResultLauncher<String>? = null
     private var requestVideoCameraPermissionLauncher: ActivityResultLauncher<String>? = null
     private var requestSceytGalleryPermissionLauncher: ActivityResultLauncher<String>? = null
+    private var requestLocationPermissionLauncher: ActivityResultLauncher<String>? = null
     private var takePhotoLauncher: ActivityResultLauncher<Uri>? = null
     private var takeVideoLauncher: ActivityResultLauncher<Uri>? = null
     private var addAttachmentLauncher: ActivityResultLauncher<Intent>? = null
@@ -79,6 +82,10 @@ class ChooseAttachmentHelper {
 
             requestSceytGalleryPermissionLauncher = initPermissionLauncher {
                 onSceytGalleryPermissionResult(it)
+            }
+
+            requestLocationPermissionLauncher = initPermissionLauncher {
+                onLocationPermissionResult(it)
             }
 
             takePhotoLauncher = initCameraLauncher {
@@ -118,6 +125,10 @@ class ChooseAttachmentHelper {
 
             requestSceytGalleryPermissionLauncher = initPermissionLauncher {
                 onSceytGalleryPermissionResult(it)
+            }
+
+            requestLocationPermissionLauncher = initPermissionLauncher {
+                onLocationPermissionResult(it)
             }
 
             takePhotoLauncher = initCameraLauncher {
@@ -172,6 +183,13 @@ class ChooseAttachmentHelper {
         if (context.checkAndAskPermissions(requestSceytGalleryPermissionLauncher, *permissions)) {
             openSceytGalleryPicker(pickerListener, filter = filter, maxSelectCount = maxSelectCount, *selections)
         } else GalleryMediaPicker.pickerListener = pickerListener
+    }
+
+    fun openLocationPreview() {
+        val permissions = gerPermissionsForLocation()
+        if (context.checkAndAskPermissions(requestLocationPermissionLauncher, *permissions)) {
+            LocationPreviewActivity.launchActivity(context)
+        }
     }
 
     private fun onTakePhotoResult(success: Boolean) {
@@ -286,6 +304,14 @@ class ChooseAttachmentHelper {
             openSceytGalleryPicker()
         } else if (context.oneOfPermissionsIgnored(*getPermissionsForMangeStorage()))
             showPermissionDeniedDialog(R.string.sceyt_media_permission_disabled_title, R.string.sceyt_media_permission_disabled_desc)
+    }
+
+    private fun onLocationPermissionResult(isGranted: Boolean) {
+        if (isGranted) {
+            LocationPreviewActivity.launchActivity(context)
+        } else {
+
+        }
     }
 
     private fun openGallery() {
