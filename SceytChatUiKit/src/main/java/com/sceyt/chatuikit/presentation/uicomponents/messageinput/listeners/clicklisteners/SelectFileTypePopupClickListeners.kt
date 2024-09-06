@@ -17,10 +17,15 @@ sealed interface SelectFileTypePopupClickListeners {
         fun onFileClick()
     }
 
+    fun interface LocationClickListener : SelectFileTypePopupClickListeners {
+        fun onLocationClick()
+    }
+
     /** Use this if you want to implement all callbacks */
     interface ClickListeners :
             GalleryClickListener,
             TakePhotoClickListener,
             TakeVideoClickListener,
-            FileClickListener
+            FileClickListener,
+            LocationClickListener
 }

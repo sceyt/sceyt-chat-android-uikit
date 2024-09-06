@@ -39,6 +39,7 @@ truth = "1.4.4"
 ucrop = "2.2.8"
 waveformseekbar = "5.0.2"
 workRuntimeKtx = "2.9.1"
+googleMaps = "19.0.0"
 
 [libraries]
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -85,6 +86,7 @@ truth = { module = "com.google.truth:truth", version.ref = "truth" }
 ucrop = { module = "com.github.yalantis:ucrop", version.ref = "ucrop" }
 waveformSeekBar = { module = "com.github.massoudss:waveformSeekBar", version.ref = "waveformseekbar" }
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+google-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "googleMaps" }
 
 [plugins]
 

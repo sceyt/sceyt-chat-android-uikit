@@ -220,4 +220,6 @@
     <string name="sceyt_waiting_for_network_title">Waiting for network…</string>
     <string name="sceyt_connecting_title">Connecting…</string>
     <string name="sceyt_chats">Chats</string>
+    <string name="sceyt_location">Location</string>
+    <string name="sceyt_share_location">Share location</string>
 </resources>

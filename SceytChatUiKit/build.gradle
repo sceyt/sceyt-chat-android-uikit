@@ -81,6 +81,7 @@ dependencies {
     api libs.emoji.google
     api libs.libphonenumber
     api libs.ucrop
+    api libs.google.maps
 
 
     // Overriding the version of the library

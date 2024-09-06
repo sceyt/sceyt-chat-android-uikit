@@ -55,6 +55,11 @@ class ChooseFileTypeDialog(context: Context) : Dialog(context, R.style.SceytDial
             chooseListener?.invoke(AttachmentChooseType.File)
             dismiss()
         }
+
+        location.setOnClickListener {
+            chooseListener?.invoke(AttachmentChooseType.Location)
+            dismiss()
+        }
     }
 
     fun setChooseListener(listener: (AttachmentChooseType) -> Unit): ChooseFileTypeDialog {

@@ -4,5 +4,6 @@ enum class AttachmentChooseType {
     Gallery,
     Photo,
     Video,
-    File
+    File,
+    Location
 }

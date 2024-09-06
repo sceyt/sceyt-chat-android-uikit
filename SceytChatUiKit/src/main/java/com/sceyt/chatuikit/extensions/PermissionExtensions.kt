@@ -125,3 +125,7 @@ fun getPermissionsForMangeStorage(): Array<String> {
     } else
         arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
 }
+
+fun gerPermissionsForLocation(): Array<String> {
+    return arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+}
