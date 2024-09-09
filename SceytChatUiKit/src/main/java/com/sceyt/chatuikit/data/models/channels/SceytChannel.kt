@@ -59,6 +59,8 @@ data class SceytChannel(
 
     val pinned get() = pinnedAt != null && pinnedAt != 0L
 
+    val autoDeleteEnabled get() = messageRetentionPeriod > 0
+
     @IgnoredOnParcel
     var typingData: ChannelTypingEventData? = null
 
