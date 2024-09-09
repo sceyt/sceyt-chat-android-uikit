@@ -6,6 +6,8 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.presentation.common.SceytDialog
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.AutoDeleteDialog
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.AutoDeleteType
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteNotificationDialog
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.dialogs.MuteTypeEnum
 import java.util.concurrent.TimeUnit
@@ -76,6 +78,18 @@ object ChannelActionConfirmationWithDialog {
                 MuteTypeEnum.MuteForever -> 0L
             }
             action(until)
+        }.show()
+    }
+
+    fun confirmAutoDeleteMessages(context: Context, action: (Long) -> Unit) {
+        AutoDeleteDialog(context).setChooseListener {
+            val period = when (it) {
+                AutoDeleteType.Delete1Day -> TimeUnit.DAYS.toMillis(1)
+                AutoDeleteType.Delete1Week -> TimeUnit.DAYS.toMillis(7)
+                AutoDeleteType.Delete1Month -> TimeUnit.DAYS.toMillis(30)
+                AutoDeleteType.DeleteOff -> 0L
+            }
+            action(period)
         }.show()
     }
 }

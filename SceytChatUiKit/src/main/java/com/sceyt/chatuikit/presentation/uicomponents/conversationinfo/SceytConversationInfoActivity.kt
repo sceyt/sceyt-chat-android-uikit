@@ -155,6 +155,11 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
             onMutedOrUnMutedChannel(it)
         }
 
+        viewModel.autoDeleteLiveData.observe(this) {
+            channel = channel.copy(messageRetentionPeriod = it.messageRetentionPeriod)
+            onMutedOrUnMutedChannel(it)
+        }
+
         viewModel.pinUnpinLiveData.observe(this) {
             channel = channel.copy(pinnedAt = it.pinnedAt)
             onPinnedOrUnPinnedChannel(it)
@@ -282,6 +287,14 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
 
     protected open fun unMuteChannel() {
         viewModel.unMuteChannel(channel.id)
+    }
+
+    protected open fun enableAutoDelete(period: Long) {
+        viewModel.enableAutoDelete(channel.id, period)
+    }
+
+    protected open fun disableAutoDelete() {
+        viewModel.disableAutoDelete(channel.id)
     }
 
     protected open fun addMembers(members: List<SceytMember>) {
@@ -495,6 +508,16 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
         }
     }
 
+    protected open fun onAutoDeleteOnOffClick(sceytChannel: SceytChannel, autoDelete: Boolean) {
+        if (autoDelete.not()) {
+            disableAutoDelete()
+        } else {
+            ChannelActionConfirmationWithDialog.confirmAutoDeleteMessages(this) {
+                enableAutoDelete(it)
+            }
+        }
+    }
+
     protected open fun setPagerAdapter(pagerAdapter: ViewPagerAdapter) {
         binding?.viewPager?.adapter = pagerAdapter
     }
@@ -526,8 +549,8 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
                 when (actionsEnum) {
                     InfoSettingsFragment.ClickActionsEnum.Mute -> onMuteUnMuteClick(this.channel, true)
                     InfoSettingsFragment.ClickActionsEnum.UnMute -> onMuteUnMuteClick(this.channel, false)
-                    InfoSettingsFragment.ClickActionsEnum.AutoDeleteOn -> {}
-                    InfoSettingsFragment.ClickActionsEnum.AutoDeleteOff -> {}
+                    InfoSettingsFragment.ClickActionsEnum.AutoDeleteOn -> onAutoDeleteOnOffClick(this.channel, true)
+                    InfoSettingsFragment.ClickActionsEnum.AutoDeleteOff -> onAutoDeleteOnOffClick(this.channel, false)
                 }
             }
         }

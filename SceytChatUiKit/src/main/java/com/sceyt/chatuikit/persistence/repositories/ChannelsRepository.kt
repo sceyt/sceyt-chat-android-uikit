@@ -32,6 +32,8 @@ interface ChannelsRepository {
     suspend fun blockAndDeleteMember(channelId: Long, userId: String): SceytResponse<SceytChannel>
     suspend fun unMuteChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun muteChannel(channelId: Long, muteUntil: Long): SceytResponse<SceytChannel>
+    suspend fun enableAutoDelete(channelId: Long, period: Long): SceytResponse<SceytChannel>
+    suspend fun disableAutoDelete(channelId: Long): SceytResponse<SceytChannel>
     suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun unpinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>

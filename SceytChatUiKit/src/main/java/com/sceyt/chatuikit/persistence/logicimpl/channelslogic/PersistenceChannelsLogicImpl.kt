@@ -648,6 +648,28 @@ internal class PersistenceChannelsLogicImpl(
         return response
     }
 
+    override suspend fun enableAutoDelete(channelId: Long, period: Long): SceytResponse<SceytChannel> {
+        val response = channelsRepository.enableAutoDelete(channelId, period)
+
+        if (response is SceytResponse.Success) {
+            channelDao.updateAutoDeleteState(channelId, period)
+            channelsCache.updateAutoDeleteState(channelId, period)
+        }
+
+        return response
+    }
+
+    override suspend fun disableAutoDelete(channelId: Long): SceytResponse<SceytChannel> {
+        val response = channelsRepository.disableAutoDelete(channelId)
+
+        if (response is SceytResponse.Success) {
+            channelDao.updateAutoDeleteState(channelId, 0L)
+            channelsCache.updateAutoDeleteState(channelId, 0L)
+        }
+
+        return response
+    }
+
     override suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel> {
         val response = channelsRepository.pinChannel(channelId)
 

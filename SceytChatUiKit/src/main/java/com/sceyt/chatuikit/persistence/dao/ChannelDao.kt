@@ -150,6 +150,9 @@ interface ChannelDao {
     @Query("update channels set muted =:muted, mutedTill =:muteUntil where chat_id =:channelId")
     suspend fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long? = 0)
 
+    @Query("update channels set messageRetentionPeriod =:period where chat_id =:channelId")
+    suspend fun updateAutoDeleteState(channelId: Long, period: Long)
+
     @Query("update channels set pinnedAt =:pinnedAt where chat_id =:channelId")
     suspend fun updatePinState(channelId: Long, pinnedAt: Long?)
 
