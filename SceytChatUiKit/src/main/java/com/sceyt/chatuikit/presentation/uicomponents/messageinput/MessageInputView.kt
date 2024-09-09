@@ -1,6 +1,9 @@
 package com.sceyt.chatuikit.presentation.uicomponents.messageinput
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
@@ -10,6 +13,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.DrawableRes
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isInvisible
@@ -42,6 +46,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.hideSoftInput
+import com.sceyt.chatuikit.extensions.initAttachmentLauncher
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
 import com.sceyt.chatuikit.extensions.setBackgroundTint
@@ -62,6 +67,8 @@ import com.sceyt.chatuikit.presentation.customviews.voicerecorder.VoiceMessageRe
 import com.sceyt.chatuikit.presentation.customviews.voicerecorder.VoiceRecordPresenter
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.dialogs.ChooseFileTypeDialog
 import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.GalleryMediaPicker
+import com.sceyt.chatuikit.presentation.uicomponents.locationpreview.LocationPreviewActivity
+import com.sceyt.chatuikit.presentation.uicomponents.locationpreview.LocationResult
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.InputState.Text
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.InputState.Voice
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.adapters.attachments.AttachmentItem
@@ -118,6 +125,7 @@ class MessageInputView @JvmOverloads constructor(
     private var actionListeners = InputActionsListenerImpl(this)
     private var selectFileTypePopupClickListeners = SelectFileTypePopupClickListenersImpl(this)
     private var chooseAttachmentHelper: ChooseAttachmentHelper? = null
+    private var requestLocationPreviewLauncher: ActivityResultLauncher<Intent>? = null
     private val typingDebounceHelper by lazy { DebounceHelper(100, getScope()) }
     private var typingTimeoutJob: Job? = null
     private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
@@ -158,8 +166,10 @@ class MessageInputView @JvmOverloads constructor(
         binding = SceytMessageInputViewBinding.inflate(LayoutInflater.from(context), this)
         style = MessageInputStyle.Builder(context, attrs).build()
 
-        if (!isInEditMode)
+        if (!isInEditMode) {
             chooseAttachmentHelper = ChooseAttachmentHelper(context.asComponentActivity())
+            initLocationPreviewActivityLauncher()
+        }
 
         init()
     }
@@ -210,6 +220,20 @@ class MessageInputView @JvmOverloads constructor(
                 it.setStyle(style)
                 linkPreviewFragment = it
             })
+        }
+    }
+
+    private fun initLocationPreviewActivityLauncher() {
+        requestLocationPreviewLauncher = context.asComponentActivity().initAttachmentLauncher { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val intent = result.data
+                val locationResult = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent?.getParcelableExtra(LocationPreviewActivity.EXTRA_LOCATION_RESULT, LocationResult::class.java)
+                } else {
+                    intent?.getParcelableExtra(LocationPreviewActivity.EXTRA_LOCATION_RESULT)
+                }
+                // TODO something with location result
+            }
         }
     }
 
@@ -951,7 +975,7 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     override fun onLocationClick() {
-        chooseAttachmentHelper?.openLocationPreview()
+        requestLocationPreviewLauncher?.launch(LocationPreviewActivity.getIntent(context))
     }
 
     override fun onInputStateChanged(sendImage: ImageView, state: InputState) {
