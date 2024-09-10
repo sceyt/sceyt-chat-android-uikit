@@ -6,6 +6,7 @@ import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CallSuper
@@ -114,6 +115,10 @@ open class ChannelViewHolder(
 
                     if (typingStateChanged)
                         setTypingState(channel, binding.lastMessage)
+
+                    if (autoDeleteStateChanged) {
+                        setAutoDeleteState(channel, binding.ivAutoDeleted)
+                    }
                 }
             }
 
@@ -258,6 +263,14 @@ open class ChannelViewHolder(
         }
     }
 
+    open fun setAutoDeleteState(channel: SceytChannel, imageView: ImageView) {
+        imageView.visibility = if (channel.autoDeleteEnabled) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
+    }
+
     open fun setPinState(channel: SceytChannel, pinImage: ImageView) {
         val isPinned = channel.pinned
         pinImage.setImageDrawable(channelStyle.pinIcon)
@@ -367,6 +380,7 @@ open class ChannelViewHolder(
         icMention.backgroundTintList = ColorStateList.valueOf(channelStyle.unreadCountColor)
         onlineStatus.setIndicatorColor(channelStyle.onlineStatusColor)
         viewPinned.setBackgroundColor(channelStyle.pinnedChannelBackgroundColor)
+        ivAutoDeleted.setImageDrawable(channelStyle.autoDeletedChannelIcon)
         dateStatus.buildStyle()
             .setStatusIconSize(channelStyle.statusIconSize)
             .setDateColor(channelStyle.dateTextColor)
