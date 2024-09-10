@@ -862,6 +862,9 @@ internal class PersistenceMessagesLogicImpl(
                 if (response is SceytResponse.Success) {
                     messages = response.data ?: arrayListOf()
                     hasPrev = response.data?.size == messagesLoadSize
+                    if (offset == 0) {
+                        persistenceChannelsLogic.updateLastMessageIfNeeded(channelId, messages.lastOrNull())
+                    }
                     // Check maybe messages was cleared
                     if (offset == 0 && messages.isEmpty()) {
                         messageDao.deleteAllMessagesExceptPending(channelId)
