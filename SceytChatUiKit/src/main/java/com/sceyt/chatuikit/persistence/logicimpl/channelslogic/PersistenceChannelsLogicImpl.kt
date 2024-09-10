@@ -797,6 +797,13 @@ internal class PersistenceChannelsLogicImpl(
         }
     }
 
+    override suspend fun updateLastMessageIfNeeded(channelId: Long, message: SceytMessage?) {
+        if (message?.deliveryStatus != DeliveryStatus.Pending) {
+            channelDao.updateLastMessage(channelId, message?.tid, message?.createdAt)
+            channelsCache.updateLastMessage(channelId, message)
+        }
+    }
+
     override suspend fun setUnreadCount(channelId: Long, count: Int) {
         channelDao.updateUnreadCount(channelId, count)
         channelsCache.updateUnreadCount(channelId, count)
