@@ -69,6 +69,7 @@ import com.sceyt.chatuikit.persistence.mappers.existThumb
 import com.sceyt.chatuikit.persistence.mappers.getLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.isHiddenLinkDetails
 import com.sceyt.chatuikit.persistence.mappers.isLink
+import com.sceyt.chatuikit.persistence.mappers.toAutoDeletedMessageEntities
 import com.sceyt.chatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
@@ -130,16 +131,17 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>,
                                    sendDeliveryMarker: Boolean) = withContext(dispatcherIO) {
+        val channel = data.first
         val message = data.second
         saveMessagesToDb(arrayListOf(message))
 
-        messagesCache.add(data.first.id, message)
+        messagesCache.add(channel.id, message)
         onMessageFlow.tryEmit(data)
         updateMessageLoadRangeOnMessageEvent(message, null)
 
         launch {
             if (message.incoming && sendDeliveryMarker)
-                markMessagesAs(data.first.id, Received, message.id)
+                markMessagesAs(channel.id, Received, message.id)
         }
         return@withContext
     }
@@ -512,6 +514,9 @@ internal class PersistenceMessagesLogicImpl(
 
                     messageDao.upsertMessage(responseMsg.toMessageDb(false))
                     persistenceChannelsLogic.updateLastMessageWithLastRead(channelId, responseMsg)
+                    if (getRetentionPeriodByChannelId(channelId) > 0L) {
+                        checkAndInsertAutoDeleteMessage(responseMsg)
+                    }
                 }
             }
 
@@ -801,6 +806,8 @@ internal class PersistenceMessagesLogicImpl(
         var hasPrev = false
         val messages: List<MessageDb>
 
+        clearOutdatedMessages(channelId)
+
         when (loadType) {
             LoadPrev -> {
                 messages = getPrevMessagesDb(channelId, lastMessageId, offset, limit)
@@ -895,7 +902,6 @@ internal class PersistenceMessagesLogicImpl(
                 }
             }
         }
-
         val updatedMessages = saveMessagesToDb(messages)
         hasDiff = messagesCache.addAll(channelId, updatedMessages, checkDifference = true, checkDiffAndNotifyUpdate = false)
 
@@ -981,6 +987,22 @@ internal class PersistenceMessagesLogicImpl(
         } else list
     }
 
+    private suspend fun getRetentionPeriodByChannelId(channelId: Long): Long {
+        val period = channelCache.get(channelId)?.messageRetentionPeriod ?: persistenceChannelsLogic.getRetentionPeriodByChannelId(channelId)
+        return period
+    }
+
+    private suspend fun checkAndInsertAutoDeleteMessage(vararg messages: SceytMessage) {
+        val filtered = messages.filter { message -> message.autoDeleteAt != null && message.autoDeleteAt > 0 }
+        if (filtered.isEmpty()) return
+        messageDao.insertAutoDeletedMessages(filtered.toAutoDeletedMessageEntities())
+    }
+
+    private suspend fun clearOutdatedMessages(channelId: Long) {
+        val outdatedMessages = messageDao.getOutdatedMessages(channelId, System.currentTimeMillis())
+        messageDao.deleteMessagesById(outdatedMessages.map { message -> message.messageId })
+    }
+
     private suspend fun saveMessagesToDb(list: List<SceytMessage>?,
                                          includeParents: Boolean = true,
                                          unListAll: Boolean = false): List<SceytMessage> {
@@ -1020,7 +1042,7 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         userDao.insertUsers(usersDb.toList())
-
+        checkAndInsertAutoDeleteMessage(*mutableList.toTypedArray())
         return mutableList
     }
 

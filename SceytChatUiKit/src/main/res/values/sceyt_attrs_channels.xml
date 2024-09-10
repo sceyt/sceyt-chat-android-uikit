@@ -33,6 +33,8 @@
         <attr name="sceytUiBodyVideoAttachmentIcon" format="reference" />
         <!-- Drawable of the voice attachment icon -->
         <attr name="sceytUiBodyVoiceAttachmentIcon" format="reference" />
+        <!-- Drawable of the auto delete channel icon -->
+        <attr name="sceytUiAutoDeletedChannelIcon" format="reference" />
         <!-- Drawable of the message delivery indicator -->
         <attr name="sceytUiIndicatorDeliveredIcon" format="reference" />
         <!-- Drawable of the message pending indicator -->

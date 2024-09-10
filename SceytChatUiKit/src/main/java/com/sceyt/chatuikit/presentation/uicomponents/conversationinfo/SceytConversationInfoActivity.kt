@@ -157,7 +157,7 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
 
         viewModel.autoDeleteLiveData.observe(this) {
             channel = channel.copy(messageRetentionPeriod = it.messageRetentionPeriod)
-            onMutedOrUnMutedChannel(it)
+            onAutoDeletedModeOnOrOff(it)
         }
 
         viewModel.pinUnpinLiveData.observe(this) {
@@ -473,6 +473,10 @@ open class SceytConversationInfoActivity : AppCompatActivity(), SceytKoinCompone
     }
 
     protected open fun onMutedOrUnMutedChannel(sceytChannel: SceytChannel) {
+        setChannelSettings(sceytChannel)
+    }
+
+    protected open fun onAutoDeletedModeOnOrOff(sceytChannel: SceytChannel) {
         setChannelSettings(sceytChannel)
     }
 
