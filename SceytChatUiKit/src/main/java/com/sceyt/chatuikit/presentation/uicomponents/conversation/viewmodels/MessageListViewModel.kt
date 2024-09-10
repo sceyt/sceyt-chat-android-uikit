@@ -69,6 +69,7 @@ import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.LoadKeyType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.MessageActionBridge
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.ShowAvatarType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -735,18 +736,20 @@ class MessageListViewModel(
                 var prevMessage = compareMessage
                 if (index > 0)
                     prevMessage = data.getOrNull(index - 1)
+                val nextMessage = data.getOrNull(index +1)
 
                 if (enableDateSeparator && shouldShowDate(message, prevMessage))
                     messageItems.add(MessageListItem.DateSeparatorItem(message.createdAt, message.tid))
 
-                var messageWithData = initMessageInfoData(message, prevMessage, true)
+                var messageWithData = initMessageInfoData(message, prevMessage, nextMessage, true)
                 val isSelected = selectedMessagesMap.containsKey(message.tid)
 
                 if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L
                         && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
 
                     messageWithData = messageWithData.copy(
-                        shouldShowAvatarAndName = messageWithData.incoming && isGroup && showSenderAvatarAndNameIfNeeded,
+                        shouldShowAvatar = messageWithData.incoming && isGroup && showSenderAvatarAndNameIfNeeded,
+                        shouldShowName = messageWithData.incoming && isGroup && showSenderAvatarAndNameIfNeeded,
                         disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded,
                     )
                     if (!ignoreUnreadMessagesSeparator)
@@ -770,13 +773,17 @@ class MessageListViewModel(
 
 
     internal fun initMessageInfoData(sceytMessage: SceytMessage, prevMessage: SceytMessage? = null,
-                                     initNameAndAvatar: Boolean = false): SceytMessage {
+                                     nextMessage: SceytMessage? = null, initNameAndAvatar: Boolean = false): SceytMessage {
+        val showType = shouldShowAvatarOrName(sceytMessage, nextMessage, prevMessage)
         return sceytMessage.copy(
             isGroup = this@MessageListViewModel.isGroup,
             files = sceytMessage.attachments?.map { it.toFileListItem() },
-            shouldShowAvatarAndName = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
-                shouldShowAvatarAndName(sceytMessage, prevMessage)
-            else sceytMessage.shouldShowAvatarAndName,
+            shouldShowName = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
+                showType == ShowAvatarType.Both || showType == ShowAvatarType.OnlyName
+            else sceytMessage.shouldShowName,
+            shouldShowAvatar = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
+                showType == ShowAvatarType.Both || showType == ShowAvatarType.OnlyAvatar
+            else sceytMessage.shouldShowAvatar,
             disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded,
             messageReactions = initReactionsItems(sceytMessage),
         )
@@ -844,14 +851,25 @@ class MessageListViewModel(
         else !DateTimeUtil.isSameDay(sceytMessage.createdAt, prevMessage.createdAt)
     }
 
-    private fun shouldShowAvatarAndName(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
+    private fun shouldShowAvatarOrName(sceytMessage: SceytMessage, nextMessage: SceytMessage?, prevMessage: SceytMessage?): ShowAvatarType {
+        val shouldShowAvatar = shouldShowAvatarAndName(sceytMessage, nextMessage)
+        val shouldShowName = shouldShowAvatarAndName(sceytMessage, prevMessage)
+        return when {
+            shouldShowName && shouldShowAvatar -> ShowAvatarType.Both
+            shouldShowName -> ShowAvatarType.OnlyName
+            shouldShowAvatar -> ShowAvatarType.OnlyAvatar
+            else -> throw IllegalStateException("Unknown avatar position")
+        }
+    }
+
+    private fun shouldShowAvatarAndName(sceytMessage: SceytMessage, secondaryMessage: SceytMessage?): Boolean {
         if (!sceytMessage.incoming) return false
-        return if (prevMessage == null)
+        return if (secondaryMessage == null)
             isGroup
         else {
-            val sameSender = prevMessage.user?.id == sceytMessage.user?.id
-            isGroup && (!sameSender || shouldShowDate(sceytMessage, prevMessage)
-                    || prevMessage.type == MessageTypeEnum.System.value())
+            val sameSender = secondaryMessage.user?.id == sceytMessage.user?.id
+            isGroup && (!sameSender || shouldShowDate(sceytMessage, secondaryMessage)
+                    || secondaryMessage.type == MessageTypeEnum.System.value())
         }
     }
 

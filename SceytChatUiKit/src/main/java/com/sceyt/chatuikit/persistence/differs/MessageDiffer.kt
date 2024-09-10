@@ -12,13 +12,14 @@ data class MessageDiff(
         val replyCountChanged: Boolean,
         val replyContainerChanged: Boolean,
         val reactionsChanged: Boolean,
-        val showAvatarAndNameChanged: Boolean,
+        val showAvatarChanged: Boolean,
+        val showNameChanged: Boolean,
         val filesChanged: Boolean,
         val selectionChanged: Boolean
 ) {
     fun hasDifference(): Boolean {
         return edited || bodyChanged || statusChanged || avatarChanged || nameChanged || replyCountChanged
-                || replyContainerChanged || reactionsChanged || showAvatarAndNameChanged || filesChanged || selectionChanged
+                || replyContainerChanged || reactionsChanged || showNameChanged || showAvatarChanged || filesChanged || selectionChanged
     }
 
     companion object {
@@ -31,7 +32,8 @@ data class MessageDiff(
             replyCountChanged = true,
             replyContainerChanged = true,
             reactionsChanged = true,
-            showAvatarAndNameChanged = true,
+            showAvatarChanged = true,
+            showNameChanged = true,
             filesChanged = true,
             selectionChanged = true
         )
@@ -44,7 +46,8 @@ data class MessageDiff(
             replyCountChanged = false,
             replyContainerChanged = false,
             reactionsChanged = false,
-            showAvatarAndNameChanged = false,
+            showAvatarChanged = true,
+            showNameChanged = true,
             filesChanged = false,
             selectionChanged = false
         )
@@ -53,7 +56,7 @@ data class MessageDiff(
     override fun toString(): String {
         return "edited: $edited, bodyChanged: $bodyChanged, statusChanged: $statusChanged, avatarChanged: $avatarChanged, " +
                 "nameChanged: $nameChanged, replyCountChanged: $replyCountChanged, reactionsChanged: $reactionsChanged, " +
-                "showAvatarAndNameChanged: $showAvatarAndNameChanged, filesChanged: $filesChanged, selectionChanged: $selectionChanged"
+                "showAvatarAndNameChanged: $, filesChanged: $filesChanged, selectionChanged: $selectionChanged"
     }
 }
 
@@ -69,7 +72,9 @@ fun SceytMessage.diff(other: SceytMessage): MessageDiff {
                 || parentMessage?.state != other.parentMessage?.state || parentMessage?.body != other.parentMessage?.body,
         reactionsChanged = messageReactions?.equalsIgnoreNull(other.messageReactions)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
-        showAvatarAndNameChanged = shouldShowAvatarAndName != other.shouldShowAvatarAndName
+        showNameChanged = shouldShowName != other.shouldShowName
+                || disabledShowAvatarAndName != other.disabledShowAvatarAndName,
+        showAvatarChanged = shouldShowAvatar != other.shouldShowAvatar
                 || disabledShowAvatarAndName != other.disabledShowAvatarAndName,
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected
@@ -88,7 +93,8 @@ fun SceytMessage.diffContent(other: SceytMessage): MessageDiff {
                 || parentMessage?.state != other.parentMessage?.state || parentMessage?.body != other.parentMessage?.body,
         reactionsChanged = reactionTotals?.equalsIgnoreNull(other.reactionTotals)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
-        showAvatarAndNameChanged = false,
+        showNameChanged = false,
+        showAvatarChanged = false,
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected
     )

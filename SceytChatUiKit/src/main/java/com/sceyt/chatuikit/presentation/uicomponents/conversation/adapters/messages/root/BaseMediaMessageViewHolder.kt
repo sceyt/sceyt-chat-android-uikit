@@ -93,7 +93,7 @@ abstract class BaseMediaMessageViewHolder(
         val message = requireMessage
         with(fileImage) {
             val defaultMargin = marginLeft
-            if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName || message.body.isNotNullOrBlank()) {
+            if (message.isForwarded || message.isReplied || message.shouldShowAvatar || message.shouldShowName || message.body.isNotNullOrBlank()) {
                 setMargins(defaultMargin, defaultMargin + dpToPx(4f), defaultMargin, defaultMargin)
             } else setMargins(defaultMargin)
         }

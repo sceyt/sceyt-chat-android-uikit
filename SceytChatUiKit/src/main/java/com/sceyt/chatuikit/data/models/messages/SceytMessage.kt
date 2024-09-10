@@ -42,7 +42,8 @@ data class SceytMessage(
         val pendingReactions: List<PendingReactionData>?,
         val bodyAttributes: List<BodyAttribute>?,
     // Local properties
-        val shouldShowAvatarAndName: Boolean = false,
+        val shouldShowAvatar: Boolean = false,
+        val shouldShowName: Boolean = false,
         val disabledShowAvatarAndName: Boolean = false,
         val isGroup: Boolean = false,
         val files: List<FileListItem>? = null,
