@@ -105,7 +105,7 @@ class IncVoiceMsgViewHolder(
             if (diff.edited || diff.statusChanged)
                 setMessageStatusAndDateText(message, messageDate)
 
-            if (diff.avatarChanged || diff.showAvatarAndNameChanged)
+            if (diff.avatarChanged || diff.showAvatarChanged)
                 setMessageUserAvatarAndName(avatar, tvUserName, message)
 
             if (diff.replyCountChanged)
@@ -120,7 +120,7 @@ class IncVoiceMsgViewHolder(
             if (diff.replyContainerChanged)
                 setReplyMessageContainer(message, viewReply, false)
 
-            if (item.message.shouldShowAvatarAndName)
+            if (item.message.shouldShowAvatar)
                 avatar.setOnClickListener {
                     messageListeners.onAvatarClick(it, item)
                 }

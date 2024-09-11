@@ -73,7 +73,7 @@ class IncAttachmentsMsgViewHolder(
                     setMessageStatusAndDateText(message, messageDate)
                 }
 
-                if (diff.avatarChanged || diff.showAvatarAndNameChanged)
+                if (diff.avatarChanged || diff.showAvatarChanged)
                     setMessageUserAvatarAndName(avatar, tvUserName, message)
 
                 if (diff.replyCountChanged)
@@ -88,7 +88,7 @@ class IncAttachmentsMsgViewHolder(
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, binding.viewReply, false)
 
-                if (item.message.shouldShowAvatarAndName)
+                if (item.message.shouldShowAvatar)
                     avatar.setOnClickListener {
                         messageListeners?.onAvatarClick(it, item)
                     }

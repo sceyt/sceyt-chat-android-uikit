@@ -62,7 +62,7 @@ class IncTextMsgViewHolder(
                     setBodyTextPosition(messageBody, messageDate, layoutDetails)
                 }
 
-                if (diff.avatarChanged || diff.showAvatarAndNameChanged)
+                if (diff.avatarChanged || diff.showAvatarChanged)
                     setMessageUserAvatarAndName(avatar, tvUserName, message)
 
                 if (diff.replyCountChanged)
@@ -74,7 +74,7 @@ class IncTextMsgViewHolder(
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, viewReply)
 
-                if (item.message.shouldShowAvatarAndName)
+                if (item.message.shouldShowAvatar)
                     avatar.setOnClickListener {
                         messageListeners?.onAvatarClick(it, item)
                     }

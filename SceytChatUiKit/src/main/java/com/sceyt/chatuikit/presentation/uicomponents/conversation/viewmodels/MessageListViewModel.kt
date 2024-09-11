@@ -858,7 +858,7 @@ class MessageListViewModel(
             shouldShowName && shouldShowAvatar -> ShowAvatarType.Both
             shouldShowName -> ShowAvatarType.OnlyName
             shouldShowAvatar -> ShowAvatarType.OnlyAvatar
-            else -> throw IllegalStateException("Unknown avatar position")
+            else -> ShowAvatarType.NotShow
         }
     }
 

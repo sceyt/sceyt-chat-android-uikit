@@ -33,10 +33,10 @@ class IncDeletedMsgViewHolder(
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
 
-                if (diff.showAvatarAndNameChanged)
+                if (diff.showAvatarChanged)
                     setMessageUserAvatarAndName(avatar, tvUserName, message)
 
-                if (item.message.shouldShowAvatarAndName)
+                if (item.message.shouldShowAvatar)
                     avatar.setOnClickListener {
                         messageListeners?.onAvatarClick(it, item)
                     }

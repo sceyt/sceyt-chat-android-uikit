@@ -98,7 +98,7 @@ class IncFileMsgViewHolder(
             if (diff.edited || diff.statusChanged)
                 setMessageStatusAndDateText(message, messageDate)
 
-            if (diff.avatarChanged || diff.showAvatarAndNameChanged)
+            if (diff.avatarChanged || diff.showAvatarChanged)
                 setMessageUserAvatarAndName(avatar, tvUserName, message)
 
             if (diff.replyCountChanged)
@@ -113,7 +113,7 @@ class IncFileMsgViewHolder(
             if (diff.replyContainerChanged)
                 setReplyMessageContainer(message, binding.viewReply, false)
 
-            if (item.message.shouldShowAvatarAndName)
+            if (item.message.shouldShowAvatar)
                 avatar.setOnClickListener {
                     messageListeners?.onAvatarClick(it, item)
                 }

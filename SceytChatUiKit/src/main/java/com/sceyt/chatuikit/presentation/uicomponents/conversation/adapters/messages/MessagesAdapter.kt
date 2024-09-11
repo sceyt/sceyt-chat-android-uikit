@@ -101,9 +101,9 @@ class MessagesAdapter(
             val prevMessage = prevItem.message
             if (prevItem.message.isGroup) {
                 val prevIndex = messages.indexOf(prevItem)
+                val shouldShowAvatarAndName = prevMessage.incoming && prevMessage.user?.id != newItem.message.user?.id
                 messages[prevIndex] = prevItem.copy(
-                    message = prevMessage.copy(shouldShowAvatarAndName = prevMessage.incoming
-                            && prevMessage.user?.id != newItem.message.user?.id))
+                    message = prevMessage.copy(shouldShowAvatar = shouldShowAvatarAndName, shouldShowName = shouldShowAvatarAndName))
                 notifyItemChanged(prevIndex, Unit)
             }
 
@@ -227,12 +227,12 @@ class MessagesAdapter(
             notifyItemRemoved(index)
             // Hide avatar and name after removing unread separator, if the previous message is from the same user
             messages.getOrNull(index)?.let { item ->
-                if (item is MessageItem && item.message.shouldShowAvatarAndName) {
+                if (item is MessageItem && item.message.shouldShowName && item.message.shouldShowName) {
                     messages.getOrNull(index - 1)?.let { prevItem ->
                         if (prevItem is MessageItem && prevItem.message.user?.id == item.message.user?.id
                                 && !shouldShowDate(item.message, prevItem.message)) {
 
-                            messages[index] = item.copy(message = item.message.copy(shouldShowAvatarAndName = false))
+                            messages[index] = item.copy(message = item.message.copy(shouldShowName = false, shouldShowAvatar = false))
                             notifyItemChanged(index, Unit)
                         }
                     }
