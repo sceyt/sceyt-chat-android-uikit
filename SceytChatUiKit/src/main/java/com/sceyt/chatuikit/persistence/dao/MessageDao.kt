@@ -17,7 +17,6 @@ import com.sceyt.chatuikit.extensions.roundUp
 import com.sceyt.chatuikit.persistence.entity.link.LinkDetailsEntity
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentPayLoadEntity
-import com.sceyt.chatuikit.persistence.entity.messages.AutoDeletedMessageEntity
 import com.sceyt.chatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.entity.messages.MentionUserMessageLink
 import com.sceyt.chatuikit.persistence.entity.messages.MessageDb
@@ -148,12 +147,6 @@ abstract class MessageDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertUserMarker(userMarker: MarkerEntity): Long
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertAutoDeletedMessages(messages: List<AutoDeletedMessageEntity>)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertAutoDeletedMessage(message: AutoDeletedMessageEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
@@ -308,9 +301,6 @@ abstract class MessageDao {
 
     @Query("select message_id as id, tid from messages where channelId =:channelId and message_id <= :id and deliveryStatus in (:status)")
     abstract suspend fun getMessagesTidAndIdLoverThanByStatus(channelId: Long, id: Long, vararg status: DeliveryStatus): List<MessageIdAndTid>
-
-    @Query("select * from AutoDeletedMessages where channelId = :channelId and autoDeleteAt <= :localTime")
-    abstract suspend fun getOutdatedMessages(channelId: Long, localTime: Long): List<AutoDeletedMessageEntity>
 
     @Transaction
     @Query("select * from messages where channelId =:channelId and createdAt >= (select max(createdAt) from messages where channelId =:channelId)")

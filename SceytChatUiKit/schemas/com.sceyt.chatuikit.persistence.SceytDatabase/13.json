@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 13,
-    "identityHash": "a3804cda6153c791f2cba8b621aa9e0a",
+    "identityHash": "f2f29398e6d34316bc5dcc752df2cf63",
     "entities": [
       {
         "tableName": "channels",
@@ -1893,7 +1893,7 @@
         ]
       },
       {
-        "tableName": "AutoDeletedMessages",
+        "tableName": "AutoDeleteMessages",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`messageId` INTEGER NOT NULL, `channelId` INTEGER NOT NULL, `autoDeleteAt` INTEGER NOT NULL, PRIMARY KEY(`messageId`), FOREIGN KEY(`messageId`) REFERENCES `messages`(`message_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
@@ -1940,7 +1940,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a3804cda6153c791f2cba8b621aa9e0a')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f2f29398e6d34316bc5dcc752df2cf63')"
     ]
   }
 }

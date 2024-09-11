@@ -12,8 +12,8 @@ import androidx.room.PrimaryKey
                 onDelete = ForeignKey.CASCADE
         )
 ],
-tableName = "AutoDeletedMessages")
-class AutoDeletedMessageEntity(
+tableName = "AutoDeleteMessages")
+class AutoDeleteMessageEntity(
         @PrimaryKey
         val messageId: Long,
         val channelId: Long,

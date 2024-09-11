@@ -43,6 +43,7 @@ import com.sceyt.chatuikit.extensions.toDeliveryStatus
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.dao.AttachmentDao
+import com.sceyt.chatuikit.persistence.dao.AutoDeleteMessageDao
 import com.sceyt.chatuikit.persistence.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.dao.MessageDao
 import com.sceyt.chatuikit.persistence.dao.PendingMarkerDao
@@ -69,7 +70,7 @@ import com.sceyt.chatuikit.persistence.mappers.existThumb
 import com.sceyt.chatuikit.persistence.mappers.getLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.isHiddenLinkDetails
 import com.sceyt.chatuikit.persistence.mappers.isLink
-import com.sceyt.chatuikit.persistence.mappers.toAutoDeletedMessageEntities
+import com.sceyt.chatuikit.persistence.mappers.toAutoDeleteMessageEntities
 import com.sceyt.chatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
@@ -103,6 +104,7 @@ import org.koin.core.component.inject
 internal class PersistenceMessagesLogicImpl(
         private val context: Context,
         private val messageDao: MessageDao,
+        private val autoDeleteMessageDao: AutoDeleteMessageDao,
         private val rangeDao: LoadRangeDao,
         private val attachmentDao: AttachmentDao,
         private val pendingMarkerDao: PendingMarkerDao,
@@ -998,11 +1000,11 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun checkAndInsertAutoDeleteMessage(vararg messages: SceytMessage) {
         val filtered = messages.filter { message -> message.autoDeleteAt != null && message.autoDeleteAt > 0 }
         if (filtered.isEmpty()) return
-        messageDao.insertAutoDeletedMessages(filtered.toAutoDeletedMessageEntities())
+        autoDeleteMessageDao.insertAutoDeletedMessages(filtered.toAutoDeleteMessageEntities())
     }
 
     private suspend fun clearOutdatedMessages(channelId: Long) {
-        val outdatedMessages = messageDao.getOutdatedMessages(channelId, System.currentTimeMillis())
+        val outdatedMessages = autoDeleteMessageDao.getOutdatedMessages(channelId, System.currentTimeMillis())
         messageDao.deleteMessagesById(outdatedMessages.map { message -> message.messageId })
     }
 
