@@ -533,7 +533,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "autoDelete error: ${e?.message}, code: ${e?.code}")
+                    SceytLog.e(TAG, "enableAutoDelete error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }
@@ -548,7 +548,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
                 override fun onError(e: SceytException?) {
                     continuation.safeResume(SceytResponse.Error(e))
-                    SceytLog.e(TAG, "autoDelete error: ${e?.message}, code: ${e?.code}")
+                    SceytLog.e(TAG, "disableAutoDelete error: ${e?.message}, code: ${e?.code}")
                 }
             })
         }

@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.persistence.converters.ChannelConverter
 import com.sceyt.chatuikit.persistence.converters.ListStringConverter
 import com.sceyt.chatuikit.persistence.converters.MessageConverter
 import com.sceyt.chatuikit.persistence.dao.AttachmentDao
+import com.sceyt.chatuikit.persistence.dao.AutoDeleteMessageDao
 import com.sceyt.chatuikit.persistence.dao.ChannelDao
 import com.sceyt.chatuikit.persistence.dao.ChatUserReactionDao
 import com.sceyt.chatuikit.persistence.dao.DraftMessageDao
@@ -33,7 +34,7 @@ import com.sceyt.chatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.chatuikit.persistence.entity.link.LinkDetailsEntity
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentPayLoadEntity
-import com.sceyt.chatuikit.persistence.entity.messages.AutoDeletedMessageEntity
+import com.sceyt.chatuikit.persistence.entity.messages.AutoDeleteMessageEntity
 import com.sceyt.chatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.chatuikit.persistence.entity.messages.DraftMessageUserLink
 import com.sceyt.chatuikit.persistence.entity.messages.LoadRangeEntity
@@ -68,7 +69,7 @@ import com.sceyt.chatuikit.persistence.entity.pendings.PendingReactionEntity
     LinkDetailsEntity::class,
     LoadRangeEntity::class,
     UserMarkerLink::class,
-    AutoDeletedMessageEntity::class
+    AutoDeleteMessageEntity::class
 ], version = 13, autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
@@ -101,6 +102,7 @@ abstract class SceytDatabase : RoomDatabase() {
     abstract fun linkDao(): LinkDao
     abstract fun loadRangeDao(): LoadRangeDao
     abstract fun markerDao(): MarkerDao
+    abstract fun autoDeleteMessageDao(): AutoDeleteMessageDao
 
     @RenameColumn(tableName = "messages", fromColumnName = "isParentMessage", toColumnName = "unList")
     class AutoMigrationSpec3to4 : AutoMigrationSpec

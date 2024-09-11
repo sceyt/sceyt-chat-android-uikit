@@ -6,7 +6,6 @@ import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
-import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CallSuper
@@ -264,11 +263,7 @@ open class ChannelViewHolder(
     }
 
     open fun setAutoDeleteState(channel: SceytChannel, imageView: ImageView) {
-        imageView.visibility = if (channel.autoDeleteEnabled) {
-            View.VISIBLE
-        } else {
-            View.GONE
-        }
+        imageView.isVisible = channel.autoDeleteEnabled
     }
 
     open fun setPinState(channel: SceytChannel, pinImage: ImageView) {

@@ -7,7 +7,7 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.persistence.entity.messages.AutoDeletedMessageEntity
+import com.sceyt.chatuikit.persistence.entity.messages.AutoDeleteMessageEntity
 import com.sceyt.chatuikit.persistence.entity.messages.DraftMessageDb
 import com.sceyt.chatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.chatuikit.persistence.entity.messages.ForwardingDetailsDb
@@ -298,10 +298,10 @@ fun DraftMessageEntity.toDraftMessage(
     bodyAttributes = styleRanges
 )
 
-fun SceytMessage.toAutoDeletedMessageEntity() = AutoDeletedMessageEntity(
+fun SceytMessage.toAutoDeleteMessageEntity() = AutoDeleteMessageEntity(
     messageId = id,
     channelId = channelId,
     autoDeleteAt = autoDeleteAt ?: 0L
 )
 
-fun List<SceytMessage>.toAutoDeletedMessageEntities() = map { it.toAutoDeletedMessageEntity() }
+fun List<SceytMessage>.toAutoDeleteMessageEntities() = map { it.toAutoDeleteMessageEntity() }
