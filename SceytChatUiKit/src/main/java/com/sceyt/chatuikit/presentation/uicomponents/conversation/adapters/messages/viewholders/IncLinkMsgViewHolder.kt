@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.databinding.SceytItemIncLinkMessageBinding
 import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.ShowAvatarType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseLinkMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -67,7 +68,7 @@ class IncLinkMsgViewHolder(
                     setBodyTextPosition(messageBody, messageDate, layoutDetails)
                 }
 
-                if (diff.avatarChanged || diff.showAvatarChanged)
+                if (diff.avatarChanged || diff.showAvatarTypeChanged)
                     setMessageUserAvatarAndName(avatar, tvUserName, message)
 
                 if (diff.replyCountChanged)
@@ -79,7 +80,7 @@ class IncLinkMsgViewHolder(
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, binding.viewReply)
 
-                if (item.message.shouldShowAvatar)
+                if (item.message.showAvatarType in ShowAvatarType.avatarSupport)
                     avatar.setOnClickListener {
                         messageListeners?.onAvatarClick(it, item)
                     }

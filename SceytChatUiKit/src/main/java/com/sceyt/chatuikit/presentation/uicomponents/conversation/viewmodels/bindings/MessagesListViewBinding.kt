@@ -52,6 +52,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.messageslogic.MessagesCache
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.LoadKeyType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.MessagesListView
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.ShowAvatarType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
@@ -303,7 +304,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
                     val topOffset = messagesListView.getMessagesRecyclerView().getChildTopByPosition(index)
                     val compareMessage = getCompareMessage(LoadNear, data.missingMessages)
-
+                    val lastMessage = messagesListView.getLastMessage()
+                    lastMessage?.message?.let { prevMessage ->
+                        if (prevMessage.user?.id == data.missingMessages.first().user?.id) {
+                            val newShowType = when (prevMessage.showAvatarType) {
+                                ShowAvatarType.OnlyAvatar, ShowAvatarType.OnlyName, ShowAvatarType.NotShow -> ShowAvatarType.NotShow
+                                ShowAvatarType.Both -> ShowAvatarType.OnlyName
+                            }
+                            val modifiedLastMessage = MessageItem(lastMessage.message.copy(showAvatarType = newShowType))
+                            items.removeLast()
+                            items.add(modifiedLastMessage)
+                        }
+                    }
                     items.addAll(mapToMessageListItem(data = data.missingMessages, hasNext = false, hasPrev = false,
                         compareMessage, ignoreUnreadMessagesSeparator = true,
                         enableDateSeparator = messagesListView.style.enableDateSeparator))
@@ -443,7 +455,18 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 return
             }
         }
-
+        val lastMessage = messagesListView.getLastMessage()
+        lastMessage?.message?.let { prevMessage ->
+            if (prevMessage.user?.id == message.user?.id) {
+                val newShowType = when (prevMessage.showAvatarType) {
+                    ShowAvatarType.OnlyAvatar, ShowAvatarType.OnlyName, ShowAvatarType.NotShow -> ShowAvatarType.NotShow
+                    ShowAvatarType.Both -> ShowAvatarType.OnlyName
+                }
+                val modifiedLastMessage = MessageItem(lastMessage.message.copy(showAvatarType = newShowType))
+                messagesListView.forceDeleteMessageByTid(modifiedLastMessage.message.tid)
+                messagesListView.addNewMessages(modifiedLastMessage)
+            }
+        }
         messagesListView.addNewMessages(*initMessage.toTypedArray())
         messagesListView.updateViewState(PageState.Nothing)
     }

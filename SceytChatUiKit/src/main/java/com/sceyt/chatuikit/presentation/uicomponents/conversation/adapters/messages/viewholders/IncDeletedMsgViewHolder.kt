@@ -5,6 +5,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemIncDeletedMessageBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.ShowAvatarType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -33,10 +34,10 @@ class IncDeletedMsgViewHolder(
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
 
-                if (diff.showAvatarChanged)
+                if (diff.showAvatarTypeChanged)
                     setMessageUserAvatarAndName(avatar, tvUserName, message)
 
-                if (item.message.shouldShowAvatar)
+                if (item.message.showAvatarType in ShowAvatarType.avatarSupport)
                     avatar.setOnClickListener {
                         messageListeners?.onAvatarClick(it, item)
                     }

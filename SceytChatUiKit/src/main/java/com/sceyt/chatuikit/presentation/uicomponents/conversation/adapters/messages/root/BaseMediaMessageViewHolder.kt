@@ -26,6 +26,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.PendingDownloa
 import com.sceyt.chatuikit.persistence.filetransfer.getProgressWithState
 import com.sceyt.chatuikit.presentation.customviews.CircularProgressView
 import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.ShowAvatarType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -93,7 +94,7 @@ abstract class BaseMediaMessageViewHolder(
         val message = requireMessage
         with(fileImage) {
             val defaultMargin = marginLeft
-            if (message.isForwarded || message.isReplied || message.shouldShowAvatar || message.shouldShowName || message.body.isNotNullOrBlank()) {
+            if (message.isForwarded || message.isReplied || message.showAvatarType != ShowAvatarType.NotShow || message.body.isNotNullOrBlank()) {
                 setMargins(defaultMargin, defaultMargin + dpToPx(4f), defaultMargin, defaultMargin)
             } else setMargins(defaultMargin)
         }

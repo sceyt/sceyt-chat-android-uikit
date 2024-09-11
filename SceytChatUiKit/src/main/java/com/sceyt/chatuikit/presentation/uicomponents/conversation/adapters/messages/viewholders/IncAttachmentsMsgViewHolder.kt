@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.databinding.SceytItemIncAttachmentsMessageBinding
 import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.filetransfer.NeedMediaInfoData
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.ShowAvatarType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.MessageFilesAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.FilesViewHolderFactory
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -73,7 +74,7 @@ class IncAttachmentsMsgViewHolder(
                     setMessageStatusAndDateText(message, messageDate)
                 }
 
-                if (diff.avatarChanged || diff.showAvatarChanged)
+                if (diff.avatarChanged || diff.showAvatarTypeChanged)
                     setMessageUserAvatarAndName(avatar, tvUserName, message)
 
                 if (diff.replyCountChanged)
@@ -88,7 +89,7 @@ class IncAttachmentsMsgViewHolder(
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, binding.viewReply, false)
 
-                if (item.message.shouldShowAvatar)
+                if (item.message.showAvatarType in ShowAvatarType.avatarSupport)
                     avatar.setOnClickListener {
                         messageListeners?.onAvatarClick(it, item)
                     }

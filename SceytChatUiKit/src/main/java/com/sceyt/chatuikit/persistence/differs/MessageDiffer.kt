@@ -12,14 +12,13 @@ data class MessageDiff(
         val replyCountChanged: Boolean,
         val replyContainerChanged: Boolean,
         val reactionsChanged: Boolean,
-        val showAvatarChanged: Boolean,
-        val showNameChanged: Boolean,
+        val showAvatarTypeChanged: Boolean,
         val filesChanged: Boolean,
         val selectionChanged: Boolean
 ) {
     fun hasDifference(): Boolean {
         return edited || bodyChanged || statusChanged || avatarChanged || nameChanged || replyCountChanged
-                || replyContainerChanged || reactionsChanged || showNameChanged || showAvatarChanged || filesChanged || selectionChanged
+                || replyContainerChanged || reactionsChanged || showAvatarTypeChanged || filesChanged || selectionChanged
     }
 
     companion object {
@@ -32,8 +31,7 @@ data class MessageDiff(
             replyCountChanged = true,
             replyContainerChanged = true,
             reactionsChanged = true,
-            showAvatarChanged = true,
-            showNameChanged = true,
+            showAvatarTypeChanged = true,
             filesChanged = true,
             selectionChanged = true
         )
@@ -46,8 +44,7 @@ data class MessageDiff(
             replyCountChanged = false,
             replyContainerChanged = false,
             reactionsChanged = false,
-            showAvatarChanged = true,
-            showNameChanged = true,
+            showAvatarTypeChanged = true,
             filesChanged = false,
             selectionChanged = false
         )
@@ -72,9 +69,7 @@ fun SceytMessage.diff(other: SceytMessage): MessageDiff {
                 || parentMessage?.state != other.parentMessage?.state || parentMessage?.body != other.parentMessage?.body,
         reactionsChanged = messageReactions?.equalsIgnoreNull(other.messageReactions)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
-        showNameChanged = shouldShowName != other.shouldShowName
-                || disabledShowAvatarAndName != other.disabledShowAvatarAndName,
-        showAvatarChanged = shouldShowAvatar != other.shouldShowAvatar
+        showAvatarTypeChanged = showAvatarType != other.showAvatarType
                 || disabledShowAvatarAndName != other.disabledShowAvatarAndName,
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected
@@ -93,8 +88,7 @@ fun SceytMessage.diffContent(other: SceytMessage): MessageDiff {
                 || parentMessage?.state != other.parentMessage?.state || parentMessage?.body != other.parentMessage?.body,
         reactionsChanged = reactionTotals?.equalsIgnoreNull(other.reactionTotals)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
-        showNameChanged = false,
-        showAvatarChanged = false,
+        showAvatarTypeChanged = false,
         filesChanged = attachments?.size != other.attachments?.size,
         selectionChanged = isSelected != other.isSelected
     )

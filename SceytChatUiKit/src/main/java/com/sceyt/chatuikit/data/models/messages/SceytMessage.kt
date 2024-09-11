@@ -8,6 +8,7 @@ import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chat.models.user.User
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.ShowAvatarType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
 import kotlinx.parcelize.Parcelize
@@ -42,8 +43,7 @@ data class SceytMessage(
         val pendingReactions: List<PendingReactionData>?,
         val bodyAttributes: List<BodyAttribute>?,
     // Local properties
-        val shouldShowAvatar: Boolean = false,
-        val shouldShowName: Boolean = false,
+        val showAvatarType: ShowAvatarType = ShowAvatarType.NotShow,
         val disabledShowAvatarAndName: Boolean = false,
         val isGroup: Boolean = false,
         val files: List<FileListItem>? = null,

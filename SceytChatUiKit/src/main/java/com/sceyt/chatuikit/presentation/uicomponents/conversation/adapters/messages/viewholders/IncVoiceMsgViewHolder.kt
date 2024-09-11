@@ -40,6 +40,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.customviews.CircularProgressView
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.ShowAvatarType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.PlaybackSpeed
@@ -105,7 +106,7 @@ class IncVoiceMsgViewHolder(
             if (diff.edited || diff.statusChanged)
                 setMessageStatusAndDateText(message, messageDate)
 
-            if (diff.avatarChanged || diff.showAvatarChanged)
+            if (diff.avatarChanged || diff.showAvatarTypeChanged)
                 setMessageUserAvatarAndName(avatar, tvUserName, message)
 
             if (diff.replyCountChanged)
@@ -120,7 +121,7 @@ class IncVoiceMsgViewHolder(
             if (diff.replyContainerChanged)
                 setReplyMessageContainer(message, viewReply, false)
 
-            if (item.message.shouldShowAvatar)
+            if (item.message.showAvatarType in ShowAvatarType.avatarSupport)
                 avatar.setOnClickListener {
                     messageListeners.onAvatarClick(it, item)
                 }

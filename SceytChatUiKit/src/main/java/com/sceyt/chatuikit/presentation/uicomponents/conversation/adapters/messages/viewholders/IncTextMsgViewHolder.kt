@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemIncTextMessageBinding
 import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.ShowAvatarType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
@@ -62,7 +63,7 @@ class IncTextMsgViewHolder(
                     setBodyTextPosition(messageBody, messageDate, layoutDetails)
                 }
 
-                if (diff.avatarChanged || diff.showAvatarChanged)
+                if (diff.avatarChanged || diff.showAvatarTypeChanged)
                     setMessageUserAvatarAndName(avatar, tvUserName, message)
 
                 if (diff.replyCountChanged)
@@ -74,7 +75,7 @@ class IncTextMsgViewHolder(
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, viewReply)
 
-                if (item.message.shouldShowAvatar)
+                if (item.message.showAvatarType in ShowAvatarType.avatarSupport)
                     avatar.setOnClickListener {
                         messageListeners?.onAvatarClick(it, item)
                     }

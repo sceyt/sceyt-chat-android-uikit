@@ -14,6 +14,7 @@ import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.ShowAvatarType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.comporators.MessageItemComparator
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.root.BaseMsgViewHolder
@@ -102,8 +103,9 @@ class MessagesAdapter(
             if (prevItem.message.isGroup) {
                 val prevIndex = messages.indexOf(prevItem)
                 val shouldShowAvatarAndName = prevMessage.incoming && prevMessage.user?.id != newItem.message.user?.id
+                val showAvatarType = if (shouldShowAvatarAndName) ShowAvatarType.Both else ShowAvatarType.NotShow
                 messages[prevIndex] = prevItem.copy(
-                    message = prevMessage.copy(shouldShowAvatar = shouldShowAvatarAndName, shouldShowName = shouldShowAvatarAndName))
+                    message = prevMessage.copy(showAvatarType = showAvatarType))
                 notifyItemChanged(prevIndex, Unit)
             }
 
@@ -227,12 +229,12 @@ class MessagesAdapter(
             notifyItemRemoved(index)
             // Hide avatar and name after removing unread separator, if the previous message is from the same user
             messages.getOrNull(index)?.let { item ->
-                if (item is MessageItem && item.message.shouldShowName && item.message.shouldShowName) {
+                if (item is MessageItem && item.message.showAvatarType != ShowAvatarType.NotShow) {
                     messages.getOrNull(index - 1)?.let { prevItem ->
                         if (prevItem is MessageItem && prevItem.message.user?.id == item.message.user?.id
                                 && !shouldShowDate(item.message, prevItem.message)) {
 
-                            messages[index] = item.copy(message = item.message.copy(shouldShowName = false, shouldShowAvatar = false))
+                            messages[index] = item.copy(message = item.message.copy(showAvatarType = ShowAvatarType.NotShow))
                             notifyItemChanged(index, Unit)
                         }
                     }

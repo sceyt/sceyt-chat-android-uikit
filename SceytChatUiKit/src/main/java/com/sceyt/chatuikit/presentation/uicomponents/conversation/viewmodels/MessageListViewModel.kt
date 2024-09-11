@@ -724,7 +724,7 @@ class MessageListViewModel(
             data: List<SceytMessage>?, hasNext: Boolean, hasPrev: Boolean,
             compareMessage: SceytMessage? = null,
             ignoreUnreadMessagesSeparator: Boolean = false,
-            enableDateSeparator: Boolean
+            enableDateSeparator: Boolean,
     ): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
@@ -736,7 +736,7 @@ class MessageListViewModel(
                 var prevMessage = compareMessage
                 if (index > 0)
                     prevMessage = data.getOrNull(index - 1)
-                val nextMessage = data.getOrNull(index +1)
+                val nextMessage = data.getOrNull(index + 1)
 
                 if (enableDateSeparator && shouldShowDate(message, prevMessage))
                     messageItems.add(MessageListItem.DateSeparatorItem(message.createdAt, message.tid))
@@ -747,9 +747,11 @@ class MessageListViewModel(
                 if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L
                         && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
 
+                    val shouldShowUserAvatarAndName = messageWithData.incoming && isGroup && showSenderAvatarAndNameIfNeeded
+                    val showAvatarType = if (shouldShowUserAvatarAndName) ShowAvatarType.Both else ShowAvatarType.NotShow
+
                     messageWithData = messageWithData.copy(
-                        shouldShowAvatar = messageWithData.incoming && isGroup && showSenderAvatarAndNameIfNeeded,
-                        shouldShowName = messageWithData.incoming && isGroup && showSenderAvatarAndNameIfNeeded,
+                        showAvatarType = showAvatarType,
                         disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded,
                     )
                     if (!ignoreUnreadMessagesSeparator)
@@ -757,6 +759,17 @@ class MessageListViewModel(
                             unreadLineMessage = it
                         })
                 }
+
+                /*if (checkPrevMessage && prevMessage?.user?.id == messageWithData.user?.id) {
+                    prevMessage?.let { prev ->
+                        val prevIndex = messageItems.indexOfFirst { it.getItemId() == prev.tid } - 2
+                        if (index > 0) {
+                            val prevMessageWithData = initMessageInfoData(prev, data.getOrNull(prevIndex), messageWithData)
+                            messageItems.removeLast()
+                            messageItems.add(MessageListItem.MessageItem(prevMessageWithData))
+                        }
+                    }
+                }*/
 
                 messageItems.add(MessageListItem.MessageItem(messageWithData.copy(isSelected = isSelected)))
             }
@@ -778,12 +791,7 @@ class MessageListViewModel(
         return sceytMessage.copy(
             isGroup = this@MessageListViewModel.isGroup,
             files = sceytMessage.attachments?.map { it.toFileListItem() },
-            shouldShowName = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
-                showType == ShowAvatarType.Both || showType == ShowAvatarType.OnlyName
-            else sceytMessage.shouldShowName,
-            shouldShowAvatar = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
-                showType == ShowAvatarType.Both || showType == ShowAvatarType.OnlyAvatar
-            else sceytMessage.shouldShowAvatar,
+            showAvatarType = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded) showType else sceytMessage.showAvatarType,
             disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded,
             messageReactions = initReactionsItems(sceytMessage),
         )

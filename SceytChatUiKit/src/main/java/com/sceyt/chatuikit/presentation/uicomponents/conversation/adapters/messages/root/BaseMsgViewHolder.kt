@@ -61,6 +61,7 @@ import com.sceyt.chatuikit.presentation.customviews.AvatarView
 import com.sceyt.chatuikit.presentation.customviews.DateStatusView
 import com.sceyt.chatuikit.presentation.customviews.ToReplyLineView
 import com.sceyt.chatuikit.presentation.extensions.setConversationMessageDateAndStatusIcon
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.ShowAvatarType
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
@@ -335,21 +336,27 @@ abstract class BaseMsgViewHolder(private val view: View,
     protected open fun setMessageUserAvatarAndName(avatarView: AvatarView, tvName: TextView, message: SceytMessage) {
         if (!message.isGroup || message.disabledShowAvatarAndName) return
 
-        when {
-            message.shouldShowName && message.shouldShowAvatar -> {
+        when (message.showAvatarType) {
+            ShowAvatarType.OnlyAvatar -> {
                 setMessageUserAvatar(avatarView, message)
-                setMessageUserAvatar(avatarView, message)
+                tvName.isVisible = false
             }
-            message.shouldShowName -> setMessageUserName(tvName, message)
-            message.shouldShowAvatar -> setMessageUserAvatar(avatarView, message)
-            else -> {
+            ShowAvatarType.OnlyName -> {
+                setMessageUserName(tvName, message)
+                avatarView.isInvisible = true
+            }
+            ShowAvatarType.Both -> {
+                setMessageUserAvatar(avatarView, message)
+                setMessageUserName(tvName, message)
+            }
+            ShowAvatarType.NotShow -> {
                 avatarView.isInvisible = true
                 tvName.isVisible = false
             }
         }
     }
 
-    protected open fun setMessageUserName(tvName: TextView, message: SceytMessage) {
+    private fun setMessageUserName(tvName: TextView, message: SceytMessage) {
         val user = message.user
         val displayName = getSenderName(user)
         if (user?.isDeleted() == true) {
@@ -361,7 +368,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         tvName.isVisible = true
     }
 
-    protected open fun setMessageUserAvatar(avatarView: AvatarView, message: SceytMessage) {
+    private fun setMessageUserAvatar(avatarView: AvatarView, message: SceytMessage) {
         val user = message.user
         if (user?.isDeleted() == true) {
             avatarView.setImageUrl(null, SceytChatUIKit.theme.deletedUserAvatar)
@@ -467,7 +474,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                 if (!it.type.isEqualsVideoOrImage()) {
                     setPadding(ViewUtil.dpToPx(8f))
                 } else {
-                    if (message.isForwarded || message.isReplied || message.shouldShowAvatar || message.shouldShowName || message.body.isNotNullOrBlank())
+                    if (message.isForwarded || message.isReplied || message.showAvatarType != ShowAvatarType.NotShow || message.body.isNotNullOrBlank())
                         setPadding(0, ViewUtil.dpToPx(4f), 0, 0)
                     else setPadding(0)
                 }
