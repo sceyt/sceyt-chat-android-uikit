@@ -196,6 +196,18 @@ class ChannelsCache {
         }
     }
 
+    fun updateAutoDeleteState(channelId: Long, period: Long) {
+        synchronized(lock) {
+            cachedData[channelId]?.let { channel ->
+                val updatedChannel = channel.copy(
+                    messageRetentionPeriod = period
+                )
+                cachedData[channelId] = updatedChannel
+                channelUpdated(updatedChannel, false, ChannelUpdatedType.AutoDeleteState)
+            }
+        }
+    }
+
     fun updatePinState(channelId: Long, pinnedAt: Long?) {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->

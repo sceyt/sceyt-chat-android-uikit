@@ -54,6 +54,9 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val _muteUnMuteLiveData = MutableLiveData<SceytChannel>()
     val muteUnMuteLiveData: LiveData<SceytChannel> = _muteUnMuteLiveData
 
+    private val _autoDeleteLiveData = MutableLiveData<SceytChannel>()
+    val autoDeleteLiveData: LiveData<SceytChannel> = _autoDeleteLiveData
+
     private val _pinUnpinLiveData = MutableLiveData<SceytChannel>()
     val pinUnpinLiveData: LiveData<SceytChannel> = _pinUnpinLiveData
 
@@ -179,6 +182,20 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelInteractor.unMuteChannel(channelId)
             notifyResponseAndPageState(_muteUnMuteLiveData, response)
+        }
+    }
+
+    fun enableAutoDelete(channelId: Long, period: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelInteractor.enableAutoDelete(channelId, period)
+            notifyResponseAndPageState(_autoDeleteLiveData, response)
+        }
+    }
+
+    fun disableAutoDelete(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelInteractor.disableAutoDelete(channelId)
+            notifyResponseAndPageState(_autoDeleteLiveData, response)
         }
     }
 

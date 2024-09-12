@@ -209,6 +209,14 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.unMuteChannel(channelId)
     }
 
+    override suspend fun enableAutoDelete(channelId: Long, period: Long): SceytResponse<SceytChannel> {
+        return channelLogic.enableAutoDelete(channelId, period)
+    }
+
+    override suspend fun disableAutoDelete(channelId: Long): SceytResponse<SceytChannel> {
+        return channelLogic.disableAutoDelete(channelId)
+    }
+
     override suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel> {
         return channelLogic.pinChannel(channelId)
     }

@@ -648,6 +648,28 @@ internal class PersistenceChannelsLogicImpl(
         return response
     }
 
+    override suspend fun enableAutoDelete(channelId: Long, period: Long): SceytResponse<SceytChannel> {
+        val response = channelsRepository.enableAutoDelete(channelId, period)
+
+        if (response is SceytResponse.Success) {
+            channelDao.updateAutoDeleteState(channelId, period)
+            channelsCache.updateAutoDeleteState(channelId, period)
+        }
+
+        return response
+    }
+
+    override suspend fun disableAutoDelete(channelId: Long): SceytResponse<SceytChannel> {
+        val response = channelsRepository.disableAutoDelete(channelId)
+
+        if (response is SceytResponse.Success) {
+            channelDao.updateAutoDeleteState(channelId, 0L)
+            channelsCache.updateAutoDeleteState(channelId, 0L)
+        }
+
+        return response
+    }
+
     override suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel> {
         val response = channelsRepository.pinChannel(channelId)
 
@@ -679,6 +701,10 @@ internal class PersistenceChannelsLogicImpl(
 
     override suspend fun getChannelFromDb(channelId: Long): SceytChannel? {
         return channelDao.getChannelById(channelId)?.toChannel()
+    }
+
+    override suspend fun getRetentionPeriodByChannelId(channelId: Long): Long {
+        return channelDao.getRetentionPeriodByChannelId(channelId)
     }
 
     override suspend fun getDirectChannelFromDb(peerId: String): SceytChannel? {
@@ -768,6 +794,13 @@ internal class PersistenceChannelsLogicImpl(
             }
             channelDao.updateLastMessageWithLastRead(channelId, message.tid, message.id, message.createdAt)
             channelsCache.updateLastMessageWithLastRead(channelId, message)
+        }
+    }
+
+    override suspend fun updateLastMessageIfNeeded(channelId: Long, message: SceytMessage?) {
+        if (message?.deliveryStatus != DeliveryStatus.Pending) {
+            channelDao.updateLastMessage(channelId, message?.tid, message?.createdAt)
+            channelsCache.updateLastMessage(channelId, message)
         }
     }
 

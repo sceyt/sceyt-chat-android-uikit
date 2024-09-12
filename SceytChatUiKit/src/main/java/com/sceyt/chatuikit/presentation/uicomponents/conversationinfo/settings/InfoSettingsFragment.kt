@@ -55,6 +55,8 @@ open class InfoSettingsFragment : Fragment(), ChannelUpdateListener, Conversatio
             onMuteUnMuteClick(channel)
         }
 
+        autoDeleteMessages.setOnlyClickable()
+
         autoDeleteMessages.setOnClickListener {
             onAutoDeleteClick(channel)
         }
@@ -63,9 +65,11 @@ open class InfoSettingsFragment : Fragment(), ChannelUpdateListener, Conversatio
     private fun setChannelDetails(channel: SceytChannel) {
         binding.root.isVisible = channel.checkIsMemberInChannel() && !channel.isSelf()
         binding.notification.isChecked = !channel.muted
+        binding.autoDeleteMessages.isChecked = channel.autoDeleteEnabled
     }
 
     open fun onAutoDeleteClick(channel: SceytChannel) {
+        buttonsListener?.invoke(if (channel.autoDeleteEnabled) ClickActionsEnum.AutoDeleteOff else ClickActionsEnum.AutoDeleteOn)
     }
 
     open fun onMuteUnMuteClick(channel: SceytChannel) {

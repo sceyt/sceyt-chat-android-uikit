@@ -92,6 +92,11 @@
     <string name="sceyt_no_voice_items_yet">No voice items yet</string>
     <string name="sceyt_no_link_items_yet">No link items yet</string>
     <string name="sceyt_history_was_successfully_cleared">History was successfully cleared!</string>
+    <string name="sceyt_auto_delete">Auto-Delete Messages</string>
+    <string name="sceyt_auto_delete_for_1_day">1 day</string>
+    <string name="sceyt_auto_delete_for_1_week">1 week</string>
+    <string name="sceyt_auto_delete_for_1_month">1 month</string>
+    <string name="sceyt_auto_delete_off">Off</string>
     <string name="sceyt_mute_chat">Mute chat:</string>
     <string name="sceyt_mute_for_1_hour">For 1 hour</string>
     <string name="sceyt_mute_for_8_hours">For 8 hours</string>

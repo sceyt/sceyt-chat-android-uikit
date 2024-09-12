@@ -524,6 +524,36 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
+    override suspend fun enableAutoDelete(channelId: Long, period: Long): SceytResponse<SceytChannel> {
+        return suspendCancellableCoroutine { continuation ->
+            ChannelOperator.build(channelId).setMessageRetentionPeriod(period, object : ChannelCallback {
+                override fun onResult(channel: Channel?) {
+                    continuation.safeResume(SceytResponse.Success(channel?.toSceytUiChannel()))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                    SceytLog.e(TAG, "enableAutoDelete error: ${e?.message}, code: ${e?.code}")
+                }
+            })
+        }
+    }
+
+    override suspend fun disableAutoDelete(channelId: Long): SceytResponse<SceytChannel> {
+        return suspendCancellableCoroutine { continuation ->
+            ChannelOperator.build(channelId).setMessageRetentionPeriod(0L, object : ChannelCallback {
+                override fun onResult(channel: Channel?) {
+                    continuation.safeResume(SceytResponse.Success(channel?.toSceytUiChannel()))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                    SceytLog.e(TAG, "disableAutoDelete error: ${e?.message}, code: ${e?.code}")
+                }
+            })
+        }
+    }
+
     override suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel> {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).pin(object : ChannelCallback {

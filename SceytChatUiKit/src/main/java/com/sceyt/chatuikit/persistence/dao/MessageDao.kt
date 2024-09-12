@@ -344,6 +344,9 @@ abstract class MessageDao {
     @Query("delete from messages where tid =:tid")
     abstract fun deleteMessageByTid(tid: Long)
 
+    @Query("delete from messages where message_id in (:ids)")
+    abstract fun deleteMessagesById(ids: List<Long>)
+
     @Query("delete from messages where channelId =:channelId")
     abstract suspend fun deleteAllMessages(channelId: Long)
 

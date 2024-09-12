@@ -20,13 +20,14 @@ data class ChannelDiff(
         val membersChanged: Boolean,
         val metadataUpdated: Boolean,
         val urlUpdated: Boolean,
-        val pinStateChanged: Boolean
+        val pinStateChanged: Boolean,
+        val autoDeleteStateChanged: Boolean
 ) {
     fun hasDifference(): Boolean {
         return subjectChanged || avatarViewChanged || lastMessageChanged || lastMessageStatusChanged ||
                 unreadCountChanged || muteStateChanged || onlineStateChanged || markedUsUnreadChanged ||
                 lastReadMsdChanged || peerBlockedChanged || typingStateChanged || membersChanged ||
-                metadataUpdated || urlUpdated || pinStateChanged
+                metadataUpdated || urlUpdated || pinStateChanged || autoDeleteStateChanged
     }
 
     companion object {
@@ -45,7 +46,8 @@ data class ChannelDiff(
             membersChanged = true,
             metadataUpdated = true,
             urlUpdated = true,
-            pinStateChanged = true
+            pinStateChanged = true,
+            autoDeleteStateChanged = true
         )
 
         val DEFAULT_FALSE = ChannelDiff(
@@ -63,7 +65,8 @@ data class ChannelDiff(
             membersChanged = false,
             metadataUpdated = false,
             urlUpdated = false,
-            pinStateChanged = false
+            pinStateChanged = false,
+            autoDeleteStateChanged = false
         )
     }
 }
@@ -94,6 +97,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
         membersChanged = membersCountChanged || members != other.members,
         metadataUpdated = metadata != other.metadata,
         urlUpdated = uri != other.uri,
-        pinStateChanged = pinnedAt != other.pinnedAt)
+        pinStateChanged = pinnedAt != other.pinnedAt,
+        autoDeleteStateChanged = autoDeleteEnabled != other.autoDeleteEnabled)
 }
 
