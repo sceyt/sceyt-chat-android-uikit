@@ -128,6 +128,9 @@ interface ChannelDao {
     @Query("select count(chat_id) from channels")
     suspend fun getAllChannelsCount(): Int
 
+    @Query("select messageRetentionPeriod from channels where chat_id = :channelId")
+    suspend fun getRetentionPeriodByChannelId(channelId: Long): Long
+
     @Update
     suspend fun updateChannel(channelEntity: ChannelEntity)
 
@@ -149,6 +152,9 @@ interface ChannelDao {
 
     @Query("update channels set muted =:muted, mutedTill =:muteUntil where chat_id =:channelId")
     suspend fun updateMuteState(channelId: Long, muted: Boolean, muteUntil: Long? = 0)
+
+    @Query("update channels set messageRetentionPeriod =:period where chat_id =:channelId")
+    suspend fun updateAutoDeleteState(channelId: Long, period: Long)
 
     @Query("update channels set pinnedAt =:pinnedAt where chat_id =:channelId")
     suspend fun updatePinState(channelId: Long, pinnedAt: Long?)

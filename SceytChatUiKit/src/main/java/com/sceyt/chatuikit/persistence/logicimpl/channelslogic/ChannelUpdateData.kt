@@ -9,5 +9,5 @@ data class ChannelUpdateData(
 )
 
 enum class ChannelUpdatedType {
-    Updated, Presence, LastMessage, ClearedHistory, MuteState, Members, UnreadCount, PinnedAt
+    Updated, Presence, LastMessage, ClearedHistory, MuteState, Members, UnreadCount, PinnedAt, AutoDeleteState
 }

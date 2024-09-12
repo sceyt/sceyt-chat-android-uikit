@@ -63,6 +63,7 @@ data class ChannelListViewStyle(
         val bodyImageAttachmentIcon: Drawable?,
         val bodyVideoAttachmentIcon: Drawable?,
         val bodyVoiceAttachmentIcon: Drawable?,
+        val autoDeletedChannelIcon: Drawable?,
         @LayoutRes val emptyState: Int,
         @LayoutRes val emptySearchState: Int,
         @LayoutRes val loadingState: Int,
@@ -154,6 +155,9 @@ data class ChannelListViewStyle(
                         mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
                     }
 
+            val autoDeletedChannelIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiAutoDeletedChannelIcon)
+                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_auto_deleted_channel)
+
             val statusIconSize = typedArray.getDimensionPixelSize(R.styleable.ChannelListView_sceytUiStatusIndicatorSize,
                 pxToDp(16f).toInt())
 
@@ -207,7 +211,8 @@ data class ChannelListViewStyle(
                 statusIconSize = statusIconSize,
                 channelDateFormat = ChannelDateFormatter(),
                 showChannelActionAsPopup = showChannelActionAsPopup,
-                enableDivider = enableDivider
+                enableDivider = enableDivider,
+                autoDeletedChannelIcon = autoDeletedChannelIcon
             ).let { styleCustomizer.apply(context, it) }
         }
     }

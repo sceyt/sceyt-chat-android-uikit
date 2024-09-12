@@ -114,6 +114,10 @@ open class ChannelViewHolder(
 
                     if (typingStateChanged)
                         setTypingState(channel, binding.lastMessage)
+
+                    if (autoDeleteStateChanged) {
+                        setAutoDeleteState(channel, binding.ivAutoDeleted)
+                    }
                 }
             }
 
@@ -258,6 +262,10 @@ open class ChannelViewHolder(
         }
     }
 
+    open fun setAutoDeleteState(channel: SceytChannel, imageView: ImageView) {
+        imageView.isVisible = channel.autoDeleteEnabled
+    }
+
     open fun setPinState(channel: SceytChannel, pinImage: ImageView) {
         val isPinned = channel.pinned
         pinImage.setImageDrawable(channelStyle.pinIcon)
@@ -367,6 +375,7 @@ open class ChannelViewHolder(
         icMention.backgroundTintList = ColorStateList.valueOf(channelStyle.unreadCountColor)
         onlineStatus.setIndicatorColor(channelStyle.onlineStatusColor)
         viewPinned.setBackgroundColor(channelStyle.pinnedChannelBackgroundColor)
+        ivAutoDeleted.setImageDrawable(channelStyle.autoDeletedChannelIcon)
         dateStatus.buildStyle()
             .setStatusIconSize(channelStyle.statusIconSize)
             .setDateColor(channelStyle.dateTextColor)
