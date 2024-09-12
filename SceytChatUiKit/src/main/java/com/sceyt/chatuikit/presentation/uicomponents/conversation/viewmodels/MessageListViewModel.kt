@@ -31,7 +31,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
-import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.data.toFileListItem
@@ -477,7 +476,7 @@ class MessageListViewModel(
         val proportionFirstId = proportion.first().id
         return@withContext when (loadType) {
             LoadNext, LoadNewest, LoadNear -> {
-                messagesCache.getChannelMessages(conversationId)?.lastOrNull {
+                messagesCache.getSorted(conversationId).lastOrNull {
                     it.id < proportionFirstId
                 }
             }
@@ -725,23 +724,37 @@ class MessageListViewModel(
             compareMessage: SceytMessage? = null,
             ignoreUnreadMessagesSeparator: Boolean = false,
             enableDateSeparator: Boolean,
+            compareMessageUpdater: ((SceytMessage) -> Unit)? = null
     ): List<MessageListItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
 
         val messageItems = arrayListOf<MessageListItem>()
-
         withContext(Dispatchers.Default) {
             var unreadLineMessage: MessageListItem.UnreadMessagesSeparatorItem? = null
+            var prev: SceytMessage? = null
             data.forEachIndexed { index, message ->
                 var prevMessage = compareMessage
-                if (index > 0)
-                    prevMessage = data.getOrNull(index - 1)
-                val nextMessage = data.getOrNull(index + 1)
+                if (index > 0) {
+                    prevMessage = prev
+                }
 
                 if (enableDateSeparator && shouldShowDate(message, prevMessage))
                     messageItems.add(MessageListItem.DateSeparatorItem(message.createdAt, message.tid))
 
-                var messageWithData = initMessageInfoData(message, prevMessage, nextMessage, true)
+                val showAvatarTypes = shouldShowAvatarOrName(message, prevMessage)
+                var messageWithData = initMessageInfoData(message, prevMessage, true, showAvatarTypes.first)
+                val compareMessageWithData = initCompareMessageInfoData(message, prevMessage, true, showAvatarTypes.second)
+                compareMessageWithData?.let {
+                    val compareMessageIndex = messageItems.indexOfFirst { it.getItemId() == compareMessageWithData.tid }
+                    if (compareMessageIndex > 0) {
+                        messageItems.removeAt(compareMessageIndex)
+                        messageItems.add(compareMessageIndex, MessageListItem.MessageItem(compareMessageWithData))
+                    }
+                    if (index == 0) {
+                        compareMessageUpdater?.invoke(compareMessageWithData)
+                    }
+                }
+
                 val isSelected = selectedMessagesMap.containsKey(message.tid)
 
                 if (channel.lastMessage?.incoming == true && pinnedLastReadMessageId != 0L
@@ -770,7 +783,7 @@ class MessageListViewModel(
                         }
                     }
                 }*/
-
+                prev = messageWithData
                 messageItems.add(MessageListItem.MessageItem(messageWithData.copy(isSelected = isSelected)))
             }
 
@@ -786,12 +799,22 @@ class MessageListViewModel(
 
 
     internal fun initMessageInfoData(sceytMessage: SceytMessage, prevMessage: SceytMessage? = null,
-                                     nextMessage: SceytMessage? = null, initNameAndAvatar: Boolean = false): SceytMessage {
-        val showType = shouldShowAvatarOrName(sceytMessage, nextMessage, prevMessage)
+                                     initNameAndAvatar: Boolean = false, showAvatarType: ShowAvatarType? = null): SceytMessage {
         return sceytMessage.copy(
             isGroup = this@MessageListViewModel.isGroup,
             files = sceytMessage.attachments?.map { it.toFileListItem() },
-            showAvatarType = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded) showType else sceytMessage.showAvatarType,
+            showAvatarType = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded) showAvatarType ?: sceytMessage.showAvatarType else sceytMessage.showAvatarType,
+            disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded,
+            messageReactions = initReactionsItems(sceytMessage),
+        )
+    }
+
+    internal fun initCompareMessageInfoData(sceytMessage: SceytMessage, prevMessage: SceytMessage? = null,
+                                            initNameAndAvatar: Boolean = false, showAvatarType: ShowAvatarType): SceytMessage? {
+        return prevMessage?.copy(
+            isGroup = this@MessageListViewModel.isGroup,
+            files = sceytMessage.attachments?.map { it.toFileListItem() },
+            showAvatarType = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded) showAvatarType else sceytMessage.showAvatarType,
             disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded,
             messageReactions = initReactionsItems(sceytMessage),
         )
@@ -859,25 +882,36 @@ class MessageListViewModel(
         else !DateTimeUtil.isSameDay(sceytMessage.createdAt, prevMessage.createdAt)
     }
 
-    private fun shouldShowAvatarOrName(sceytMessage: SceytMessage, nextMessage: SceytMessage?, prevMessage: SceytMessage?): ShowAvatarType {
-        val shouldShowAvatar = shouldShowAvatarAndName(sceytMessage, nextMessage)
-        val shouldShowName = shouldShowAvatarAndName(sceytMessage, prevMessage)
-        return when {
-            shouldShowName && shouldShowAvatar -> ShowAvatarType.Both
-            shouldShowName -> ShowAvatarType.OnlyName
-            shouldShowAvatar -> ShowAvatarType.OnlyAvatar
+    private fun shouldShowAvatarOrName(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Pair<ShowAvatarType, ShowAvatarType> {
+        val shouldShowNameNew = (sceytMessage.user?.id != prevMessage?.user?.id) && sceytMessage.incoming
+        val shouldShowAvatarNew = shouldShowAvatar(sceytMessage, prevMessage)
+        val showTypeNew = when {
+            shouldShowNameNew && shouldShowAvatarNew -> ShowAvatarType.Both
+            shouldShowNameNew -> ShowAvatarType.OnlyName
+            shouldShowAvatarNew -> ShowAvatarType.OnlyAvatar
             else -> ShowAvatarType.NotShow
         }
+
+        val shouldShowNamePrev = prevMessage?.showAvatarType in ShowAvatarType.nameSupport
+        val shouldShowAvatarPrev = (sceytMessage.user?.id != prevMessage?.user?.id)
+        val showTypePrev = when {
+            shouldShowNamePrev && shouldShowAvatarPrev -> ShowAvatarType.Both
+            shouldShowNamePrev -> ShowAvatarType.OnlyName
+            shouldShowAvatarPrev -> ShowAvatarType.OnlyAvatar
+            else -> ShowAvatarType.NotShow
+        }
+        return showTypeNew to showTypePrev
     }
 
-    private fun shouldShowAvatarAndName(sceytMessage: SceytMessage, secondaryMessage: SceytMessage?): Boolean {
+
+    private fun shouldShowAvatar(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
         if (!sceytMessage.incoming) return false
-        return if (secondaryMessage == null)
+        return if (prevMessage == null)
             isGroup
         else {
-            val sameSender = secondaryMessage.user?.id == sceytMessage.user?.id
-            isGroup && (!sameSender || shouldShowDate(sceytMessage, secondaryMessage)
-                    || secondaryMessage.type == MessageTypeEnum.System.value())
+            val sameSender = prevMessage.user?.id == sceytMessage.user?.id
+            isGroup /*&& (shouldShowDate(sceytMessage, prevMessage)
+                    || prevMessage.type == MessageTypeEnum.System.value())*/
         }
     }
 

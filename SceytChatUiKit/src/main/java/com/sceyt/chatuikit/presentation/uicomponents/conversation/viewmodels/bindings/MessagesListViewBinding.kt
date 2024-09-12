@@ -304,24 +304,22 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
                     val topOffset = messagesListView.getMessagesRecyclerView().getChildTopByPosition(index)
                     val compareMessage = getCompareMessage(LoadNear, data.missingMessages)
-                    val lastMessage = messagesListView.getLastMessage()
-                    lastMessage?.message?.let { prevMessage ->
-                        if (prevMessage.user?.id == data.missingMessages.first().user?.id) {
-                            val newShowType = when (prevMessage.showAvatarType) {
-                                ShowAvatarType.OnlyAvatar, ShowAvatarType.OnlyName, ShowAvatarType.NotShow -> ShowAvatarType.NotShow
-                                ShowAvatarType.Both -> ShowAvatarType.OnlyName
-                            }
-                            val modifiedLastMessage = MessageItem(lastMessage.message.copy(showAvatarType = newShowType))
-                            items.removeLast()
-                            items.add(modifiedLastMessage)
-                        }
-                    }
                     items.addAll(mapToMessageListItem(data = data.missingMessages, hasNext = false, hasPrev = false,
                         compareMessage, ignoreUnreadMessagesSeparator = true,
-                        enableDateSeparator = messagesListView.style.enableDateSeparator))
+                        enableDateSeparator = messagesListView.style.enableDateSeparator) { message ->
+                        if (message.user?.id == data.missingMessages.first().user?.id) {
+                            val compareMessageIndex = items.indexOfFirst { listItem -> message.id == listItem.getItemId() }
+                            if (compareMessageIndex > 0) {
+                                items.removeAt(compareMessageIndex)
+                                items.add(compareMessageIndex, MessageItem(message))
+                            }
+                        }
+                    })
 
                     items.sortBy { item -> item.getMessageCreatedAt() }
                     val filtered = mutableSetOf(*items.toTypedArray())
+
+
 
                     withContext(Dispatchers.Main) {
                         messagesListView.setMessagesList(filtered.toList())
@@ -447,24 +445,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             hasNext = false,
             hasPrev = false,
             compareMessage = messagesListView.getLastMessage()?.message,
-            enableDateSeparator = messagesListView.style.enableDateSeparator)
+            enableDateSeparator = messagesListView.style.enableDateSeparator) { compareMessage ->
+            if (compareMessage.user?.id == message.user?.id) {
+                messagesListView.forceDeleteMessageByTid(compareMessage.tid)
+                messagesListView.addNewMessages(MessageItem(compareMessage))
+            }
+        }
 
         if (notFoundMessagesToUpdate.containsKey(message.tid)) {
             notFoundMessagesToUpdate.remove(message.tid)?.let {
                 onMessage(it)
                 return
-            }
-        }
-        val lastMessage = messagesListView.getLastMessage()
-        lastMessage?.message?.let { prevMessage ->
-            if (prevMessage.user?.id == message.user?.id) {
-                val newShowType = when (prevMessage.showAvatarType) {
-                    ShowAvatarType.OnlyAvatar, ShowAvatarType.OnlyName, ShowAvatarType.NotShow -> ShowAvatarType.NotShow
-                    ShowAvatarType.Both -> ShowAvatarType.OnlyName
-                }
-                val modifiedLastMessage = MessageItem(lastMessage.message.copy(showAvatarType = newShowType))
-                messagesListView.forceDeleteMessageByTid(modifiedLastMessage.message.tid)
-                messagesListView.addNewMessages(modifiedLastMessage)
             }
         }
         messagesListView.addNewMessages(*initMessage.toTypedArray())

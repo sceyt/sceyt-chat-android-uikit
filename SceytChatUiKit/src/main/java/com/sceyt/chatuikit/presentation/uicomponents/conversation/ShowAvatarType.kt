@@ -5,5 +5,6 @@ enum class ShowAvatarType {
 
     companion object {
         val avatarSupport = arrayOf(OnlyAvatar, Both)
+        val nameSupport = arrayOf(OnlyName, Both)
     }
 }
