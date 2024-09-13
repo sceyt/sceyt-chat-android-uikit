@@ -199,8 +199,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
             app:sceytUiDateStatusDateTextSize="@dimen/tinyTextSize"
-            app:sceytUiDateStatusFirstStatus="false"
-            app:sceytUiDateStatusStatusIconSize="15.5dp"
+            app:sceytUiDateStatusTrailingIconSize="15.5dp"
             tools:sceytUiDateStatusDateText="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

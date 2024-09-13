@@ -1,15 +1,14 @@
 package com.sceyt.chatuikit.presentation.customviews
 
 import android.content.Context
-import android.content.res.TypedArray
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.os.Build
-import android.support.v4.media.RatingCompat.Style
 import android.text.Layout
 import android.text.Spannable
 import android.text.SpannableStringBuilder
@@ -17,15 +16,14 @@ import android.text.StaticLayout
 import android.text.TextPaint
 import android.text.style.StyleSpan
 import android.util.AttributeSet
+import android.util.Size
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.isRtl
-import kotlin.math.absoluteValue
 import kotlin.math.min
 
 class DateStatusView @JvmOverloads constructor(
@@ -33,240 +31,289 @@ class DateStatusView @JvmOverloads constructor(
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
+    private lateinit var staticLayout: StaticLayout
     private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
-    private lateinit var textBoundsRect: Rect
-    private lateinit var iconBoundsRect: Rect
-    private lateinit var stringBuilder: SpannableStringBuilder
+    private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var dateText = ""
     private var textSize = 30
-    private var statusIconSize = 0
-    private var statusIconMargin = 0
-    private var heightIcon = 0
-    private var widthIcon = 0
-    private var textColor = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
+    private var leadingIconSize = 0
+    private var trailingIconSize = 0
     private var editedText: String = ""
     private var editedTextStyle: Int = Typeface.ITALIC
-    private var statusDrawable: Drawable? = null
-    private var firstStatusIcon = true
-    private var mMargin = 0
-    private var mIconSize = 0
-    private var mMinHeightSize = 0
-    private var isHighlighted = false
+    private var leadingIcon: Drawable? = null
+    private var trailingIcon: Drawable? = null
     private var isEdited = false
     private var ignoreRtl: Boolean = false
-    private lateinit var paddings: IntArray
-    private val showFirstStatus get() = firstStatusIcon or (!ignoreRtl && context.isRtl())
+    private var cornerRadius: Int = 30
+    private var isHighlighted = false
+    private var backgroundRectF: RectF = RectF()
+
+    private var leadingIconRect: Rect = Rect()
+        get() = if (leadingIcon == null) Rect() else field
+
+    private var trailingIconRect: Rect = Rect()
+        get() = if (trailingIcon == null) Rect() else field
+
+    private var leadingIconPadding: Int = 10
+        get() = if (leadingIcon == null) 0 else field
+
+    private var trailingIconPadding: Int = 10
+        get() = if (trailingIcon == null) 0 else field
+
+    private val highlightedStatePaddings by lazy {
+        // left, top, right, bottom
+        intArrayOf(7.dpToPx(), 2.dpToPx(), 5.dpToPx(), 2.dpToPx())
+    }
+
+    @ColorInt
+    private var textColor = Color.BLACK
+
+    @ColorInt
+    private var iconsTintColor: Int = 0
+
+    @ColorInt
+    private var bgColor: Int = 0
+
+    private val isRtl: Boolean
+        get() = context.isRtl()
+
+    private val textHeight: Int
+        get() = if (dateText.isBlank()) 0 else staticLayout.height
 
     init {
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.DateStatusView)
-            statusDrawable = a.getDrawable(R.styleable.DateStatusView_sceytUiDateStatusStatusIcon)?.mutate()
+            bgColor = a.getColor(R.styleable.DateStatusView_sceytUiDateStatusBackgroundColor, 0)
+            cornerRadius = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusBackgroundCornerRadius, cornerRadius)
+            leadingIcon = a.getDrawable(R.styleable.DateStatusView_sceytUiDateStatusLeadingIcon)?.mutate()
+                    ?: leadingIcon
+            trailingIcon = a.getDrawable(R.styleable.DateStatusView_sceytUiDateStatusTrailingIcon)?.mutate()
+                    ?: trailingIcon
+            iconsTintColor = a.getColor(R.styleable.DateStatusView_sceytUiDateStatusIconsTint, iconsTintColor)
             dateText = a.getString(R.styleable.DateStatusView_sceytUiDateStatusDateText)
                     ?: dateText
             textSize = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusDateTextSize, textSize)
             textColor = a.getColor(R.styleable.DateStatusView_sceytUiDateStatusDateTextColor, textColor)
-            statusIconMargin = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusStatusIconMargin, statusIconMargin)
-            statusIconSize = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusStatusIconSize, 0)
-            firstStatusIcon = a.getBoolean(R.styleable.DateStatusView_sceytUiDateStatusFirstStatus, firstStatusIcon)
-            ignoreRtl = a.getBoolean(R.styleable.DateStatusView_sceytUiDateStatusIgnoreRtl, ignoreRtl)
+            leadingIconPadding = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusLeadingIconPadding, leadingIconPadding)
+            trailingIconPadding = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusTrailingIconPadding, trailingIconPadding)
+            leadingIconSize = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusLeadingIconSize, leadingIconSize)
+            trailingIconSize = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusTrailingIconSize, trailingIconSize)
             isHighlighted = a.getBoolean(R.styleable.DateStatusView_sceytUiDateStatusHighlighted, isHighlighted)
-            getPaddingsFromAttr(a)
+            ignoreRtl = a.getBoolean(R.styleable.DateStatusView_sceytUiDateStatusIgnoreRtl, ignoreRtl)
             a.recycle()
         }
         init()
     }
 
-    private fun getPaddingsFromAttr(typedArray: TypedArray) {
-        /** For highlighted state.
-         *  After removing state, need to set initial paddings.*/
-        paddings = IntArray(4)
-        val padding = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_padding, 0)
-        if (padding != 0) {
-            paddings.forEachIndexed { i, _ ->
-                paddings[i] = padding
-            }
-        } else {
-            // padding start
-            paddings[0] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingStart,
-                typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingHorizontal, 0))
-            // padding top
-            paddings[1] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingTop,
-                typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingVertical, 0))
-            // padding end
-            paddings[2] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingEnd,
-                typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingHorizontal, 0))
-            // padding bottom
-            paddings[3] = typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingBottom,
-                typedArray.getDimensionPixelSize(R.styleable.DateStatusView_android_paddingVertical, 0))
-        }
-    }
-
     private fun init() {
         textPaint.color = textColor
         textPaint.textSize = textSize.toFloat()
-        mMargin = statusIconMargin
-        mIconSize = statusIconSize
-        mMinHeightSize = statusIconSize
-        textBoundsRect = Rect()
-        iconBoundsRect = Rect()
+        backgroundPaint.color = bgColor
+        backgroundPaint.style = Paint.Style.FILL
 
         setHighlightedState(isHighlighted)
 
-        checkSizesAndMargins()
-        if (showFirstStatus)
-            measureViewsFirstStatus()
-        else measureViewsFirstText()
-    }
+        initStaticLayout()
 
-    private fun measureViewsFirstText() {
-        val dateTitle = initText(dateText)
-        textPaint.getTextBounds(stringBuilder.toString(), 0, dateTitle.length, textBoundsRect)
+        leadingIcon?.let {
+            leadingIconRect = measureIcon(it, leadingIconSize, textHeight)
+        }
 
-        if (statusDrawable != null) {
-            initStatsIconSize(statusDrawable!!)
-
-            val left = textBoundsRect.right + mMargin - textBoundsRect.left
-            val top = getTopFormIcon()
-            val sizeDiff = getStatusIconWidthHeightDiff()
-            val widthDiff = sizeDiff.first
-            val heightDiff = sizeDiff.second
-
-            iconBoundsRect.set(left + widthDiff, top + heightDiff,
-                left + widthIcon + widthDiff, top + heightIcon + heightDiff)
+        trailingIcon?.let {
+            trailingIconRect = measureIcon(it, trailingIconSize, textHeight)
         }
     }
 
-    private fun measureViewsFirstStatus() {
-        val dateTitle = initText(dateText)
-        textPaint.getTextBounds(dateTitle, 0, dateTitle.length, textBoundsRect)
-
-        statusDrawable?.let {
-            initStatsIconSize(it)
-
-            val left = 0
-            val sizeDiff = getStatusIconWidthHeightDiff()
-            val widthDiff = sizeDiff.first
-            val heightDiff = sizeDiff.second
-
-            val top = getTopFormIcon()
-            iconBoundsRect.set(left + widthDiff, top + heightDiff,
-                left + widthIcon + widthDiff, top + heightIcon + heightDiff)
-        }
-    }
-
-    private fun getStatusIconWidthHeightDiff(): Pair<Int, Int> {
-        val widthDiff = if (widthIcon < heightIcon) (heightIcon - widthIcon) / 2 else 0
-        val heightDiff = if (heightIcon < widthIcon && Integer.max(heightIcon, mIconSize) >= textBoundsRect.height()) (widthIcon - heightIcon) / 2 else 0
-        return Pair(widthDiff, heightDiff)
-    }
-
-    private fun checkSizesAndMargins() {
-        if (statusDrawable == null)
-            mIconSize = 0
-
-        if (statusDrawable == null || dateText.isBlank())
-            mMargin = 0
-    }
-
-    private fun initStatsIconSize(icon: Drawable) {
-        if (mIconSize == 0) {
-            mIconSize = if (textBoundsRect.height() != 0)
-                textBoundsRect.height()
-            else min(icon.intrinsicWidth, icon.intrinsicHeight)
-        }
-
-        if (icon.intrinsicWidth > icon.intrinsicHeight) {
-            widthIcon = min(mIconSize, Integer.max(mIconSize, icon.intrinsicWidth))
-            heightIcon = widthIcon * icon.intrinsicHeight / icon.intrinsicWidth
-        } else {
-            heightIcon = min(mIconSize, Integer.max(mIconSize, icon.intrinsicHeight))
-            widthIcon = heightIcon * icon.intrinsicWidth / icon.intrinsicHeight
-        }
-    }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if (showFirstStatus) {
-            //Draw status icon
-            canvas.translate(paddingStart.toFloat(), paddingTop.toFloat())
-            statusDrawable?.let {
-                it.bounds = iconBoundsRect
-                it.draw(canvas)
+
+        if (bgColor != 0)
+            drawBackground(canvas)
+
+        if (isRtl && !ignoreRtl) {
+            // Apply paddings
+            canvas.translate(realPaddingEnd.toFloat(), realPaddingTop.toFloat())
+            // Draw trailing icon
+            trailingIcon?.let { drawable ->
+                drawTrailingIcon(canvas, drawable)
+                // Move canvas to the end of the icon
+                canvas.translate(trailingIconRect.width() + trailingIconPadding.toFloat(), 0f)
             }
-            //Draw text
-            initText(dateText)
-            val staticLayout = getStaticLayout()
-            canvas.translate((Integer.max(iconBoundsRect.right, mIconSize) + mMargin).toFloat(),
-                ((height + paddingTop - paddingBottom) - staticLayout.height) / 2f - paddingTop.toFloat())
-            staticLayout.draw(canvas)
+
+            // Draw text
+            drawText(canvas)
+            // Move canvas to the end of the text
+            canvas.translate(staticLayout.width.toFloat() + leadingIconPadding.toFloat(), 0f)
+
+            // Draw leading icon
+            leadingIcon?.let { drawable ->
+                drawLeadingIcon(canvas, drawable)
+            }
         } else {
-            //Draw text
-            initText(dateText)
-            val staticLayout = getStaticLayout()
-            canvas.save()
-            canvas.translate(paddingStart.toFloat(), ((height + paddingTop - paddingBottom) - staticLayout.height) / 2f)
-            staticLayout.draw(canvas)
-            canvas.restore()
-            canvas.translate(paddingStart.toFloat(), paddingTop.toFloat())
-            //Draw status icon
-            statusDrawable?.let {
-                it.bounds = iconBoundsRect
-                it.draw(canvas)
+            // Apply paddings
+            canvas.translate(realPaddingStart.toFloat(), realPaddingTop.toFloat())
+            // Draw leading icon
+            leadingIcon?.let { drawable ->
+                drawLeadingIcon(canvas, drawable)
+                // Move canvas to the end of the icon
+                canvas.translate(leadingIconRect.width() + leadingIconPadding.toFloat(), 0f)
             }
+
+            // Draw text
+            drawText(canvas)
+            // Move canvas to the end of the text
+            canvas.translate(staticLayout.width.toFloat() + trailingIconPadding.toFloat(), 0f)
+
+            // Draw trailing icon
+            trailingIcon?.let { drawable ->
+                drawTrailingIcon(canvas, drawable)
+            }
+        }
+    }
+
+    private fun drawBackground(canvas: Canvas) {
+        backgroundRectF.set(0f, 0f, width.toFloat(), height.toFloat())
+        canvas.drawRoundRect(
+            backgroundRectF,
+            cornerRadius.toFloat(),
+            cornerRadius.toFloat(),
+            backgroundPaint
+        )
+    }
+
+    private fun drawLeadingIcon(canvas: Canvas, icon: Drawable) {
+        canvas.save()
+        val dyIcon = (heightWithoutPaddingVertical - leadingIconRect.height()) / 2f
+        canvas.translate(0f, dyIcon)
+        icon.bounds = leadingIconRect
+        if (iconsTintColor != 0)
+            icon.setTint(iconsTintColor)
+
+        icon.draw(canvas)
+        canvas.restore()
+    }
+
+    private fun drawText(canvas: Canvas) {
+        val dyText = (heightWithoutPaddingVertical - staticLayout.height) / 2f
+        canvas.save()
+        canvas.translate(0f, dyText)
+        staticLayout.draw(canvas)
+        canvas.restore()
+    }
+
+    private fun drawTrailingIcon(canvas: Canvas, icon: Drawable) {
+        canvas.save()
+        val dyIcon = (heightWithoutPaddingVertical - trailingIconRect.height()) / 2f
+        canvas.translate(0f, dyIcon)
+        icon.bounds = trailingIconRect
+        if (iconsTintColor != 0)
+            icon.setTint(iconsTintColor)
+
+        icon.draw(canvas)
+        canvas.restore()
+    }
+
+    private fun initStaticLayout() {
+        val dateTitle = initText(dateText)
+        staticLayout = getStaticLayout(dateTitle, textPaint)
+    }
+
+    private fun measureIcon(icon: Drawable, size: Int, textHeight: Int): Rect {
+        val iconSize = initIconSizeDependText(icon, size, textHeight)
+
+        val sizeDiff = getStatusIconWidthHeightDiff(iconSize)
+        val widthDiff = sizeDiff.first
+        val heightDiff = sizeDiff.second
+
+        val rect = Rect(widthDiff, heightDiff,
+            iconSize.width + widthDiff, iconSize.height + heightDiff)
+
+        return rect
+    }
+
+    private fun getStatusIconWidthHeightDiff(iconSize: Size): Pair<Int, Int> {
+        val (widthIcon, heightIcon) = Pair(iconSize.width, iconSize.height)
+        val widthDiff = if (widthIcon < heightIcon)
+            (heightIcon - widthIcon) / 2 else 0
+        val heightDiff = if (heightIcon in textHeight..<widthIcon)
+            (widthIcon - heightIcon) / 2 else 0
+        return Pair(widthDiff, heightDiff)
+    }
+
+    private fun initIconSizeDependText(icon: Drawable, size: Int, textHeight: Int = 0): Size {
+        var iconSize: Int = size
+        if (size == 0) {
+            iconSize = if (textHeight != 0)
+                textHeight
+            else min(icon.intrinsicWidth, icon.intrinsicHeight)
+        }
+        return if (icon.intrinsicWidth > icon.intrinsicHeight) {
+            val widthIcon = min(iconSize, Integer.max(iconSize, icon.intrinsicWidth))
+            val heightIcon = widthIcon * icon.intrinsicHeight / icon.intrinsicWidth
+            Size(widthIcon, heightIcon)
+        } else {
+            val heightIcon = min(iconSize, Integer.max(iconSize, icon.intrinsicHeight))
+            val widthIcon = heightIcon * icon.intrinsicWidth / icon.intrinsicHeight
+            Size(widthIcon, heightIcon)
         }
     }
 
     @Suppress("DEPRECATION")
-    private fun getStaticLayout(): StaticLayout {
+    private fun getStaticLayout(stringBuilder: SpannableStringBuilder, textPaint: TextPaint): StaticLayout {
         val textWidth = textPaint.measureText(stringBuilder.toString()).toInt()
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            StaticLayout.Builder.obtain(stringBuilder, 0, stringBuilder.length, textPaint, textWidth)
+            StaticLayout.Builder
+                .obtain(stringBuilder, 0, stringBuilder.length, textPaint, textWidth)
                 .setAlignment(Layout.Alignment.ALIGN_NORMAL)
                 .setLineSpacing(0f, 1f)
-                .setIncludePad(false).build()
-        } else StaticLayout(stringBuilder, textPaint, textWidth, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
-    }
-
-    /** For center vertical text date when icon is bigger */
-    private fun getTopFormText(): Int {
-        val realHeight = Integer.max(heightIcon, mMinHeightSize)
-        return if (textBoundsRect.height() < realHeight)
-            (realHeight - (textBoundsRect.top.absoluteValue)) / 2
-        else 0
-    }
-
-    /** For center vertical status icon when text height is bigger*/
-    private fun getTopFormIcon(): Int {
-        return if (Integer.max(heightIcon, mIconSize) < textBoundsRect.height()) {
-            (textBoundsRect.height() - heightIcon) / 2
-        } else 0
+                .setIncludePad(false)
+                .build()
+        } else StaticLayout(stringBuilder, textPaint, textWidth,
+            Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
     }
 
     private fun setHighlightedState(highlighted: Boolean) {
         if (highlighted) {
+            setPadding(7.dpToPx(), 2.dpToPx(), 5.dpToPx(), 2.dpToPx())
             textPaint.color = Color.WHITE
-            background = context.getCompatDrawable(R.drawable.sceyt_date_transparent_background)
+            bgColor = context.getCompatColor(R.color.sceyt_color_overlay_background)
         } else {
             textPaint.color = textColor
             background = null
-            setPadding(paddings[0], paddings[1], paddings[2], paddings[3])
         }
     }
 
-    private fun initText(text: String): String {
+    private fun initText(text: String): SpannableStringBuilder {
         return if (isEdited) {
             val str = SpannableStringBuilder("$editedText  $text")
             str.setSpan(StyleSpan(editedTextStyle), 0, editedText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            stringBuilder = str
-            str.toString()
-        } else {
-            stringBuilder = SpannableStringBuilder(text)
-            text
-        }
+            str
+        } else SpannableStringBuilder(text)
     }
 
-    fun setStatusIconSize(size: Int) {
-        statusIconSize = size
+    private val realPaddingStart
+        get() = if (isHighlighted && paddingStart == 0)
+            highlightedStatePaddings[0] else paddingStart
+
+    private val realPaddingEnd
+        get() = if (isHighlighted && paddingEnd == 0)
+            highlightedStatePaddings[2] else paddingEnd
+
+    private val realPaddingTop
+        get() = if (isHighlighted && paddingTop == 0)
+            highlightedStatePaddings[1] else paddingTop
+
+    private val realPaddingBottom
+        get() = if (isHighlighted && paddingBottom == 0)
+            highlightedStatePaddings[3] else paddingBottom
+
+    private val heightWithoutPaddingVertical
+        get() = height - realPaddingBottom - realPaddingTop
+
+    fun setIconsSize(size: Int) {
+        leadingIconSize = size
+        trailingIconSize = size
         init()
         requestLayout()
         invalidate()
@@ -280,29 +327,39 @@ class DateStatusView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun setStatusIcon(drawable: Drawable?, ignoreHighlight: Boolean = false) {
-        var statusIcon = drawable
-        if (isHighlighted && !ignoreHighlight)
-            statusIcon = drawable?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
-
-        statusDrawable = statusIcon
+    fun setIcons(leadingIcon: Drawable? = null,
+                 trailingIcon: Drawable? = null,
+                 ignoreHighlight: Boolean = false) {
+        var leading = leadingIcon
+        var trailing = trailingIcon
+        if (isHighlighted && !ignoreHighlight) {
+            leading = leadingIcon?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
+            trailing = trailingIcon?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
+        }
+        this.leadingIcon = leading
+        this.trailingIcon = trailing
         init()
         requestLayout()
         invalidate()
     }
 
     fun setDateAndStatusIcon(text: String,
-                             drawable: Drawable?,
-                             edited: Boolean,
+                             leadingIcon: Drawable? = null,
+                             trailingIcon: Drawable? = null,
+                             edited: Boolean = false,
                              textColor: Int = this.textColor,
                              editedText: String = this.editedText,
                              editedTextStyle: Int = this.editedTextStyle,
                              ignoreHighlight: Boolean = false) {
-        var statusIcon = drawable
-        if (isHighlighted && !ignoreHighlight)
-            statusIcon = drawable?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
+        var leading = leadingIcon
+        var trailing = trailingIcon
+        if (isHighlighted && !ignoreHighlight) {
+            leading = leadingIcon?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
+            trailing = trailingIcon?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
+        }
 
-        statusDrawable = statusIcon
+        this.leadingIcon = leading
+        this.trailingIcon = trailing
         dateText = text
         isEdited = edited
         this.textColor = textColor
@@ -335,23 +392,54 @@ class DateStatusView @JvmOverloads constructor(
         invalidate()
     }
 
+    fun setEdited(edited: Boolean) {
+        isEdited = edited
+        setDateText(dateText, isEdited)
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val iconsPadding = leadingIconPadding + trailingIconPadding
+        val width = staticLayout.width +
+                leadingIconRect.width() +
+                trailingIconRect.width() +
+                iconsPadding +
+                realPaddingStart + realPaddingEnd
+
+        val leadingIconHeight = leadingIconRect.height()
+        val trailingIconHeight = trailingIconRect.height()
+        val maxIconHeight = Integer.max(leadingIconHeight, trailingIconHeight)
+        val height = staticLayout.height.coerceAtLeast(maxIconHeight) + realPaddingTop + realPaddingBottom
+        setMeasuredDimension(width, height)
+    }
+
     inner class BuildStyle {
-        private var statusIconSize: Int = this@DateStatusView.statusIconSize
-        private var statusIcon: Drawable? = null
+        private var leadingIconSize: Int = this@DateStatusView.leadingIconSize
+        private var trailingIconSize: Int = this@DateStatusView.trailingIconSize
+        private var leadingIcon: Drawable? = this@DateStatusView.leadingIcon
+        private var trailingIcon: Drawable? = this@DateStatusView.trailingIcon
         private var dateText: String = ""
         private var dateTextColor: Int = this@DateStatusView.textColor
         private var isEdited: Boolean = this@DateStatusView.isEdited
         private var editedText: String = this@DateStatusView.editedText
         private var editedTextStyle: Int = this@DateStatusView.editedTextStyle
-        private var ignoreHighlight: Boolean = false
 
-        fun setStatusIconSize(size: Int): BuildStyle {
-            statusIconSize = size
+        fun setLeadingIcon(drawable: Drawable?): BuildStyle {
+            leadingIcon = drawable
             return this
         }
 
-        fun setStatusIcon(drawable: Drawable?): BuildStyle {
-            statusIcon = drawable
+        fun setTrailingIcon(drawable: Drawable?): BuildStyle {
+            trailingIcon = drawable
+            return this
+        }
+
+        fun setLeadingIconSize(size: Int): BuildStyle {
+            leadingIconSize = size
+            return this
+        }
+
+        fun setTrailingIconSize(size: Int): BuildStyle {
+            trailingIconSize = size
             return this
         }
 
@@ -380,14 +468,16 @@ class DateStatusView @JvmOverloads constructor(
             return this
         }
 
-        fun setEditedTextStyle(@Style style: Int): BuildStyle {
+        fun setEditedTextStyle(style: Int): BuildStyle {
             editedTextStyle = style
             return this
         }
 
         fun build() {
-            this@DateStatusView.statusIconSize = statusIconSize
-            this@DateStatusView.statusDrawable = statusIcon?.mutate()
+            this@DateStatusView.leadingIconSize = leadingIconSize
+            this@DateStatusView.trailingIconSize = trailingIconSize
+            this@DateStatusView.leadingIcon = leadingIcon?.mutate()
+            this@DateStatusView.trailingIcon = trailingIcon?.mutate()
             this@DateStatusView.textColor = dateTextColor
             this@DateStatusView.editedText = editedText
             this@DateStatusView.isEdited = isEdited
@@ -402,15 +492,4 @@ class DateStatusView @JvmOverloads constructor(
     }
 
     fun buildStyle() = BuildStyle()
-
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val width = textPaint.measureText(stringBuilder.toString()).toInt() + mMargin + Integer.max(iconBoundsRect.width(), mIconSize) + paddingStart + paddingEnd
-        val height = textBoundsRect.height().coerceAtLeast(Integer.max(iconBoundsRect.height(), mMinHeightSize)) + paddingTop + paddingBottom
-        setMeasuredDimension(width, height)
-    }
-
-    fun setEdited(edited: Boolean) {
-        isEdited = edited
-        setDateText(dateText, isEdited)
-    }
 }

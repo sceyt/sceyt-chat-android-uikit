@@ -33,11 +33,11 @@
         android:layout_height="22dp"
         android:layout_marginTop="-4dp"
         android:layout_marginEnd="-1dp"
-        app:layout_constraintTop_toTopOf="@id/avatar"
-        app:layout_constraintEnd_toEndOf="@id/avatar"
-        app:srcCompat="@drawable/sceyt_ic_auto_deleted_channel"
         android:visibility="gone"
-        tools:visibility="visible"/>
+        app:layout_constraintEnd_toEndOf="@id/avatar"
+        app:layout_constraintTop_toTopOf="@id/avatar"
+        app:srcCompat="@drawable/sceyt_ic_auto_deleted_channel"
+        tools:visibility="visible" />
 
     <com.sceyt.chatuikit.presentation.customviews.OnlineView
         android:id="@+id/onlineStatus"
@@ -112,12 +112,11 @@
         app:layout_constraintTop_toTopOf="@+id/channelTitle"
         app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
         app:sceytUiDateStatusDateTextSize="13sp"
-        app:sceytUiDateStatusFirstStatus="true"
         app:sceytUiDateStatusIgnoreRtl="true"
-        app:sceytUiDateStatusStatusIconMargin="4dp"
-        app:sceytUiDateStatusStatusIconSize="16dp"
+        app:sceytUiDateStatusLeadingIconPadding="4dp"
+        app:sceytUiDateStatusLeadingIconSize="16dp"
         tools:sceytUiDateStatusDateText="12:28"
-        tools:sceytUiDateStatusStatusIcon="@drawable/sceyt_ic_status_delivered" />
+        tools:sceytUiDateStatusLeadingIcon="@drawable/sceyt_ic_status_delivered" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icPinned"

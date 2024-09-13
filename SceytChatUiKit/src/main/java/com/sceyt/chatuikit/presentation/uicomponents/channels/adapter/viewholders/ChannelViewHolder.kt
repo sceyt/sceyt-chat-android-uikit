@@ -150,7 +150,7 @@ open class ChannelViewHolder(
         if (message.state == MessageState.Deleted) {
             textView.text = context.getString(R.string.sceyt_message_was_deleted)
             textView.setTypeface(null, Typeface.ITALIC)
-            binding.dateStatus.setStatusIcon(null)
+            binding.dateStatus.setIcons(null)
         } else {
             val body = message.getFormattedLastMessageBody(context)
 
@@ -377,7 +377,7 @@ open class ChannelViewHolder(
         viewPinned.setBackgroundColor(channelStyle.pinnedChannelBackgroundColor)
         ivAutoDeleted.setImageDrawable(channelStyle.autoDeletedChannelIcon)
         dateStatus.buildStyle()
-            .setStatusIconSize(channelStyle.statusIconSize)
+            .setLeadingIconSize(channelStyle.statusIconSize)
             .setDateColor(channelStyle.dateTextColor)
             .setEditedTitle(context.getString(R.string.sceyt_edited))
             .build()
