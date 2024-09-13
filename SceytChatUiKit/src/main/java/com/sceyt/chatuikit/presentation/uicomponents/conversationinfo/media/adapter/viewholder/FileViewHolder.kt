@@ -45,19 +45,26 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
 
-        if (data.state == TransferState.PendingDownload)
-            needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+        when (data.state) {
+            TransferState.PendingDownload -> {
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+            }
+            TransferState.Downloaded -> {
+                binding.icFile.setImageDrawable(MessagesListViewStyle.currentStyle?.messageItemStyle?.fileAttachmentIcon
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_file_filled))
+            }
+            else -> return
+        }
     }
 
     override val loadingProgressView: CircularProgressView
         get() = binding.loadProgress
 
     private fun SceytItemChannelFileBinding.applyStyle() {
+        val colorOnPrimary = context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor)
         root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
-        icFile.setImageDrawable(MessagesListViewStyle.currentStyle?.messageItemStyle?.fileAttachmentIcon
-                ?: context.getCompatDrawable(R.drawable.sceyt_ic_file_filled))
         icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
-        loadProgress.setIconTintColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-        loadProgress.setProgressColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        loadProgress.setIconTintColor(colorOnPrimary)
+        loadProgress.setProgressColor(colorOnPrimary)
     }
 }

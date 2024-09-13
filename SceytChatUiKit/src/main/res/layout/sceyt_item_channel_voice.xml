@@ -17,7 +17,25 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_ic_play" />
+        tools:srcCompat="@drawable/sceyt_ic_play" />
+
+    <com.sceyt.chatuikit.presentation.customviews.CircularProgressView
+        android:id="@+id/loadProgress"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:padding="1dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/icFile"
+        app:layout_constraintStart_toStartOf="@id/icFile"
+        app:layout_constraintTop_toTopOf="@id/icFile"
+        app:layout_constraintEnd_toEndOf="@id/icFile"
+        app:sceytUiProgressColor="@color/sceyt_color_on_primary"
+        app:sceytUiProgressIconSizeInPercent="65"
+        app:sceytUiProgressIconTint="@color/sceyt_color_on_primary"
+        app:sceytUiProgressMinProgress="25"
+        app:sceytUiProgressTrackColor="@android:color/transparent"
+        app:sceytUiProgressTrackThickness="2dp"
+        tools:visibility="visible" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvFileName"
@@ -58,26 +76,9 @@
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="13sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/loadProgress"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_goneMarginEnd="0dp"
         tools:text="02:34" />
-
-    <com.sceyt.chatuikit.presentation.customviews.CircularProgressView
-        android:id="@+id/loadProgress"
-        android:layout_width="35dp"
-        android:layout_height="35dp"
-        android:padding="1dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:sceytUiProgressColor="@color/sceyt_color_accent"
-        app:sceytUiProgressIconSizeInPercent="65"
-        app:sceytUiProgressIconTint="@color/sceyt_color_accent"
-        app:sceytUiProgressMinProgress="2"
-        app:sceytUiProgressTrackColor="@android:color/transparent"
-        app:sceytUiProgressTrackThickness="2.5dp"
-        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
