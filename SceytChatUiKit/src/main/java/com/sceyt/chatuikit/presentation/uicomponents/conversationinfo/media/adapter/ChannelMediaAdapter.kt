@@ -18,11 +18,11 @@ import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 class ChannelMediaAdapter(
         private var attachments: SyncArrayList<ChannelFileItem>,
-        private val attachmentViewHolderFactory: ChannelAttachmentViewHolderFactory,
+        private val factory: ChannelAttachmentViewHolderFactory,
 ) : RecyclerView.Adapter<BaseFileViewHolder<ChannelFileItem>>(), MediaStickHeaderItemDecoration.StickyHeaderInterface {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseFileViewHolder<ChannelFileItem> {
-        return attachmentViewHolderFactory.createViewHolder(parent, viewType)
+        return factory.createViewHolder(parent, viewType)
     }
 
     override fun onBindViewHolder(holder: BaseFileViewHolder<ChannelFileItem>, position: Int) {
@@ -44,7 +44,7 @@ class ChannelMediaAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return attachmentViewHolderFactory.getItemViewType(attachments[position])
+        return factory.getItemViewType(attachments[position])
     }
 
     private fun removeLoading() {
@@ -112,7 +112,7 @@ class ChannelMediaAdapter(
         val date = DateTimeUtil.getDateTimeStringWithDateFormatter(
             context = header.root.context,
             time = attachments.getOrNull(headerPosition)?.getCreatedAt(),
-            dateFormatter = attachmentViewHolderFactory.getMediaStyle().mediaDateSeparatorFormat)
+            dateFormatter = factory.getMediaStyle().mediaDateSeparatorFormat)
 
         header.tvDate.text = date
         header.tvDate.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
