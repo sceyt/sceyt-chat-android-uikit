@@ -31,7 +31,7 @@
         tools:listitem="@layout/sceyt_item_input_image_attachment" />
 
     <FrameLayout
-        android:id="@+id/layoutReplyOrEditMessage"
+        android:id="@+id/frameLayoutReplyOrEditMessage"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:visibility="gone"
@@ -41,7 +41,7 @@
         app:layout_goneMarginTop="0dp" />
 
     <FrameLayout
-        android:id="@+id/layoutLinkPreview"
+        android:id="@+id/frameLayoutLinkPreview"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
