@@ -201,11 +201,11 @@ class MessageInputView @JvmOverloads constructor(
         val fragmentManager = checkIfInsideFragment()?.childFragmentManager
                 ?: context.asFragmentActivity().supportFragmentManager
         fragmentManager.commit {
-            add(R.id.layoutReplyOrEditMessage, EditOrReplyMessageFragment().also {
+            add(R.id.frameLayoutReplyOrEditMessage, EditOrReplyMessageFragment().also {
                 it.setClickListener(clickListeners)
                 editOrReplyMessageFragment = it
             })
-            add(R.id.layoutLinkPreview, LinkPreviewFragment().also {
+            add(R.id.frameLayoutLinkPreview, LinkPreviewFragment().also {
                 it.setClickListener(clickListeners)
                 it.setStyle(style)
                 linkPreviewFragment = it
@@ -242,7 +242,7 @@ class MessageInputView @JvmOverloads constructor(
     private fun hideAndReleaseLinkPreview() {
         linkDetails = null
         linkPreviewFragment?.hideLinkDetails {
-            binding.layoutLinkPreview.isVisible = false
+            binding.frameLayoutLinkPreview.isVisible = false
             return@hideLinkDetails Unit
         }
     }
@@ -264,7 +264,7 @@ class MessageInputView @JvmOverloads constructor(
             linkPreviewFragment?.hideLinkDetailsWithTimeout()
             linkDetailsProvider.loadLinkDetails(text.toString(), detailsCallback = {
                 if (it != null) {
-                    binding.layoutLinkPreview.isVisible = true
+                    binding.frameLayoutLinkPreview.isVisible = true
                     linkPreviewFragment?.showLinkDetails(it)
                     linkDetails = it
                 } else hideAndReleaseLinkPreview()
@@ -512,7 +512,7 @@ class MessageInputView @JvmOverloads constructor(
         if (replyMessage == null && editMessage == null)
             readyCb?.invoke()
         else editOrReplyMessageFragment?.close {
-            binding.layoutReplyOrEditMessage.isVisible = false
+            binding.frameLayoutReplyOrEditMessage.isVisible = false
             readyCb?.invoke()
         }
     }
@@ -521,7 +521,7 @@ class MessageInputView @JvmOverloads constructor(
         if (linkDetails == null)
             readyCb?.invoke()
         else linkPreviewFragment?.hideLinkDetails {
-            binding.layoutLinkPreview.isVisible = false
+            binding.frameLayoutLinkPreview.isVisible = false
             readyCb?.invoke()
         }
     }
@@ -597,7 +597,7 @@ class MessageInputView @JvmOverloads constructor(
             determineInputState()
             if (!initWithDraft)
                 initInputWithEditMessage(message)
-            binding.layoutReplyOrEditMessage.isVisible = true
+            binding.frameLayoutReplyOrEditMessage.isVisible = true
             editOrReplyMessageFragment?.editMessage(message)
             if (!initWithDraft)
                 updateDraftMessage()
@@ -608,7 +608,7 @@ class MessageInputView @JvmOverloads constructor(
         checkIfRecordingAndConfirm {
             editMessage = null
             replyMessage = message
-            binding.layoutReplyOrEditMessage.isVisible = true
+            binding.frameLayoutReplyOrEditMessage.isVisible = true
             editOrReplyMessageFragment?.replyMessage(message, style, needMessagesListViewStyleCallback())
 
             if (!initWithDraft) {
@@ -659,7 +659,7 @@ class MessageInputView @JvmOverloads constructor(
                 with(binding) {
                     if (isBlockedPeer) {
                         viewAttachments.isVisible = false
-                        layoutReplyOrEditMessage.isVisible = false
+                        frameLayoutReplyOrEditMessage.isVisible = false
                     }
                     isInputHidden = if (isBlockedPeer) {
                         hideInputWithMessage(getString(R.string.sceyt_you_blocked_this_user), R.drawable.sceyt_ic_warning)
@@ -844,14 +844,14 @@ class MessageInputView @JvmOverloads constructor(
     fun setCustomEditOrReplyMessageFragment(fragment: EditOrReplyMessageFragment, fragmentManager: FragmentManager) {
         fragment.setClickListener(clickListeners)
         fragmentManager.commit {
-            replace(R.id.layoutReplyOrEditMessage, fragment)
+            replace(R.id.frameLayoutReplyOrEditMessage, fragment)
         }
     }
 
     fun setCustomLinkPreviewFragment(fragment: LinkPreviewFragment, fragmentManager: FragmentManager) {
         fragment.setClickListener(clickListeners)
         fragmentManager.commit {
-            replace(R.id.layoutLinkPreview, fragment)
+            replace(R.id.frameLayoutLinkPreview, fragment)
         }
     }
 
@@ -1033,7 +1033,7 @@ class MessageInputView @JvmOverloads constructor(
                 replyMessage?.let { replyMessage(it, initWithDraft = true) }
                 editMessage?.let { editMessage(it, initWithDraft = true) }
                 linkDetails?.let {
-                    binding.layoutLinkPreview.isVisible = true
+                    binding.frameLayoutLinkPreview.isVisible = true
                     linkPreviewFragment?.showLinkDetails(it)
                 }
                 determineInputState()
