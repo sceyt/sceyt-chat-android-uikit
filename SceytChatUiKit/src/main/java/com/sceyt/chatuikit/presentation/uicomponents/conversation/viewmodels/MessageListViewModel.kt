@@ -142,6 +142,7 @@ class MessageListViewModel(
     internal var lastSyncCenterOffsetId = 0L
 
     private val isGroup = channel.isGroup
+    private val isPublicChannel = channel.isPublicChannel
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
 
     private val _loadMessagesFlow = MutableStateFlow<Pair<PaginationResponse<SceytMessage>, List<MessageListItem>>>(
@@ -773,6 +774,7 @@ class MessageListViewModel(
                                      initNameAndAvatar: Boolean = false): SceytMessage {
         return sceytMessage.copy(
             isGroup = this@MessageListViewModel.isGroup,
+            isPublicChannel = this@MessageListViewModel.isPublicChannel,
             files = sceytMessage.attachments?.map { it.toFileListItem() },
             shouldShowAvatarAndName = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
                 shouldShowAvatarAndName(sceytMessage, prevMessage)

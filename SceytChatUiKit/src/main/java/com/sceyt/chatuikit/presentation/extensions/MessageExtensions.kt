@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.presentation.customviews.DateStatusView
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
+import com.sceyt.chatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import java.io.File
 
 fun SceytMessage?.setChannelMessageDateAndStatusIcon(
@@ -62,13 +63,24 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(
         dateText: String,
         edited: Boolean
 ) {
-    if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
+    if (this?.deliveryStatus == null || state == MessageState.Deleted || (incoming && isPublicChannel.not())) {
         dateStatusView.setDateAndStatusIcon(text = dateText,
             leadingIcon = null,
             trailingIcon = null,
             edited = edited,
             editedText = style.editedMessageStateText,
             ignoreHighlight = false)
+        return
+    } else if (incoming && isPublicChannel) {
+        dateStatusView.setDateAndStatusIcon(
+            leadingIcon = style.messageDisplayCountIcon,
+            text = dateText,
+            textColor = style.messageDateTextColor,
+            edited = edited,
+            editedText = style.editedMessageStateText,
+            editedTextStyle = style.messageEditedTextStyle,
+            ignoreHighlight = checkIgnoreHighlight(deliveryStatus)
+        )
         return
     }
     val icon = when (deliveryStatus) {
@@ -91,6 +103,14 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(
             ignoreHighlight = checkIgnoreHighlight(deliveryStatus))
         dateStatusView.isVisible = true
     }
+}
+
+fun SceytMessage.getFormattedDateOrDisplayCount(): String {
+    val builder = StringBuilder(getDateTimeString(createdAt))
+    if (isPublicChannel && incoming) {
+        builder.insert(0, " $displayCount • ")
+    }
+    return builder.toString()
 }
 
 private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {

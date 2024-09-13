@@ -85,5 +85,7 @@
 
         <attr name="sceytUiSwipeReplyIcon" format="reference" />
 
+        <attr name="sceytMessageDisplayCountIcon" format="reference" />
+
     </declare-styleable>
 </resources>

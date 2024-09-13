@@ -47,6 +47,8 @@ fun SceytChannel.getPeer(): SceytMember? {
 
 fun ChannelTypeEnum?.isGroup() = this != ChannelTypeEnum.Direct
 
+fun ChannelTypeEnum?.isPublicChannel() = this == ChannelTypeEnum.Public || this == ChannelTypeEnum.Broadcast
+
 fun SceytChannel.isDirect() = type == ChannelTypeEnum.Direct.getString()
 
 fun SceytChannel.isPrivate() = type == ChannelTypeEnum.Private.getString() || type == ChannelTypeEnum.Group.getString()
