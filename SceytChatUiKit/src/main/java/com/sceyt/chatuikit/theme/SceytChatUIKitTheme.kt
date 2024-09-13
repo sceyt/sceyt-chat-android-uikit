@@ -13,6 +13,8 @@ data class SceytChatUIKitTheme(
         @ColorRes
         val accentColor: Int = R.color.sceyt_color_accent,
         @ColorRes
+        val onPrimaryColor: Int = R.color.sceyt_color_on_primary,
+        @ColorRes
         val backgroundColor: Int = R.color.sceyt_color_background,
         @ColorRes
         val backgroundColorSecondary: Int = R.color.sceyt_color_background_secondary,
@@ -40,8 +42,6 @@ data class SceytChatUIKitTheme(
         val textSecondaryColor: Int = R.color.sceyt_color_text_secondary,
         @ColorRes
         val textFootnoteColor: Int = R.color.sceyt_color_text_footnote,
-        @ColorRes
-        val onPrimaryColor: Int = R.color.sceyt_color_on_primary,
         @ColorRes
         val errorColor: Int = R.color.sceyt_color_error,
         @ColorRes

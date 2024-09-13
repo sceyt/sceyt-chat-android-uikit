@@ -5,9 +5,12 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 
-class AttachmentsAdapter(private val attachments: ArrayList<AttachmentItem>,
-                         private val factory: AttachmentsViewHolderFactory
+class AttachmentsAdapter(
+        data: List<AttachmentItem>,
+        private val factory: AttachmentsViewHolderFactory
 ) : RecyclerView.Adapter<BaseViewHolder<AttachmentItem>>() {
+
+    private val attachments = data.toMutableList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<AttachmentItem> {
         return factory.createViewHolder(parent, viewType)

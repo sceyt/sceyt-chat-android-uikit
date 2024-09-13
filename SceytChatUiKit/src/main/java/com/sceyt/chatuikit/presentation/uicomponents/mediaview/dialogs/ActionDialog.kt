@@ -15,7 +15,10 @@ import com.sceyt.chatuikit.presentation.uicomponents.mediaview.dialogs.ActionDia
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.dialogs.ActionDialog.Action.Save
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.dialogs.ActionDialog.Action.Share
 
-class ActionDialog(context: Context, var listener: ((Action) -> Unit)? = null) : Dialog(context, R.style.SceytDialogNoTitle95) {
+class ActionDialog(
+        context: Context,
+        var listener: ((Action) -> Unit)? = null
+) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogMediaActionsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
