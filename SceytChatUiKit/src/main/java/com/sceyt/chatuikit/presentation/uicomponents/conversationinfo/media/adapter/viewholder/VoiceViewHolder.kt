@@ -127,12 +127,16 @@ class VoiceViewHolder(private val binding: SceytItemChannelVoiceBinding,
 
         when (data.state) {
             TransferState.PendingDownload -> needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
-            TransferState.Downloaded -> lastFilePath = data.filePath
+            TransferState.Downloaded -> {
+                lastFilePath = data.filePath
+                setPlayingState(false)
+            }
             else -> return
         }
     }
 
     private fun setPlayingState(playing: Boolean) {
+        if (lastFilePath.isNullOrBlank()) return
         val iconRes = if (playing) R.drawable.sceyt_ic_pause else R.drawable.sceyt_ic_play
         binding.icFile.setImageResource(iconRes)
 
@@ -160,9 +164,10 @@ class VoiceViewHolder(private val binding: SceytItemChannelVoiceBinding,
 
     private fun SceytItemChannelVoiceBinding.applyStyle() {
         val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        val colorOnPrimary = context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor)
         root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
         icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
-        loadProgress.setIconTintColor(accentColor)
-        loadProgress.setProgressColor(accentColor)
+        loadProgress.setIconTintColor(colorOnPrimary)
+        loadProgress.setProgressColor(colorOnPrimary)
     }
 }
