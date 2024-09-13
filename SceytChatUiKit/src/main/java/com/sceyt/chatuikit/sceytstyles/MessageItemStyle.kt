@@ -70,7 +70,8 @@ data class MessageItemStyle(
         val voiceAttachmentIcon: Drawable?,
         val linkAttachmentIcon: Drawable?,
         val swipeReplyIcon: Drawable?,
-        val replyMessageBodyFormatter: MessageBodyFormatter
+        val replyMessageBodyFormatter: MessageBodyFormatter,
+        val messageDisplayCountIcon: Drawable?
 ) {
 
     companion object {
@@ -173,6 +174,9 @@ data class MessageItemStyle(
                 message.getFormattedBody(context)
             }
 
+            val messageDisplayCountIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytMessageDisplayCountIcon)
+                ?: context.getCompatDrawable(R.drawable.sceyt_ic_display_count)
+
             typedArray.recycle()
 
             return MessageItemStyle(
@@ -201,7 +205,8 @@ data class MessageItemStyle(
                 voiceAttachmentIcon = voiceAttachmentIcon,
                 linkAttachmentIcon = linkAttachmentIcon,
                 swipeReplyIcon = swipeReplyIcon,
-                replyMessageBodyFormatter = replyMessageBodyFormatter
+                replyMessageBodyFormatter = replyMessageBodyFormatter,
+                messageDisplayCountIcon = messageDisplayCountIcon
             ).let { styleCustomizer.apply(context, it) }
         }
     }

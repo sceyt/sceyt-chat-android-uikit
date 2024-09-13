@@ -60,6 +60,7 @@ import com.sceyt.chatuikit.persistence.mappers.isDeleted
 import com.sceyt.chatuikit.presentation.customviews.AvatarView
 import com.sceyt.chatuikit.presentation.customviews.DateStatusView
 import com.sceyt.chatuikit.presentation.customviews.ToReplyLineView
+import com.sceyt.chatuikit.presentation.extensions.getFormattedDateOrDisplayCount
 import com.sceyt.chatuikit.presentation.extensions.setConversationMessageDateAndStatusIcon
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageListItem
@@ -72,7 +73,6 @@ import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Messag
 import com.sceyt.chatuikit.sceytconfigs.UserNameFormatter
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
-import com.sceyt.chatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.chatuikit.shared.utils.ViewUtil
 import kotlin.math.min
 
@@ -192,7 +192,7 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     protected open fun setMessageStatusAndDateText(message: SceytMessage, messageDate: DateStatusView) {
         val isEdited = message.state == MessageState.Edited
-        val dateText = getDateTimeString(message.createdAt)
+        val dateText = message.getFormattedDateOrDisplayCount()
         message.setConversationMessageDateAndStatusIcon(messageDate, style, dateText, isEdited)
     }
 
