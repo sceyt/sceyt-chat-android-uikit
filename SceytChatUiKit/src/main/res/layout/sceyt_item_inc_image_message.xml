@@ -146,14 +146,14 @@
             android:layout_height="@dimen/messageProgressSize"
             android:padding="1dp"
             android:visibility="gone"
-            app:sceytUiProgressBackgroundColor="@color/sceyt_progress_bg_color"
-            app:sceytUiProgressIconSizeInPercent="65"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/fileImage"
-            app:sceytUiProgressMinProgress="2"
+            app:sceytUiProgressBackgroundColor="@color/sceyt_progress_bg_color"
             app:sceytUiProgressColor="@color/sceyt_color_on_primary"
+            app:sceytUiProgressIconSizeInPercent="65"
+            app:sceytUiProgressMinProgress="2"
             app:sceytUiProgressTrackColor="@android:color/transparent"
             tools:visibility="visible" />
 
@@ -167,9 +167,8 @@
             app:layout_constraintEnd_toEndOf="@id/fileImage"
             app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
             app:sceytUiDateStatusDateTextSize="@dimen/tinyTextSize"
-            app:sceytUiDateStatusFirstStatus="false"
             app:sceytUiDateStatusHighlighted="true"
-            app:sceytUiDateStatusStatusIconSize="15.5dp"
+            app:sceytUiDateStatusTrailingIconSize="15.5dp"
             tools:sceytUiDateStatusDateText="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

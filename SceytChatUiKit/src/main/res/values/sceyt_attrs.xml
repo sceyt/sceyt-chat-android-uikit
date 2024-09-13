@@ -19,22 +19,20 @@
     </declare-styleable>
 
     <declare-styleable name="DateStatusView">
-        <attr name="sceytUiDateStatusStatusIcon" format="reference" />
-        <attr name="sceytUiDateStatusStatusIconSize" format="dimension" />
-        <attr name="sceytUiDateStatusStatusIconMargin" format="dimension" />
+        <attr name="sceytUiDateStatusLeadingIcon" format="reference" />
+        <attr name="sceytUiDateStatusTrailingIcon" format="reference" />
+        <attr name="sceytUiDateStatusLeadingIconSize" format="dimension" />
+        <attr name="sceytUiDateStatusTrailingIconSize" format="dimension" />
+        <attr name="sceytUiDateStatusIconsTint" format="reference|color" />
+        <attr name="sceytUiDateStatusLeadingIconPadding" format="dimension" />
+        <attr name="sceytUiDateStatusTrailingIconPadding" format="dimension" />
         <attr name="sceytUiDateStatusDateTextSize" format="dimension" />
         <attr name="sceytUiDateStatusDateTextColor" format="reference|color" />
         <attr name="sceytUiDateStatusDateText" format="string" />
-        <attr name="sceytUiDateStatusFirstStatus" format="boolean" />
-        <attr name="sceytUiDateStatusHighlighted" format="boolean" />
         <attr name="sceytUiDateStatusIgnoreRtl" format="boolean" />
-        <attr name="android:paddingStart" format="dimension" />
-        <attr name="android:paddingEnd" format="dimension" />
-        <attr name="android:paddingBottom" format="dimension" />
-        <attr name="android:paddingTop" format="dimension" />
-        <attr name="android:padding" format="dimension" />
-        <attr name="android:paddingVertical" format="dimension" />
-        <attr name="android:paddingHorizontal" format="dimension" />
+        <attr name="sceytUiDateStatusBackgroundColor" format="color|reference" />
+        <attr name="sceytUiDateStatusBackgroundCornerRadius" format="dimension" />
+        <attr name="sceytUiDateStatusHighlighted" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="ReactionView">

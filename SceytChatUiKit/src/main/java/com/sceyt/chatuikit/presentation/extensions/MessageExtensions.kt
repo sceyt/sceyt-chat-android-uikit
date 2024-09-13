@@ -23,14 +23,18 @@ import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
 import java.io.File
 
-fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: DateStatusView,
-                                                     channelStyle: ChannelListViewStyle,
-                                                     dateText: String, edited: Boolean, shouldShowStatus: Boolean) {
+fun SceytMessage?.setChannelMessageDateAndStatusIcon(
+        dateStatusView: DateStatusView,
+        channelStyle: ChannelListViewStyle,
+        dateText: String, edited: Boolean,
+        shouldShowStatus: Boolean
+) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || !shouldShowStatus) {
-        dateStatusView.setDateAndStatusIcon(text = dateText,
-            drawable = null,
-            edited = edited,
-            ignoreHighlight = false)
+        dateStatusView.setDateAndStatusIcon(
+            text = dateText,
+            leadingIcon = null,
+            trailingIcon = null,
+            edited = edited, ignoreHighlight = false)
         return
     }
     val icon = when (deliveryStatus) {
@@ -41,9 +45,10 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: DateStatusV
         else -> null
     }
     icon?.let {
-        dateStatusView.setDateAndStatusIcon(text = dateText,
+        dateStatusView.setDateAndStatusIcon(
+            text = dateText,
             textColor = channelStyle.dateTextColor,
-            drawable = it,
+            leadingIcon = it,
             edited = edited,
             ignoreHighlight = checkIgnoreHighlight(deliveryStatus))
         dateStatusView.isVisible = true
@@ -51,13 +56,16 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(dateStatusView: DateStatusV
 }
 
 
-fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: DateStatusView,
-                                                          style: MessageItemStyle,
-                                                          dateText: String,
-                                                          edited: Boolean) {
+fun SceytMessage?.setConversationMessageDateAndStatusIcon(
+        dateStatusView: DateStatusView,
+        style: MessageItemStyle,
+        dateText: String,
+        edited: Boolean
+) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
         dateStatusView.setDateAndStatusIcon(text = dateText,
-            drawable = null,
+            leadingIcon = null,
+            trailingIcon = null,
             edited = edited,
             editedText = style.editedMessageStateText,
             ignoreHighlight = false)
@@ -76,7 +84,7 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(dateStatusView: DateSt
     icon?.let {
         dateStatusView.setDateAndStatusIcon(text = dateText,
             textColor = style.messageDateTextColor,
-            drawable = it,
+            trailingIcon = it,
             edited = edited,
             editedText = style.editedMessageStateText,
             editedTextStyle = style.messageEditedTextStyle,

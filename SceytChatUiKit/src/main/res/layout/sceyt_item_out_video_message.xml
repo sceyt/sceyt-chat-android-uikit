@@ -151,14 +151,14 @@
             android:layout_height="@dimen/messageProgressSize"
             android:padding="1dp"
             android:visibility="gone"
-            app:sceytUiProgressBackgroundColor="@color/sceyt_progress_bg_color"
-            app:sceytUiProgressIconSizeInPercent="65"
             app:layout_constraintBottom_toBottomOf="@+id/imageThumb"
             app:layout_constraintEnd_toEndOf="@+id/imageThumb"
             app:layout_constraintStart_toStartOf="@+id/imageThumb"
             app:layout_constraintTop_toTopOf="@+id/imageThumb"
-            app:sceytUiProgressMinProgress="2"
+            app:sceytUiProgressBackgroundColor="@color/sceyt_progress_bg_color"
             app:sceytUiProgressColor="@color/sceyt_color_on_primary"
+            app:sceytUiProgressIconSizeInPercent="65"
+            app:sceytUiProgressMinProgress="2"
             app:sceytUiProgressTrackColor="@android:color/transparent" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -188,12 +188,11 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
             app:sceytUiDateStatusDateTextSize="@dimen/tinyTextSize"
-            app:sceytUiDateStatusFirstStatus="false"
             app:sceytUiDateStatusHighlighted="true"
-            app:sceytUiDateStatusStatusIconMargin="5dp"
-            app:sceytUiDateStatusStatusIconSize="15.5dp"
+            app:sceytUiDateStatusTrailingIconPadding="5dp"
+            app:sceytUiDateStatusTrailingIconSize="15.5dp"
             tools:sceytUiDateStatusDateText="00:37"
-            tools:sceytUiDateStatusStatusIcon="@drawable/sceyt_ic_status_delivered" />
+            tools:sceytUiDateStatusTrailingIcon="@drawable/sceyt_ic_status_delivered" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
