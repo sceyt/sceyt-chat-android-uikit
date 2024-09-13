@@ -746,12 +746,14 @@ class MessageListViewModel(
                 val compareMessageWithData = initCompareMessageInfoData(message, prevMessage, true, showAvatarTypes.second)
                 compareMessageWithData?.let {
                     val compareMessageIndex = messageItems.indexOfFirst { it.getItemId() == compareMessageWithData.tid }
-                    if (compareMessageIndex > 0) {
+                    if (compareMessageIndex >= 0) {
                         messageItems.removeAt(compareMessageIndex)
                         messageItems.add(compareMessageIndex, MessageListItem.MessageItem(compareMessageWithData))
                     }
                     if (index == 0) {
-                        compareMessageUpdater?.invoke(compareMessageWithData)
+                        withContext(Dispatchers.Main) {
+                            compareMessageUpdater?.invoke(compareMessageWithData)
+                        }
                     }
                 }
 
