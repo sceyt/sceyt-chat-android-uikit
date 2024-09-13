@@ -21,8 +21,6 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
-    private var isDownloaded: Boolean = false
-
     init {
         binding.applyStyle()
         binding.root.setOnClickListener {
@@ -49,11 +47,9 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
 
         when (data.state) {
             TransferState.PendingDownload -> {
-                isDownloaded = false
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
             TransferState.Downloaded -> {
-                isDownloaded = true
                 binding.icFile.setImageDrawable(MessagesListViewStyle.currentStyle?.messageItemStyle?.fileAttachmentIcon
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_file_filled))
             }
@@ -70,9 +66,5 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
         icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
         loadProgress.setIconTintColor(colorOnPrimary)
         loadProgress.setProgressColor(colorOnPrimary)
-        if (isDownloaded) {
-            icFile.setImageDrawable(MessagesListViewStyle.currentStyle?.messageItemStyle?.fileAttachmentIcon
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_file_filled))
-        }
     }
 }
