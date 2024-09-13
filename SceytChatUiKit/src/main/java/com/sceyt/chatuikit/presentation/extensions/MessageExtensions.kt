@@ -71,7 +71,7 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(
             editedText = style.editedMessageStateText,
             ignoreHighlight = false)
         return
-    } else if (incoming && isPublicChannel) {
+    } else if (isPublicChannel) {
         dateStatusView.setDateAndStatusIcon(
             leadingIcon = style.messageDisplayCountIcon,
             text = dateText,
@@ -79,7 +79,7 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(
             edited = edited,
             editedText = style.editedMessageStateText,
             editedTextStyle = style.messageEditedTextStyle,
-            ignoreHighlight = checkIgnoreHighlight(deliveryStatus)
+            ignoreHighlight = false
         )
         return
     }
@@ -107,7 +107,7 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(
 
 fun SceytMessage.getFormattedDateOrDisplayCount(): String {
     val builder = StringBuilder(getDateTimeString(createdAt))
-    if (isPublicChannel && incoming) {
+    if (isPublicChannel) {
         builder.insert(0, " $displayCount • ")
     }
     return builder.toString()
