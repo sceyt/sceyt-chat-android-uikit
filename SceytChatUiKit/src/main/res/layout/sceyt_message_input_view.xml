@@ -48,7 +48,7 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/layoutReplyOrEditMessage" />
+        app:layout_constraintTop_toBottomOf="@+id/frameLayoutReplyOrEditMessage" />
 
     <View
         android:id="@+id/view3"
@@ -63,7 +63,7 @@
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
         android:paddingVertical="8dp"
-        app:layout_constraintTop_toBottomOf="@+id/layoutLinkPreview">
+        app:layout_constraintTop_toBottomOf="@+id/frameLayoutLinkPreview">
 
         <com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MentionSupportEditText
             android:id="@+id/messageInput"
