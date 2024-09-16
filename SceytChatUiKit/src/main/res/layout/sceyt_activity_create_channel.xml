@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".presentation.uicomponents.createchat.createchannel.CreateChannelActivity">
+    tools:context=".presentation.components.create_chat.create_channel.CreateChannelActivity">
 
     <com.sceyt.chatuikit.presentation.customviews.CustomToolbar
         android:id="@+id/toolbar"
@@ -17,7 +17,7 @@
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragment_container"
-        android:name="com.sceyt.chatuikit.presentation.uicomponents.createchat.createchannel.fragments.CreateChannelDetailsFragment"
+        android:name="com.sceyt.chatuikit.presentation.components.create_chat.create_channel.fragments.CreateChannelDetailsFragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"

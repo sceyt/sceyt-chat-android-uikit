@@ -24,7 +24,7 @@
         tools:ignore="UnusedAttribute"
         tools:text="link" />
 
-    <androidx.legacy.widget.Space
+    <Space
         android:id="@+id/space"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

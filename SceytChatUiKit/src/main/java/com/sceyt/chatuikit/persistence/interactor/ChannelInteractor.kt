@@ -9,8 +9,8 @@ import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mention
-import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
+import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import kotlinx.coroutines.flow.Flow
 
 interface ChannelInteractor {

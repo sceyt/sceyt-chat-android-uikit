@@ -2,10 +2,10 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
-import com.sceyt.chatuikit.data.messageeventobserver.ReactionUpdateEventData
-import com.sceyt.chatuikit.data.messageeventobserver.ReactionUpdateEventEnum.Add
-import com.sceyt.chatuikit.data.messageeventobserver.ReactionUpdateEventEnum.Remove
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
+import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum.Add
+import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum.Remove
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -21,9 +21,9 @@ import com.sceyt.chatuikit.persistence.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.entity.pendings.PendingReactionEntity
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChatReactionMessagesCache
-import com.sceyt.chatuikit.persistence.logicimpl.messageslogic.MessagesCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChatReactionMessagesCache
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toReactionEntity

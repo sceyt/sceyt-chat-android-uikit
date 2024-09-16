@@ -1,6 +1,6 @@
 package com.sceyt.chatuikit.data.models.messages
 
-import com.sceyt.chatuikit.persistence.filetransfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 
 data class AttachmentPayLoadData(
         val messageTid: Long,

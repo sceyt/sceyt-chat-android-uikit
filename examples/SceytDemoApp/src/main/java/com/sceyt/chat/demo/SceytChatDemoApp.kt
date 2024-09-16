@@ -13,11 +13,11 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.ChannelActivity
-import com.sceyt.chatuikit.sceytconfigs.SceytChatUIKitConfig
-import com.sceyt.chatuikit.sceytconfigs.UploadNotificationClickHandleData
-import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
-import com.sceyt.chatuikit.sceytstyles.StyleCustomizer
+import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
+import com.sceyt.chatuikit.config.SceytChatUIKitConfig
+import com.sceyt.chatuikit.config.UploadNotificationClickHandleData
+import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin

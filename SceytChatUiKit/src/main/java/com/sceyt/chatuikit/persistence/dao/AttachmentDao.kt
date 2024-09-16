@@ -3,14 +3,13 @@ package com.sceyt.chatuikit.persistence.dao
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.LoadNearData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentPayLoadDb
-import com.sceyt.chatuikit.persistence.filetransfer.TransferData
-import com.sceyt.chatuikit.persistence.filetransfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 
 @Dao
 abstract class AttachmentDao {

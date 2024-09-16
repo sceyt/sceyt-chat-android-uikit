@@ -5,8 +5,8 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelsComparatorDescBy
-import com.sceyt.chatuikit.sceytconfigs.ChannelSortType
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsComparatorDescBy
+import com.sceyt.chatuikit.config.ChannelSortType
 import org.junit.Test
 
 

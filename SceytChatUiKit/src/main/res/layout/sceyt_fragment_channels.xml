@@ -46,7 +46,7 @@
             android:background="@color/sceyt_color_background"
             app:elevation="0dp">
 
-            <com.sceyt.chatuikit.presentation.uicomponents.searchinput.SearchChannelInputView
+            <com.sceyt.chatuikit.presentation.components.channel_list.search.SearchChannelInputView
                 android:id="@+id/searchView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -58,7 +58,7 @@
 
         </com.google.android.material.appbar.AppBarLayout>
 
-        <com.sceyt.chatuikit.presentation.uicomponents.channels.ChannelListView
+        <com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
             android:id="@+id/channelListView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

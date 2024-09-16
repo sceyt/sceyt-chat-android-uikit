@@ -8,8 +8,8 @@ import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chat.models.user.User
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.reactions.ReactionItem
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import kotlinx.parcelize.Parcelize
 
 @Parcelize

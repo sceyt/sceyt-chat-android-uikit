@@ -2,8 +2,8 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import com.sceyt.chat.models.message.DeliveryStatus.Displayed
 import com.sceyt.chat.models.message.DeliveryStatus.Received
-import com.sceyt.chatuikit.data.channeleventobserver.MessageMarkerEventData
-import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData
+import com.sceyt.chatuikit.data.managers.channel.event.MessageMarkerEventData
+import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMarker

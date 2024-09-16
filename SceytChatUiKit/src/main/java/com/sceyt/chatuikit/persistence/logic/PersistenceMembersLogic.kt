@@ -1,8 +1,8 @@
 package com.sceyt.chatuikit.persistence.logic
 
 import com.sceyt.chat.models.member.Member
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventData
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel

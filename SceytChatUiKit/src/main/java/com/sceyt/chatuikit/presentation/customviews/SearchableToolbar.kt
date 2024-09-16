@@ -14,7 +14,7 @@ import com.sceyt.chatuikit.databinding.SceytLayoutSearchableToolbarBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.showSoftInput
-import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
+import com.sceyt.chatuikit.presentation.common.DebounceHelper
 
 class SearchableToolbar @JvmOverloads constructor(
         context: Context,

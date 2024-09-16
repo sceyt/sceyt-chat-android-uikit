@@ -4,8 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.text.format.DateFormat
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.sceytconfigs.dateformaters.BaseDateFormatter
-import com.sceyt.chatuikit.sceytconfigs.dateformaters.DateFormatData
+import com.sceyt.chatuikit.config.formatters.BaseDateFormatter
+import com.sceyt.chatuikit.config.formatters.DateFormatData
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Calendar

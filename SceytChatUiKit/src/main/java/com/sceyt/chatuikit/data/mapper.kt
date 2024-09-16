@@ -6,7 +6,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.FileListItem
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 
 
 fun Member.toSceytMember() = SceytMember(

@@ -8,15 +8,15 @@ import android.widget.ImageView
 import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.sceyt.chatuikit.persistence.filetransfer.ThumbData
-import com.sceyt.chatuikit.persistence.filetransfer.TransferData
-import com.sceyt.chatuikit.persistence.filetransfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.AttachmentDataItem
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem
 
 class AttachmentViewHolderHelper(itemView: View) {
     private var context: Context = itemView.context
-    private lateinit var fileItem: AttachmentDataItem
+    private lateinit var fileItem: com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem
     val isFileItemInitialized get() = this::fileItem.isInitialized
     var blurredThumb: Drawable? = null
         private set
@@ -28,7 +28,7 @@ class AttachmentViewHolderHelper(itemView: View) {
         private set
 
 
-    fun bind(item: AttachmentDataItem, resizedImageSize: Size? = null) {
+    fun bind(item: com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem, resizedImageSize: Size? = null) {
         if (isFileItemInitialized && item.thumbPath == null && !fileItem.thumbPath.isNullOrBlank()
                 && fileItem.file.messageTid == item.file.messageTid)
             item.thumbPath = fileItem.thumbPath
@@ -73,7 +73,7 @@ class AttachmentViewHolderHelper(itemView: View) {
             loadBlurThumb(blurredThumb, imageView)
     }
 
-    fun updateTransferData(data: TransferData, item: AttachmentDataItem, isValidThumb: (thumbData: ThumbData?) -> Boolean): Boolean {
+    fun updateTransferData(data: TransferData, item: com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem, isValidThumb: (thumbData: ThumbData?) -> Boolean): Boolean {
         if (isFileItemInitialized.not() || (data.messageTid != item.file.messageTid)) return false
         if (data.state == TransferState.ThumbLoaded) {
             if (isValidThumb(data.thumbData))

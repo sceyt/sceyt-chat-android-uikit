@@ -1,6 +1,6 @@
 package com.sceyt.chatuikit.persistence.logic
 
-import com.sceyt.chatuikit.data.messageeventobserver.ReactionUpdateEventData
+import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse

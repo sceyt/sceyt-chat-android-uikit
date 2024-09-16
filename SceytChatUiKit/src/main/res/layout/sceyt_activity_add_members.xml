@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.sceyt.chatuikit.presentation.uicomponents.addmembers.SelectUsersActivity">
+    tools:context="com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity">
 
     <com.sceyt.chatuikit.presentation.customviews.SearchableToolbar
         android:id="@+id/toolbar"
