@@ -45,6 +45,7 @@ data class SceytMessage(
         val shouldShowAvatarAndName: Boolean = false,
         val disabledShowAvatarAndName: Boolean = false,
         val isGroup: Boolean = false,
+        val isPublicChannel: Boolean = false,
         val files: List<FileListItem>? = null,
         val messageReactions: List<ReactionItem.Reaction>? = null,
         val isSelected: Boolean = false

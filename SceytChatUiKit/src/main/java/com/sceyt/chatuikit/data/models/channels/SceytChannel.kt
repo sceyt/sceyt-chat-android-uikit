@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isGroup
+import com.sceyt.chatuikit.persistence.extensions.isPublicChannel
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
@@ -56,6 +57,8 @@ data class SceytChannel(
         else getPeer()?.avatarUrl
 
     val isGroup get() = stringToEnum(type).isGroup()
+
+    val isPublicChannel get() = stringToEnum(type).isPublicChannel()
 
     val pinned get() = pinnedAt != null && pinnedAt != 0L
 
