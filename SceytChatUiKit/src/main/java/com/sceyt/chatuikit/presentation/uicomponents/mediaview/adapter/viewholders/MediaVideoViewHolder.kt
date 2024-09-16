@@ -33,7 +33,7 @@ import com.sceyt.chatuikit.persistence.filetransfer.TransferState.WaitingToUploa
 import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.viewholders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.OnMediaClickCallback
-import com.sceyt.chatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
+import com.sceyt.chatuikit.presentation.uicomponents.mediaview.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.uicomponents.mediaview.applySystemWindowInsetsMargin
@@ -85,7 +85,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
                     }
                     false
                 }
-                isVisible = ((context as? SceytMediaActivity)?.isShowMediaDetail() ?: true)
+                isVisible = ((context as? MediaPreviewActivity)?.isShowMediaDetail() ?: true)
                 videoController = this
             }
         }
@@ -100,7 +100,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
 
     private fun setPlayingState() {
         videoController?.applySystemWindowInsetsMargin(applyBottom = true, userDefaultMargins = false)
-        videoController?.isVisible = ((context as? SceytMediaActivity)?.isShowMediaDetail()
+        videoController?.isVisible = ((context as? MediaPreviewActivity)?.isShowMediaDetail()
                 ?: true)
         initPlayerHelper()
     }

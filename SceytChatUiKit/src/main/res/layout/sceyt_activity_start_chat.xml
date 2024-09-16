@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.sceyt.chatuikit.presentation.uicomponents.startchat.SceytStartChatActivity">
+    tools:context="com.sceyt.chatuikit.presentation.uicomponents.startchat.StartChatActivity">
 
     <com.sceyt.chatuikit.presentation.customviews.SearchableToolbar
         android:id="@+id/toolbar"

@@ -10,14 +10,14 @@ import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
-import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
+import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.MessagesListHeaderView
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-fun MessageListViewModel.bind(headerView: ConversationHeaderView,
+fun MessageListViewModel.bind(headerView: MessagesListHeaderView,
                               replyInThreadMessage: SceytMessage?,
                               lifecycleOwner: LifecycleOwner) {
 
@@ -76,6 +76,6 @@ fun MessageListViewModel.bind(headerView: ConversationHeaderView,
 }
 
 @Suppress("unused")
-fun bindViewFromJava(viewModel: MessageListViewModel, replyInThreadMessage: SceytMessage?, headerView: ConversationHeaderView, lifecycleOwner: LifecycleOwner) {
+fun bindViewFromJava(viewModel: MessageListViewModel, replyInThreadMessage: SceytMessage?, headerView: MessagesListHeaderView, lifecycleOwner: LifecycleOwner) {
     viewModel.bind(headerView, replyInThreadMessage, lifecycleOwner)
 }

@@ -18,7 +18,6 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @param hintTextColor Hint text color for the input, default is [SceytChatUIKitTheme.textFootnoteColor]
  * @param backgroundColor Background color for the input, default is [SceytChatUIKitTheme.surface1Color]
  * @param hintText Hint text for the input, default is "Search for channels"
- * @param disableDebouncedSearch Disable debounced search, default is false
  * */
 data class SearchChannelInputStyle(
         var searchIcon: Drawable?,
@@ -27,7 +26,6 @@ data class SearchChannelInputStyle(
         @ColorInt var hintTextColor: Int,
         @ColorInt var backgroundColor: Int,
         var hintText: String,
-        var disableDebouncedSearch: Boolean
 ) {
 
     companion object {
@@ -60,9 +58,6 @@ data class SearchChannelInputStyle(
             val backgroundColor = typedArray.getColor(R.styleable.SearchChannelInput_sceytUiBackgroundColor,
                 context.getCompatColor(SceytChatUIKit.theme.surface1Color))
 
-            val disableDebouncedSearch = typedArray.getBoolean(R.styleable.SearchChannelInput_sceytUiDisableDebouncedSearch,
-                false)
-
             typedArray.recycle()
 
             return SearchChannelInputStyle(
@@ -72,7 +67,6 @@ data class SearchChannelInputStyle(
                 hintTextColor = hintTextColor,
                 backgroundColor = backgroundColor,
                 hintText = context.getString(R.string.sceyt_search_for_channels),
-                disableDebouncedSearch = disableDebouncedSearch
             ).let { styleCustomizer.apply(context, it) }
         }
     }

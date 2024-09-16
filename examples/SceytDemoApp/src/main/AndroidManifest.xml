@@ -26,7 +26,7 @@
         android:theme="@style/SceytAppTheme">
 
         <activity
-            android:name="com.sceyt.chatuikit.presentation.uicomponents.share.SceytShareActivity"
+            android:name="com.sceyt.chatuikit.presentation.uicomponents.share.ShareActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />

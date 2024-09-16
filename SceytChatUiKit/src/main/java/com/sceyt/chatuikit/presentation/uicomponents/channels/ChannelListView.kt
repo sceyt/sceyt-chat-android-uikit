@@ -24,14 +24,14 @@ import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.viewholders.ChannelViewHolderFactory
 import com.sceyt.chatuikit.presentation.uicomponents.channels.dialogs.ChannelActionConfirmationWithDialog
-import com.sceyt.chatuikit.presentation.uicomponents.channels.dialogs.ChatActionsDialog
+import com.sceyt.chatuikit.presentation.uicomponents.channels.dialogs.ChannelActionsDialog
 import com.sceyt.chatuikit.presentation.uicomponents.channels.events.ChannelEvent
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelClickListenersImpl
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.channels.listeners.ChannelPopupClickListenersImpl
-import com.sceyt.chatuikit.presentation.uicomponents.channels.popups.PopupMenuChannel
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytConversationActivity
+import com.sceyt.chatuikit.presentation.uicomponents.channels.popups.ChannelActionsPopup
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.ChannelActivity
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.chatuikit.sceytconfigs.ChannelSortType
 import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
@@ -161,7 +161,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     private fun showChannelActionsPopup(view: View, item: ChannelListItem.ChannelItem) {
         if (style.showChannelActionAsPopup) {
-            val popup = PopupMenuChannel(ContextThemeWrapper(context, style.popupStyle), view, channel = item.channel)
+            val popup = ChannelActionsPopup(ContextThemeWrapper(context, style.popupStyle), view, channel = item.channel)
             popup.setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {
                     R.id.sceyt_mark_as_read -> popupClickListeners.onMarkAsReadClick(item.channel)
@@ -176,17 +176,17 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
             }
             popup.show()
         } else
-            ChatActionsDialog.newInstance(context, item.channel).also {
+            ChannelActionsDialog.newInstance(context, item.channel).also {
                 it.setChooseTypeCb { action ->
                     when (action) {
-                        ChatActionsDialog.ActionsEnum.Pin -> popupClickListeners.onPinClick(item.channel)
-                        ChatActionsDialog.ActionsEnum.UnPin -> popupClickListeners.onUnPinClick(item.channel)
-                        ChatActionsDialog.ActionsEnum.MarkAsRead -> popupClickListeners.onMarkAsReadClick(item.channel)
-                        ChatActionsDialog.ActionsEnum.MarkAsUnRead -> popupClickListeners.onMarkAsUnReadClick(item.channel)
-                        ChatActionsDialog.ActionsEnum.Mute -> popupClickListeners.onMuteClick(item.channel)
-                        ChatActionsDialog.ActionsEnum.UnMute -> popupClickListeners.onUnMuteClick(item.channel)
-                        ChatActionsDialog.ActionsEnum.Leave -> popupClickListeners.onLeaveChannelClick(item.channel)
-                        ChatActionsDialog.ActionsEnum.Delete -> popupClickListeners.onDeleteChannelClick(item.channel)
+                        ChannelActionsDialog.ActionsEnum.Pin -> popupClickListeners.onPinClick(item.channel)
+                        ChannelActionsDialog.ActionsEnum.UnPin -> popupClickListeners.onUnPinClick(item.channel)
+                        ChannelActionsDialog.ActionsEnum.MarkAsRead -> popupClickListeners.onMarkAsReadClick(item.channel)
+                        ChannelActionsDialog.ActionsEnum.MarkAsUnRead -> popupClickListeners.onMarkAsUnReadClick(item.channel)
+                        ChannelActionsDialog.ActionsEnum.Mute -> popupClickListeners.onMuteClick(item.channel)
+                        ChannelActionsDialog.ActionsEnum.UnMute -> popupClickListeners.onUnMuteClick(item.channel)
+                        ChannelActionsDialog.ActionsEnum.Leave -> popupClickListeners.onLeaveChannelClick(item.channel)
+                        ChannelActionsDialog.ActionsEnum.Delete -> popupClickListeners.onDeleteChannelClick(item.channel)
                     }
                 }
             }.show()
@@ -282,11 +282,11 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-        SceytConversationActivity.newInstance(context, item.channel)
+        ChannelActivity.newInstance(context, item.channel)
     }
 
     override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
-        SceytConversationActivity.newInstance(context, item.channel)
+        ChannelActivity.newInstance(context, item.channel)
     }
 
     override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {

@@ -49,10 +49,10 @@ import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.presentation.uicomponents.addmembers.SceytAddMembersActivity
+import com.sceyt.chatuikit.presentation.uicomponents.addmembers.SelectUsersActivity
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
-import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
-import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.SceytConversationInfoActivity
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelInfoStyleApplier
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.ChannelMembersAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.adapter.diff.MemberItemPayloadDiff
@@ -62,10 +62,10 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.po
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.popups.MemberActionsDialog.ActionsEnum.Delete
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.popups.MemberActionsDialog.ActionsEnum.RevokeAdmin
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
+import com.sceyt.chatuikit.sceytstyles.ChannelInfoStyle
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ConversationInfoStyleApplier, SceytKoinComponent {
+open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier, SceytKoinComponent {
     protected val viewModel by viewModel<ChannelMembersViewModel>()
     protected var membersAdapter: ChannelMembersAdapter? = null
     protected var binding: SceytFragmentChannelMembersBinding? = null
@@ -74,7 +74,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
         private set
     protected lateinit var memberType: MemberTypeEnum
         private set
-    protected lateinit var style: ConversationInfoStyle
+    protected lateinit var style: ChannelInfoStyle
         private set
     protected var currentUserRole: Role? = null
         private set
@@ -102,7 +102,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
         super.onAttach(context)
         addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.parcelableArrayList<SceytMember>(SceytAddMembersActivity.SELECTED_USERS)?.let { data ->
+                result.data?.parcelableArrayList<SceytMember>(SelectUsersActivity.SELECTED_USERS)?.let { data ->
                     if (memberType == MemberTypeEnum.Admin) {
                         val users = data.map { it.copy(role = Role(RoleTypeEnum.Admin.toString())) }
                         changeRole(*users.toTypedArray())
@@ -324,7 +324,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
     protected open fun onAddMembersClick(memberType: MemberTypeEnum) {
         val animOptions = ActivityOptionsCompat.makeCustomAnimation(requireContext(),
             R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
-        addMembersActivityLauncher.launch(SceytAddMembersActivity.newInstance(requireContext(), memberType, true), animOptions)
+        addMembersActivityLauncher.launch(SelectUsersActivity.newInstance(requireContext(), memberType, true), animOptions)
     }
 
     protected open fun onRevokeAdminClick(member: SceytMember) {
@@ -449,7 +449,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
     }
 
     protected open fun onFindOrCreateChat(sceytChannel: SceytChannel) {
-        SceytConversationInfoActivity.launch(requireContext(), sceytChannel)
+        ChannelInfoActivity.launch(requireContext(), sceytChannel)
     }
 
     protected open fun onPageStateChange(pageState: PageState) {
@@ -462,7 +462,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, Conversat
         getCurrentUserRole()
     }
 
-    override fun setStyle(style: ConversationInfoStyle) {
+    override fun setStyle(style: ChannelInfoStyle) {
         this.style = style
     }
 

@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytConversationActivity
+import com.sceyt.chatuikit.presentation.uicomponents.conversation.ChannelActivity
 import com.sceyt.chatuikit.sceytconfigs.SceytChatUIKitConfig
 import com.sceyt.chatuikit.sceytconfigs.UploadNotificationClickHandleData
 import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
@@ -58,7 +58,7 @@ class SceytChatDemoApp : Application() {
 
         SceytChatUIKit.config = SceytChatUIKitConfig(
             uploadNotificationClickHandleData = UploadNotificationClickHandleData(
-                SceytConversationActivity::class.java, SceytConversationActivity.CHANNEL
+                ChannelActivity::class.java, ChannelActivity.CHANNEL
             )
         )
         ChatClient.setSceytLogLevel(SCTLogLevel.Info) { i: Int, s: String, s1: String ->

@@ -32,8 +32,8 @@ import com.sceyt.chatuikit.extensions.permissionIgnored
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.common.SceytLoader
-import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.GalleryMediaPicker
-import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.GalleryMediaPicker.Companion.MAX_SELECT_MEDIA_COUNT
+import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.BottomSheetMediaPicker
+import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.BottomSheetMediaPicker.Companion.MAX_SELECT_MEDIA_COUNT
 import com.sceyt.chatuikit.presentation.uicomponents.searchinput.DebounceHelper
 import com.sceyt.chatuikit.shared.utils.FileUtil
 import kotlinx.coroutines.CoroutineScope
@@ -54,7 +54,7 @@ class ChooseAttachmentHelper {
     private var addAttachmentLauncher: ActivityResultLauncher<Intent>? = null
     private var allowMultiple: Boolean = true
     private var onlyImages: Boolean = true
-    private var sceytGalleryFilter = GalleryMediaPicker.PickerFilterType.All
+    private var sceytGalleryFilter = BottomSheetMediaPicker.PickerFilterType.All
     private var sceytGalleryMaxSelectCount: Int = MAX_SELECT_MEDIA_COUNT
     private var chooseFilesCb: ((List<String>) -> Unit)? = null
     private var takePictureCb: ((String) -> Unit)? = null
@@ -162,16 +162,16 @@ class ChooseAttachmentHelper {
         pickFile()
     }
 
-    fun openSceytGallery(pickerListener: GalleryMediaPicker.PickerListener,
-                         filter: GalleryMediaPicker.PickerFilterType = sceytGalleryFilter,
-                         maxSelectCount: Int = sceytGalleryMaxSelectCount,
-                         vararg selections: String) {
+    fun openMediaPicker(pickerListener: BottomSheetMediaPicker.PickerListener,
+                        filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
+                        maxSelectCount: Int = sceytGalleryMaxSelectCount,
+                        vararg selections: String) {
         val permissions = getPermissionsForMangeStorage()
         sceytGalleryFilter = filter
         sceytGalleryMaxSelectCount = maxSelectCount
         if (context.checkAndAskPermissions(requestSceytGalleryPermissionLauncher, *permissions)) {
             openSceytGalleryPicker(pickerListener, filter = filter, maxSelectCount = maxSelectCount, *selections)
-        } else GalleryMediaPicker.pickerListener = pickerListener
+        } else BottomSheetMediaPicker.pickerListener = pickerListener
     }
 
     private fun onTakePhotoResult(success: Boolean) {
@@ -296,16 +296,16 @@ class ChooseAttachmentHelper {
         addAttachmentLauncher?.launch(intent)
     }
 
-    private fun openSceytGalleryPicker(pickerListener: GalleryMediaPicker.PickerListener? = GalleryMediaPicker.pickerListener,
-                                       filter: GalleryMediaPicker.PickerFilterType = sceytGalleryFilter,
+    private fun openSceytGalleryPicker(pickerListener: BottomSheetMediaPicker.PickerListener? = BottomSheetMediaPicker.pickerListener,
+                                       filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
                                        maxSelectCount: Int = sceytGalleryMaxSelectCount,
                                        vararg selections: String) {
-        GalleryMediaPicker.instance(
+        BottomSheetMediaPicker.instance(
             selections = selections,
             fileFilter = filter,
             maxSelectCount = maxSelectCount).apply {
-            GalleryMediaPicker.pickerListener = pickerListener
-        }.show(context.asFragmentActivity().supportFragmentManager, GalleryMediaPicker.TAG)
+            BottomSheetMediaPicker.pickerListener = pickerListener
+        }.show(context.asFragmentActivity().supportFragmentManager, BottomSheetMediaPicker.TAG)
     }
 
     private fun pickFile() {

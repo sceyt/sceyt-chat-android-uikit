@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/sceyt_color_background"
-    tools:context="com.sceyt.chatuikit.presentation.uicomponents.share.SceytShareActivity">
+    tools:context="com.sceyt.chatuikit.presentation.uicomponents.share.ShareActivity">
 
     <com.sceyt.chatuikit.presentation.customviews.SearchableToolbar
         android:id="@+id/toolbar"
