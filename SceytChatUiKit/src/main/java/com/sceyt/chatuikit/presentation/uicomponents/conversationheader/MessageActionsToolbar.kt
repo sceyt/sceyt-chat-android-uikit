@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.changeAlphaWithAnim
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners.HeaderUIElementsListener.ToolbarActionsVisibilityListener
+import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.listeners.ui.HeaderUIElementsListener.ToolbarActionsVisibilityListener
 
 class MessageActionsToolbar @JvmOverloads constructor(
         context: Context, attributeSet: AttributeSet? = null, defStyleAttr: Int = 0

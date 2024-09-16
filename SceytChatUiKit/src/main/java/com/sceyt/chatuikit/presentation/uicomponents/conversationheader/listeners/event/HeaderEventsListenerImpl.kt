@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.uicomponents.conversationheader.eventlisteners
+package com.sceyt.chatuikit.presentation.uicomponents.conversationheader.listeners.event
 
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
