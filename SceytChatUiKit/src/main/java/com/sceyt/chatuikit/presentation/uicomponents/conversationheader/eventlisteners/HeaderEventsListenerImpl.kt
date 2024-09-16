@@ -2,9 +2,9 @@ package com.sceyt.chatuikit.presentation.uicomponents.conversationheader.eventli
 
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
-import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
+import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.MessagesListHeaderView
 
-open class HeaderEventsListenerImpl(view: ConversationHeaderView) : HeaderEventsListener.EventListeners {
+open class HeaderEventsListenerImpl(view: MessagesListHeaderView) : HeaderEventsListener.EventListeners {
     private var defaultListeners: HeaderEventsListener.EventListeners = view
     private var typingListener: HeaderEventsListener.TypingListener? = null
     private var presenceUpdateListener: HeaderEventsListener.PresenceUpdateListener? = null

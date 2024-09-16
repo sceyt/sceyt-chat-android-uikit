@@ -1,9 +1,9 @@
 package com.sceyt.chatuikit.presentation.uicomponents.conversationheader.clicklisteners
 
 import android.view.View
-import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
+import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.MessagesListHeaderView
 
-open class HeaderClickListenersImpl(view: ConversationHeaderView) : HeaderClickListeners.ClickListeners {
+open class HeaderClickListenersImpl(view: MessagesListHeaderView) : HeaderClickListeners.ClickListeners {
     private var defaultListeners: HeaderClickListeners.ClickListeners = view
     private var avatarClickListener: HeaderClickListeners.AvatarClickListener? = null
     private var toolbarClickListener: HeaderClickListeners.ToolbarClickListener? = null

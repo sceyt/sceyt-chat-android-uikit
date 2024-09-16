@@ -4,13 +4,13 @@ import android.view.Menu
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
-import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
+import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.MessagesListHeaderView
 import com.sceyt.chatuikit.presentation.uicomponents.messageinput.MessageInputView
 
 internal class MessageActionBridge {
     var messagesListView: MessagesListView? = null
         private set
-    var headerView: ConversationHeaderView? = null
+    var headerView: MessagesListHeaderView? = null
         private set
     var inputView: MessageInputView? = null
         private set
@@ -19,7 +19,7 @@ internal class MessageActionBridge {
         this.messagesListView = messagesListView
     }
 
-    fun setHeaderView(headerView: ConversationHeaderView) {
+    fun setHeaderView(headerView: MessagesListHeaderView) {
         this.headerView = headerView
         headerView.setToolbarActionHiddenCallback {
             messagesListView?.getMessageCommandEventListener()?.invoke(MessageCommandEvent.OnCancelMultiselectEvent)

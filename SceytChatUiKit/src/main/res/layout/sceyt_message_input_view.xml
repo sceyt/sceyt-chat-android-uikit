@@ -31,7 +31,7 @@
         tools:listitem="@layout/sceyt_item_input_image_attachment" />
 
     <FrameLayout
-        android:id="@+id/frameLayoutReplyOrEditMessage"
+        android:id="@+id/frameLayoutMessageActions"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:visibility="gone"
@@ -48,7 +48,7 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/frameLayoutReplyOrEditMessage" />
+        app:layout_constraintTop_toBottomOf="@+id/frameLayoutMessageActions" />
 
     <View
         android:id="@+id/view3"
@@ -113,8 +113,8 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <com.sceyt.chatuikit.presentation.customviews.voicerecorder.VoiceRecordPresenter
-        android:id="@+id/voiceRecordPresenter"
+    <com.sceyt.chatuikit.presentation.customviews.voicerecorder.VoiceRecordPlaybackView
+        android:id="@+id/VoiceRecordPlaybackView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clickable="true"

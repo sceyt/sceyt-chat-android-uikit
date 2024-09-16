@@ -1,20 +1,20 @@
 package com.sceyt.chatuikit.logger
 
-import com.sceyt.chatuikit.logger.SceytLogLevel.ALL
-import com.sceyt.chatuikit.logger.SceytLogLevel.DEBUG
-import com.sceyt.chatuikit.logger.SceytLogLevel.ERROR
-import com.sceyt.chatuikit.logger.SceytLogLevel.NONE
-import com.sceyt.chatuikit.logger.SceytLogLevel.WARNING
+import com.sceyt.chatuikit.logger.SceytLogLevel.All
+import com.sceyt.chatuikit.logger.SceytLogLevel.Debug
+import com.sceyt.chatuikit.logger.SceytLogLevel.Error
+import com.sceyt.chatuikit.logger.SceytLogLevel.None
+import com.sceyt.chatuikit.logger.SceytLogLevel.Warning
 
 internal class SceytLogLevelValidator(private val logLevel: SceytLogLevel) : LogLevelValidator {
 
     override fun isLoggable(priority: Priority): Boolean {
         return when (logLevel) {
-            NONE -> false
-            ALL -> true
-            DEBUG -> priority.level >= Priority.DEBUG.level
-            WARNING -> priority.level >= Priority.WARNING.level
-            ERROR -> priority.level >= Priority.ERROR.level
+            None -> false
+            All -> true
+            Debug -> priority.level >= Priority.Debug.level
+            Warning -> priority.level >= Priority.Warning.level
+            Error -> priority.level >= Priority.Error.level
         }
     }
 }

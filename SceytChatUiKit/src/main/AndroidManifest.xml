@@ -22,29 +22,29 @@
 
     <application android:requestLegacyExternalStorage="true">
         <activity
-            android:name="com.sceyt.chatuikit.presentation.uicomponents.conversation.SceytConversationActivity"
+            android:name="com.sceyt.chatuikit.presentation.uicomponents.conversation.ChannelActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name="com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.SceytConversationInfoActivity"
+            android:name="com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelInfoActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".presentation.uicomponents.mediaview.SceytMediaActivity"
+            android:name=".presentation.uicomponents.mediaview.MediaPreviewActivity"
             android:theme="@style/SceytPreviewThemeDark" />
 
         <activity
-            android:name=".presentation.uicomponents.forward.SceytForwardActivity"
+            android:name=".presentation.uicomponents.forward.ForwardActivity"
             android:theme="@style/DefaultFontTheme" />
 
         <activity
-            android:name=".presentation.uicomponents.share.SceytShareActivity"
+            android:name=".presentation.uicomponents.share.ShareActivity"
             android:theme="@style/DefaultFontTheme" />
 
         <activity
-            android:name=".presentation.uicomponents.conversationinfo.photopreview.SceytPhotoPreviewActivity"
+            android:name=".presentation.uicomponents.conversationinfo.photopreview.ImagePreviewActivity"
             android:theme="@style/DefaultFontTheme" />
 
         <activity
@@ -52,20 +52,20 @@
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity
-            android:name=".presentation.uicomponents.addmembers.SceytAddMembersActivity"
+            android:name=".presentation.uicomponents.addmembers.SelectUsersActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity
-            android:name=".presentation.uicomponents.startchat.SceytStartChatActivity"
+            android:name=".presentation.uicomponents.startchat.StartChatActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
         <activity
-            android:name=".presentation.uicomponents.createchat.createchannel.SceytCreateChannelActivity"
+            android:name=".presentation.uicomponents.createchat.createchannel.CreateChannelActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".presentation.uicomponents.createchat.newgroup.SceytCreateGroupActivity"
+            android:name=".presentation.uicomponents.createchat.newgroup.CreateGroupActivity"
             android:exported="false"
             android:theme="@style/DefaultFontTheme" />
 

@@ -74,8 +74,8 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.Reac
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.popups.PopupMenuMessageActions
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.popups.PopupReactions
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.popups.PopupReactionsAdapter
-import com.sceyt.chatuikit.presentation.uicomponents.forward.SceytForwardActivity
-import com.sceyt.chatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
+import com.sceyt.chatuikit.presentation.uicomponents.forward.ForwardActivity
+import com.sceyt.chatuikit.presentation.uicomponents.mediaview.MediaPreviewActivity
 import com.sceyt.chatuikit.sceytstyles.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -868,11 +868,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage) {
         when (item) {
             is FileListItem.Image -> {
-                SceytMediaActivity.openMediaView(context, item.file, message.user, message.channelId)
+                MediaPreviewActivity.launch(context, item.file, message.user, message.channelId)
             }
 
             is FileListItem.Video -> {
-                SceytMediaActivity.openMediaView(context, item.file, message.user, message.channelId)
+                MediaPreviewActivity.launch(context, item.file, message.user, message.channelId)
             }
 
             else -> item.file.openFile(context)
@@ -941,7 +941,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onForwardMessageClick(vararg messages: SceytMessage) {
-        SceytForwardActivity.launch(context, *messages)
+        ForwardActivity.launch(context, *messages)
     }
 
     override fun onReactMessageClick(message: SceytMessage) {

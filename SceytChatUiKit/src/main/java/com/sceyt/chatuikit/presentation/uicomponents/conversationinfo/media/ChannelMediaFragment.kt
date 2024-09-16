@@ -27,14 +27,14 @@ import com.sceyt.chatuikit.presentation.customviews.PageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelFileItem.Companion.getData
-import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.SceytConversationInfoActivity
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ViewPagerAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.ChannelMediaAdapter
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.media.viewmodel.ChannelAttachmentsViewModel
-import com.sceyt.chatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
+import com.sceyt.chatuikit.presentation.uicomponents.mediaview.MediaPreviewActivity
 import com.sceyt.chatuikit.sceytstyles.ConversationInfoMediaStyle
 import kotlinx.coroutines.launch
 
@@ -98,7 +98,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
             pageStateView = this
 
             post {
-                (activity as? SceytConversationInfoActivity)?.getViewPagerY()?.let {
+                (activity as? ChannelInfoActivity)?.getViewPagerY()?.let {
                     if (it > 0)
                         layoutParams.height = screenHeightPx() - it
                 }
@@ -157,7 +157,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     protected open fun onMediaClick(item: ChannelFileItem) {
         item.getData()?.let { data ->
-            SceytMediaActivity.openMediaView(requireContext(), data.attachment, data.user, channel.id, true)
+            MediaPreviewActivity.launch(requireContext(), data.attachment, data.user, channel.id, true)
         }
     }
 

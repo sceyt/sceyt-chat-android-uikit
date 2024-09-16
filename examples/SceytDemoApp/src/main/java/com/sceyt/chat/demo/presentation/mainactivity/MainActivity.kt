@@ -14,7 +14,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.presentation.uicomponents.channels.SceytChannelsFragment
+import com.sceyt.chatuikit.presentation.uicomponents.channels.ChannelListFragment
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject
@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setPagerAdapter() {
-        val adapter = MainViewPagerAdapter(this, arrayListOf(SceytChannelsFragment(), ProfileFragment()))
+        val adapter = MainViewPagerAdapter(this, arrayListOf(ChannelListFragment(), ProfileFragment()))
         binding.viewPager.adapter = adapter
         binding.viewPager.isUserInputEnabled = false
         binding.viewPager.offscreenPageLimit = 2

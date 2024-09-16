@@ -19,16 +19,16 @@ import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelUpdateListener
-import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ConversationInfoStyleApplier
+import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelInfoStyleApplier
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.links.ChannelLinksFragment
-import com.sceyt.chatuikit.sceytstyles.ConversationInfoStyle
+import com.sceyt.chatuikit.sceytstyles.ChannelInfoStyle
 
-open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener, ConversationInfoStyleApplier {
+open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
     protected lateinit var binding: SceytFragmentInfoDescriptionBinding
         private set
     protected lateinit var channel: SceytChannel
         private set
-    protected lateinit var style: ConversationInfoStyle
+    protected lateinit var style: ChannelInfoStyle
         private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -66,7 +66,7 @@ open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener, Conversa
         setChannelDescription(channel)
     }
 
-    override fun setStyle(style: ConversationInfoStyle) {
+    override fun setStyle(style: ChannelInfoStyle) {
         this.style = style
     }
 

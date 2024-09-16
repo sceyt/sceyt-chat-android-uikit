@@ -23,7 +23,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.messages.MessageInfoViewProvider
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.listeners.MessageClickListeners
-import com.sceyt.chatuikit.presentation.uicomponents.mediaview.SceytMediaActivity
+import com.sceyt.chatuikit.presentation.uicomponents.mediaview.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.uicomponents.messageinfo.adapter.UserMarkerAdapter
 import com.sceyt.chatuikit.sceytstyles.MessageInfoStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
@@ -181,11 +181,11 @@ open class MessageInfoFragment : Fragment() {
     protected open fun onAttachmentClick(item: FileListItem, message: SceytMessage) {
         when (item) {
             is FileListItem.Image -> {
-                SceytMediaActivity.openMediaView(requireContext(), item.file, message.user, message.channelId)
+                MediaPreviewActivity.launch(requireContext(), item.file, message.user, message.channelId)
             }
 
             is FileListItem.Video -> {
-                SceytMediaActivity.openMediaView(requireContext(), item.file, message.user, message.channelId)
+                MediaPreviewActivity.launch(requireContext(), item.file, message.user, message.channelId)
             }
 
             else -> item.file.openFile(requireContext())
@@ -196,6 +196,7 @@ open class MessageInfoFragment : Fragment() {
         root.setBackgroundColor(style.backgroundColor)
         toolbar.setBackgroundColor(style.toolbarColor)
         toolbar.setTitleColor(style.titleColor)
+        toolbar.setTitle(style.title)
         setTextViewsTextColor(listOf(tvSentDate, tvPlayedByHint, tvReadByHint, tvDeliveredToHint),
             requireContext().getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
         divider.setBackgroundColor(style.borderColor)

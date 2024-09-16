@@ -7,9 +7,9 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.presentation.customviews.AvatarView
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.events.MessageCommandEvent
-import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.ConversationHeaderView
+import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.MessagesListHeaderView
 
-open class HeaderUIElementsListenerImpl(view: ConversationHeaderView) : HeaderUIElementsListener.ElementsListeners {
+open class HeaderUIElementsListenerImpl(view: MessagesListHeaderView) : HeaderUIElementsListener.ElementsListeners {
     private var defaultListeners: HeaderUIElementsListener.ElementsListeners = view
     private var titleListener: HeaderUIElementsListener.TitleListener? = null
     private var subTitleListener: HeaderUIElementsListener.SubTitleListener? = null

@@ -49,7 +49,6 @@ class SearchChannelInputView @JvmOverloads constructor(
     private val query: String
         get() = binding.input.text.toString().trim()
 
-    private var disableDebouncedSearchDuringTyping = false
 
     init {
         binding = SceytSearchViewBinding.inflate(LayoutInflater.from(context), this)
@@ -97,24 +96,20 @@ class SearchChannelInputView @JvmOverloads constructor(
         input.setTextColor(style.textColor)
         input.hint = style.hintText
         input.setHintTextColor(style.hintTextColor)
-
-        disableDebouncedSearchDuringTyping = style.disableDebouncedSearch
         root.background = context.getCompatDrawable(R.drawable.sceyt_bg_corners_10)
         root.setBackgroundTint(style.backgroundColor)
     }
 
     private fun handleClearClick() {
         binding.input.text = null
-        if (disableDebouncedSearchDuringTyping)
-            eventListeners.onSearchSubmitted("")
+        eventListeners.onSearchSubmitted("")
     }
 
     private fun onQueryChanged(newQuery: String) {
         inputChangedListener?.onInputChanged(newQuery)
-        if (!disableDebouncedSearchDuringTyping)
-            debounceHelper.submit {
-                eventListeners.onSearchSubmittedByDebounce(newQuery)
-            }
+        debounceHelper.submit {
+            eventListeners.onSearchSubmittedByDebounce(newQuery)
+        }
     }
 
     fun setDebouncedTextChangeListener(inputChangedListener: InputChangedListener) {

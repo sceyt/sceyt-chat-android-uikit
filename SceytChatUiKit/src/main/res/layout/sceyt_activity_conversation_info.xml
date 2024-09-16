@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/sceyt_color_background_secondary"
-    tools:context=".presentation.uicomponents.conversationinfo.SceytConversationInfoActivity">
+    tools:context=".presentation.uicomponents.conversationinfo.ChannelInfoActivity">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/coordinatorLayout"
@@ -72,7 +72,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:layout_constraintTop_toBottomOf="@+id/frame_layout_settings"
-                        tools:layout="@layout/sceyt_fragment_info_members_by_role" />
+                        tools:layout="@layout/sceyt_fragment_info_options" />
 
                     <FrameLayout
                         android:id="@+id/frame_layout_additional_info"

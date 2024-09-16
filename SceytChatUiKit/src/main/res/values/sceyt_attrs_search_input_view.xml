@@ -8,6 +8,5 @@
         <attr name="sceytUiBackgroundColor" format="reference|color" />
         <attr name="sceytUiTextColor" format="reference|color" />
         <attr name="sceytUiHintTextColor" format="reference|color" />
-        <attr name="sceytUiDisableDebouncedSearch" format="boolean" />
     </declare-styleable>
 </resources>
