@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
-import com.sceyt.chatuikit.data.managers.channel.ChannelEventsManager
+import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
@@ -53,19 +53,19 @@ class ChannelMembersViewModel(private val channelsLogic: PersistenceChannelsLogi
 
     init {
         viewModelScope.launch {
-            ChannelEventsManager.onChannelMembersEventFlow.collect {
+            ChannelEventManager.onChannelMembersEventFlow.collect {
                 _channelMemberEventLiveData.postValue(it)
             }
         }
 
         viewModelScope.launch {
-            ChannelEventsManager.onChannelOwnerChangedEventFlow.collect {
+            ChannelEventManager.onChannelOwnerChangedEventFlow.collect {
                 _channelOwnerChangedEventLiveData.postValue(it)
             }
         }
 
         viewModelScope.launch {
-            ChannelEventsManager.onChannelEventFlow.collect {
+            ChannelEventManager.onChannelEventFlow.collect {
                 _channelEventEventLiveData.postValue(it)
             }
         }

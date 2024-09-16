@@ -1,6 +1,6 @@
 package com.sceyt.chatuikit.persistence.logicimpl.channel
 
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -41,7 +41,7 @@ object ChatReactionMessagesCache : SceytKoinComponent {
                 list[it.id] = it
                 channelsCache.channelLastReactionLoaded(channelId)
             } ?: run {
-                ConnectionEventsManager.awaitToConnectSceytWithTimeout(5.seconds.inWholeMilliseconds)
+                ConnectionEventManager.awaitToConnectSceytWithTimeout(5.seconds.inWholeMilliseconds)
                 val result = messageInteractor.getMessageFromServerById(channelId, messageId)
                 if (result is SceytResponse.Success) {
                     result.data?.let {

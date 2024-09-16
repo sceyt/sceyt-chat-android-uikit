@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.withContext
 
-object MessageEventsManager : MessageEventHandler.AllEventManagers {
+object MessageEventManager : MessageEventHandler.AllEventManagers {
     private var eventManager = MessageEventHandlerImpl(this)
 
     private val onMessageFlow_: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> = MutableSharedFlow(

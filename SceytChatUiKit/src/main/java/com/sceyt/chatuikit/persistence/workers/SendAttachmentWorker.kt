@@ -20,7 +20,7 @@ import androidx.work.WorkerParameters
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
@@ -177,7 +177,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         return if (result.isSuccess && !isStopped) {
             val messageToSend  = tmpMessage.copy(attachments = result.getOrThrow()).toMessage()
 
-            ConnectionEventsManager.awaitToConnectSceyt()
+            ConnectionEventManager.awaitToConnectSceyt()
             val response = messageLogic.sendMessageWithUploadedAttachments(tmpMessage.channelId, messageToSend)
             if (response is SceytResponse.Success) {
                 response.data?.let {

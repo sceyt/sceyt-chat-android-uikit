@@ -13,7 +13,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.data.managers.message.MessageEventsManager
+import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
@@ -67,7 +67,7 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
     }
 
     private fun observeToReactionsUpdate() {
-        MessageEventsManager.onMessageReactionUpdatedFlow
+        MessageEventManager.onMessageReactionUpdatedFlow
             .filter { it.message.id == message.id }
             .onEach { eventData ->
                 message = eventData.message

@@ -13,11 +13,11 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
-import com.sceyt.chatuikit.data.managers.channel.ChannelEventsManager
+import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
-import com.sceyt.chatuikit.data.managers.message.MessageEventsManager
+import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
@@ -230,10 +230,10 @@ class MessageListViewModel(
               .filter { it.first.id == channel.id && it.second.replyInThread }
               .mapNotNull { initMessageInfoData(it.second) }*/
 
-        onChannelEventFlow = ChannelEventsManager.onChannelEventFlow
+        onChannelEventFlow = ChannelEventManager.onChannelEventFlow
             .filter { it.channelId == channel.id }
 
-        onChannelTypingEventFlow = ChannelEventsManager.onChannelTypingEventFlow
+        onChannelTypingEventFlow = ChannelEventManager.onChannelTypingEventFlow
             .filter { it.channel.id == channel.id && it.member.id != myId }
 
         onChannelUpdatedEventFlow = ChannelsCache.channelUpdatedFlow
@@ -241,7 +241,7 @@ class MessageListViewModel(
             .map { it.channel }
 
         viewModelScope.launch(Dispatchers.IO) {
-            ChannelEventsManager.onChannelMembersEventFlow
+            ChannelEventManager.onChannelMembersEventFlow
                 .filter { it.channel.id == channel.id }
                 .collect(::onChannelMemberEvent)
         }
@@ -254,7 +254,7 @@ class MessageListViewModel(
                 conversationId = newChannelId
             }.launchIn(viewModelScope)
 
-        onNewOutGoingMessageFlow = MessageEventsManager.onOutgoingMessageFlow
+        onNewOutGoingMessageFlow = MessageEventManager.onOutgoingMessageFlow
             .filter { it.channelId == channel.id /*&& !it.replyInThread*/ }
 
         /*onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow

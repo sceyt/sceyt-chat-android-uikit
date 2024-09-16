@@ -7,7 +7,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum
-import com.sceyt.chatuikit.data.managers.channel.ChannelEventsManager
+import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -104,7 +104,7 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
     }
 
     fun onChannelEvent(channelId: Long) {
-        ChannelEventsManager.onChannelEventFlow
+        ChannelEventManager.onChannelEventFlow
             .filter { it.channelId == channelId }
             .onEach {
                 when (val event = it.eventType) {

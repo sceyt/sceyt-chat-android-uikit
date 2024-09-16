@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-object ChannelEventsManager : ChannelEventHandler.AllEvents {
+object ChannelEventManager : ChannelEventHandler.AllEvents {
     private var eventManager = ChannelEventHandlerImpl(this)
 
     private val onTotalUnreadChangedFlow_ = MutableSharedFlow<ChannelUnreadCountUpdatedEventData>(
