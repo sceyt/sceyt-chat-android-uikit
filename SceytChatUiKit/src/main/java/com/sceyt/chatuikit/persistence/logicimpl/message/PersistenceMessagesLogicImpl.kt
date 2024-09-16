@@ -14,8 +14,8 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
-import com.sceyt.chatuikit.data.managers.message.MessageEventsManager
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
+import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum
@@ -244,7 +244,7 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                                     messageId: Long): Flow<SceytResponse<List<SceytMessage>>> = callbackFlow {
-        ConnectionEventsManager.awaitToConnectSceyt()
+        ConnectionEventManager.awaitToConnectSceyt()
         messagesRepository.loadAllMessagesAfter(conversationId, replyInThread, messageId)
             .onCompletion { channel.close() }
             .collect { (nextMessageId, response) ->
@@ -359,7 +359,7 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun emitTmpMessageAndStore(channelId: Long, message: Message, sendChannel: SendChannel<SendMessageResult>) {
         val tmpMessage = tmpMessageToSceytMessage(channelId, message)
         sendChannel.trySend(SendMessageResult.TempMessage(tmpMessage))
-        MessageEventsManager.emitOutgoingMessage(tmpMessage)
+        MessageEventManager.emitOutgoingMessage(tmpMessage)
         messagesCache.add(channelId, tmpMessage)
         insertTmpMessageToDb(tmpMessage)
     }
@@ -383,7 +383,7 @@ internal class PersistenceMessagesLogicImpl(
                 createdAt = System.currentTimeMillis(),
                 user = ClientWrapper.currentUser ?: User(preference.getUserId())
             )
-            MessageEventsManager.emitOutgoingMessage(tmpMessage)
+            MessageEventManager.emitOutgoingMessage(tmpMessage)
             insertTmpMessageToDb(tmpMessage)
             it.attachments?.forEach { attachment ->
                 if (attachment.type != AttachmentTypeEnum.Link.value()) {
@@ -852,7 +852,7 @@ internal class PersistenceMessagesLogicImpl(
         val response: SceytResponse<List<SceytMessage>>
 
         if (loadType != LoadNear)
-            ConnectionEventsManager.awaitToConnectSceyt()
+            ConnectionEventManager.awaitToConnectSceyt()
 
         when (loadType) {
             LoadPrev -> {

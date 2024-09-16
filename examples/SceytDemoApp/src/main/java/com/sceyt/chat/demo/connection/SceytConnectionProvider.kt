@@ -8,7 +8,7 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.logger.SceytLog
 import kotlinx.coroutines.CoroutineScope
@@ -85,12 +85,12 @@ class SceytConnectionProvider(
                 preference.setString("", AppSharedPreference.PREF_USER_TOKEN)
             }
 
-            if (ConnectionEventsManager.connectionState == ConnectionState.Connecting) {
+            if (ConnectionEventManager.connectionState == ConnectionState.Connecting) {
                 SceytLog.i(Tag, "$Tag connectChatClient ignore login because ChatClient is connecting.")
                 return@launch
             }
 
-            if (ConnectionEventsManager.isConnected) {
+            if (ConnectionEventManager.isConnected) {
                 SceytLog.i(Tag, "$Tag connectChatClient ignore login because ChatClient is connected.")
                 return@launch
             }
@@ -143,7 +143,7 @@ class SceytConnectionProvider(
 
     private fun observeToConnectionState() {
         launch {
-            ConnectionEventsManager.onChangedConnectStatusFlow.collect {
+            ConnectionEventManager.onChangedConnectStatusFlow.collect {
                 when (it.state) {
                     ConnectionState.Failed -> SceytLog.e(Tag, "${it.exception?.message}")
                     ConnectionState.Disconnected -> {

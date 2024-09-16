@@ -19,7 +19,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.ClearedHistory
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Deleted
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Left
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
@@ -79,7 +79,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
      * lifecycle come back onResume state. */
     viewModelScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            if (ConnectionEventsManager.connectionState == ConnectionState.Connected) {
+            if (ConnectionEventManager.connectionState == ConnectionState.Connected) {
                 if (pendingDisplayMsgIds.isNotEmpty()) {
                     markMessageAsRead(*pendingDisplayMsgIds.toLongArray())
                     pendingDisplayMsgIds.clear()
@@ -270,7 +270,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    ConnectionEventsManager.onChangedConnectStatusFlow.onEach { stateData ->
+    ConnectionEventManager.onChangedConnectStatusFlow.onEach { stateData ->
         if (stateData.state == ConnectionState.Connected) {
             val message = messagesListView.getLastMessageBy {
                 // First trying to get last displayed message

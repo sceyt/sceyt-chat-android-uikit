@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.services
 
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.User
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.getPresentableName
@@ -47,7 +47,7 @@ object SceytPresenceChecker : SceytKoinComponent {
     }
 
     private suspend fun getUsers() {
-        if (presenceCheckUsers.keys.isEmpty() || !isAppOnForeground() || !ConnectionEventsManager.isConnected) return
+        if (presenceCheckUsers.keys.isEmpty() || !isAppOnForeground() || !ConnectionEventManager.isConnected) return
         val result = userInteractor.getUsersByIds(presenceCheckUsers.keys.toList())
         if (result is SceytResponse.Success) {
             result.data?.let { users ->

@@ -7,7 +7,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.withResumed
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.ChannelEventsManager
+import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -170,7 +170,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
         }
     }.launchIn(viewModelScope)
 
-    ChannelEventsManager.onChannelTypingEventFlow
+    ChannelEventManager.onChannelTypingEventFlow
         .filter { it.member.id != SceytChatUIKit.chatUIFacade.myId }
         .onEach {
             typingCancelHelper.await(it) { data ->

@@ -8,14 +8,14 @@ import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
-import com.sceyt.chatuikit.data.managers.channel.ChannelEventsManager
+import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
 import com.sceyt.chatuikit.data.managers.channel.event.MessageMarkerEventData
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
-import com.sceyt.chatuikit.data.managers.message.MessageEventsManager
+import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.models.LoadKeyData
@@ -84,19 +84,19 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     init {
         // Channel events
-        ChannelEventsManager.onChannelEventFlow.onEach(::onChannelEvent).launchIn(scope)
-        ChannelEventsManager.onTotalUnreadChangedFlow.onEach(::onChannelUnreadCountUpdatedEvent).launchIn(scope)
-        ChannelEventsManager.onChannelMembersEventFlow.onEach(::onChannelMemberEvent).launchIn(scope)
-        ChannelEventsManager.onChannelOwnerChangedEventFlow.onEach(::onChannelOwnerChangedEvent).launchIn(scope)
+        ChannelEventManager.onChannelEventFlow.onEach(::onChannelEvent).launchIn(scope)
+        ChannelEventManager.onTotalUnreadChangedFlow.onEach(::onChannelUnreadCountUpdatedEvent).launchIn(scope)
+        ChannelEventManager.onChannelMembersEventFlow.onEach(::onChannelMemberEvent).launchIn(scope)
+        ChannelEventManager.onChannelOwnerChangedEventFlow.onEach(::onChannelOwnerChangedEvent).launchIn(scope)
         // Message events
-        ChannelEventsManager.onMessageStatusFlow.onEach(::onMessageStatusChangeEvent).launchIn(scope)
-        ChannelEventsManager.onMarkerReceivedFlow.onEach(::onMessageMarkerEvent).launchIn(scope)
-        MessageEventsManager.onMessageFlow.onEach(::onMessage).launchIn(scope)
-        MessageEventsManager.onMessageReactionUpdatedFlow.onEach(::onMessageReactionUpdated).launchIn(scope)
-        MessageEventsManager.onMessageEditedOrDeletedFlow.onEach(::onMessageEditedOrDeleted).launchIn(scope)
+        ChannelEventManager.onMessageStatusFlow.onEach(::onMessageStatusChangeEvent).launchIn(scope)
+        ChannelEventManager.onMarkerReceivedFlow.onEach(::onMessageMarkerEvent).launchIn(scope)
+        MessageEventManager.onMessageFlow.onEach(::onMessage).launchIn(scope)
+        MessageEventManager.onMessageReactionUpdatedFlow.onEach(::onMessageReactionUpdated).launchIn(scope)
+        MessageEventManager.onMessageEditedOrDeletedFlow.onEach(::onMessageEditedOrDeleted).launchIn(scope)
 
         // Connection events
-        ConnectionEventsManager.onChangedConnectStatusFlow.onEach(::onChangedConnectStatus).launchIn(scope)
+        ConnectionEventManager.onChangedConnectStatusFlow.onEach(::onChangedConnectStatus).launchIn(scope)
 
         // Presence events
         SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach(::onPresenceChanged).launchIn(scope)

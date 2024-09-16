@@ -6,9 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chatuikit.data.managers.channel.ChannelEventsManager
+import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.MessageMarkerEventData
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
@@ -78,12 +78,12 @@ class MessageInfoViewModel(
     private var message: SceytMessage? = null
 
     init {
-        ChannelEventsManager.onMessageStatusFlow
+        ChannelEventManager.onMessageStatusFlow
             .filter { it.marker.messageIds.contains(messageId) }
             .onEach(::onMessageStatusChange)
             .launchIn(viewModelScope)
 
-        ChannelEventsManager.onMarkerReceivedFlow
+        ChannelEventManager.onMarkerReceivedFlow
             .filter { it.marker.messageIds.contains(messageId) }
             .onEach(::onMarkerReceived)
             .launchIn(viewModelScope)
@@ -178,7 +178,7 @@ class MessageInfoViewModel(
                 }
             }
 
-            ConnectionEventsManager.awaitToConnectSceyt()
+            ConnectionEventManager.awaitToConnectSceyt()
 
             val readMarkers = async {
                 markerInteractor.getMessageMarkers(messageId, read, 0, limit)
