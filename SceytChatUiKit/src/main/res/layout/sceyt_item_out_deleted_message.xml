@@ -50,6 +50,8 @@
             app:layout_constraintEnd_toEndOf="@id/layoutDetails"
             app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
             app:sceytUiDateStatusDateTextSize="@dimen/tinyTextSize"
+            app:sceytUiDateStatusLeadingIconPadding="5dp"
+            app:sceytUiDateStatusLeadingIconSize="15.5dp"
             app:sceytUiDateStatusTrailingIconPadding="5dp"
             app:sceytUiDateStatusTrailingIconSize="15.5dp"
             tools:sceytUiDateStatusDateText="00:37" />

@@ -11,17 +11,18 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.presentation.customviews.DateStatusView
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
+import com.sceyt.chatuikit.presentation.customviews.DateStatusView
+import com.sceyt.chatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.chatuikit.styles.ChannelListViewStyle
 import com.sceyt.chatuikit.styles.MessageItemStyle
-import com.sceyt.chatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import java.io.File
 
 fun SceytMessage?.setChannelMessageDateAndStatusIcon(
@@ -108,7 +109,10 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(
 fun SceytMessage.getFormattedDateOrDisplayCount(): String {
     val builder = StringBuilder(getDateTimeString(createdAt))
     if (isPublicChannel) {
-        builder.insert(0, " $displayCount • ")
+        val viewCount = markerTotals?.firstOrNull {
+            it.name == MarkerTypeEnum.Displayed.value()
+        }?.count ?: 0
+        builder.insert(0, "$viewCount • ")
     }
     return builder.toString()
 }
