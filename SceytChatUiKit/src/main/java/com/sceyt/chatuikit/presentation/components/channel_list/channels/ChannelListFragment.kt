@@ -11,7 +11,7 @@ import com.sceyt.chat.connectivity_change.NetworkMonitor
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
@@ -48,10 +48,10 @@ class ChannelListFragment : Fragment() {
     }
 
     private fun initViews() {
-        setupConnectionStatus(ConnectionEventsObserver.connectionState)
+        setupConnectionStatus(ConnectionEventsManager.connectionState)
 
         lifecycleScope.launch {
-            ConnectionEventsObserver.onChangedConnectStatusFlow.distinctUntilChanged().collect {
+            ConnectionEventsManager.onChangedConnectStatusFlow.distinctUntilChanged().collect {
                 it.state?.let { it1 -> setupConnectionStatus(it1) }
             }
         }

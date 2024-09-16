@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
 import com.sceyt.chatuikit.data.managers.channel.event.MessageMarkerEventData
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.data.managers.message.MessageEventsManager
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
@@ -96,7 +96,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         MessageEventsManager.onMessageEditedOrDeletedFlow.onEach(::onMessageEditedOrDeleted).launchIn(scope)
 
         // Connection events
-        ConnectionEventsObserver.onChangedConnectStatusFlow.onEach(::onChangedConnectStatus).launchIn(scope)
+        ConnectionEventsManager.onChangedConnectStatusFlow.onEach(::onChangedConnectStatus).launchIn(scope)
 
         // Presence events
         SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach(::onPresenceChanged).launchIn(scope)

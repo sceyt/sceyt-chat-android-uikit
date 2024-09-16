@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
@@ -72,7 +72,7 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun getSettings() {
         viewModelScope.launch(Dispatchers.IO) {
-            ConnectionEventsObserver.awaitToConnectSceyt()
+            ConnectionEventsManager.awaitToConnectSceyt()
             val response = userInteractor.getSettings()
             notifyResponseAndPageState(_settingsLiveData, response)
         }
