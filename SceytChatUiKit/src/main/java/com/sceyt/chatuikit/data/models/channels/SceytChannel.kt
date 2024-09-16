@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.data.models.channels
 
 import android.os.Parcelable
 import com.sceyt.chat.models.user.User
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.messages.PendingReactionData
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction

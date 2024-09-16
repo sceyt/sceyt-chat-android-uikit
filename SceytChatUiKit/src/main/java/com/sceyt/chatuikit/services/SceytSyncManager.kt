@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.shared.LiveEvent
 import com.sceyt.chatuikit.presentation.common.ConcurrentHashSet
 import kotlinx.coroutines.Dispatchers

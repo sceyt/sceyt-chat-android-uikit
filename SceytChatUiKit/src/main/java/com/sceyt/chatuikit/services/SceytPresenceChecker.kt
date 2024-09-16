@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.services
 
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.User
-import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.getPresentableName

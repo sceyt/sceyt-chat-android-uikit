@@ -18,9 +18,9 @@ import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.presentation.customviews.DateStatusView
-import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
-import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
-import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
+import com.sceyt.chatuikit.styles.ChannelListViewStyle
+import com.sceyt.chatuikit.styles.MessageItemStyle
 import java.io.File
 
 fun SceytMessage?.setChannelMessageDateAndStatusIcon(

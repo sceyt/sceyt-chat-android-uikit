@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.persistence.logic
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
-import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData
+import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.pushes.RemoteMessageData
+import com.sceyt.chatuikit.push.RemoteMessageData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 

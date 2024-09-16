@@ -2,8 +2,8 @@ package com.sceyt.chatuikit.data.models.messages
 
 import android.os.Parcelable
 import com.sceyt.chatuikit.persistence.extensions.equalsIgnoreNull
-import com.sceyt.chatuikit.persistence.filetransfer.TransferData
-import com.sceyt.chatuikit.persistence.filetransfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import kotlinx.parcelize.Parcelize
 
 @Parcelize

@@ -8,8 +8,8 @@ import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.data.AppSharedPreferenceImpl
 import com.sceyt.chat.demo.data.api.AuthApiService
 import com.sceyt.chat.demo.data.repositories.ConnectionRepo
-import com.sceyt.chatuikit.presentation.uicomponents.addmembers.viewmodel.UsersViewModel
-import com.sceyt.chatuikit.presentation.uicomponents.changerole.viewmodel.RoleViewModel
+import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersViewModel
+import com.sceyt.chatuikit.presentation.components.role.viewmodel.RoleViewModel
 import com.sceyt.chat.demo.presentation.login.LoginViewModel
 import okhttp3.OkHttpClient
 import org.koin.androidx.viewmodel.dsl.viewModel

@@ -10,7 +10,7 @@ import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState

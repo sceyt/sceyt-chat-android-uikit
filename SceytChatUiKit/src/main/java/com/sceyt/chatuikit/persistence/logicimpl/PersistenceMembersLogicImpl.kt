@@ -2,9 +2,9 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventData
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventEnum
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -20,7 +20,7 @@ import com.sceyt.chatuikit.persistence.dao.UserDao
 import com.sceyt.chatuikit.persistence.entity.UserEntity
 import com.sceyt.chatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb

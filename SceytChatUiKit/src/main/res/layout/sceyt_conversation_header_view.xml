@@ -150,7 +150,7 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <com.sceyt.chatuikit.presentation.uicomponents.conversationheader.MessageActionsToolbar
+            <com.sceyt.chatuikit.presentation.components.channel.header.MessageActionsToolbar
                 android:id="@+id/toolbar_message_actions"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

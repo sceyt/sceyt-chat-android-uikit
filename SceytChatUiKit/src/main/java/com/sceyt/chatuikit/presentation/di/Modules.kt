@@ -1,8 +1,8 @@
 package com.sceyt.chatuikit.presentation.di
 
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.fragments.viewmodels.ReactionsInfoViewModel
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModel
-import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.members.viewmodel.ChannelMembersViewModel
+import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.viewmodel.ReactionsInfoViewModel
+import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
+import com.sceyt.chatuikit.presentation.components.channel_info.members.viewmodel.ChannelMembersViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 

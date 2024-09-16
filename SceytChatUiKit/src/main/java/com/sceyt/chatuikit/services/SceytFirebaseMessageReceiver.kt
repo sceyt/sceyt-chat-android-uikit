@@ -4,7 +4,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.pushes.SceytFirebaseMessagingDelegate
+import com.sceyt.chatuikit.push.SceytFirebaseMessagingDelegate
 import kotlinx.coroutines.runBlocking
 
 

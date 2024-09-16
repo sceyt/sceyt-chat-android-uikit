@@ -65,7 +65,7 @@
         android:paddingVertical="8dp"
         app:layout_constraintTop_toBottomOf="@+id/frameLayoutLinkPreview">
 
-        <com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MentionSupportEditText
+        <com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionSupportEditText
             android:id="@+id/messageInput"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -113,7 +113,7 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <com.sceyt.chatuikit.presentation.customviews.voicerecorder.VoiceRecordPlaybackView
+    <com.sceyt.chatuikit.presentation.customviews.voice_recorder.VoiceRecordPlaybackView
         android:id="@+id/VoiceRecordPlaybackView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

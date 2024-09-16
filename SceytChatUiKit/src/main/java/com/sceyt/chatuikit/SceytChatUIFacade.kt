@@ -7,9 +7,9 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver
 import com.sceyt.chatuikit.persistence.SceytDatabase
-import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.CoroutineScope

@@ -11,7 +11,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import androidx.appcompat.widget.AppCompatTextView
-import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
+import com.sceyt.chatuikit.styles.MessageItemStyle
 
 
 class ClickableTextView @JvmOverloads constructor(

@@ -8,7 +8,7 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver
 import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.logger.SceytLog
 import kotlinx.coroutines.CoroutineScope

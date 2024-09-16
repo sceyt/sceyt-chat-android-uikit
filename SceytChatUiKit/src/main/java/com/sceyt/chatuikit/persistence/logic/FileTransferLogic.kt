@@ -1,9 +1,9 @@
 package com.sceyt.chatuikit.persistence.logic
 
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.persistence.filetransfer.ThumbData
-import com.sceyt.chatuikit.persistence.filetransfer.TransferState
-import com.sceyt.chatuikit.persistence.filetransfer.TransferTask
+import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 
 interface FileTransferLogic {
     fun uploadFile(attachment: SceytAttachment, task: TransferTask)

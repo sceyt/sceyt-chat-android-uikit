@@ -32,7 +32,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
-import com.sceyt.chatuikit.sceytconfigs.ChannelSortType
+import com.sceyt.chatuikit.config.ChannelSortType
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow

@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.sceyt.chatuikit.presentation.uicomponents.channels.ChannelsRV
+    <com.sceyt.chatuikit.presentation.components.channel_list.channels.components.ChannelsRV
         android:id="@+id/channelsRV"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
