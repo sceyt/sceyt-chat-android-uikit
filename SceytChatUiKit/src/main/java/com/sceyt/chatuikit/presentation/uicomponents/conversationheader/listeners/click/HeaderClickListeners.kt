@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.uicomponents.conversationheader.clicklisteners
+package com.sceyt.chatuikit.presentation.uicomponents.conversationheader.listeners.click
 
 import android.view.View
 

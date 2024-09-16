@@ -23,7 +23,7 @@ import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.Mes
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.MessageListViewModelFactory
 import com.sceyt.chatuikit.presentation.uicomponents.conversation.viewmodels.bindings.bind
 import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.MessagesListHeaderView
-import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.clicklisteners.HeaderClickListenersImpl
+import com.sceyt.chatuikit.presentation.uicomponents.conversationheader.listeners.click.HeaderClickListenersImpl
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.uicomponents.conversationinfo.ChannelInfoActivity.Companion.ACTION_SEARCH_MESSAGES
 import com.sceyt.chatuikit.presentation.uicomponents.messageinfo.MessageInfoFragment

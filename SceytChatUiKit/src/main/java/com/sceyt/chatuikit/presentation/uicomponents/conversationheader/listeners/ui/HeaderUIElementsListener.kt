@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.uicomponents.conversationheader.uiupdatelisteners
+package com.sceyt.chatuikit.presentation.uicomponents.conversationheader.listeners.ui
 
 import android.view.Menu
 import android.view.MenuItem
