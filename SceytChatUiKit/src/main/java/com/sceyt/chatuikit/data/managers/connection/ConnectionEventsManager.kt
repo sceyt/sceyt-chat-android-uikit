@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 
-object ConnectionEventsObserver {
+object ConnectionEventsManager {
     val connectionState get() = ClientWrapper.getConnectionState() ?: ConnectionState.Disconnected
     val isConnected get() = connectionState == ConnectionState.Connected
 

@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum.Add
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum.Remove
@@ -115,7 +115,7 @@ internal class PersistenceReactionsLogicImpl(
             trySend(PaginationResponse.DBResponse(data = dbReactions, loadKey = loadKey, offset = offset,
                 hasNext = hasNext, hasPrev = false))
 
-            ConnectionEventsObserver.awaitToConnectSceyt()
+            ConnectionEventsManager.awaitToConnectSceyt()
 
             val response = if (offset == 0) reactionsRepository.getReactions(messageId, key)
             else reactionsRepository.loadMoreReactions(messageId, key)

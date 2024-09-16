@@ -13,7 +13,7 @@ import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.sceyt_callbacks.ChannelCallback
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver.awaitToConnectSceytWithTimeout
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager.awaitToConnectSceytWithTimeout
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum

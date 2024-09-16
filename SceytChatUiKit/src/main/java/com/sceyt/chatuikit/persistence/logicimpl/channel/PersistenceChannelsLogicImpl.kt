@@ -20,7 +20,7 @@ import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Joined
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Left
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Updated
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver.awaitToConnectSceyt
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager.awaitToConnectSceyt
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse

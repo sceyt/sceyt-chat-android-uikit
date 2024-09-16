@@ -7,7 +7,7 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
 import com.sceyt.chatuikit.persistence.SceytDatabase
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
@@ -80,11 +80,11 @@ class SceytChatUIFacade(
     }
 
     private fun setListener() {
-        ConnectionEventsObserver.onTokenExpired.onEach {
+        ConnectionEventsManager.onTokenExpired.onEach {
             _onTokenExpired.tryEmit(Unit)
         }.launchIn(scope)
 
-        ConnectionEventsObserver.onTokenWillExpire.onEach {
+        ConnectionEventsManager.onTokenWillExpire.onEach {
             _onTokenWillExpire.tryEmit(Unit)
         }.launchIn(scope)
     }

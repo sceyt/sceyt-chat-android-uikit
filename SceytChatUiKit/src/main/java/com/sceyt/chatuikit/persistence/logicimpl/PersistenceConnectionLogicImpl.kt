@@ -7,7 +7,7 @@ import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -42,14 +42,14 @@ internal class PersistenceConnectionLogicImpl(
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     init {
-        if (ConnectionEventsObserver.connectionState == ConnectionState.Connected)
+        if (ConnectionEventsManager.connectionState == ConnectionState.Connected)
             scope.launch(Dispatchers.IO) {
                 onChangedConnectStatus(ConnectionStateData(ConnectionState.Connected))
             }
 
         scope.launch {
             ProcessLifecycleOwner.get().repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                if (ConnectionEventsObserver.isConnected)
+                if (ConnectionEventsManager.isConnected)
                     SceytChatUIKit.chatUIFacade.userInteractor.setPresenceState(PresenceState.Online)
             }
         }

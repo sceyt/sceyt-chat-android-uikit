@@ -14,7 +14,7 @@ import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
 import com.sceyt.chatuikit.data.managers.message.MessageEventsManager
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
@@ -244,7 +244,7 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
                                                     messageId: Long): Flow<SceytResponse<List<SceytMessage>>> = callbackFlow {
-        ConnectionEventsObserver.awaitToConnectSceyt()
+        ConnectionEventsManager.awaitToConnectSceyt()
         messagesRepository.loadAllMessagesAfter(conversationId, replyInThread, messageId)
             .onCompletion { channel.close() }
             .collect { (nextMessageId, response) ->
@@ -852,7 +852,7 @@ internal class PersistenceMessagesLogicImpl(
         val response: SceytResponse<List<SceytMessage>>
 
         if (loadType != LoadNear)
-            ConnectionEventsObserver.awaitToConnectSceyt()
+            ConnectionEventsManager.awaitToConnectSceyt()
 
         when (loadType) {
             LoadPrev -> {

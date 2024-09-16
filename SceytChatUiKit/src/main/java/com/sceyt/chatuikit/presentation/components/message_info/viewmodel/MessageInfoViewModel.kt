@@ -8,7 +8,7 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventsManager
 import com.sceyt.chatuikit.data.managers.channel.event.MessageMarkerEventData
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventsManager
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
@@ -178,7 +178,7 @@ class MessageInfoViewModel(
                 }
             }
 
-            ConnectionEventsObserver.awaitToConnectSceyt()
+            ConnectionEventsManager.awaitToConnectSceyt()
 
             val readMarkers = async {
                 markerInteractor.getMessageMarkers(messageId, read, 0, limit)
