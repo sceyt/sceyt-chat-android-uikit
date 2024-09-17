@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.theme
+package com.sceyt.chatuikit.formatters
 
 import android.content.Context
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
