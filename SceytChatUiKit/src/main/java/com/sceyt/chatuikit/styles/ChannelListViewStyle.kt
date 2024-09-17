@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.pxToDp
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
-import com.sceyt.chatuikit.config.formatters.ChannelDateFormatter
+import com.sceyt.chatuikit.formatters.ChannelDateFormatter
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
@@ -27,8 +27,8 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property dateTextColor - Color of the date text, default is [SceytChatUIKitTheme.textSecondaryColor].
  * @property mutedIcon - Icon for muted channel, default is [R.drawable.sceyt_ic_muted].
  * @property pinIcon - Icon for pinned channel, default is [R.drawable.sceyt_ic_pin_filled].
- * @property statusIndicatorPendingIcon - Icon for pending status, default is [R.drawable.sceyt_ic_status_not_sent].
- * @property statusIndicatorSentIcon - Icon for sent status, default is [R.drawable.sceyt_ic_status_on_server].
+ * @property statusIndicatorPendingIcon - Icon for pending status, default is [R.drawable.sceyt_ic_status_pending].
+ * @property statusIndicatorSentIcon - Icon for sent status, default is [R.drawable.sceyt_ic_status_sent].
  * @property statusIndicatorDeliveredIcon - Icon for delivered status, default is [R.drawable.sceyt_ic_status_delivered].
  * @property statusIndicatorReadIcon - Icon for read status, default is [R.drawable.sceyt_ic_status_read].
  * @property bodyFileAttachmentIcon - Icon for file attachment, default is [R.drawable.sceyt_ic_body_file_attachment].
@@ -116,12 +116,12 @@ data class ChannelListViewStyle(
                 context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
 
             val statusIndicatorPendingIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiIndicatorPendingIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_status_not_sent)?.apply {
+                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_status_pending)?.apply {
                         mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
                     }
 
             val statusIndicatorSentIcon = typedArray.getDrawable(R.styleable.ChannelListView_sceytUiIndicatorSentIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_status_on_server)?.apply {
+                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_status_sent)?.apply {
                         mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
                     }
 

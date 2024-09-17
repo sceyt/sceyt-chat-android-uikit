@@ -19,7 +19,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.repositories.UsersRepository
-import com.sceyt.chatuikit.push.SceytFirebaseMessagingDelegate
+import com.sceyt.chatuikit.push.FirebaseMessagingDelegate
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.CoroutineScope
@@ -61,7 +61,7 @@ internal class PersistenceConnectionLogicImpl(
                 ClientWrapper.currentUser?.id?.let { preference.setUserId(it) }
                 insertCurrentUser()
                 SceytPresenceChecker.startPresenceCheck()
-                SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
+                FirebaseMessagingDelegate.checkNeedRegisterForPushToken()
             }
 
             scope.launch(Dispatchers.IO) {

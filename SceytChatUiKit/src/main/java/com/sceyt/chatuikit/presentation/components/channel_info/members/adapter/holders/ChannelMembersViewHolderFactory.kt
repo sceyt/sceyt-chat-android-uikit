@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.listeners.MemberClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.listeners.MemberClickListenersImpl
-import com.sceyt.chatuikit.config.formatters.UserNameFormatter
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 
 open class ChannelMembersViewHolderFactory(context: Context) {
     private val layoutInflater = LayoutInflater.from(context)

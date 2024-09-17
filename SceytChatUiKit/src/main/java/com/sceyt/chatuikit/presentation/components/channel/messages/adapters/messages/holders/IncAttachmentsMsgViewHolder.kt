@@ -14,7 +14,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.config.formatters.UserNameFormatter
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.styles.MessageItemStyle
 
 class IncAttachmentsMsgViewHolder(

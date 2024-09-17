@@ -19,16 +19,16 @@
         app:sceytUiAvatarFullName="Art d"
         app:sceytUiAvatarTextSize="15sp" />
 
-    <com.sceyt.chatuikit.presentation.customviews.OnlineView
+    <com.sceyt.chatuikit.presentation.customviews.PresenceStateIndicatorView
         android:id="@+id/onlineStatus"
         android:layout_width="12dp"
         android:layout_height="12dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/avatar"
         app:layout_constraintEnd_toEndOf="@id/avatar"
-        app:sceytUiOnlineViewIndicatorColor="@color/sceyt_color_green"
-        app:sceytUiOnlineViewStrokeColor="@color/sceyt_color_background"
-        app:sceytUiOnlineViewStrokeWidth="1dp"
+        app:sceytUiIndicatorColor="@color/sceyt_color_green"
+        app:sceytUiIndicatorStrokeColor="@color/sceyt_color_background"
+        app:sceytUiIndicatorStrokeWidth="1dp"
         tools:visibility="visible" />
 
     <androidx.appcompat.widget.AppCompatTextView

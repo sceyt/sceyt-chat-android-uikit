@@ -24,7 +24,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.rea
 import java.lang.Integer.max
 import kotlin.math.min
 
-open class PopupReactions(
+open class ReactionsPopup(
         private var context: Context
 ) : PopupWindow(context) {
     private lateinit var binding: SceytPopupAddReactionBinding
@@ -33,7 +33,7 @@ open class PopupReactions(
 
     open fun showPopup(anchorView: View, message: SceytMessage,
                        reactions: List<String> = SceytChatUIKit.theme.defaultReactions,
-                       clickListener: PopupReactionsAdapter.OnItemClickListener): PopupReactions {
+                       clickListener: PopupReactionsAdapter.OnItemClickListener): ReactionsPopup {
         this.clickListener = clickListener
 
         val reversed = !message.incoming && !context.isRtl()
@@ -56,7 +56,7 @@ open class PopupReactions(
         with(binding.cardView) {
             measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
 
-            this@PopupReactions.width = min(context.screenWidthPx(), measuredWidth + marginHorizontal)
+            this@ReactionsPopup.width = min(context.screenWidthPx(), measuredWidth + marginHorizontal)
 
             val minYPos = measuredHeight + marginBottom + marginTop
             val xPos = if (reversed) context.screenWidthPx() else 0

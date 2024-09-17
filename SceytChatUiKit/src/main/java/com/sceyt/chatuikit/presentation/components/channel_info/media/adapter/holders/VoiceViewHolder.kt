@@ -20,7 +20,7 @@ import com.sceyt.chatuikit.presentation.customviews.CircularProgressView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListenersImpl
-import com.sceyt.chatuikit.config.formatters.UserNameFormatter
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 

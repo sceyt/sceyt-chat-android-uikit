@@ -29,7 +29,7 @@ import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.config.formatters.UserNameFormatter
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.styles.MessageItemStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
@@ -128,7 +128,7 @@ abstract class BaseMediaMessageViewHolder(
         val message = requireMessage
         val corner = (if (message.isForwarded || message.body.isNotBlank() || message.isReplied) {
             dpToPx(5f)
-        } else dpToPx(18f)).toFloat()
+        } else dpToPx(17f)).toFloat()
 
         fileImage.setShapeAppearanceModel(
             fileImage.shapeAppearanceModel.toBuilder()

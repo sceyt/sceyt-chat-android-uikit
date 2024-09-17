@@ -24,8 +24,8 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @param outBubbleColor Color for the outgoing message bubble, default is 20% blend of [SceytChatUIKitTheme.accentColor]
  * @param incLinkPreviewBackgroundColor Color for the incoming link preview background, default is [R.color.sceyt_color_bg_inc_link_preview]
  * @param outLinkPreviewBackgroundColor Color for the outgoing link preview background, default is 30% blend of [SceytChatUIKitTheme.accentColor]
- * @param messageStatusPendingIcon Icon for the pending message status, default is [R.drawable.sceyt_ic_status_not_sent]
- * @param messageStatusSentIcon Icon for the sent message status, default is [R.drawable.sceyt_ic_status_on_server]
+ * @param messageStatusPendingIcon Icon for the pending message status, default is [R.drawable.sceyt_ic_status_pending]
+ * @param messageStatusSentIcon Icon for the sent message status, default is [R.drawable.sceyt_ic_status_sent]
  * @param messageStatusDeliveredIcon Icon for the delivered message status, default is [R.drawable.sceyt_ic_status_delivered]
  * @param messageStatusReadIcon Icon for the read message status, default is [R.drawable.sceyt_ic_status_read]
  * @param messageDateTextColor Color for the message date text, default is [SceytChatUIKitTheme.textSecondaryColor]
@@ -108,12 +108,12 @@ data class MessageItemStyle(
                 defaultOutDarkColor)
 
             val messageStatusPendingIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiMessagePendingIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_status_not_sent)?.apply {
+                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_status_pending)?.apply {
                         mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
                     }
 
             val messageStatusSentIcon: Drawable? = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiMessageSentIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_status_on_server)?.apply {
+                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_status_sent)?.apply {
                         mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
                     }
 

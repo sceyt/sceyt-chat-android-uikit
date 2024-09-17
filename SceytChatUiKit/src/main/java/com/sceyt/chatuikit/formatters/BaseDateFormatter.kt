@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.config.formatters
+package com.sceyt.chatuikit.formatters
 
 import android.content.Context
 import com.sceyt.chatuikit.R

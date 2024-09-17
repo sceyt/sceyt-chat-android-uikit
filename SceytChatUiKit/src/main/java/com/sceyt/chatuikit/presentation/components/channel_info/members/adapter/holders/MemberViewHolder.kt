@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.listeners.MemberClickListenersImpl
-import com.sceyt.chatuikit.config.formatters.UserNameFormatter
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 

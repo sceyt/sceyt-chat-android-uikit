@@ -28,7 +28,7 @@
         app:layout_constraintTop_toTopOf="@+id/avatar"
         app:srcCompat="@drawable/sceyt_ic_remove" />
 
-    <com.sceyt.chatuikit.presentation.customviews.OnlineView
+    <com.sceyt.chatuikit.presentation.customviews.PresenceStateIndicatorView
         android:id="@+id/onlineStatus"
         android:layout_width="12dp"
         android:layout_height="12dp"
@@ -36,9 +36,9 @@
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@id/avatar"
         app:layout_constraintEnd_toEndOf="@id/avatar"
-        app:sceytUiOnlineViewIndicatorColor="@color/sceyt_color_green"
-        app:sceytUiOnlineViewStrokeColor="@color/sceyt_color_background"
-        app:sceytUiOnlineViewStrokeWidth="1dp" />
+        app:sceytUiIndicatorColor="@color/sceyt_color_green"
+        app:sceytUiIndicatorStrokeColor="@color/sceyt_color_background"
+        app:sceytUiIndicatorStrokeWidth="1dp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/userName"

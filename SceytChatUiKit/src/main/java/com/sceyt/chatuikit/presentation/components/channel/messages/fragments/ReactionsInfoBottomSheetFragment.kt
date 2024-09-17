@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.onEach
 import java.lang.Integer.max
 
 
-class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
+class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
     private lateinit var binding: SceytBottomShetReactionsInfoBinding
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<*>
     private var headerAdapter: ReactionsHeaderAdapter? = null
@@ -133,7 +133,7 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
         }
 
         with(binding.viewPager) {
-            adapter = ViewPagerAdapterReactedUsers(this@BottomSheetReactionsInfoFragment, fragments).also {
+            adapter = ViewPagerAdapterReactedUsers(this@ReactionsInfoBottomSheetFragment, fragments).also {
                 pagerAdapter = it
             }
             offscreenPageLimit = 1
@@ -183,8 +183,8 @@ class BottomSheetReactionsInfoFragment : BottomSheetDialogFragment() {
     companion object {
         private const val MESSAGE_KEY = "messageKey"
 
-        fun newInstance(message: SceytMessage): BottomSheetReactionsInfoFragment {
-            val fragment = BottomSheetReactionsInfoFragment()
+        fun newInstance(message: SceytMessage): ReactionsInfoBottomSheetFragment {
+            val fragment = ReactionsInfoBottomSheetFragment()
             fragment.setBundleArguments {
                 putParcelable(MESSAGE_KEY, message)
             }

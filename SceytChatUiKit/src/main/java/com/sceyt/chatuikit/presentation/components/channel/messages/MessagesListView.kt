@@ -61,21 +61,21 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessagesAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.components.BottomSheetEmojisFragment
+import com.sceyt.chatuikit.presentation.components.channel.messages.components.EmojiPickerBottomSheetFragment
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.MessagesRV
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.ScrollToDownView
 import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.DeleteMessageDialog
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
-import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.BottomSheetReactionsInfoFragment
+import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.ReactionsInfoBottomSheetFragment
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.ReactionPopupClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.ReactionPopupClickListenersImpl
-import com.sceyt.chatuikit.presentation.components.channel.messages.popups.PopupMenuMessageActions
-import com.sceyt.chatuikit.presentation.components.channel.messages.popups.PopupReactions
+import com.sceyt.chatuikit.presentation.components.channel.messages.popups.MessageActionsPopupMenu
+import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.PopupReactionsAdapter
 import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
@@ -267,7 +267,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         }
     }
 
-    private fun showModifyReactionsPopup(view: View, message: SceytMessage): PopupReactions? {
+    private fun showModifyReactionsPopup(view: View, message: SceytMessage): ReactionsPopup? {
         if (message.deliveryStatus == DeliveryStatus.Pending) return null
         val maxSize = SceytChatUIKit.config.maxSelfReactionsSize
         val reactions = message.messageReactions
@@ -281,7 +281,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 .take(maxSize - reactions.size))
         }
 
-        return PopupReactions(context).showPopup(view, message, reactions.take(maxSize),
+        return ReactionsPopup(context).showPopup(view, message, reactions.take(maxSize),
             object : PopupReactionsAdapter.OnItemClickListener {
                 override fun onReactionClick(reaction: ReactionItem.Reaction) {
                     this@MessagesListView.onAddOrRemoveReaction(reaction, message)
@@ -316,7 +316,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun showMessageActionsPopup(view: View, message: SceytMessage) {
-        val popup = PopupMenuMessageActions(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message)
+        val popup = MessageActionsPopupMenu(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message)
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_edit_message -> messageActionsViewClickListeners.onEditMessageClick(message)
@@ -354,7 +354,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun showAddEmojiDialog(message: SceytMessage) {
         context.getFragmentManager()?.let {
-            BottomSheetEmojisFragment().also { fragment ->
+            EmojiPickerBottomSheetFragment().also { fragment ->
                 fragment.setEmojiListener { emoji ->
                     val containsSelf = message.userReactions?.find { reaction -> reaction.key == emoji } != null
                     onAddOrRemoveReaction(ReactionItem.Reaction(SceytReactionTotal(emoji, containsSelf = containsSelf), message.tid, true), message)
@@ -853,7 +853,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onReactionClick(view: View, item: ReactionItem.Reaction, message: SceytMessage) {
         context.getFragmentManager()?.let {
-            BottomSheetReactionsInfoFragment.newInstance(message).also { fragment ->
+            ReactionsInfoBottomSheetFragment.newInstance(message).also { fragment ->
                 fragment.setClickListener { reaction ->
                     if (reaction.user?.id == SceytChatUIKit.chatUIFacade.myId)
                         reactionClickListeners.onRemoveReaction(message,

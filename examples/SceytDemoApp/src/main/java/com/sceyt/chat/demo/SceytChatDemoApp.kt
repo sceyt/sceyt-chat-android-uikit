@@ -11,11 +11,11 @@ import com.sceyt.chat.demo.di.viewModelModules
 import com.sceyt.chat.models.SCTLogLevel
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.SceytChatUIKitConfig
+import com.sceyt.chatuikit.config.UploadNotificationClickHandleData
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
-import com.sceyt.chatuikit.config.SceytChatUIKitConfig
-import com.sceyt.chatuikit.config.UploadNotificationClickHandleData
 import com.sceyt.chatuikit.styles.MessageItemStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import org.koin.android.ext.android.inject

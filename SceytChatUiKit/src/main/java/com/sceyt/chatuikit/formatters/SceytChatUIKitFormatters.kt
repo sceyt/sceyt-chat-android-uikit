@@ -1,7 +1,4 @@
-package com.sceyt.chatuikit
-
-import com.sceyt.chatuikit.config.formatters.UserNameFormatter
-import com.sceyt.chatuikit.config.formatters.UserPresenceDateFormatter
+package com.sceyt.chatuikit.formatters
 
 class SceytChatUIKitFormatters {
     var userNameFormatter: UserNameFormatter? = null

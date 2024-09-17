@@ -20,7 +20,7 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiMessage
 import org.koin.core.component.inject
 
-object SceytFirebaseMessagingDelegate : SceytKoinComponent {
+object FirebaseMessagingDelegate : SceytKoinComponent {
     private val context: Context by inject()
     private val messagesLogic: PersistenceMessagesLogic by inject()
     private val preferences: SceytSharedPreference by inject()
@@ -31,6 +31,22 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
 
         preferences.setString(KEY_FCM_TOKEN, token)
         registerClientPushToken(token)
+    }
+
+    fun unregisterFirebaseToken(
+            unregisterPushCallback: ((success: Boolean, error: String?) -> Unit)? = null
+    ) {
+        ChatClient.getClient().unregisterPushToken(object : ActionCallback {
+            override fun onSuccess() {
+                preferences.setBoolean(KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION, false)
+                preferences.setString(KEY_FCM_TOKEN, null)
+                unregisterPushCallback?.invoke(true, null)
+            }
+
+            override fun onError(exception: SceytException?) {
+                unregisterPushCallback?.invoke(false, exception?.message)
+            }
+        })
     }
 
     fun checkNeedRegisterForPushToken() {
@@ -48,7 +64,7 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
                 if (it.isSuccessful) {
                     onToken(it.result)
                 } else
-                    SceytLog.e(this@SceytFirebaseMessagingDelegate.TAG, "Error: Firebase didn't returned token")
+                    SceytLog.e(this@FirebaseMessagingDelegate.TAG, "Error: Firebase didn't returned token")
             }
         } else onToken(null)
     }
@@ -59,11 +75,11 @@ object SceytFirebaseMessagingDelegate : SceytKoinComponent {
             override fun onSuccess() {
                 preferences.setString(KEY_FCM_TOKEN, fcmToken)
                 preferences.setBoolean(KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION, true)
-                SceytLog.i(this@SceytFirebaseMessagingDelegate.TAG, "push token successfully registered")
+                SceytLog.i(this@FirebaseMessagingDelegate.TAG, "push token successfully registered")
             }
 
             override fun onError(e: SceytException) {
-                SceytLog.e(this@SceytFirebaseMessagingDelegate.TAG, "push token couldn't register error: $e")
+                SceytLog.e(this@FirebaseMessagingDelegate.TAG, "push token couldn't register error: $e")
             }
         })
     }

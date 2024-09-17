@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <declare-styleable name="OnlineView">
-        <attr name="sceytUiOnlineViewStrokeColor" format="reference|color" />
-        <attr name="sceytUiOnlineViewIndicatorColor" format="reference|color" />
-        <attr name="sceytUiOnlineViewStrokeWidth" format="dimension" />
-        <attr name="sceytUiOnlineViewChangeVisibilityWithAnim" format="boolean" />
+    <declare-styleable name="PresenceStateIndicatorView">
+        <attr name="sceytUiIndicatorStrokeColor" format="reference|color" />
+        <attr name="sceytUiIndicatorColor" format="reference|color" />
+        <attr name="sceytUiIndicatorStrokeWidth" format="dimension" />
+        <attr name="sceytUiIndicatorChangeVisibilityWithAnim" format="boolean" />
     </declare-styleable>
 </resources>

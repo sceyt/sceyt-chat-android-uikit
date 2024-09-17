@@ -39,7 +39,7 @@
         app:srcCompat="@drawable/sceyt_ic_auto_deleted_channel"
         tools:visibility="visible" />
 
-    <com.sceyt.chatuikit.presentation.customviews.OnlineView
+    <com.sceyt.chatuikit.presentation.customviews.PresenceStateIndicatorView
         android:id="@+id/onlineStatus"
         android:layout_width="14dp"
         android:layout_height="14dp"
@@ -47,10 +47,10 @@
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/avatar"
         app:layout_constraintEnd_toEndOf="@id/avatar"
-        app:sceytUiOnlineViewChangeVisibilityWithAnim="true"
-        app:sceytUiOnlineViewIndicatorColor="@color/sceyt_color_green"
-        app:sceytUiOnlineViewStrokeColor="@color/sceyt_color_background"
-        app:sceytUiOnlineViewStrokeWidth="1.5dp"
+        app:sceytUiIndicatorChangeVisibilityWithAnim="true"
+        app:sceytUiIndicatorColor="@color/sceyt_color_green"
+        app:sceytUiIndicatorStrokeColor="@color/sceyt_color_background"
+        app:sceytUiIndicatorStrokeWidth="1.5dp"
         tools:visibility="visible" />
 
     <androidx.appcompat.widget.AppCompatTextView

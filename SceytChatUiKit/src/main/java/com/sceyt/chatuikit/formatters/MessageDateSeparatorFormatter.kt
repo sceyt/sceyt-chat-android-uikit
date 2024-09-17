@@ -1,3 +1,3 @@
-package com.sceyt.chatuikit.config.formatters
+package com.sceyt.chatuikit.formatters
 
 open class MessageDateSeparatorFormatter : BaseDateFormatter()

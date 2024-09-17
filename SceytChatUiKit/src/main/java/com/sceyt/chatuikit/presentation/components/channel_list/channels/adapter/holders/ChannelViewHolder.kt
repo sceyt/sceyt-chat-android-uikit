@@ -33,7 +33,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChatReactionMessagesCac
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.presentation.customviews.ColorSpannableTextView
 import com.sceyt.chatuikit.presentation.customviews.DateStatusView
-import com.sceyt.chatuikit.presentation.customviews.OnlineView
+import com.sceyt.chatuikit.presentation.customviews.PresenceStateIndicatorView
 import com.sceyt.chatuikit.presentation.extensions.getAttachmentIconAsString
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.presentation.extensions.getFormattedLastMessageBody
@@ -42,7 +42,7 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
-import com.sceyt.chatuikit.config.formatters.UserNameFormatter
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.styles.ChannelListViewStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.text.NumberFormat
@@ -293,7 +293,7 @@ open class ChannelViewHolder(
         channel.lastMessage.setChannelMessageDateAndStatusIcon(dateStatusView, channelStyle, data.first, false, shouldShowStatus)
     }
 
-    open fun setOnlineStatus(channel: SceytChannel?, onlineStatus: OnlineView) {
+    open fun setOnlineStatus(channel: SceytChannel?, onlineStatus: PresenceStateIndicatorView) {
         val isOnline = !isSelf && channel?.isDirect() == true &&
                 channel.getPeer()?.user?.presence?.state == PresenceState.Online
         onlineStatus.isVisible = isOnline

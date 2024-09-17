@@ -22,7 +22,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ho
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.holders.LinkViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.holders.VideoViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.holders.VoiceViewHolder
-import com.sceyt.chatuikit.config.formatters.UserNameFormatter
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.styles.ConversationInfoMediaStyle
 
 open class ChannelAttachmentViewHolderFactory(
