@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.isAppInDarkMode
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
-import com.sceyt.chatuikit.theme.MessageBodyFormatter
+import com.sceyt.chatuikit.formatters.MessageBodyFormatter
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**

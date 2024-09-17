@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.presentation.extensions.isTextMessage
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
-import com.sceyt.chatuikit.theme.MessageBodyFormatter
+import com.sceyt.chatuikit.formatters.MessageBodyFormatter
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
