@@ -13,5 +13,5 @@ sealed class MemberItem {
         }
     }
 
-    object LoadingMore : MemberItem()
+    data object LoadingMore : MemberItem()
 }

@@ -10,14 +10,14 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.databinding.SceytFragmentBottomSheetEmojisBinding
+import com.sceyt.chatuikit.databinding.SceytFragmentBottomSheetEmojiPickerBinding
 import com.sceyt.chatuikit.extensions.dismissSafety
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.vanniktech.emoji.EmojiTheming
 import com.vanniktech.emoji.search.NoSearchEmoji
 
-class BottomSheetEmojisFragment : BottomSheetDialogFragment() {
-    private lateinit var binding: SceytFragmentBottomSheetEmojisBinding
+class EmojiPickerBottomSheetFragment : BottomSheetDialogFragment() {
+    private lateinit var binding: SceytFragmentBottomSheetEmojiPickerBinding
     private var emojiListener: ((String) -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,7 +26,7 @@ class BottomSheetEmojisFragment : BottomSheetDialogFragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        binding = SceytFragmentBottomSheetEmojisBinding.inflate(inflater, container, false)
+        binding = SceytFragmentBottomSheetEmojiPickerBinding.inflate(inflater, container, false)
         return binding.root
     }
 

@@ -5,7 +5,7 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.config.formatters.ConversationMediaDateFormatter
+import com.sceyt.chatuikit.formatters.ConversationMediaDateFormatter
 
 /**
  * Style for conversation info media

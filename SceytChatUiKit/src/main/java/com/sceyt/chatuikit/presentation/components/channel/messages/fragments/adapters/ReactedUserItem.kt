@@ -8,5 +8,5 @@ sealed class ReactedUserItem {
             val reaction: SceytReaction
     ) : ReactedUserItem()
 
-    object LoadingMore : ReactedUserItem()
+    data object LoadingMore : ReactedUserItem()
 }

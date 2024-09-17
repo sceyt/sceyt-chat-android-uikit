@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
+import com.sceyt.chatuikit.push.FirebaseMessagingDelegate
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
+@Suppress("unused", "MemberVisibilityCanBePrivate")
 class SceytChatUIFacade(
         private val context: Context,
         private val preferences: SceytSharedPreference,
@@ -102,15 +104,13 @@ class SceytChatUIFacade(
         clearData()
         ClientWrapper.currentUser = null
         clientUserId = null
-        ChatClient.getClient().unregisterPushToken(object : ActionCallback {
-            override fun onSuccess() {
+        FirebaseMessagingDelegate.unregisterFirebaseToken { success, error ->
+            if (success) {
                 ChatClient.getClient().disconnect()
                 unregisterPushCallback?.invoke(true, null)
+            } else {
+                unregisterPushCallback?.invoke(false, error)
             }
-
-            override fun onError(exception: SceytException?) {
-                unregisterPushCallback?.invoke(false, exception?.message)
-            }
-        })
+        }
     }
 }

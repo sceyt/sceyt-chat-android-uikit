@@ -20,7 +20,7 @@ sealed class ChannelFileItem : com.sceyt.chatuikit.presentation.components.chann
 
     data class MediaDate(val data: AttachmentWithUserData) : ChannelFileItem(data)
 
-    object LoadingMoreItem : ChannelFileItem()
+    data object LoadingMoreItem : ChannelFileItem()
 
     fun getCreatedAt(): Long {
         return if (isFileItemInitialized)

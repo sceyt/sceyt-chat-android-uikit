@@ -89,7 +89,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.I
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQueryChangedListener
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.config.formatters.UserNameFormatter
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.presentation.components.channel.input.components.MentionUsersListView
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult

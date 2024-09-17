@@ -11,7 +11,7 @@ import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.scaleAndAlphaAnim
 
-class OnlineView @JvmOverloads constructor(
+class PresenceStateIndicatorView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0
@@ -27,11 +27,12 @@ class OnlineView @JvmOverloads constructor(
 
     init {
         attrs?.let {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.OnlineView)
-            strokeColor = a.getColor(R.styleable.OnlineView_sceytUiOnlineViewStrokeColor, strokeColor)
-            indicatorColor = a.getColor(R.styleable.OnlineView_sceytUiOnlineViewIndicatorColor, indicatorColor)
-            strokeWidth = a.getDimensionPixelSize(R.styleable.OnlineView_sceytUiOnlineViewStrokeWidth, strokeWidth)
-            changeVisibilityWithAnim = a.getBoolean(R.styleable.OnlineView_sceytUiOnlineViewChangeVisibilityWithAnim, changeVisibilityWithAnim)
+            val a = context.obtainStyledAttributes(attrs, R.styleable.PresenceStateIndicatorView)
+            strokeColor = a.getColor(R.styleable.PresenceStateIndicatorView_sceytUiIndicatorStrokeColor, strokeColor)
+            indicatorColor = a.getColor(R.styleable.PresenceStateIndicatorView_sceytUiIndicatorColor, indicatorColor)
+            strokeWidth = a.getDimensionPixelSize(R.styleable.PresenceStateIndicatorView_sceytUiIndicatorStrokeWidth, strokeWidth)
+            changeVisibilityWithAnim = a.getBoolean(R.styleable.PresenceStateIndicatorView_sceytUiIndicatorChangeVisibilityWithAnim,
+                changeVisibilityWithAnim)
             a.recycle()
         }
         init()
@@ -41,7 +42,7 @@ class OnlineView @JvmOverloads constructor(
         with(strokePaint) {
             flags = Paint.ANTI_ALIAS_FLAG
             color = strokeColor
-            strokeWidth = this@OnlineView.strokeWidth.toFloat()
+            strokeWidth = this@PresenceStateIndicatorView.strokeWidth.toFloat()
             style = Paint.Style.STROKE
         }
         with(indicatorPaint) {

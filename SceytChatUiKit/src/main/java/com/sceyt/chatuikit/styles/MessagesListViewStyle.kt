@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
-import com.sceyt.chatuikit.config.formatters.MessageDateSeparatorFormatter
+import com.sceyt.chatuikit.formatters.MessageDateSeparatorFormatter
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
