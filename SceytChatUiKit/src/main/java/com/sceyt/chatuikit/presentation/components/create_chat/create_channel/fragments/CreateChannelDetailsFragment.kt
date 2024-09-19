@@ -178,6 +178,7 @@ open class CreateChannelDetailsFragment : Fragment() {
         binding.uriWarning.apply {
             text = provider.provide(type)
             setTextColor(requireContext().getCompatColor(colorRes))
+            isVisible = true
         }
     }
 
