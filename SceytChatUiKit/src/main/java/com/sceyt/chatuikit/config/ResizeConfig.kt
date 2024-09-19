@@ -1,11 +1,11 @@
 package com.sceyt.chatuikit.config
 
 @Suppress("Unused")
-enum class ResizeConfig(
+open class ResizeConfig(
         val dimensionThreshold: Int,
         val compressionQuality: Int
 ) {
-    Low(720, 80),
-    Medium(1080, 80),
-    High(1600, 90)
+    data object Low : ResizeConfig(720, 80)
+    data object Medium : ResizeConfig(1080, 80)
+    data object High : ResizeConfig(1600, 90)
 }
