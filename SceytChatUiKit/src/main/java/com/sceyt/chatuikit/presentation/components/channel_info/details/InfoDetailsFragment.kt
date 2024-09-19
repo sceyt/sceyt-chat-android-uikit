@@ -20,12 +20,12 @@ import com.sceyt.chatuikit.persistence.extensions.getDefaultAvatar
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
+import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelLinksFragment
-import com.sceyt.chatuikit.styles.ChannelInfoStyle
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import com.sceyt.chatuikit.styles.ChannelInfoStyle
 import java.util.Date
 
 open class InfoDetailsFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
@@ -94,14 +94,14 @@ open class InfoDetailsFragment : Fragment(), ChannelUpdateListener, ChannelInfoS
                     }
                 }
 
-                ChannelTypeEnum.Private, ChannelTypeEnum.Group -> {
+                ChannelTypeEnum.Group -> {
                     val memberCount = channel.memberCount
                     if (memberCount > 1)
                         getString(R.string.sceyt_members_count, memberCount)
                     else getString(R.string.sceyt_member_count, memberCount)
                 }
 
-                ChannelTypeEnum.Public, ChannelTypeEnum.Broadcast -> {
+                ChannelTypeEnum.Public -> {
                     val memberCount = channel.memberCount
                     if (memberCount > 1)
                         getString(R.string.sceyt_subscribers_count, memberCount)

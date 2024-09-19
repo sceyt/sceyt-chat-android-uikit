@@ -6,11 +6,9 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.text.Editable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.ColorRes
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
@@ -30,15 +28,17 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.setTextViewsHintTextColorRes
 import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
+import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.presentation.components.create_chat.create_channel.CreateChannelActivity
 import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.CreateChatViewModel
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.URIValidation
+import com.sceyt.chatuikit.providers.URIValidationType
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.yalantis.ucrop.UCrop
 import java.io.File
 
-class CreateChannelDetailsFragment : Fragment() {
+open class CreateChannelDetailsFragment : Fragment() {
     private lateinit var binding: SceytFragmentCreateChannelDetailsBinding
     private val filePickerHelper = FilePickerHelper(this)
     private val createChannelData by lazy { CreateChannelData(ChannelTypeEnum.Public.getString()) }
@@ -62,17 +62,13 @@ class CreateChannelDetailsFragment : Fragment() {
     }
 
     private fun initViewModel() {
-        viewModel.isValidUrlLiveData.observe(viewLifecycleOwner) {
-            urlIsValidByServer = it
-            if (it)
+        viewModel.isValidUrlLiveData.observe(viewLifecycleOwner) { isValid ->
+            urlIsValidByServer = isValid
+            if (isValid) {
                 checkNextEnabled(false)
-            binding.uriWarning.apply {
-                if (!it) {
-                    setUriStatusText(getString(R.string.sceyt_the_url_exist_title), R.color.sceyt_color_error)
-                } else
-                    setUriStatusText(getString(R.string.sceyt_valid_url_title), R.color.sceyt_color_green)
-                isVisible = true
-            }
+                setUriStatusText(URIValidationType.FreeToUse)
+            } else
+                setUriStatusText(URIValidationType.AlreadyTaken)
         }
     }
 
@@ -118,7 +114,7 @@ class CreateChannelDetailsFragment : Fragment() {
             with(createChannelData) {
                 subject = inputSubject.text.toString().trim()
                 channelType = ChannelTypeEnum.Public.getString()
-                uri = inputUri.text?.toString()?.lowercase()?.run { "@$this" } ?: ""
+                uri = inputUri.text?.toString()?.trim()?.lowercase().toString()
                 metadata = Gson().toJson(ChannelDescriptionData(inputDescription.text.toString().trim()))
                 members = arrayListOf()
             }
@@ -142,45 +138,54 @@ class CreateChannelDetailsFragment : Fragment() {
 
             if (!checkUri) return
 
-            val isValid = checkIsValidUrl(inputUri.text ?: run {
+            val isValid = viewModel.checkIsValidUrlFormat(inputUri.text?.toString() ?: run {
                 fabNext.setEnabledOrNot(false)
                 return
             })
+            when (isValid) {
+                URIValidation.Valid -> {
+                    if (checkingUrl != inputUri.text.toString()) {
+                        checkingUrl = inputUri.text.toString()
+                        viewModel.checkIsValidUrl(inputUri.text.toString().lowercase())
+                    }
+                }
 
-            if (isValid && checkingUrl != inputUri.text.toString()) {
-                checkingUrl = inputUri.text.toString()
-                viewModel.checkIsValidUrl("@${inputUri.text.toString().lowercase()}")
-            } else {
-                fabNext.setEnabledOrNot(false)
+                URIValidation.TooShort -> disableWithError(URIValidationType.TooShort)
+                URIValidation.TooLong -> disableWithError(URIValidationType.TooLong)
+                URIValidation.InvalidCharacters -> disableWithError(URIValidationType.InvalidCharacters)
             }
         }
     }
 
-    private fun checkIsValidUrl(url: Editable?): Boolean {
+    open fun disableWithError(type: URIValidationType) {
         with(binding) {
-            val isValidUrl = "^\\w{5,50}".toPattern().matcher(url
-                    ?: return false).matches()
-            if (!isValidUrl) {
-                if (inputUri.text.toString().length < 5 || inputUri.text.toString().length > 50)
-                    setUriStatusText(getString(R.string.sceyt_url_length_validation_text), R.color.sceyt_color_error)
-                else
-                    setUriStatusText(getString(R.string.sceyt_url_characters_validation_text), R.color.sceyt_color_error)
-            }
             uriWarning.isVisible = true
-            return isValidUrl
+            fabNext.setEnabledOrNot(false)
+            setUriStatusText(type)
         }
     }
 
-    private fun setUriStatusText(title: String, @ColorRes color: Int) {
+    open fun setUriStatusText(type: URIValidationType) {
+        val provider = SceytChatUIKit.providers.channelURIValidationMessageProvider
+        val colorRes = when (type) {
+            URIValidationType.AlreadyTaken,
+            URIValidationType.TooLong,
+            URIValidationType.TooShort,
+            URIValidationType.InvalidCharacters -> R.color.sceyt_color_error
+
+            URIValidationType.FreeToUse -> R.color.sceyt_color_success
+        }
         binding.uriWarning.apply {
-            text = title
-            setTextColor(requireContext().getCompatColor(color))
+            text = provider.provide(type)
+            setTextColor(requireContext().getCompatColor(colorRes))
         }
     }
 
     private fun setAvatarImage(filePath: String?) {
         createChannelData.avatarUrl = filePath.let {
-            resizeImage(requireContext(), it, 500).getOrNull() ?: ""
+            val reqSize = SceytChatUIKit.config.avatarResizeConfig.dimensionThreshold
+            val quality = SceytChatUIKit.config.avatarResizeConfig.compressionQuality
+            resizeImage(requireContext(), it, reqSize, quality).getOrNull() ?: ""
         }
         binding.avatar.setImageUrl(createChannelData.avatarUrl)
     }
@@ -223,7 +228,7 @@ class CreateChannelDetailsFragment : Fragment() {
 
     private fun SceytFragmentCreateChannelDetailsBinding.applyStyle() {
         root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
-        setTextViewsTextColor(listOf(inputSubject, inputUri, inputDescription, uriBegin),
+        setTextViewsTextColor(listOf(inputSubject, inputUri, inputDescription, uriPrefix),
             requireContext().getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
         setTextViewsHintTextColorRes(listOf(inputSubject, inputUri, inputDescription),
             SceytChatUIKit.theme.textFootnoteColor)

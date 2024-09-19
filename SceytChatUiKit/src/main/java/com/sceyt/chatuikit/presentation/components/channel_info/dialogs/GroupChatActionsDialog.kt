@@ -47,16 +47,15 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
 
     private fun SceytDialogGroupChannelActionsBinding.initView() {
         when (channel.getChannelType()) {
-            ChannelTypeEnum.Private -> {
+            ChannelTypeEnum.Group -> {
                 leaveChat.text = context.getString(R.string.sceyt_leave_group)
                 delete.text = context.getString(R.string.sceyt_delete_group)
                 report.isVisible = false
             }
 
-            ChannelTypeEnum.Public, ChannelTypeEnum.Broadcast -> {
+            ChannelTypeEnum.Public -> {
                 leaveChat.text = context.getString(R.string.sceyt_leave_channel)
                 delete.text = context.getString(R.string.sceyt_delete_channel)
-                // todo report.isVisible = true
             }
 
             else -> {}

@@ -11,8 +11,7 @@ import com.sceyt.chat.demo.di.viewModelModules
 import com.sceyt.chat.models.SCTLogLevel
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.config.SceytChatUIKitConfig
-import com.sceyt.chatuikit.config.UploadNotificationClickHandleData
+import com.sceyt.chatuikit.config.UploadNotificationPendingIntentData
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
@@ -56,11 +55,10 @@ class SceytChatDemoApp : Application() {
             )
         }
 
-        SceytChatUIKit.config = SceytChatUIKitConfig(
-            uploadNotificationClickHandleData = UploadNotificationClickHandleData(
-                ChannelActivity::class.java, ChannelActivity.CHANNEL
-            )
+        SceytChatUIKit.config.uploadNotificationPendingIntentData = UploadNotificationPendingIntentData(
+            ChannelActivity::class.java, ChannelActivity.CHANNEL
         )
+
         ChatClient.setSceytLogLevel(SCTLogLevel.Info) { i: Int, s: String, s1: String ->
             when (i) {
                 Log.DEBUG, Log.INFO -> Log.i(TAG, "$s $s1")

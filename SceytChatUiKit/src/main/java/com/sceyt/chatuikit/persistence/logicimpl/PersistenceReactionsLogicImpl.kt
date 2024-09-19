@@ -53,7 +53,7 @@ internal class PersistenceReactionsLogicImpl(
         private var messagesCache: MessagesCache) : PersistenceReactionsLogic {
 
     private val reactionUpdateMutex = Mutex()
-    private val reactionsLoadSize get() = SceytChatUIKit.config.reactionsLoadSize
+    private val reactionsLoadSize get() = SceytChatUIKit.config.queryLimits.reactionListQueryLimit
 
     override suspend fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
         reactionUpdateMutex.withLock {

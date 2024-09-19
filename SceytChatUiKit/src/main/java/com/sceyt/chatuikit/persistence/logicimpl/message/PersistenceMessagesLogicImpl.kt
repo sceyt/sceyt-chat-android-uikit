@@ -125,7 +125,7 @@ internal class PersistenceMessagesLogicImpl(
     private val createChannelAndSendMessageMutex = Mutex()
     private val dispatcherIO = Dispatchers.IO
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
-    private val messagesLoadSize get() = SceytChatUIKit.config.messagesLoadSize
+    private val messagesLoadSize get() = SceytChatUIKit.config.queryLimits.messageListQueryLimit
 
     private val onMessageFlow: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> = MutableSharedFlow(
         extraBufferCapacity = 10,

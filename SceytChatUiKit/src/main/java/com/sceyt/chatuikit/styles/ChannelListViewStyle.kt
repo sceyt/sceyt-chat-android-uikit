@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.pxToDp
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
-import com.sceyt.chatuikit.formatters.ChannelDateFormatter
+import com.sceyt.chatuikit.formatters.date.ChannelDateFormatter
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**

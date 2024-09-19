@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.formatters
+package com.sceyt.chatuikit.formatters.date
 
 import android.content.Context
 

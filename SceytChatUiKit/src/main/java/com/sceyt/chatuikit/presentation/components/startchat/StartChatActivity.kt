@@ -10,6 +10,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold
@@ -21,20 +22,23 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
-import com.sceyt.chatuikit.extensions.parcelableArrayList
+import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
-import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
-import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
-import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersViewModel
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
+import com.sceyt.chatuikit.presentation.components.channel_info.members.MemberTypeEnum
 import com.sceyt.chatuikit.presentation.components.create_chat.create_channel.CreateChannelActivity
 import com.sceyt.chatuikit.presentation.components.create_chat.create_group.CreateGroupActivity
-import com.sceyt.chatuikit.presentation.components.startchat.adapters.holders.UserViewHolderFactory
+import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
+import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageArgs
+import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResult
+import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
+import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersViewModel
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapter
+import com.sceyt.chatuikit.presentation.components.startchat.adapters.holders.UserViewHolderFactory
+import com.sceyt.chatuikit.presentation.root.PageState
 
 class StartChatActivity : AppCompatActivity() {
     private lateinit var binding: SceytActivityStartChatBinding
@@ -100,7 +104,8 @@ class StartChatActivity : AppCompatActivity() {
         }
 
         binding.tvNewGroup.setOnClickListener {
-            selectUsersActivityLauncher.launch(SelectUsersActivity.newInstance(this), animOptions)
+            val args = SelectUsersPageArgs(toolbarTitle = MemberTypeEnum.Member.getPageTitle(this))
+            selectUsersActivityLauncher.launch(SelectUsersActivity.newIntent(this, args), animOptions)
         }
 
         binding.tvNewChannel.setOnClickListener {
@@ -136,7 +141,8 @@ class StartChatActivity : AppCompatActivity() {
 
     private val selectUsersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.parcelableArrayList<SceytMember>(SelectUsersActivity.SELECTED_USERS)?.let { members ->
+            result.data?.parcelable<SelectUsersResult>(SelectUsersActivity.SELECTED_USERS_RESULT)?.let { data ->
+                val members = data.selectedUsers.map { SceytMember(Role(MemberTypeEnum.Member.toRole()), it) }
                 createGroupLauncher.launch(CreateGroupActivity.newIntent(this, members), animOptions)
             }
         }

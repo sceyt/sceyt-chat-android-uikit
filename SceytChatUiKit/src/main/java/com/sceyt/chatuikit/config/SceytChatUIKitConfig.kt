@@ -1,31 +1,40 @@
 package com.sceyt.chatuikit.config
 
+import android.content.Context
 import androidx.annotation.IntRange
-import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.logger.SceytLogLevel
-import com.sceyt.chatuikit.logger.SceytLogger
+import androidx.core.graphics.toColorInt
+import com.sceyt.chatuikit.config.defaults.DefaultAutoDeleteMessagesOptions
+import com.sceyt.chatuikit.config.defaults.DefaultMuteNotificationOptions
+import kotlin.time.Duration.Companion.hours
 
 class SceytChatUIKitConfig(
-        @IntRange(1, 50) val channelsLoadSize: Int = 20,
-        @IntRange(1, 50) val channelMembersLoadSize: Int = 30,
-        @IntRange(1, 50) val usersLoadSize: Int = 30,
-        @IntRange(1, 50) val messagesLoadSize: Int = 50,
-        @IntRange(1, 50) val attachmentsLoadSize: Int = 20,
-        @IntRange(1, 50) val reactionsLoadSize: Int = 30,
-        @IntRange(from = 1, to = 6) var maxSelfReactionsSize: Int = 6,
-        @IntRange(from = 1, to = 50) var maxMultiselectMessagesCount: Int = 30,
-        val sortChannelsBy: ChannelSortType = ChannelSortType.ByLastMsg,
-        val presenceStatusText: String = "",
-        val uploadNotificationClickHandleData: UploadNotificationClickHandleData? = null,
-        val shouldHardDeleteMessageForAll: Boolean = false,
+        appContext: Context
 ) {
+    var queryLimits: QueryLimits = QueryLimits()
+    var presenceConfig: PresenceConfig = PresenceConfig()
+    var channelURIConfig: ChannelURIConfig = ChannelURIConfig()
+    var channelTypesConfig: ChannelTypesConfig = ChannelTypesConfig()
+    var memberRolesConfig: MemberRolesConfig = MemberRolesConfig()
+    var muteChannelNotificationOptions: List<IntervalOption> = DefaultMuteNotificationOptions(appContext).options
+    var muteUserNotificationOptions: List<IntervalOption> = DefaultMuteNotificationOptions(appContext).options
+    var messageAutoDeleteOptions = DefaultAutoDeleteMessagesOptions(appContext).options
+    var syncChannelsAfterConnect: Boolean = true
+    var hardDeleteMessageForAll: Boolean = false
+    var messageEditTimeout: Long = 2.hours.inWholeMilliseconds
+    var avatarResizeConfig: ResizeConfig = ResizeConfig.Low
+    var imageAttachmentResizeConfig: ResizeConfig = ResizeConfig.Medium
+    var videoAttachmentResizeConfig: VideoResizeConfig = VideoResizeConfig.Medium
+    var sortChannelsBy: ChannelSortType = ChannelSortType.ByLastMsg
+    val defaultAvatarBackgroundColors: List<Int> = listOf("#4F6AFF".toColorInt(), "#B463E7".toColorInt())
+    val defaultReactions: List<String> = listOf("😎", "😂", "👌", "😍", "👍", "😏")
+    var uploadNotificationPendingIntentData: UploadNotificationPendingIntentData? = null
 
-    fun setLogger(logLevel: SceytLogLevel, logger: SceytLogger) {
-        SceytLog.setLogger(logLevel, logger)
-    }
-}
+    @IntRange(from = 1, to = 6)
+    var messageReactionPerUserLimit: Int = 6
 
-enum class ChannelSortType {
-    ByLastMsg,
-    ByChannelCreatedAt
+    @IntRange(from = 1, to = 50)
+    var maxMultiselectMessagesCount: Int = 30
+
+    @IntRange(from = 1, to = 50)
+    var attachmentSelectionLimit: Int = 20
 }

@@ -100,7 +100,7 @@ internal class PersistenceChannelsLogicImpl(
 
     private val messageLogic: PersistenceMessagesLogic by inject()
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
-    private val channelsLoadSize get() = SceytChatUIKit.config.channelsLoadSize
+    private val channelsLoadSize get() = SceytChatUIKit.config.queryLimits.channelListQueryLimit
 
     override suspend fun onChannelEvent(data: ChannelEventData) {
         when (val event = data.eventType) {

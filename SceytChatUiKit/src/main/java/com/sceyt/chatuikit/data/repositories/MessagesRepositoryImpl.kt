@@ -338,7 +338,7 @@ class MessagesRepositoryImpl : MessagesRepository {
         else ChannelOperator.build(channelId).stopTyping()
     }
 
-    private val messagesLoadSize get() = SceytChatUIKit.config.messagesLoadSize
+    private val messagesLoadSize get() = SceytChatUIKit.config.queryLimits.messageListQueryLimit
 
     private fun getQuery(conversationId: Long,
                          replyInThread: Boolean,

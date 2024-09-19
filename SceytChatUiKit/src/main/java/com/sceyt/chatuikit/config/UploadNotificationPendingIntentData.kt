@@ -2,8 +2,8 @@ package com.sceyt.chatuikit.config
 
 import android.content.Intent
 
-data class UploadNotificationClickHandleData(
+data class UploadNotificationPendingIntentData(
         val classToOpen: Class<*>,
-        val channelToParcelKey: String?,
+        val extraKey: String?,
         val intentFlags: Int? = Intent.FLAG_ACTIVITY_CLEAR_TOP
 )

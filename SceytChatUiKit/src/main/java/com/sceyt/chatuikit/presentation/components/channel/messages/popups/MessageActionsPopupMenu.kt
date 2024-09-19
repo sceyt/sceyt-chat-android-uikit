@@ -13,6 +13,7 @@ import androidx.core.graphics.BlendModeCompat
 import androidx.core.view.GravityCompat
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 
@@ -33,8 +34,9 @@ class MessageActionsPopupMenu(
 
         menu.findItem(R.id.sceyt_reply).isVisible = !isPending
         menu.findItem(R.id.sceyt_forward).isVisible = !isPending
-        menu.findItem(R.id.sceyt_edit_message).isVisible = message.body.isNotNullOrBlank()
 
+        val expiredEditMessage = (System.currentTimeMillis() - message.createdAt) > SceytChatUIKit.config.messageEditTimeout
+        menu.findItem(R.id.sceyt_edit_message).isVisible = message.body.isNotNullOrBlank() && !expiredEditMessage
 
         val deleteMessageItem = menu.findItem(R.id.sceyt_delete_message)
 

@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.formatters
+package com.sceyt.chatuikit.formatters.date
 
 data class DateFormatData(
         var format: String? = null,

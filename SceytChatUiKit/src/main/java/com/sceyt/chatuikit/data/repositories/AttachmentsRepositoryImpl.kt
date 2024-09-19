@@ -19,7 +19,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 class AttachmentsRepositoryImpl : AttachmentsRepository {
 
     private fun getQuery(conversationId: Long, types: List<String>) = AttachmentListQuery.Builder(conversationId)
-        .setLimit(SceytChatUIKit.config.attachmentsLoadSize)
+        .setLimit(SceytChatUIKit.config.queryLimits.attachmentListQueryLimit)
         .withTypes(types)
         .build()
 

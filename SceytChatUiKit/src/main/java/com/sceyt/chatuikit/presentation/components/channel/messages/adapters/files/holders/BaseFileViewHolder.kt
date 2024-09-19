@@ -15,8 +15,10 @@ import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem
 
-abstract class BaseFileViewHolder<Item : com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem>(itemView: View,
-                                                                                                                                         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseViewHolder<Item>(itemView) {
+abstract class BaseFileViewHolder<Item : AttachmentDataItem>(
+        itemView: View,
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+) : BaseViewHolder<Item>(itemView) {
     protected lateinit var fileItem: Item
     protected val viewHolderHelper by lazy { AttachmentViewHolderHelper(itemView) }
     private var addedLister = false

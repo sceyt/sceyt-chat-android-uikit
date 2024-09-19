@@ -84,7 +84,8 @@ class SceytSyncManager(private val channelInteractor: ChannelInteractor,
             suspendCancellableCoroutine { cont ->
                 launch(Dispatchers.IO) {
                     val syncChannelData = SyncChannelData(mutableSetOf(), false)
-                    channelInteractor.syncChannels(SceytChatUIKit.config.channelsLoadSize).collect {
+                    val limit = SceytChatUIKit.config.queryLimits.channelListQueryLimit
+                    channelInteractor.syncChannels(limit).collect {
                         when (it) {
                             is GetAllChannelsResponse.Error -> {
                                 syncChannelData.withError = true

@@ -221,7 +221,7 @@ class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun addMembersToChannel(channelId: Long, users: ArrayList<SceytMember>) {
+    fun addMembersToChannel(channelId: Long, users: List<SceytMember>) {
         viewModelScope.launch(Dispatchers.IO) {
             val members = users.map { it.toMember() }
             val response = channelMemberInteractor.addMembersToChannel(channelId, members)

@@ -50,25 +50,26 @@ import com.sceyt.chatuikit.extensions.setTextAndMoveSelectionEnd
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.setTint
 import com.sceyt.chatuikit.extensions.showSoftInput
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 import com.sceyt.chatuikit.persistence.lazyVar
+import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.common.SceytDialog
-import com.sceyt.chatuikit.presentation.customviews.voice_recorder.AudioMetadata
-import com.sceyt.chatuikit.presentation.customviews.voice_recorder.RecordingListener
-import com.sceyt.chatuikit.presentation.customviews.voice_recorder.VoiceRecordPlaybackView
-import com.sceyt.chatuikit.presentation.customviews.voice_recorder.VoiceRecorderView
-import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.ChooseFileTypeDialog
-import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
-import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState.Text
-import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState.Voice
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentItem
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentsAdapter
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentsViewHolderFactory
+import com.sceyt.chatuikit.presentation.components.channel.input.components.MentionUsersListView
+import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState
+import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState.Text
+import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState.Voice
+import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
+import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.fragments.LinkPreviewFragment
 import com.sceyt.chatuikit.presentation.components.channel.input.fragments.MessageActionsFragment
+import com.sceyt.chatuikit.presentation.components.channel.input.helpers.MessageToSendHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.link.SingleLinkDetailsProvider
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.action.InputActionsListener
@@ -87,17 +88,16 @@ import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQuery
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQueryChangedListener
-import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.presentation.components.channel.input.components.MentionUsersListView
-import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState
-import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
-import com.sceyt.chatuikit.presentation.components.channel.input.helpers.MessageToSendHelper
+import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.ChooseFileTypeDialog
+import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
+import com.sceyt.chatuikit.presentation.customviews.voice_recorder.AudioMetadata
+import com.sceyt.chatuikit.presentation.customviews.voice_recorder.RecordingListener
+import com.sceyt.chatuikit.presentation.customviews.voice_recorder.VoiceRecordPlaybackView
+import com.sceyt.chatuikit.presentation.customviews.voice_recorder.VoiceRecorderView
+import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
+import com.sceyt.chatuikit.shared.helpers.picker.PickType
 import com.sceyt.chatuikit.styles.MessageInputStyle
 import com.sceyt.chatuikit.styles.MessagesListViewStyle
-import com.sceyt.chatuikit.shared.helpers.picker.PickType
-import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.vanniktech.ui.animateToGone
 import com.vanniktech.ui.animateToVisible
 import kotlinx.coroutines.Job
@@ -654,7 +654,7 @@ class MessageInputView @JvmOverloads constructor(
 
     internal fun checkIsParticipant(channel: SceytChannel) {
         when (channel.getChannelType()) {
-            ChannelTypeEnum.Public, ChannelTypeEnum.Broadcast -> {
+            ChannelTypeEnum.Public -> {
                 if (channel.userRole.isNullOrBlank()) {
                     showHideJoinButton(true)
                 } else showHideJoinButton(false)
@@ -938,7 +938,11 @@ class MessageInputView @JvmOverloads constructor(
     // Choose file type popup listeners
     override fun onGalleryClick() {
         binding.messageInput.clearFocus()
-        filePickerHelper?.openMediaPicker(getPickerListener(), selections = allAttachments.map { it.filePath }.toTypedArray())
+        filePickerHelper?.openMediaPicker(
+            pickerListener = getPickerListener(),
+            selections = allAttachments.map { it.filePath }.toTypedArray(),
+            maxSelectCount = SceytChatUIKit.config.attachmentSelectionLimit
+        )
     }
 
     override fun onTakePhotoClick() {

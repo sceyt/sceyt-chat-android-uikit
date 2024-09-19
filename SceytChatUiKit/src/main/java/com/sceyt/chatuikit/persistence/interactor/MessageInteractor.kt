@@ -17,24 +17,34 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
 interface MessageInteractor {
-    suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long,
-                                 replyInThread: Boolean, offset: Int,
-                                 limit: Int = SceytChatUIKit.config.messagesLoadSize, loadKey: LoadKeyData,
-                                 ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
+    suspend fun loadPrevMessages(
+            conversationId: Long, lastMessageId: Long,
+            replyInThread: Boolean, offset: Int,
+            limit: Int = SceytChatUIKit.config.queryLimits.messageListQueryLimit,
+            loadKey: LoadKeyData, ignoreDb: Boolean = false
+    ): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
-                                 offset: Int, limit: Int = SceytChatUIKit.config.messagesLoadSize,
-                                 ignoreDb: Boolean = false): Flow<PaginationResponse<SceytMessage>>
+    suspend fun loadNextMessages(
+            conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
+            offset: Int, limit: Int = SceytChatUIKit.config.queryLimits.messageListQueryLimit,
+            ignoreDb: Boolean = false
+    ): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
-                                 limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean = false,
-                                 ignoreServer: Boolean = false): Flow<PaginationResponse<SceytMessage>>
+    suspend fun loadNearMessages(
+            conversationId: Long, messageId: Long, replyInThread: Boolean,
+            limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean = false,
+            ignoreServer: Boolean = false
+    ): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int = SceytChatUIKit.config.messagesLoadSize,
-                                   loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>>
+    suspend fun loadNewestMessages(
+            conversationId: Long, replyInThread: Boolean,
+            limit: Int = SceytChatUIKit.config.queryLimits.messageListQueryLimit,
+            loadKey: LoadKeyData, ignoreDb: Boolean
+    ): Flow<PaginationResponse<SceytMessage>>
 
-    suspend fun searchMessages(conversationId: Long, replyInThread: Boolean,
-                               query: String): SceytPagingResponse<List<SceytMessage>>
+    suspend fun searchMessages(
+            conversationId: Long, replyInThread: Boolean, query: String
+    ): SceytPagingResponse<List<SceytMessage>>
 
     suspend fun loadNextSearchMessages(): SceytPagingResponse<List<SceytMessage>>
     suspend fun loadMessagesById(conversationId: Long, ids: List<Long>): SceytResponse<List<SceytMessage>>
@@ -58,11 +68,14 @@ interface MessageInteractor {
     suspend fun sendAllPendingReactions()
     suspend fun markMessagesAs(channelId: Long, marker: MarkerTypeEnum,
                                vararg ids: Long): List<SceytResponse<MessageListMarker>>
+
     suspend fun addMessagesMarker(channelId: Long, marker: String,
                                   vararg ids: Long): List<SceytResponse<MessageListMarker>>
+
     suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage>
     suspend fun deleteMessage(channelId: Long, message: SceytMessage,
                               deleteType: DeleteMessageType): SceytResponse<SceytMessage>
+
     suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
     suspend fun getMessageDbById(messageId: Long): SceytMessage?
     suspend fun getMessageDbByTid(messageTid: Long): SceytMessage?

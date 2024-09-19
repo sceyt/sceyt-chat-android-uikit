@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.styles.MessagesListViewStyle
-import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import java.util.Date
 
 class DateSeparatorViewHolder(
         private val binding: SceytItemMessageDateSeparatorBinding,
@@ -24,12 +24,7 @@ class DateSeparatorViewHolder(
         itemView.isVisible = true
         if (item is MessageListItem.DateSeparatorItem) {
             val createdAt = item.createdAt
-            val dateText = DateTimeUtil.getDateTimeStringWithDateFormatter(
-                context = context,
-                time = createdAt,
-                dateFormatter = style.dateSeparatorDateFormat
-            )
-            binding.messageDay.text = dateText
+            binding.messageDay.text = style.dateSeparatorDateFormat.format(context, Date(createdAt))
         }
     }
 

@@ -138,7 +138,7 @@ internal class PersistenceUsersLogicImpl(
         val status = ClientWrapper.currentUser?.presence?.status
         val response = suspendCancellableCoroutine<SceytResponse<Boolean>> { continuation ->
             ClientWrapper.setPresence(presenceState, if (status.isNullOrBlank())
-                SceytChatUIKit.config.presenceStatusText else status) {
+                SceytChatUIKit.config.presenceConfig.defaultPresenceStatus else status) {
                 if (it.isOk) {
                     continuation.safeResume(SceytResponse.Success(true))
                 } else continuation.safeResume(SceytResponse.Error(it.error))

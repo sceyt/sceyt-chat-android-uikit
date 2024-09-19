@@ -7,12 +7,16 @@ import androidx.emoji2.text.FontRequestEmojiCompatConfig
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
+import com.sceyt.chatuikit.config.SceytChatUIKitConfig
 import com.sceyt.chatuikit.data.di.repositoryModule
 import com.sceyt.chatuikit.data.transformers.MessageTransformer
 import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.koin.SceytKoinApp
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.logger.SceytLogLevel
+import com.sceyt.chatuikit.logger.SceytLogger
 import com.sceyt.chatuikit.persistence.di.appModules
 import com.sceyt.chatuikit.persistence.di.cacheModule
 import com.sceyt.chatuikit.persistence.di.coroutineModule
@@ -21,8 +25,7 @@ import com.sceyt.chatuikit.persistence.di.interactorModule
 import com.sceyt.chatuikit.persistence.di.logicModule
 import com.sceyt.chatuikit.persistence.lazyVar
 import com.sceyt.chatuikit.presentation.di.viewModelModule
-import com.sceyt.chatuikit.config.SceytChatUIKitConfig
-import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
+import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 import com.vanniktech.emoji.EmojiManager
 import com.vanniktech.emoji.google.GoogleEmojiProvider
@@ -34,13 +37,15 @@ import org.koin.core.component.inject
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 import org.koin.dsl.koinApplication
+import java.util.Date
 
 object SceytChatUIKit : SceytKoinComponent {
     private lateinit var appContext: Context
     val chatUIFacade: SceytChatUIFacade by inject()
     var theme: SceytChatUIKitTheme by lazyVar { SceytChatUIKitTheme() }
-    var config: SceytChatUIKitConfig by lazyVar { SceytChatUIKitConfig() }
-    val formatters: SceytChatUIKitFormatters by lazy { SceytChatUIKitFormatters() }
+    var config: SceytChatUIKitConfig by lazyVar { SceytChatUIKitConfig(appContext) }
+    var providers: SceytChatUIKitProviders by lazyVar { SceytChatUIKitProviders(appContext) }
+    var formatters: SceytChatUIKitFormatters by lazyVar { SceytChatUIKitFormatters() }
 
     @JvmField
     var messageTransformer: MessageTransformer? = null
@@ -56,6 +61,7 @@ object SceytChatUIKit : SceytKoinComponent {
         this.appContext = appContext
         initKoin(enableDatabase)
         initEmojiSupport()
+
         return chatClient
     }
 
@@ -69,6 +75,10 @@ object SceytChatUIKit : SceytKoinComponent {
 
     fun disconnect() {
         ChatClient.getClient().disconnect()
+    }
+
+    fun setLogger(logLevel: SceytLogLevel, logger: SceytLogger) {
+        SceytLog.setLogger(logLevel, logger)
     }
 
     private fun initKoin(enableDatabase: Boolean) {

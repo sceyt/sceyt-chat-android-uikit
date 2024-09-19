@@ -62,7 +62,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:clickable="false"
-        android:src="@drawable/ic_arrow_forward"
+        android:src="@drawable/sceyt_ic_arrow_next"
         android:tint="@color/sceyt_color_on_primary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

@@ -9,7 +9,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.role.Role
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -17,16 +16,18 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityCreateChannelBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.overrideTransitions
-import com.sceyt.chatuikit.extensions.parcelableArrayList
+import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytLoader.hideLoading
 import com.sceyt.chatuikit.presentation.common.SceytLoader.showLoading
-import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.members.MemberTypeEnum
 import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.CreateChatViewModel
+import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
+import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageArgs
+import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResult
+import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.launch
 
 class CreateChannelActivity : AppCompatActivity() {
@@ -53,11 +54,14 @@ class CreateChannelActivity : AppCompatActivity() {
                 createdChannel = it
                 val animOptions = ActivityOptionsCompat.makeCustomAnimation(this@CreateChannelActivity,
                     com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold)
+                val args = SelectUsersPageArgs(
+                    toolbarTitle = MemberTypeEnum.Subscriber.getPageTitle(this@CreateChannelActivity),
+                    actionButtonAlwaysEnable = true,
+                )
                 selectUsersActivityLauncher.launch(
-                    SelectUsersActivity.newInstance(
+                    SelectUsersActivity.newIntent(
                         context = this@CreateChannelActivity,
-                        buttonAlwaysEnable = true,
-                        memberType = MemberTypeEnum.Subscriber), animOptions)
+                        args = args), animOptions)
             }
         }
 
@@ -92,10 +96,9 @@ class CreateChannelActivity : AppCompatActivity() {
 
     private val selectUsersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.parcelableArrayList<SceytMember>(SelectUsersActivity.SELECTED_USERS)?.let { members ->
-                viewModel.addMembers(createdChannel.id, members.map {
-                    SceytMember(Role(MemberTypeEnum.Subscriber.toString()), User(it.id))
-                })
+            result.data?.parcelable<SelectUsersResult>(SelectUsersActivity.SELECTED_USERS_RESULT)?.let { data ->
+                val members = data.selectedUsers.map { SceytMember(Role(MemberTypeEnum.Subscriber.toRole()), it) }
+                viewModel.addMembers(createdChannel.id, members)
             }
         } else startConversationPageAndFinish(createdChannel)
     }
