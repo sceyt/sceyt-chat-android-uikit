@@ -37,7 +37,6 @@ import org.koin.core.component.inject
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 import org.koin.dsl.koinApplication
-import java.util.Date
 
 object SceytChatUIKit : SceytKoinComponent {
     private lateinit var appContext: Context

@@ -8,6 +8,12 @@
     <color name="sceyt_color_primary">#FFFFFF</color>
     <color name="sceyt_color_accent">#5159F6</color>
 
+    <!--Accents-->
+    <color name="sceyt_color_accent_2">#FBB019</color>
+    <color name="sceyt_color_accent_3">#B463E7</color>
+    <color name="sceyt_color_accent_4">#63AFFF</color>
+    <color name="sceyt_color_accent_5">#67D292</color>
+
     <!--Surface-->
     <color name="sceyt_color_surface_1">#F1F2F6</color>
     <color name="sceyt_color_surface_2">#E4E6EE</color>
