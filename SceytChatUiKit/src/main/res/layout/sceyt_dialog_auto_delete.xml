@@ -24,7 +24,7 @@
         android:background="?selectableItemBackground"
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
-        android:text="@string/sceyt_auto_delete_for_1_day"
+        android:text="@string/sceyt_1_day"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize" />
 
@@ -35,7 +35,7 @@
         android:background="?selectableItemBackground"
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
-        android:text="@string/sceyt_auto_delete_for_1_week"
+        android:text="@string/sceyt_1_week"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize" />
 
@@ -46,7 +46,7 @@
         android:background="?selectableItemBackground"
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
-        android:text="@string/sceyt_auto_delete_for_1_month"
+        android:text="@string/sceyt_1_month"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize" />
 
@@ -57,7 +57,7 @@
         android:background="?selectableItemBackground"
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
-        android:text="@string/sceyt_auto_delete_off"
+        android:text="@string/sceyt_off"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize" />
 

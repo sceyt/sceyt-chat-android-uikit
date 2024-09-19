@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.ColorRes
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
@@ -31,14 +30,17 @@ import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.common.SceytLoader.showLoading
-import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.edit.viewmodel.EditChannelViewModel
 import com.sceyt.chatuikit.presentation.components.channel_info.members.ChannelMembersFragment
-import com.sceyt.chatuikit.styles.ChannelInfoStyle
+import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.URIValidation
+import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.providers.URIValidationType
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
+import com.sceyt.chatuikit.styles.ChannelInfoStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.net.URI
 
 open class EditChannelFragment : Fragment(), SceytKoinComponent {
     protected var binding: SceytFragmentEditChannelBinding? = null
@@ -85,15 +87,11 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             if (url != binding?.inputUri?.text?.toString()) return@observe
 
             urlIsValidByServer = isValid
-            if (isValid)
+            if (isValid) {
                 checkSaveEnabled(false)
-            binding?.uriWarning?.apply {
-                if (!isValid) {
-                    setUriStatusText(getString(R.string.sceyt_the_url_exist_title), R.color.sceyt_color_error)
-                } else
-                    setUriStatusText(getString(R.string.sceyt_valid_url_title), R.color.sceyt_color_green)
-                isVisible = true
-            }
+                setUriStatusText(URIValidationType.FreeToUse)
+            } else
+                setUriStatusText(URIValidationType.AlreadyTaken)
         }
 
         viewModel.pageStateLiveData.observe(viewLifecycleOwner) {
@@ -134,6 +132,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             avatar.setImageUrl(avatarUrl)
             inputUri.setText(channel.uri)
             tvSubject.setText(channel.channelSubject.trim())
+            uriPrefix.text = SceytChatUIKit.config.channelURIConfig.prefix
             tvDescription.setText(channel.metadata.jsonToObject(ChannelDescriptionData::class.java)?.description?.trim())
         }
     }
@@ -162,13 +161,19 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
 
                     if (!checkUriFormat) return
 
-                    val isValid = checkIsValidUrlFormat(inputUrl)
+                    val isValid = viewModel.checkIsValidUrlFormat(inputUrl)
+                    when (isValid) {
+                        URIValidation.Valid -> {
+                            if (checkingUrl != inputUri.text.toString()) {
+                                checkingUrl = inputUri.text.toString()
+                                viewModel.checkIsValidUrl(inputUri.text.toString().lowercase())
+                            }
+                        }
 
-                    if (isValid && checkingUrl != inputUri.text.toString()) {
-                        checkingUrl = inputUri.text.toString()
-                        viewModel.checkIsValidUrl(inputUri.text.toString().lowercase())
-                    } else
-                        icSave.setEnabledOrNot(false)
+                        URIValidation.TooShort -> disableWithError(URIValidationType.TooShort)
+                        URIValidation.TooLong -> disableWithError(URIValidationType.TooLong)
+                        URIValidation.InvalidCharacters -> disableWithError(URIValidationType.InvalidCharacters)
+                    }
                 }
 
                 else -> icSave.setEnabledOrNot(true)
@@ -176,24 +181,27 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    open fun checkIsValidUrlFormat(url: String): Boolean {
-        with(binding ?: return false) {
-            val isValidUrl = "^\\w{5,50}".toPattern().matcher(url).matches()
-            if (!isValidUrl) {
-                if (inputUri.text.toString().length < 5 || inputUri.text.toString().length > 50)
-                    setUriStatusText(getString(R.string.sceyt_url_length_validation_text), R.color.sceyt_color_error)
-                else
-                    setUriStatusText(getString(R.string.sceyt_url_characters_validation_text), R.color.sceyt_color_error)
-                uriWarning.isVisible = true
-            }
-            return isValidUrl
+    open fun disableWithError(type: URIValidationType) {
+        with(binding ?: return) {
+            uriWarning.isVisible = true
+            icSave.setEnabledOrNot(false)
+            setUriStatusText(type)
         }
     }
 
-    open fun setUriStatusText(title: String, @ColorRes color: Int) {
+    open fun setUriStatusText(type: URIValidationType) {
+        val provider = SceytChatUIKit.providers.channelURIValidationMessageProvider
+        val colorRes = when (type) {
+            URIValidationType.AlreadyTaken,
+            URIValidationType.TooLong,
+            URIValidationType.TooShort,
+            URIValidationType.InvalidCharacters -> R.color.sceyt_color_error
+
+            URIValidationType.FreeToUse -> R.color.sceyt_color_success
+        }
         binding?.uriWarning?.apply {
-            text = title
-            setTextColor(requireContext().getCompatColor(color))
+            text = provider.provide(type)
+            setTextColor(requireContext().getCompatColor(colorRes))
         }
     }
 
@@ -204,7 +212,9 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     }
 
     open fun setProfileImage(filePath: String?) {
-        avatarUrl = resizeImage(requireContext(), filePath, 500).getOrNull()
+        val reqSize = SceytChatUIKit.config.avatarResizeConfig.dimensionThreshold
+        val quality = SceytChatUIKit.config.avatarResizeConfig.compressionQuality
+        avatarUrl = resizeImage(requireContext(), filePath, reqSize, quality).getOrNull()
         binding?.avatar?.setImageUrl(avatarUrl)
         checkSaveEnabled(false)
     }
@@ -235,7 +245,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     open fun onSaveClick() {
         val newSubject = binding?.tvSubject?.text?.trim().toString()
         val newDescription = binding?.tvDescription?.text?.trim().toString()
-        val newUrl = "@${binding?.inputUri?.text?.trim()}"
+        val newUrl = binding?.inputUri?.text?.trim().toString()
         val isEditedAvatar = avatarUrl != channel.avatarUrl
         val oldDesc = channel.metadata.jsonToObject(ChannelDescriptionData::class.java)?.description?.trim()
         val isEditedSubjectOrDesc = newSubject != channel.channelSubject.trim() || newDescription != oldDesc
@@ -259,7 +269,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         toolbar.setTitleColorRes(SceytChatUIKit.theme.textPrimaryColor)
         uriWarning.setTextColor(requireContext().getCompatColor(SceytChatUIKit.theme.errorColor))
         icSave.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
-        setTextViewsTextColorRes(listOf(tvSubject, tvDescription, uriBegin, inputUri), SceytChatUIKit.theme.textPrimaryColor)
+        setTextViewsTextColorRes(listOf(tvSubject, tvDescription, uriPrefix, inputUri), SceytChatUIKit.theme.textPrimaryColor)
         setTextViewsHintTextColorRes(listOf(tvSubject, tvDescription, inputUri), SceytChatUIKit.theme.textFootnoteColor)
     }
 

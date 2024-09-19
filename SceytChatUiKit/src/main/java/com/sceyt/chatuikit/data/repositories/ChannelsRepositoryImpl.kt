@@ -9,8 +9,6 @@ import com.sceyt.chat.models.channel.ChannelQueryParam
 import com.sceyt.chat.models.channel.CreateChannelRequest
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.member.MemberListQuery
-import com.sceyt.chat.models.role.Role
-import com.sceyt.chat.models.user.User
 import com.sceyt.chat.operators.ChannelOperator
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.sceyt_callbacks.ChannelCallback
@@ -19,8 +17,8 @@ import com.sceyt.chat.sceyt_callbacks.MembersCallback
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.ChannelSortType
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
@@ -32,7 +30,6 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
-import com.sceyt.chatuikit.config.ChannelSortType
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -50,7 +47,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     private fun createMemberListQuery(channelId: Long, offset: Int, role: String?): MemberListQuery {
         return MemberListQuery.Builder(channelId)
-            .limit(SceytChatUIKit.config.channelMembersLoadSize)
+            .limit(SceytChatUIKit.config.queryLimits.channelMemberListQueryLimit)
             .orderType(MemberListQuery.QueryOrderType.ListQueryOrderAscending)
             .order(MemberListQuery.MemberListOrder.MemberListQueryOrderKeyUserName)
             .apply {
@@ -177,23 +174,6 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         })
 
         awaitClose()
-    }
-
-    override suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel> {
-        return suspendCancellableCoroutine { continuation ->
-            CreateChannelRequest.Builder(ChannelTypeEnum.Direct.getString())
-                .withMembers(arrayListOf(Member(Role("Admin"), user)))
-                .build()
-                .execute(object : ChannelCallback {
-                    override fun onResult(channel: Channel) {
-                        continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
-                    }
-
-                    override fun onError(e: SceytException?) {
-                        continuation.safeResume(SceytResponse.Error(e))
-                    }
-                })
-        }
     }
 
     override suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel> {
@@ -604,7 +584,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             .order(getOrder())
             .query(query?.ifBlank { null })
             .withQueryParam(channelQueryParam)
-            .limit(SceytChatUIKit.config.channelsLoadSize)
+            .limit(SceytChatUIKit.config.queryLimits.channelListQueryLimit)
             .build()
     }
 

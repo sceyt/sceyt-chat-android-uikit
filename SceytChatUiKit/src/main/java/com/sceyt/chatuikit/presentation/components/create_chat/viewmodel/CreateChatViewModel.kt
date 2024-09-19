@@ -51,4 +51,21 @@ class CreateChatViewModel : BaseViewModel() {
             }
         }
     }
+
+    fun checkIsValidUrlFormat(url: String): URIValidation {
+        val config = SceytChatUIKit.config.channelURIConfig
+        return when {
+            url.length < config.minLength -> URIValidation.TooShort
+            url.length > config.maxLength -> URIValidation.TooLong
+            !config.regex.toPattern().matcher(url).matches() -> URIValidation.InvalidCharacters
+            else -> URIValidation.Valid
+        }
+    }
+}
+
+enum class URIValidation {
+    Valid,
+    TooShort,
+    TooLong,
+    InvalidCharacters
 }

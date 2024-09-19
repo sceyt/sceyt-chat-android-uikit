@@ -24,10 +24,8 @@ import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Broadcast
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Direct
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Group
-import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Private
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -39,7 +37,6 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
-import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.setBoldSpan
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setTextColorRes
@@ -48,20 +45,22 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog
-import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
+import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
+import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.ChannelMembersAdapter
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.diff.MemberItemPayloadDiff
-import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.listeners.MemberClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.holders.ChannelMembersViewHolderFactory
+import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.listeners.MemberClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.MemberActionsDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.MemberActionsDialog.ActionsEnum.Delete
 import com.sceyt.chatuikit.presentation.components.channel_info.members.popups.MemberActionsDialog.ActionsEnum.RevokeAdmin
 import com.sceyt.chatuikit.presentation.components.channel_info.members.viewmodel.ChannelMembersViewModel
+import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
+import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageArgs
+import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResult
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.ChannelInfoStyle
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -79,7 +78,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
     protected var currentUserRole: Role? = null
         private set
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
-    private lateinit var addMembersActivityLauncher: ActivityResultLauncher<Intent>
+    private lateinit var selectUsersActivityLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelMembersBinding.inflate(inflater, container, false).also {
@@ -100,14 +99,14 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        addMembersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        selectUsersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.parcelableArrayList<SceytMember>(SelectUsersActivity.SELECTED_USERS)?.let { data ->
+                result.data?.parcelable<SelectUsersResult>(SelectUsersActivity.SELECTED_USERS_RESULT)?.let { data ->
+                    val members = data.selectedUsers.map { SceytMember(Role(memberType.toRole()), it) }
                     if (memberType == MemberTypeEnum.Admin) {
-                        val users = data.map { it.copy(role = Role(RoleTypeEnum.Admin.toString())) }
-                        changeRole(*users.toTypedArray())
+                        changeRole(*members.toTypedArray())
                     }
-                    addMembersToChannel(data)
+                    addMembersToChannel(members)
                 }
             }
         }
@@ -210,7 +209,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
                  itemsDb.addAll(items.minus(itemsDb.toSet()))
              }*/
 
-            if (data.offset + SceytChatUIKit.config.channelMembersLoadSize >= members.size)
+            if (data.offset + SceytChatUIKit.config.queryLimits.channelMemberListQueryLimit >= members.size)
                 if (hasNext) {
                     if (!itemsDb.contains(MemberItem.LoadingMore))
                         itemsDb.add(MemberItem.LoadingMore)
@@ -324,7 +323,11 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
     protected open fun onAddMembersClick(memberType: MemberTypeEnum) {
         val animOptions = ActivityOptionsCompat.makeCustomAnimation(requireContext(),
             R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
-        addMembersActivityLauncher.launch(SelectUsersActivity.newInstance(requireContext(), memberType, true), animOptions)
+        val args = SelectUsersPageArgs(
+            toolbarTitle = memberType.getPageTitle(requireContext()),
+            actionButtonAlwaysEnable = true
+        )
+        selectUsersActivityLauncher.launch(SelectUsersActivity.newIntent(requireContext(), args), animOptions)
     }
 
     protected open fun onRevokeAdminClick(member: SceytMember) {
@@ -346,12 +349,12 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
         val titleId: Int
         val descId: Int
         when (channel.getChannelType()) {
-            Private, Group -> {
+            Group -> {
                 titleId = R.string.sceyt_remove_member_title
                 descId = R.string.sceyt_remove_member_desc
             }
 
-            Public, Broadcast -> {
+            Public -> {
                 titleId = R.string.sceyt_remove_subscriber_title
                 descId = R.string.sceyt_remove_subscriber_desc
             }

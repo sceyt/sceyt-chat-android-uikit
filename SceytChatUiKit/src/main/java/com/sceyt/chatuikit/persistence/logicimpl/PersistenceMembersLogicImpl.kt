@@ -40,7 +40,7 @@ internal class PersistenceMembersLogicImpl(
         private val usersDao: UserDao,
         private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent {
 
-    private val channelMembersLoadSize get() = SceytChatUIKit.config.channelMembersLoadSize
+    private val channelMembersLoadSize get() = SceytChatUIKit.config.queryLimits.channelMemberListQueryLimit
 
     override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
         val chatId = data.channel.id

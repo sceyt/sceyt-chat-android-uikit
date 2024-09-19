@@ -18,12 +18,12 @@ object ChannelActionConfirmationWithDialog {
         val titleId: Int
         val descId: Int
         when (channel.getChannelType()) {
-            ChannelTypeEnum.Private -> {
+            ChannelTypeEnum.Group -> {
                 titleId = R.string.sceyt_leave_group_title
                 descId = R.string.sceyt_leave_group_desc
             }
 
-            ChannelTypeEnum.Public, ChannelTypeEnum.Broadcast -> {
+            ChannelTypeEnum.Public -> {
                 titleId = R.string.sceyt_leave_channel_title
                 descId = R.string.sceyt_leave_channel_desc
             }
@@ -39,12 +39,12 @@ object ChannelActionConfirmationWithDialog {
         val titleId: Int
         val descId: Int
         when (channel.getChannelType()) {
-            ChannelTypeEnum.Private, ChannelTypeEnum.Group -> {
+            ChannelTypeEnum.Group -> {
                 titleId = R.string.sceyt_delete_group_title
                 descId = R.string.sceyt_delete_group_desc
             }
 
-            ChannelTypeEnum.Public, ChannelTypeEnum.Broadcast -> {
+            ChannelTypeEnum.Public -> {
                 titleId = R.string.sceyt_delete_channel_title
                 descId = R.string.sceyt_delete_channel_desc
             }
@@ -62,8 +62,8 @@ object ChannelActionConfirmationWithDialog {
     fun confirmClearHistoryAction(context: Context, channel: SceytChannel, action: () -> Unit) {
         val descId: Int = when (channel.getChannelType()) {
             ChannelTypeEnum.Direct -> R.string.sceyt_clear_direct_history_desc
-            ChannelTypeEnum.Private, ChannelTypeEnum.Group -> R.string.sceyt_clear_private_chat_history_desc
-            ChannelTypeEnum.Public, ChannelTypeEnum.Broadcast -> R.string.sceyt_clear_public_chat_history_desc
+            ChannelTypeEnum.Group -> R.string.sceyt_clear_private_chat_history_desc
+            ChannelTypeEnum.Public -> R.string.sceyt_clear_public_chat_history_desc
         }
         SceytDialog.showSceytDialog(context, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear, positiveCb = {
             action()

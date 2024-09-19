@@ -144,14 +144,14 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener, ChannelInfoS
                 }
             }
 
-            ChannelTypeEnum.Private, ChannelTypeEnum.Group -> {
+            ChannelTypeEnum.Group -> {
                 val memberCount = channel.memberCount
                 if (memberCount > 1)
                     getString(R.string.sceyt_members_count, memberCount)
                 else getString(R.string.sceyt_member_count, memberCount)
             }
 
-            ChannelTypeEnum.Public, ChannelTypeEnum.Broadcast -> {
+            ChannelTypeEnum.Public -> {
                 val memberCount = channel.memberCount
                 if (memberCount > 1)
                     getString(R.string.sceyt_subscribers_count, memberCount)

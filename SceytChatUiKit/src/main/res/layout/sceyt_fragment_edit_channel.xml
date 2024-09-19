@@ -71,7 +71,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/tvSubject" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/uriBegin"
+                android:id="@+id/uriPrefix"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layoutDirection="ltr"
@@ -100,11 +100,11 @@
                 android:textColorHint="@color/sceyt_color_text_footnote"
                 android:textSize="16sp"
                 app:layout_constrainedWidth="true"
-                app:layout_constraintBottom_toBottomOf="@+id/uriBegin"
+                app:layout_constraintBottom_toBottomOf="@+id/uriPrefix"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0"
-                app:layout_constraintStart_toEndOf="@+id/uriBegin"
-                app:layout_constraintTop_toTopOf="@+id/uriBegin"
+                app:layout_constraintStart_toEndOf="@+id/uriPrefix"
+                app:layout_constraintTop_toTopOf="@+id/uriPrefix"
                 tools:ignore="HardcodedText" />
 
             <View
@@ -113,7 +113,7 @@
                 android:layout_height="1dp"
                 android:background="@color/sceyt_color_border"
                 app:layout_constraintEnd_toEndOf="@+id/inputUri"
-                app:layout_constraintStart_toStartOf="@+id/uriBegin"
+                app:layout_constraintStart_toStartOf="@+id/uriPrefix"
                 app:layout_constraintTop_toBottomOf="@+id/inputUri" />
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -137,7 +137,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:visibility="gone"
-                app:constraint_referenced_ids="uriBegin,inputUri,uriUnderline"
+                app:constraint_referenced_ids="uriPrefix,inputUri,uriUnderline"
                 tools:visibility="visible" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>

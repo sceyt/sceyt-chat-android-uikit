@@ -1,5 +1,7 @@
 package com.sceyt.chatuikit.formatters
 
+import com.sceyt.chatuikit.formatters.date.UserPresenceDateFormatter
+
 class SceytChatUIKitFormatters {
     var userNameFormatter: UserNameFormatter? = null
         set(value) {
@@ -10,4 +12,6 @@ class SceytChatUIKitFormatters {
 
     var mentionUserNameFormatter: UserNameFormatter? = null
     var userPresenceDateFormatter = UserPresenceDateFormatter()
+    var avatarInitialsFormatter = DefaultAvatarInitialsFormatter()
+    var messageDateSeparatorFormatter = DefaultMessageDateSeparatorFormatter()
 }

@@ -32,7 +32,7 @@ class UsersViewModel : BaseViewModel() {
             var empty = false
             if (response is SceytResponse.Success) {
                 empty = response.data.isNullOrEmpty()
-                hasNext = response.data?.size == SceytChatUIKit.config.usersLoadSize
+                hasNext = response.data?.size == SceytChatUIKit.config.queryLimits.userListQueryLimit
                 if (isLoadMore)
                     _loadMoreChannelsLiveData.postValue(mapToUserItems(response.data, hasNext))
                 else _usersLiveData.postValue(mapToUserItems(response.data, hasNext))

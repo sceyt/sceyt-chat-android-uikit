@@ -21,12 +21,10 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.copy
-import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Broadcast
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Direct
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Group
-import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Private
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
@@ -49,10 +47,8 @@ import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
-import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.dialogs.ChannelActionConfirmationWithDialog
-import com.sceyt.chatuikit.presentation.components.channel_info.details.InfoDetailsFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.description.InfoDescriptionFragment
+import com.sceyt.chatuikit.presentation.components.channel_info.details.InfoDetailsFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectChatActionsDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectChatActionsDialog.ActionsEnum.BlockUser
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectChatActionsDialog.ActionsEnum.ClearHistory
@@ -77,8 +73,10 @@ import com.sceyt.chatuikit.presentation.components.channel_info.toolbar.InfoTool
 import com.sceyt.chatuikit.presentation.components.channel_info.toolbar.InfoToolbarFragment.ClickActionsEnum.More
 import com.sceyt.chatuikit.presentation.components.channel_info.viewmodel.ConversationInfoViewModel
 import com.sceyt.chatuikit.presentation.components.channel_info.voice.ChannelVoiceFragment
-import com.sceyt.chatuikit.styles.ChannelInfoStyle
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.dialogs.ChannelActionConfirmationWithDialog
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytPresenceChecker
+import com.sceyt.chatuikit.styles.ChannelInfoStyle
 
 open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     private lateinit var channel: SceytChannel
@@ -298,7 +296,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     protected open fun addMembers(members: List<SceytMember>) {
-        viewModel.addMembersToChannel(channel.id, members as ArrayList)
+        viewModel.addMembersToChannel(channel.id, members)
     }
 
     protected fun getChannel() = channel
@@ -308,8 +306,8 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     protected open fun getMembersType(): MemberTypeEnum {
         return if (::channel.isInitialized) {
             when (channel.getChannelType()) {
-                Private, Direct, Group -> MemberTypeEnum.Member
-                Public, Broadcast -> MemberTypeEnum.Subscriber
+                Direct, Group -> MemberTypeEnum.Member
+                Public -> MemberTypeEnum.Subscriber
             }
         } else MemberTypeEnum.Member
     }

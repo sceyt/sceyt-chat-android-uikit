@@ -211,13 +211,13 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setSmallIcon(R.drawable.sceyt_ic_upload)
 
-        val clickData = SceytChatUIKit.config.uploadNotificationClickHandleData
+        val clickData = SceytChatUIKit.config.uploadNotificationPendingIntentData
         val channel = if (clickData != null)
             channelLogic.getChannelFromDb(channelId) else null
 
         if (channel != null && clickData != null) {
             val pendingIntent = applicationContext.initPendingIntent(Intent(applicationContext, clickData.classToOpen).apply {
-                clickData.channelToParcelKey?.let {
+                clickData.extraKey?.let {
                     putExtra(it, channel)
                 }
                 clickData.intentFlags?.let {

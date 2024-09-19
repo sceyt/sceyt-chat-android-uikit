@@ -23,7 +23,7 @@ class UsersRepositoryImpl : UsersRepository {
             val userListQuery = UserListQuery.Builder()
                 .order(UserListQuery.UserListQueryOrderKeyType.UserListQueryOrderKeyFirstName)
                 .filter(UserListQuery.UserListFilterType.UserListFilterTypeAll)
-                .limit(SceytChatUIKit.config.usersLoadSize)
+                .limit(SceytChatUIKit.config.queryLimits.userListQueryLimit)
                 .query(query)
                 .build().also { usersQuery = it }
 

@@ -32,7 +32,7 @@ open class ReactionsPopup(
     private var clickListener: PopupReactionsAdapter.OnItemClickListener? = null
 
     open fun showPopup(anchorView: View, message: SceytMessage,
-                       reactions: List<String> = SceytChatUIKit.theme.defaultReactions,
+                       reactions: List<String> = SceytChatUIKit.config.defaultReactions,
                        clickListener: PopupReactionsAdapter.OnItemClickListener): ReactionsPopup {
         this.clickListener = clickListener
 
@@ -76,7 +76,7 @@ open class ReactionsPopup(
             ReactionItem.Reaction(SceytReactionTotal(it, containsSelf = containsSelf), message.tid, reactionItem?.isPending
                     ?: false)
         }.run {
-            if ((message.userReactions?.size ?: 0) < SceytChatUIKit.config.maxSelfReactionsSize)
+            if ((message.userReactions?.size ?: 0) < SceytChatUIKit.config.messageReactionPerUserLimit)
                 plus(ReactionItem.Other(message))
             else this
         }

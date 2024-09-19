@@ -38,7 +38,7 @@ import kotlin.math.roundToInt
  */
 object CustomCompressor : CoroutineScope {
 
-    // 2Mbps
+    // 1.5Mbps
     private const val MIN_BITRATE = 1500000
 
     // H.264 Advanced Video Coding

@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
 import com.sceyt.chatuikit.formatters.MessageDateSeparatorFormatter
+import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
@@ -22,7 +23,6 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @param loadingState Layout resource for the loading state view, default is [R.layout.sceyt_loading_state]
  * @param downScrollerUnreadCountColor Color for the unread count in the down scroller, default is [SceytChatUIKitTheme.accentColor]
  * @param downScrollerIcon Icon for the down scroller, default is [R.drawable.sceyt_scroll_down_button]
- * @param dateSeparatorDateFormat Date format for the date separator item, default is [MessageDateSeparatorFormatter]
  * @param dateSeparatorTextFont Font for the date separator item text, default is -1
  * @param dateSeparatorTextStyle Style for the date separator item text, default is [Typeface.NORMAL]
  * @param dateSeparatorItemBackgroundColor Color for the date separator item background, default is [R.color.sceyt_color_overlay_background_2]
@@ -33,6 +33,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @param messageItemStyle Style for the message item view
  * @param enableScrollDownButton Enable scroll down button, default is true
  * @param enableDateSeparator Enable date separator, default is true
+ * @param dateSeparatorDateFormat Date format for the date separator item, default is [SceytChatUIKitFormatters.messageDateSeparatorFormatter]
  **/
 data class MessagesListViewStyle(
         @ColorInt val backgroundColor: Int,
@@ -41,7 +42,6 @@ data class MessagesListViewStyle(
         @LayoutRes val loadingState: Int,
         @ColorInt val downScrollerUnreadCountColor: Int,
         val downScrollerIcon: Drawable?,
-        val dateSeparatorDateFormat: MessageDateSeparatorFormatter = MessageDateSeparatorFormatter(),
         @FontRes val dateSeparatorTextFont: Int = -1,
         val dateSeparatorTextStyle: Int = Typeface.NORMAL,
         @ColorInt val dateSeparatorItemBackgroundColor: Int,
@@ -52,6 +52,7 @@ data class MessagesListViewStyle(
         val messageItemStyle: MessageItemStyle,
         val enableScrollDownButton: Boolean,
         val enableDateSeparator: Boolean,
+        val dateSeparatorDateFormat: MessageDateSeparatorFormatter,
 ) {
     companion object {
         @JvmField
@@ -108,6 +109,7 @@ data class MessagesListViewStyle(
             val enableScrollDownButton = typedArray.getBoolean(R.styleable.MessagesListView_sceytUiEnableScrollDownButton, true)
             val enableDateSeparator = typedArray.getBoolean(R.styleable.MessagesListView_sceytUiEnableDateSeparator, true)
 
+            val dateSeparatorDateFormat = SceytChatUIKit.formatters.messageDateSeparatorFormatter
             typedArray.recycle()
 
             return MessagesListViewStyle(
@@ -126,7 +128,8 @@ data class MessagesListViewStyle(
                 unreadMessagesBackendColor = unreadMessagesBackgroundColor,
                 messageItemStyle = messageItemStyle,
                 enableScrollDownButton = enableScrollDownButton,
-                enableDateSeparator = enableDateSeparator
+                enableDateSeparator = enableDateSeparator,
+                dateSeparatorDateFormat = dateSeparatorDateFormat
             ).let { style ->
                 styleCustomizer.apply(context, style).also {
                     currentStyle = it

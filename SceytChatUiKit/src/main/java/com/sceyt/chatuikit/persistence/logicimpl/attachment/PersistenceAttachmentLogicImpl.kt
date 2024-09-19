@@ -65,7 +65,7 @@ internal class PersistenceAttachmentLogicImpl(
         private val attachmentsRepository: AttachmentsRepository) : PersistenceAttachmentLogic, SceytKoinComponent {
 
     private val messagesLogic: PersistenceMessagesLogic by inject()
-    private val attachmentsLoadSize get() = SceytChatUIKit.config.attachmentsLoadSize
+    private val attachmentsLoadSize get() = SceytChatUIKit.config.queryLimits.attachmentListQueryLimit
 
     override suspend fun setupFileTransferUpdateObserver() {
         FileTransferHelper.onTransferUpdatedLiveData.asFlow().collect {

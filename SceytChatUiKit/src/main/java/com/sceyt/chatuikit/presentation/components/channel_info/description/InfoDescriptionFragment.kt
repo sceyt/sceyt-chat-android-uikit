@@ -53,7 +53,7 @@ open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener, ChannelI
         with(binding) {
             val about = if (channel.isDirect()) {
                 channel.getPeer()?.user?.presence?.status
-                        ?: SceytChatUIKit.config.presenceStatusText
+                        ?: SceytChatUIKit.config.presenceConfig.defaultPresenceStatus
             } else channel.metadata?.jsonToObject(ChannelDescriptionData::class.java)?.description
 
             tvDescription.text = about

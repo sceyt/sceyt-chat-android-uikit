@@ -7,7 +7,9 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.Shader
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
@@ -17,7 +19,6 @@ import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageView
-import androidx.core.graphics.drawable.toBitmap
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chatuikit.R
@@ -27,6 +28,7 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getFirstCharIsEmoji
 import com.sceyt.chatuikit.extensions.processEmojiCompat
 import com.sceyt.chatuikit.extensions.roundUp
+import com.sceyt.chatuikit.presentation.customviews.AvatarView.DefaultAvatar
 import kotlin.math.abs
 
 class AvatarView @JvmOverloads constructor(
@@ -45,7 +47,7 @@ class AvatarView @JvmOverloads constructor(
 
     @ColorInt
     private var avatarBackgroundColor: Int = 0
-    private var defaultAvatarResId: Int = 0
+    private var defaultAvatar: DefaultAvatar? = null
 
     init {
         var enableRipple = true
@@ -56,7 +58,10 @@ class AvatarView @JvmOverloads constructor(
             imageUrl = a.getString(R.styleable.AvatarView_sceytUiAvatarImageUrl)
             textSize = a.getDimensionPixelSize(R.styleable.AvatarView_sceytUiAvatarTextSize, textSize)
             avatarBackgroundColor = a.getColor(R.styleable.AvatarView_sceytUiAvatarColor, 0)
-            defaultAvatarResId = a.getResourceId(R.styleable.AvatarView_sceytUiAvatarDefaultIcon, defaultAvatarResId)
+            val defaultAvatarResId = a.getResourceId(R.styleable.AvatarView_sceytUiAvatarDefaultIcon, 0)
+            if (defaultAvatarResId != 0) {
+                defaultAvatar = defaultAvatarResId.toDefaultAvatar()
+            }
             enableRipple = a.getBoolean(R.styleable.AvatarView_sceytUiAvatarEnableRipple, true)
             a.recycle()
         }
@@ -81,14 +86,15 @@ class AvatarView @JvmOverloads constructor(
         if (visibility != VISIBLE) return
         if (imageUrl.isNullOrBlank()) {
             setImageResource(0)
-            if (defaultAvatarResId == 0) {
+            val default = defaultAvatar
+            if (default == null) {
                 drawBackgroundColor(canvas)
                 drawName(canvas)
             } else {
                 if (avatarBackgroundColor != 0)
                     drawBackgroundColor(canvas)
 
-                drawDefaultImage(canvas)
+                drawDefaultImage(canvas, default)
             }
         }
         super.draw(canvas)
@@ -134,7 +140,7 @@ class AvatarView @JvmOverloads constructor(
     }
 
     private fun getAvatarRandomColor(): Int {
-        val colors = SceytChatUIKit.theme.avatarColors
+        val colors = SceytChatUIKit.config.defaultAvatarBackgroundColors
         return colors[abs((fullName ?: "").hashCode()) % colors.size]
     }
 
@@ -167,9 +173,61 @@ class AvatarView @JvmOverloads constructor(
         }
     }
 
-    private fun drawDefaultImage(canvas: Canvas) {
-        val defaultImage = context.getCompatDrawable(defaultAvatarResId) ?: return
-        val bitmap = defaultImage.toBitmap()
+    private fun drawDefaultImage(canvas: Canvas, avatar: DefaultAvatar) {
+        when (avatar) {
+            is DefaultAvatar.FromBitmap -> {
+                drawCircleBitmap(avatar.bitmap, canvas)
+            }
+
+            is DefaultAvatar.FromDrawable -> {
+                drawCircleDrawable(avatar.drawable, canvas)
+            }
+
+            is DefaultAvatar.FromDrawableRes -> {
+                val drawable = context.getCompatDrawable(avatar.id) ?: return
+                drawCircleDrawable(drawable, canvas)
+            }
+
+            is DefaultAvatar.Initial -> {
+                drawBackgroundColor(canvas)
+                drawName(canvas)
+            }
+        }
+    }
+
+    private fun drawCircleDrawable(drawable: Drawable, canvas: Canvas) {
+        // Get the drawable's width and height
+        val drawableWidth = drawable.intrinsicWidth
+        val drawableHeight = drawable.intrinsicHeight
+
+        // Find the center and radius for the circle
+        val radius = minOf(width, height) / 2f
+        val cx = width / 2f
+        val cy = height / 2f
+
+        // Create a path for the circular shape
+        val path = Path()
+        path.addCircle(cx, cy, radius, Path.Direction.CW)
+
+        // Clip the canvas to the circle path
+        canvas.save()
+        canvas.clipPath(path)
+
+        // Scale and position the drawable within the circle
+        val matrix = Matrix()
+        matrix.setScale(width / drawableWidth.toFloat(), height / drawableHeight.toFloat())
+        // matrix.postTranslate(cx - drawableWidth / 2f, cy - drawableHeight / 2f)
+        canvas.concat(matrix)
+
+        // Set the bounds and draw the drawable on the canvas
+        drawable.setBounds(0, 0, drawableWidth, drawableHeight)
+        drawable.draw(canvas)
+
+        // Restore the canvas to remove the clipping
+        canvas.restore()
+    }
+
+    private fun drawCircleBitmap(bitmap: Bitmap, canvas: Canvas) {
         updateShader(bitmap)
         val circleCenter = (width) / 2f
         canvas.drawCircle(circleCenter, circleCenter, circleCenter, imagePaint)
@@ -186,19 +244,36 @@ class AvatarView @JvmOverloads constructor(
         imagePaint.shader = shader
     }
 
-    fun setNameAndImageUrl(name: String?, url: String?, @DrawableRes defaultIcon: Int = defaultAvatarResId) {
+    /*  fun setNameAndImageUrl(name: String?, url: String?, defaultAvatar: DefaultAvatar? = null) {
+          val oldImageUrl = imageUrl
+          fullName = name
+          imageUrl = url
+          defaultAvatar?.let { this.defaultAvatar = it }
+          invalidate()
+          loadAvatarImage(oldImageUrl)
+      }*/
+
+    fun setNameAndImageUrl(name: String?, url: String?, @DrawableRes defaultAvatar: Int? = null) {
         val oldImageUrl = imageUrl
         fullName = name
         imageUrl = url
-        defaultAvatarResId = defaultIcon
+        defaultAvatar?.let { this.defaultAvatar = it.toDefaultAvatar() }
         invalidate()
         loadAvatarImage(oldImageUrl)
     }
 
-    fun setImageUrl(url: String?, @DrawableRes defaultIcon: Int = defaultAvatarResId) {
+    /*   fun setImageUrl(url: String?, defaultAvatar: DefaultAvatar? = null) {
+           val oldImageUrl = imageUrl
+           imageUrl = url
+           defaultAvatar?.let { this.defaultAvatar = it }
+           invalidate()
+           loadAvatarImage(oldImageUrl)
+       }*/
+
+    fun setImageUrl(url: String?, defaultAvatar: Int? = null) {
         val oldImageUrl = imageUrl
         imageUrl = url
-        defaultAvatarResId = defaultIcon
+        defaultAvatar?.let { this.defaultAvatar = it.toDefaultAvatar() }
         invalidate()
         loadAvatarImage(oldImageUrl)
     }
@@ -217,8 +292,18 @@ class AvatarView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun setDefaultIcon(@DrawableRes id: Int) {
-        defaultAvatarResId = id
+    fun setDefaultAvatar(@DrawableRes id: Int) {
+        defaultAvatar = id.toDefaultAvatar()
+        invalidate()
+    }
+
+    fun setDefaultAvatar(drawable: Drawable) {
+        defaultAvatar = DefaultAvatar.FromDrawable(drawable)
+        invalidate()
+    }
+
+    fun setDefaultAvatar(bitmap: Bitmap) {
+        defaultAvatar = DefaultAvatar.FromBitmap(bitmap)
         invalidate()
     }
 
@@ -227,4 +312,20 @@ class AvatarView @JvmOverloads constructor(
         val measuredWidth = measuredWidth
         setMeasuredDimension(measuredWidth, measuredWidth)
     }
+
+    sealed class DefaultAvatar {
+        data class FromBitmap(val bitmap: Bitmap) : DefaultAvatar()
+        data class FromDrawable(val drawable: Drawable) : DefaultAvatar()
+        data class FromDrawableRes(@DrawableRes val id: Int) : DefaultAvatar()
+        data class Initial(
+                val initial: String
+        ) : DefaultAvatar()
+    }
 }
+
+fun @receiver:DrawableRes Int.toDefaultAvatar(): DefaultAvatar? {
+    if (this == 0) return null
+    return DefaultAvatar.FromDrawableRes(this)
+}
+
+

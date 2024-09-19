@@ -8,6 +8,7 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
@@ -112,7 +113,7 @@ internal class FileTransferLogicImpl(
 
             loadedFile.deleteOnExit()
             loadedFile.createNewFile()
-             task.progressCallback?.onProgress(TransferData(
+            task.progressCallback?.onProgress(TransferData(
                 task.messageTid, 0f, Downloading, null, attachment.url))
             downloadingUrlMap[downloadMapKey] = downloadMapKey
 
@@ -121,7 +122,7 @@ internal class FileTransferLogicImpl(
                 .progress { downloaded, total ->
                     if (pausedTasksMap[attachment.messageTid] == null) {
                         val progress = ((downloaded / total.toFloat())) * 100
-                         task.progressCallback?.onProgress(TransferData(
+                        task.progressCallback?.onProgress(TransferData(
                             task.messageTid, progress, Downloading, null, attachment.url))
                     }
                 }
@@ -299,7 +300,7 @@ internal class FileTransferLogicImpl(
                 if (progress == 1f || pausedTasksMap[attachment.messageTid] != null) return
                 getAppropriateTasks(transferTask).forEach { task ->
                     fileTransferService.getTasks()[task.messageTid.toString()]?.state = Uploading
-                     task.progressCallback?.onProgress(TransferData(task.messageTid,
+                    task.progressCallback?.onProgress(TransferData(task.messageTid,
                         progress * 100, Uploading, task.attachment.filePath, null))
                 }
             }
@@ -364,7 +365,9 @@ internal class FileTransferLogicImpl(
         when (attachment.type) {
             AttachmentTypeEnum.Image.value() -> {
                 resizingAttachmentsMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
-                val result = resizeImage(context, attachment.filePath, 1080)
+                val reqSize = SceytChatUIKit.config.imageAttachmentResizeConfig.dimensionThreshold
+                val quality = SceytChatUIKit.config.imageAttachmentResizeConfig.compressionQuality
+                val result = resizeImage(context, attachment.filePath, reqSize, quality)
                 resizingAttachmentsMap.remove(attachment.messageTid.toString())
                 callback(result)
             }

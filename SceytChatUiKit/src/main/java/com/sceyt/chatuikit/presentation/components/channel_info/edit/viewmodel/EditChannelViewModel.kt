@@ -3,14 +3,16 @@ package com.sceyt.chatuikit.presentation.components.channel_info.edit.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
-import com.sceyt.chatuikit.presentation.root.BaseViewModel
+import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.URIValidation
+import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
@@ -41,6 +43,16 @@ class EditChannelViewModel : BaseViewModel(), SceytKoinComponent {
                     _isValidUrlLiveData.postValue(response.data.isNullOrEmpty() to url)
                 }
             }
+        }
+    }
+
+    fun checkIsValidUrlFormat(url: String): URIValidation {
+        val config = SceytChatUIKit.config.channelURIConfig
+        return when {
+            url.length < config.minLength -> URIValidation.TooShort
+            url.length > config.maxLength -> URIValidation.TooLong
+            !config.regex.toPattern().matcher(url).matches() -> URIValidation.InvalidCharacters
+            else -> URIValidation.Valid
         }
     }
 }

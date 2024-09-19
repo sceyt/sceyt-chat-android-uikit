@@ -4,7 +4,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.sceyt.chat.models.ConnectionState
-import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
@@ -49,8 +48,10 @@ internal class PersistenceConnectionLogicImpl(
 
         scope.launch {
             ProcessLifecycleOwner.get().repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                if (ConnectionEventManager.isConnected)
-                    SceytChatUIKit.chatUIFacade.userInteractor.setPresenceState(PresenceState.Online)
+                if (ConnectionEventManager.isConnected) {
+                    val state = SceytChatUIKit.config.presenceConfig.defaultPresenceState
+                    SceytChatUIKit.chatUIFacade.userInteractor.setPresenceState(state)
+                }
             }
         }
     }
@@ -69,9 +70,13 @@ internal class PersistenceConnectionLogicImpl(
                 messageLogic.sendAllPendingMessages()
                 messageLogic.sendAllPendingMessageStateUpdates()
                 reactionsLogic.sendAllPendingReactions()
-                if (!channelsCache.initialized)
-                    delay(1000) // Await 1 second maybe channel cache will be initialized
-                sceytSyncManager.startSync(false)
+                if (SceytChatUIKit.config.syncChannelsAfterConnect) {
+                    if (!channelsCache.initialized)
+                    // Await 1 second before sync maybe channel cache will be initialized,
+                    // otherwise no need to sync
+                        delay(1000)
+                    sceytSyncManager.startSync(false)
+                }
             }
         } else SceytPresenceChecker.stopPresenceCheck()
     }

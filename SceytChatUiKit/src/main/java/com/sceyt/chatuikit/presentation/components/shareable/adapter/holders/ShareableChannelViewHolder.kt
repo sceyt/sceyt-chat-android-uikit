@@ -4,10 +4,8 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Broadcast
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Direct
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Group
-import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Private
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytItemShareChannelBinding
@@ -38,13 +36,13 @@ open class ShareableChannelViewHolder(private val binding: SceytItemShareChannel
 
         binding.tvMemberCount.apply {
             val membersText = when (channel.getChannelType()) {
-                Private, Group -> {
+                Group -> {
                     if (channel.memberCount > 0)
                         getString(R.string.sceyt_members_count, channel.memberCount)
                     else getString(R.string.sceyt_member_count, channel.memberCount)
                 }
 
-                Public, Broadcast -> {
+                Public -> {
                     if (channel.memberCount > 0)
                         getString(R.string.sceyt_subscribers_count, channel.memberCount)
                     else getString(R.string.sceyt_subscriber_count, channel.memberCount)

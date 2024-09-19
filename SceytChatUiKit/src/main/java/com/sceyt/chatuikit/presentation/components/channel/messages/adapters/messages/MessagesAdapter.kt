@@ -26,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Date
 
 class MessagesAdapter(
         private var messages: SyncArrayList<MessageListItem>,
@@ -279,12 +280,9 @@ class MessagesAdapter(
 
     override fun bindHeaderData(header: StickyDateHeaderView, headerPosition: Int) {
         if (lastHeaderPosition == headerPosition) return
-        val date = DateTimeUtil.getDateTimeStringWithDateFormatter(
-            context = header.context,
-            time = messages.getOrNull(headerPosition)?.getMessageCreatedAtForDateHeader() ?: return,
-            dateFormatter = style.dateSeparatorDateFormat)
-
-        header.setDate(date)
+        val date = Date(messages.getOrNull(headerPosition)?.getMessageCreatedAtForDateHeader()
+                ?: return)
+        header.setDate(style.dateSeparatorDateFormat.format(header.context, date))
         lastHeaderPosition = headerPosition
     }
 

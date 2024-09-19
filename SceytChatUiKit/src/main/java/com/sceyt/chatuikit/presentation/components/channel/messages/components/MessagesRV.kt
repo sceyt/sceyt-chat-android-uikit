@@ -29,8 +29,8 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessagesAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.sticky_date.StickyDateHeaderUpdater
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.styles.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.helpers.MessageSwipeController
+import com.sceyt.chatuikit.styles.MessagesListViewStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -83,6 +83,8 @@ class MessagesRV @JvmOverloads constructor(
         addOnScrollListener()
     }
 
+    private val messageListQueryLimit get() = SceytChatUIKit.config.queryLimits.messageListQueryLimit
+
     private fun addOnScrollListener() {
         addRVScrollListener(onScrolled = { _: RecyclerView, _: Int, dy: Int ->
             checkNeedLoadPrev(dy)
@@ -104,7 +106,7 @@ class MessagesRV @JvmOverloads constructor(
     private fun checkNeedLoadPrev(dy: Int) {
         if (mAdapter.itemCount == 0) return
         val firstVisiblePosition = getFirstVisibleItemPosition()
-        if (firstVisiblePosition <= SceytChatUIKit.config.messagesLoadSize / 2 && dy < 0) {
+        if (firstVisiblePosition <= messageListQueryLimit / 2 && dy < 0) {
             if (firstVisiblePosition == 0) {
                 if (!reachToStartInvoked) {
                     val skip = mAdapter.getSkip()
@@ -128,7 +130,7 @@ class MessagesRV @JvmOverloads constructor(
         val lastVisiblePosition = getLastVisibleItemPosition()
         checkScrollDown(lastVisiblePosition)
 
-        if (mAdapter.itemCount - lastVisiblePosition <= SceytChatUIKit.config.messagesLoadSize / 2 && dy > 0) {
+        if (mAdapter.itemCount - lastVisiblePosition <= messageListQueryLimit / 2 && dy > 0) {
             if (lastVisiblePosition == mAdapter.itemCount - 1) {
                 if (!reachToEndInvoked) {
                     val skip = mAdapter.getSkip()

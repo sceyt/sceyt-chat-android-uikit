@@ -29,8 +29,8 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.copy
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
@@ -49,23 +49,23 @@ import com.sceyt.chatuikit.extensions.setHintColorRes
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.extensions.showSoftInput
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
-import com.sceyt.chatuikit.presentation.customviews.AvatarView
-import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderTypingUsersHelper
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.HeaderClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.HeaderClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.HeaderEventsListener
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.HeaderEventsListenerImpl
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.HeaderUIElementsListener
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.HeaderUIElementsListenerImpl
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderTypingUsersHelper
-import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.styles.MessagesListHeaderStyle
+import com.sceyt.chatuikit.presentation.customviews.AvatarView
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import com.sceyt.chatuikit.styles.MessagesListHeaderStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -225,14 +225,14 @@ class MessagesListHeaderView @JvmOverloads constructor(
                         }
                     }
 
-                    ChannelTypeEnum.Private, ChannelTypeEnum.Group -> {
+                    ChannelTypeEnum.Group -> {
                         val memberCount = channel.memberCount
                         if (memberCount > 1)
                             getString(R.string.sceyt_members_count, memberCount)
                         else getString(R.string.sceyt_member_count, memberCount)
                     }
 
-                    ChannelTypeEnum.Public, ChannelTypeEnum.Broadcast -> {
+                    ChannelTypeEnum.Public -> {
                         val memberCount = channel.memberCount
                         if (memberCount > 1)
                             getString(R.string.sceyt_subscribers_count, memberCount)

@@ -32,15 +32,16 @@ import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
+import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytLoader.hideLoading
 import com.sceyt.chatuikit.presentation.common.SceytLoader.showLoading
-import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.CreateChatViewModel
-import com.sceyt.chatuikit.presentation.components.startchat.adapters.holders.UserViewHolderFactory
+import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapter
+import com.sceyt.chatuikit.presentation.components.startchat.adapters.holders.UserViewHolderFactory
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch
@@ -50,7 +51,7 @@ class CreateGroupActivity : AppCompatActivity() {
     private lateinit var binding: SceytActivityCreateGroupBinding
     private val viewModel: CreateChatViewModel by viewModels()
     private val filePickerHelper = FilePickerHelper(this)
-    private val createChannelData by lazy { CreateChannelData(ChannelTypeEnum.Private.getString()) }
+    private val createChannelData by lazy { CreateChannelData(ChannelTypeEnum.Group.getString()) }
     private lateinit var members: List<SceytMember>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -133,7 +134,7 @@ class CreateGroupActivity : AppCompatActivity() {
         btnCreate.setOnClickListener {
             with(createChannelData) {
                 subject = tvSubject.text.toString().trim()
-                channelType = ChannelTypeEnum.Private.getString()
+                channelType = ChannelTypeEnum.Group.getString()
                 metadata = Gson().toJson(ChannelDescriptionData(tvDescription.text.toString().trim()))
                 members = this@CreateGroupActivity.members.map {
                     Member(Role(RoleTypeEnum.Member.toString()), User(it.id))
@@ -174,7 +175,9 @@ class CreateGroupActivity : AppCompatActivity() {
 
     private fun setAvatarImage(filePath: String?) {
         createChannelData.avatarUrl = filePath.let {
-            resizeImage(this@CreateGroupActivity, it, 500).getOrNull() ?: ""
+            val reqSize = SceytChatUIKit.config.avatarResizeConfig.dimensionThreshold
+            val quality = SceytChatUIKit.config.avatarResizeConfig.compressionQuality
+            resizeImage(this@CreateGroupActivity, it, reqSize, quality).getOrNull() ?: ""
         }
         binding.avatar.setImageUrl(createChannelData.avatarUrl)
     }
@@ -212,9 +215,9 @@ class CreateGroupActivity : AppCompatActivity() {
     companion object {
         private const val MEMBERS = "MEMBERS"
 
-        fun newIntent(context: Context, members: ArrayList<SceytMember>): Intent {
+        fun newIntent(context: Context, members: List<SceytMember>): Intent {
             val intent = Intent(context, CreateGroupActivity::class.java)
-            intent.putParcelableArrayListExtra(MEMBERS, members)
+            intent.putParcelableArrayListExtra(MEMBERS, members.toArrayList())
             return intent
         }
     }

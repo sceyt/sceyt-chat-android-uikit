@@ -269,14 +269,14 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun showModifyReactionsPopup(view: View, message: SceytMessage): ReactionsPopup? {
         if (message.deliveryStatus == DeliveryStatus.Pending) return null
-        val maxSize = SceytChatUIKit.config.maxSelfReactionsSize
+        val maxSize = SceytChatUIKit.config.messageReactionPerUserLimit
         val reactions = message.messageReactions
             ?.sortedByDescending { it.reaction.containsSelf }
             ?.map { it.reaction.key }
             ?.toMutableList() ?: mutableListOf()
 
         if (reactions.size < maxSize) {
-            reactions.addAll(SceytChatUIKit.theme.defaultReactions
+            reactions.addAll(SceytChatUIKit.config.defaultReactions
                 .minus(reactions.toSet())
                 .take(maxSize - reactions.size))
         }

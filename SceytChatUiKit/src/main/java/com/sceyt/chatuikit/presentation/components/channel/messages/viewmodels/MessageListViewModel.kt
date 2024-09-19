@@ -12,8 +12,8 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
@@ -66,17 +66,17 @@ import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
-import com.sceyt.chatuikit.presentation.root.BaseViewModel
-import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
+import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
+import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
-import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
-import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.LoadKeyType
+import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.services.SceytSyncManager
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
@@ -296,7 +296,7 @@ class MessageListViewModel(
         loadPrevJob?.cancel()
         loadNextJob?.cancel()
         loadNearJob = viewModelScope.launch(Dispatchers.IO) {
-            val limit = min(50, SceytChatUIKit.config.messagesLoadSize * 2)
+            val limit = min(50, SceytChatUIKit.config.queryLimits.messageListQueryLimit * 2)
             messageInteractor.loadNearMessages(conversationId, messageId, replyInThread,
                 limit, loadKey, ignoreServer = ignoreServer).collect { response ->
                 withContext(Dispatchers.Main) {
@@ -913,7 +913,8 @@ class MessageListViewModel(
         _searchResult.postValue(searchResult.copy(currentIndex = nextIndex))
         _onScrollToSearchMessageLiveData.postValue(messages[nextIndex])
 
-        if (searchResult.hasNext && messages.size - nextIndex < SceytChatUIKit.config.messagesLoadSize / 2) {
+        val queryLimit = SceytChatUIKit.config.queryLimits.messageListQueryLimit
+        if (searchResult.hasNext && messages.size - nextIndex < queryLimit / 2) {
             loadNextSearchedMessages()
         }
     }

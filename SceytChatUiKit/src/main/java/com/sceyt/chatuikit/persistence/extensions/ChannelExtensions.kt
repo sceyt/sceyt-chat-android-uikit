@@ -49,9 +49,7 @@ fun ChannelTypeEnum?.isGroup() = this != ChannelTypeEnum.Direct
 
 fun SceytChannel.isDirect() = type == ChannelTypeEnum.Direct.getString()
 
-fun SceytChannel.isPrivate() = type == ChannelTypeEnum.Private.getString() || type == ChannelTypeEnum.Group.getString()
-
-fun SceytChannel.isPublic() = type == ChannelTypeEnum.Public.getString() || type == ChannelTypeEnum.Broadcast.getString()
+fun SceytChannel.isPublic() = type == ChannelTypeEnum.Public.getString()
 
 fun SceytChannel.isSelf(): Boolean {
     val isSelf = try {
