@@ -6,9 +6,9 @@ enum class ChannelTypeEnum {
     Direct, Group, Public;
 
     fun getString() = when (this) {
-        Direct -> SceytChatUIKit.config.channelTypesConfig.directChannel
-        Group -> SceytChatUIKit.config.channelTypesConfig.groupChannel
-        Public -> SceytChatUIKit.config.channelTypesConfig.broadcastChannel
+        Direct -> SceytChatUIKit.config.channelTypesConfig.direct
+        Group -> SceytChatUIKit.config.channelTypesConfig.group
+        Public -> SceytChatUIKit.config.channelTypesConfig.broadcast
     }
 }
 
