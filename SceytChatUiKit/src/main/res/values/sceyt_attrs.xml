@@ -18,21 +18,21 @@
         <attr name="sceytUiToReplyLineConnectedViewBottom" format="reference" />
     </declare-styleable>
 
-    <declare-styleable name="DateStatusView">
-        <attr name="sceytUiDateStatusLeadingIcon" format="reference" />
-        <attr name="sceytUiDateStatusTrailingIcon" format="reference" />
-        <attr name="sceytUiDateStatusLeadingIconSize" format="dimension" />
-        <attr name="sceytUiDateStatusTrailingIconSize" format="dimension" />
-        <attr name="sceytUiDateStatusIconsTint" format="reference|color" />
-        <attr name="sceytUiDateStatusLeadingIconPadding" format="dimension" />
-        <attr name="sceytUiDateStatusTrailingIconPadding" format="dimension" />
-        <attr name="sceytUiDateStatusDateTextSize" format="dimension" />
-        <attr name="sceytUiDateStatusDateTextColor" format="reference|color" />
-        <attr name="sceytUiDateStatusDateText" format="string" />
-        <attr name="sceytUiDateStatusIgnoreRtl" format="boolean" />
-        <attr name="sceytUiDateStatusBackgroundColor" format="color|reference" />
-        <attr name="sceytUiDateStatusBackgroundCornerRadius" format="dimension" />
-        <attr name="sceytUiDateStatusHighlighted" format="boolean" />
+    <declare-styleable name="DecoratedTextView">
+        <attr name="sceytUiDecoratedTextLeadingIcon" format="reference" />
+        <attr name="sceytUiDecoratedTextTrailingIcon" format="reference" />
+        <attr name="sceytUiDecoratedTextLeadingIconSize" format="dimension" />
+        <attr name="sceytUiDecoratedTextTrailingIconSize" format="dimension" />
+        <attr name="sceytUiDecoratedTextIconsTint" format="reference|color" />
+        <attr name="sceytUiDecoratedTextLeadingIconPadding" format="dimension" />
+        <attr name="sceytUiDecoratedTextTrailingIconPadding" format="dimension" />
+        <attr name="sceytUiDecoratedTextDateTextSize" format="dimension" />
+        <attr name="sceytUiDecoratedTextDateTextColor" format="reference|color" />
+        <attr name="sceytUiDecoratedTextDateText" format="string" />
+        <attr name="sceytUiDecoratedTextIgnoreRtl" format="boolean" />
+        <attr name="sceytUiDecoratedTextBackgroundColor" format="color|reference" />
+        <attr name="sceytUiDecoratedTextBackgroundCornerRadius" format="dimension" />
+        <attr name="sceytUiDecoratedTextHighlighted" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="ReactionView">

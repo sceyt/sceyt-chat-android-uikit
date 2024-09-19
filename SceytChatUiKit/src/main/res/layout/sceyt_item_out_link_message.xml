@@ -114,7 +114,7 @@
             app:layout_goneMarginTop="0dp"
             tools:visibility="visible" />
 
-        <com.sceyt.chatuikit.presentation.customviews.DateStatusView
+        <com.sceyt.chatuikit.presentation.customviews.DecoratedTextView
             android:id="@+id/messageDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -124,12 +124,12 @@
             android:paddingEnd="5dp"
             app:layout_constraintBottom_toBottomOf="@+id/layoutDetails"
             app:layout_constraintEnd_toEndOf="parent"
-            app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
-            app:sceytUiDateStatusDateTextSize="@dimen/tinyTextSize"
-            app:sceytUiDateStatusTrailingIconPadding="5dp"
-            app:sceytUiDateStatusTrailingIconSize="15.5dp"
-            tools:sceytUiDateStatusDateText="00:37"
-            tools:sceytUiDateStatusTrailingIcon="@drawable/sceyt_ic_status_delivered" />
+            app:sceytUiDecoratedTextDateTextColor="@color/sceyt_color_text_secondary"
+            app:sceytUiDecoratedTextDateTextSize="@dimen/tinyTextSize"
+            app:sceytUiDecoratedTextTrailingIconPadding="5dp"
+            app:sceytUiDecoratedTextTrailingIconSize="15.5dp"
+            tools:sceytUiDecoratedTextDateText="00:37"
+            tools:sceytUiDecoratedTextTrailingIcon="@drawable/sceyt_ic_status_delivered" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

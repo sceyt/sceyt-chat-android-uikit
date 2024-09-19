@@ -103,20 +103,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/channelTitle" />
 
-    <com.sceyt.chatuikit.presentation.customviews.DateStatusView
+    <com.sceyt.chatuikit.presentation.customviews.DecoratedTextView
         android:id="@+id/dateStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/channelTitle"
-        app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
-        app:sceytUiDateStatusDateTextSize="13sp"
-        app:sceytUiDateStatusIgnoreRtl="true"
-        app:sceytUiDateStatusLeadingIconPadding="4dp"
-        app:sceytUiDateStatusLeadingIconSize="16dp"
-        tools:sceytUiDateStatusDateText="12:28"
-        tools:sceytUiDateStatusLeadingIcon="@drawable/sceyt_ic_status_delivered" />
+        app:sceytUiDecoratedTextDateTextColor="@color/sceyt_color_text_secondary"
+        app:sceytUiDecoratedTextDateTextSize="13sp"
+        app:sceytUiDecoratedTextIgnoreRtl="true"
+        app:sceytUiDecoratedTextLeadingIconPadding="4dp"
+        app:sceytUiDecoratedTextLeadingIconSize="16dp"
+        tools:sceytUiDecoratedTextDateText="12:28"
+        tools:sceytUiDecoratedTextLeadingIcon="@drawable/sceyt_ic_status_delivered" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icPinned"

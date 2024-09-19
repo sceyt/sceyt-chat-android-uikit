@@ -157,7 +157,7 @@
             app:sceytUiProgressTrackColor="@android:color/transparent"
             tools:visibility="visible" />
 
-        <com.sceyt.chatuikit.presentation.customviews.DateStatusView
+        <com.sceyt.chatuikit.presentation.customviews.DecoratedTextView
             android:id="@+id/messageDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -165,11 +165,11 @@
             android:layout_marginBottom="7dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/fileImage"
-            app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
-            app:sceytUiDateStatusDateTextSize="@dimen/tinyTextSize"
-            app:sceytUiDateStatusHighlighted="true"
-            app:sceytUiDateStatusTrailingIconSize="15.5dp"
-            tools:sceytUiDateStatusDateText="00:37" />
+            app:sceytUiDecoratedTextDateTextColor="@color/sceyt_color_text_secondary"
+            app:sceytUiDecoratedTextDateTextSize="@dimen/tinyTextSize"
+            app:sceytUiDecoratedTextHighlighted="true"
+            app:sceytUiDecoratedTextTrailingIconSize="15.5dp"
+            tools:sceytUiDecoratedTextDateText="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -32,7 +32,7 @@ import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChatReactionMessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.presentation.customviews.ColorSpannableTextView
-import com.sceyt.chatuikit.presentation.customviews.DateStatusView
+import com.sceyt.chatuikit.presentation.customviews.DecoratedTextView
 import com.sceyt.chatuikit.presentation.customviews.PresenceStateIndicatorView
 import com.sceyt.chatuikit.presentation.extensions.getAttachmentIconAsString
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
@@ -287,10 +287,10 @@ open class ChannelViewHolder(
                 0 else SceytChatUIKit.theme.userDefaultAvatar)
     }
 
-    open fun setLastMessageStatusAndDate(channel: SceytChannel, dateStatusView: DateStatusView) {
+    open fun setLastMessageStatusAndDate(channel: SceytChannel, decoratedTextView: DecoratedTextView) {
         val data = getDateData(channel)
         val shouldShowStatus = data.second
-        channel.lastMessage.setChannelMessageDateAndStatusIcon(dateStatusView, channelStyle, data.first, false, shouldShowStatus)
+        channel.lastMessage.setChannelMessageDateAndStatusIcon(decoratedTextView, channelStyle, data.first, false, shouldShowStatus)
     }
 
     open fun setOnlineStatus(channel: SceytChannel?, onlineStatus: PresenceStateIndicatorView) {
@@ -378,8 +378,8 @@ open class ChannelViewHolder(
         ivAutoDeleted.setImageDrawable(channelStyle.autoDeletedChannelIcon)
         dateStatus.buildStyle()
             .setLeadingIconSize(channelStyle.statusIconSize)
-            .setDateColor(channelStyle.dateTextColor)
-            .setEditedTitle(context.getString(R.string.sceyt_edited))
+            .setTextColor(channelStyle.dateTextColor)
+            .setLeadingText(context.getString(R.string.sceyt_edited))
             .build()
 
         divider.isVisible = if (channelStyle.enableDivider) {
