@@ -58,7 +58,7 @@ import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
 import com.sceyt.chatuikit.presentation.customviews.AvatarView
-import com.sceyt.chatuikit.presentation.customviews.DateStatusView
+import com.sceyt.chatuikit.presentation.customviews.DecoratedTextView
 import com.sceyt.chatuikit.presentation.customviews.ToReplyLineView
 import com.sceyt.chatuikit.presentation.extensions.setConversationMessageDateAndStatusIcon
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
@@ -190,7 +190,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
-    protected open fun setMessageStatusAndDateText(message: SceytMessage, messageDate: DateStatusView) {
+    protected open fun setMessageStatusAndDateText(message: SceytMessage, messageDate: DecoratedTextView) {
         val isEdited = message.state == MessageState.Edited
         val dateText = getDateTimeString(message.createdAt)
         message.setConversationMessageDateAndStatusIcon(messageDate, style, dateText, isEdited)
@@ -420,7 +420,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
-    protected open fun setMessageDateDependAttachments(messageDate: DateStatusView, attachments: List<FileListItem>?) {
+    protected open fun setMessageDateDependAttachments(messageDate: DecoratedTextView, attachments: List<FileListItem>?) {
         messageDate.apply {
             val lastAttachment = attachments?.lastOrNull()
             val needHighlight = lastAttachment is FileListItem.Image || lastAttachment is FileListItem.Video

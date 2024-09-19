@@ -28,7 +28,7 @@ class OutDeletedMsgViewHolder(
 
                 if (diff.statusChanged || diff.edited) {
                     val dateText = DateTimeUtil.getDateTimeString(message.createdAt)
-                    messageDate.setDateText(dateText, false)
+                    messageDate.setText(dateText, false)
                 }
             }
         }

@@ -26,7 +26,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isRtl
 import kotlin.math.min
 
-class DateStatusView @JvmOverloads constructor(
+class DecoratedTextView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0
@@ -34,15 +34,15 @@ class DateStatusView @JvmOverloads constructor(
     private lateinit var staticLayout: StaticLayout
     private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private var dateText = ""
+    private var text = ""
     private var textSize = 30
     private var leadingIconSize = 0
     private var trailingIconSize = 0
-    private var editedText: String = ""
-    private var editedTextStyle: Int = Typeface.ITALIC
+    private var leadingText: String = ""
+    private var leadingTextStyle: Int = Typeface.ITALIC
     private var leadingIcon: Drawable? = null
     private var trailingIcon: Drawable? = null
-    private var isEdited = false
+    private var enableLeadingText = false
     private var ignoreRtl: Boolean = false
     private var cornerRadius: Int = 30
     private var isHighlighted = false
@@ -78,28 +78,28 @@ class DateStatusView @JvmOverloads constructor(
         get() = context.isRtl()
 
     private val textHeight: Int
-        get() = if (dateText.isBlank()) 0 else staticLayout.height
+        get() = if (text.isBlank()) 0 else staticLayout.height
 
     init {
         attrs?.let {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.DateStatusView)
-            bgColor = a.getColor(R.styleable.DateStatusView_sceytUiDateStatusBackgroundColor, 0)
-            cornerRadius = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusBackgroundCornerRadius, cornerRadius)
-            leadingIcon = a.getDrawable(R.styleable.DateStatusView_sceytUiDateStatusLeadingIcon)?.mutate()
+            val a = context.obtainStyledAttributes(attrs, R.styleable.DecoratedTextView)
+            bgColor = a.getColor(R.styleable.DecoratedTextView_sceytUiDecoratedTextBackgroundColor, 0)
+            cornerRadius = a.getDimensionPixelSize(R.styleable.DecoratedTextView_sceytUiDecoratedTextBackgroundCornerRadius, cornerRadius)
+            leadingIcon = a.getDrawable(R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingIcon)?.mutate()
                     ?: leadingIcon
-            trailingIcon = a.getDrawable(R.styleable.DateStatusView_sceytUiDateStatusTrailingIcon)?.mutate()
+            trailingIcon = a.getDrawable(R.styleable.DecoratedTextView_sceytUiDecoratedTextTrailingIcon)?.mutate()
                     ?: trailingIcon
-            iconsTintColor = a.getColor(R.styleable.DateStatusView_sceytUiDateStatusIconsTint, iconsTintColor)
-            dateText = a.getString(R.styleable.DateStatusView_sceytUiDateStatusDateText)
-                    ?: dateText
-            textSize = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusDateTextSize, textSize)
-            textColor = a.getColor(R.styleable.DateStatusView_sceytUiDateStatusDateTextColor, textColor)
-            leadingIconPadding = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusLeadingIconPadding, leadingIconPadding)
-            trailingIconPadding = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusTrailingIconPadding, trailingIconPadding)
-            leadingIconSize = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusLeadingIconSize, leadingIconSize)
-            trailingIconSize = a.getDimensionPixelSize(R.styleable.DateStatusView_sceytUiDateStatusTrailingIconSize, trailingIconSize)
-            isHighlighted = a.getBoolean(R.styleable.DateStatusView_sceytUiDateStatusHighlighted, isHighlighted)
-            ignoreRtl = a.getBoolean(R.styleable.DateStatusView_sceytUiDateStatusIgnoreRtl, ignoreRtl)
+            iconsTintColor = a.getColor(R.styleable.DecoratedTextView_sceytUiDecoratedTextIconsTint, iconsTintColor)
+            text = a.getString(R.styleable.DecoratedTextView_sceytUiDecoratedTextDateText)
+                    ?: text
+            textSize = a.getDimensionPixelSize(R.styleable.DecoratedTextView_sceytUiDecoratedTextDateTextSize, textSize)
+            textColor = a.getColor(R.styleable.DecoratedTextView_sceytUiDecoratedTextDateTextColor, textColor)
+            leadingIconPadding = a.getDimensionPixelSize(R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingIconPadding, leadingIconPadding)
+            trailingIconPadding = a.getDimensionPixelSize(R.styleable.DecoratedTextView_sceytUiDecoratedTextTrailingIconPadding, trailingIconPadding)
+            leadingIconSize = a.getDimensionPixelSize(R.styleable.DecoratedTextView_sceytUiDecoratedTextLeadingIconSize, leadingIconSize)
+            trailingIconSize = a.getDimensionPixelSize(R.styleable.DecoratedTextView_sceytUiDecoratedTextTrailingIconSize, trailingIconSize)
+            isHighlighted = a.getBoolean(R.styleable.DecoratedTextView_sceytUiDecoratedTextHighlighted, isHighlighted)
+            ignoreRtl = a.getBoolean(R.styleable.DecoratedTextView_sceytUiDecoratedTextIgnoreRtl, ignoreRtl)
             a.recycle()
         }
         init()
@@ -215,14 +215,14 @@ class DateStatusView @JvmOverloads constructor(
     }
 
     private fun initStaticLayout() {
-        val dateTitle = initText(dateText)
+        val dateTitle = initText(text)
         staticLayout = getStaticLayout(dateTitle, textPaint)
     }
 
     private fun measureIcon(icon: Drawable, size: Int, textHeight: Int): Rect {
         val iconSize = initIconSizeDependText(icon, size, textHeight)
 
-        val sizeDiff = getStatusIconWidthHeightDiff(iconSize)
+        val sizeDiff = getIconWidthHeightDiff(iconSize)
         val widthDiff = sizeDiff.first
         val heightDiff = sizeDiff.second
 
@@ -232,7 +232,7 @@ class DateStatusView @JvmOverloads constructor(
         return rect
     }
 
-    private fun getStatusIconWidthHeightDiff(iconSize: Size): Pair<Int, Int> {
+    private fun getIconWidthHeightDiff(iconSize: Size): Pair<Int, Int> {
         val (widthIcon, heightIcon) = Pair(iconSize.width, iconSize.height)
         val widthDiff = if (widthIcon < heightIcon)
             (heightIcon - widthIcon) / 2 else 0
@@ -285,9 +285,9 @@ class DateStatusView @JvmOverloads constructor(
     }
 
     private fun initText(text: String): SpannableStringBuilder {
-        return if (isEdited) {
-            val str = SpannableStringBuilder("$editedText  $text")
-            str.setSpan(StyleSpan(editedTextStyle), 0, editedText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        return if (enableLeadingText) {
+            val str = SpannableStringBuilder("$leadingText  $text")
+            str.setSpan(StyleSpan(leadingTextStyle), 0, leadingText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             str
         } else SpannableStringBuilder(text)
     }
@@ -319,9 +319,9 @@ class DateStatusView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun setDateText(text: String, edited: Boolean) {
-        dateText = text
-        isEdited = edited
+    fun setText(text: String, enableLeadingText: Boolean) {
+        this.text = text
+        this.enableLeadingText = enableLeadingText
         init()
         requestLayout()
         invalidate()
@@ -329,7 +329,8 @@ class DateStatusView @JvmOverloads constructor(
 
     fun setIcons(leadingIcon: Drawable? = null,
                  trailingIcon: Drawable? = null,
-                 ignoreHighlight: Boolean = false) {
+                 ignoreHighlight: Boolean = false
+    ) {
         var leading = leadingIcon
         var trailing = trailingIcon
         if (isHighlighted && !ignoreHighlight) {
@@ -343,14 +344,15 @@ class DateStatusView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun setDateAndStatusIcon(text: String,
-                             leadingIcon: Drawable? = null,
-                             trailingIcon: Drawable? = null,
-                             edited: Boolean = false,
-                             textColor: Int = this.textColor,
-                             editedText: String = this.editedText,
-                             editedTextStyle: Int = this.editedTextStyle,
-                             ignoreHighlight: Boolean = false) {
+    fun setTextAndIcons(text: String,
+                        leadingIcon: Drawable? = null,
+                        trailingIcon: Drawable? = null,
+                        enableLeadingText: Boolean = false,
+                        textColor: Int = this.textColor,
+                        leadingText: String = this.leadingText,
+                        leadingTextStyle: Int = this.leadingTextStyle,
+                        ignoreHighlight: Boolean = false
+    ) {
         var leading = leadingIcon
         var trailing = trailingIcon
         if (isHighlighted && !ignoreHighlight) {
@@ -360,11 +362,11 @@ class DateStatusView @JvmOverloads constructor(
 
         this.leadingIcon = leading
         this.trailingIcon = trailing
-        dateText = text
-        isEdited = edited
+        this.text = text
+        this.enableLeadingText = enableLeadingText
         this.textColor = textColor
-        this.editedText = editedText
-        this.editedTextStyle = editedTextStyle
+        this.leadingText = leadingText
+        this.leadingTextStyle = leadingTextStyle
         init()
         requestLayout()
         invalidate()
@@ -380,8 +382,8 @@ class DateStatusView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun setEditedText(editedText: String) {
-        this.editedText = editedText
+    fun setLeadingText(text: String) {
+        leadingText = text
         invalidate()
     }
 
@@ -392,9 +394,9 @@ class DateStatusView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun setEdited(edited: Boolean) {
-        isEdited = edited
-        setDateText(dateText, isEdited)
+    fun enableLeadingText(enable: Boolean) {
+        enableLeadingText = enable
+        setText(text, enableLeadingText)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -413,15 +415,15 @@ class DateStatusView @JvmOverloads constructor(
     }
 
     inner class BuildStyle {
-        private var leadingIconSize: Int = this@DateStatusView.leadingIconSize
-        private var trailingIconSize: Int = this@DateStatusView.trailingIconSize
-        private var leadingIcon: Drawable? = this@DateStatusView.leadingIcon
-        private var trailingIcon: Drawable? = this@DateStatusView.trailingIcon
-        private var dateText: String = ""
-        private var dateTextColor: Int = this@DateStatusView.textColor
-        private var isEdited: Boolean = this@DateStatusView.isEdited
-        private var editedText: String = this@DateStatusView.editedText
-        private var editedTextStyle: Int = this@DateStatusView.editedTextStyle
+        private var leadingIconSize: Int = this@DecoratedTextView.leadingIconSize
+        private var trailingIconSize: Int = this@DecoratedTextView.trailingIconSize
+        private var leadingIcon: Drawable? = this@DecoratedTextView.leadingIcon
+        private var trailingIcon: Drawable? = this@DecoratedTextView.trailingIcon
+        private var text: String = ""
+        private var textColor: Int = this@DecoratedTextView.textColor
+        private var enableLeadingText: Boolean = this@DecoratedTextView.enableLeadingText
+        private var leadingText: String = this@DecoratedTextView.leadingText
+        private var leadingTextStyle: Int = this@DecoratedTextView.leadingTextStyle
 
         fun setLeadingIcon(drawable: Drawable?): BuildStyle {
             leadingIcon = drawable
@@ -443,46 +445,46 @@ class DateStatusView @JvmOverloads constructor(
             return this
         }
 
-        fun setDateText(text: String): BuildStyle {
-            dateText = text
+        fun setText(text: String): BuildStyle {
+            this.text = text
             return this
         }
 
-        fun setDateColorId(@ColorRes colorId: Int): BuildStyle {
-            dateTextColor = context.getCompatColor(colorId)
+        fun setTextColorId(@ColorRes colorId: Int): BuildStyle {
+            textColor = context.getCompatColor(colorId)
             return this
         }
 
-        fun setDateColor(@ColorInt color: Int): BuildStyle {
-            dateTextColor = color
+        fun setTextColor(@ColorInt color: Int): BuildStyle {
+            textColor = color
             return this
         }
 
-        fun setEditedTitle(editedText: String): BuildStyle {
-            this.editedText = editedText
+        fun setLeadingText(text: String): BuildStyle {
+            leadingText = text
             return this
         }
 
-        fun edited(boolean: Boolean): BuildStyle {
-            this.isEdited = boolean
+        fun enableLeading(enable: Boolean): BuildStyle {
+            enableLeadingText = enable
             return this
         }
 
-        fun setEditedTextStyle(style: Int): BuildStyle {
-            editedTextStyle = style
+        fun setLeadingTextStyle(style: Int): BuildStyle {
+            leadingTextStyle = style
             return this
         }
 
         fun build() {
-            this@DateStatusView.leadingIconSize = leadingIconSize
-            this@DateStatusView.trailingIconSize = trailingIconSize
-            this@DateStatusView.leadingIcon = leadingIcon?.mutate()
-            this@DateStatusView.trailingIcon = trailingIcon?.mutate()
-            this@DateStatusView.textColor = dateTextColor
-            this@DateStatusView.editedText = editedText
-            this@DateStatusView.isEdited = isEdited
-            this@DateStatusView.editedTextStyle = editedTextStyle
-            this@DateStatusView.dateText = dateText
+            this@DecoratedTextView.leadingIconSize = leadingIconSize
+            this@DecoratedTextView.trailingIconSize = trailingIconSize
+            this@DecoratedTextView.leadingIcon = leadingIcon?.mutate()
+            this@DecoratedTextView.trailingIcon = trailingIcon?.mutate()
+            this@DecoratedTextView.textColor = textColor
+            this@DecoratedTextView.leadingText = leadingText
+            this@DecoratedTextView.enableLeadingText = enableLeadingText
+            this@DecoratedTextView.leadingTextStyle = leadingTextStyle
+            this@DecoratedTextView.text = text
 
 
             init()

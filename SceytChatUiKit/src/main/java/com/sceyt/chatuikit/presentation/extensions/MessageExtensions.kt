@@ -17,24 +17,24 @@ import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.presentation.customviews.DateStatusView
+import com.sceyt.chatuikit.presentation.customviews.DecoratedTextView
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.styles.ChannelListViewStyle
 import com.sceyt.chatuikit.styles.MessageItemStyle
 import java.io.File
 
 fun SceytMessage?.setChannelMessageDateAndStatusIcon(
-        dateStatusView: DateStatusView,
+        decoratedTextView: DecoratedTextView,
         channelStyle: ChannelListViewStyle,
         dateText: String, edited: Boolean,
         shouldShowStatus: Boolean
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || !shouldShowStatus) {
-        dateStatusView.setDateAndStatusIcon(
+        decoratedTextView.setTextAndIcons(
             text = dateText,
             leadingIcon = null,
             trailingIcon = null,
-            edited = edited, ignoreHighlight = false)
+            enableLeadingText = edited, ignoreHighlight = false)
         return
     }
     val icon = when (deliveryStatus) {
@@ -45,29 +45,29 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
         else -> null
     }
     icon?.let {
-        dateStatusView.setDateAndStatusIcon(
+        decoratedTextView.setTextAndIcons(
             text = dateText,
             textColor = channelStyle.dateTextColor,
             leadingIcon = it,
-            edited = edited,
+            enableLeadingText = edited,
             ignoreHighlight = checkIgnoreHighlight(deliveryStatus))
-        dateStatusView.isVisible = true
+        decoratedTextView.isVisible = true
     }
 }
 
 
 fun SceytMessage?.setConversationMessageDateAndStatusIcon(
-        dateStatusView: DateStatusView,
+        decoratedTextView: DecoratedTextView,
         style: MessageItemStyle,
         dateText: String,
         edited: Boolean
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
-        dateStatusView.setDateAndStatusIcon(text = dateText,
+        decoratedTextView.setTextAndIcons(text = dateText,
             leadingIcon = null,
             trailingIcon = null,
-            edited = edited,
-            editedText = style.editedMessageStateText,
+            enableLeadingText = edited,
+            leadingText = style.editedMessageStateText,
             ignoreHighlight = false)
         return
     }
@@ -82,14 +82,14 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(
         }
     }
     icon?.let {
-        dateStatusView.setDateAndStatusIcon(text = dateText,
+        decoratedTextView.setTextAndIcons(text = dateText,
             textColor = style.messageDateTextColor,
             trailingIcon = it,
-            edited = edited,
-            editedText = style.editedMessageStateText,
-            editedTextStyle = style.messageEditedTextStyle,
+            enableLeadingText = edited,
+            leadingText = style.editedMessageStateText,
+            leadingTextStyle = style.messageEditedTextStyle,
             ignoreHighlight = checkIgnoreHighlight(deliveryStatus))
-        dateStatusView.isVisible = true
+        decoratedTextView.isVisible = true
     }
 }
 
