@@ -313,8 +313,8 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     override fun onMuteClick(channel: SceytChannel) {
-        ChannelActionConfirmationWithDialog.confirmMuteUntilAction(context) {
-            channelCommandEventListener?.invoke(ChannelEvent.Mute(channel))
+        ChannelActionConfirmationWithDialog.confirmMuteUntilAction(context) { until ->
+            channelCommandEventListener?.invoke(ChannelEvent.Mute(channel, until))
         }
     }
 

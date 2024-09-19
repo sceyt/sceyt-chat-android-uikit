@@ -86,8 +86,8 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         if (filteredChannels.isEmpty())
             return emptyList()
 
-        val channelItems: List<ChannelListItem> = filteredChannels.map {
-            item -> ChannelListItem.ChannelItem(item)
+        val channelItems: List<ChannelListItem> = filteredChannels.map { item ->
+            ChannelListItem.ChannelItem(item)
         }
 
         if (hasNext)
@@ -216,7 +216,7 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
             }
 
             is ChannelEvent.DeleteChannel -> deleteChannel(event.channel.id)
-            is ChannelEvent.Mute -> muteChannel(event.channel.id, 0)
+            is ChannelEvent.Mute -> muteChannel(event.channel.id, event.muteUntil)
             is ChannelEvent.UnMute -> unMuteChannel(event.channel.id)
             is ChannelEvent.Pin -> pinChannel(event.channel.id)
             is ChannelEvent.UnPin -> unpinChannel(event.channel.id)

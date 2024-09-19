@@ -2,15 +2,13 @@ package com.sceyt.chatuikit.presentation.components.channel_list.channels.dialog
 
 import android.content.Context
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.AutoDeleteDialog
-import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.AutoDeleteType
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.MuteNotificationDialog
-import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.MuteTypeEnum
-import java.util.concurrent.TimeUnit
 
 object ChannelActionConfirmationWithDialog {
 
@@ -71,25 +69,17 @@ object ChannelActionConfirmationWithDialog {
     }
 
     fun confirmMuteUntilAction(context: Context, action: (Long) -> Unit) {
-        MuteNotificationDialog(context).setChooseListener {
-            val until = when (it) {
-                MuteTypeEnum.Mute1Hour -> TimeUnit.HOURS.toMillis(1)
-                MuteTypeEnum.Mute8Hour -> TimeUnit.HOURS.toMillis(8)
-                MuteTypeEnum.MuteForever -> 0L
-            }
-            action(until)
-        }.show()
+        MuteNotificationDialog.showDialog(
+            context = context,
+            title = context.getString(R.string.sceyt_mute_chat),
+            options = SceytChatUIKit.config.muteChannelNotificationOptions) {
+            action(it.timeInterval)
+        }
     }
 
     fun confirmAutoDeleteMessages(context: Context, action: (Long) -> Unit) {
         AutoDeleteDialog(context).setChooseListener {
-            val period = when (it) {
-                AutoDeleteType.Delete1Day -> TimeUnit.DAYS.toMillis(1)
-                AutoDeleteType.Delete1Week -> TimeUnit.DAYS.toMillis(7)
-                AutoDeleteType.Delete1Month -> TimeUnit.DAYS.toMillis(30)
-                AutoDeleteType.DeleteOff -> 0L
-            }
-            action(period)
+            action(it.timeInterval)
         }.show()
     }
 }

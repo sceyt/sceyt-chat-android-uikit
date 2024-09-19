@@ -6,45 +6,35 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.IntervalOption
 import com.sceyt.chatuikit.databinding.SceytDialogAutoDeleteBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setTextViewsTextColor
+import com.sceyt.chatuikit.extensions.setTextColorRes
+import com.sceyt.chatuikit.presentation.common.IntervalOptionsAdapter
 
 class AutoDeleteDialog(
         context: Context,
 ) : Dialog(context, R.style.SceytDialogNoTitle) {
     private lateinit var binding: SceytDialogAutoDeleteBinding
-    private var chooseListener: ((AutoDeleteType) -> Unit)? = null
+    private var chooseListener: ((IntervalOption) -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = SceytDialogAutoDeleteBinding.inflate(LayoutInflater.from(context))
         setContentView(binding.root)
-        initView()
+        setOptions()
         binding.applyStyle()
         window?.setWindowAnimations(R.style.SceytDialogWindowAnimation)
     }
 
-    private fun initView() {
-        binding.deleteOneDay.setOnClickListener {
-            chooseListener?.invoke(AutoDeleteType.Delete1Day)
-            dismiss()
-        }
-        binding.deleteOneWeek.setOnClickListener {
-            chooseListener?.invoke(AutoDeleteType.Delete1Week)
-            dismiss()
-        }
-        binding.deleteOneMonth.setOnClickListener {
-            chooseListener?.invoke(AutoDeleteType.Delete1Month)
-            dismiss()
-        }
-        binding.deleteOff.setOnClickListener {
-            chooseListener?.invoke(AutoDeleteType.DeleteOff)
+    private fun setOptions() {
+        val options = SceytChatUIKit.config.messageAutoDeleteOptions
+        binding.rvOptions.adapter = IntervalOptionsAdapter(options) {
+            chooseListener?.invoke(it)
             dismiss()
         }
     }
 
-    fun setChooseListener(listener: (AutoDeleteType) -> Unit): AutoDeleteDialog {
+    fun setChooseListener(listener: (IntervalOption) -> Unit): AutoDeleteDialog {
         chooseListener = listener
         return this
     }
@@ -54,7 +44,6 @@ class AutoDeleteDialog(
     }
 
     private fun SceytDialogAutoDeleteBinding.applyStyle() {
-        setTextViewsTextColor(listOf(tvTitle, deleteOneDay, deleteOneWeek, deleteOneMonth, deleteOff),
-            context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+        tvTitle.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
     }
 }

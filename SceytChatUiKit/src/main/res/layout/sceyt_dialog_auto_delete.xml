@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -16,49 +18,13 @@
         android:textSize="@dimen/mediumTextSize"
         android:textStyle="bold" />
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/deleteOneDay"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvOptions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:background="?selectableItemBackground"
-        android:paddingHorizontal="18dp"
-        android:paddingVertical="10dp"
-        android:text="@string/sceyt_1_day"
-        android:textColor="@color/sceyt_color_text_primary"
-        android:textSize="@dimen/mediumTextSize" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/deleteOneWeek"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
-        android:paddingHorizontal="18dp"
-        android:paddingVertical="10dp"
-        android:text="@string/sceyt_1_week"
-        android:textColor="@color/sceyt_color_text_primary"
-        android:textSize="@dimen/mediumTextSize" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/deleteOneMonth"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
-        android:paddingHorizontal="18dp"
-        android:paddingVertical="10dp"
-        android:text="@string/sceyt_1_month"
-        android:textColor="@color/sceyt_color_text_primary"
-        android:textSize="@dimen/mediumTextSize" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/deleteOff"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
-        android:paddingHorizontal="18dp"
-        android:paddingVertical="10dp"
-        android:text="@string/sceyt_off"
-        android:textColor="@color/sceyt_color_text_primary"
-        android:textSize="@dimen/mediumTextSize" />
+        android:nestedScrollingEnabled="false"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:itemCount="3"
+        tools:listitem="@layout/sceyt_item_option" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

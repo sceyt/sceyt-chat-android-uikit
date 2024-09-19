@@ -28,14 +28,12 @@ import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.MuteNotificationDialog
-import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.MuteTypeEnum
 import com.sceyt.chatuikit.presentation.components.profile.viewmodel.ProfileViewModel
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import java.util.concurrent.TimeUnit
 import com.sceyt.chatuikit.R as SceytKitR
 
 class ProfileFragment : Fragment() {
@@ -126,17 +124,12 @@ class ProfileFragment : Fragment() {
                 viewModel.unMuteNotifications()
                 switchNotifications.isChecked = true
             } else {
-                MuteNotificationDialog(requireContext()).setChooseListener {
-                    val until = when (it) {
-                        MuteTypeEnum.Mute1Hour -> TimeUnit.HOURS.toMillis(1)
-                        MuteTypeEnum.Mute8Hour -> TimeUnit.HOURS.toMillis(8)
-                        MuteTypeEnum.MuteForever -> 0L
-                    }
-                    viewModel.muteNotifications(until)
+                MuteNotificationDialog.showDialog(
+                    context = requireContext(),
+                    title = requireContext().getString(R.string.mute_notifications),
+                    options = SceytChatUIKit.config.muteUserNotificationOptions) {
+                    viewModel.muteNotifications(it.timeInterval)
                     switchNotifications.isChecked = false
-                }.also {
-                    it.show()
-                    it.setTitles(getString(R.string.mute_notifications))
                 }
             }
         }

@@ -6,51 +6,69 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.IntervalOption
 import com.sceyt.chatuikit.databinding.SceytDialogMuteNotificationsBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setTextViewsTextColor
+import com.sceyt.chatuikit.extensions.setTextColorRes
+import com.sceyt.chatuikit.presentation.common.IntervalOptionsAdapter
 
 class MuteNotificationDialog(
         context: Context,
 ) : Dialog(context, R.style.SceytDialogNoTitle) {
     private lateinit var binding: SceytDialogMuteNotificationsBinding
-    private var chooseListener: ((MuteTypeEnum) -> Unit)? = null
+    private var chooseListener: ((IntervalOption) -> Unit)? = null
+    private var title: String = ""
+    private var options: List<IntervalOption> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = SceytDialogMuteNotificationsBinding.inflate(LayoutInflater.from(context))
         setContentView(binding.root)
-        initView()
         binding.applyStyle()
+        binding.initViews()
+        setOptionsAdapter()
         window?.setWindowAnimations(R.style.SceytDialogWindowAnimation)
     }
 
-    private fun initView() {
-        binding.muteOneHour.setOnClickListener {
-            chooseListener?.invoke(MuteTypeEnum.Mute1Hour)
-            dismiss()
-        }
-        binding.muteTwoHour.setOnClickListener {
-            chooseListener?.invoke(MuteTypeEnum.Mute8Hour)
-            dismiss()
-        }
-        binding.muteForever.setOnClickListener {
-            chooseListener?.invoke(MuteTypeEnum.MuteForever)
+    private fun SceytDialogMuteNotificationsBinding.initViews() {
+        tvTitle.text = title
+    }
+
+    private fun setOptionsAdapter() {
+        binding.rvOptions.adapter = IntervalOptionsAdapter(options) {
+            chooseListener?.invoke(it)
             dismiss()
         }
     }
 
-    fun setChooseListener(listener: (MuteTypeEnum) -> Unit): MuteNotificationDialog {
+    private fun setOptions(options: List<IntervalOption>) {
+        this.options = options
+    }
+
+    private fun setTitles(title: String) {
+        this.title = title
+    }
+
+    fun setChooseListener(listener: (IntervalOption) -> Unit): MuteNotificationDialog {
         chooseListener = listener
         return this
     }
 
-    fun setTitles(title: String) {
-        binding.tvTitle.text = title
+    private fun SceytDialogMuteNotificationsBinding.applyStyle() {
+        tvTitle.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
     }
 
-    private fun SceytDialogMuteNotificationsBinding.applyStyle() {
-        setTextViewsTextColor(listOf(tvTitle, muteOneHour, muteTwoHour, muteForever),
-            context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+    companion object {
+        fun showDialog(
+                context: Context,
+                title: String,
+                options: List<IntervalOption>,
+                listener: (IntervalOption) -> Unit
+        ) {
+            MuteNotificationDialog(context).apply {
+                setTitles(title)
+                setOptions(options)
+                setChooseListener(listener)
+            }.show()
+        }
     }
 }
