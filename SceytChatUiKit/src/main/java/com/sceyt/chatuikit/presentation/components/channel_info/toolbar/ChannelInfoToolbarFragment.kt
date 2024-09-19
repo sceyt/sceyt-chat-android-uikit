@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.databinding.SceytFragmentInfoToolbarBinding
+import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoToolbarBinding
 import com.sceyt.chatuikit.extensions.changeAlphaWithAnimation
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
@@ -29,16 +29,16 @@ import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
-import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelLinksFragment
-import com.sceyt.chatuikit.styles.ChannelInfoStyle
+import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
+import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import com.sceyt.chatuikit.styles.ChannelInfoStyle
 import java.util.Date
 
-open class InfoToolbarFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
-    protected lateinit var binding: SceytFragmentInfoToolbarBinding
+open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
+    protected lateinit var binding: SceytFragmentChannelInfoToolbarBinding
         private set
     protected lateinit var channel: SceytChannel
         private set
@@ -49,7 +49,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener, ChannelInfoS
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return SceytFragmentInfoToolbarBinding.inflate(layoutInflater, container, false)
+        return SceytFragmentChannelInfoToolbarBinding.inflate(layoutInflater, container, false)
             .also { binding = it }
             .root
     }
@@ -64,11 +64,11 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener, ChannelInfoS
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(arguments?.parcelable(ChannelLinksFragment.CHANNEL))
+        channel = requireNotNull(arguments?.parcelable(ChannelInfoLinksFragment.CHANNEL))
         isSelf = channel.isSelf()
     }
 
-    private fun SceytFragmentInfoToolbarBinding.initViews() {
+    private fun SceytFragmentChannelInfoToolbarBinding.initViews() {
         icBack.setOnClickListener {
             buttonsListener?.invoke(ClickActionsEnum.Back)
         }
@@ -206,7 +206,7 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener, ChannelInfoS
         Back, Edit, More
     }
 
-    private fun SceytFragmentInfoToolbarBinding.applyStyle() {
+    private fun SceytFragmentChannelInfoToolbarBinding.applyStyle() {
         root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.primaryColor))
         titleToolbar.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
         tvToolbarInfo.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
@@ -222,8 +222,8 @@ open class InfoToolbarFragment : Fragment(), ChannelUpdateListener, ChannelInfoS
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(channel: SceytChannel): InfoToolbarFragment {
-            val fragment = InfoToolbarFragment()
+        fun newInstance(channel: SceytChannel): ChannelInfoToolbarFragment {
+            val fragment = ChannelInfoToolbarFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)
             }

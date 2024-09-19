@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.channel_info.links
+package com.sceyt.chatuikit.presentation.components.channel_info.voice
 
 import android.content.Context
 import android.os.Bundle
@@ -13,20 +13,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
-import com.sceyt.chatuikit.databinding.SceytFragmentChannelLinksBinding
-import com.sceyt.chatuikit.extensions.findIndexed
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoVoiceBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
-import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
-import com.sceyt.chatuikit.presentation.customviews.PageStateView
-import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.ViewPagerAdapter
@@ -35,16 +30,18 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.Ch
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.ChannelAttachmentsViewModel
+import com.sceyt.chatuikit.presentation.customviews.PageStateView
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.ConversationInfoMediaStyle
 import kotlinx.coroutines.launch
 
-open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
-    protected lateinit var channel: SceytChannel
-    protected var binding: SceytFragmentChannelLinksBinding? = null
+open class ChannelInfoVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
+    private lateinit var channel: SceytChannel
+    private var binding: SceytFragmentChannelInfoVoiceBinding? = null
     protected open var mediaAdapter: ChannelMediaAdapter? = null
     protected open var pageStateView: PageStateView? = null
-    protected open val mediaType = listOf("link")
-    protected lateinit var viewModel: ChannelAttachmentsViewModel
+    protected open val mediaType = listOf(AttachmentTypeEnum.Voice.value())
+    private lateinit var viewModel: ChannelAttachmentsViewModel
     protected lateinit var style: ConversationInfoMediaStyle
         private set
 
@@ -54,7 +51,7 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return SceytFragmentChannelLinksBinding.inflate(inflater, container, false).also {
+        return SceytFragmentChannelInfoVoiceBinding.inflate(inflater, container, false).also {
             binding = it
         }.root
     }
@@ -65,7 +62,7 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         getBundleArguments()
         initViewModel()
         addPageStateView()
-        loadInitialLinksList()
+        loadInitialFilesList()
         binding?.applyStyle()
     }
 
@@ -77,26 +74,69 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         viewModel = viewModels<ChannelAttachmentsViewModel>().value
 
         lifecycleScope.launch {
-            viewModel.filesFlow.collect(::onInitialLinksList)
+            viewModel.filesFlow.collect(::onInitialVoiceList)
         }
 
         lifecycleScope.launch {
-            viewModel.loadMoreFilesFlow.collect(::onMoreLinksList)
+            viewModel.loadMoreFilesFlow.collect(::onMoreFilesList)
         }
-
-        viewModel.linkPreviewLiveData.observe(viewLifecycleOwner, ::onLinkPreview)
 
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
     }
 
-    private fun onLinkClick(url: String?) {
-        requireContext().openLink(url)
+    open fun onInitialVoiceList(list: List<ChannelFileItem>) {
+        if (mediaAdapter == null) {
+            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(requireContext(), style).also {
+                it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, _ ->
+                    // voice message play functionality is handled in VoiceMessageViewHolder
+                })
+                it.setClickListener(AttachmentClickListeners.AttachmentLoaderClickListener { _, item ->
+                    viewModel.pauseOrResumeUpload(item, channel.id)
+                })
+
+                it.setNeedMediaDataCallback { data -> viewModel.needMediaInfo(data) }
+            }).also { mediaAdapter = it }
+
+            with((binding ?: return).rvVoice) {
+                this.adapter = adapter
+                addItemDecoration(MediaStickHeaderItemDecoration(adapter))
+
+                addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                        super.onScrolled(recyclerView, dx, dy)
+                        if (isLastItemDisplaying() && viewModel.canLoadPrev())
+                            loadMoreFilesList(adapter.getLastMediaItem()?.file?.id ?: 0,
+                                adapter.getFileItems().size)
+                    }
+                })
+            }
+        } else binding?.rvVoice?.let { mediaAdapter?.notifyUpdate(list, it) }
+    }
+
+    open fun onMoreFilesList(list: List<ChannelFileItem>) {
+        mediaAdapter?.addNewItems(list)
+    }
+
+    open fun onPageStateChange(pageState: PageState) {
+        pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0, enableErrorSnackBar = false)
+    }
+
+    protected open fun loadInitialFilesList() {
+        if (channel.pending) {
+            binding?.root?.post { pageStateView?.updateState(PageState.StateEmpty()) }
+            return
+        }
+        viewModel.loadAttachments(channel.id, 0, false, mediaType, 0)
+    }
+
+    protected fun loadMoreFilesList(lastAttachmentId: Long, offset: Int) {
+        viewModel.loadAttachments(channel.id, lastAttachmentId, true, mediaType, offset)
     }
 
     private fun addPageStateView() {
         binding?.root?.addView(PageStateView(requireContext()).apply {
             setEmptyStateView(R.layout.sceyt_empty_state).also {
-                it.findViewById<TextView>(R.id.empty_state_title).text = getString(R.string.sceyt_no_link_items_yet)
+                it.findViewById<TextView>(R.id.empty_state_title).text = getString(R.string.sceyt_no_voice_items_yet)
             }
             setLoadingStateView(R.layout.sceyt_loading_state)
             pageStateView = this
@@ -110,63 +150,6 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         })
     }
 
-    open fun onInitialLinksList(list: List<ChannelFileItem>) {
-        if (mediaAdapter == null) {
-            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(
-                requireContext(), style
-            ).also {
-                it.setNeedMediaDataCallback { data -> viewModel.needMediaInfo(data) }
-
-                it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                    onLinkClick(item.file.url)
-                })
-            }).also { mediaAdapter = it }
-
-            with((binding ?: return).rvLinks) {
-                this.adapter = adapter
-                addItemDecoration(MediaStickHeaderItemDecoration(adapter))
-
-                addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                        super.onScrolled(recyclerView, dx, dy)
-                        if (isLastItemDisplaying() && viewModel.canLoadPrev()) {
-                            loadMoreLinksList(adapter.getLastMediaItem()?.file?.id ?: 0,
-                                adapter.getFileItems().size)
-                        }
-                    }
-                })
-            }
-        } else binding?.rvLinks?.let { mediaAdapter?.notifyUpdate(list, it) }
-    }
-
-    open fun onMoreLinksList(list: List<ChannelFileItem>) {
-        mediaAdapter?.addNewItems(list)
-    }
-
-    open fun onLinkPreview(previewDetails: LinkPreviewDetails) {
-        val data = mediaAdapter?.getData() ?: return
-        data.findIndexed { it.isMediaItem() && it.file.url == previewDetails.link }?.let { (index, item) ->
-            item.file = item.file.copy(linkPreviewDetails = previewDetails)
-            mediaAdapter?.updateItemAt(index, item)
-        }
-    }
-
-    open fun onPageStateChange(pageState: PageState) {
-        pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0, enableErrorSnackBar = false)
-    }
-
-    protected open fun loadInitialLinksList() {
-        if (channel.pending) {
-            binding?.root?.post { pageStateView?.updateState(PageState.StateEmpty()) }
-            return
-        }
-        viewModel.loadAttachments(channel.id, 0, false, mediaType, 0)
-    }
-
-    protected fun loadMoreLinksList(lastAttachmentId: Long, offset: Int) {
-        viewModel.loadAttachments(channel.id, lastAttachmentId, true, mediaType, offset)
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         mediaAdapter = null
@@ -177,15 +160,15 @@ open class ChannelLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         pageStateView?.updateState(PageState.StateEmpty())
     }
 
-    private fun SceytFragmentChannelLinksBinding.applyStyle() {
+    private fun SceytFragmentChannelInfoVoiceBinding.applyStyle() {
         root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
     }
 
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(channel: SceytChannel): ChannelLinksFragment {
-            val fragment = ChannelLinksFragment()
+        fun newInstance(channel: SceytChannel): ChannelInfoVoiceFragment {
+            val fragment = ChannelInfoVoiceFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)
             }

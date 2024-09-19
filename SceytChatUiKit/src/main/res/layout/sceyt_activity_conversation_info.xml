@@ -44,35 +44,35 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:layout_constraintTop_toTopOf="parent"
-                        tools:layout="@layout/sceyt_fragment_info_details" />
+                        tools:layout="@layout/sceyt_fragment_channel_info_details" />
 
                     <androidx.fragment.app.FragmentContainerView
                         android:id="@+id/frame_layout_description"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:layout_constraintTop_toBottomOf="@+id/frame_layout_info"
-                        tools:layout="@layout/sceyt_fragment_info_description" />
+                        tools:layout="@layout/sceyt_fragment_channel_info_description" />
 
                     <androidx.fragment.app.FragmentContainerView
                         android:id="@+id/frame_layout_specifications"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:layout_constraintTop_toBottomOf="@+id/frame_layout_description"
-                        tools:layout="@layout/sceyt_fragment_info_specifications" />
+                        tools:layout="@layout/sceyt_fragment_channel_info_uri" />
 
                     <androidx.fragment.app.FragmentContainerView
                         android:id="@+id/frame_layout_settings"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:layout_constraintTop_toBottomOf="@+id/frame_layout_specifications"
-                        tools:layout="@layout/sceyt_fragment_info_settings" />
+                        tools:layout="@layout/sceyt_fragment_channel_info_settings" />
 
                     <androidx.fragment.app.FragmentContainerView
                         android:id="@+id/frame_layout_members_by_role"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:layout_constraintTop_toBottomOf="@+id/frame_layout_settings"
-                        tools:layout="@layout/sceyt_fragment_info_options" />
+                        tools:layout="@layout/sceyt_fragment_channel_info_options" />
 
                     <FrameLayout
                         android:id="@+id/frame_layout_additional_info"
@@ -103,7 +103,7 @@
                         android:layout_height="match_parent"
                         app:layout_collapseMode="pin"
                         app:layout_constraintTop_toTopOf="parent"
-                        tools:layout="@layout/sceyt_fragment_info_toolbar" />
+                        tools:layout="@layout/sceyt_fragment_channel_info_toolbar" />
 
                 </androidx.appcompat.widget.Toolbar>
 

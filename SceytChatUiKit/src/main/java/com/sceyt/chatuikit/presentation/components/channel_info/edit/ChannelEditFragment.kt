@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.databinding.SceytFragmentEditChannelBinding
+import com.sceyt.chatuikit.databinding.SceytFragmentChannelEditBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
@@ -41,8 +41,8 @@ import com.sceyt.chatuikit.styles.ChannelInfoStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-open class EditChannelFragment : Fragment(), SceytKoinComponent {
-    protected var binding: SceytFragmentEditChannelBinding? = null
+open class ChannelEditFragment : Fragment(), SceytKoinComponent {
+    protected var binding: SceytFragmentChannelEditBinding? = null
     protected val viewModel: EditChannelViewModel by viewModels()
     protected val filePickerHelper = FilePickerHelper(this)
     protected var avatarUrl: String? = null
@@ -54,7 +54,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return SceytFragmentEditChannelBinding.inflate(inflater, container, false)
+        return SceytFragmentChannelEditBinding.inflate(inflater, container, false)
             .also { binding = it }
             .root
     }
@@ -101,7 +101,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    private fun SceytFragmentEditChannelBinding.initViews() {
+    private fun SceytFragmentChannelEditBinding.initViews() {
         tvSubject.doAfterTextChanged { checkSaveEnabled(false) }
 
         inputUri.doAfterTextChanged {
@@ -262,7 +262,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         } else requireActivity().onBackPressedDispatcher.onBackPressed()
     }
 
-    private fun SceytFragmentEditChannelBinding.applyStyle() {
+    private fun SceytFragmentChannelEditBinding.applyStyle() {
         root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
         toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
         toolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.primaryColor))
@@ -276,8 +276,8 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(channel: SceytChannel): EditChannelFragment {
-            val fragment = EditChannelFragment()
+        fun newInstance(channel: SceytChannel): ChannelEditFragment {
+            val fragment = ChannelEditFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)
             }

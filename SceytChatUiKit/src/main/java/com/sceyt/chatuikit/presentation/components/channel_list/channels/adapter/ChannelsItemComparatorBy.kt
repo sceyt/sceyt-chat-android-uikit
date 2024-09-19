@@ -1,14 +1,16 @@
 package com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 
+import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem.LoadingMoreItem
-import com.sceyt.chatuikit.config.ChannelSortType
 
-class ChannelsItemComparatorBy(private val compareBy: ChannelSortType = SceytChatUIKit.config.sortChannelsBy) : Comparator<ChannelListItem> {
+class ChannelsItemComparatorBy(
+        private val compareBy: ChannelListOrder = SceytChatUIKit.config.channelListOrder
+) : Comparator<ChannelListItem> {
     private val channelsComparatorDescBy = ChannelsComparatorDescBy(compareBy)
 
     override fun compare(first: ChannelListItem, second: ChannelListItem): Int {
-        return if (compareBy == ChannelSortType.ByLastMsg)
+        return if (compareBy == ChannelListOrder.ListQueryChannelOrderLastMessage)
             compareByLastMessageCreatedAt(first, second)
         else compareByChannelCreatedAt(first, second)
     }

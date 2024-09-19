@@ -8,20 +8,20 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.databinding.SceytFragmentInfoSettingsBinding
+import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoSettingsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setOnlyClickable
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.isSelf
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
-import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelLinksFragment
+import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
+import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
 import com.sceyt.chatuikit.styles.ChannelInfoStyle
 
-open class InfoSettingsFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
-    protected lateinit var binding: SceytFragmentInfoSettingsBinding
+open class ChannelInfoSettingsFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
+    protected lateinit var binding: SceytFragmentChannelInfoSettingsBinding
         private set
     protected lateinit var channel: SceytChannel
         private set
@@ -30,7 +30,7 @@ open class InfoSettingsFragment : Fragment(), ChannelUpdateListener, ChannelInfo
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return SceytFragmentInfoSettingsBinding.inflate(layoutInflater, container, false)
+        return SceytFragmentChannelInfoSettingsBinding.inflate(layoutInflater, container, false)
             .also { binding = it }
             .root
     }
@@ -45,10 +45,10 @@ open class InfoSettingsFragment : Fragment(), ChannelUpdateListener, ChannelInfo
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(arguments?.parcelable(ChannelLinksFragment.CHANNEL))
+        channel = requireNotNull(arguments?.parcelable(ChannelInfoLinksFragment.CHANNEL))
     }
 
-    private fun SceytFragmentInfoSettingsBinding.initViews() {
+    private fun SceytFragmentChannelInfoSettingsBinding.initViews() {
         notification.setOnlyClickable()
 
         notification.setOnClickListener {
@@ -94,7 +94,7 @@ open class InfoSettingsFragment : Fragment(), ChannelUpdateListener, ChannelInfo
         this.style = style
     }
 
-    private fun SceytFragmentInfoSettingsBinding.applyStyle() {
+    private fun SceytFragmentChannelInfoSettingsBinding.applyStyle() {
         layoutDetails.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
         notification.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
         autoDeleteMessages.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
@@ -105,8 +105,8 @@ open class InfoSettingsFragment : Fragment(), ChannelUpdateListener, ChannelInfo
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(channel: SceytChannel): InfoSettingsFragment {
-            val fragment = InfoSettingsFragment()
+        fun newInstance(channel: SceytChannel): ChannelInfoSettingsFragment {
+            val fragment = ChannelInfoSettingsFragment()
             fragment.arguments = Bundle().apply {
                 putParcelable(CHANNEL, channel)
             }

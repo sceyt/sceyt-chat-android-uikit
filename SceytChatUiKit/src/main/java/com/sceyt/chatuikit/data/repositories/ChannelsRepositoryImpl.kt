@@ -17,7 +17,6 @@ import com.sceyt.chat.sceyt_callbacks.MembersCallback
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.config.ChannelSortType
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
@@ -38,12 +37,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 class ChannelsRepositoryImpl : ChannelsRepository {
 
     private lateinit var channelsQuery: ChannelListQuery
-
-    private fun getOrder(): ChannelListQuery.ChannelListOrder {
-        return if (SceytChatUIKit.config.sortChannelsBy == ChannelSortType.ByLastMsg)
-            ChannelListQuery.ChannelListOrder.ListQueryChannelOrderLastMessage
-        else ChannelListQuery.ChannelListOrder.ListQueryChannelOrderCreatedAt
-    }
 
     private fun createMemberListQuery(channelId: Long, offset: Int, role: String?): MemberListQuery {
         return MemberListQuery.Builder(channelId)
@@ -146,7 +139,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     override suspend fun getAllChannels(limit: Int): Flow<GetAllChannelsResponse> = callbackFlow {
         val channelListQuery = ChannelListQuery.Builder()
             .withQueryParam(channelQueryParam)
-            .order(getOrder())
+            .order(SceytChatUIKit.config.channelListOrder)
             .limit(limit)
             .build()
 
@@ -581,7 +574,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     private fun createChannelListQuery(query: String? = null): ChannelListQuery {
         return ChannelListQuery.Builder()
-            .order(getOrder())
+            .order(SceytChatUIKit.config.channelListOrder)
             .query(query?.ifBlank { null })
             .withQueryParam(channelQueryParam)
             .limit(SceytChatUIKit.config.queryLimits.channelListQueryLimit)

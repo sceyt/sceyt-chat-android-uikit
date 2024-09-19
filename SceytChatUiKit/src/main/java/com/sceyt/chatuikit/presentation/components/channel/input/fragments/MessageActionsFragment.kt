@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.databinding.SceytFragmentEditOrReplyMessageBinding
+import com.sceyt.chatuikit.databinding.SceytFragmentMessageActionsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
@@ -23,24 +23,24 @@ import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setBoldSpan
 import com.sceyt.chatuikit.extensions.setTint
 import com.sceyt.chatuikit.extensions.setTintColorRes
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
-import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
-import com.sceyt.chatuikit.presentation.extensions.isTextMessage
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.CancelReplyMessageViewClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
-import com.sceyt.chatuikit.formatters.UserNameFormatter
+import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
+import com.sceyt.chatuikit.presentation.extensions.isTextMessage
+import com.sceyt.chatuikit.shared.utils.ViewUtil
 import com.sceyt.chatuikit.styles.MessageInputStyle
 import com.sceyt.chatuikit.styles.MessageItemStyle
 import com.sceyt.chatuikit.styles.MessagesListViewStyle
-import com.sceyt.chatuikit.shared.utils.ViewUtil
 
 open class MessageActionsFragment : Fragment() {
-    protected var binding: SceytFragmentEditOrReplyMessageBinding? = null
+    protected var binding: SceytFragmentMessageActionsBinding? = null
     protected var clickListeners: CancelReplyMessageViewClickListener? = null
     protected var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return SceytFragmentEditOrReplyMessageBinding.inflate(inflater, container, false).also {
+        return SceytFragmentMessageActionsBinding.inflate(inflater, container, false).also {
             binding = it
         }.root
     }
@@ -164,7 +164,7 @@ open class MessageActionsFragment : Fragment() {
             .into(imageAttachment)
     }
 
-    private fun SceytFragmentEditOrReplyMessageBinding.applyStyle() {
+    private fun SceytFragmentMessageActionsBinding.applyStyle() {
         val accentColor = requireContext().getCompatColor(SceytChatUIKit.theme.accentColor)
         root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.surface1Color))
         tvName.setTextColor(accentColor)

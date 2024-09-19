@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.databinding.SceytFragmentInfoDescriptionBinding
+import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoDescriptionBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.jsonToObject
@@ -18,13 +18,13 @@ import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
-import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelLinksFragment
+import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
+import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
 import com.sceyt.chatuikit.styles.ChannelInfoStyle
 
-open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
-    protected lateinit var binding: SceytFragmentInfoDescriptionBinding
+open class ChannelInfoDescriptionFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
+    protected lateinit var binding: SceytFragmentChannelInfoDescriptionBinding
         private set
     protected lateinit var channel: SceytChannel
         private set
@@ -32,7 +32,7 @@ open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener, ChannelI
         private set
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return SceytFragmentInfoDescriptionBinding.inflate(layoutInflater, container, false)
+        return SceytFragmentChannelInfoDescriptionBinding.inflate(layoutInflater, container, false)
             .also { binding = it }
             .root
     }
@@ -46,7 +46,7 @@ open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener, ChannelI
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(arguments?.parcelable(ChannelLinksFragment.CHANNEL))
+        channel = requireNotNull(arguments?.parcelable(ChannelInfoLinksFragment.CHANNEL))
     }
 
     open fun setChannelDescription(channel: SceytChannel) {
@@ -70,7 +70,7 @@ open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener, ChannelI
         this.style = style
     }
 
-    private fun SceytFragmentInfoDescriptionBinding.applyStyle() {
+    private fun SceytFragmentChannelInfoDescriptionBinding.applyStyle() {
         layoutDetails.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
         tvTitle.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
         tvDescription.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
@@ -81,8 +81,8 @@ open class InfoDescriptionFragment : Fragment(), ChannelUpdateListener, ChannelI
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(channel: SceytChannel): InfoDescriptionFragment {
-            val fragment = InfoDescriptionFragment()
+        fun newInstance(channel: SceytChannel): ChannelInfoDescriptionFragment {
+            val fragment = ChannelInfoDescriptionFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)
             }
