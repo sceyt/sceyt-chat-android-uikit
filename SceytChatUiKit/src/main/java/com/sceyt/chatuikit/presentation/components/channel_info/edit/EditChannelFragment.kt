@@ -40,7 +40,6 @@ import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.sceyt.chatuikit.styles.ChannelInfoStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.net.URI
 
 open class EditChannelFragment : Fragment(), SceytKoinComponent {
     protected var binding: SceytFragmentEditChannelBinding? = null
@@ -202,6 +201,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         binding?.uriWarning?.apply {
             text = provider.provide(type)
             setTextColor(requireContext().getCompatColor(colorRes))
+            isVisible = true
         }
     }
 

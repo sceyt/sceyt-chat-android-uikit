@@ -75,6 +75,7 @@ open class SelectUsersActivity : AppCompatActivity() {
             root.layoutTransition = LayoutTransition().apply { enableTransitionType(LayoutTransition.CHANGING) }
             toolbar.setTitle(pageArgs?.toolbarTitle ?: "")
             pageArgs?.actionButtonIcon?.let { fabNext.setImageResource(it) }
+            fabNext.setEnabledOrNot(pageArgs?.actionButtonAlwaysEnable == true)
 
             toolbar.setQueryChangeListener { query ->
                 viewModel.loadUsers(query, false)
@@ -192,7 +193,7 @@ open class SelectUsersActivity : AppCompatActivity() {
 @Parcelize
 data class SelectUsersPageArgs(
         val toolbarTitle: String? = null,
-        val actionButtonAlwaysEnable: Boolean? = null,
+        val actionButtonAlwaysEnable: Boolean = false,
         @DrawableRes val actionButtonIcon: Int = R.drawable.sceyt_ic_arrow_next
 ) : Parcelable
 
