@@ -12,7 +12,8 @@ sealed class ChannelEvent {
     ) : ChannelEvent()
 
     data class Mute(
-            val channel: SceytChannel
+            val channel: SceytChannel,
+            val muteUntil: Long
     ) : ChannelEvent()
 
     data class UnMute(
