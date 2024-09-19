@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
-class ConversationInfoViewModel : BaseViewModel(), SceytKoinComponent {
+class ChannelInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val channelInteractor by inject<ChannelInteractor>()
     private val channelMemberInteractor by inject<ChannelMemberInteractor>()
     private val userInteractor by inject<UserInteractor>()

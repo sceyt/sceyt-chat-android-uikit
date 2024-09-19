@@ -7,11 +7,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.copy
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytChannelListViewBinding
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
@@ -19,22 +20,21 @@ import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
-import com.sceyt.chatuikit.presentation.customviews.PageStateView
-import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.ChannelViewHolderFactory
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.components.ChannelsRV
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.data.ChannelEvent
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.dialogs.ChannelActionConfirmationWithDialog
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.dialogs.ChannelActionsDialog
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.data.ChannelEvent
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelPopupClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelPopupClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.popups.ChannelActionsPopup
-import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.config.ChannelSortType
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.components.ChannelsRV
+import com.sceyt.chatuikit.presentation.customviews.PageStateView
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.ChannelListViewStyle
 
 class ChannelListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
@@ -95,7 +95,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
         channelsRV.getData()?.let {
             if (it.contains(channelItem)) return
             val newData = ArrayList(it).also { items -> items.add(channelItem) }
-            channelsRV.sortByAndSetNewData(SceytChatUIKit.config.sortChannelsBy, newData)
+            channelsRV.sortByAndSetNewData(SceytChatUIKit.config.channelListOrder, newData)
         } ?: channelsRV.setData(arrayListOf(channelItem))
 
         binding.pageStateView.updateState(PageState.Nothing)
@@ -221,7 +221,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
         channelsRV.hideLoadingMore()
     }
 
-    fun sortChannelsBy(sortBy: ChannelSortType) {
+    fun sortChannelsBy(sortBy: ChannelListOrder) {
         debounceHelper.submitForceIfNotRunning { channelsRV.sortBy(sortBy) }
     }
 

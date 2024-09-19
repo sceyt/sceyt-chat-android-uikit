@@ -10,19 +10,19 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.databinding.SceytFragmentInfoOptionsBinding
+import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoOptionsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPublic
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
-import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelLinksFragment
+import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
+import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
 import com.sceyt.chatuikit.styles.ChannelInfoStyle
 
-open class InfoOptionsFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
-    protected lateinit var binding: SceytFragmentInfoOptionsBinding
+open class ChannelInfoOptionsFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
+    protected lateinit var binding: SceytFragmentChannelInfoOptionsBinding
         private set
     protected lateinit var channel: SceytChannel
         private set
@@ -32,7 +32,7 @@ open class InfoOptionsFragment : Fragment(), ChannelUpdateListener, ChannelInfoS
     private var enableSearchMessages: Boolean = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return SceytFragmentInfoOptionsBinding.inflate(layoutInflater, container, false)
+        return SceytFragmentChannelInfoOptionsBinding.inflate(layoutInflater, container, false)
             .also { binding = it }
             .root
     }
@@ -47,7 +47,7 @@ open class InfoOptionsFragment : Fragment(), ChannelUpdateListener, ChannelInfoS
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(arguments?.parcelable(ChannelLinksFragment.CHANNEL))
+        channel = requireNotNull(arguments?.parcelable(ChannelInfoLinksFragment.CHANNEL))
         enableSearchMessages = arguments?.getBoolean(ENABLE_SEARCH_MESSAGES) ?: false
     }
 
@@ -97,7 +97,7 @@ open class InfoOptionsFragment : Fragment(), ChannelUpdateListener, ChannelInfoS
         Members, Admins, SearchMessages
     }
 
-    private fun SceytFragmentInfoOptionsBinding.applyStyle() {
+    private fun SceytFragmentChannelInfoOptionsBinding.applyStyle() {
         val textPrimaryColor = requireContext().getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
         val backgroundColorSections = requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections)
         members.setTextColor(textPrimaryColor)
@@ -115,8 +115,8 @@ open class InfoOptionsFragment : Fragment(), ChannelUpdateListener, ChannelInfoS
         private const val ENABLE_SEARCH_MESSAGES = "ENABLE_SEARCH_MESSAGES"
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(channel: SceytChannel, enableSearchMessages: Boolean): InfoOptionsFragment {
-            val fragment = InfoOptionsFragment()
+        fun newInstance(channel: SceytChannel, enableSearchMessages: Boolean): ChannelInfoOptionsFragment {
+            val fragment = ChannelInfoOptionsFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)
                 putBoolean(ENABLE_SEARCH_MESSAGES, enableSearchMessages)

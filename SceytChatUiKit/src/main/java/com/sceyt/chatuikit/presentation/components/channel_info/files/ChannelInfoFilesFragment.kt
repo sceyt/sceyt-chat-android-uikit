@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.channel_info.media
+package com.sceyt.chatuikit.presentation.components.channel_info.files
 
 import android.content.Context
 import android.os.Bundle
@@ -9,24 +9,21 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.databinding.SceytFragmentChannelMediaBinding
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoFilesBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.isLandscape
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
-import com.sceyt.chatuikit.presentation.customviews.PageStateView
-import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem.Companion.getData
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.ViewPagerAdapter
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ChannelAttachmentViewHolderFactory
@@ -34,16 +31,18 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.Ch
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.ChannelAttachmentsViewModel
-import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
+import com.sceyt.chatuikit.presentation.customviews.PageStateView
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.ConversationInfoMediaStyle
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.launch
 
-open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
+open class ChannelInfoFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     protected lateinit var channel: SceytChannel
-    protected var binding: SceytFragmentChannelMediaBinding? = null
-    protected open var mediaAdapter: ChannelMediaAdapter? = null
-    protected open val mediaType = listOf("image", "video")
-    protected open var pageStateView: PageStateView? = null
+    protected var binding: SceytFragmentChannelInfoFilesBinding? = null
+    protected var mediaAdapter: ChannelMediaAdapter? = null
+    protected var pageStateView: PageStateView? = null
+    protected val mediaType = listOf(AttachmentTypeEnum.File.value())
     protected lateinit var viewModel: ChannelAttachmentsViewModel
     protected lateinit var style: ConversationInfoMediaStyle
         private set
@@ -54,7 +53,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return SceytFragmentChannelMediaBinding.inflate(inflater, container, false).also {
+        return SceytFragmentChannelInfoFilesBinding.inflate(inflater, container, false).also {
             binding = it
         }.root
     }
@@ -65,7 +64,7 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         getBundleArguments()
         initViewModel()
         addPageStateView()
-        loadInitialMediaList()
+        loadInitialFilesList()
         binding?.applyStyle()
     }
 
@@ -75,24 +74,73 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
 
     private fun initViewModel() {
         viewModel = viewModels<ChannelAttachmentsViewModel>().value
-
         viewModel.observeToUpdateAfterOnResume(this)
 
         lifecycleScope.launch {
-            viewModel.filesFlow.collect(::onInitialMediaList)
+            viewModel.filesFlow.filterNot { it.isEmpty() }.collect(::onInitialFilesList)
         }
 
         lifecycleScope.launch {
-            viewModel.loadMoreFilesFlow.collect(::onMoreMediaList)
+            viewModel.loadMoreFilesFlow.filterNot { it.isEmpty() }.collect(::onMoreFilesList)
         }
 
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
     }
 
+    open fun onInitialFilesList(list: List<ChannelFileItem>) {
+        if (mediaAdapter == null) {
+            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(requireContext(), style).also {
+                it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
+                    item.file.openFile(requireContext())
+                })
+
+                it.setClickListener(AttachmentClickListeners.AttachmentLoaderClickListener { _, item ->
+                    viewModel.pauseOrResumeUpload(item, channel.id)
+                })
+
+                it.setNeedMediaDataCallback { data -> viewModel.needMediaInfo(data) }
+            }).also { mediaAdapter = it }
+
+            with((binding ?: return).rvFiles) {
+                this.adapter = adapter
+                addItemDecoration(MediaStickHeaderItemDecoration(adapter))
+
+                addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                        super.onScrolled(recyclerView, dx, dy)
+                        if (isLastItemDisplaying() && viewModel.canLoadPrev())
+                            loadMoreFilesList(adapter.getLastMediaItem()?.file?.id
+                                    ?: 0, adapter.getFileItems().size)
+                    }
+                })
+            }
+        } else binding?.rvFiles?.let { mediaAdapter?.notifyUpdate(list, it) }
+    }
+
+    open fun onMoreFilesList(list: List<ChannelFileItem>) {
+        mediaAdapter?.addNewItems(list)
+    }
+
+    open fun onPageStateChange(pageState: PageState) {
+        pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0, enableErrorSnackBar = false)
+    }
+
+    protected open fun loadInitialFilesList() {
+        if (channel.pending) {
+            binding?.root?.post { pageStateView?.updateState(PageState.StateEmpty()) }
+            return
+        }
+        viewModel.loadAttachments(channel.id, 0, false, mediaType, 0)
+    }
+
+    protected fun loadMoreFilesList(lastAttachmentId: Long, offset: Int) {
+        viewModel.loadAttachments(channel.id, lastAttachmentId, true, mediaType, offset)
+    }
+
     private fun addPageStateView() {
         binding?.root?.addView(PageStateView(requireContext()).apply {
             setEmptyStateView(R.layout.sceyt_empty_state).also {
-                it.findViewById<TextView>(R.id.empty_state_title).text = getString(R.string.sceyt_no_media_items_yet)
+                it.findViewById<TextView>(R.id.empty_state_title).text = getString(R.string.sceyt_no_file_items_yet)
             }
             setLoadingStateView(R.layout.sceyt_loading_state)
             pageStateView = this
@@ -106,81 +154,6 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         })
     }
 
-    protected open fun onInitialMediaList(list: List<ChannelFileItem>) {
-        if (mediaAdapter == null) {
-            val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(
-                requireContext(), style).also {
-
-                it.setNeedMediaDataCallback { data ->
-                    viewModel.needMediaInfo(data)
-                }
-
-                it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                    onMediaClick(item)
-                })
-            }).also { mediaAdapter = it }
-
-            with((binding ?: return).rvFiles) {
-                setHasFixedSize(true)
-                this.adapter = adapter
-                layoutManager = GridLayoutManager(requireContext(), getSpanCount()).also {
-                    it.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-                        override fun getSpanSize(position: Int): Int {
-                            return when (adapter.getItemViewType(position)) {
-                                ChannelAttachmentViewHolderFactory.ItemType.Loading.ordinal -> getSpanCount()
-                                ChannelAttachmentViewHolderFactory.ItemType.MediaDate.ordinal -> getSpanCount()
-                                else -> 1
-                            }
-                        }
-                    }
-                }
-
-                addItemDecoration(MediaStickHeaderItemDecoration(adapter))
-
-                addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                        super.onScrolled(recyclerView, dx, dy)
-                        if (isLastItemDisplaying() && viewModel.canLoadPrev())
-                            loadMoreMediaList(adapter.getLastMediaItem()?.file?.id
-                                    ?: 0, adapter.getFileItems().size)
-                    }
-                })
-            }
-        } else binding?.rvFiles?.let { mediaAdapter?.notifyUpdate(list, it) }
-    }
-
-    protected open fun getSpanCount(): Int {
-        return if (requireContext().isLandscape()) {
-            6
-        } else 3
-    }
-
-    protected open fun onMediaClick(item: ChannelFileItem) {
-        item.getData()?.let { data ->
-            MediaPreviewActivity.launch(requireContext(), data.attachment, data.user, channel.id, true)
-        }
-    }
-
-    protected open fun onMoreMediaList(list: List<ChannelFileItem>) {
-        mediaAdapter?.addNewItems(list)
-    }
-
-    protected open fun onPageStateChange(pageState: PageState) {
-        pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0, enableErrorSnackBar = false)
-    }
-
-    protected open fun loadInitialMediaList() {
-        if (channel.pending) {
-            binding?.root?.post { pageStateView?.updateState(PageState.StateEmpty()) }
-            return
-        }
-        viewModel.loadAttachments(channel.id, 0, false, mediaType, 0)
-    }
-
-    protected fun loadMoreMediaList(lastAttachmentId: Long, offset: Int) {
-        viewModel.loadAttachments(channel.id, lastAttachmentId, true, mediaType, offset)
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         mediaAdapter = null
@@ -191,15 +164,15 @@ open class ChannelMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapt
         pageStateView?.updateState(PageState.StateEmpty())
     }
 
-    private fun SceytFragmentChannelMediaBinding.applyStyle() {
+    private fun SceytFragmentChannelInfoFilesBinding.applyStyle() {
         root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
     }
 
     companion object {
-
         const val CHANNEL = "CHANNEL"
-        fun newInstance(channel: SceytChannel): ChannelMediaFragment {
-            val fragment = ChannelMediaFragment()
+
+        fun newInstance(channel: SceytChannel): ChannelInfoFilesFragment {
+            val fragment = ChannelInfoFilesFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)
             }

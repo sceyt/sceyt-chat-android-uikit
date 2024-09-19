@@ -54,7 +54,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
                     }
                     needToUpdateChannelsAfterResume.clear()
                     if (needSort)
-                        channelListView.sortChannelsBy(SceytChatUIKit.config.sortChannelsBy)
+                        channelListView.sortChannelsBy(SceytChatUIKit.config.channelListOrder)
                 }
             }
         }
@@ -114,7 +114,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
             val diff = channelListView.channelUpdated(data.channel)
             if (diff != null) {
                 if (diff.lastMessageChanged || data.needSorting || isCanceled)
-                    channelListView.sortChannelsBy(SceytChatUIKit.config.sortChannelsBy)
+                    channelListView.sortChannelsBy(SceytChatUIKit.config.channelListOrder)
                 SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body} draft:${data.channel.draftMessage?.message}  unreadCount ${data.channel.newMessageCount}" +
                         " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${diff.hasDifference()} lastMessageChanged: ${diff.lastMessageChanged} needSorting: ${data.needSorting}")
             } else {

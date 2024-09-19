@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.config
 import android.content.Context
 import androidx.annotation.IntRange
 import androidx.core.graphics.toColorInt
+import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chatuikit.config.defaults.DefaultAutoDeleteMessagesOptions
 import com.sceyt.chatuikit.config.defaults.DefaultMuteNotificationOptions
 import kotlin.time.Duration.Companion.hours
@@ -24,7 +25,7 @@ class SceytChatUIKitConfig(
     var avatarResizeConfig: ResizeConfig = ResizeConfig.Low
     var imageAttachmentResizeConfig: ResizeConfig = ResizeConfig.Medium
     var videoAttachmentResizeConfig: VideoResizeConfig = VideoResizeConfig.Medium
-    var sortChannelsBy: ChannelSortType = ChannelSortType.ByLastMsg
+    var channelListOrder: ChannelListOrder = ChannelListOrder.ListQueryChannelOrderLastMessage
     var defaultAvatarBackgroundColors: List<Int> = listOf("#4F6AFF".toColorInt(), "#B463E7".toColorInt())
     var defaultReactions: List<String> = listOf("😎", "😂", "👌", "😍", "👍", "😏")
     var mentionTriggerPrefix = '@'
