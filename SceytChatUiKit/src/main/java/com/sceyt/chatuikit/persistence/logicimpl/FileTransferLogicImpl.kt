@@ -354,8 +354,12 @@ internal class FileTransferLogicImpl(
         }
     }
 
-    private fun checkAndResizeMessageAttachments(context: Context, attachment: SceytAttachment, checksumData: FileChecksumData?,
-                                                 task: TransferTask, callback: (Result<String?>) -> Unit) {
+    private fun checkAndResizeMessageAttachments(
+            context: Context,
+            attachment: SceytAttachment,
+            checksumData: FileChecksumData?,
+            task: TransferTask, callback: (Result<String?>) -> Unit
+    ) {
 
         val path = checksumData?.resizedFilePath
         if (path != null && File(path).exists()) {
@@ -388,6 +392,7 @@ internal class FileTransferLogicImpl(
     }
 
     private fun getAttachmentChecksum(filePath: String?): FileChecksumData? {
+        if (!SceytChatUIKit.config.preventDuplicateAttachmentUpload) return null
         val data: FileChecksumData?
         runBlocking(Dispatchers.IO) {
             data = attachmentLogic.getFileChecksumData(filePath)
@@ -395,8 +400,10 @@ internal class FileTransferLogicImpl(
         return data
     }
 
-    private fun checkMaybeAlreadyUploadedWithAnotherMessage(checksumData: FileChecksumData?,
-                                                            task: TransferTask): Pair<Boolean, String?> {
+    private fun checkMaybeAlreadyUploadedWithAnotherMessage(
+            checksumData: FileChecksumData?,
+            task: TransferTask
+    ): Pair<Boolean, String?> {
         checksumData ?: return false to ""
         if (checksumData.url.isNotNullOrBlank()) {
             if (!checksumData.resizedFilePath.isNullOrEmpty())
@@ -408,7 +415,11 @@ internal class FileTransferLogicImpl(
         return false to ""
     }
 
-    private fun getAttachmentThumbPath(context: Context, attachment: SceytAttachment, size: Size): Result<String?> {
+    private fun getAttachmentThumbPath(
+            context: Context,
+            attachment: SceytAttachment,
+            size: Size
+    ): Result<String?> {
         val path = attachment.filePath ?: return Result.failure(FileNotFoundException())
         val minSize = max(size.height, size.width)
         val reqSize = if (minSize > 0) minSize.toFloat() else 800f

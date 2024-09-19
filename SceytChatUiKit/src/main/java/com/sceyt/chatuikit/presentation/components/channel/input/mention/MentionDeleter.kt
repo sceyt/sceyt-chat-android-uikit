@@ -36,8 +36,4 @@ class MentionDeleter : TextWatcher {
     }
 
     override fun onTextChanged(sequence: CharSequence, start: Int, before: Int, count: Int) {}
-
-    companion object {
-        const val MENTION_STARTER = '@'
-    }
 }
