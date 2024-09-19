@@ -24,14 +24,15 @@ import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.text.getSpans
 import androidx.core.widget.doAfterTextChanged
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionValidatorWatcher.MentionValidator
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQuery
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQueryChangedListener
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQueryReplacement
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyler
 import com.sceyt.chatuikit.presentation.components.channel.input.format.StyleType
 import com.sceyt.chatuikit.presentation.components.channel.input.format.UnderlineTextSpan
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionValidatorWatcher.MentionValidator
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQuery
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQueryChangedListener
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQueryReplacement
 
 
 class MentionSupportEditText : AppCompatEditText {
@@ -52,6 +53,7 @@ class MentionSupportEditText : AppCompatEditText {
     private var cursorPositionChangedListener: CursorPositionChangedListener? = null
     private var inlineQueryChangedListener: InlineQueryChangedListener? = null
     private var stylingChangedListener: StylingChangedListener? = null
+    private val mentionPrefix get() = SceytChatUIKit.config.mentionTriggerPrefix
 
     private fun initialize() {
         addTextChangedListener(mentionValidatorWatcher)
@@ -292,7 +294,7 @@ class MentionSupportEditText : AppCompatEditText {
     }
 
     private fun createReplacementToken(text: CharSequence, recipientId: String): CharSequence {
-        val builder = SpannableStringBuilder().append(MentionDeleter.MENTION_STARTER)
+        val builder = SpannableStringBuilder().append(mentionPrefix)
         if (text is Spanned) {
             val spannableString = SpannableString("$text ")
             TextUtils.copySpansFrom(text, 0, text.length, Any::class.java, spannableString, 0)
@@ -313,12 +315,12 @@ class MentionSupportEditText : AppCompatEditText {
             return QueryStart(start, false)
         }
 
-        val queryStart = QueryStart(findQueryStart(text, inputCursorPosition, MentionDeleter.MENTION_STARTER), true)
+        val queryStart = QueryStart(findQueryStart(text, inputCursorPosition, mentionPrefix), true)
 
         if (queryStart.index < 0)
             return null
 
-        return QueryStart(findQueryStart(text, inputCursorPosition, MentionDeleter.MENTION_STARTER), true)
+        return QueryStart(findQueryStart(text, inputCursorPosition, mentionPrefix), true)
     }
 
     private fun findQueryStart(text: CharSequence, inputCursorPosition: Int, starter: Char): Int {

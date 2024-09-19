@@ -10,6 +10,7 @@ import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.view.isVisible
+import androidx.databinding.DataBindingUtil.getBinding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
@@ -78,12 +79,16 @@ import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.styles.ChannelInfoStyle
 
+@Suppress("MemberVisibilityCanBePrivate")
 open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
-    private lateinit var channel: SceytChannel
-    private lateinit var pagerAdapter: ViewPagerAdapter
-    private var binding: SceytActivityConversationInfoBinding? = null
+    protected lateinit var pagerAdapter: ViewPagerAdapter
+        private set
     protected val viewModel: ConversationInfoViewModel by viewModels()
     protected lateinit var style: ChannelInfoStyle
+    protected var binding: SceytActivityConversationInfoBinding? = null
+        private set
+    lateinit var channel: SceytChannel
+        private set
 
     @CallSuper
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -299,10 +304,6 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         viewModel.addMembersToChannel(channel.id, members)
     }
 
-    protected fun getChannel() = channel
-
-    protected open fun getBinding() = binding
-
     protected open fun getMembersType(): MemberTypeEnum {
         return if (::channel.isInitialized) {
             when (channel.getChannelType()) {
@@ -456,7 +457,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     protected open fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
-        with(getBinding() ?: return) {
+        with(binding ?: return) {
             (frameLayoutInfo.getFragment() as? InfoDetailsFragment)?.onUserPresenceUpdated(presenceUser)
             (frameLayoutToolbar.getFragment() as? InfoToolbarFragment)?.onUserPresenceUpdated(presenceUser)
         }

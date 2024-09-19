@@ -20,12 +20,14 @@ class SceytChatUIKitConfig(
     var syncChannelsAfterConnect: Boolean = true
     var hardDeleteMessageForAll: Boolean = false
     var messageEditTimeout: Long = 2.hours.inWholeMilliseconds
+    var preventDuplicateAttachmentUpload: Boolean = true
     var avatarResizeConfig: ResizeConfig = ResizeConfig.Low
     var imageAttachmentResizeConfig: ResizeConfig = ResizeConfig.Medium
     var videoAttachmentResizeConfig: VideoResizeConfig = VideoResizeConfig.Medium
     var sortChannelsBy: ChannelSortType = ChannelSortType.ByLastMsg
-    val defaultAvatarBackgroundColors: List<Int> = listOf("#4F6AFF".toColorInt(), "#B463E7".toColorInt())
-    val defaultReactions: List<String> = listOf("😎", "😂", "👌", "😍", "👍", "😏")
+    var defaultAvatarBackgroundColors: List<Int> = listOf("#4F6AFF".toColorInt(), "#B463E7".toColorInt())
+    var defaultReactions: List<String> = listOf("😎", "😂", "👌", "😍", "👍", "😏")
+    var mentionTriggerPrefix = '@'
     var uploadNotificationPendingIntentData: UploadNotificationPendingIntentData? = null
 
     @IntRange(from = 1, to = 6)
