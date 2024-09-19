@@ -16,7 +16,6 @@ class SceytChatUIKitConfig(
     var channelTypesConfig: ChannelTypesConfig = ChannelTypesConfig()
     var memberRolesConfig: MemberRolesConfig = MemberRolesConfig()
     var muteChannelNotificationOptions: List<IntervalOption> = DefaultMuteNotificationOptions(appContext).options
-    var muteUserNotificationOptions: List<IntervalOption> = DefaultMuteNotificationOptions(appContext).options
     var messageAutoDeleteOptions: List<IntervalOption> = DefaultAutoDeleteMessagesOptions(appContext).options
     var syncChannelsAfterConnect: Boolean = true
     var hardDeleteMessageForAll: Boolean = false
