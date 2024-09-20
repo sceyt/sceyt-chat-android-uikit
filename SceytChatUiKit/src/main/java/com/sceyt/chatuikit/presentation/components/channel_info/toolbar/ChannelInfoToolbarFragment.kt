@@ -16,7 +16,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoToolbarBinding
 import com.sceyt.chatuikit.extensions.changeAlphaWithAnimation
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setOnClickListenerDisableClickViewForWhile
@@ -24,7 +23,6 @@ import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
-import com.sceyt.chatuikit.persistence.extensions.getDefaultAvatar
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
@@ -32,6 +30,7 @@ import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
+import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import com.sceyt.chatuikit.styles.ChannelInfoStyle
@@ -162,11 +161,7 @@ open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, Chann
     }
 
     protected open fun setChannelToolbarAvatar(channel: SceytChannel) {
-        if (isSelf) {
-            binding.toolbarAvatar.setAvatarColor(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
-            binding.toolbarAvatar.setImageUrl(null, SceytChatUIKit.theme.notesAvatar)
-        } else
-            binding.toolbarAvatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
+        binding.toolbarAvatar.setChannelAvatar(channel)
     }
 
     override fun onChannelUpdated(channel: SceytChannel) {
@@ -182,12 +177,9 @@ open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, Chann
         buttonsListener = listener
     }
 
-    fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
+    open fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
         if (isSelf) return
-        val user = presenceUser.user
-        val userName = SceytChatUIKit.formatters.userNameFormatter?.format(user)
-                ?: user.getPresentableName()
-        binding.toolbarAvatar.setNameAndImageUrl(userName, user.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
+        binding.toolbarAvatar.setChannelAvatar(channel, isSelf)
     }
 
     protected open fun onBackClick() {

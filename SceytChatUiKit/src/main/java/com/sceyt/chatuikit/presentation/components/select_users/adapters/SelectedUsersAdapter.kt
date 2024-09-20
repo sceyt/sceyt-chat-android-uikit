@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.databinding.SceytItemSelectedUserBinding
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.setTextColorRes
+import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 
 class SelectedUsersAdapter(private val users: ArrayList<UserItem.User>,
@@ -35,7 +36,7 @@ class SelectedUsersAdapter(private val users: ArrayList<UserItem.User>,
         override fun bind(item: UserItem.User) {
             val presentableName = item.user.getPresentableName()
             binding.userName.text = presentableName
-            binding.avatar.setNameAndImageUrl(presentableName, item.user.avatarURL)
+            binding.avatar.setUserAvatar(item.user)
             binding.onlineStatus.isVisible = item.user.presence.state == PresenceState.Online
 
             binding.icRemove.setOnClickListener {

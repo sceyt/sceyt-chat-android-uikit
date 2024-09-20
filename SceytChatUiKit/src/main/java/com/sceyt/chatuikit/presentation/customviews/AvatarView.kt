@@ -36,8 +36,7 @@ class AvatarView @JvmOverloads constructor(
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0
 ) : AppCompatImageView(context, attrs, defStyleAttr) {
-    private var isGroup = false
-    private var fullName: String? = null
+    private var name: CharSequence? = null
     private var imageUrl: String? = null
     private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private lateinit var imagePaint: Paint
@@ -53,11 +52,10 @@ class AvatarView @JvmOverloads constructor(
         var enableRipple = true
         attrs?.let {
             val a = context.obtainStyledAttributes(attrs, R.styleable.AvatarView)
-            isGroup = a.getBoolean(R.styleable.AvatarView_sceytUiAvatarIsGroup, false)
-            fullName = a.getString(R.styleable.AvatarView_sceytUiAvatarFullName)
+            name = a.getString(R.styleable.AvatarView_sceytUiAvatarFullName) ?: name
             imageUrl = a.getString(R.styleable.AvatarView_sceytUiAvatarImageUrl)
             textSize = a.getDimensionPixelSize(R.styleable.AvatarView_sceytUiAvatarTextSize, textSize)
-            avatarBackgroundColor = a.getColor(R.styleable.AvatarView_sceytUiAvatarColor, 0)
+            avatarBackgroundColor = a.getColor(R.styleable.AvatarView_sceytUiAvatarColor, avatarBackgroundColor)
             val defaultAvatarResId = a.getResourceId(R.styleable.AvatarView_sceytUiAvatarDefaultIcon, 0)
             if (defaultAvatarResId != 0) {
                 defaultAvatar = defaultAvatarResId.toDefaultAvatar()
@@ -88,11 +86,15 @@ class AvatarView @JvmOverloads constructor(
             setImageResource(0)
             val default = defaultAvatar
             if (default == null) {
-                drawBackgroundColor(canvas)
-                drawName(canvas)
+                val initials = getInitials(name ?: "")
+                drawBackgroundColor(canvas, avatarBackgroundColor)
+                drawInitials(canvas, initials)
             } else {
-                if (avatarBackgroundColor != 0)
-                    drawBackgroundColor(canvas)
+                // Id default avatar is DefaultAvatar.Initial then drawDefaultImage
+                // will draw the initials and background,
+                // otherwise we should tyr to draw the avatarBackgroundColor
+                if (default !is DefaultAvatar.Initial)
+                    drawBackgroundColor(canvas, avatarBackgroundColor)
 
                 drawDefaultImage(canvas, default)
             }
@@ -100,11 +102,11 @@ class AvatarView @JvmOverloads constructor(
         super.draw(canvas)
     }
 
-    private fun drawName(canvas: Canvas) {
+    private fun drawInitials(canvas: Canvas, name: CharSequence) {
         textPaint.textSize = if (textSize > 0) textSize.toFloat() else width * 0.38f
         textPaint.color = Color.WHITE
 
-        val staticLayout = getStaticLayout(getAvatarText(fullName ?: ""))
+        val staticLayout = getStaticLayout(name)
 
         val xPos = (width - staticLayout.width) / 2f
         canvas.save()
@@ -113,13 +115,14 @@ class AvatarView @JvmOverloads constructor(
         canvas.restore()
     }
 
-    private fun drawBackgroundColor(canvas: Canvas) {
+    private fun drawBackgroundColor(canvas: Canvas, @ColorInt color: Int) {
+        if (color == 0) return
         canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), backgroundPaint.apply {
-            color = if (avatarBackgroundColor == 0) getAvatarRandomColor() else avatarBackgroundColor
+            this.color = color
         })
     }
 
-    private fun getAvatarText(title: String): CharSequence {
+    private fun getInitials(title: CharSequence): CharSequence {
         if (title.isBlank()) return ""
         val strings = title.trim().split(" ").filter { it.isNotBlank() }
         if (strings.isEmpty()) return ""
@@ -139,9 +142,10 @@ class AvatarView @JvmOverloads constructor(
         return if (isInEditMode) text else text.processEmojiCompat() ?: title.take(1)
     }
 
-    private fun getAvatarRandomColor(): Int {
-        val colors = SceytChatUIKit.config.defaultAvatarBackgroundColors
-        return colors[abs((fullName ?: "").hashCode()) % colors.size]
+    private fun getAvatarRandomColor(initials: CharSequence): Int {
+        val colors = if (isInEditMode)
+            listOf(1) else SceytChatUIKit.config.defaultAvatarBackgroundColors
+        return colors[abs(initials.hashCode()) % colors.size]
     }
 
     @Suppress("DEPRECATION")
@@ -189,8 +193,10 @@ class AvatarView @JvmOverloads constructor(
             }
 
             is DefaultAvatar.Initial -> {
-                drawBackgroundColor(canvas)
-                drawName(canvas)
+                val color = if (avatarBackgroundColor == 0)
+                    getAvatarRandomColor(avatar.initial) else avatarBackgroundColor
+                drawBackgroundColor(canvas, color)
+                drawInitials(canvas, avatar.initial)
             }
         }
     }
@@ -244,67 +250,15 @@ class AvatarView @JvmOverloads constructor(
         imagePaint.shader = shader
     }
 
-    /*  fun setNameAndImageUrl(name: String?, url: String?, defaultAvatar: DefaultAvatar? = null) {
-          val oldImageUrl = imageUrl
-          fullName = name
-          imageUrl = url
-          defaultAvatar?.let { this.defaultAvatar = it }
-          invalidate()
-          loadAvatarImage(oldImageUrl)
-      }*/
-
-    fun setNameAndImageUrl(name: String?, url: String?, @DrawableRes defaultAvatar: Int? = null) {
-        val oldImageUrl = imageUrl
-        fullName = name
-        imageUrl = url
-        defaultAvatar?.let { this.defaultAvatar = it.toDefaultAvatar() }
-        invalidate()
-        loadAvatarImage(oldImageUrl)
-    }
-
-    /*   fun setImageUrl(url: String?, defaultAvatar: DefaultAvatar? = null) {
-           val oldImageUrl = imageUrl
-           imageUrl = url
-           defaultAvatar?.let { this.defaultAvatar = it }
-           invalidate()
-           loadAvatarImage(oldImageUrl)
-       }*/
-
-    fun setImageUrl(url: String?, defaultAvatar: Int? = null) {
+    fun setImageUrl(url: String?) {
         val oldImageUrl = imageUrl
         imageUrl = url
-        defaultAvatar?.let { this.defaultAvatar = it.toDefaultAvatar() }
         invalidate()
         loadAvatarImage(oldImageUrl)
     }
 
     fun setAvatarImageLoadListener(cb: (Boolean) -> Unit) {
         avatarLoadCb = cb
-    }
-
-    fun setAvatarColor(@ColorInt color: Int) {
-        avatarBackgroundColor = color
-        invalidate()
-    }
-
-    fun setAvatarColorRes(@ColorRes colorId: Int) {
-        avatarBackgroundColor = context.getCompatColor(colorId)
-        invalidate()
-    }
-
-    fun setDefaultAvatar(@DrawableRes id: Int) {
-        defaultAvatar = id.toDefaultAvatar()
-        invalidate()
-    }
-
-    fun setDefaultAvatar(drawable: Drawable) {
-        defaultAvatar = DefaultAvatar.FromDrawable(drawable)
-        invalidate()
-    }
-
-    fun setDefaultAvatar(bitmap: Bitmap) {
-        defaultAvatar = DefaultAvatar.FromBitmap(bitmap)
-        invalidate()
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -318,13 +272,73 @@ class AvatarView @JvmOverloads constructor(
         data class FromDrawable(val drawable: Drawable) : DefaultAvatar()
         data class FromDrawableRes(@DrawableRes val id: Int) : DefaultAvatar()
         data class Initial(
-                val initial: String
+                val initial: CharSequence
         ) : DefaultAvatar()
     }
+
+    inner class StyleBuilder {
+        private var name: CharSequence? = this@AvatarView.name
+        private var imageUrl: String? = this@AvatarView.imageUrl
+        private var textSize = this@AvatarView.textSize
+
+        @ColorInt
+        private var avatarBackgroundColor: Int = this@AvatarView.avatarBackgroundColor
+        private var defaultAvatar: DefaultAvatar? = this@AvatarView.defaultAvatar
+
+        fun setName(name: CharSequence) = apply {
+            this.name = name
+        }
+
+        fun setImageUrl(url: String?) = apply {
+            this.imageUrl = url
+        }
+
+        fun setTextSize(size: Int) = apply {
+            this.textSize = size
+        }
+
+        fun setAvatarBackgroundColor(@ColorInt color: Int) = apply {
+            avatarBackgroundColor = color
+        }
+
+        fun setAvatarBackgroundColorRes(@ColorRes color: Int) = apply {
+            avatarBackgroundColor = if (color != 0)
+                context.getCompatColor(color) else 0
+        }
+
+        fun setDefaultAvatar(avatar: DefaultAvatar) = apply {
+            defaultAvatar = avatar
+        }
+
+        fun setDefaultAvatar(@DrawableRes id: Int) = apply {
+            defaultAvatar = id.toDefaultAvatar()
+        }
+
+        fun setDefaultAvatar(drawable: Drawable) = apply {
+            defaultAvatar = DefaultAvatar.FromDrawable(drawable)
+        }
+
+        fun setDefaultAvatar(bitmap: Bitmap) = apply {
+            defaultAvatar = DefaultAvatar.FromBitmap(bitmap)
+        }
+
+        fun build() {
+            val oldImageUrl = this@AvatarView.imageUrl
+            this@AvatarView.name = name
+            this@AvatarView.imageUrl = imageUrl
+            this@AvatarView.textSize = textSize
+            this@AvatarView.avatarBackgroundColor = avatarBackgroundColor
+            this@AvatarView.defaultAvatar = defaultAvatar
+
+            invalidate()
+            loadAvatarImage(oldImageUrl)
+        }
+    }
+
+    fun styleBuilder() = StyleBuilder()
 }
 
-fun @receiver:DrawableRes Int.toDefaultAvatar(): DefaultAvatar? {
-    if (this == 0) return null
+fun @receiver:DrawableRes Int.toDefaultAvatar(): DefaultAvatar {
     return DefaultAvatar.FromDrawableRes(this)
 }
 

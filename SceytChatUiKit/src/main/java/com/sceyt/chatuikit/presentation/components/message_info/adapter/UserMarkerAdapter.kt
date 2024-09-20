@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.databinding.SceytItemUserMarkerBinding
 import com.sceyt.chatuikit.extensions.getPresentableName
+import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 class UserMarkerAdapter : ListAdapter<SceytMarker, UserMarkerAdapter.SimpleUserViewHolder>(DIFF_UTIL) {
@@ -43,7 +44,7 @@ class UserMarkerAdapter : ListAdapter<SceytMarker, UserMarkerAdapter.SimpleUserV
                 val user = marker.user ?: User(marker.userId)
                 val name = SceytChatUIKit.formatters.userNameFormatter?.format(user)
                         ?: user.getPresentableName()
-                avatar.setNameAndImageUrl(name, user.avatarURL)
+                avatar.setUserAvatar(marker.user)
                 userName.text = name
                 tvData.text = DateTimeUtil.getDateTimeString(marker.createdAt, "dd.MM.yy • HH:mm")
             }

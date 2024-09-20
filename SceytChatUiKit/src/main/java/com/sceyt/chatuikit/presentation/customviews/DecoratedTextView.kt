@@ -414,7 +414,7 @@ class DecoratedTextView @JvmOverloads constructor(
         setMeasuredDimension(width, height)
     }
 
-    inner class BuildStyle {
+    inner class StyleBuilder {
         private var leadingIconSize: Int = this@DecoratedTextView.leadingIconSize
         private var trailingIconSize: Int = this@DecoratedTextView.trailingIconSize
         private var leadingIcon: Drawable? = this@DecoratedTextView.leadingIcon
@@ -425,52 +425,52 @@ class DecoratedTextView @JvmOverloads constructor(
         private var leadingText: String = this@DecoratedTextView.leadingText
         private var leadingTextStyle: Int = this@DecoratedTextView.leadingTextStyle
 
-        fun setLeadingIcon(drawable: Drawable?): BuildStyle {
+        fun setLeadingIcon(drawable: Drawable?): StyleBuilder {
             leadingIcon = drawable
             return this
         }
 
-        fun setTrailingIcon(drawable: Drawable?): BuildStyle {
+        fun setTrailingIcon(drawable: Drawable?): StyleBuilder {
             trailingIcon = drawable
             return this
         }
 
-        fun setLeadingIconSize(size: Int): BuildStyle {
+        fun setLeadingIconSize(size: Int): StyleBuilder {
             leadingIconSize = size
             return this
         }
 
-        fun setTrailingIconSize(size: Int): BuildStyle {
+        fun setTrailingIconSize(size: Int): StyleBuilder {
             trailingIconSize = size
             return this
         }
 
-        fun setText(text: String): BuildStyle {
+        fun setText(text: String): StyleBuilder {
             this.text = text
             return this
         }
 
-        fun setTextColorId(@ColorRes colorId: Int): BuildStyle {
+        fun setTextColorId(@ColorRes colorId: Int): StyleBuilder {
             textColor = context.getCompatColor(colorId)
             return this
         }
 
-        fun setTextColor(@ColorInt color: Int): BuildStyle {
+        fun setTextColor(@ColorInt color: Int): StyleBuilder {
             textColor = color
             return this
         }
 
-        fun setLeadingText(text: String): BuildStyle {
+        fun setLeadingText(text: String): StyleBuilder {
             leadingText = text
             return this
         }
 
-        fun enableLeading(enable: Boolean): BuildStyle {
+        fun enableLeading(enable: Boolean): StyleBuilder {
             enableLeadingText = enable
             return this
         }
 
-        fun setLeadingTextStyle(style: Int): BuildStyle {
+        fun setLeadingTextStyle(style: Int): StyleBuilder {
             leadingTextStyle = style
             return this
         }
@@ -493,5 +493,5 @@ class DecoratedTextView @JvmOverloads constructor(
         }
     }
 
-    fun buildStyle() = BuildStyle()
+    fun styleBuilder() = StyleBuilder()
 }

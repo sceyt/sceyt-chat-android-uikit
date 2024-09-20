@@ -6,6 +6,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytItemMemberBinding
 import com.sceyt.chatuikit.extensions.getPresentableName
+import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 
 class MentionUserViewHolder(
@@ -19,9 +20,9 @@ class MentionUserViewHolder(
         val user = item.user
 
         with(binding) {
+            avatar.setUserAvatar(user)
             val userPresentableName = SceytChatUIKit.formatters.mentionUserNameFormatter?.format(item.user)
                     ?: user.getPresentableName()
-            avatar.setNameAndImageUrl(userPresentableName, user.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
             userName.text = userPresentableName
             onlineStatus.isVisible = user.presence?.state == PresenceState.Online
 

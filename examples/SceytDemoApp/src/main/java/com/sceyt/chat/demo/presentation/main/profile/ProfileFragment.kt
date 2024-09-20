@@ -30,6 +30,7 @@ import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.MuteNotificationDialog
 import com.sceyt.chatuikit.presentation.components.profile.viewmodel.ProfileViewModel
+import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -199,7 +200,7 @@ class ProfileFragment : Fragment() {
         currentUser = user
         avatarUrl = user?.avatarURL
         user?.apply {
-            binding.avatar.setNameAndImageUrl(fullName.trim(), avatarURL)
+            binding.avatar.setUserAvatar(user)
             var displayName = fullName.trim()
             if (displayName.isBlank())
                 displayName = "@${user.id}"
@@ -244,6 +245,6 @@ class ProfileFragment : Fragment() {
 
     private fun setProfileImage(filePath: String?) {
         avatarUrl = filePath
-        binding.avatar.setImageUrl(filePath, SceytChatUIKit.theme.userDefaultAvatar)
+        binding.avatar.setImageUrl(filePath)
     }
 }

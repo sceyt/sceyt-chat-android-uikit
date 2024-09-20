@@ -13,16 +13,15 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoDetailsBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
-import com.sceyt.chatuikit.persistence.extensions.getDefaultAvatar
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
+import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import com.sceyt.chatuikit.styles.ChannelInfoStyle
@@ -130,10 +129,7 @@ open class ChannelInfoDetailsFragment : Fragment(), ChannelUpdateListener, Chann
 
     open fun setChannelAvatar(channel: SceytChannel) {
         with(binding) {
-            if (isSelf) {
-                avatar.setImageUrl(null, channel.getDefaultAvatar())
-                avatar.setAvatarColor(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
-            } else avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl, channel.getDefaultAvatar())
+            avatar.setChannelAvatar(channel, isSelf)
         }
     }
 
@@ -143,10 +139,7 @@ open class ChannelInfoDetailsFragment : Fragment(), ChannelUpdateListener, Chann
 
     open fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
         if (isSelf) return
-        val user = presenceUser.user
-        val userName = SceytChatUIKit.formatters.userNameFormatter?.format(user)
-                ?: user.getPresentableName()
-        binding.avatar.setNameAndImageUrl(userName, user.avatarURL, channel.getDefaultAvatar())
+        binding.avatar.setChannelAvatar(channel, isSelf)
     }
 
     fun setClickActionsListener(listener: (ClickActionsEnum) -> Unit) {

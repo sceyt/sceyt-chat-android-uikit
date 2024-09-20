@@ -7,8 +7,12 @@ class SceytChatUIKitProviders(
         private val context: Context
 ) {
     var attachmentIconProvider: AttachmentIconProvider? = null
-    var channelDefaultAvatarProvider: ChannelDefaultAvatarProvider? = null
-    var userDefaultAvatarProvider: UserDefaultAvatarProvider? = null
+    var channelDefaultAvatarProvider: ChannelDefaultAvatarProvider by lazyVar {
+        DefaultChannelDefaultAvatarProvider()
+    }
+    var userDefaultAvatarProvider: UserDefaultAvatarProvider by lazyVar {
+        DefaultUserAvatarProvider()
+    }
     var channelURIValidationMessageProvider: ChannelURIValidationMessageProvider by lazyVar {
         DefaultChannelURIValidationMessageProvider(context)
     }

@@ -5,18 +5,20 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum
-import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.toMember
+import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
@@ -66,7 +68,7 @@ class ChannelInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val _channelAddMemberLiveData = MutableLiveData<ChannelMembersEventData>()
     val channelAddMemberLiveData: LiveData<ChannelMembersEventData> = _channelAddMemberLiveData
 
-    private val _userPresenceUpdatedLiveData = MutableLiveData<SceytPresenceChecker.PresenceUser>()
+    private val _userPresenceUpdatedLiveData = MutableLiveData<Pair<SceytChannel, SceytPresenceChecker.PresenceUser>>()
     val userPresenceUpdateLiveData = _userPresenceUpdatedLiveData.asLiveData()
 
     private val _channelUpdatedLiveData = MutableLiveData<SceytChannel>()
@@ -80,9 +82,13 @@ class ChannelInfoViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun observeUserPresenceUpdate(channel: SceytChannel) {
         SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged()
-            .onEach {
-                it.find { user -> user.user.id == channel.getPeer()?.id }?.let { presenceUser ->
-                    _userPresenceUpdatedLiveData.postValue(presenceUser)
+            .onEach { users ->
+                users.find { user -> user.user.id == channel.getPeer()?.id }?.let { presenceUser ->
+                    val members = channel.members?.toArrayList() ?: return@onEach
+                    members.findIndexed { it.user.id == presenceUser.user.id }?.let { (index, member) ->
+                        members[index] = member
+                        _userPresenceUpdatedLiveData.postValue(channel.copy(members = members) to presenceUser)
+                    }
                 }
             }.launchIn(viewModelScope)
     }

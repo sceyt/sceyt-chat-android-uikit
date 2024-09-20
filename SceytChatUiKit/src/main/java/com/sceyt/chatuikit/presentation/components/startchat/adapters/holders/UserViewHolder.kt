@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapter
+import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
@@ -33,14 +34,16 @@ class UserViewHolder(private val binding: SceytItemUserBinding,
 
         with(binding) {
             if (user.id == SceytChatUIKit.chatUIFacade.myId) {
-                avatar.setAvatarColorRes(SceytChatUIKit.theme.accentColor)
-                avatar.setNameAndImageUrl("", null, drawable.sceyt_ic_notes)
+                avatar.styleBuilder()
+                    .setImageUrl(null)
+                    .setAvatarBackgroundColorRes(SceytChatUIKit.theme.accentColor)
+                    .setDefaultAvatar(drawable.sceyt_ic_notes)
+                    .build()
                 userName.text = context.getString(string.sceyt_self_notes)
                 tvStatus.isVisible = false
             } else {
                 val userPresentableName = user.getPresentableName()
-                avatar.setAvatarColor(0)
-                avatar.setNameAndImageUrl(userPresentableName, user.avatarURL, drawable.sceyt_ic_default_avatar)
+                avatar.setUserAvatar(user)
                 userName.text = userPresentableName
 
                 if (user.presence == null || user.presence!!.lastActiveAt == 0L)
