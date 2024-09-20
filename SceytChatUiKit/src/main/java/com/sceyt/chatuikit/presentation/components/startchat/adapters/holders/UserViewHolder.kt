@@ -34,7 +34,7 @@ class UserViewHolder(private val binding: SceytItemUserBinding,
         with(binding) {
             if (user.id == SceytChatUIKit.chatUIFacade.myId) {
                 avatar.setAvatarColorRes(SceytChatUIKit.theme.accentColor)
-                avatar.setNameAndImageUrl("", null, drawable.sceyt_ic_notes_with_paddings)
+                avatar.setNameAndImageUrl("", null, drawable.sceyt_ic_notes)
                 userName.text = context.getString(string.sceyt_self_notes)
                 tvStatus.isVisible = false
             } else {

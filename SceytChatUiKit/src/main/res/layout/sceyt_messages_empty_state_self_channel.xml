@@ -27,7 +27,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_chainStyle="packed"
-            app:layout_constraintWidth_percent=".15"
+            app:layout_constraintWidth_percent=".2"
             app:srcCompat="@drawable/sceyt_ic_notes" />
 
         <androidx.appcompat.widget.AppCompatTextView
@@ -36,7 +36,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="15dp"
+            android:layout_marginTop="5dp"
             android:fontFamily="@font/roboto_medium"
             android:text="@string/sceyt_add_notes"
             android:textDirection="locale"

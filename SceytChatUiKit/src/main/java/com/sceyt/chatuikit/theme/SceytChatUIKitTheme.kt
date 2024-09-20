@@ -60,5 +60,5 @@ data class SceytChatUIKitTheme(
         @DrawableRes
         val deletedUserAvatar: Int = R.drawable.sceyt_ic_deleted_user,
         @DrawableRes
-        val notesAvatar: Int = R.drawable.sceyt_ic_notes_with_paddings,
+        val notesAvatar: Int = R.drawable.sceyt_ic_notes,
 )
