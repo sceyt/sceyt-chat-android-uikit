@@ -16,7 +16,7 @@
         android:id="@+id/icLinkImage"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:background="@color/sceyt_color_surface_1"
+        android:background="@color/sceyt_color_surface_2"
         android:scaleType="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="1:1"

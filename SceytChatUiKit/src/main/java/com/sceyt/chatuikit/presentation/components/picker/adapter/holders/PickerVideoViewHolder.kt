@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.picker.adapter.holders
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemPickerVideoBinding
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.persistence.differs.GalleryMediaItemDiff
@@ -38,7 +39,7 @@ class PickerVideoViewHolder(
             Glide.with(itemView.context)
                 .load(item.media.realPath)
                 .override(itemView.width)
-                .placeholder(R.color.sceyt_gallery_item_default_color)
+                .placeholder(SceytChatUIKit.theme.backgroundColorSecondary)
                 .error(R.drawable.sceyt_ic_broken_image)
                 .into(binding.ivImage)
         }

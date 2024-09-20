@@ -14,6 +14,7 @@
     <color name="sceyt_color_background">#19191B</color>
     <color name="sceyt_color_background_secondary">#19191B</color>
     <color name="sceyt_color_background_sections">#232324</color>
+    <color name="sceyt_color_overlay_background">#66000000</color>
     <color name="sceyt_color_border">#303032</color>
     <color name="sceyt_color_icon_secondary">#969A9F</color>
     <color name="sceyt_color_icon_inactive">#64666A</color>
