@@ -15,7 +15,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@color/sceyt_color_gray"/>
+        app:srcCompat="@color/sceyt_color_background_secondary"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

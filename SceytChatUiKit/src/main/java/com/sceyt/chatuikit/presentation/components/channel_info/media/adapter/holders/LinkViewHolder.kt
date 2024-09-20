@@ -39,7 +39,7 @@ class LinkViewHolder(
             root.layoutTransition?.setAnimateParentHierarchy(false)
 
             tvLinkUrl.text = attachment.url
-            val previewDetails  =attachment.linkPreviewDetails
+            val previewDetails = attachment.linkPreviewDetails
             if (previewDetails == null) {
                 setLinkInfo(null, attachment)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedLinkPreview(attachment, false))
@@ -89,7 +89,7 @@ class LinkViewHolder(
 
     private fun setDefaultStateLinkImage() {
         binding.icLinkImage.setImageDrawable(defaultImage)
-        binding.icLinkImage.setBackgroundColor(context.getCompatColor(R.color.sceyt_color_gray))
+        binding.icLinkImage.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.surface2Color))
     }
 
     private val defaultImage by lazy {
