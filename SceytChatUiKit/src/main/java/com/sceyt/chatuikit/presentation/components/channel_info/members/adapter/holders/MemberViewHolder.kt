@@ -14,6 +14,7 @@ import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.listeners.MemberClickListenersImpl
+import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
@@ -40,13 +41,11 @@ class MemberViewHolder(private val binding: SceytItemChannelMembersBinding,
         val member = memberItem.member
 
         with(binding) {
-
             val presentableName = userNameFormatter?.format(member.user)
                     ?: member.getPresentableNameWithYou(itemView.context)
 
             if (diff.nameChanged || diff.avatarChanged) {
-                avatar.setNameAndImageUrl(presentableName, member.user.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
-
+                avatar.setUserAvatar(member.user)
                 userName.text = presentableName
             }
 

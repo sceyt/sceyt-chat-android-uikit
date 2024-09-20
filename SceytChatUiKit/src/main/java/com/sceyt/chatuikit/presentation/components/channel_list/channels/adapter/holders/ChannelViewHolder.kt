@@ -24,27 +24,28 @@ import com.sceyt.chatuikit.extensions.getPresentableNameWithYou
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.setOnClickListenerAvailable
 import com.sceyt.chatuikit.extensions.setOnLongClickListenerAvailable
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
-import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChatReactionMessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
+import com.sceyt.chatuikit.presentation.customviews.AvatarView
 import com.sceyt.chatuikit.presentation.customviews.ColorSpannableTextView
 import com.sceyt.chatuikit.presentation.customviews.DecoratedTextView
 import com.sceyt.chatuikit.presentation.customviews.PresenceStateIndicatorView
 import com.sceyt.chatuikit.presentation.extensions.getAttachmentIconAsString
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.presentation.extensions.getFormattedLastMessageBody
+import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
 import com.sceyt.chatuikit.presentation.extensions.setChannelMessageDateAndStatusIcon
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
-import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.styles.ChannelListViewStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import com.sceyt.chatuikit.styles.ChannelListViewStyle
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -273,18 +274,8 @@ open class ChannelViewHolder(
         binding.viewPinned.isVisible = isPinned
     }
 
-    open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatar: ImageView) {
-        if (isSelf) {
-            binding.avatar.setImageUrl(null, SceytChatUIKit.theme.notesAvatar)
-            binding.avatar.setAvatarColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-            return
-        }
-        binding.avatar.setAvatarColor(0)
-        if (channel.isDirect() && channel.isPeerDeleted()) {
-            binding.avatar.setImageUrl(null, SceytChatUIKit.theme.deletedUserAvatar)
-        } else
-            binding.avatar.setNameAndImageUrl(name, url, if (channel.isGroup)
-                0 else SceytChatUIKit.theme.userDefaultAvatar)
+    open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatarView: AvatarView) {
+        avatarView.setChannelAvatar(channel, isSelf)
     }
 
     open fun setLastMessageStatusAndDate(channel: SceytChannel, decoratedTextView: DecoratedTextView) {
@@ -376,7 +367,7 @@ open class ChannelViewHolder(
         onlineStatus.setIndicatorColor(channelStyle.onlineStatusColor)
         viewPinned.setBackgroundColor(channelStyle.pinnedChannelBackgroundColor)
         ivAutoDeleted.setImageDrawable(channelStyle.autoDeletedChannelIcon)
-        dateStatus.buildStyle()
+        dateStatus.styleBuilder()
             .setLeadingIconSize(channelStyle.statusIconSize)
             .setTextColor(channelStyle.dateTextColor)
             .setLeadingText(context.getString(R.string.sceyt_edited))

@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.databinding.SceytItemReactedUserBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
+import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 
 class ReactedUsersAdapter(
@@ -76,7 +77,7 @@ class ReactedUsersAdapter(
                 val user: User? = (item as ReactedUserItem.Item).reaction.user
                 val userPresentableName = user?.let { SceytChatUIKit.formatters.userNameFormatter?.format(it) }
                         ?: user?.getPresentableName()
-                avatar.setNameAndImageUrl(userPresentableName, user?.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
+                avatar.setUserAvatar(user)
                 userName.text = userPresentableName
 
                 reaction.setSmileText(item.reaction.key)

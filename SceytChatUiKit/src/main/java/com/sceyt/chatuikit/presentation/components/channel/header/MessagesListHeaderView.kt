@@ -64,6 +64,7 @@ import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.H
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.customviews.AvatarView
+import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import com.sceyt.chatuikit.styles.MessagesListHeaderStyle
 import kotlinx.coroutines.delay
@@ -262,20 +263,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     private fun setAvatar(avatar: AvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
         binding.avatar.isVisible = !replyInThread
-        if (!replyInThread) {
-            when {
-                channel.isPeerDeleted() -> avatar.setImageUrl(null, SceytChatUIKit.theme.deletedUserAvatar)
-                channel.isSelf() -> {
-                    avatar.setAvatarColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-                    avatar.setImageUrl(null, SceytChatUIKit.theme.notesAvatar)
-                }
-
-                else -> {
-                    avatar.setNameAndImageUrl(channel.channelSubject, channel.iconUrl,
-                        if (isGroup) 0 else SceytChatUIKit.theme.userDefaultAvatar)
-                }
-            }
-        }
+        if (!replyInThread)
+            avatar.setChannelAvatar(channel)
     }
 
     private fun showMessageActionsInToolbar(vararg messages: SceytMessage, @MenuRes resId: Int,

@@ -42,7 +42,7 @@ class SceytChatUIKitConfig(
     var messageReactionPerUserLimit: Int = 6
 
     @IntRange(from = 1, to = 50)
-    var maxMultiselectMessagesCount: Int = 30
+    var messageMultiselectLimit: Int = 30
 
     @IntRange(from = 1, to = 50)
     var attachmentSelectionLimit: Int = 20

@@ -7,9 +7,10 @@ import com.sceyt.chatuikit.databinding.SceytItemSelectUserBinding
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.setTextColorRes
-import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.SelectableUsersAdapter
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
+import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
+import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
@@ -33,7 +34,7 @@ class SelectableUserViewHolder(
             with(layoutDetails) {
                 root.background = null
                 val userPresentableName = user.getPresentableName()
-                avatar.setNameAndImageUrl(userPresentableName, user.avatarURL)
+                avatar.setUserAvatar(user)
                 userName.text = userPresentableName
                 tvStatus.isVisible = user.presence?.state == PresenceState.Online || (user.presence?.lastActiveAt
                         ?: 0) > 0L

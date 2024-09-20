@@ -53,27 +53,29 @@ import com.sceyt.chatuikit.extensions.marginHorizontal
 import com.sceyt.chatuikit.extensions.screenPortraitWidthPx
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
+import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.setTintColorRes
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
-import com.sceyt.chatuikit.presentation.customviews.AvatarView
-import com.sceyt.chatuikit.presentation.customviews.DecoratedTextView
-import com.sceyt.chatuikit.presentation.customviews.ToReplyLineView
-import com.sceyt.chatuikit.presentation.extensions.setConversationMessageDateAndStatusIcon
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionUserHelper
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionsAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.holders.ReactionViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionUserHelper
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
-import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.presentation.customviews.AvatarView
+import com.sceyt.chatuikit.presentation.customviews.DecoratedTextView
+import com.sceyt.chatuikit.presentation.customviews.ToReplyLineView
+import com.sceyt.chatuikit.presentation.extensions.setConversationMessageDateAndStatusIcon
+import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.chatuikit.shared.utils.ViewUtil
+import com.sceyt.chatuikit.styles.MessageItemStyle
 import kotlin.math.min
 
 abstract class BaseMsgViewHolder(private val view: View,
@@ -338,13 +340,11 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (message.shouldShowAvatarAndName) {
             val user = message.user
             val displayName = getSenderName(user)
-            if (user?.isDeleted() == true) {
-                avatarView.setImageUrl(null, SceytChatUIKit.theme.deletedUserAvatar)
-                tvName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.errorColor))
-            } else {
-                avatarView.setNameAndImageUrl(displayName, user?.avatarURL, SceytChatUIKit.theme.userDefaultAvatar)
-                tvName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-            }
+            tvName.setTextColorRes(
+                if (user?.isDeleted() == true)
+                    SceytChatUIKit.theme.errorColor else SceytChatUIKit.theme.accentColor
+            )
+            avatarView.setUserAvatar(user)
             tvName.text = displayName
             tvName.isVisible = true
             avatarView.isVisible = true
@@ -354,8 +354,11 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
-    protected open fun setOrUpdateReactions(item: MessageListItem.MessageItem, rvReactionsViewStub: ViewStub,
-                                            viewPool: RecyclerView.RecycledViewPool) {
+    protected open fun setOrUpdateReactions(
+            item: MessageListItem.MessageItem,
+            rvReactionsViewStub: ViewStub,
+            viewPool: RecyclerView.RecycledViewPool
+    ) {
         val reactions: List<ReactionItem.Reaction>? = item.message.messageReactions?.take(19)
         val resizeWithDependReactions = layoutBubbleConfig?.second ?: false
         val layoutDetails = if (resizeWithDependReactions) layoutBubble else null

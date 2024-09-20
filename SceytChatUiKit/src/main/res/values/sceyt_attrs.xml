@@ -4,7 +4,6 @@
     <declare-styleable name="AvatarView">
         <attr name="sceytUiAvatarImageUrl" format="string" />
         <attr name="sceytUiAvatarFullName" format="string" />
-        <attr name="sceytUiAvatarIsGroup" format="boolean" />
         <attr name="sceytUiAvatarTextSize" format="dimension|integer" />
         <attr name="sceytUiAvatarColor" format="color|reference" />
         <attr name="sceytUiAvatarDefaultIcon" format="reference" />

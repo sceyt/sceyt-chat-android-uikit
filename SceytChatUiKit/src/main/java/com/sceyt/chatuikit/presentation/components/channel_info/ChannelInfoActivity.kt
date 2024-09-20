@@ -66,16 +66,16 @@ import com.sceyt.chatuikit.presentation.components.channel_info.members.MemberTy
 import com.sceyt.chatuikit.presentation.components.channel_info.options.ChannelInfoOptionsFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.preview.ImagePreviewActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.settings.ChannelInfoSettingsFragment
-import com.sceyt.chatuikit.presentation.components.channel_info.uri.ChannelInfoURIFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.toolbar.ChannelInfoToolbarFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.toolbar.ChannelInfoToolbarFragment.ClickActionsEnum.Back
 import com.sceyt.chatuikit.presentation.components.channel_info.toolbar.ChannelInfoToolbarFragment.ClickActionsEnum.Edit
 import com.sceyt.chatuikit.presentation.components.channel_info.toolbar.ChannelInfoToolbarFragment.ClickActionsEnum.More
+import com.sceyt.chatuikit.presentation.components.channel_info.uri.ChannelInfoURIFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.viewmodel.ChannelInfoViewModel
 import com.sceyt.chatuikit.presentation.components.channel_info.voice.ChannelInfoVoiceFragment
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.dialogs.ChannelActionConfirmationWithDialog
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.services.SceytPresenceChecker
+import com.sceyt.chatuikit.services.SceytPresenceChecker.PresenceUser
 import com.sceyt.chatuikit.styles.ChannelInfoStyle
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -137,8 +137,6 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
                 finish()
         }
 
-        viewModel.userPresenceUpdateLiveData.observe(this, ::onUserPresenceUpdated)
-
         viewModel.leaveChannelLiveData.observe(this, ::onLeftChannel)
 
         viewModel.deleteChannelLiveData.observe(this, ::onDeletedChannel)
@@ -146,6 +144,11 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         viewModel.clearHistoryLiveData.observe(this, ::onClearedHistory)
 
         viewModel.blockUnblockUserLiveData.observe(this, ::onBlockedOrUnblockedUser)
+
+        viewModel.userPresenceUpdateLiveData.observe(this) { (channel, presenceUser) ->
+            this.channel = channel
+            onUserPresenceUpdated(channel, presenceUser)
+        }
 
         viewModel.joinLiveData.observe(this) {
             channel = it
@@ -455,7 +458,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         setChannelDetails(channel)
     }
 
-    protected open fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
+    protected open fun onUserPresenceUpdated(channel: SceytChannel, presenceUser: PresenceUser) {
         with(binding ?: return) {
             (frameLayoutInfo.getFragment() as? ChannelInfoDetailsFragment)?.onUserPresenceUpdated(presenceUser)
             (frameLayoutToolbar.getFragment() as? ChannelInfoToolbarFragment)?.onUserPresenceUpdated(presenceUser)

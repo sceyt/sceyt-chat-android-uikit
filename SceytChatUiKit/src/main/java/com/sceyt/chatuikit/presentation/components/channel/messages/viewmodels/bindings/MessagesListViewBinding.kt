@@ -598,7 +598,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
             is MessageCommandEvent.OnMultiselectEvent -> {
                 val wasSelected = selectedMessagesMap.containsKey(event.message.tid)
-                val maxCount = SceytChatUIKit.config.maxMultiselectMessagesCount
+                val maxCount = SceytChatUIKit.config.messageMultiselectLimit
 
                 if (!wasSelected && selectedMessagesMap.size >= maxCount) {
                     val errorMessage = String.format(messagesListView.getString(R.string.sceyt_reach_max_message_select_count, maxCount.toString()))
