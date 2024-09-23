@@ -17,23 +17,23 @@ import com.sceyt.chatuikit.providers.defaults.URIValidationType
 class SceytChatUIKitProviders(
         private val context: Context
 ) {
-    var attachmentIconProvider: Provider<SceytAttachment, Drawable?> by lazyVar {
+    var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?> by lazyVar {
         DefaultAttachmentIconProvider(context)
     }
 
-    var channelListAttachmentIconProvider: Provider<SceytAttachment, Drawable?> by lazyVar {
+    var channelListAttachmentIconProvider: VisualProvider<SceytAttachment, Drawable?> by lazyVar {
         DefaultChannelListAttachmentIconProvider(context)
     }
 
-    var channelDefaultAvatarProvider: Provider<SceytChannel, AvatarView.DefaultAvatar> by lazyVar {
+    var channelDefaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar> by lazyVar {
         DefaultChannelDefaultAvatarProvider()
     }
 
-    var userDefaultAvatarProvider: Provider<User, AvatarView.DefaultAvatar> by lazyVar {
+    var userDefaultAvatarProvider: VisualProvider<User, AvatarView.DefaultAvatar> by lazyVar {
         DefaultUserAvatarProvider()
     }
 
-    var channelURIValidationMessageProvider: Provider<URIValidationType, String> by lazyVar {
+    var channelURIValidationMessageProvider: VisualProvider<URIValidationType, String> by lazyVar {
         DefaultChannelURIValidationMessageProvider(context)
     }
 }

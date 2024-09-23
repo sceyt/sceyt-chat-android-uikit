@@ -14,7 +14,7 @@ class StickyDateHeaderUpdater(
         private val listener: StickyHeaderInterface,
         private val messageItemStyle: MessagesListViewStyle
 ) {
-    private val dateHeaderVerticalPadding = messageItemStyle.messageItemStyle.differentSenderMsgDistance
+    private val dateHeaderVerticalPadding = messageItemStyle.differentSenderMsgDistance
 
     init {
         recyclerView.addRVScrollListener(onScrolled = { rv, _, _ ->

@@ -177,7 +177,7 @@ class IncFileMsgViewHolder(
 
     private fun SceytItemIncFileMessageBinding.setMessageItemStyle() {
         val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
-        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incBubbleColor)
+        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incomingBubbleColor)
         tvUserName.setTextColor(style.senderNameTextColor)
         tvForwarded.setTextAndDrawableByColor(accentColor)
         loadProgress.setBackgroundColor(accentColor)

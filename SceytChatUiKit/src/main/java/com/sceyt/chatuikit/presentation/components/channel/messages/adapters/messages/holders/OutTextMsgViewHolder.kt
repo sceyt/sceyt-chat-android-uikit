@@ -77,7 +77,7 @@ class OutTextMsgViewHolder(
     override val selectMessageView get() = binding.selectView
 
     private fun SceytItemOutTextMessageBinding.setMessageItemStyle() {
-        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outBubbleColor)
+        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outgoingBubbleColor)
         tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
         messageBody.applyStyle(style)
     }

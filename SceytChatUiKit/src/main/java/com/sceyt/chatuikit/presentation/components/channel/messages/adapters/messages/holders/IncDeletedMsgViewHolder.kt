@@ -49,7 +49,7 @@ class IncDeletedMsgViewHolder(
     override val selectMessageView get() = binding.selectView
 
     private fun SceytItemIncDeletedMessageBinding.setMessageItemStyle() {
-        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incBubbleColor)
+        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incomingBubbleColor)
         tvUserName.setTextColor(style.senderNameTextColor)
         messageBody.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
     }

@@ -8,9 +8,9 @@ import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.customviews.AvatarView
-import com.sceyt.chatuikit.providers.Provider
+import com.sceyt.chatuikit.providers.VisualProvider
 
-open class DefaultChannelDefaultAvatarProvider : Provider<SceytChannel, AvatarView.DefaultAvatar> {
+open class DefaultChannelDefaultAvatarProvider : VisualProvider<SceytChannel, AvatarView.DefaultAvatar> {
     override fun provide(from: SceytChannel): AvatarView.DefaultAvatar {
         return when {
             from.isSelf() -> {

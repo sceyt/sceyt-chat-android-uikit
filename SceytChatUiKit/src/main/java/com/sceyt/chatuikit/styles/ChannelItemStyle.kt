@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.pxToDp
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelDateFormatter
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.providers.Provider
+import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.providers.defaults.DefaultChannelListAttachmentIconProvider
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
@@ -25,14 +25,14 @@ import java.util.Date
  * @property titleColor - Color of the channel title, default is [SceytChatUIKitTheme.textPrimaryColor].
  * @property lastMessageTextColor - Color of the last message text, default is [SceytChatUIKitTheme.textSecondaryColor].
  * @property unreadCountColor - Color of the unread message counter, default is [SceytChatUIKitTheme.accentColor].
- * @property onlineStatusColor - Color of the online status indicator, default is [R.color.sceyt_color_green].
+ * @property onlineStateColor - Color of the online status indicator, default is [R.color.sceyt_color_green].
  * @property dividerColor - Color of the divider, default is [SceytChatUIKitTheme.borderColor].
  * @property dateTextColor - Color of the date text, default is [SceytChatUIKitTheme.textSecondaryColor].
- * @property enableDivider - Enable divider, default is false.
+ * @property showDivider - Enable divider, default is false.
  * @property mutedIcon - Icon for muted channel, default is [R.drawable.sceyt_ic_muted].
  * @property pinIcon - Icon for pinned channel, default is [R.drawable.sceyt_ic_pin_filled].
- * @property statusIconSize - Size of the status icon, default is 16dp.
- * @property channelDateFormat - Date format for channel, default is [DefaultChannelDateFormatter].
+ * @property deliveryStatusIndicatorSize - Size of the status icon, default is 16dp.
+ * @property channelDateFormatter - Date format for channel, default is [DefaultChannelDateFormatter].
  * @property attachmentIconProvider - Provider for attachment icon, default is [DefaultChannelListAttachmentIconProvider].
  * */
 data class ChannelItemStyle(
@@ -40,17 +40,17 @@ data class ChannelItemStyle(
         @ColorInt val titleColor: Int,
         @ColorInt val lastMessageTextColor: Int,
         @ColorInt val unreadCountColor: Int,
-        @ColorInt val onlineStatusColor: Int,
+        @ColorInt val onlineStateColor: Int,
         @ColorInt val dividerColor: Int,
         @ColorInt val dateTextColor: Int,
-        val enableDivider: Boolean,
+        val showDivider: Boolean,
         val mutedIcon: Drawable?,
         val pinIcon: Drawable?,
         val messageDeliveryStatusIcons: MessageDeliveryStatusIcons,
         val autoDeletedChannelIcon: Drawable?,
-        val statusIconSize: Int,
-        val channelDateFormat: Formatter<Date>,
-        val attachmentIconProvider: Provider<SceytAttachment, Drawable?>
+        val deliveryStatusIndicatorSize: Int,
+        val channelDateFormatter: Formatter<Date>,
+        val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
 
     companion object {
@@ -115,16 +115,16 @@ data class ChannelItemStyle(
                     titleColor = titleColor,
                     lastMessageTextColor = lastMessageTextColor,
                     unreadCountColor = unreadCountColor,
-                    onlineStatusColor = onlineStatusColor,
+                    onlineStateColor = onlineStatusColor,
                     dividerColor = dividerColor,
                     dateTextColor = dateTextColor,
-                    enableDivider = enableDivider,
+                    showDivider = enableDivider,
                     mutedIcon = mutedIcon,
                     pinIcon = pinIcon,
                     messageDeliveryStatusIcons = messageDeliveryStatusIcons,
                     autoDeletedChannelIcon = autoDeletedChannelIcon,
-                    statusIconSize = statusIconSize,
-                    channelDateFormat = SceytChatUIKit.formatters.channelDateFormatter,
+                    deliveryStatusIndicatorSize = statusIconSize,
+                    channelDateFormatter = SceytChatUIKit.formatters.channelDateFormatter,
                     attachmentIconProvider = SceytChatUIKit.providers.channelListAttachmentIconProvider,
                 ).let { styleCustomizer.apply(context, it) }
             }

@@ -49,9 +49,9 @@ class SceytChatDemoApp : Application() {
 
         MessageItemStyle.styleCustomizer = StyleCustomizer { context, style ->
             style.copy(
-                outBubbleColor = context.getCompatColor(R.color.sceyt_color_bg_out_message),
-                outLinkPreviewBackgroundColor = context.getCompatColor(R.color.sceyt_color_bg_out_link_preview),
-                outReplyBackgroundColor = context.getCompatColor(R.color.sceyt_color_bg_out_link_preview),
+                outgoingBubbleColor = context.getCompatColor(R.color.sceyt_color_bg_out_message),
+                outgoingLinkPreviewBackgroundColor = context.getCompatColor(R.color.sceyt_color_bg_out_link_preview),
+                outgoingReplyBackgroundColor = context.getCompatColor(R.color.sceyt_color_bg_out_link_preview),
             )
         }
 

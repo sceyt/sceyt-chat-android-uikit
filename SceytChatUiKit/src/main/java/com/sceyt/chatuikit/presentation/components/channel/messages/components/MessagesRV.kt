@@ -173,7 +173,7 @@ class MessagesRV @JvmOverloads constructor(
 
     internal fun setStyle(style: MessagesListViewStyle) {
         this.style = style
-        addItemDecoration(ItemOffsetDecoration(style.messageItemStyle))
+        addItemDecoration(ItemOffsetDecoration(style))
         viewHolderFactory.setStyle(style)
     }
 

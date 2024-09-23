@@ -166,11 +166,11 @@ class MessagesListHeaderView @JvmOverloads constructor(
         root.setBackgroundColor(style.backgroundColor)
         toolbarMessageActions.popupTheme = style.menuStyle
         toolbarMessageActions.setTitleTextAppearance(context, style.menuTitleAppearance)
-        icBack.setImageDrawable(style.backIcon)
+        icBack.setImageDrawable(style.navigationIcon)
         title.setTextColor(style.titleColor)
         subTitle.setTextColor(style.subTitleColor)
         toolbarUnderline.background = ColorDrawable(style.underlineColor)
-        toolbarUnderline.isVisible = style.enableUnderline
+        toolbarUnderline.isVisible = style.showUnderline
         layoutSearch.setBackgroundTintColorRes(SceytChatUIKit.theme.surface1Color)
         inputSearch.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
         inputSearch.setHintColorRes(SceytChatUIKit.theme.textFootnoteColor)
