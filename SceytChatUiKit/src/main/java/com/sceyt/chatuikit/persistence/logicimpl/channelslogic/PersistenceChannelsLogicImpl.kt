@@ -446,7 +446,7 @@ internal class PersistenceChannelsLogicImpl(
             }
         }
 
-        list.map { channel ->
+        var updatedList = list.map { channel ->
             if (channel.isGroup) {
                 addEntitiesToLists(channel.id, channel.members, channel.lastMessage, channel.newReactions)
             } else {
@@ -470,7 +470,7 @@ internal class PersistenceChannelsLogicImpl(
             myId?.let { id -> channelDao.deleteChatLinksExceptUser(it, id) }
         }
 
-        val updatedList = initPendingLastMessageBeforeInsert(list)
+        updatedList = initPendingLastMessageBeforeInsert(updatedList)
         channelDao.insertChannelsAndLinks(updatedList.map { it.toChannelEntity() }, links)
         return updatedList
     }
