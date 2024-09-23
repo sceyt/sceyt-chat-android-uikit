@@ -13,8 +13,12 @@ import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attach
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.holders.AttachmentVideoViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.AttachmentClickListenersImpl
+import com.sceyt.chatuikit.styles.MessageInputStyle
 
-open class AttachmentsViewHolderFactory(context: Context) {
+open class AttachmentsViewHolderFactory(
+        context: Context,
+        private val inputStyle: MessageInputStyle
+) {
     private val layoutInflater = LayoutInflater.from(context)
     private val clickListeners = AttachmentClickListenersImpl()
 
@@ -39,7 +43,7 @@ open class AttachmentsViewHolderFactory(context: Context) {
 
     open fun createFileViewHolder(parent: ViewGroup): BaseViewHolder<AttachmentItem> {
         val binding = SceytItemInputFileAttachmentBinding.inflate(layoutInflater, parent, false)
-        return AttachmentFileViewHolder(binding, clickListeners)
+        return AttachmentFileViewHolder(binding, inputStyle, clickListeners)
     }
 
     open fun getItemViewType(item: AttachmentItem): Int {

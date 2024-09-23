@@ -54,6 +54,5 @@ sealed interface ChannelPopupClickListeners {
 
     /** Use this if you want to implement all callbacks */
     interface PopupClickListeners : Pin, UnPin, Mute, UnMute, LeaveChannel, DeleteChannel, ClearHistory,
-            BlockChannel, MarkAsRead, MarkAsUnRead, BlockUser, UnBlockUser {
-    }
+            BlockChannel, MarkAsRead, MarkAsUnRead, BlockUser, UnBlockUser
 }

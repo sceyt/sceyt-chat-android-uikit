@@ -34,7 +34,7 @@ class DecoratedTextView @JvmOverloads constructor(
     private lateinit var staticLayout: StaticLayout
     private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private var text = ""
+    private var text: CharSequence = ""
     private var textSize = 30
     private var leadingIconSize = 0
     private var trailingIconSize = 0
@@ -284,7 +284,7 @@ class DecoratedTextView @JvmOverloads constructor(
         }
     }
 
-    private fun initText(text: String): SpannableStringBuilder {
+    private fun initText(text: CharSequence): SpannableStringBuilder {
         return if (enableLeadingText) {
             val str = SpannableStringBuilder("$leadingText  $text")
             str.setSpan(StyleSpan(leadingTextStyle), 0, leadingText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -319,7 +319,7 @@ class DecoratedTextView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun setText(text: String, enableLeadingText: Boolean) {
+    fun setText(text: CharSequence, enableLeadingText: Boolean) {
         this.text = text
         this.enableLeadingText = enableLeadingText
         init()
@@ -327,9 +327,10 @@ class DecoratedTextView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun setIcons(leadingIcon: Drawable? = null,
-                 trailingIcon: Drawable? = null,
-                 ignoreHighlight: Boolean = false
+    fun setIcons(
+            leadingIcon: Drawable? = null,
+            trailingIcon: Drawable? = null,
+            ignoreHighlight: Boolean = false
     ) {
         var leading = leadingIcon
         var trailing = trailingIcon
@@ -344,14 +345,15 @@ class DecoratedTextView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun setTextAndIcons(text: String,
-                        leadingIcon: Drawable? = null,
-                        trailingIcon: Drawable? = null,
-                        enableLeadingText: Boolean = false,
-                        textColor: Int = this.textColor,
-                        leadingText: String = this.leadingText,
-                        leadingTextStyle: Int = this.leadingTextStyle,
-                        ignoreHighlight: Boolean = false
+    fun setTextAndIcons(
+            text: CharSequence,
+            leadingIcon: Drawable? = null,
+            trailingIcon: Drawable? = null,
+            enableLeadingText: Boolean = false,
+            textColor: Int = this.textColor,
+            leadingText: String = this.leadingText,
+            leadingTextStyle: Int = this.leadingTextStyle,
+            ignoreHighlight: Boolean = false
     ) {
         var leading = leadingIcon
         var trailing = trailingIcon

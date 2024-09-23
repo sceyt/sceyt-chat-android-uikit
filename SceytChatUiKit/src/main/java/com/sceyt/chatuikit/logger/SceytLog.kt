@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.logger
 
 
 object SceytLog {
-    private var logLevel = SceytLogLevel.All
+    private var logLevel = SceytLogLevel.Verbose
     private var logger: SceytLogger = SceytLoggerImpl()
 
     internal fun setLogger(logLevel: SceytLogLevel, logger: SceytLogger) {

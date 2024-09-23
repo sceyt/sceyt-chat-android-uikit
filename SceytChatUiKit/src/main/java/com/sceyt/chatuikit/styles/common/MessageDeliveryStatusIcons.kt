@@ -1,49 +1,74 @@
 package com.sceyt.chatuikit.styles.common
 
 import android.content.Context
+import android.content.res.TypedArray
 import android.graphics.drawable.Drawable
+import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.styles.StyleConstants
+import com.sceyt.chatuikit.persistence.lazyVar
 
+/**
+ * @property pendingIcon - Icon for pending status, default is [R.drawable.sceyt_ic_status_pending].
+ * @property sentIcon - Icon for sent status, default is [R.drawable.sceyt_ic_status_sent].
+ * @property receivedIcon - Icon for delivered status, default is [R.drawable.sceyt_ic_status_received].
+ * @property displayedIcon - Icon for read status, default is [R.drawable.sceyt_ic_status_displayed].
+ * */
 data class MessageDeliveryStatusIcons(
         val pendingIcon: Drawable?,
         val sentIcon: Drawable?,
-        val deliveredIcon: Drawable?,
-        val readIcon: Drawable?
+        val receivedIcon: Drawable?,
+        val displayedIcon: Drawable?
 ) {
+
     internal class Builder(
-            private val context: Context
+            private val context: Context,
+            private val typedArray: TypedArray?
     ) {
-        private var pendingIcon = context.getCompatDrawable(R.drawable.sceyt_ic_status_pending)
+        private var pendingIcon by lazyVar {
+            context.getCompatDrawable(R.drawable.sceyt_ic_status_pending)
+                ?.applyTint(context, SceytChatUIKit.theme.iconSecondaryColor)
+        }
         private var sentIcon = context.getCompatDrawable(R.drawable.sceyt_ic_status_sent)
-        private var deliveredIcon = context.getCompatDrawable(R.drawable.sceyt_ic_status_delivered)
-        private var readIcon = context.getCompatDrawable(R.drawable.sceyt_ic_status_read)
+            ?.applyTint(context, SceytChatUIKit.theme.iconSecondaryColor)
 
-        fun pendingIcon(icon: Drawable) = apply {
-            pendingIcon = icon
+        private var receivedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_status_received)
+            ?.applyTint(context, SceytChatUIKit.theme.iconSecondaryColor)
+
+        private var displayedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_status_displayed)
+            ?.applyTint(context, SceytChatUIKit.theme.accentColor)
+
+        fun setPendingIconFromStyle(@StyleableRes index: Int) = apply {
+            typedArray?.getDrawable(index)?.let {
+                pendingIcon = it
+            } ?: pendingIcon
         }
 
-        fun sentIcon(icon: Drawable) = apply {
-            sentIcon = icon
+        fun setSentIconFromStyle(@StyleableRes index: Int) = apply {
+            typedArray?.getDrawable(index)?.let {
+                sentIcon = it
+            } ?: sentIcon
         }
 
-        fun deliveredIcon(icon: Drawable) = apply { deliveredIcon = icon }
-        fun readIcon(icon: Drawable) = apply { readIcon = icon }
+        fun setReceivedIconIconFromStyle(@StyleableRes index: Int) = apply {
+            typedArray?.getDrawable(index)?.let {
+                receivedIcon = it
+            } ?: receivedIcon
+        }
 
+        fun setDisplayedIconFromStyle(@StyleableRes index: Int) = apply {
+            typedArray?.getDrawable(index)?.let {
+                displayedIcon = it
+            } ?: displayedIcon
+        }
 
         fun build() = MessageDeliveryStatusIcons(
             pendingIcon = pendingIcon,
             sentIcon = sentIcon,
-            deliveredIcon = deliveredIcon,
-            readIcon = readIcon
+            receivedIcon = receivedIcon,
+            displayedIcon = displayedIcon
         )
-
-
-        private fun Drawable?.applyTint(tintColor: Int): Drawable? {
-            return if (tintColor != StyleConstants.UNSET_COLOR)
-                this?.mutate()?.apply { setTint(tintColor) }
-            else this
-        }
     }
 }

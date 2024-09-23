@@ -134,16 +134,18 @@ open class MessageActionsFragment : Fragment() {
                     }
 
                     else -> {
-                        fileAttachment.setImageDrawable(style.fileAttachmentIcon)
+                        val icon = style.attachmentIconProvider.provide(attachment)
+                        fileAttachment.setImageDrawable(icon)
                         fileAttachment.isVisible = true
                         imageAttachment.isVisible = false
                     }
                 }
             } else {
                 val attachment = links[0]
+                val icon = style.attachmentIconProvider.provide(attachment)
                 attachment.linkPreviewDetails?.imageUrl?.let {
-                    loadImage(imageAttachment, attachment.metadata, it, style.linkAttachmentIcon)
-                } ?: imageAttachment.setImageDrawable(style.linkAttachmentIcon)
+                    loadImage(imageAttachment, attachment.metadata, it, icon)
+                } ?: imageAttachment.setImageDrawable(icon)
             }
         }
     }

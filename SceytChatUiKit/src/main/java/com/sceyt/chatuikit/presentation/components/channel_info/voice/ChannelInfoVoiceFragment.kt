@@ -32,7 +32,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.li
 import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.chatuikit.presentation.customviews.PageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.ConversationInfoMediaStyle
+import com.sceyt.chatuikit.styles.ChannelInfoMediaStyle
 import kotlinx.coroutines.launch
 
 open class ChannelInfoVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
@@ -42,12 +42,12 @@ open class ChannelInfoVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerA
     protected open var pageStateView: PageStateView? = null
     protected open val mediaType = listOf(AttachmentTypeEnum.Voice.value())
     private lateinit var viewModel: ChannelAttachmentsViewModel
-    protected lateinit var style: ConversationInfoMediaStyle
+    protected lateinit var style: ChannelInfoMediaStyle
         private set
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        style = ConversationInfoMediaStyle.Builder(context, null).build()
+        style = ChannelInfoMediaStyle.Builder(context, null).build()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

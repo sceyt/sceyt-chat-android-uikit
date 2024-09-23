@@ -5,7 +5,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem
 
-abstract class BaseMessageFileViewHolder<Item : com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem>(
+abstract class BaseMessageFileViewHolder<Item : AttachmentDataItem>(
         itemView: View,
         needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder<Item>(itemView, needMediaDataCallback) {

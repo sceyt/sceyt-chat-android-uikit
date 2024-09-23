@@ -12,11 +12,11 @@ import kotlin.time.Duration.Companion.hours
 class SceytChatUIKitConfig(
         appContext: Context
 ) {
-    var queryLimits: QueryLimits = QueryLimits()
-    var presenceConfig: PresenceConfig = PresenceConfig()
-    var channelURIConfig: ChannelURIConfig = ChannelURIConfig()
-    var channelTypesConfig: ChannelTypesConfig = ChannelTypesConfig()
-    var memberRolesConfig: MemberRolesConfig = MemberRolesConfig()
+    var queryLimits: QueryLimits by lazyVar { QueryLimits() }
+    var presenceConfig: PresenceConfig by lazyVar { PresenceConfig() }
+    var channelURIConfig: ChannelURIConfig by lazyVar { ChannelURIConfig() }
+    var channelTypesConfig: ChannelTypesConfig by lazyVar { ChannelTypesConfig() }
+    var memberRolesConfig: MemberRolesConfig by lazyVar { MemberRolesConfig() }
     var syncChannelsAfterConnect: Boolean = true
     var hardDeleteMessageForAll: Boolean = false
     var messageEditTimeout: Long = 2.hours.inWholeMilliseconds

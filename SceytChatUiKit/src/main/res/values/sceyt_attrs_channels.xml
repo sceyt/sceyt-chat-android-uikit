@@ -23,22 +23,14 @@
         <attr name="sceytUiStatusIndicatorSize" format="dimension" />
         <!-- Drawable of the message sent state indicator -->
         <attr name="sceytUiIndicatorSentIcon" format="reference" />
-        <!-- Drawable of the message read state indicator -->
-        <attr name="sceytUiIndicatorReadIcon" format="reference" />
-        <!-- Drawable of the file attachment icon -->
-        <attr name="sceytUiBodyFileAttachmentIcon" format="reference" />
-        <!-- Drawable of the image attachment icon -->
-        <attr name="sceytUiBodyImageAttachmentIcon" format="reference" />
-        <!-- Drawable of the video attachment icon -->
-        <attr name="sceytUiBodyVideoAttachmentIcon" format="reference" />
-        <!-- Drawable of the voice attachment icon -->
-        <attr name="sceytUiBodyVoiceAttachmentIcon" format="reference" />
-        <!-- Drawable of the auto delete channel icon -->
-        <attr name="sceytUiAutoDeletedChannelIcon" format="reference" />
-        <!-- Drawable of the message delivery indicator -->
-        <attr name="sceytUiIndicatorDeliveredIcon" format="reference" />
+        <!-- Drawable of the message displayed state indicator -->
+        <attr name="sceytUiIndicatorDisplayedIcon" format="reference" />
+        <!-- Drawable of the message received indicator -->
+        <attr name="sceytUiIndicatorReceivedIcon" format="reference" />
         <!-- Drawable of the message pending indicator -->
         <attr name="sceytUiIndicatorPendingIcon" format="reference" />
+        <!-- Drawable of the auto delete channel icon -->
+        <attr name="sceytUiAutoDeletedChannelIcon" format="reference" />
         <!-- A color of the unread message count text -->
         <attr name="sceytUiUnreadMessageCounterTextColor" format="reference|color" />
         <!-- Background color of the unread message counter -->

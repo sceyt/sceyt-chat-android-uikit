@@ -7,14 +7,16 @@ import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import androidx.annotation.FontRes
 import androidx.annotation.LayoutRes
+import androidx.core.content.res.use
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
-import com.sceyt.chatuikit.formatters.MessageDateSeparatorFormatter
+import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
+import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
+import java.util.Date
 
 /**
  * Style for [MessagesListView] component.
@@ -30,10 +32,10 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @param unreadMessagesSeparatorTextStyle Style for the unread messages separator text, default is [Typeface.NORMAL]
  * @param unreadMessagesTextColor Color for the unread messages separator text, default is [SceytChatUIKitTheme.textSecondaryColor]
  * @param unreadMessagesBackendColor Background color for the unread messages separator, default is [SceytChatUIKitTheme.surface1Color]
- * @param messageItemStyle Style for the message item view
  * @param enableScrollDownButton Enable scroll down button, default is true
  * @param enableDateSeparator Enable date separator, default is true
  * @param dateSeparatorDateFormat Date format for the date separator item, default is [SceytChatUIKitFormatters.messageDateSeparatorFormatter]
+ * @param messageItemStyle Style for the message item view
  **/
 data class MessagesListViewStyle(
         @ColorInt val backgroundColor: Int,
@@ -49,10 +51,10 @@ data class MessagesListViewStyle(
         val unreadMessagesSeparatorTextStyle: Int = Typeface.NORMAL,
         @ColorInt val unreadMessagesTextColor: Int,
         @ColorInt val unreadMessagesBackendColor: Int,
-        val messageItemStyle: MessageItemStyle,
         val enableScrollDownButton: Boolean,
         val enableDateSeparator: Boolean,
-        val dateSeparatorDateFormat: MessageDateSeparatorFormatter,
+        val dateSeparatorDateFormat: Formatter<Date>,
+        val messageItemStyle: MessageItemStyle
 ) {
     companion object {
         @JvmField
@@ -66,73 +68,70 @@ data class MessagesListViewStyle(
             private val attrs: AttributeSet?
     ) {
         fun build(): MessagesListViewStyle {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.MessagesListView)
+            context.obtainStyledAttributes(attrs, R.styleable.MessagesListView).use { array ->
+                val messageItemStyle = MessageItemStyle.Builder(context, attrs).build()
 
-            val messageItemStyle = MessageItemStyle.Builder(context, attrs).build()
+                val backgroundColor = array.getColor(R.styleable.MessagesListView_sceytUiMessageListBackgroundColor,
+                    context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
 
-            val backgroundColor = typedArray.getColor(R.styleable.MessagesListView_sceytUiMessageListBackgroundColor,
-                context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
+                val emptyState = array.getResourceId(R.styleable.MessagesListView_sceytUiEmptyStateLayout,
+                    R.layout.sceyt_messages_empty_state)
 
-            val emptyState = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiEmptyStateLayout,
-                R.layout.sceyt_messages_empty_state)
+                val emptyStateSelfChannel = array.getResourceId(R.styleable.MessagesListView_sceytUiEmptyStateSelfChannelLayout,
+                    R.layout.sceyt_messages_empty_state_self_channel)
 
-            val emptyStateSelfChannel = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiEmptyStateSelfChannelLayout,
-                R.layout.sceyt_messages_empty_state_self_channel)
+                val loadingState = array.getResourceId(R.styleable.MessagesListView_sceytUiLoadingStateLayout,
+                    R.layout.sceyt_loading_state)
 
-            val loadingState = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiLoadingStateLayout,
-                R.layout.sceyt_loading_state)
+                val downScrollerUnreadCountColor = array.getColor(R.styleable.MessagesListView_sceytUiDownScrollerUnreadCountColor,
+                    context.getCompatColor(SceytChatUIKit.theme.accentColor))
 
-            val downScrollerUnreadCountColor = typedArray.getColor(R.styleable.MessagesListView_sceytUiDownScrollerUnreadCountColor,
-                context.getCompatColor(SceytChatUIKit.theme.accentColor))
+                val downScrollerIcon = array.getDrawable(R.styleable.MessagesListView_sceytUiDownScrollerIcon)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_scroll_down_button)
 
-            val downScrollerIcon = typedArray.getDrawable(R.styleable.MessagesListView_sceytUiDownScrollerIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_scroll_down_button)
+                val dateSeparatorTextFont = array.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextFont, -1)
 
-            val dateSeparatorTextFont: Int = typedArray.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextFont, -1)
+                val dateSeparatorTextStyle = array.getInt(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextStyle, Typeface.NORMAL)
 
-            val dateSeparatorTextStyle: Int = typedArray.getInt(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextStyle, Typeface.NORMAL)
+                val dateSeparatorItemBackgroundColor = array.getColor(R.styleable.MessagesListView_sceytUiDateSeparatorItemBackgroundColor,
+                    context.getCompatColor(SceytChatUIKit.theme.overlayBackgroundColor))
 
-            val dateSeparatorItemBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiDateSeparatorItemBackgroundColor,
-                context.getCompatColor(SceytChatUIKit.theme.overlayBackgroundColor))
+                val dateSeparatorItemTextColor = array.getColor(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextColor,
+                    context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor))
 
-            val dateSeparatorItemTextColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextColor,
-                context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor))
+                val unreadMessagesSeparatorTextStyle = array.getInt(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorTextStyle, Typeface.NORMAL)
 
-            val unreadMessagesSeparatorTextStyle: Int = typedArray.getInt(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorTextStyle, Typeface.NORMAL)
+                val unreadMessagesBackgroundColor = array.getColor(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorBackgroundColor,
+                    context.getCompatColor(SceytChatUIKit.theme.surface1Color))
 
-            val unreadMessagesBackgroundColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorBackgroundColor,
-                context.getCompatColor(SceytChatUIKit.theme.surface1Color))
+                val unreadMessagesTextColor = array.getColor(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorTextColor,
+                    context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
 
-            val unreadMessagesTextColor: Int = typedArray.getColor(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorTextColor,
-                context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+                val enableScrollDownButton = array.getBoolean(R.styleable.MessagesListView_sceytUiEnableScrollDownButton, true)
+                val enableDateSeparator = array.getBoolean(R.styleable.MessagesListView_sceytUiEnableDateSeparator, true)
 
-            val enableScrollDownButton = typedArray.getBoolean(R.styleable.MessagesListView_sceytUiEnableScrollDownButton, true)
-            val enableDateSeparator = typedArray.getBoolean(R.styleable.MessagesListView_sceytUiEnableDateSeparator, true)
-
-            val dateSeparatorDateFormat = SceytChatUIKit.formatters.messageDateSeparatorFormatter
-            typedArray.recycle()
-
-            return MessagesListViewStyle(
-                backgroundColor = backgroundColor,
-                emptyState = emptyState,
-                emptyStateSelfChannel = emptyStateSelfChannel,
-                loadingState = loadingState,
-                downScrollerUnreadCountColor = downScrollerUnreadCountColor,
-                downScrollerIcon = downScrollerIcon,
-                dateSeparatorTextFont = dateSeparatorTextFont,
-                dateSeparatorTextStyle = dateSeparatorTextStyle,
-                dateSeparatorItemBackgroundColor = dateSeparatorItemBackgroundColor,
-                dateSeparatorItemTextColor = dateSeparatorItemTextColor,
-                unreadMessagesSeparatorTextStyle = unreadMessagesSeparatorTextStyle,
-                unreadMessagesTextColor = unreadMessagesTextColor,
-                unreadMessagesBackendColor = unreadMessagesBackgroundColor,
-                messageItemStyle = messageItemStyle,
-                enableScrollDownButton = enableScrollDownButton,
-                enableDateSeparator = enableDateSeparator,
-                dateSeparatorDateFormat = dateSeparatorDateFormat
-            ).let { style ->
-                styleCustomizer.apply(context, style).also {
-                    currentStyle = it
+                return MessagesListViewStyle(
+                    backgroundColor = backgroundColor,
+                    emptyState = emptyState,
+                    emptyStateSelfChannel = emptyStateSelfChannel,
+                    loadingState = loadingState,
+                    downScrollerUnreadCountColor = downScrollerUnreadCountColor,
+                    downScrollerIcon = downScrollerIcon,
+                    dateSeparatorTextFont = dateSeparatorTextFont,
+                    dateSeparatorTextStyle = dateSeparatorTextStyle,
+                    dateSeparatorItemBackgroundColor = dateSeparatorItemBackgroundColor,
+                    dateSeparatorItemTextColor = dateSeparatorItemTextColor,
+                    unreadMessagesSeparatorTextStyle = unreadMessagesSeparatorTextStyle,
+                    unreadMessagesTextColor = unreadMessagesTextColor,
+                    unreadMessagesBackendColor = unreadMessagesBackgroundColor,
+                    enableScrollDownButton = enableScrollDownButton,
+                    enableDateSeparator = enableDateSeparator,
+                    dateSeparatorDateFormat = SceytChatUIKit.formatters.messageDateSeparatorFormatter,
+                    messageItemStyle = messageItemStyle
+                ).let { style ->
+                    styleCustomizer.apply(context, style).also {
+                        currentStyle = it
+                    }
                 }
             }
         }

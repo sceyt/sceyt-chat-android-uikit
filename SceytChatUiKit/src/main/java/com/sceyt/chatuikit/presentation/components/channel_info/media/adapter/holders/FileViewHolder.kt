@@ -1,24 +1,24 @@
 package com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.holders
 
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelFileBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
-import com.sceyt.chatuikit.presentation.customviews.CircularProgressView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
-import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListenersImpl
-import com.sceyt.chatuikit.styles.MessagesListViewStyle
+import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
+import com.sceyt.chatuikit.presentation.customviews.CircularProgressView
+import com.sceyt.chatuikit.styles.ChannelInfoMediaStyle
 
-class FileViewHolder(private val binding: SceytItemChannelFileBinding,
-                     private val clickListeners: AttachmentClickListenersImpl,
-                     private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+class FileViewHolder(
+        private val binding: SceytItemChannelFileBinding,
+        private val style: ChannelInfoMediaStyle,
+        private val clickListeners: AttachmentClickListeners.ClickListeners,
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     init {
@@ -49,10 +49,12 @@ class FileViewHolder(private val binding: SceytItemChannelFileBinding,
             TransferState.PendingDownload -> {
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
+
             TransferState.Downloaded -> {
-                binding.icFile.setImageDrawable(MessagesListViewStyle.currentStyle?.messageItemStyle?.fileAttachmentIcon
-                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_file_filled))
+                val icon = style.attachmentIconProvider.provide(fileItem.file)
+                binding.icFile.setImageDrawable(icon)
             }
+
             else -> return
         }
     }

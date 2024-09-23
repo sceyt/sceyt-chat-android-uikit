@@ -28,7 +28,7 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Group
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
-import com.sceyt.chatuikit.databinding.SceytActivityConversationInfoBinding
+import com.sceyt.chatuikit.databinding.SceytActivityChannelInfoBinding
 import com.sceyt.chatuikit.extensions.TAG_NAME
 import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -84,7 +84,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         private set
     protected val viewModel: ChannelInfoViewModel by viewModels()
     protected lateinit var style: ChannelInfoStyle
-    protected var binding: SceytActivityConversationInfoBinding? = null
+    protected var binding: SceytActivityChannelInfoBinding? = null
         private set
     lateinit var channel: SceytChannel
         private set
@@ -326,7 +326,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     protected open fun setActivityContentView() {
-        setContentView(SceytActivityConversationInfoBinding.inflate(layoutInflater)
+        setContentView(SceytActivityChannelInfoBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
     }

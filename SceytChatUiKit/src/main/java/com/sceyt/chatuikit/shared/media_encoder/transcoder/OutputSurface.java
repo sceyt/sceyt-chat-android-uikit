@@ -57,7 +57,7 @@ class OutputSurface implements SurfaceTexture.OnFrameAvailableListener {
     private SurfaceTexture mSurfaceTexture;
     private Surface mSurface;
 
-    private Object mFrameSyncObject = new Object();     // guards mFrameAvailable
+    private final Object mFrameSyncObject = new Object();     // guards mFrameAvailable
     private boolean mFrameAvailable;
 
     private TextureRender mTextureRender;

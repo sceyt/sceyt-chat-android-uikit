@@ -13,14 +13,14 @@
         <attr name="sceytUiMessageIncLinkPreviewBackgroundColor" format="reference|color" />
         <attr name="sceytUiMessageOutLinkPreviewBackgroundColor" format="reference|color" />
 
-        <!-- Drawable of the message sent state indicator -->
-        <attr name="sceytUiMessageSentIcon" format="reference" />
-        <!-- Drawable of the message read state indicator -->
-        <attr name="sceytUiMessageReadIcon" format="reference" />
-        <!-- Drawable of the message delivery indicator -->
-        <attr name="sceytUiMessageDeliveredIcon" format="reference" />
         <!-- Drawable of the message pending indicator -->
         <attr name="sceytUiMessagePendingIcon" format="reference" />
+        <!-- Drawable of the message sent state indicator -->
+        <attr name="sceytUiMessageSentIcon" format="reference" />
+        <!-- Drawable of the message received indicator -->
+        <attr name="sceytUiMessageReceivedIcon" format="reference" />
+        <!-- Drawable of the message displayed state indicator -->
+        <attr name="sceytUiMessageDisplayedIcon" format="reference" />
 
         <attr name="sceytUiMessageBodyTextColor" format="reference|color" />
         <attr name="sceytUiMessageDateTextColor" format="reference|color" />
@@ -79,9 +79,6 @@
 
         <attr name="sceytUiMediaLoaderColor" format="reference|color" />
         <attr name="sceytUiVideoDurationIcon" format="reference" />
-        <attr name="sceytUiVoiceAttachmentIcon" format="reference" />
-        <attr name="sceytUiFileAttachmentIcon" format="reference" />
-        <attr name="sceytUiLinkAttachmentIcon" format="reference" />
 
         <attr name="sceytUiSwipeReplyIcon" format="reference" />
 

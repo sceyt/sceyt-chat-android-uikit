@@ -24,13 +24,14 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUplo
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListenersImpl
-import com.sceyt.chatuikit.styles.ConversationInfoMediaStyle
+import com.sceyt.chatuikit.styles.ChannelInfoMediaStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
-class VideoViewHolder(private val binding: SceytItemChannelVideoBinding,
-                      private val style: ConversationInfoMediaStyle,
-                      private val clickListeners: AttachmentClickListenersImpl,
-                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+class VideoViewHolder(
+        private val binding: SceytItemChannelVideoBinding,
+        private val style: ChannelInfoMediaStyle,
+        private val clickListeners: AttachmentClickListenersImpl,
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     init {

@@ -5,7 +5,7 @@ import android.text.format.DateFormat
 import com.sceyt.chatuikit.R
 import java.util.Calendar
 
-open class BaseDateFormatter {
+open class SceytDateFormatter {
     open fun today(context: Context) = DateFormatData(beginTittle = context.getString(R.string.sceyt_today))
     open fun thisYear(context: Context) = DateFormatData(format = "MMMM dd")
     open fun olderThisYear(context: Context) = DateFormatData(format = "MMMM dd, yyyy")

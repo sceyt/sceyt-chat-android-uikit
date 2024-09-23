@@ -4,15 +4,18 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
+import androidx.core.content.res.use
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
-import com.sceyt.chatuikit.presentation.extensions.isTextMessage
+import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultReplyMessageBodyFormatter
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
-import com.sceyt.chatuikit.formatters.MessageBodyFormatter
+import com.sceyt.chatuikit.providers.Provider
+import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
@@ -30,7 +33,8 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @param inputHintTextColor Color for the input hint text, default is [SceytChatUIKitTheme.textFootnoteColor]
  * @param inputBackgroundColor Background color for the input view, default is [SceytChatUIKitTheme.surface1Color]
  * @param inputHintText Hint text for the input, default is [R.string.sceyt_write_a_message]
- * @param replyMessageBodyFormatter Formatter for the reply message body, default is [MessageBodyFormatter] that returns the formatted body of the message
+ * @param replyMessageBodyFormatter Formatter for the reply message body, default is [DefaultReplyMessageBodyFormatter] that returns the formatted body of the message
+ * @param selectedAttachmentIconProvider Provider for the selected attachment icon, default is [SceytChatUIKitProviders.attachmentIconProvider]
  * */
 data class MessageInputStyle(
         var attachmentIcon: Drawable?,
@@ -46,7 +50,8 @@ data class MessageInputStyle(
         @ColorInt var inputHintTextColor: Int,
         @ColorInt var inputBackgroundColor: Int,
         var inputHintText: String,
-        val replyMessageBodyFormatter: MessageBodyFormatter
+        val replyMessageBodyFormatter: Formatter<SceytMessage>,
+        val selectedAttachmentIconProvider: Provider<SceytAttachment, Drawable?>
 ) {
 
     companion object {
@@ -59,77 +64,70 @@ data class MessageInputStyle(
             private val attrs: AttributeSet?
     ) {
         fun build(): MessageInputStyle {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.MessageInputView)
-            val attachmentIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputAttachmentIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_upload_file)?.apply {
-                        mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
-                    }
+            context.obtainStyledAttributes(attrs, R.styleable.MessageInputView).use { array ->
+                val attachmentIcon = array.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputAttachmentIcon)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_upload_file)?.apply {
+                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+                        }
 
-            val sendMessageIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputSendIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_send_message)
+                val sendMessageIcon = array.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputSendIcon)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_send_message)
 
-            val voiceRecordIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_voice_white)
+                val voiceRecordIcon = array.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordIcon)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_voice_white)
 
-            val sendVoiceMessageIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputSendVoiceRecordIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_up)?.apply {
-                        mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor))
-                    }
+                val sendVoiceMessageIcon = array.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputSendVoiceRecordIcon)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_up)?.apply {
+                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor))
+                        }
 
+                val linkIcon = array.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputLinkIcon)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_link)?.apply {
+                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+                        }
 
-            val linkIcon = typedArray.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputLinkIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_link)?.apply {
-                        mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-                    }
+                val inputTextColor = array.getColor(R.styleable.MessageInputView_sceytUiMessageInputTextColor,
+                    context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
 
-            val inputTextColor = typedArray.getColor(R.styleable.MessageInputView_sceytUiMessageInputTextColor,
-                context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+                val inputHintTextColor = array.getColor(R.styleable.MessageInputView_sceytUiMessageInputHintTextColor,
+                    context.getCompatColor(SceytChatUIKit.theme.textFootnoteColor))
 
-            val inputHintTextColor = typedArray.getColor(R.styleable.MessageInputView_sceytUiMessageInputHintTextColor,
-                context.getCompatColor(SceytChatUIKit.theme.textFootnoteColor))
+                val inputHintText = array.getString(R.styleable.MessageInputView_sceytUiMessageInputHintText)
+                        ?: context.getString(R.string.sceyt_write_a_message)
 
-            val inputHintText = typedArray.getString(R.styleable.MessageInputView_sceytUiMessageInputHintText)
-                    ?: context.getString(R.string.sceyt_write_a_message)
+                val inputBackgroundColor = array.getColor(R.styleable.MessageInputView_sceytUiMessageInputBackgroundColor,
+                    context.getCompatColor(SceytChatUIKit.theme.surface1Color))
 
-            val inputBackgroundColor = typedArray.getColor(R.styleable.MessageInputView_sceytUiMessageInputBackgroundColor,
-                context.getCompatColor(SceytChatUIKit.theme.surface1Color))
+                val sendIconBackgroundColor = array.getColor(R.styleable.MessageInputView_sceytUiMessageInputSendIconBackgroundColor,
+                    context.getCompatColor(SceytChatUIKit.theme.accentColor))
 
-            val sendIconBackgroundColor = typedArray.getColor(R.styleable.MessageInputView_sceytUiMessageInputSendIconBackgroundColor,
-                context.getCompatColor(SceytChatUIKit.theme.accentColor))
+                val enableVoiceRecord = array.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableVoiceRecord,
+                    true)
 
-            val enableVoiceRecord = typedArray.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableVoiceRecord,
-                true)
+                val enableSendAttachment = array.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableSendAttachment,
+                    true)
 
-            val enableSendAttachment = typedArray.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableSendAttachment,
-                true)
+                val enableMention = array.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableMention,
+                    true)
 
-            val enableMention = typedArray.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableMention,
-                true)
-
-            val replyMessageBodyFormatter = MessageBodyFormatter { context, message ->
-                if (message.isTextMessage())
-                    MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message)
-                else message.getFormattedBody(context)
+                return MessageInputStyle(
+                    attachmentIcon = attachmentIcon,
+                    sendMessageIcon = sendMessageIcon,
+                    voiceRecordIcon = voiceRecordIcon,
+                    sendVoiceMessageIcon = sendVoiceMessageIcon,
+                    linkIcon = linkIcon,
+                    inputTextColor = inputTextColor,
+                    inputHintTextColor = inputHintTextColor,
+                    inputHintText = inputHintText,
+                    inputBackgroundColor = inputBackgroundColor,
+                    sendIconBackgroundColor = sendIconBackgroundColor,
+                    enableVoiceRecord = enableVoiceRecord,
+                    enableSendAttachment = enableSendAttachment,
+                    enableMention = enableMention,
+                    replyMessageBodyFormatter = DefaultReplyMessageBodyFormatter(),
+                    selectedAttachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider
+                ).let { styleCustomizer.apply(context, it) }
             }
-
-            typedArray.recycle()
-
-            return MessageInputStyle(
-                attachmentIcon = attachmentIcon,
-                sendMessageIcon = sendMessageIcon,
-                voiceRecordIcon = voiceRecordIcon,
-                sendVoiceMessageIcon = sendVoiceMessageIcon,
-                linkIcon = linkIcon,
-                inputTextColor = inputTextColor,
-                inputHintTextColor = inputHintTextColor,
-                inputHintText = inputHintText,
-                inputBackgroundColor = inputBackgroundColor,
-                sendIconBackgroundColor = sendIconBackgroundColor,
-                enableVoiceRecord = enableVoiceRecord,
-                enableSendAttachment = enableSendAttachment,
-                enableMention = enableMention,
-                replyMessageBodyFormatter = replyMessageBodyFormatter
-            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }
