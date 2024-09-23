@@ -18,8 +18,8 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property titleColor color of the title, default is [SceytChatUIKitTheme.textPrimaryColor]
  * @property subTitleColor color of the subtitle, default is [SceytChatUIKitTheme.textSecondaryColor]
  * @property underlineColor color of the underline, default is [SceytChatUIKitTheme.borderColor]
- * @property backIcon icon for back button, default is [R.drawable.sceyt_ic_arrow_back]
- * @property enableUnderline enable underline, default is true
+ * @property navigationIcon icon for back button, default is [R.drawable.sceyt_ic_arrow_back]
+ * @property showUnderline enable underline, default is true
  * @property menuStyle style for the toolbar menu, default is [R.style.SceytPopupMenuStyle]
  * @property menuTitleAppearance title appearance for the toolbar menu, default is [R.style.SceytMenuTitleAppearance]
  * */
@@ -28,8 +28,8 @@ data class MessagesListHeaderStyle(
         @ColorInt var titleColor: Int,
         @ColorInt var subTitleColor: Int,
         @ColorInt var underlineColor: Int,
-        var backIcon: Drawable?,
-        var enableUnderline: Boolean,
+        var navigationIcon: Drawable?,
+        var showUnderline: Boolean,
         val menuStyle: Int,
         val menuTitleAppearance: Int,
 ) {
@@ -77,8 +77,8 @@ data class MessagesListHeaderStyle(
                 titleColor = titleColor,
                 subTitleColor = subTitleColor,
                 underlineColor = underlineColor,
-                backIcon = backIcon,
-                enableUnderline = enableUnderline,
+                navigationIcon = backIcon,
+                showUnderline = enableUnderline,
                 menuStyle = menuStyle,
                 menuTitleAppearance = menuTitleAppearance
             ).let { styleCustomizer.apply(context, it) }

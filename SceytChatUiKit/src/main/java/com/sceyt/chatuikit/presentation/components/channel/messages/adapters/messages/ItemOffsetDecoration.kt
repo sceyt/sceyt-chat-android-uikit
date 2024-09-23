@@ -4,8 +4,9 @@ import android.graphics.Rect
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.styles.MessagesListViewStyle
 
-class ItemOffsetDecoration(private val style: MessageItemStyle) : RecyclerView.ItemDecoration() {
+class ItemOffsetDecoration(private val style: MessagesListViewStyle) : RecyclerView.ItemDecoration() {
 
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
         super.getItemOffsets(outRect, view, parent, state)

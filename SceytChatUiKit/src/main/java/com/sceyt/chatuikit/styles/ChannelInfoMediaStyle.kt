@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.date.ConversationMediaDateFormatter
-import com.sceyt.chatuikit.providers.Provider
+import com.sceyt.chatuikit.providers.VisualProvider
 
 /**
  * Style for conversation info media
@@ -19,7 +19,7 @@ data class ChannelInfoMediaStyle(
         var videoDurationIcon: Drawable?,
         var mediaDateSeparatorFormat: ConversationMediaDateFormatter,
     //TODO
-        var attachmentIconProvider: Provider<SceytAttachment, Drawable?>
+        var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
 
     companion object {

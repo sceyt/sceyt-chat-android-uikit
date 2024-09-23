@@ -2,11 +2,11 @@ package com.sceyt.chatuikit.providers.defaults
 
 import android.content.Context
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.providers.Provider
+import com.sceyt.chatuikit.providers.VisualProvider
 
 class DefaultChannelURIValidationMessageProvider(
         private val context: Context
-) : Provider<URIValidationType, String> {
+) : VisualProvider<URIValidationType, String> {
     override fun provide(from: URIValidationType): String {
         return when (from) {
             URIValidationType.FreeToUse -> context.getString(R.string.sceyt_valid_url_title)

@@ -222,7 +222,7 @@ class IncVideoMsgViewHolder(
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
     private fun SceytItemIncVideoMessageBinding.setMessageItemStyle() {
-        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incBubbleColor)
+        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incomingBubbleColor)
         tvUserName.setTextColor(style.senderNameTextColor)
         tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
         tvDuration.setDrawableStart(style.videoDurationIcon)

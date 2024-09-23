@@ -360,7 +360,7 @@ open class ChannelViewHolder(
             else -> channel.createdAt
         }
 
-        val date = itemStyle.channelDateFormat.format(context, Date(lastMsgCreatedAt))
+        val date = itemStyle.channelDateFormatter.format(context, Date(lastMsgCreatedAt))
         return date to shouldShowStatus
     }
 
@@ -369,16 +369,16 @@ open class ChannelViewHolder(
         lastMessage.setTextColor(itemStyle.lastMessageTextColor)
         unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(itemStyle.unreadCountColor)
         icMention.backgroundTintList = ColorStateList.valueOf(itemStyle.unreadCountColor)
-        onlineStatus.setIndicatorColor(itemStyle.onlineStatusColor)
+        onlineStatus.setIndicatorColor(itemStyle.onlineStateColor)
         viewPinned.setBackgroundColor(itemStyle.pinnedChannelBackgroundColor)
         ivAutoDeleted.setImageDrawable(itemStyle.autoDeletedChannelIcon)
         dateStatus.styleBuilder()
-            .setLeadingIconSize(itemStyle.statusIconSize)
+            .setLeadingIconSize(itemStyle.deliveryStatusIndicatorSize)
             .setTextColor(itemStyle.dateTextColor)
             .setLeadingText(context.getString(R.string.sceyt_edited))
             .build()
 
-        divider.isVisible = if (itemStyle.enableDivider) {
+        divider.isVisible = if (itemStyle.showDivider) {
             divider.setBackgroundColor(itemStyle.dividerColor)
             true
         } else false

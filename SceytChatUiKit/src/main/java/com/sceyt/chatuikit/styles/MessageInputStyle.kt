@@ -14,7 +14,7 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultReplyMessageBodyFormatter
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
-import com.sceyt.chatuikit.providers.Provider
+import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
@@ -51,7 +51,7 @@ data class MessageInputStyle(
         @ColorInt var inputBackgroundColor: Int,
         var inputHintText: String,
         val replyMessageBodyFormatter: Formatter<SceytMessage>,
-        val selectedAttachmentIconProvider: Provider<SceytAttachment, Drawable?>
+        val selectedAttachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
 
     companion object {

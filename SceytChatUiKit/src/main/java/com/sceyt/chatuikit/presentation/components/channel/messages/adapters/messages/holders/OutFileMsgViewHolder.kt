@@ -171,7 +171,7 @@ class OutFileMsgViewHolder(
 
     private fun SceytItemOutFileMessageBinding.setMessageItemStyle() {
         val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
-        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outBubbleColor)
+        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outgoingBubbleColor)
         tvForwarded.setTextAndDrawableByColor(accentColor)
         icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
         loadProgress.setBackgroundColor(accentColor)

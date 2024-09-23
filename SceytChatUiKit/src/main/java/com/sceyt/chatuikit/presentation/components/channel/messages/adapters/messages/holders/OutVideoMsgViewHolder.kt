@@ -212,7 +212,7 @@ class OutVideoMsgViewHolder(
     override val selectMessageView get() = binding.selectView
 
     private fun SceytItemOutVideoMessageBinding.setMessageItemStyle() {
-        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outBubbleColor)
+        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outgoingBubbleColor)
         tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
         tvDuration.setDrawableStart(style.videoDurationIcon)
         messageBody.applyStyle(style)
