@@ -114,7 +114,7 @@ public class CallbackBasedTranscoder {
     private String mOutputFile;
 
     private File mInputFile;
-    private Context mContext;
+    private final Context mContext;
 
     private int mVideoRotation;
 
@@ -1051,7 +1051,7 @@ public class CallbackBasedTranscoder {
 
     private void muxVideo(int index, MediaCodec.BufferInfo info) throws Exception {
         if (!mMuxing) {
-            mPendingVideoEncoderOutputBufferIndices.add(new Integer(index));
+            mPendingVideoEncoderOutputBufferIndices.add(Integer.valueOf(index));
             mPendingVideoEncoderOutputBufferInfos.add(info);
             return;
         }
@@ -1084,7 +1084,7 @@ public class CallbackBasedTranscoder {
 
     private void muxAudio(int index, MediaCodec.BufferInfo info) throws Exception {
         if (!mMuxing) {
-            mPendingAudioEncoderOutputBufferIndices.add(new Integer(index));
+            mPendingAudioEncoderOutputBufferIndices.add(Integer.valueOf(index));
             mPendingAudioEncoderOutputBufferInfos.add(info);
             return;
         }

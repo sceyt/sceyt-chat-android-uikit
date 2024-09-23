@@ -1,9 +1,11 @@
 package com.sceyt.chatuikit.logger
 
 enum class SceytLogLevel {
-    All,
-    Debug,
-    Warning,
+    None,
     Error,
-    None
+    Fatal,
+    Warning,
+    Info,
+    Debug,
+    Verbose,
 }

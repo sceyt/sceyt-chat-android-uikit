@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 
 class AttachmentViewHolderHelper(itemView: View) {
     private var context: Context = itemView.context
-    private lateinit var fileItem: com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem
+    private lateinit var fileItem: AttachmentDataItem
     val isFileItemInitialized get() = this::fileItem.isInitialized
     var blurredThumb: Drawable? = null
         private set
@@ -28,7 +28,7 @@ class AttachmentViewHolderHelper(itemView: View) {
         private set
 
 
-    fun bind(item: com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem, resizedImageSize: Size? = null) {
+    fun bind(item: AttachmentDataItem, resizedImageSize: Size? = null) {
         if (isFileItemInitialized && item.thumbPath == null && !fileItem.thumbPath.isNullOrBlank()
                 && fileItem.file.messageTid == item.file.messageTid)
             item.thumbPath = fileItem.thumbPath
@@ -73,7 +73,7 @@ class AttachmentViewHolderHelper(itemView: View) {
             loadBlurThumb(blurredThumb, imageView)
     }
 
-    fun updateTransferData(data: TransferData, item: com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem, isValidThumb: (thumbData: ThumbData?) -> Boolean): Boolean {
+    fun updateTransferData(data: TransferData, item: AttachmentDataItem, isValidThumb: (thumbData: ThumbData?) -> Boolean): Boolean {
         if (isFileItemInitialized.not() || (data.messageTid != item.file.messageTid)) return false
         if (data.state == TransferState.ThumbLoaded) {
             if (isValidThumb(data.thumbData))

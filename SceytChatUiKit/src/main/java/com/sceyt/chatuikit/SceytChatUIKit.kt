@@ -49,31 +49,32 @@ object SceytChatUIKit : SceytKoinComponent {
     @JvmField
     var messageTransformer: MessageTransformer? = null
 
+    val chatClient: ChatClient
+        get() = ChatClient.getClient()
+
     fun initialize(
             appContext: Context,
             apiUrl: String,
             appId: String,
             clientId: String,
-            enableDatabase: Boolean = true): ChatClient {
-
-        val chatClient = ChatClient.initialize(appContext, apiUrl, appId, clientId)
+            enableDatabase: Boolean = true
+    ) {
+        ChatClient.initialize(appContext, apiUrl, appId, clientId)
         this.appContext = appContext
         initKoin(enableDatabase)
         initEmojiSupport()
-
-        return chatClient
     }
 
     fun connect(token: String) {
-        ChatClient.getClient().connect(token)
+        chatClient.connect(token)
     }
 
     fun reconnect() {
-        ChatClient.getClient().reconnect()
+        chatClient.reconnect()
     }
 
     fun disconnect() {
-        ChatClient.getClient().disconnect()
+        chatClient.disconnect()
     }
 
     fun setLogger(logLevel: SceytLogLevel, logger: SceytLogger) {

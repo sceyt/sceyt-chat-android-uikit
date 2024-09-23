@@ -1,11 +1,7 @@
 package com.sceyt.chatuikit.presentation.extensions
 
 import android.content.Context
-import android.graphics.drawable.Drawable
-import android.text.Spannable
 import android.text.SpannableString
-import android.text.SpannableStringBuilder
-import android.text.style.ImageSpan
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
@@ -17,16 +13,17 @@ import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.presentation.customviews.DecoratedTextView
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
-import com.sceyt.chatuikit.styles.ChannelListViewStyle
+import com.sceyt.chatuikit.presentation.customviews.DecoratedTextView
+import com.sceyt.chatuikit.styles.ChannelItemStyle
 import com.sceyt.chatuikit.styles.MessageItemStyle
 import java.io.File
 
 fun SceytMessage?.setChannelMessageDateAndStatusIcon(
         decoratedTextView: DecoratedTextView,
-        channelStyle: ChannelListViewStyle,
-        dateText: String, edited: Boolean,
+        itemStyle: ChannelItemStyle,
+        dateText: CharSequence,
+        edited: Boolean,
         shouldShowStatus: Boolean
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || !shouldShowStatus) {
@@ -37,17 +34,18 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
             enableLeadingText = edited, ignoreHighlight = false)
         return
     }
+    val icons = itemStyle.messageDeliveryStatusIcons
     val icon = when (deliveryStatus) {
-        DeliveryStatus.Pending -> channelStyle.statusIndicatorPendingIcon
-        DeliveryStatus.Sent -> channelStyle.statusIndicatorSentIcon
-        DeliveryStatus.Received -> channelStyle.statusIndicatorDeliveredIcon
-        DeliveryStatus.Displayed -> channelStyle.statusIndicatorReadIcon
+        DeliveryStatus.Pending -> icons.pendingIcon
+        DeliveryStatus.Sent -> icons.sentIcon
+        DeliveryStatus.Received -> icons.receivedIcon
+        DeliveryStatus.Displayed -> icons.displayedIcon
         else -> null
     }
     icon?.let {
         decoratedTextView.setTextAndIcons(
             text = dateText,
-            textColor = channelStyle.dateTextColor,
+            textColor = itemStyle.dateTextColor,
             leadingIcon = it,
             enableLeadingText = edited,
             ignoreHighlight = checkIgnoreHighlight(deliveryStatus))
@@ -55,10 +53,9 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
     }
 }
 
-
 fun SceytMessage?.setConversationMessageDateAndStatusIcon(
         decoratedTextView: DecoratedTextView,
-        style: MessageItemStyle,
+        itemStyle: MessageItemStyle,
         dateText: String,
         edited: Boolean
 ) {
@@ -67,15 +64,16 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(
             leadingIcon = null,
             trailingIcon = null,
             enableLeadingText = edited,
-            leadingText = style.editedMessageStateText,
+            leadingText = itemStyle.editedMessageStateText,
             ignoreHighlight = false)
         return
     }
+    val icons = itemStyle.messageDeliveryStatusIcons
     val icon = when (deliveryStatus) {
-        DeliveryStatus.Pending -> style.messageStatusPendingIcon
-        DeliveryStatus.Sent -> style.messageStatusSentIcon
-        DeliveryStatus.Received -> style.messageStatusDeliveredIcon
-        DeliveryStatus.Displayed -> style.messageStatusReadIcon
+        DeliveryStatus.Pending -> icons.pendingIcon
+        DeliveryStatus.Sent -> icons.sentIcon
+        DeliveryStatus.Received -> icons.receivedIcon
+        DeliveryStatus.Displayed -> icons.displayedIcon
         else -> {
             SceytLog.e(TAG, "Unknown delivery status: $deliveryStatus for message: $id, tid: $tid, body: $body")
             null
@@ -83,11 +81,11 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(
     }
     icon?.let {
         decoratedTextView.setTextAndIcons(text = dateText,
-            textColor = style.messageDateTextColor,
+            textColor = itemStyle.messageDateTextColor,
             trailingIcon = it,
             enableLeadingText = edited,
-            leadingText = style.editedMessageStateText,
-            leadingTextStyle = style.messageEditedTextStyle,
+            leadingText = itemStyle.editedMessageStateText,
+            leadingTextStyle = itemStyle.messageEditedTextStyle,
             ignoreHighlight = checkIgnoreHighlight(deliveryStatus))
         decoratedTextView.isVisible = true
     }
@@ -138,26 +136,6 @@ fun SceytAttachment?.getShowName(context: Context, body: String): String {
         AttachmentTypeEnum.Voice.value() -> context.getString(R.string.sceyt_voice)
         AttachmentTypeEnum.File.value() -> context.getString(R.string.sceyt_file)
         else -> name
-    }
-}
-
-fun SceytMessage.getAttachmentIconAsString(channelStyle: ChannelListViewStyle): SpannableStringBuilder {
-    val icRes = getAttachmentIconId(channelStyle) ?: return SpannableStringBuilder()
-    val builder = SpannableStringBuilder(". ")
-    icRes.setBounds(0, 0, icRes.intrinsicWidth, icRes.intrinsicHeight)
-    builder.setSpan(ImageSpan(icRes), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-    return builder
-}
-
-fun SceytMessage.getAttachmentIconId(channelStyle: ChannelListViewStyle): Drawable? {
-    return attachments?.getOrNull(0)?.let {
-        when (it.type) {
-            AttachmentTypeEnum.Video.value() -> channelStyle.bodyVideoAttachmentIcon
-            AttachmentTypeEnum.Image.value() -> channelStyle.bodyImageAttachmentIcon
-            AttachmentTypeEnum.Voice.value() -> channelStyle.bodyVoiceAttachmentIcon
-            AttachmentTypeEnum.File.value() -> channelStyle.bodyFileAttachmentIcon
-            else -> null
-        }
     }
 }
 

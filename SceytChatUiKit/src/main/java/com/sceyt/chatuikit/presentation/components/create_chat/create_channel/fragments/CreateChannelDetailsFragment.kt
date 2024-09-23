@@ -33,7 +33,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.EditAvat
 import com.sceyt.chatuikit.presentation.components.create_chat.create_channel.CreateChannelActivity
 import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.CreateChatViewModel
 import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.URIValidation
-import com.sceyt.chatuikit.providers.URIValidationType
+import com.sceyt.chatuikit.providers.defaults.URIValidationType
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.yalantis.ucrop.UCrop
 import java.io.File

@@ -5,7 +5,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import kotlinx.parcelize.Parcelize
 
 
-sealed class FileListItem : com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem, Parcelable {
+sealed class FileListItem : AttachmentDataItem, Parcelable {
 
     private constructor() : super()
 

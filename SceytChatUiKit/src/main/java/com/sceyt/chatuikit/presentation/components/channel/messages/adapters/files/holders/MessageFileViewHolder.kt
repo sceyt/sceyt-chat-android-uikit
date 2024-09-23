@@ -89,7 +89,8 @@ class MessageFileViewHolder(
             }
 
             Uploaded, Downloaded -> {
-                binding.icFile.setImageDrawable(style.fileAttachmentIcon)
+                val icon = style.attachmentIconProvider.provide(fileItem.file)
+                binding.icFile.setImageDrawable(icon)
             }
 
             ErrorUpload, ErrorDownload, PauseDownload, PauseUpload -> {
@@ -106,7 +107,6 @@ class MessageFileViewHolder(
 
     private fun SceytMessageFileItemBinding.applyStyle() {
         loadProgress.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-        icFile.setImageDrawable(style.fileAttachmentIcon)
         icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
     }
 }

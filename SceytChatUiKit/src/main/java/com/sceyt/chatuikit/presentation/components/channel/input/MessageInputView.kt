@@ -114,7 +114,7 @@ class MessageInputView @JvmOverloads constructor(
         InputActionsListener.InputActionListeners {
 
     private lateinit var attachmentsAdapter: AttachmentsAdapter
-    private var attachmentsViewHolderFactory by lazyVar { AttachmentsViewHolderFactory(context) }
+    private var attachmentsViewHolderFactory by lazyVar { AttachmentsViewHolderFactory(context, style) }
     private var allAttachments = mutableListOf<Attachment>()
     private val binding: SceytMessageInputViewBinding
     private var style: MessageInputStyle

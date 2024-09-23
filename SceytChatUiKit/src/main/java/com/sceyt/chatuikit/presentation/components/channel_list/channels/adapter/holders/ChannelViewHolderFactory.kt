@@ -34,7 +34,8 @@ open class ChannelViewHolderFactory(context: Context) {
 
     open fun createChannelViewHolder(parent: ViewGroup): BaseChannelViewHolder {
         val binding = SceytItemChannelBinding.inflate(layoutInflater, parent, false)
-        return ChannelViewHolder(binding, channelStyle, channelClickListenersImpl, attachDetachListener, userNameFormatter)
+        return ChannelViewHolder(binding, channelStyle.itemStyle,
+            channelClickListenersImpl, attachDetachListener, userNameFormatter)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelViewHolder {

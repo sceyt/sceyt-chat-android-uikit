@@ -26,13 +26,13 @@ class StickyDateHeaderView @JvmOverloads constructor(
     private var hideAnimation: ValueAnimator? = null
     private val lifecycleScope by lazy { getLifecycleScope() }
     private var autoHideJob: Job? = null
-    private var currentDay: String = ""
+    private var currentDay: CharSequence = ""
 
     init {
         binding = SceytItemMessageDateSeparatorBinding.inflate(LayoutInflater.from(context), this, true)
     }
 
-    fun setDate(date: String) {
+    fun setDate(date: CharSequence) {
         if (currentDay == date)
             return
 

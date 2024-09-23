@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.text.format.DateFormat
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.formatters.date.BaseDateFormatter
+import com.sceyt.chatuikit.formatters.date.SceytDateFormatter
 import com.sceyt.chatuikit.formatters.date.DateFormatData
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -152,7 +152,7 @@ object DateTimeUtil {
             )
     }
 
-    fun getDateTimeStringWithDateFormatter(context: Context, time: Long?, dateFormatter: BaseDateFormatter): String {
+    fun getDateTimeStringWithDateFormatter(context: Context, time: Long?, dateFormatter: SceytDateFormatter): String {
         if (time == null) return ""
         val now = Calendar.getInstance()
         val cal = Calendar.getInstance()

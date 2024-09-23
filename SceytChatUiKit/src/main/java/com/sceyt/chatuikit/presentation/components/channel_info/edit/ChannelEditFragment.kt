@@ -35,7 +35,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.edit.viewmodel.E
 import com.sceyt.chatuikit.presentation.components.channel_info.members.ChannelMembersFragment
 import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.URIValidation
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.providers.URIValidationType
+import com.sceyt.chatuikit.providers.defaults.URIValidationType
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.sceyt.chatuikit.styles.ChannelInfoStyle
 import kotlinx.coroutines.delay

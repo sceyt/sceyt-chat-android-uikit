@@ -141,7 +141,8 @@ class IncFileMsgViewHolder(
         super.updateState(data, isOnBind)
         when (data.state) {
             Uploaded, Downloaded -> {
-                binding.icFile.setImageDrawable(style.fileAttachmentIcon)
+                val icon = style.attachmentIconProvider.provide(fileItem.file)
+                binding.icFile.setImageDrawable(icon)
                 binding.tvFileSize.text = data.fileTotalSize
                         ?: fileItem.file.fileSize.toPrettySize()
             }
@@ -180,7 +181,6 @@ class IncFileMsgViewHolder(
         tvUserName.setTextColor(style.senderNameTextColor)
         tvForwarded.setTextAndDrawableByColor(accentColor)
         loadProgress.setBackgroundColor(accentColor)
-        icFile.setImageDrawable(style.fileAttachmentIcon)
         icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
         messageBody.applyStyle(style)
         tvFileSize.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))

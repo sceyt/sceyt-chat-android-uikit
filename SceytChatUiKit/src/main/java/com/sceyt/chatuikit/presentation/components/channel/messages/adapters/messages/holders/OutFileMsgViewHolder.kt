@@ -133,7 +133,8 @@ class OutFileMsgViewHolder(
         super.updateState(data, isOnBind)
         when (data.state) {
             Uploaded, Downloaded -> {
-                binding.icFile.setImageDrawable(style.fileAttachmentIcon)
+                val icon = style.attachmentIconProvider.provide(fileItem.file)
+                binding.icFile.setImageDrawable(icon)
                 binding.tvFileSize.text = data.fileTotalSize
                         ?: fileItem.file.fileSize.toPrettySize()
             }
@@ -172,7 +173,6 @@ class OutFileMsgViewHolder(
         val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outBubbleColor)
         tvForwarded.setTextAndDrawableByColor(accentColor)
-        icFile.setImageDrawable(style.fileAttachmentIcon)
         icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
         loadProgress.setBackgroundColor(accentColor)
         messageBody.applyStyle(style)

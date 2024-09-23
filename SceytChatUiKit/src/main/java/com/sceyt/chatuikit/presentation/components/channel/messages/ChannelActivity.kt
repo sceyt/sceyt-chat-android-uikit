@@ -12,24 +12,24 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.databinding.SceytActivityConversationBinding
+import com.sceyt.chatuikit.databinding.SceytActivityChannelBinding
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.HeaderClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModelFactory
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings.bind
-import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
-import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.HeaderClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity.Companion.ACTION_SEARCH_MESSAGES
 import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoFragment
 
 open class ChannelActivity : AppCompatActivity() {
-    private lateinit var binding: SceytActivityConversationBinding
+    private lateinit var binding: SceytActivityChannelBinding
     private val viewModel: MessageListViewModel by viewModels { factory }
     private lateinit var channel: SceytChannel
     private var replyMessage: SceytMessage? = null
@@ -37,7 +37,7 @@ open class ChannelActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(SceytActivityConversationBinding.inflate(layoutInflater)
+        setContentView(SceytActivityChannelBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 

@@ -23,11 +23,11 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ho
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.holders.VideoViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.holders.VoiceViewHolder
 import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.styles.ConversationInfoMediaStyle
+import com.sceyt.chatuikit.styles.ChannelInfoMediaStyle
 
 open class ChannelAttachmentViewHolderFactory(
         context: Context,
-        protected val style: ConversationInfoMediaStyle
+        protected val style: ChannelInfoMediaStyle
 ) {
     protected val layoutInflater = LayoutInflater.from(context)
     protected var clickListeners = AttachmentClickListenersImpl()
@@ -63,8 +63,8 @@ open class ChannelAttachmentViewHolderFactory(
 
     open fun createFileViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         return FileViewHolder(
-            SceytItemChannelFileBinding.inflate(layoutInflater, parent, false), clickListeners,
-            needMediaDataCallback = needMediaDataCallback)
+            SceytItemChannelFileBinding.inflate(layoutInflater, parent, false), style,
+            clickListeners, needMediaDataCallback = needMediaDataCallback)
     }
 
     open fun createVoiceViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {

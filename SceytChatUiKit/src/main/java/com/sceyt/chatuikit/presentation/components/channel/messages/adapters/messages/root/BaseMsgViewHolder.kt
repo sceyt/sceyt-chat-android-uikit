@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.text.util.Linkify
 import android.view.View
 import android.view.ViewGroup
@@ -54,7 +55,6 @@ import com.sceyt.chatuikit.extensions.screenPortraitWidthPx
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setTextColorRes
-import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
@@ -229,7 +229,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                 icFile.isVisible = false
             } else {
                 val attachment = parent.attachments.getOrNull(0)
-                icMsgBodyStartIcon.isVisible = attachment?.type == AttachmentTypeEnum.Voice.value()
+                val icon = attachment?.let { style.replyMessageAttachmentIconProvider.provide(it) }
                 when {
                     attachment?.type.isEqualsVideoOrImage() -> {
                         loadReplyMessageImageOrObserveToDownload(attachment, imageAttachment)
@@ -237,19 +237,8 @@ abstract class BaseMsgViewHolder(private val view: View,
                         icFile.isVisible = false
                     }
 
-                    attachment?.type == AttachmentTypeEnum.Voice.value() -> {
-                        with(icMsgBodyStartIcon) {
-                            setImageDrawable(style.voiceAttachmentIcon)
-                            val tint = if (message.incoming)
-                                SceytChatUIKit.theme.iconSecondaryColor else SceytChatUIKit.theme.accentColor
-                            setTintColorRes(tint)
-                        }
-                        imageAttachment.isVisible = false
-                        icFile.isVisible = false
-                    }
-
                     attachment?.type == AttachmentTypeEnum.Link.value() -> {
-                        loadLinkImage(attachment, imageAttachment)
+                        loadLinkImage(attachment, imageAttachment, icon)
                         imageAttachment.isVisible = true
                         icFile.isVisible = false
                     }
@@ -257,7 +246,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                     else -> {
                         imageAttachment.isVisible = false
                         icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
-                        icFile.setImageDrawable(style.fileAttachmentIcon)
+                        icFile.setImageDrawable(icon)
                         icFile.isVisible = true
                     }
                 }
@@ -302,7 +291,10 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
-    protected open fun loadReplyMessageImageOrObserveToDownload(attachment: SceytAttachment?, imageAttachment: ImageView) {
+    protected open fun loadReplyMessageImageOrObserveToDownload(
+            attachment: SceytAttachment?,
+            imageAttachment: ImageView
+    ) {
         attachment ?: return
         val path = attachment.filePath
         val placeHolder = getThumbFromMetadata(attachment.metadata)?.toDrawable(context.resources)?.mutate()
@@ -321,17 +313,21 @@ abstract class BaseMsgViewHolder(private val view: View,
         } else loadImage(path)
     }
 
-    protected open fun loadLinkImage(attachment: SceytAttachment?, imageAttachment: ImageView) {
+    protected open fun loadLinkImage(
+            attachment: SceytAttachment?,
+            imageAttachment: ImageView,
+            icon: Drawable?
+    ) {
         attachment ?: return
         val url = attachment.linkPreviewDetails?.imageUrl
         if (!url.isNullOrBlank()) {
             Glide.with(itemView.context)
                 .load(url)
-                .placeholder(style.linkAttachmentIcon)
-                .error(style.linkAttachmentIcon)
+                .placeholder(icon)
+                .error(icon)
                 .override(imageAttachment.width, imageAttachment.height)
                 .into(imageAttachment)
-        } else imageAttachment.setImageDrawable(style.linkAttachmentIcon)
+        } else imageAttachment.setImageDrawable(icon)
     }
 
     protected open fun setMessageUserAvatarAndName(avatarView: AvatarView, tvName: TextView, message: SceytMessage) {

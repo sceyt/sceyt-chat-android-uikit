@@ -90,7 +90,10 @@ fun AttachmentDb.toAttachmentPayLoad(messageStatus: MessageEntity): AttachmentPa
     }
 }
 
-fun AttachmentPayLoadEntity.toTransferData(state: TransferState, progress: Float = 0f): TransferData {
+fun AttachmentPayLoadEntity.toTransferData(
+        state: TransferState,
+        progress: Float = 0f
+): TransferData {
     return TransferData(
         messageTid = messageTid,
         state = state,
@@ -110,8 +113,10 @@ fun SceytAttachment.toTransferData(): TransferData? {
     ).withPrettySizes(fileSize)
 }
 
-fun SceytAttachment.toTransferData(transferState: TransferState,
-                                   progress: Float = progressPercent ?: 0f): TransferData {
+fun SceytAttachment.toTransferData(
+        transferState: TransferState,
+        progress: Float = progressPercent ?: 0f
+): TransferData {
     return TransferData(
         messageTid = messageTid,
         progressPercent = progress,
@@ -121,8 +126,12 @@ fun SceytAttachment.toTransferData(transferState: TransferState,
     )
 }
 
-fun Attachment.toSceytAttachment(messageTid: Long, transferState: TransferState,
-                                 progress: Float = 0f, linkPreviewDetails: LinkPreviewDetails? = null) = SceytAttachment(
+fun Attachment.toSceytAttachment(
+        messageTid: Long,
+        transferState: TransferState,
+        progress: Float = 0f,
+        linkPreviewDetails: LinkPreviewDetails? = null
+) = SceytAttachment(
     id = id,
     messageTid = messageTid,
     messageId = messageId,
@@ -160,17 +169,18 @@ fun FileChecksumEntity.toFileChecksumData() = FileChecksumData(
     checksum, resizedFilePath, url, metadata, fileSize
 )
 
-fun SceytAttachment.getInfoFromMetadata(): com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataFromJson {
+fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
     var size: Size? = null
     var duration: Long? = null
     var blurredThumbBitmap: Bitmap? = null
     var audioMetadata: AudioMetadata? = null
 
     try {
-        val jsonObject = JSONObject(metadata ?: return com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataFromJson())
+        val jsonObject = JSONObject(metadata
+                ?: return AttachmentDataFromJson())
         when (type) {
             AttachmentTypeEnum.File.value() -> {
-                return com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataFromJson()
+                return AttachmentDataFromJson()
             }
 
             AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value(), AttachmentTypeEnum.Link.value() -> {
@@ -191,7 +201,7 @@ fun SceytAttachment.getInfoFromMetadata(): com.sceyt.chatuikit.presentation.comp
     } catch (_: Exception) {
     }
 
-    return com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataFromJson(size, duration, blurredThumbBitmap, audioMetadata)
+    return AttachmentDataFromJson(size, duration, blurredThumbBitmap, audioMetadata)
 }
 
 fun getThumbFromMetadata(metadata: String?): Bitmap? {
