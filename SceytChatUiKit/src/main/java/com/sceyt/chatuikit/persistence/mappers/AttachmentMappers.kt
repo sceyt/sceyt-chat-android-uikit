@@ -21,7 +21,7 @@ import com.sceyt.chatuikit.persistence.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData.Companion.withPrettySizes
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
-import com.sceyt.chatuikit.presentation.customviews.voice_recorder.AudioMetadata
+import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadata
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataFromJson
 import com.sceyt.chatuikit.shared.utils.BitmapUtil
 import com.sceyt.chatuikit.shared.utils.ThumbHash

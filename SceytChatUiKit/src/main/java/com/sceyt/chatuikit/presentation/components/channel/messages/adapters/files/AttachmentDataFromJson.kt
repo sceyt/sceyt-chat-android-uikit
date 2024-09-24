@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fi
 
 import android.graphics.Bitmap
 import android.util.Size
-import com.sceyt.chatuikit.presentation.customviews.voice_recorder.AudioMetadata
+import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadata
 
 data class AttachmentDataFromJson(
         var size: Size? = null,

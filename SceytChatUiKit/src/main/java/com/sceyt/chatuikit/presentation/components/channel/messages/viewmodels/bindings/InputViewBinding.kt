@@ -222,7 +222,7 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
                 ChannelTypeEnum.Group -> R.string.sceyt_clear_private_chat_history_desc
                 ChannelTypeEnum.Public -> R.string.sceyt_clear_public_chat_history_desc
             }
-            SceytDialog.showSceytDialog(messageInputView.context, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear, positiveCb = {
+            SceytDialog.showDialog(messageInputView.context, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear, positiveCb = {
                 clearHistory(channel.isPublic())
                 messageActionBridge.cancelMultiSelectMode()
                 selectedMessagesMap.clear()

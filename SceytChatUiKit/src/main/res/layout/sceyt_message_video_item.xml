@@ -67,7 +67,7 @@
         tools:text="0:11"
         tools:visibility="visible" />
 
-    <com.sceyt.chatuikit.presentation.customviews.CircularProgressView
+    <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
         android:id="@+id/loadProgress"
         android:layout_width="@dimen/messageProgressSize"
         android:layout_height="@dimen/messageProgressSize"

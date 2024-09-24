@@ -77,31 +77,31 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle
     companion object {
         private var lastDialog: SceytDialog? = null
 
-        fun showSceytDialog(context: Context, title: String, description: String,
+        fun showDialog(context: Context, title: String, description: String,
                             positiveBtnTitle: String,
                             negativeBtnTitle: String = context.getString(R.string.sceyt_cancel),
                             replaceLastDialog: Boolean = true,
                             negativeCb: (() -> Unit)? = null,
                             positiveCb: (() -> Unit)? = null): SceytDialog {
-            return showDialog(context, title, description, positiveBtnTitle, negativeBtnTitle,
+            return showDialogImpl(context, title, description, positiveBtnTitle, negativeBtnTitle,
                 replaceLastDialog, negativeCb, positiveCb)
         }
 
-        fun showSceytDialog(context: Context,
-                            @StringRes titleId: Int = R.string.sceyt_empty_string,
-                            @StringRes descId: Int = R.string.sceyt_empty_string,
-                            @StringRes positiveBtnTitleId: Int,
-                            @StringRes negativeBtnTitleId: Int = R.string.sceyt_cancel,
-                            replaceLastDialog: Boolean = true,
-                            negativeCb: (() -> Unit)? = null,
-                            positiveCb: (() -> Unit)? = null
+        fun showDialog(context: Context,
+                       @StringRes titleId: Int = R.string.sceyt_empty_string,
+                       @StringRes descId: Int = R.string.sceyt_empty_string,
+                       @StringRes positiveBtnTitleId: Int,
+                       @StringRes negativeBtnTitleId: Int = R.string.sceyt_cancel,
+                       replaceLastDialog: Boolean = true,
+                       negativeCb: (() -> Unit)? = null,
+                       positiveCb: (() -> Unit)? = null
         ): SceytDialog {
-            return showDialog(context, context.getString(titleId), context.getString(descId),
+            return showDialogImpl(context, context.getString(titleId), context.getString(descId),
                 context.getString(positiveBtnTitleId), context.getString(negativeBtnTitleId),
                 replaceLastDialog, negativeCb, positiveCb)
         }
 
-        private fun showDialog(
+        private fun showDialogImpl(
                 context: Context, title: String, description: String,
                 positiveBtnTitle: String,
                 negativeBtnTitle: String,

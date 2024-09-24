@@ -46,7 +46,7 @@ import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
-import com.sceyt.chatuikit.presentation.common.SceytDialog.Companion.showSceytDialog
+import com.sceyt.chatuikit.presentation.common.SceytDialog.Companion.showDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.description.ChannelInfoDescriptionFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.details.ChannelInfoDetailsFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectChatActionsDialog
@@ -395,7 +395,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     protected open fun onBlockUnBlockUserClick(channel: SceytChannel, block: Boolean) {
         val peer = channel.getPeer() ?: return
         if (block) {
-            showSceytDialog(this, R.string.sceyt_block_user_title,
+            showDialog(this, R.string.sceyt_block_user_title,
                 R.string.sceyt_block_user_desc, R.string.sceyt_block, positiveCb = {
                     blockUser(peer.id)
                 })

@@ -33,7 +33,7 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.listene
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelPopupClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelPopupClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.popups.ChannelActionsPopup
-import com.sceyt.chatuikit.presentation.customviews.PageStateView
+import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.ChannelListViewStyle
 

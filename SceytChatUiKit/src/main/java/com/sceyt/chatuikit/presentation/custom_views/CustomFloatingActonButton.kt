@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.customviews
+package com.sceyt.chatuikit.presentation.custom_views
 
 import android.content.Context
 import android.util.AttributeSet

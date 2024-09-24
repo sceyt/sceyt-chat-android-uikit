@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.customviews
+package com.sceyt.chatuikit.presentation.custom_views
 
 import android.animation.ValueAnimator
 import android.content.Context

@@ -6,7 +6,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.persistence.lazyVar
-import com.sceyt.chatuikit.presentation.customviews.AvatarView
+import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.providers.defaults.DefaultAttachmentIconProvider
 import com.sceyt.chatuikit.providers.defaults.DefaultChannelDefaultAvatarProvider
 import com.sceyt.chatuikit.providers.defaults.DefaultChannelListAttachmentIconProvider

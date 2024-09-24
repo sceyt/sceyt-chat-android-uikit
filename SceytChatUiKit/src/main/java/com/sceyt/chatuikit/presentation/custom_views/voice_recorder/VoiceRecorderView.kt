@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.customviews.voice_recorder
+package com.sceyt.chatuikit.presentation.custom_views.voice_recorder
 
 import android.Manifest
 import android.animation.ArgbEvaluator
@@ -466,7 +466,7 @@ class VoiceRecorderView @JvmOverloads constructor(
     }
 
     private fun showPermissionSettingsDialog() {
-        SceytDialog.showSceytDialog(context,
+        SceytDialog.showDialog(context,
             titleId = R.string.sceyt_voice_permission_disabled_title,
             descId = R.string.sceyt_voice_permission_disabled_desc,
             positiveBtnTitleId = R.string.sceyt_settings,

@@ -15,7 +15,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.sceyt.chatuikit.presentation.customviews.CircularProgressView
+    <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
         android:id="@+id/progress"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

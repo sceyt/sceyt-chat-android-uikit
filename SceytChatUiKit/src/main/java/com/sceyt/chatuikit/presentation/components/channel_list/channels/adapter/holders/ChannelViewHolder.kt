@@ -36,10 +36,10 @@ import com.sceyt.chatuikit.presentation.components.channel.input.mention.Message
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
-import com.sceyt.chatuikit.presentation.customviews.AvatarView
-import com.sceyt.chatuikit.presentation.customviews.ColorSpannableTextView
-import com.sceyt.chatuikit.presentation.customviews.DecoratedTextView
-import com.sceyt.chatuikit.presentation.customviews.PresenceStateIndicatorView
+import com.sceyt.chatuikit.presentation.custom_views.AvatarView
+import com.sceyt.chatuikit.presentation.custom_views.ColorSpannableTextView
+import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
+import com.sceyt.chatuikit.presentation.custom_views.PresenceStateIndicatorView
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.presentation.extensions.getFormattedLastMessageBody
 import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar

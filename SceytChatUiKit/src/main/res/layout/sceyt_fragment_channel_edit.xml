@@ -7,7 +7,7 @@
     android:background="@color/sceyt_color_background"
     tools:context=".presentation.components.channel_info.edit.ChannelEditFragment">
 
-    <com.sceyt.chatuikit.presentation.customviews.CustomToolbar
+    <com.sceyt.chatuikit.presentation.custom_views.CustomToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
@@ -29,7 +29,7 @@
             android:paddingHorizontal="16dp"
             app:layout_constraintTop_toTopOf="parent">
 
-            <com.sceyt.chatuikit.presentation.customviews.AvatarView
+            <com.sceyt.chatuikit.presentation.custom_views.AvatarView
                 android:id="@+id/avatar"
                 android:layout_width="@dimen/_62sdp"
                 android:layout_height="@dimen/_62sdp"
@@ -144,7 +144,7 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <com.sceyt.chatuikit.presentation.customviews.CustomFloatingActonButton
+    <com.sceyt.chatuikit.presentation.custom_views.CustomFloatingActonButton
         android:id="@+id/icSave"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

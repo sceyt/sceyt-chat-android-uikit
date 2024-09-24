@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.customviews
+package com.sceyt.chatuikit.presentation.custom_views
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -28,7 +28,7 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getFirstCharIsEmoji
 import com.sceyt.chatuikit.extensions.processEmojiCompat
 import com.sceyt.chatuikit.extensions.roundUp
-import com.sceyt.chatuikit.presentation.customviews.AvatarView.DefaultAvatar
+import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
 import kotlin.math.abs
 
 class AvatarView @JvmOverloads constructor(

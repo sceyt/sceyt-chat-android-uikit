@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
-import com.sceyt.chatuikit.presentation.customviews.VideoControllerView
+import com.sceyt.chatuikit.presentation.custom_views.VideoControllerView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseMessageFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.FilesViewHolderFactory
 import com.sceyt.chatuikit.shared.utils.MyDiffUtil

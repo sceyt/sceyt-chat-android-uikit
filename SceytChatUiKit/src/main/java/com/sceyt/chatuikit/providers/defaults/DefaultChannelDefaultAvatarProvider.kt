@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.extensions.processEmojiCompat
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
-import com.sceyt.chatuikit.presentation.customviews.AvatarView
+import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.providers.VisualProvider
 
 open class DefaultChannelDefaultAvatarProvider : VisualProvider<SceytChannel, AvatarView.DefaultAvatar> {
