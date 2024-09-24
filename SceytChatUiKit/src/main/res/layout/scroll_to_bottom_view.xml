@@ -36,7 +36,7 @@
         android:layout_gravity="center"
         android:layout_marginStart="25dp"
         android:layout_marginTop="-7dp"
-        android:background="@drawable/sceyt_bg_circle"
+        android:background="@drawable/sceyt_bg_corners_30"
         android:elevation="2dp"
         android:includeFontPadding="false"
         android:maxLength="3"
