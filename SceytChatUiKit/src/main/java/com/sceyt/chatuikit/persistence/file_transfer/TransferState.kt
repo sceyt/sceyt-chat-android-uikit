@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
-import com.sceyt.chatuikit.presentation.customviews.CircularProgressView
+import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 
 enum class TransferState {
     PendingUpload,

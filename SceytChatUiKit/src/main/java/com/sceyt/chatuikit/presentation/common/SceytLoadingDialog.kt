@@ -7,15 +7,15 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.databinding.SceytProgressDialogBinding
+import com.sceyt.chatuikit.databinding.SceytDialogLoadingBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 
-class SceytProgressDialogLoading(context: Context) : Dialog(context) {
-    private lateinit var binding: SceytProgressDialogBinding
+class SceytLoadingDialog(context: Context) : Dialog(context) {
+    private lateinit var binding: SceytDialogLoadingBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = SceytProgressDialogBinding.inflate(LayoutInflater.from(context))
+        binding = SceytDialogLoadingBinding.inflate(LayoutInflater.from(context))
         window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         setContentView(binding.root)
         setCancelable(false)

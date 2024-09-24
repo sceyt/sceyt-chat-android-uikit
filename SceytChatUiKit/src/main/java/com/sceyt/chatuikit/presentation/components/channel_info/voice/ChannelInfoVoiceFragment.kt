@@ -30,7 +30,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.Ch
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.MediaStickHeaderItemDecoration
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.ChannelAttachmentsViewModel
-import com.sceyt.chatuikit.presentation.customviews.PageStateView
+import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.ChannelInfoMediaStyle
 import kotlinx.coroutines.launch

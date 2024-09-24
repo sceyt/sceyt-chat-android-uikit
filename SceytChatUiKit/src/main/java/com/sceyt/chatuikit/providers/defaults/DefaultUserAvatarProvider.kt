@@ -3,8 +3,8 @@ package com.sceyt.chatuikit.providers.defaults
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.presentation.customviews.AvatarView
-import com.sceyt.chatuikit.presentation.customviews.toDefaultAvatar
+import com.sceyt.chatuikit.presentation.custom_views.AvatarView
+import com.sceyt.chatuikit.presentation.custom_views.toDefaultAvatar
 import com.sceyt.chatuikit.providers.VisualProvider
 
 open class DefaultUserAvatarProvider : VisualProvider<User, AvatarView.DefaultAvatar> {

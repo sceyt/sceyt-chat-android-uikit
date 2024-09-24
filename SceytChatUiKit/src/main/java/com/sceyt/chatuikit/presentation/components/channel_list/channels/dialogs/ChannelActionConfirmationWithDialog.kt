@@ -28,7 +28,7 @@ object ChannelActionConfirmationWithDialog {
 
             else -> return
         }
-        SceytDialog.showSceytDialog(context, titleId, descId, R.string.sceyt_leave, positiveCb = {
+        SceytDialog.showDialog(context, titleId, descId, R.string.sceyt_leave, positiveCb = {
             action()
         })
     }
@@ -52,7 +52,7 @@ object ChannelActionConfirmationWithDialog {
                 descId = R.string.sceyt_delete_p2p_desc
             }
         }
-        SceytDialog.showSceytDialog(context, titleId, descId, R.string.sceyt_delete, positiveCb = {
+        SceytDialog.showDialog(context, titleId, descId, R.string.sceyt_delete, positiveCb = {
             action()
         })
     }
@@ -63,7 +63,7 @@ object ChannelActionConfirmationWithDialog {
             ChannelTypeEnum.Group -> R.string.sceyt_clear_private_chat_history_desc
             ChannelTypeEnum.Public -> R.string.sceyt_clear_public_chat_history_desc
         }
-        SceytDialog.showSceytDialog(context, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear, positiveCb = {
+        SceytDialog.showDialog(context, R.string.sceyt_clear_history_title, descId, R.string.sceyt_clear, positiveCb = {
             action()
         })
     }

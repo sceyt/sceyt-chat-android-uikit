@@ -67,9 +67,9 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.rea
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionsAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.holders.ReactionViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.presentation.customviews.AvatarView
-import com.sceyt.chatuikit.presentation.customviews.DecoratedTextView
-import com.sceyt.chatuikit.presentation.customviews.ToReplyLineView
+import com.sceyt.chatuikit.presentation.custom_views.AvatarView
+import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
+import com.sceyt.chatuikit.presentation.custom_views.ToReplyLineView
 import com.sceyt.chatuikit.presentation.extensions.setConversationMessageDateAndStatusIcon
 import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration

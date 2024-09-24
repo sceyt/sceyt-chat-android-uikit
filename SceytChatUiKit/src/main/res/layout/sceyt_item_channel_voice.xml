@@ -19,7 +19,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:srcCompat="@drawable/sceyt_ic_play" />
 
-    <com.sceyt.chatuikit.presentation.customviews.CircularProgressView
+    <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
         android:id="@+id/loadProgress"
         android:layout_width="38dp"
         android:layout_height="38dp"

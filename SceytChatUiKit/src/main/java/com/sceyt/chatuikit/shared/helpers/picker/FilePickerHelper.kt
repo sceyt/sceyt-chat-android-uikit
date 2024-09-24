@@ -332,7 +332,7 @@ class FilePickerHelper {
     }
 
     private fun showPermissionDeniedDialog(titleId: Int, descId: Int) {
-        SceytDialog.showSceytDialog(context,
+        SceytDialog.showDialog(context,
             titleId = titleId,
             descId = descId,
             positiveBtnTitleId = R.string.sceyt_settings,

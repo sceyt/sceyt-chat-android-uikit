@@ -63,7 +63,7 @@ import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.H
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.HeaderUIElementsListenerImpl
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
-import com.sceyt.chatuikit.presentation.customviews.AvatarView
+import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import com.sceyt.chatuikit.styles.MessagesListHeaderStyle

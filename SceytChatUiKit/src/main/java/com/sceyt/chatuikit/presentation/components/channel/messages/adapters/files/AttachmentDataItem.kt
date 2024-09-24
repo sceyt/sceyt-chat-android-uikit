@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import android.util.Size
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.persistence.mappers.getInfoFromMetadata
-import com.sceyt.chatuikit.presentation.customviews.voice_recorder.AudioMetadata
+import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadata
 
 open class AttachmentDataItem {
     lateinit var file: SceytAttachment

@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.customviews.voice_recorder
+package com.sceyt.chatuikit.presentation.custom_views.voice_recorder
 
 interface RecordingListener {
     fun onRecordingStarted() {}

@@ -6,7 +6,7 @@ import android.widget.TextView
 import androidx.annotation.MenuRes
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.customviews.AvatarView
+import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 
 sealed interface HeaderUIElementsListener {

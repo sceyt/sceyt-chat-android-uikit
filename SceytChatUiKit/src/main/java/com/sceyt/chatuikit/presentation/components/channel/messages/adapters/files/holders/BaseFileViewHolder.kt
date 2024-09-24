@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.getProgressWithState
-import com.sceyt.chatuikit.presentation.customviews.CircularProgressView
+import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem

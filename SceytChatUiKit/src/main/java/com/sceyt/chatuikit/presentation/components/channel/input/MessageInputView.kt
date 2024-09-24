@@ -90,10 +90,10 @@ import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.I
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQueryChangedListener
 import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.ChooseFileTypeDialog
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
-import com.sceyt.chatuikit.presentation.customviews.voice_recorder.AudioMetadata
-import com.sceyt.chatuikit.presentation.customviews.voice_recorder.RecordingListener
-import com.sceyt.chatuikit.presentation.customviews.voice_recorder.VoiceRecordPlaybackView
-import com.sceyt.chatuikit.presentation.customviews.voice_recorder.VoiceRecorderView
+import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadata
+import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.RecordingListener
+import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.VoiceRecordPlaybackView
+import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.VoiceRecorderView
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.sceyt.chatuikit.shared.helpers.picker.PickType
 import com.sceyt.chatuikit.styles.MessageInputStyle
@@ -718,7 +718,7 @@ class MessageInputView @JvmOverloads constructor(
     @SuppressWarnings("WeakerAccess")
     fun checkIfRecordingAndConfirm(onConfirm: () -> Unit) {
         if (isRecording()) {
-            SceytDialog.showSceytDialog(context, R.string.sceyt_stop_recording,
+            SceytDialog.showDialog(context, R.string.sceyt_stop_recording,
                 R.string.sceyt_stop_recording_desc, R.string.sceyt_discard, positiveCb = {
                     stopRecording()
                     onConfirm()
