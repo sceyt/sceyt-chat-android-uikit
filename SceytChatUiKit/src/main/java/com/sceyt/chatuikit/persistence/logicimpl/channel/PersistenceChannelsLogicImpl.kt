@@ -283,8 +283,8 @@ internal class PersistenceChannelsLogicImpl(
         })
     }
 
-    override suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: LoadKeyData?,
-                                      ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
+    override fun loadChannels(offset: Int, searchQuery: String, loadKey: LoadKeyData?,
+                              ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
             if (offset == 0) channelsCache.clear()
 
