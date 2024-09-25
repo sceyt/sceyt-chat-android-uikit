@@ -128,9 +128,8 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
     internal fun onTyping(data: ChannelTypingEventData) {
         channelsRV.getChannelIndexed(data.channel.id)?.let { (index, channelItem) ->
             val oldChannel = channelItem.channel
-            channelItem.channel.typingData = data
-            val diff = oldChannel.diff(channelItem.channel)
-            channelsRV.adapter?.notifyItemChanged(index, diff)
+            channelItem.channel = oldChannel.copy(typingData = data)
+            channelsRV.adapter?.notifyItemChanged(index, ChannelDiff.DEFAULT_FALSE.copy(typingStateChanged = true))
         }
     }
 
@@ -264,10 +263,6 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
             setChannelListener(defaultClickListeners)
             setStyle(style)
         })
-    }
-
-    fun setUserNameFormatter(builder: (User) -> String) {
-        channelsRV.getViewHolderFactory().setUserNameFormatter(builder)
     }
 
     /**

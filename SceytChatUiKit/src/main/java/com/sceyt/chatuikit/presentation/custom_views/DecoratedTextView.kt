@@ -20,10 +20,16 @@ import android.util.Size
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
+import androidx.core.content.res.ResourcesCompat
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isRtl
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_FONT_RESOURCE
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_STYLE
+import com.sceyt.chatuikit.styles.common.TextStyle
 import kotlin.math.min
 
 class DecoratedTextView @JvmOverloads constructor(
@@ -35,6 +41,7 @@ class DecoratedTextView @JvmOverloads constructor(
     private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var text: CharSequence = ""
+    private var textStyle: Int = Typeface.NORMAL
     private var textSize = 30
     private var leadingIconSize = 0
     private var trailingIconSize = 0
@@ -67,6 +74,8 @@ class DecoratedTextView @JvmOverloads constructor(
 
     @ColorInt
     private var textColor = Color.BLACK
+
+    private var textTypeface = Typeface.DEFAULT
 
     @ColorInt
     private var iconsTintColor: Int = 0
@@ -108,6 +117,7 @@ class DecoratedTextView @JvmOverloads constructor(
     private fun init() {
         textPaint.color = textColor
         textPaint.textSize = textSize.toFloat()
+        textPaint.typeface = textTypeface
         backgroundPaint.color = bgColor
         backgroundPaint.style = Paint.Style.FILL
 
@@ -288,8 +298,11 @@ class DecoratedTextView @JvmOverloads constructor(
         return if (enableLeadingText) {
             val str = SpannableStringBuilder("$leadingText  $text")
             str.setSpan(StyleSpan(leadingTextStyle), 0, leadingText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            str.setSpan(StyleSpan(textStyle), leadingText.length + 2, str.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             str
-        } else SpannableStringBuilder(text)
+        } else SpannableStringBuilder(text).apply {
+            setSpan(StyleSpan(textStyle), 0, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
     }
 
     private val realPaddingStart
@@ -398,7 +411,7 @@ class DecoratedTextView @JvmOverloads constructor(
 
     fun enableLeadingText(enable: Boolean) {
         enableLeadingText = enable
-        setText(text, enableLeadingText)
+        setText(leadingText, enableLeadingText)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -423,8 +436,11 @@ class DecoratedTextView @JvmOverloads constructor(
         private var trailingIcon: Drawable? = this@DecoratedTextView.trailingIcon
         private var text: String = ""
         private var textColor: Int = this@DecoratedTextView.textColor
+        private var textSize: Int = this@DecoratedTextView.textSize
         private var enableLeadingText: Boolean = this@DecoratedTextView.enableLeadingText
         private var leadingText: String = this@DecoratedTextView.leadingText
+        private var textStyle: Int = this@DecoratedTextView.textStyle
+        private var textTypeface: Typeface = this@DecoratedTextView.textTypeface
         private var leadingTextStyle: Int = this@DecoratedTextView.leadingTextStyle
 
         fun setLeadingIcon(drawable: Drawable?): StyleBuilder {
@@ -462,6 +478,11 @@ class DecoratedTextView @JvmOverloads constructor(
             return this
         }
 
+        fun setTextSize(size: Int): StyleBuilder {
+            textSize = size
+            return this
+        }
+
         fun setLeadingText(text: String): StyleBuilder {
             leadingText = text
             return this
@@ -477,17 +498,36 @@ class DecoratedTextView @JvmOverloads constructor(
             return this
         }
 
+        fun setTextStyle(textStyle: TextStyle): StyleBuilder {
+            if (textStyle.style != UNSET_STYLE)
+                this.textStyle = textStyle.style
+
+            if (textStyle.size != UNSET_SIZE)
+                this.textSize = textStyle.size
+
+            if (textStyle.color != UNSET_COLOR)
+                this.textColor = textStyle.color
+
+            if (textStyle.font != UNSET_FONT_RESOURCE)
+                ResourcesCompat.getFont(context, textStyle.font)?.let {
+                    this.textTypeface = it
+                }
+            return this
+        }
+
         fun build() {
             this@DecoratedTextView.leadingIconSize = leadingIconSize
             this@DecoratedTextView.trailingIconSize = trailingIconSize
             this@DecoratedTextView.leadingIcon = leadingIcon?.mutate()
             this@DecoratedTextView.trailingIcon = trailingIcon?.mutate()
             this@DecoratedTextView.textColor = textColor
+            this@DecoratedTextView.textSize = textSize
+            this@DecoratedTextView.textStyle = textStyle
+            this@DecoratedTextView.textTypeface = textTypeface
             this@DecoratedTextView.leadingText = leadingText
             this@DecoratedTextView.enableLeadingText = enableLeadingText
             this@DecoratedTextView.leadingTextStyle = leadingTextStyle
             this@DecoratedTextView.text = text
-
 
             init()
             requestLayout()

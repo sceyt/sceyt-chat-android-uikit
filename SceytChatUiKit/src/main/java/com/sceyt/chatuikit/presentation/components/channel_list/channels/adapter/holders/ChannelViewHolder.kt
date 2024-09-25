@@ -1,14 +1,12 @@
 package com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders
 
 import android.annotation.SuppressLint
-import android.content.res.ColorStateList
-import android.graphics.Typeface
-import android.text.Spannable
 import android.text.SpannableStringBuilder
-import android.text.style.ForegroundColorSpan
+import android.text.util.Linkify
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CallSuper
+import androidx.core.text.buildSpannedString
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
@@ -17,15 +15,11 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytItemChannelBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getPresentableFirstName
-import com.sceyt.chatuikit.extensions.getPresentableNameCheckDeleted
-import com.sceyt.chatuikit.extensions.getPresentableNameWithYou
+import com.sceyt.chatuikit.extensions.extractLinksWithPositions
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.setOnClickListenerAvailable
 import com.sceyt.chatuikit.extensions.setOnLongClickListenerAvailable
 import com.sceyt.chatuikit.extensions.toSpannableString
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
@@ -37,7 +31,6 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
-import com.sceyt.chatuikit.presentation.custom_views.ColorSpannableTextView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.PresenceStateIndicatorView
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
@@ -54,7 +47,6 @@ open class ChannelViewHolder(
         private val itemStyle: ChannelItemStyle,
         private var listeners: ChannelClickListeners.ClickListeners,
         private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)? = null,
-        private val userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
 ) : BaseChannelViewHolder(binding.root) {
 
     protected var isSelf = false
@@ -93,7 +85,7 @@ open class ChannelViewHolder(
                 setMentionUserSymbol(channel, binding.icMention)
                 setLastMessageStatusAndDate(channel, binding.dateStatus)
                 setLastMessagedText(channel, binding.lastMessage)
-                setOnlineStatus(channel, binding.onlineStatus)
+                setOnlineStatus(channel, binding.onlineState)
 
                 diff.run {
                     if (!hasDifference()) return@run
@@ -117,7 +109,7 @@ open class ChannelViewHolder(
                         setTypingState(channel, binding.lastMessage)
 
                     if (autoDeleteStateChanged) {
-                        setAutoDeleteState(channel, binding.ivAutoDeleted)
+                        setAutoDeleteState(channel, binding.icAutoDeleted)
                     }
                 }
             }
@@ -149,41 +141,48 @@ open class ChannelViewHolder(
             return
         }
         if (message.state == MessageState.Deleted) {
-            textView.text = context.getString(R.string.sceyt_message_was_deleted)
-            textView.setTypeface(null, Typeface.ITALIC)
+            val text = SpannableStringBuilder(context.getString(R.string.sceyt_message_was_deleted))
+            itemStyle.deletedTextStyle.apply(context, text)
+            textView.text = text
             binding.dateStatus.setIcons(null)
-        } else {
-            val body = message.getFormattedLastMessageBody(context)
-
-            val fromText = when {
-                message.incoming -> {
-                    val from = channel.lastMessage.user
-                    val userFirstName = from?.let {
-                        userNameFormatter?.format(from)
-                                ?: from.getPresentableNameCheckDeleted(context)
-                    }
-                    if (channel.isGroup && !userFirstName.isNullOrBlank()) {
-                        "${userFirstName}: "
-                    } else ""
-                }
-
-                isSelf -> ""
-                else -> "${context.getString(R.string.sceyt_your_last_message)}: "
-            }
-
-            val attachmentIcon = message.attachments?.getOrNull(0)?.let {
-                itemStyle.attachmentIconProvider.provide(it)
-            }
-            (textView as ColorSpannableTextView).buildSpannable()
-                .append(fromText)
-                .append(attachmentIcon.toSpannableString())
-                .append(body)
-                .setForegroundColorId(SceytChatUIKit.theme.textPrimaryColor)
-                .setIndexSpan(0, fromText.length)
-                .build()
-
-            textView.setTypeface(null, Typeface.NORMAL)
+            return
         }
+        val body = message.getFormattedLastMessageBody(context)
+        val fromText = when {
+            message.incoming -> {
+                val from = channel.lastMessage.user
+                val userFirstName = from?.let {
+                    itemStyle.messageSenderNameFormatter.format(context, it)
+                }
+                if (channel.isGroup && !userFirstName.isNullOrBlank()) {
+                    "${userFirstName}: "
+                } else ""
+            }
+
+            isSelf -> ""
+            else -> "${context.getString(R.string.sceyt_your_last_message)}: "
+        }
+
+        val attachmentIcon = message.attachments?.getOrNull(0)?.let {
+            itemStyle.attachmentIconProvider.provide(it)
+        }
+
+        setTextAutoLinkMasks(textView, message.body)
+
+        textView.setText(buildSpannedString {
+            if (fromText.isNotEmpty()) {
+                append(fromText)
+                itemStyle.messageSenderNameStyle.apply(context, this, 0, fromText.length)
+            }
+            append(attachmentIcon.toSpannableString())
+            append(body)
+        }, TextView.BufferType.SPANNABLE)
+    }
+
+    protected open fun setTextAutoLinkMasks(messageText: TextView, body: String) {
+        val hasLinks = body.extractLinksWithPositions().isNotEmpty()
+        messageText.autoLinkMask = if (hasLinks)
+            Linkify.WEB_URLS else 0
     }
 
     open fun checkHasLastReaction(channel: SceytChannel, textView: TextView): Boolean {
@@ -207,9 +206,8 @@ open class ChannelViewHolder(
 
             val reactUserName = when {
                 channel.isGroup -> {
-                    val name = lastReaction.user?.let {
-                        SceytChatUIKit.formatters.userNameFormatter?.format(it)
-                    } ?: lastReaction.user?.getPresentableNameWithYou(context)
+                    val name = lastReaction.user?.let { itemStyle.reactedUserNameFormatter.format(context, it) }
+                            ?: ""
                     "$name ${reactedWord.lowercase()}"
                 }
 
@@ -224,7 +222,6 @@ open class ChannelViewHolder(
             title.append("\"")
 
             textView.setText(title, TextView.BufferType.SPANNABLE)
-            textView.setTypeface(null, Typeface.NORMAL)
             return true
         }
         return false
@@ -235,27 +232,21 @@ open class ChannelViewHolder(
         return if (draftMessage != null) {
             val draft = context.getString(R.string.sceyt_draft)
             val text = SpannableStringBuilder("$draft: ").apply {
-                append(MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(draftMessage.message.toString(),
-                    draftMessage.mentionUsers, draftMessage.bodyAttributes))
-                setSpan(ForegroundColorSpan(context.getCompatColor(SceytChatUIKit.theme.errorColor)), 0, draft.length + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                append(MessageBodyStyleHelper.buildWithAllAttributes(
+                    body = draftMessage.message.toString(),
+                    mentionUsers = draftMessage.mentionUsers,
+                    bodyAttributes = draftMessage.bodyAttributes,
+                    style = itemStyle.draftPrefixTextStyle.style)
+                )
+                itemStyle.draftPrefixTextStyle.apply(context, this, 0, draft.length + 1)
             }
             textView.text = text
-            textView.setTypeface(null, Typeface.NORMAL)
             true
         } else false
     }
 
     open fun setSubject(channel: SceytChannel, textView: TextView) {
-        textView.text = if (channel.isGroup) channel.channelSubject
-        else {
-            if (channel.isSelf()) {
-                context.getString(R.string.sceyt_self_notes)
-            } else {
-                channel.getPeer()?.user?.let { from ->
-                    userNameFormatter?.format(from) ?: from.getPresentableNameCheckDeleted(context)
-                }
-            }
-        }
+        textView.text = itemStyle.channelNameFormatter.format(context, channel)
     }
 
     open fun setMuteState(channel: SceytChannel, textView: TextView) {
@@ -284,7 +275,12 @@ open class ChannelViewHolder(
     open fun setLastMessageStatusAndDate(channel: SceytChannel, decoratedTextView: DecoratedTextView) {
         val data = getDateData(channel)
         val shouldShowStatus = data.second
-        channel.lastMessage.setChannelMessageDateAndStatusIcon(decoratedTextView, itemStyle, data.first, false, shouldShowStatus)
+        channel.lastMessage.setChannelMessageDateAndStatusIcon(
+            decoratedTextView = decoratedTextView,
+            itemStyle = itemStyle,
+            dateText = data.first,
+            edited = false,
+            shouldShowStatus = shouldShowStatus)
     }
 
     open fun setOnlineStatus(channel: SceytChannel?, onlineStatus: PresenceStateIndicatorView) {
@@ -308,6 +304,9 @@ open class ChannelViewHolder(
         textView.apply {
             text = title
             isVisible = true
+            if (channel.muted)
+                itemStyle.unreadCountMutedStateTextStyle.apply(this)
+            else itemStyle.unreadCountTextStyle.apply(this)
         }
     }
 
@@ -320,22 +319,27 @@ open class ChannelViewHolder(
         textView.isVisible = channel.unread
     }
 
-    open fun setMentionUserSymbol(channel: SceytChannel, icMention: ImageView) {
-        icMention.isVisible = channel.newMentionCount > 0 && channel.newMessageCount > 0
+    open fun setMentionUserSymbol(channel: SceytChannel, icMention: TextView) {
+        val showMention = channel.newMentionCount > 0 && channel.newMessageCount > 0
+        if (showMention) {
+            icMention.isVisible = true
+            if (channel.muted)
+                itemStyle.mentionMutedStateTextStyle.apply(icMention)
+            else itemStyle.mentionTextStyle.apply(icMention)
+        } else icMention.isVisible = false
     }
 
     @SuppressLint("SetTextI18n")
     open fun setTypingState(channel: SceytChannel, textView: TextView) {
         val data = channel.typingData ?: return
         if (data.typing) {
-            textView.setTypeface(null, Typeface.ITALIC)
-            if (channel.isGroup) {
-                val name = userNameFormatter?.format(data.member.user)
-                        ?: data.member.getPresentableFirstName()
-                textView.text = "$name ${context.getString(R.string.sceyt_typing_)}"
+            val title: SpannableStringBuilder = if (channel.isGroup) {
+                val name = itemStyle.typingUserNameFormatter.format(context, data.member.user)
+                SpannableStringBuilder("$name ${context.getString(R.string.sceyt_typing_)}")
             } else
-                textView.text = context.getString(R.string.sceyt_typing_)
-
+                SpannableStringBuilder(context.getString(R.string.sceyt_typing_))
+            itemStyle.typingTextStyle.apply(context, title)
+            textView.setText(title, TextView.BufferType.SPANNABLE)
         } else setLastMessagedText(channel, textView)
     }
 
@@ -365,22 +369,17 @@ open class ChannelViewHolder(
     }
 
     private fun SceytItemChannelBinding.setChannelItemStyle() {
-        channelTitle.setTextColor(itemStyle.titleColor)
-        lastMessage.setTextColor(itemStyle.lastMessageTextColor)
-        unreadMessagesCount.backgroundTintList = ColorStateList.valueOf(itemStyle.unreadCountColor)
-        icMention.backgroundTintList = ColorStateList.valueOf(itemStyle.unreadCountColor)
-        onlineStatus.setIndicatorColor(itemStyle.onlineStateColor)
         viewPinned.setBackgroundColor(itemStyle.pinnedChannelBackgroundColor)
-        ivAutoDeleted.setImageDrawable(itemStyle.autoDeletedChannelIcon)
+        onlineState.setIndicatorColor(itemStyle.onlineStateColor)
+        divider.setBackgroundColor(itemStyle.dividerColor)
+        icAutoDeleted.setImageDrawable(itemStyle.autoDeletedChannelIcon)
         dateStatus.styleBuilder()
             .setLeadingIconSize(itemStyle.deliveryStatusIndicatorSize)
-            .setTextColor(itemStyle.dateTextColor)
+            .setTextStyle(itemStyle.dateTextStyle)
             .setLeadingText(context.getString(R.string.sceyt_edited))
             .build()
-
-        divider.isVisible = if (itemStyle.showDivider) {
-            divider.setBackgroundColor(itemStyle.dividerColor)
-            true
-        } else false
+        lastMessage.setLinkTextColor(itemStyle.linkTextColor)
+        itemStyle.subjectTextStyle.apply(channelTitle)
+        itemStyle.lastMessageTextStyle.apply(lastMessage)
     }
 }

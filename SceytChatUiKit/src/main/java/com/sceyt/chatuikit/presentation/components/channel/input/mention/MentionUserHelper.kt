@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.channel.input.mention
 
-import android.content.Context
 import android.graphics.Typeface
 import android.text.Annotation
 import android.text.SpannableStringBuilder
@@ -10,14 +9,14 @@ import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.view.View
-import androidx.annotation.ColorRes
+import androidx.annotation.ColorInt
 import com.google.gson.Gson
 import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_STYLE
 
 object MentionUserHelper {
     const val MENTION = "mention"
@@ -32,17 +31,23 @@ object MentionUserHelper {
         return items
     }
 
-    fun buildWithMentionedUsers(context: Context, body: CharSequence, attributes: List<BodyAttribute>?,
-                                mentionUsers: List<User>?, @ColorRes colorId: Int = SceytChatUIKit.theme.accentColor,
-                                mentionClickListener: ((String) -> Unit)? = null): CharSequence {
-        val data = attributes?.filter { it.type == MENTION }
-                ?: return body
-
-        val newBody = SpannableStringBuilder(body)
-
+    fun buildWithMentionedUsers(
+            body: CharSequence,
+            mentionAttributes: List<BodyAttribute>?,
+            mentionUsers: List<User>?,
+            @ColorInt color: Int = 0,
+            style: Int = UNSET_STYLE,
+            mentionClickListener: ((String) -> Unit)? = null
+    ): CharSequence {
         return try {
-            data.sortedByDescending { it.offset }.forEach {
+            mentionAttributes ?: return body
+            val newBody = SpannableStringBuilder(body)
+            mentionAttributes.sortedByDescending { it.offset }.forEach {
                 val name = setNewBodyWithName(mentionUsers, newBody, it)
+
+                if (style != UNSET_STYLE)
+                    newBody.setSpan(StyleSpan(style),
+                        it.offset, it.offset + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
                 if (mentionClickListener != null) {
                     val clickableSpan = object : ClickableSpan() {
@@ -51,13 +56,14 @@ object MentionUserHelper {
                         }
 
                         override fun updateDrawState(ds: TextPaint) {
-                            ds.color = context.getCompatColor(colorId)
+                            if (color != 0)
+                                ds.color = color
                             ds.isUnderlineText = false
                         }
                     }
                     newBody.setSpan(clickableSpan, it.offset, it.offset + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                } else
-                    newBody.setSpan(ForegroundColorSpan(context.getCompatColor(colorId)),
+                } else if (color != 0)
+                    newBody.setSpan(ForegroundColorSpan(color),
                         it.offset, it.offset + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
             newBody
@@ -67,15 +73,20 @@ object MentionUserHelper {
         }
     }
 
-    fun buildOnlyBoldNamesWithMentionedUsers(spannableBody: CharSequence, attributes: List<BodyAttribute>?,
-                                             mentionUsers: List<User>?): CharSequence {
+    fun buildOnlyBoldNamesWithMentionedUsers(
+            spannableBody: CharSequence,
+            attributes: List<BodyAttribute>?,
+            mentionUsers: List<User>?,
+            style: Int = Typeface.BOLD
+    ): CharSequence {
         return try {
             val data = attributes?.filter { it.type == MENTION } ?: return spannableBody
             val newBody = SpannableStringBuilder(spannableBody)
             data.sortedByDescending { it.offset }.forEach {
                 val name = setNewBodyWithName(mentionUsers, newBody, it)
-                newBody.setSpan(StyleSpan(Typeface.BOLD),
-                    it.offset, it.offset + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                if (style != UNSET_STYLE)
+                    newBody.setSpan(StyleSpan(style),
+                        it.offset, it.offset + name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
             newBody
         } catch (e: Exception) {
@@ -106,8 +117,11 @@ object MentionUserHelper {
         return list
     }
 
-    private fun setNewBodyWithName(mentionUsers: List<User>?, newBody: SpannableStringBuilder,
-                                   item: BodyAttribute): String {
+    private fun setNewBodyWithName(
+            mentionUsers: List<User>?,
+            newBody: SpannableStringBuilder,
+            item: BodyAttribute
+    ): String {
         val mentionUser = mentionUsers?.find { mentionUser -> mentionUser.id == item.metadata }
         var name = mentionUser?.let { user ->
             userNameFormatter?.format(user) ?: user.getPresentableName()

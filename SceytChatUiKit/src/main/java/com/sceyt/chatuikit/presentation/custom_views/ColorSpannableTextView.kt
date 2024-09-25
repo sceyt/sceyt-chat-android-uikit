@@ -1,11 +1,15 @@
 package com.sceyt.chatuikit.presentation.custom_views
 
 import android.content.Context
+import android.graphics.Typeface
+import android.os.Build
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextUtils
 import android.text.style.ForegroundColorSpan
+import android.text.style.TypefaceSpan
 import android.util.AttributeSet
+import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.appcompat.widget.AppCompatTextView
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -15,7 +19,8 @@ class ColorSpannableTextView @JvmOverloads constructor(
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0
 ) : AppCompatTextView(context, attrs, defStyleAttr) {
-    private var spanColorId: Int = 0
+    @ColorInt
+    private var spanColor: Int = 0
     private var fromIndex: Int = 0
     private var toIndex: Int = 0
     private var flag: Int = Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -24,14 +29,26 @@ class ColorSpannableTextView @JvmOverloads constructor(
 
 
     inner class BuildSpannable {
-        private var spanColorId: Int = this@ColorSpannableTextView.spanColorId
+        @ColorInt
+        private var spanColor: Int = this@ColorSpannableTextView.spanColor
         private var fromIndex: Int = this@ColorSpannableTextView.fromIndex
         private var toIndex: Int = this@ColorSpannableTextView.toIndex
         private var flag: Int = this@ColorSpannableTextView.flag
+        private var typeface: Typeface = Typeface.DEFAULT
         private var spanString: SpannableString = this@ColorSpannableTextView.spanString
 
         fun setForegroundColorId(@ColorRes colorId: Int): BuildSpannable {
-            spanColorId = colorId
+            spanColor = context.getCompatColor(colorId)
+            return this
+        }
+
+        fun setForegroundColor(@ColorInt color: Int): BuildSpannable {
+            spanColor = color
+            return this
+        }
+
+        fun setTypeFace(typeface: Typeface): BuildSpannable {
+            this.typeface = typeface
             return this
         }
 
@@ -63,8 +80,12 @@ class ColorSpannableTextView @JvmOverloads constructor(
         }
 
         fun build(): SpannableString {
-            if (fromIndex < toIndex)
-                spanString.setSpan(ForegroundColorSpan(context.getCompatColor(spanColorId)), fromIndex, toIndex, flag)
+            if (fromIndex < toIndex) {
+                spanString.setSpan(ForegroundColorSpan(spanColor), fromIndex, toIndex, flag)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    spanString.setSpan(TypefaceSpan(typeface), fromIndex, toIndex, flag)
+                }
+            }
             setSpannableText(spanString)
             buildSpannable = this
             return spanString

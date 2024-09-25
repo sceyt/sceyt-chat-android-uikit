@@ -156,8 +156,9 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (!message.bodyAttributes.isNullOrEmpty()) {
             text = MessageBodyStyleHelper.buildOnlyStylesWithAttributes(text, message.bodyAttributes)
             if (!message.mentionedUsers.isNullOrEmpty())
-                text = MentionUserHelper.buildWithMentionedUsers(context, text,
-                    message.bodyAttributes, message.mentionedUsers) {
+                text = MentionUserHelper.buildWithMentionedUsers(text,
+                    message.bodyAttributes, message.mentionedUsers,
+                    color = context.getCompatColor(SceytChatUIKit.theme.accentColor)) {
                     messageListeners?.onMentionClick(messageBody, it)
                 }
         }

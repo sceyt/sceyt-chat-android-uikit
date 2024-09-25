@@ -103,6 +103,17 @@ fun CharSequence?.extractLinks(): Array<String> {
     return links.toTypedArray()
 }
 
+fun CharSequence?.extractLinksWithPositions(): Array<Triple<String, Int, Int>> {
+    if (this.isNullOrBlank() || isValidEmail()) return emptyArray()
+    val links = ArrayList<Triple<String, Int, Int>>()
+    val m = Patterns.WEB_URL.matcher(this)
+    while (m.find()) {
+        val url = m.group()
+        links.add(Triple(url, m.start(), m.end()))
+    }
+    return links.toTypedArray()
+}
+
 fun String?.isValidUrl(context: Context): Boolean {
     this ?: return false
     return Linkify.addLinks(TextView(context).apply { text = this@isValidUrl }, Linkify.WEB_URLS)
