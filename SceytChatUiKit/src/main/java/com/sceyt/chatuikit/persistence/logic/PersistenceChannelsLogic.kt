@@ -25,8 +25,8 @@ interface PersistenceChannelsLogic {
     suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>)
     suspend fun onFcmMessage(data: RemoteMessageData)
     suspend fun onMessageEditedOrDeleted(message: SceytMessage)
-    suspend fun loadChannels(offset: Int, searchQuery: String,
-                             loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
+    fun loadChannels(offset: Int, searchQuery: String,
+                     loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun searchChannelsWithUserIds(offset: Int, limit: Int, searchQuery: String,
                                           userIds: List<String>, includeUserNames: Boolean,

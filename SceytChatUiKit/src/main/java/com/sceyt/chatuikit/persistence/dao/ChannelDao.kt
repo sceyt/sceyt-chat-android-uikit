@@ -56,7 +56,7 @@ interface ChannelDao {
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from channels " +
-            "join UserChatLink as link on link.chat_id = channels.chat_id " +
+            "left join UserChatLink as link on link.chat_id = channels.chat_id " +
             "where ((subject like '%' || :query || '%' and (not pending or lastMessageTid != 0) and type <> :directType " +
             "and (case when :onlyMine then channels.userRole <> '' else 1 end)) " +
             "or (type =:directType and (link.user_id in (:userIds) or isSelf and link.user_id like '%' || :query || '%'))) " +
