@@ -20,6 +20,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property loadingState - Layout for loading state, default is [R.layout.sceyt_channels_page_loading_state].
  * @property popupStyle - Style for popup, default is [R.style.SceytPopupMenuStyle].
  * @property showChannelActionAsPopup - Show channel action as popup, default is false.
+ * @property itemStyle - Style for channel item.
  * */
 data class ChannelListViewStyle(
         @ColorInt val backgroundColor: Int,
@@ -46,18 +47,18 @@ data class ChannelListViewStyle(
                 val backgroundColor = array.getColor(R.styleable.ChannelListView_sceytUiChannelListBackgroundColor,
                     context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
 
-                val emptyState = array.getResourceId(R.styleable.ChannelListView_sceytUiEmptyStateView,
+                val emptyState = array.getResourceId(R.styleable.ChannelListView_sceytUiChannelListEmptyStateView,
                     R.layout.sceyt_channel_list_empty_state)
 
-                val emptySearchState = array.getResourceId(R.styleable.ChannelListView_sceytUiEmptySearchStateView,
+                val emptySearchState = array.getResourceId(R.styleable.ChannelListView_sceytUiChannelListEmptySearchStateView,
                     R.layout.sceyt_search_channels_empty_state)
 
-                val loadingState = array.getResourceId(R.styleable.ChannelListView_sceytUiLoadingView,
+                val loadingState = array.getResourceId(R.styleable.ChannelListView_sceytUiChannelListLoadingView,
                     R.layout.sceyt_channels_page_loading_state)
 
-                val showChannelActionAsPopup = array.getBoolean(R.styleable.ChannelListView_sceytUiShowChannelActionAsPopup, false)
+                val showChannelActionAsPopup = array.getBoolean(R.styleable.ChannelListView_sceytUiChannelListShowChannelActionAsPopup, false)
 
-                val popupStyle = array.getResourceId(R.styleable.ChannelListView_sceytUiPopupStyle,
+                val popupStyle = array.getResourceId(R.styleable.ChannelListView_sceytUiChannelListPopupStyle,
                     R.style.SceytPopupMenuStyle)
 
                 val itemStyle = ChannelItemStyle.Builder(context, attrs).build()

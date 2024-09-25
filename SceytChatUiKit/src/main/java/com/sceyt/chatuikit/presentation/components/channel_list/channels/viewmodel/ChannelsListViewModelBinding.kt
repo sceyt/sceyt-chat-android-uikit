@@ -19,9 +19,9 @@ import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelUpdateData
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.TypingCancelHelper
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.TypingCancelHelper
 import com.sceyt.chatuikit.presentation.components.channel_list.search.SearchChannelInputView
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.Job
@@ -175,10 +175,8 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
         .onEach {
             typingCancelHelper.await(it) { data ->
                 channelListView.onTyping(data)
-                needToUpdateChannelsAfterResume[it.channel.id]?.channel?.typingData = data
             }
             channelListView.onTyping(it)
-            needToUpdateChannelsAfterResume[it.channel.id]?.channel?.typingData = it
         }.launchIn(viewModelScope)
 
     blockUserLiveData.observe(lifecycleOwner) {

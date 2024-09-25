@@ -4,49 +4,158 @@
 
         <!--Background color channel list view-->
         <attr name="sceytUiChannelListBackgroundColor" format="reference|color" />
+        <!--Background color of the pinned state-->
         <attr name="sceytUiChannelListPinnedBackgroundColor" format="reference|color" />
         <!-- A color of the online indicator-->
-        <attr name="sceytUiOnlineIndicatorColor" format="reference|color" />
+        <attr name="sceytUiChannelListOnlineStateColor" format="reference|color" />
         <!-- A color of the channels divider-->
-        <attr name="sceytUiDividerColor" format="reference|color" />
-        <!-- Show/Hide channels divider-->
-        <attr name="sceytUiEnableDivider" format="boolean" />
+        <attr name="sceytUiChannelListDividerColor" format="reference|color" />
         <!-- Show channel action as popup-->
-        <attr name="sceytUiShowChannelActionAsPopup" format="boolean" />
-        <!-- A color of the channel title text color-->
-        <attr name="sceytUiChannelTitleTextColor" format="reference|color" />
-        <!-- A color of the last message text color-->
-        <attr name="sceytUiLastMessageTextColor" format="reference|color" />
-        <!-- A color of the date text color-->
-        <attr name="sceytUiLastMessageDateTextColor" format="reference|color" />
-        <!-- Show message status icon-->
-        <attr name="sceytUiStatusIndicatorSize" format="dimension" />
-        <!-- Drawable of the message sent state indicator -->
-        <attr name="sceytUiIndicatorSentIcon" format="reference" />
-        <!-- Drawable of the message displayed state indicator -->
-        <attr name="sceytUiIndicatorDisplayedIcon" format="reference" />
-        <!-- Drawable of the message received indicator -->
-        <attr name="sceytUiIndicatorReceivedIcon" format="reference" />
+        <attr name="sceytUiChannelListShowChannelActionAsPopup" format="boolean" />
+
+        <!-- Channel Subject text style -->
+        <attr name="sceytUiChannelListChannelSubjectTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListChannelSubjectTextSize" format="dimension" />
+        <attr name="sceytUiChannelListChannelSubjectTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiChannelListChannelSubjectTextFont" format="reference" />
+
+        <!-- Last Message delivery status icon size-->
+        <attr name="sceytUiChannelListStatusIndicatorSize" format="dimension" />
+
         <!-- Drawable of the message pending indicator -->
-        <attr name="sceytUiIndicatorPendingIcon" format="reference" />
-        <!-- Drawable of the auto delete channel icon -->
-        <attr name="sceytUiAutoDeletedChannelIcon" format="reference" />
-        <!-- A color of the unread message count text -->
-        <attr name="sceytUiUnreadMessageCounterTextColor" format="reference|color" />
-        <!-- Background color of the unread message counter -->
-        <attr name="sceytUiUnreadMessageCounterBackgroundColor" format="reference|color" />
+        <attr name="sceytUiChannelListStatusPendingIndicator" format="reference" />
+        <!-- Drawable of the message sent state indicator -->
+        <attr name="sceytUiChannelListStatusSentIndicator" format="reference" />
+        <!-- Drawable of the message received indicator -->
+        <attr name="sceytUiChannelListStatusReceivedIndicator" format="reference" />
+        <!-- Drawable of the message displayed state indicator -->
+        <attr name="sceytUiChannelListStatusDisplayedIndicator" format="reference" />
+
         <!-- Drawable of the muted channel icon  -->
-        <attr name="sceytUiMutedChannelIcon" format="reference" />
+        <attr name="sceytUiChannelListMutedIcon" format="reference" />
+        <!-- Drawable of the auto delete channel icon -->
+        <attr name="sceytUiChannelListAutoDeletedChannelIcon" format="reference" />
         <!-- Drawable of the pinned channel icon  -->
-        <attr name="sceytUiPinnedChannelIcon" format="reference" />
+        <attr name="sceytUiChannelListPinnedIcon" format="reference" />
         <!-- Reference to layout resource of the channel list "loading" view -->
-        <attr name="sceytUiLoadingView" format="reference" />
+        <attr name="sceytUiChannelListLoadingView" format="reference" />
         <!-- Reference to layout resource of the channel list empty state view -->
-        <attr name="sceytUiEmptyStateView" format="reference" />
+        <attr name="sceytUiChannelListEmptyStateView" format="reference" />
         <!-- Reference to layout resource of the channel list empty search state view -->
-        <attr name="sceytUiEmptySearchStateView" format="reference" />
+        <attr name="sceytUiChannelListEmptySearchStateView" format="reference" />
         <!-- Reference to channel long click popup style -->
-        <attr name="sceytUiPopupStyle" format="reference" />
+        <attr name="sceytUiChannelListPopupStyle" format="reference" />
+
+        <!-- Channel last message text style -->
+        <attr name="sceytUiChannelListLastMessageTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListLastMessageTextSize" format="dimension" />
+        <attr name="sceytUiChannelListLastMessageTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiChannelListLastMessageTextFont" format="reference" />
+
+        <!-- Channel date text style -->
+        <attr name="sceytUiChannelListDateTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListDateTextSize" format="dimension" />
+        <attr name="sceytUiChannelListDateTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiChannelListDateTextFont" format="reference" />
+
+        <!-- Channel sender name text style -->
+        <attr name="sceytUiChannelListMessageSenderNameTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListMessageSenderNameTextSize" format="dimension" />
+        <attr name="sceytUiChannelListMessageSenderNameTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiChannelListMessageSenderNameTextFont" format="reference" />
+
+        <!-- Channel deleted text style -->
+        <attr name="sceytUiChannelListDeletedTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListDeletedTextSize" format="dimension" />
+        <attr name="sceytUiChannelListDeletedTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiChannelListDeletedTextFont" format="reference" />
+
+        <!-- Channel draft text style -->
+        <attr name="sceytUiChannelListDraftPrefixTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListDraftPrefixTextSize" format="dimension" />
+        <attr name="sceytUiChannelListDraftPrefixTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiChannelListDraftTextFont" format="reference" />
+
+        <!-- Channel typing text style -->
+        <attr name="sceytUiChannelListTypingTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListTypingTextSize" format="dimension" />
+        <attr name="sceytUiChannelListTypingTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiChannelListTypingTextFont" format="reference" />
+
+        <!-- Channel unread count text style -->
+        <attr name="sceytUiChannelListUnreadCountBackgroundColor" format="reference|color" />
+        <attr name="sceytUiChannelListUnreadCountTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListUnreadCountTextSize" format="dimension" />
+        <attr name="sceytUiChannelListUnreadCountTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiChannelListUnreadCountTextFont" format="reference" />
+
+        <!-- Channel unread count muted state text style -->
+        <attr name="sceytUiChannelListUnreadCountMutedStateBackgroundColor" format="reference|color" />
+        <attr name="sceytUiChannelListUnreadCountMutedStateTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListUnreadCountMutedStateTextSize" format="dimension" />
+        <attr name="sceytUiChannelListUnreadCountMutedStateTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiChannelListUnreadCountMutedTextFont" format="reference" />
+
+        <!-- Channel mention text style -->
+        <attr name="sceytUiChannelListMentionBackgroundColor" format="reference|color" />
+        <attr name="sceytUiChannelListMentionTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListMentionTextSize" format="dimension" />
+        <attr name="sceytUiChannelListMentionTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiChannelListMentionTextFont" format="reference" />
+
+        <!-- Channel mention muted text style -->
+        <attr name="sceytUiChannelListMentionMutedStateBackgroundColor" format="reference|color" />
+        <attr name="sceytUiChannelListMentionMutedStateTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListMentionMutedStateTextSize" format="dimension" />
+        <attr name="sceytUiChannelListMentionMutedStateTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiChannelListMentionMutedTextFont" format="reference" />
+
+        <!-- Channel link text color -->
+        <attr name="sceytUiChannelListLinkTextColor" format="reference|color" />
 
     </declare-styleable>
 </resources>

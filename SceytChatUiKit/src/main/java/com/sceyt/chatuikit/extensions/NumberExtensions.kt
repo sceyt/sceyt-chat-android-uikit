@@ -57,14 +57,15 @@ fun Number.toPrettySize(format: String = "%.2f"): String {
     val sizeInKb = toDouble() / 1000
     val sizeInMb = sizeInKb / 1000f
     return when {
-        sizeInMb >= 1 -> String.format(format, sizeInMb) + "MB"
-        sizeInKb >= 1 -> String.format(format, sizeInKb) + "KB"
+        sizeInMb >= 1 -> String.format(Locale.getDefault(), format, sizeInMb) + "MB"
+        sizeInKb >= 1 -> String.format(Locale.getDefault(), format, sizeInKb) + "KB"
         else -> "${this}B"
     }
 }
 
 fun Long.convertMSIntoHourMinSeconds(): String {
-    return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(this),
+    return String.format(Locale.getDefault(), "%02d:%02d:%02d",
+        TimeUnit.MILLISECONDS.toHours(this),
         TimeUnit.MILLISECONDS.toMinutes(this) -
                 TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(this)),
         TimeUnit.MILLISECONDS.toSeconds(this) -

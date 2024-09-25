@@ -45,7 +45,6 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
     icon?.let {
         decoratedTextView.setTextAndIcons(
             text = dateText,
-            textColor = itemStyle.dateTextColor,
             leadingIcon = it,
             enableLeadingText = edited,
             ignoreHighlight = checkIgnoreHighlight(deliveryStatus))
@@ -99,7 +98,7 @@ fun SceytMessage.getFormattedBody(context: Context): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() || attachments.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
-            MessageBodyStyleHelper.buildWithMentionsAndAttributes(context, this)
+            MessageBodyStyleHelper.buildWithAllAttributes( this)
         }
 
         attachments.size == 1 -> {

@@ -45,7 +45,8 @@ data class SceytChannel(
         val newReactions: List<SceytReaction>?,
         val pendingReactions: List<PendingReactionData>?,
         val pending: Boolean,
-        val draftMessage: DraftMessage?) : Parcelable {
+        val draftMessage: DraftMessage?,
+        val typingData: ChannelTypingEventData? = null) : Parcelable {
 
     val channelSubject: String
         get() = (if (isGroup) subject
@@ -60,9 +61,6 @@ data class SceytChannel(
     val pinned get() = pinnedAt != null && pinnedAt != 0L
 
     val autoDeleteEnabled get() = messageRetentionPeriod > 0
-
-    @IgnoredOnParcel
-    var typingData: ChannelTypingEventData? = null
 
     override fun equals(other: Any?): Boolean {
         if (other == null || other !is SceytChannel) return false

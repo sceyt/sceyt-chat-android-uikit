@@ -50,6 +50,7 @@
     <color name="sceyt_color_black">#000000</color>
 
     <color name="sceyt_color_green">#24C383</color>
+    <color name="sceyt_color_red">#FA4C56</color>
     <color name="sceyt_auto_link_color">#438CED</color>
     <color name="sceyt_media_primary_color">#CC000000</color>
 

@@ -634,7 +634,7 @@ class MessageInputView @JvmOverloads constructor(
         var body: CharSequence = draftMessage.message
         binding.messageInput.removeTextChangedListener(inputTextWatcher)
         with(binding.messageInput) {
-            body = MessageBodyStyleHelper.buildWithMentionsAndAttributes(context, body.toString(),
+            body = MessageBodyStyleHelper.buildWithAllAttributes(body.toString(),
                 draftMessage.mentionUsers, draftMessage.bodyAttributes)
 
             if (!draftMessage.mentionUsers.isNullOrEmpty()) {
