@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel_list.search
 
 import android.content.Context
+import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -9,11 +10,8 @@ import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytSearchViewBinding
-import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.hideSoftInput
-import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.SceytDatabase
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
@@ -92,13 +90,17 @@ class SearchChannelInputView @JvmOverloads constructor(
     }
 
     private fun SceytSearchViewBinding.applyStyle() {
-        icSearch.setImageDrawable(style.searchIcon)
-        icClear.setImageDrawable(style.clearIcon)
-        input.setTextColor(style.textColor)
-        input.hint = style.hintText
-        input.setHintTextColor(style.hintTextColor)
-        root.background = context.getCompatDrawable(R.drawable.sceyt_bg_corners_10)
-        root.setBackgroundTint(style.backgroundColor)
+        style.searchInputStyle.apply(
+            editText = input,
+            clearIconImage = icClear,
+            searchIconImage = icSearch)
+
+        background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = style.cornerRadius
+            setStroke(style.borderWidth.toInt(), style.borderColor)
+            setColor(style.backgroundColor)
+        }
     }
 
     private fun handleClearClick() {

@@ -1,31 +1,34 @@
 package com.sceyt.chatuikit.styles
 
 import android.content.Context
-import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
+import androidx.annotation.Px
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.styles.common.HintStyle
+import com.sceyt.chatuikit.styles.common.SearchInputStyle
+import com.sceyt.chatuikit.styles.common.TextInputStyle
+import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
  * Style for the search channel input view.
- * @param searchIcon Icon for the search button, default is [R.drawable.sceyt_ic_search]
- * @param clearIcon Icon for the clear button, default is [R.drawable.sceyt_ic_cancel]
- * @param textColor Text color for the input, default is [SceytChatUIKitTheme.textPrimaryColor]
- * @param hintTextColor Hint text color for the input, default is [SceytChatUIKitTheme.textFootnoteColor]
- * @param backgroundColor Background color for the input, default is [SceytChatUIKitTheme.surface1Color]
- * @param hintText Hint text for the input, default is "Search for channels"
+ * @property backgroundColor Background color for the input, default is [SceytChatUIKitTheme.surface1Color]
+ * @property cornerRadius Corner radius for the input, default is 10 dp
+ * @property borderWidth Border width for the input, default is 0 dp
+ * @property borderColor Border color for the input, default is [SceytChatUIKitTheme.borderColor]
+ * @property searchInputStyle Style for the search input.
  * */
 data class SearchChannelInputStyle(
-        var searchIcon: Drawable?,
-        var clearIcon: Drawable?,
-        @ColorInt var textColor: Int,
-        @ColorInt var hintTextColor: Int,
         @ColorInt var backgroundColor: Int,
-        var hintText: String,
+        @Px val cornerRadius: Float,
+        @Px val borderWidth: Float ,
+        @ColorInt val borderColor: Int,
+        val searchInputStyle: SearchInputStyle
 ) {
 
     companion object {
@@ -37,37 +40,78 @@ data class SearchChannelInputStyle(
             private val attrs: AttributeSet?
     ) {
         fun build(): SearchChannelInputStyle {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.SearchChannelInput)
+            context.obtainStyledAttributes(attrs, R.styleable.SearchChannelInputView).use { array ->
+                val backgroundColor = array.getColor(R.styleable.SearchChannelInputView_sceytUiSearchChannelInputBackgroundColor,
+                    context.getCompatColor(SceytChatUIKit.theme.surface1Color))
 
-            val searchIcon = typedArray.getDrawable(R.styleable.SearchChannelInput_sceytUiSearchIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_search)?.apply {
-                        setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
-                    }
+                val cornerRadius = array.getDimension(R.styleable.SearchChannelInputView_sceytUiSearchChannelInputCornerRadius,
+                    dpToPx(10f).toFloat()
+                )
 
-            val clearIcon = typedArray.getDrawable(R.styleable.SearchChannelInput_sceytUiClearIcon)
-                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_cancel)?.apply {
-                        setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
-                    }
+                val borderWidth = array.getDimension(R.styleable.SearchChannelInputView_sceytUiSearchChannelInputBorderWidth,
+                    0f
+                )
 
-            val textColor = typedArray.getColor(R.styleable.SearchChannelInput_sceytUiTextColor,
-                context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+                val borderColor = array.getColor(R.styleable.SearchChannelInputView_sceytUiSearchChannelInputBorderColor,
+                    context.getCompatColor(SceytChatUIKit.theme.borderColor)
+                )
 
-            val hintTextColor = typedArray.getColor(R.styleable.SearchChannelInput_sceytUiHintTextColor,
-                context.getCompatColor(SceytChatUIKit.theme.textFootnoteColor))
+                val textStyle = TextStyle.Builder(array)
+                    .setColor(
+                        index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputTextColor,
+                        defValue = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
+                    )
+                    .setSize(
+                        index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputTextSize
+                    )
+                    .setStyle(
+                        index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputTextStyle
+                    )
+                    .setFont(
+                        index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputTextFont
+                    )
+                    .build()
 
-            val backgroundColor = typedArray.getColor(R.styleable.SearchChannelInput_sceytUiBackgroundColor,
-                context.getCompatColor(SceytChatUIKit.theme.surface1Color))
+                val hintStyle = HintStyle.Builder(array)
+                    .textColor(
+                        index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputHintTextColor,
+                        defValue = context.getCompatColor(SceytChatUIKit.theme.textFootnoteColor)
+                    )
+                    .hint(
+                        index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputHintText,
+                        defValue = context.getString(R.string.sceyt_search_for_channels)
+                    )
+                    .build()
 
-            typedArray.recycle()
 
-            return SearchChannelInputStyle(
-                searchIcon = searchIcon,
-                clearIcon = clearIcon,
-                textColor = textColor,
-                hintTextColor = hintTextColor,
-                backgroundColor = backgroundColor,
-                hintText = context.getString(R.string.sceyt_search_for_channels),
-            ).let { styleCustomizer.apply(context, it) }
+                val textInputStyle = TextInputStyle.Builder(array)
+                    .setTextStyle(textStyle)
+                    .setHintStyle(hintStyle)
+                    .build()
+
+                val searchInputStyle = SearchInputStyle.Builder(array)
+                    .searchIcon(
+                        index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputSearchIcon,
+                        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_search)?.apply {
+                            setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+                        })
+                    .clearIcon(
+                        index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputClearIcon,
+                        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_cancel)?.apply {
+                            setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+                        })
+                    .textInputStyle(textInputStyle)
+                    .build()
+
+
+                return SearchChannelInputStyle(
+                    backgroundColor = backgroundColor,
+                    cornerRadius = cornerRadius,
+                    borderWidth = borderWidth,
+                    borderColor = borderColor,
+                    searchInputStyle = searchInputStyle,
+                ).let { styleCustomizer.apply(context, it) }
+            }
         }
     }
 }

@@ -1,12 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <declare-styleable name="SearchChannelInput">
-        <attr name="sceytUiSearchIcon" format="reference" />
-        <attr name="sceytUiClearIcon" format="reference" />
-        <attr name="sceytUiHintText" format="string" localization="suggested" />
-        <attr name="sceytUiBackgroundColor" format="reference|color" />
-        <attr name="sceytUiTextColor" format="reference|color" />
-        <attr name="sceytUiHintTextColor" format="reference|color" />
+    <declare-styleable name="SearchChannelInputView">
+        <attr name="sceytUiSearchChannelInputBackgroundColor" format="reference|color" />
+        <attr name="sceytUiSearchChannelInputCornerRadius" format="dimension" />
+        <!-- Border-->
+        <attr name="sceytUiSearchChannelInputBorderWidth" format="dimension" />
+        <attr name="sceytUiSearchChannelInputBorderColor" format="reference|color" />
+
+        <!--Icons -->
+        <attr name="sceytUiSearchChannelInputSearchIcon" format="reference" />
+        <attr name="sceytUiSearchChannelInputClearIcon" format="reference" />
+        
+        <!--Input text style-->
+        <attr name="sceytUiSearchChannelInputTextColor" format="reference|color" />
+        <attr name="sceytUiSearchChannelInputTextSize" format="dimension" />
+        <attr name= "sceytUiSearchChannelInputTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiSearchChannelInputTextFont" format="reference" />
+        
+        <attr name="sceytUiSearchChannelInputHintText" format="string" localization="suggested" />
+        <attr name="sceytUiSearchChannelInputHintTextColor" format="reference|color" />
     </declare-styleable>
 </resources>
