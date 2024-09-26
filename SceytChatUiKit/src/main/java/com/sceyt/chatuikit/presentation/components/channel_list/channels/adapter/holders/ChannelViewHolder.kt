@@ -149,21 +149,7 @@ open class ChannelViewHolder(
             mentionTextStyle = itemStyle.mentionTextStyle,
             attachmentNameFormatter = itemStyle.attachmentNameFormatter
         )
-        val fromText = when {
-            message.incoming -> {
-                val from = channel.lastMessage.user
-                val userFirstName = from?.let {
-                    itemStyle.messageSenderNameFormatter.format(context, it)
-                }
-                if (channel.isGroup && !userFirstName.isNullOrBlank()) {
-                    "${userFirstName}: "
-                } else ""
-            }
-
-            isSelf -> ""
-            else -> "${context.getString(R.string.sceyt_your_last_message)}: "
-        }
-
+        val senderName = itemStyle.lastMessageSenderNameFormatter.format(context, channel)
         val attachmentIcon = message.attachments?.getOrNull(0)?.let {
             itemStyle.attachmentIconProvider.provide(it)
         }
@@ -171,9 +157,9 @@ open class ChannelViewHolder(
         setTextAutoLinkMasks(textView, message.body)
 
         textView.setText(buildSpannedString {
-            if (fromText.isNotEmpty()) {
-                append(fromText)
-                itemStyle.messageSenderNameStyle.apply(context, this, 0, fromText.length)
+            if (senderName.isNotEmpty()) {
+                append(senderName)
+                itemStyle.lastMessageSenderNameTextStyle.apply(context, this, 0, senderName.length)
             }
             append(attachmentIcon.toSpannableString())
             append(body)

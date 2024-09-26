@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAvatarInitialsFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelDateFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageSenderNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelUnreadCountFormatter
@@ -32,12 +33,12 @@ class SceytChatUIKitFormatters {
         DefaultUserNameFormatter()
     }
 
-    var mentionUserNameFormatterNew: Formatter<User> by lazyVar {
-        DefaultMentionUserNameFormatter()
+    var userShortNameFormatter: Formatter<User> by lazyVar {
+        DefaultUserShortNameFormatter()
     }
 
-    var messageSenderNameFormatter: Formatter<User> by lazyVar {
-        DefaultUserShortNameFormatter()
+    var mentionUserNameFormatterNew: Formatter<User> by lazyVar {
+        DefaultMentionUserNameFormatter()
     }
 
     var typingUserNameFormatter: Formatter<User> by lazyVar {
@@ -62,6 +63,10 @@ class SceytChatUIKitFormatters {
 
     var channelUnreadCountFormatter: Formatter<SceytChannel> by lazyVar {
         DefaultChannelUnreadCountFormatter()
+    }
+
+    var channelLastMessageSenderNameFormatter: Formatter<SceytChannel> by lazyVar {
+        DefaultChannelLastMessageSenderNameFormatter()
     }
 
     var messageBodyFormatter: Formatter<SceytMessage> by lazyVar {

@@ -66,7 +66,7 @@ internal fun ChannelItemStyle.Builder.buildDateTextStyle(
     )
     .build()
 
-internal fun ChannelItemStyle.Builder.buildMessageSenderNameStyle(
+internal fun ChannelItemStyle.Builder.buildLastMessageSenderNameStyle(
         array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
