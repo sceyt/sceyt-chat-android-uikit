@@ -2,7 +2,9 @@ package com.sceyt.chatuikit.formatters
 
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAvatarInitialsFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
@@ -72,5 +74,9 @@ class SceytChatUIKitFormatters {
 
     var avatarInitialsFormatter: Formatter<String> by lazyVar {
         DefaultAvatarInitialsFormatter()
+    }
+
+    var attachmentNameFormatter: Formatter<SceytAttachment> by lazyVar {
+        DefaultAttachmentNameFormatter()
     }
 }

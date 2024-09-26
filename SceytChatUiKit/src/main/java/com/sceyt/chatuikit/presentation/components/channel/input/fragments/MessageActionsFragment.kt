@@ -69,7 +69,7 @@ open class MessageActionsFragment : Fragment() {
             tvName.text = getString(R.string.sceyt_edit_message)
             tvMessageBody.text = message.getFormattedBody(root.context, TextStyle(
                 style = Typeface.BOLD,
-            ))
+            ), SceytChatUIKit.formatters.attachmentNameFormatter)
         }
     }
 

@@ -16,7 +16,6 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
-import com.sceyt.chatuikit.formatters.defaults.DefaultChannelUnreadCountFormatter
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
@@ -64,7 +63,8 @@ import java.util.Date
  * @property mentionUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.mentionUserNameFormatter].
  * @property reactedUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.reactedUserNameFormatter].
  * @property typingUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.typingUserNameFormatter].
- * @property channelUnreadCountFormatter - Formatter for unread count, default is [DefaultChannelUnreadCountFormatter].
+ * @property channelUnreadCountFormatter - Formatter for unread count, default is [SceytChatUIKitFormatters.channelUnreadCountFormatter].
+ * @property attachmentNameFormatter - Formatter for attachment name, default is [SceytChatUIKitFormatters.attachmentNameFormatter].
  * @property attachmentIconProvider - Provider for attachment icon, default is [SceytChatUIKitProviders.attachmentIconProvider].
  * @property channelDefaultAvatarProvider - Provider for channel default avatar, default is [SceytChatUIKitProviders.channelDefaultAvatarProvider].
  * */
@@ -96,6 +96,7 @@ data class ChannelItemStyle(
         val reactedUserNameFormatter: Formatter<User>,
         val typingUserNameFormatter: Formatter<User>,
         val channelUnreadCountFormatter: Formatter<SceytChannel>,
+        val attachmentNameFormatter: Formatter<SceytAttachment>,
         val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
         val channelDefaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>
 ) {
@@ -172,8 +173,9 @@ data class ChannelItemStyle(
                     mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatterNew,
                     reactedUserNameFormatter = SceytChatUIKit.formatters.reactedUserNameFormatter,
                     typingUserNameFormatter = SceytChatUIKit.formatters.typingUserNameFormatter,
-                    attachmentIconProvider = SceytChatUIKit.providers.channelListAttachmentIconProvider,
                     channelUnreadCountFormatter = SceytChatUIKit.formatters.channelUnreadCountFormatter,
+                    attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
+                    attachmentIconProvider = SceytChatUIKit.providers.channelListAttachmentIconProvider,
                     channelDefaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider
                 ).let { styleCustomizer.apply(context, it) }
             }

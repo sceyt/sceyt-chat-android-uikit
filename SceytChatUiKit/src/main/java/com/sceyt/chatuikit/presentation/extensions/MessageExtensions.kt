@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
-import com.sceyt.chatuikit.extensions.isNotNullOrBlank
+import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper.buildWithAttributes
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
@@ -97,7 +97,8 @@ private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
 
 fun SceytMessage.getFormattedBody(
         context: Context,
-        mentionTextStyle: TextStyle
+        mentionTextStyle: TextStyle,
+        attachmentNameFormatter: Formatter<SceytAttachment>
 ): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
@@ -106,7 +107,7 @@ fun SceytMessage.getFormattedBody(
         }
 
         attachments.size == 1 -> {
-            attachments.getOrNull(0)?.getShowName(context, body)
+            body.ifEmpty { attachmentNameFormatter.format(context, attachments[0]) }
         }
 
         else -> context.getString(R.string.sceyt_file)
@@ -114,9 +115,8 @@ fun SceytMessage.getFormattedBody(
     return SpannableString(body)
 }
 
-fun SceytAttachment?.getShowName(context: Context, body: String): String {
+fun SceytAttachment?.getShowName(context: Context): String {
     this ?: return ""
-    if (body.isNotNullOrBlank()) return body
     return when (type) {
         AttachmentTypeEnum.Video.value() -> context.getString(R.string.sceyt_video)
         AttachmentTypeEnum.Image.value() -> context.getString(R.string.sceyt_photo)
