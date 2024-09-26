@@ -58,7 +58,7 @@ data class MessagesListHeaderStyle(
 
                 val navigationIcon = array.getDrawable(R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderNavigationIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back)
-                            ?.applyTint(SceytChatUIKit.theme.accentColor)
+                            ?.applyTint(context, SceytChatUIKit.theme.accentColor)
 
                 val underlineColor = array.getColor(R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderUnderlineColor,
                     context.getCompatColor(SceytChatUIKit.theme.borderColor))
