@@ -144,7 +144,11 @@ open class ChannelViewHolder(
             binding.dateStatus.setIcons(null)
             return
         }
-        val body = message.getFormattedBody(context, itemStyle.mentionTextStyle)
+        val body = message.getFormattedBody(
+            context = context,
+            mentionTextStyle = itemStyle.mentionTextStyle,
+            attachmentNameFormatter = itemStyle.attachmentNameFormatter
+        )
         val fromText = when {
             message.incoming -> {
                 val from = channel.lastMessage.user
@@ -198,7 +202,11 @@ open class ChannelViewHolder(
                 ?: return false
 
         if (lastReaction.id > (channel.lastMessage?.id ?: 0) || lastReaction.pending) {
-            val toMessage = SpannableStringBuilder(message.getFormattedBody(context, itemStyle.mentionTextStyle))
+            val toMessage = SpannableStringBuilder(message.getFormattedBody(
+                context,
+                itemStyle.mentionTextStyle,
+                itemStyle.attachmentNameFormatter
+            ))
             val reactedWord = itemView.getString(R.string.sceyt_reacted)
 
             val reactUserName = when {
