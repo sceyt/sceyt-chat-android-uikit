@@ -60,7 +60,6 @@ import java.util.Date
  * @property mentionMutedStateTextStyle - Style for mention message in muted channel, default is [buildMentionMutedTextStyle].
  * @property channelNameFormatter - Formatter for channel name, default is [SceytChatUIKitFormatters.channelNameFormatter].
  * @property channelDateFormatter - Date format for channel, default is [SceytChatUIKitFormatters.channelDateFormatter].
- * @property userNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.userNameFormatter].
  * @property messageSenderNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.messageSenderNameFormatter].
  * @property mentionUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.mentionUserNameFormatter].
  * @property reactedUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.reactedUserNameFormatter].
@@ -92,7 +91,6 @@ data class ChannelItemStyle(
         val mentionMutedStateTextStyle: TextStyle,
         val channelNameFormatter: Formatter<SceytChannel>,
         val channelDateFormatter: Formatter<Date>,
-        val userNameFormatter: Formatter<User>,
         val messageSenderNameFormatter: Formatter<User>,
         val mentionUserNameFormatter: Formatter<User>,
         val reactedUserNameFormatter: Formatter<User>,
@@ -170,7 +168,6 @@ data class ChannelItemStyle(
                     mentionMutedStateTextStyle = buildMentionMutedTextStyle(array),
                     channelNameFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                     channelDateFormatter = SceytChatUIKit.formatters.channelDateFormatter,
-                    userNameFormatter = SceytChatUIKit.formatters.userNameFormatterNew,
                     messageSenderNameFormatter = SceytChatUIKit.formatters.messageSenderNameFormatter,
                     mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatterNew,
                     reactedUserNameFormatter = SceytChatUIKit.formatters.reactedUserNameFormatter,
