@@ -27,7 +27,7 @@ import com.sceyt.chatuikit.styles.extensions.buildDraftPrefixTextStyle
 import com.sceyt.chatuikit.styles.extensions.buildLastMessageTextStyle
 import com.sceyt.chatuikit.styles.extensions.buildMentionMutedTextStyle
 import com.sceyt.chatuikit.styles.extensions.buildMentionTextStyle
-import com.sceyt.chatuikit.styles.extensions.buildMessageSenderNameStyle
+import com.sceyt.chatuikit.styles.extensions.buildLastMessageSenderNameStyle
 import com.sceyt.chatuikit.styles.extensions.buildSubjectTextStyle
 import com.sceyt.chatuikit.styles.extensions.buildTypingTextStyle
 import com.sceyt.chatuikit.styles.extensions.buildUnreadCountMutedTextStyle
@@ -49,7 +49,7 @@ import java.util.Date
  * @property subjectTextStyle - Style for channel subject, default is [buildSubjectTextStyle].
  * @property lastMessageTextStyle - Style for last message, default is [buildLastMessageTextStyle].
  * @property dateTextStyle - Style for date, default is [buildDateTextStyle].
- * @property messageSenderNameStyle - Style for sender name, default is [buildMessageSenderNameStyle].
+ * @property lastMessageSenderNameTextStyle - Style for sender name, default is [buildLastMessageSenderNameStyle].
  * @property deletedTextStyle - Style for deleted message, default is [buildDeletedTextStyle].
  * @property draftPrefixTextStyle - Style for draft message, default is [buildDraftPrefixTextStyle].
  * @property typingTextStyle - Style for typing message, default is [buildTypingTextStyle].
@@ -59,7 +59,7 @@ import java.util.Date
  * @property mentionMutedStateTextStyle - Style for mention message in muted channel, default is [buildMentionMutedTextStyle].
  * @property channelNameFormatter - Formatter for channel name, default is [SceytChatUIKitFormatters.channelNameFormatter].
  * @property channelDateFormatter - Date format for channel, default is [SceytChatUIKitFormatters.channelDateFormatter].
- * @property messageSenderNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.messageSenderNameFormatter].
+ * @property lastMessageSenderNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.channelLastMessageSenderNameFormatter].
  * @property mentionUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.mentionUserNameFormatter].
  * @property reactedUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.reactedUserNameFormatter].
  * @property typingUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.typingUserNameFormatter].
@@ -81,7 +81,7 @@ data class ChannelItemStyle(
         val subjectTextStyle: TextStyle,
         val lastMessageTextStyle: TextStyle,
         val dateTextStyle: TextStyle,
-        val messageSenderNameStyle: TextStyle,
+        val lastMessageSenderNameTextStyle: TextStyle,
         val deletedTextStyle: TextStyle,
         val draftPrefixTextStyle: TextStyle,
         val typingTextStyle: TextStyle,
@@ -91,7 +91,7 @@ data class ChannelItemStyle(
         val mentionMutedStateTextStyle: TextStyle,
         val channelNameFormatter: Formatter<SceytChannel>,
         val channelDateFormatter: Formatter<Date>,
-        val messageSenderNameFormatter: Formatter<User>,
+        val lastMessageSenderNameFormatter: Formatter<SceytChannel>,
         val mentionUserNameFormatter: Formatter<User>,
         val reactedUserNameFormatter: Formatter<User>,
         val typingUserNameFormatter: Formatter<User>,
@@ -159,7 +159,7 @@ data class ChannelItemStyle(
                     subjectTextStyle = buildSubjectTextStyle(array),
                     lastMessageTextStyle = buildLastMessageTextStyle(array),
                     dateTextStyle = buildDateTextStyle(array),
-                    messageSenderNameStyle = buildMessageSenderNameStyle(array),
+                    lastMessageSenderNameTextStyle = buildLastMessageSenderNameStyle(array),
                     deletedTextStyle = buildDeletedTextStyle(array),
                     draftPrefixTextStyle = buildDraftPrefixTextStyle(array),
                     typingTextStyle = buildTypingTextStyle(array),
@@ -169,7 +169,7 @@ data class ChannelItemStyle(
                     mentionMutedStateTextStyle = buildMentionMutedTextStyle(array),
                     channelNameFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                     channelDateFormatter = SceytChatUIKit.formatters.channelDateFormatter,
-                    messageSenderNameFormatter = SceytChatUIKit.formatters.messageSenderNameFormatter,
+                    lastMessageSenderNameFormatter = SceytChatUIKit.formatters.channelLastMessageSenderNameFormatter,
                     mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatterNew,
                     reactedUserNameFormatter = SceytChatUIKit.formatters.reactedUserNameFormatter,
                     typingUserNameFormatter = SceytChatUIKit.formatters.typingUserNameFormatter,
