@@ -13,6 +13,9 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
+import com.sceyt.chatuikit.presentation.custom_views.AvatarView
+import com.sceyt.chatuikit.providers.VisualProvider
+import com.sceyt.chatuikit.providers.defaults.DefaultChannelDefaultAvatarProvider
 import com.sceyt.chatuikit.styles.common.MenuStyle
 import com.sceyt.chatuikit.styles.common.SearchInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -35,6 +38,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property messageActionsMenuStyle style for the toolbar menu, default is [buildMessageActionsMenuStyle]
  * @property channelTitleFormatter formatter for the channel title, default is [SceytChatUIKitFormatters.channelNameFormatter]
  * @property channelSubtitleFormatter formatter for the channel subtitle, default is [SceytChatUIKitFormatters.channelSubtitleFormatter]
+ * @property channelDefaultAvatarProvider provider for the channel default avatar, default is [DefaultChannelDefaultAvatarProvider]
  * */
 data class MessagesListHeaderStyle(
         @ColorInt val backgroundColor: Int,
@@ -46,7 +50,8 @@ data class MessagesListHeaderStyle(
         val searchInputStyle: SearchInputStyle,
         val messageActionsMenuStyle: MenuStyle,
         val channelTitleFormatter: Formatter<SceytChannel>,
-        val channelSubtitleFormatter: Formatter<SceytChannel>
+        val channelSubtitleFormatter: Formatter<SceytChannel>,
+        val channelDefaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>
 ) {
 
     companion object {
@@ -83,7 +88,8 @@ data class MessagesListHeaderStyle(
                     searchInputStyle = buildSearchInputTextStyle(array),
                     messageActionsMenuStyle = buildMessageActionsMenuStyle(array),
                     channelTitleFormatter = SceytChatUIKit.formatters.channelNameFormatter,
-                    channelSubtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter
+                    channelSubtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter,
+                    channelDefaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider
                 ).let { styleCustomizer.apply(context, it) }
             }
         }
