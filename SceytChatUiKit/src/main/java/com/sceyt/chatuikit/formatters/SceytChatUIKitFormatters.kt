@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.persistence.lazyVar
 import java.util.Date
 
 class SceytChatUIKitFormatters {
+    //Todo: Remove this formatter
     var userNameFormatter: UserNameFormatter? = null
     val mentionUserNameFormatter: UserNameFormatter? = null
 

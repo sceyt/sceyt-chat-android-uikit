@@ -6,9 +6,16 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
+import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
+import com.sceyt.chatuikit.providers.VisualProvider
 
-fun AvatarView.setChannelAvatar(channel: SceytChannel, isSelf: Boolean = channel.isSelf()) {
-    val defaultAvatar = SceytChatUIKit.providers.channelDefaultAvatarProvider.provide(channel)
+fun AvatarView.setChannelAvatar(
+        channel: SceytChannel,
+        isSelf: Boolean = channel.isSelf(),
+        defaultAvatarProvider: VisualProvider<SceytChannel, DefaultAvatar>
+        = SceytChatUIKit.providers.channelDefaultAvatarProvider
+) {
+    val defaultAvatar = defaultAvatarProvider.provide(channel)
     val builder = styleBuilder()
         .setDefaultAvatar(defaultAvatar)
 
