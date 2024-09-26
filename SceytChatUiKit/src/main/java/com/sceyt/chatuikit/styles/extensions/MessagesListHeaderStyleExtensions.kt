@@ -106,13 +106,13 @@ internal fun MessagesListHeaderStyle.Builder.buildSearchInputTextStyle(
     .searchIcon(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputSearchIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_search)?.applyTint(
-            SceytChatUIKit.theme.iconSecondaryColor
+            context, SceytChatUIKit.theme.iconSecondaryColor
         )
     )
     .clearIcon(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputClearIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_cancel)?.applyTint(
-            SceytChatUIKit.theme.iconSecondaryColor
+            context, SceytChatUIKit.theme.iconSecondaryColor
         )
     )
     .textInputStyle(buildSearchInputTextInputStyle(typedArray))
