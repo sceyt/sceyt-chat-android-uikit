@@ -98,6 +98,7 @@ import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.sceyt.chatuikit.shared.helpers.picker.PickType
 import com.sceyt.chatuikit.styles.MessageInputStyle
 import com.sceyt.chatuikit.styles.MessagesListViewStyle
+import com.sceyt.chatuikit.styles.common.TextStyle
 import com.vanniktech.ui.animateToGone
 import com.vanniktech.ui.animateToVisible
 import kotlinx.coroutines.Job
@@ -585,7 +586,7 @@ class MessageInputView @JvmOverloads constructor(
 
     private fun initInputWithEditMessage(message: SceytMessage) {
         with(binding) {
-            var body = MessageBodyStyleHelper.buildOnlyStylesWithAttributes(message.body, message.bodyAttributes)
+            var body = MessageBodyStyleHelper.buildOnlyTextStyles(message.body, message.bodyAttributes)
             if (!message.mentionedUsers.isNullOrEmpty()) {
                 val data = MentionUserHelper.getMentionsIndexed(message.bodyAttributes, message.mentionedUsers)
                 body = MentionAnnotation.setMentionAnnotations(body, data)
@@ -634,9 +635,13 @@ class MessageInputView @JvmOverloads constructor(
         var body: CharSequence = draftMessage.message
         binding.messageInput.removeTextChangedListener(inputTextWatcher)
         with(binding.messageInput) {
-            body = MessageBodyStyleHelper.buildWithAllAttributes(body.toString(),
-                draftMessage.mentionUsers, draftMessage.bodyAttributes)
-
+            body = MessageBodyStyleHelper.buildWithAttributes(
+                context = context,
+                body = body.toString(),
+                mentionUsers = draftMessage.mentionUsers,
+                bodyAttributes = draftMessage.bodyAttributes,
+                mentionTextStyle = TextStyle()
+            )
             if (!draftMessage.mentionUsers.isNullOrEmpty()) {
                 val data = MentionUserHelper.getMentionsIndexed(draftMessage.bodyAttributes, draftMessage.mentionUsers)
                 body = MentionAnnotation.setMentionAnnotations(body, data)

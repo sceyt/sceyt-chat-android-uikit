@@ -14,4 +14,16 @@ object StyleConstants {
     fun Int.colorOrDefault(@ColorInt default: Int): Int {
         return if (this == UNSET_COLOR) default else this
     }
+
+    fun Int.sizeOrDefault(default: Int): Int {
+        return if (this == UNSET_SIZE) default else this
+    }
+
+    fun Int.fontOrDefault(default: Int): Int {
+        return if (this == UNSET_FONT_RESOURCE) default else this
+    }
+
+    fun Int.styleOrDefault(default: Int): Int {
+        return if (this == UNSET_STYLE) default else this
+    }
 }

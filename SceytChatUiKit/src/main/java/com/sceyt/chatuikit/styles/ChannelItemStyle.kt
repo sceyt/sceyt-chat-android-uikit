@@ -308,7 +308,7 @@ data class ChannelItemStyle(
                     )
                     .setStyle(
                         index = R.styleable.ChannelListView_sceytUiChannelListMentionTextStyle,
-                        defValue = Typeface.NORMAL
+                        defValue = Typeface.BOLD
                     )
                     .setFont(
                         index = R.styleable.ChannelListView_sceytUiChannelListMentionTextFont

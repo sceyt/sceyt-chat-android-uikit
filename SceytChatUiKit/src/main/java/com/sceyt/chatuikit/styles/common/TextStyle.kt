@@ -5,6 +5,7 @@ import android.content.res.TypedArray
 import android.graphics.Typeface
 import android.os.Build
 import android.text.SpannableStringBuilder
+import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.text.style.TypefaceSpan
@@ -18,13 +19,15 @@ import androidx.core.content.res.ResourcesCompat
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_FONT_RESOURCE
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_STYLE
+import com.sceyt.chatuikit.styles.StyleConstants.styleOrDefault
 
 data class TextStyle(
         @ColorInt val backgroundColor: Int = UNSET_COLOR,
         @ColorInt val color: Int = UNSET_COLOR,
         @Px val size: Int = UNSET_SIZE,
         @FontRes val font: Int = UNSET_FONT_RESOURCE,
-        val style: Int = Typeface.NORMAL
+        val style: Int = UNSET_STYLE
 ) {
 
     fun apply(textView: TextView) {
@@ -43,7 +46,7 @@ data class TextStyle(
         val typeface = if (font != UNSET_FONT_RESOURCE)
             ResourcesCompat.getFont(textView.context, font) else Typeface.DEFAULT
 
-        textView.setTypeface(typeface, style)
+        textView.setTypeface(typeface, style.styleOrDefault(Typeface.NORMAL))
     }
 
     fun apply(
@@ -63,14 +66,16 @@ data class TextStyle(
                 }
             }
 
-        if (style != Typeface.NORMAL) {
+        if (style != UNSET_STYLE) {
             spannable.setSpan(StyleSpan(style), start, end, SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+
+        if (size != UNSET_SIZE) {
+            spannable.setSpan(AbsoluteSizeSpan(size), start, end, SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
     }
 
-    internal class Builder(
-            private val typedArray: TypedArray
-    ) {
+    internal class Builder(private val typedArray: TypedArray) {
         @ColorInt
         private var color = UNSET_COLOR
 
@@ -83,22 +88,18 @@ data class TextStyle(
         @FontRes
         private var font = UNSET_FONT_RESOURCE
 
-        private var style = Typeface.NORMAL
+        private var style = UNSET_STYLE
 
         fun setStyle(@StyleableRes index: Int, defValue: Int = style) = apply {
             style = typedArray.getInt(index, defValue)
         }
 
-        fun setColor(@StyleableRes index: Int, @ColorInt defValue: Int = UNSET_COLOR) = apply {
+        fun setColor(@StyleableRes index: Int, @ColorInt defValue: Int = color) = apply {
             color = typedArray.getColor(index, defValue)
         }
 
-        fun setBackgroundColor(@StyleableRes index: Int, @ColorInt defValue: Int = UNSET_COLOR) = apply {
+        fun setBackgroundColor(@StyleableRes index: Int, @ColorInt defValue: Int = backgroundColor) = apply {
             backgroundColor = typedArray.getColor(index, defValue)
-        }
-
-        fun setColor(@ColorInt color: Int) = apply {
-            this.color = color
         }
 
         fun setSize(@StyleableRes index: Int, defValue: Int = size) = apply {
