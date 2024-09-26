@@ -3,21 +3,26 @@ package com.sceyt.chatuikit.formatters
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.formatters.date.UserPresenceDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAvatarInitialsFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMentionUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageDateSeparatorFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultTypingUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultUserPresenceDateFormatter
 import com.sceyt.chatuikit.persistence.lazyVar
 import java.util.Date
 
 class SceytChatUIKitFormatters {
     var userNameFormatter: UserNameFormatter? = null
-    val mentionUserNameFormatter:UserNameFormatter? = null
+    val mentionUserNameFormatter: UserNameFormatter? = null
+
+    var userPresenceDateFormatter: Formatter<User> by lazyVar {
+        DefaultUserPresenceDateFormatter()
+    }
 
     var userNameFormatterNew: Formatter<User> by lazyVar {
         DefaultUserNameFormatter()
@@ -39,12 +44,12 @@ class SceytChatUIKitFormatters {
         DefaultUserNameFormatter()
     }
 
-    var userPresenceDateFormatter: UserPresenceDateFormatter by lazyVar {
-        UserPresenceDateFormatter()
-    }
-
     var channelNameFormatter: Formatter<SceytChannel> by lazyVar {
         DefaultChannelNameFormatter()
+    }
+
+    var channelSubtitleFormatter: Formatter<SceytChannel> by lazyVar {
+        DefaultChannelSubtitleFormatter()
     }
 
     var channelDateFormatter: Formatter<Date> by lazyVar {
