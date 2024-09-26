@@ -27,7 +27,8 @@ internal fun MessagesListHeaderStyle.Builder.buildTitleTextStyle(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderTitleTextStyle
     )
     .setFont(
-        index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderTitleTextFont
+        index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderTitleTextFont,
+        defValue = R.font.roboto_medium
     )
     .build()
 
