@@ -13,10 +13,11 @@ import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper.buildWithAttributes
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.styles.ChannelItemStyle
 import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.styles.common.TextStyle
 import java.io.File
 
 fun SceytMessage?.setChannelMessageDateAndStatusIcon(
@@ -94,27 +95,14 @@ private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
     return deliveryStatus == DeliveryStatus.Displayed
 }
 
-fun SceytMessage.getFormattedBody(context: Context): SpannableString {
+fun SceytMessage.getFormattedBody(
+        context: Context,
+        mentionTextStyle: TextStyle
+): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() || attachments.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
-            MessageBodyStyleHelper.buildWithAllAttributes( this)
-        }
-
-        attachments.size == 1 -> {
-            attachments.getOrNull(0)?.getShowName(context, body)
-        }
-
-        else -> context.getString(R.string.sceyt_file)
-    }
-    return SpannableString(body)
-}
-
-fun SceytMessage.getFormattedLastMessageBody(context: Context): SpannableString {
-    val body = when {
-        state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
-        attachments.isNullOrEmpty() || attachments.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
-            MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(this)
+            buildWithAttributes(context, mentionTextStyle)
         }
 
         attachments.size == 1 -> {

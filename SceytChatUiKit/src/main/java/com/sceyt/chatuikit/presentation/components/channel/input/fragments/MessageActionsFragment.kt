@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.input.fragments
 
+import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -26,13 +27,12 @@ import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.CancelReplyMessageViewClickListener
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
-import com.sceyt.chatuikit.presentation.extensions.isTextMessage
 import com.sceyt.chatuikit.shared.utils.ViewUtil
 import com.sceyt.chatuikit.styles.MessageInputStyle
 import com.sceyt.chatuikit.styles.MessageItemStyle
 import com.sceyt.chatuikit.styles.MessagesListViewStyle
+import com.sceyt.chatuikit.styles.common.TextStyle
 
 open class MessageActionsFragment : Fragment() {
     protected var binding: SceytFragmentMessageActionsBinding? = null
@@ -67,9 +67,9 @@ open class MessageActionsFragment : Fragment() {
             icReplyOrEdit.setImageResource(R.drawable.sceyt_ic_edit)
             layoutImage.isVisible = false
             tvName.text = getString(R.string.sceyt_edit_message)
-            tvMessageBody.text = if (message.isTextMessage())
-                MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(message)
-            else message.getFormattedBody(root.context)
+            tvMessageBody.text = message.getFormattedBody(root.context, TextStyle(
+                style = Typeface.BOLD,
+            ))
         }
     }
 

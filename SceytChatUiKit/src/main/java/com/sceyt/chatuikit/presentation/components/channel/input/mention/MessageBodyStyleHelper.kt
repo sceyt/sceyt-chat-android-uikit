@@ -1,8 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel.input.mention
 
-import android.graphics.Typeface
+import android.content.Context
 import android.text.SpannableStringBuilder
-import androidx.annotation.ColorInt
 import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -10,11 +9,11 @@ import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyAttr
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyler
 import com.sceyt.chatuikit.presentation.components.channel.input.format.StyleType
 import com.sceyt.chatuikit.presentation.components.channel.input.format.toStyleType
-import com.sceyt.chatuikit.styles.StyleConstants.UNSET_STYLE
+import com.sceyt.chatuikit.styles.common.TextStyle
 
 object MessageBodyStyleHelper {
 
-    fun buildOnlyStylesWithAttributes(
+    fun buildOnlyTextStyles(
             body: CharSequence,
             attribute: List<BodyAttribute>?
     ): CharSequence {
@@ -22,81 +21,53 @@ object MessageBodyStyleHelper {
         return appendTextStyle(body, attribute)
     }
 
-    fun buildWithAllAttributes(
-            message: SceytMessage,
-            @ColorInt color: Int = 0,
-            style: Int = UNSET_STYLE,
+    fun SceytMessage.buildWithAttributes(
+            context: Context,
+            mentionTextStyle: TextStyle
     ): CharSequence {
-        return buildWithAllAttributes(
-            body = message.body,
-            mentionUsers = message.mentionedUsers,
-            bodyAttributes = message.bodyAttributes,
-            color = color,
-            style = style)
+        return buildWithAttributes(
+            context = context,
+            body = body,
+            mentionUsers = mentionedUsers,
+            bodyAttributes = bodyAttributes,
+            mentionTextStyle = mentionTextStyle
+        )
     }
 
-    fun buildWithAllAttributes(
+    fun buildWithAttributes(
+            context: Context,
             body: CharSequence,
             mentionUsers: List<User>?,
             bodyAttributes: List<BodyAttribute>?,
-            @ColorInt color: Int = 0,
-            style: Int = UNSET_STYLE,
+            mentionTextStyle: TextStyle
     ): CharSequence {
-        return appendBodyAttributes(
+        return appendAttributes(
+            context = context,
             body = body,
             list = bodyAttributes,
             mentionUsers = mentionUsers,
-            color = color,
-            style = style)
+            mentionTextStyle = mentionTextStyle
+        )
     }
 
-    fun buildOnlyBoldMentionsAndStylesWithAttributes(message: SceytMessage): CharSequence {
-        return buildOnlyBoldMentionsAndStylesWithAttributes(message.body, message.mentionedUsers, message.bodyAttributes)
-    }
-
-    fun buildOnlyBoldMentionsAndStylesWithAttributes(body: CharSequence, mentionUsers: List<User>?, bodyAttributes: List<BodyAttribute>?): CharSequence {
-        return appendStyleOnlyWithBoldMentions(body, bodyAttributes, mentionUsers)
-    }
-
-    private fun appendBodyAttributes(
+    private fun appendAttributes(
+            context: Context,
             body: CharSequence,
             list: List<BodyAttribute>?,
             mentionUsers: List<User>?,
-            @ColorInt color: Int = 0,
-            style: Int = UNSET_STYLE,
+            mentionTextStyle: TextStyle
     ): CharSequence {
         list ?: return body
-        val group = list.groupBy { it.type == BodyAttributeType.Mention.toString() }
+        val group = list.groupBy { it.type == BodyAttributeType.Mention.value() }
         var spannableString = appendTextStyle(body, group[false])
 
         group[true]?.let {
             spannableString = MentionUserHelper.buildWithMentionedUsers(
+                context = context,
                 body = spannableString,
                 mentionAttributes = it,
                 mentionUsers = mentionUsers,
-                color = color,
-                style = style)
-        }
-
-        return spannableString
-    }
-
-    private fun appendStyleOnlyWithBoldMentions(
-            body: CharSequence,
-            list: List<BodyAttribute>?,
-            mentionUsers: List<User>?,
-            style: Int = Typeface.BOLD
-    ): CharSequence {
-        list ?: return body
-        val group = list.groupBy { it.type == BodyAttributeType.Mention.toString() }
-        var spannableString = appendTextStyle(body, group[false])
-
-        group[true]?.let {
-            spannableString = MentionUserHelper.buildOnlyBoldNamesWithMentionedUsers(
-                spannableBody = spannableString,
-                attributes = it,
-                mentionUsers = mentionUsers,
-                style = style)
+                mentionTextStyle = mentionTextStyle)
         }
 
         return spannableString

@@ -59,6 +59,7 @@ import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
+import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyAttributeType
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionUserHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
@@ -76,6 +77,7 @@ import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.chatuikit.shared.utils.ViewUtil
 import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.styles.common.TextStyle
 import kotlin.math.min
 
 abstract class BaseMsgViewHolder(private val view: View,
@@ -148,19 +150,28 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
-    protected var reactionsAdapter: ReactionsAdapter? = null
+    protected open var reactionsAdapter: ReactionsAdapter? = null
 
     protected open fun setMessageBody(messageBody: TextView, message: SceytMessage,
                                       checkLinks: Boolean = true, isLinkViewHolder: Boolean = false) {
         var text: CharSequence = message.body.trim()
         if (!message.bodyAttributes.isNullOrEmpty()) {
-            text = MessageBodyStyleHelper.buildOnlyStylesWithAttributes(text, message.bodyAttributes)
+            text = MessageBodyStyleHelper.buildOnlyTextStyles(text, message.bodyAttributes)
             if (!message.mentionedUsers.isNullOrEmpty())
-                text = MentionUserHelper.buildWithMentionedUsers(text,
-                    message.bodyAttributes, message.mentionedUsers,
-                    color = context.getCompatColor(SceytChatUIKit.theme.accentColor)) {
-                    messageListeners?.onMentionClick(messageBody, it)
-                }
+                text = MentionUserHelper.buildWithMentionedUsers(
+                    context = context,
+                    body = text,
+                    mentionAttributes = message.bodyAttributes.filter {
+                        it.type == BodyAttributeType.Mention.value()
+                    },
+                    mentionUsers = message.mentionedUsers,
+                    mentionTextStyle = TextStyle(
+                        color = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+                    ),
+                    mentionClickListener = {
+                        messageListeners?.onMentionClick(messageBody, it)
+                    }
+                )
         }
         setTextAutoLinkMasks(messageBody, text.toString(), checkLinks, isLinkViewHolder)
         messageBody.setText(text, TextView.BufferType.SPANNABLE)

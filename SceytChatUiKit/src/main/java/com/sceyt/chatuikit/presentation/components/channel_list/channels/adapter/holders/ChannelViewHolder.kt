@@ -34,7 +34,6 @@ import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.PresenceStateIndicatorView
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
-import com.sceyt.chatuikit.presentation.extensions.getFormattedLastMessageBody
 import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
 import com.sceyt.chatuikit.presentation.extensions.setChannelMessageDateAndStatusIcon
 import com.sceyt.chatuikit.styles.ChannelItemStyle
@@ -147,7 +146,7 @@ open class ChannelViewHolder(
             binding.dateStatus.setIcons(null)
             return
         }
-        val body = message.getFormattedLastMessageBody(context)
+        val body = message.getFormattedBody(context, itemStyle.mentionTextStyle)
         val fromText = when {
             message.incoming -> {
                 val from = channel.lastMessage.user
@@ -201,7 +200,7 @@ open class ChannelViewHolder(
                 ?: return false
 
         if (lastReaction.id > (channel.lastMessage?.id ?: 0) || lastReaction.pending) {
-            val toMessage = SpannableStringBuilder(message.getFormattedBody(context))
+            val toMessage = SpannableStringBuilder(message.getFormattedBody(context, itemStyle.mentionTextStyle))
             val reactedWord = itemView.getString(R.string.sceyt_reacted)
 
             val reactUserName = when {
@@ -232,11 +231,12 @@ open class ChannelViewHolder(
         return if (draftMessage != null) {
             val draft = context.getString(R.string.sceyt_draft)
             val text = SpannableStringBuilder("$draft: ").apply {
-                append(MessageBodyStyleHelper.buildWithAllAttributes(
+                append(MessageBodyStyleHelper.buildWithAttributes(
+                    context = context,
                     body = draftMessage.message.toString(),
                     mentionUsers = draftMessage.mentionUsers,
                     bodyAttributes = draftMessage.bodyAttributes,
-                    style = itemStyle.draftPrefixTextStyle.style)
+                    mentionTextStyle = itemStyle.mentionTextStyle)
                 )
                 itemStyle.draftPrefixTextStyle.apply(context, this, 0, draft.length + 1)
             }
