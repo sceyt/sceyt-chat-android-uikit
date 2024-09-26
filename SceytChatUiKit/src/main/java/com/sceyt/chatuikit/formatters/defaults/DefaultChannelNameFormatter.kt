@@ -11,15 +11,12 @@ import com.sceyt.chatuikit.persistence.extensions.isSelf
 open class DefaultChannelNameFormatter : Formatter<SceytChannel> {
 
     override fun format(context: Context, from: SceytChannel): CharSequence {
-        return if (from.isGroup) {
-            from.channelSubject
-        } else {
-            if (from.isSelf()) {
-                context.getString(R.string.sceyt_self_notes)
-            } else {
-                from.getPeer()?.user?.let { user ->
-                    SceytChatUIKit.formatters.userNameFormatterNew.format(context, user)
-                } ?: ""
+        return when {
+            from.isGroup -> from.channelSubject
+            from.isSelf() -> context.getString(R.string.sceyt_self_notes)
+            else -> {
+                val member = from.getPeer() ?: return ""
+                SceytChatUIKit.formatters.userNameFormatterNew.format(context, member.user)
             }
         }
     }

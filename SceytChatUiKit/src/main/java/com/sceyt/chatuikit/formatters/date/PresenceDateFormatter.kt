@@ -5,7 +5,7 @@ import com.sceyt.chatuikit.R
 import java.text.SimpleDateFormat
 import java.util.*
 
-open class UserPresenceDateFormatter {
+open class PresenceDateFormatter {
     open fun oneMinAgo(context: Context, date: Date) = DateFormatData(
         beginTittle = "${context.getString(R.string.sceyt_last_seen)} ${context.getString(R.string.sceyt_1_min_ago)}")
 

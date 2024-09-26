@@ -1,18 +1,14 @@
 package com.sceyt.chatuikit.presentation.components.select_users.adapters.holders
 
 import androidx.core.view.isVisible
-import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemSelectUserBinding
 import com.sceyt.chatuikit.extensions.getPresentableName
-import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.SelectableUsersAdapter
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
-import com.sceyt.chatuikit.shared.utils.DateTimeUtil
-import java.util.Date
 
 class SelectableUserViewHolder(
         private val binding: SceytItemSelectUserBinding,
@@ -36,17 +32,9 @@ class SelectableUserViewHolder(
                 val userPresentableName = user.getPresentableName()
                 avatar.setUserAvatar(user)
                 userName.text = userPresentableName
-                tvStatus.isVisible = user.presence?.state == PresenceState.Online || (user.presence?.lastActiveAt
-                        ?: 0) > 0L
-
-                tvStatus.text = if (user.presence?.state == PresenceState.Online) {
-                    itemView.getString(com.sceyt.chatuikit.R.string.sceyt_online)
-                } else {
-                    if (user.presence?.lastActiveAt == 0L) {
-                        ""
-                    } else DateTimeUtil.getPresenceDateFormatData(itemView.context, Date(user.presence?.lastActiveAt
-                            ?: 0))
-                }
+                val presence = SceytChatUIKit.formatters.userPresenceDateFormatter.format(context, user)
+                tvStatus.isVisible = presence.isNotEmpty()
+                tvStatus.text = presence
             }
 
             itemView.setOnClickListener {

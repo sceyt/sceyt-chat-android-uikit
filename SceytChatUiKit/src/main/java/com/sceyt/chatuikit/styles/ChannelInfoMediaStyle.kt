@@ -7,17 +7,17 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.formatters.date.ConversationMediaDateFormatter
+import com.sceyt.chatuikit.formatters.date.MediaDateFormatter
 import com.sceyt.chatuikit.providers.VisualProvider
 
 /**
  * Style for conversation info media
  * @param videoDurationIcon icon for video duration, default is [R.drawable.sceyt_ic_video]
- * @param mediaDateSeparatorFormat date separator format, default is [ConversationMediaDateFormatter]
+ * @param mediaDateSeparatorFormat date separator format, default is [MediaDateFormatter]
  * */
 data class ChannelInfoMediaStyle(
         var videoDurationIcon: Drawable?,
-        var mediaDateSeparatorFormat: ConversationMediaDateFormatter,
+        var mediaDateSeparatorFormat: MediaDateFormatter,
     //TODO
         var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
@@ -32,7 +32,7 @@ data class ChannelInfoMediaStyle(
     ) {
         fun build(): ChannelInfoMediaStyle {
             context.obtainStyledAttributes(attributeSet, R.styleable.ConversationInfoMediaStyle).use { typedArray ->
-                val mediaDateSeparatorFormat = ConversationMediaDateFormatter()
+                val mediaDateSeparatorFormat = MediaDateFormatter()
 
                 val videoDurationIcon = typedArray.getDrawable(R.styleable.ConversationInfoMediaStyle_sceytUiInfoVideoDurationIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_video)

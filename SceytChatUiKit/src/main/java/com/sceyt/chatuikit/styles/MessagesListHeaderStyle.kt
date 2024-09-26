@@ -6,9 +6,12 @@ import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.styles.common.MenuStyle
 import com.sceyt.chatuikit.styles.common.SearchInputStyle
@@ -30,6 +33,8 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property subTitleStyle style for the subtitle, default is [buildSubTitleTextStyle]
  * @property searchInputStyle style for the search input, default is [buildSearchInputTextStyle]
  * @property messageActionsMenuStyle style for the toolbar menu, default is [buildMessageActionsMenuStyle]
+ * @property channelTitleFormatter formatter for the channel title, default is [SceytChatUIKitFormatters.channelNameFormatter]
+ * @property channelSubtitleFormatter formatter for the channel subtitle, default is [SceytChatUIKitFormatters.channelSubtitleFormatter]
  * */
 data class MessagesListHeaderStyle(
         @ColorInt val backgroundColor: Int,
@@ -39,7 +44,9 @@ data class MessagesListHeaderStyle(
         val titleTextStyle: TextStyle,
         val subTitleStyle: TextStyle,
         val searchInputStyle: SearchInputStyle,
-        val messageActionsMenuStyle: MenuStyle
+        val messageActionsMenuStyle: MenuStyle,
+        val channelTitleFormatter: Formatter<SceytChannel>,
+        val channelSubtitleFormatter: Formatter<SceytChannel>
 ) {
 
     companion object {
@@ -75,6 +82,8 @@ data class MessagesListHeaderStyle(
                     subTitleStyle = buildSubTitleTextStyle(array),
                     searchInputStyle = buildSearchInputTextStyle(array),
                     messageActionsMenuStyle = buildMessageActionsMenuStyle(array),
+                    channelTitleFormatter = SceytChatUIKit.formatters.channelNameFormatter,
+                    channelSubtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter
                 ).let { styleCustomizer.apply(context, it) }
             }
         }

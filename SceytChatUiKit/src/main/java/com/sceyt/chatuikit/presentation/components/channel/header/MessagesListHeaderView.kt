@@ -25,13 +25,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.AppBarLayout
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.copy
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
-import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -39,14 +37,12 @@ import com.sceyt.chatuikit.databinding.SceytMessagesListHeaderViewBinding
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
@@ -61,12 +57,10 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.Messa
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
-import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import com.sceyt.chatuikit.styles.MessagesListHeaderStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.Date
 
 @Suppress("MemberVisibilityCanBePrivate")
 class MessagesListHeaderView @JvmOverloads constructor(
@@ -181,15 +175,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 (layoutParams as MarginLayoutParams).setMargins(binding.avatar.marginLeft, marginTop, marginRight, marginBottom)
             }
         } else {
-            val title = when {
-                isGroup -> channel.channelSubject
-                channel.isSelf() -> getString(R.string.sceyt_self_notes)
-                else -> {
-                    val member = channel.getPeer() ?: return
-                    userNameFormatter?.format(member.user)
-                            ?: member.user.getPresentableNameCheckDeleted(context)
-                }
-            }
+            val title = style.channelTitleFormatter.format(context, channel)
             if (titleTextView.text.equals(title)) return
             titleTextView.text = title
         }
@@ -202,39 +188,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
         post {
             if (!replyInThread) {
-                val title = when (channel.getChannelType()) {
-                    ChannelTypeEnum.Direct -> {
-                        val member = channel.getPeer() ?: return@post
-                        if (member.user.blocked) {
-                            ""
-                        } else {
-                            if (member.user.presence?.state == PresenceState.Online) {
-                                getString(R.string.sceyt_online)
-                            } else {
-                                member.user.presence?.lastActiveAt?.let {
-                                    if (it != 0L) {
-                                        DateTimeUtil.getPresenceDateFormatData(context, Date(it))
-                                    } else null
-                                }
-                            }
-                        }
-                    }
-
-                    ChannelTypeEnum.Group -> {
-                        val memberCount = channel.memberCount
-                        if (memberCount > 1)
-                            getString(R.string.sceyt_members_count, memberCount)
-                        else getString(R.string.sceyt_member_count, memberCount)
-                    }
-
-                    ChannelTypeEnum.Public -> {
-                        val memberCount = channel.memberCount
-                        if (memberCount > 1)
-                            getString(R.string.sceyt_subscribers_count, memberCount)
-                        else getString(R.string.sceyt_subscriber_count, memberCount)
-                    }
-                }
-                setSubTitleText(subjectTextView, title, !title.isNullOrBlank() && !typingUsersHelper.isTyping)
+                val title = style.channelSubtitleFormatter.format(context, channel)
+                setSubTitleText(subjectTextView, title, title.isNotBlank() && !typingUsersHelper.isTyping)
             } else {
                 val fullName = replyMessage?.user?.fullName
                 val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
@@ -243,7 +198,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun setSubTitleText(textView: TextView, title: String?, visible: Boolean) {
+    private fun setSubTitleText(textView: TextView, title: CharSequence, visible: Boolean) {
         if (!visible) {
             textView.isVisible = false
             return

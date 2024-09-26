@@ -3,9 +3,9 @@ package com.sceyt.chatuikit.shared.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import android.text.format.DateFormat
-import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.formatters.date.SceytDateFormatter
 import com.sceyt.chatuikit.formatters.date.DateFormatData
+import com.sceyt.chatuikit.formatters.date.PresenceDateFormatter
+import com.sceyt.chatuikit.formatters.date.SceytDateFormatter
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -201,7 +201,11 @@ object DateTimeUtil {
         }
     }
 
-    fun getPresenceDateFormatData(context: Context, date: Date): String {
+    fun getPresenceDateFormatData(
+            context: Context,
+            date: Date,
+            dateFormatter: PresenceDateFormatter
+    ): String {
         val now = Calendar.getInstance()
         val sdf = SimpleDateFormat(SERVER_DATE_PATTERN, Locale.getDefault())
         sdf.timeZone = TimeZone.getTimeZone("UTC")
@@ -219,7 +223,6 @@ object DateTimeUtil {
             val hoursDiff = TimeUnit.MILLISECONDS.toHours(now.timeInMillis - date2.timeInMillis).toInt().absoluteValue
             val minDiff = TimeUnit.MILLISECONDS.toMinutes(now.timeInMillis - date2.timeInMillis).toInt().absoluteValue
 
-            val dateFormatter = SceytChatUIKit.formatters.userPresenceDateFormatter
             return when {
                 yearsDiff > 0 -> {
                     getDateText(date, dateFormatter.olderThisYear(context, date))
