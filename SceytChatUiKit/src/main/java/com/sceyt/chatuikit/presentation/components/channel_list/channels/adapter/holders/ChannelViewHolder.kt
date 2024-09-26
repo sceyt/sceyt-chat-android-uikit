@@ -269,7 +269,7 @@ open class ChannelViewHolder(
     }
 
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatarView: AvatarView) {
-        avatarView.setChannelAvatar(channel, isSelf)
+        avatarView.setChannelAvatar(channel, isSelf, itemStyle.channelDefaultAvatarProvider)
     }
 
     open fun setLastMessageStatusAndDate(channel: SceytChannel, decoratedTextView: DecoratedTextView) {
