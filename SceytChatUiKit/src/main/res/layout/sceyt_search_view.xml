@@ -5,10 +5,10 @@
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:backgroundTint="@color/sceyt_color_surface_1"
     android:focusable="true"
     android:focusableInTouchMode="true"
     tools:background="@drawable/sceyt_bg_corners_10"
+    tools:backgroundTint="@color/sceyt_color_surface_1"
     tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
     <androidx.appcompat.widget.AppCompatImageView

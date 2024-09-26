@@ -166,15 +166,15 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:background="@drawable/sceyt_bg_corners_10"
-                android:backgroundTint="@color/sceyt_color_surface_1"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/icBack"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toTopOf="parent"
+                tools:background="@drawable/sceyt_bg_corners_10"
+                tools:backgroundTint="@color/sceyt_color_surface_1">
 
                 <androidx.appcompat.widget.AppCompatImageView
                     android:id="@+id/icSearch"

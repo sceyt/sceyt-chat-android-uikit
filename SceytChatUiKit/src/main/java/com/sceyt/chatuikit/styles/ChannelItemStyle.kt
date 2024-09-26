@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.styles
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
@@ -21,6 +20,17 @@ import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.providers.defaults.DefaultChannelListAttachmentIconProvider
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.extensions.buildDateTextStyle
+import com.sceyt.chatuikit.styles.extensions.buildDeletedTextStyle
+import com.sceyt.chatuikit.styles.extensions.buildDraftPrefixTextStyle
+import com.sceyt.chatuikit.styles.extensions.buildLastMessageTextStyle
+import com.sceyt.chatuikit.styles.extensions.buildMentionMutedTextStyle
+import com.sceyt.chatuikit.styles.extensions.buildMentionTextStyle
+import com.sceyt.chatuikit.styles.extensions.buildMessageSenderNameStyle
+import com.sceyt.chatuikit.styles.extensions.buildSubjectTextStyle
+import com.sceyt.chatuikit.styles.extensions.buildTypingTextStyle
+import com.sceyt.chatuikit.styles.extensions.buildUnreadCountMutedTextStyle
+import com.sceyt.chatuikit.styles.extensions.buildUnreadCountTextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 import java.util.Date
 
@@ -35,17 +45,17 @@ import java.util.Date
  * @property messageDeliveryStatusIcons - Icons for message delivery status, default is [MessageDeliveryStatusIcons].
  * @property autoDeletedChannelIcon - Icon for auto deleted channel, default is [R.drawable.sceyt_ic_auto_deleted_channel].
  * @property deliveryStatusIndicatorSize - Size of the status icon, default is 16dp.
- * @property subjectTextStyle - Style for channel subject, default is [TextStyle].
- * @property lastMessageTextStyle - Style for last message, default is [TextStyle].
- * @property dateTextStyle - Style for date, default is [TextStyle].
- * @property messageSenderNameStyle - Style for sender name, default is [TextStyle].
- * @property deletedTextStyle - Style for deleted message, default is [TextStyle].
- * @property draftPrefixTextStyle - Style for draft message, default is [TextStyle].
- * @property typingTextStyle - Style for typing message, default is [TextStyle].
- * @property unreadCountTextStyle - Style for unread count, default is [TextStyle].
- * @property unreadCountMutedStateTextStyle - Style for unread count in muted channel, default is [TextStyle].
- * @property mentionTextStyle - Style for mention message, default is [TextStyle].
- * @property mentionMutedStateTextStyle - Style for mention message in muted channel, default is [TextStyle].
+ * @property subjectTextStyle - Style for channel subject, default is [buildSubjectTextStyle].
+ * @property lastMessageTextStyle - Style for last message, default is [buildLastMessageTextStyle].
+ * @property dateTextStyle - Style for date, default is [buildDateTextStyle].
+ * @property messageSenderNameStyle - Style for sender name, default is [buildMessageSenderNameStyle].
+ * @property deletedTextStyle - Style for deleted message, default is [buildDeletedTextStyle].
+ * @property draftPrefixTextStyle - Style for draft message, default is [buildDraftPrefixTextStyle].
+ * @property typingTextStyle - Style for typing message, default is [buildTypingTextStyle].
+ * @property unreadCountTextStyle - Style for unread count, default is [buildUnreadCountTextStyle].
+ * @property unreadCountMutedStateTextStyle - Style for unread count in muted channel, default is [buildUnreadCountMutedTextStyle].
+ * @property mentionTextStyle - Style for mention message, default is [buildMentionTextStyle].
+ * @property mentionMutedStateTextStyle - Style for mention message in muted channel, default is [buildMentionMutedTextStyle].
  * @property channelNameFormatter - Formatter for channel name, default is [SceytChatUIKitFormatters.channelNameFormatter].
  * @property channelDateFormatter - Date format for channel, default is [SceytChatUIKitFormatters.channelDateFormatter].
  * @property userNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.userNameFormatter].
@@ -92,7 +102,7 @@ data class ChannelItemStyle(
     }
 
     internal class Builder(
-            private val context: Context,
+            internal val context: Context,
             private val attrs: AttributeSet?
     ) {
         fun build(): ChannelItemStyle {
@@ -131,213 +141,6 @@ data class ChannelItemStyle(
                 val statusIconSize = array.getDimensionPixelSize(R.styleable.ChannelListView_sceytUiChannelListStatusIndicatorSize,
                     dpToPx(16f))
 
-                val subjectTextStyle = TextStyle.Builder(array)
-                    .setColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListChannelSubjectTextColor,
-                        defValue = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
-                    )
-                    .setSize(
-                        index = R.styleable.ChannelListView_sceytUiChannelListChannelSubjectTextSize,
-                    )
-                    .setStyle(
-                        index = R.styleable.ChannelListView_sceytUiChannelListChannelSubjectTextStyle,
-                        defValue = Typeface.NORMAL
-                    )
-                    .setFont(
-                        index = R.styleable.ChannelListView_sceytUiChannelListChannelSubjectTextFont,
-                        defValue = R.font.roboto_medium
-                    )
-                    .build()
-
-
-                val lastMessageTextStyle = TextStyle.Builder(array)
-                    .setColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListLastMessageTextColor,
-                        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
-                    )
-                    .setSize(
-                        index = R.styleable.ChannelListView_sceytUiChannelListLastMessageTextSize,
-                    )
-                    .setStyle(
-                        index = R.styleable.ChannelListView_sceytUiChannelListLastMessageTextStyle,
-                        defValue = Typeface.NORMAL
-                    )
-                    .setFont(
-                        index = R.styleable.ChannelListView_sceytUiChannelListLastMessageTextFont
-                    )
-                    .build()
-
-                val dateTextStyle = TextStyle.Builder(array)
-                    .setColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListDateTextColor,
-                        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
-                    )
-                    .setSize(
-                        index = R.styleable.ChannelListView_sceytUiChannelListDateTextSize,
-                    )
-                    .setStyle(
-                        index = R.styleable.ChannelListView_sceytUiChannelListDateTextStyle,
-                        defValue = Typeface.NORMAL
-                    )
-                    .setFont(
-                        index = R.styleable.ChannelListView_sceytUiChannelListDateTextFont
-                    )
-                    .build()
-
-                val messageSenderNameStyle = TextStyle.Builder(array)
-                    .setColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListMessageSenderNameTextColor,
-                        defValue = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
-                    )
-                    .setSize(
-                        index = R.styleable.ChannelListView_sceytUiChannelListMessageSenderNameTextSize,
-                    )
-                    .setStyle(
-                        index = R.styleable.ChannelListView_sceytUiChannelListMessageSenderNameTextStyle,
-                        defValue = Typeface.NORMAL
-                    )
-                    .setFont(
-                        index = R.styleable.ChannelListView_sceytUiChannelListMessageSenderNameTextFont,
-                    )
-                    .build()
-
-                val deletedTextStyle = TextStyle.Builder(array)
-                    .setColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListDeletedTextColor,
-                        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
-                    )
-                    .setSize(
-                        index = R.styleable.ChannelListView_sceytUiChannelListDeletedTextSize,
-                    )
-                    .setStyle(
-                        index = R.styleable.ChannelListView_sceytUiChannelListDeletedTextStyle,
-                        defValue = Typeface.ITALIC
-                    )
-                    .setFont(
-                        index = R.styleable.ChannelListView_sceytUiChannelListDeletedTextFont
-                    )
-                    .build()
-
-                val draftPrefixTextStyle = TextStyle.Builder(array)
-                    .setColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListDraftPrefixTextColor,
-                        defValue = context.getCompatColor(R.color.sceyt_color_red)
-                    )
-                    .setSize(
-                        index = R.styleable.ChannelListView_sceytUiChannelListDraftPrefixTextSize,
-                    )
-                    .setStyle(
-                        index = R.styleable.ChannelListView_sceytUiChannelListDraftPrefixTextStyle,
-                        defValue = Typeface.NORMAL
-                    )
-                    .setFont(
-                        index = R.styleable.ChannelListView_sceytUiChannelListDraftTextFont
-                    )
-                    .build()
-
-                val typingTextStyle = TextStyle.Builder(array)
-                    .setColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListTypingTextColor,
-                        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
-                    )
-                    .setSize(
-                        index = R.styleable.ChannelListView_sceytUiChannelListTypingTextSize,
-                    )
-                    .setStyle(
-                        index = R.styleable.ChannelListView_sceytUiChannelListTypingTextStyle,
-                        defValue = Typeface.ITALIC
-                    )
-                    .setFont(
-                        index = R.styleable.ChannelListView_sceytUiChannelListTypingTextFont
-                    )
-                    .build()
-
-                val unreadCountTextStyle = TextStyle.Builder(array)
-                    .setBackgroundColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountBackgroundColor,
-                        defValue = context.getCompatColor(SceytChatUIKit.theme.accentColor)
-                    )
-                    .setColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountTextColor,
-                        defValue = context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor)
-                    )
-                    .setSize(
-                        index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountTextSize,
-                    )
-                    .setStyle(
-                        index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountTextStyle,
-                        defValue = Typeface.NORMAL
-                    )
-                    .setFont(
-                        index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountTextFont
-                    )
-                    .build()
-
-                val unreadCountMutedTextStyle = TextStyle.Builder(array)
-                    .setBackgroundColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountMutedStateBackgroundColor,
-                        defValue = context.getCompatColor(SceytChatUIKit.theme.surface3Color)
-                    )
-                    .setColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountMutedStateTextColor,
-                        defValue = context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor)
-                    )
-                    .setSize(
-                        index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountMutedStateTextSize,
-                    )
-                    .setStyle(
-                        index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountMutedStateTextStyle,
-                        defValue = Typeface.NORMAL
-                    )
-                    .setFont(
-                        index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountMutedTextFont
-                    )
-                    .build()
-
-                val mentionTextStyle = TextStyle.Builder(array)
-                    .setBackgroundColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListMentionBackgroundColor,
-                        defValue = context.getCompatColor(SceytChatUIKit.theme.accentColor)
-                    )
-                    .setColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListMentionTextColor,
-                        defValue = context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor)
-                    )
-                    .setSize(
-                        index = R.styleable.ChannelListView_sceytUiChannelListMentionTextSize,
-                    )
-                    .setStyle(
-                        index = R.styleable.ChannelListView_sceytUiChannelListMentionTextStyle,
-                        defValue = Typeface.BOLD
-                    )
-                    .setFont(
-                        index = R.styleable.ChannelListView_sceytUiChannelListMentionTextFont
-                    )
-                    .build()
-
-                val mentionMutedTextStyle = TextStyle.Builder(array)
-                    .setBackgroundColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListMentionMutedStateBackgroundColor,
-                        defValue = context.getCompatColor(SceytChatUIKit.theme.surface3Color)
-                    )
-                    .setColor(
-                        index = R.styleable.ChannelListView_sceytUiChannelListMentionMutedStateTextColor,
-                        defValue = context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor)
-                    )
-                    .setSize(
-                        index = R.styleable.ChannelListView_sceytUiChannelListMentionMutedStateTextSize,
-                    )
-                    .setStyle(
-                        index = R.styleable.ChannelListView_sceytUiChannelListMentionMutedStateTextStyle,
-                        defValue = Typeface.NORMAL
-                    )
-                    .setFont(
-                        index = R.styleable.ChannelListView_sceytUiChannelListMentionMutedTextFont
-                    )
-                    .build()
-
-
-
                 return ChannelItemStyle(
                     pinnedChannelBackgroundColor = pinnedChannelBackgroundColor,
                     onlineStateColor = onlineStateColor,
@@ -348,17 +151,17 @@ data class ChannelItemStyle(
                     messageDeliveryStatusIcons = messageDeliveryStatusIcons,
                     autoDeletedChannelIcon = autoDeletedChannelIcon,
                     deliveryStatusIndicatorSize = statusIconSize,
-                    subjectTextStyle = subjectTextStyle,
-                    lastMessageTextStyle = lastMessageTextStyle,
-                    dateTextStyle = dateTextStyle,
-                    messageSenderNameStyle = messageSenderNameStyle,
-                    deletedTextStyle = deletedTextStyle,
-                    draftPrefixTextStyle = draftPrefixTextStyle,
-                    typingTextStyle = typingTextStyle,
-                    unreadCountTextStyle = unreadCountTextStyle,
-                    unreadCountMutedStateTextStyle = unreadCountMutedTextStyle,
-                    mentionTextStyle = mentionTextStyle,
-                    mentionMutedStateTextStyle = mentionMutedTextStyle,
+                    subjectTextStyle = buildSubjectTextStyle(array),
+                    lastMessageTextStyle = buildLastMessageTextStyle(array),
+                    dateTextStyle = buildDateTextStyle(array),
+                    messageSenderNameStyle = buildMessageSenderNameStyle(array),
+                    deletedTextStyle = buildDeletedTextStyle(array),
+                    draftPrefixTextStyle = buildDraftPrefixTextStyle(array),
+                    typingTextStyle = buildTypingTextStyle(array),
+                    unreadCountTextStyle = buildUnreadCountTextStyle(array),
+                    unreadCountMutedStateTextStyle = buildUnreadCountMutedTextStyle(array),
+                    mentionTextStyle = buildMentionTextStyle(array),
+                    mentionMutedStateTextStyle = buildMentionMutedTextStyle(array),
                     channelNameFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                     channelDateFormatter = SceytChatUIKit.formatters.channelDateFormatter,
                     userNameFormatter = SceytChatUIKit.formatters.userNameFormatterNew,

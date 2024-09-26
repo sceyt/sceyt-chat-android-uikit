@@ -35,7 +35,7 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.databinding.SceytConversationHeaderViewBinding
+import com.sceyt.chatuikit.databinding.SceytMessagesListHeaderViewBinding
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -44,10 +44,6 @@ import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
-import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
-import com.sceyt.chatuikit.extensions.setHintColorRes
-import com.sceyt.chatuikit.extensions.setTextColorRes
-import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
@@ -80,7 +76,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
 ) : AppBarLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners,
         HeaderEventsListener.EventListeners, HeaderUIElementsListener.ElementsListeners {
 
-    private val binding: SceytConversationHeaderViewBinding
+    private val binding: SceytMessagesListHeaderViewBinding
     private val style: MessagesListHeaderStyle
     private var clickListeners = HeaderClickListenersImpl(this)
     private var eventListeners = HeaderEventsListenerImpl(this)
@@ -102,7 +98,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         private set
 
     init {
-        binding = SceytConversationHeaderViewBinding.inflate(LayoutInflater.from(context), this)
+        binding = SceytMessagesListHeaderViewBinding.inflate(LayoutInflater.from(context), this)
         style = MessagesListHeaderStyle.Builder(context, attrs).build()
         init()
     }
@@ -162,21 +158,19 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun SceytConversationHeaderViewBinding.applyStyle() {
+    private fun SceytMessagesListHeaderViewBinding.applyStyle() {
         root.setBackgroundColor(style.backgroundColor)
-        toolbarMessageActions.popupTheme = style.menuStyle
-        toolbarMessageActions.setTitleTextAppearance(context, style.menuTitleAppearance)
-        icBack.setImageDrawable(style.navigationIcon)
-        title.setTextColor(style.titleColor)
-        subTitle.setTextColor(style.subTitleColor)
         toolbarUnderline.background = ColorDrawable(style.underlineColor)
         toolbarUnderline.isVisible = style.showUnderline
-        layoutSearch.setBackgroundTintColorRes(SceytChatUIKit.theme.surface1Color)
-        inputSearch.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        inputSearch.setHintColorRes(SceytChatUIKit.theme.textFootnoteColor)
-        icSearch.setTintColorRes(SceytChatUIKit.theme.accentColor)
-        icBack.setTintColorRes(SceytChatUIKit.theme.accentColor)
-        icClear.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
+        icBack.setImageDrawable(style.navigationIcon)
+        style.titleTextStyle.apply(title)
+        style.subTitleStyle.apply(subTitle)
+        style.searchInputStyle.apply(
+            editText = inputSearch,
+            inputRoot = layoutSearch,
+            searchIconImage = icSearch,
+            clearIconImage = icClear)
+        style.messageActionsMenuStyle.apply(toolbarMessageActions)
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -345,14 +339,14 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun SceytConversationHeaderViewBinding.hideMessageActions() {
+    private fun SceytMessagesListHeaderViewBinding.hideMessageActions() {
         toolbarMessageActions.isVisible = false
         layoutToolbarDetails.isVisible = true
         isShowingMessageActions = false
         addedMenu?.forEach { item -> item.isVisible = true }
     }
 
-    private fun SceytConversationHeaderViewBinding.toggleSearch(showSearch: Boolean) {
+    private fun SceytMessagesListHeaderViewBinding.toggleSearch(showSearch: Boolean) {
         hideMessageActions()
         layoutSearch.isVisible = showSearch
         layoutToolbarDetails.isVisible = !showSearch
