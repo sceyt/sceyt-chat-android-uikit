@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel_list.search
 
 import android.content.Context
-import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -92,15 +91,10 @@ class SearchChannelInputView @JvmOverloads constructor(
     private fun SceytSearchViewBinding.applyStyle() {
         style.searchInputStyle.apply(
             editText = input,
+            inputRoot = root,
             clearIconImage = icClear,
-            searchIconImage = icSearch)
-
-        background = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = style.cornerRadius
-            setStroke(style.borderWidth.toInt(), style.borderColor)
-            setColor(style.backgroundColor)
-        }
+            searchIconImage = icSearch
+        )
     }
 
     private fun handleClearClick() {
