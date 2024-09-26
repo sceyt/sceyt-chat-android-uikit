@@ -146,7 +146,7 @@ open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, Chann
 
     open fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
         if (isSelf) return
-        binding.toolbarAvatar.setChannelAvatar(channel, isSelf)
+        binding.toolbarAvatar.setChannelAvatar(channel, isSelf = isSelf)
     }
 
     protected open fun onBackClick() {

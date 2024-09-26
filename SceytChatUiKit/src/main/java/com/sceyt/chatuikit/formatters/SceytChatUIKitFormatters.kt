@@ -7,12 +7,13 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultAvatarInitialsFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelSubtitleFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMentionUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageDateSeparatorFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultTypingUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserPresenceDateFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultUserShortNameFormatter
 import com.sceyt.chatuikit.persistence.lazyVar
 import java.util.Date
 
@@ -34,11 +35,11 @@ class SceytChatUIKitFormatters {
     }
 
     var messageSenderNameFormatter: Formatter<User> by lazyVar {
-        DefaultUserNameFormatter()
+        DefaultUserShortNameFormatter()
     }
 
     var typingUserNameFormatter: Formatter<User> by lazyVar {
-        DefaultTypingUserNameFormatter()
+        DefaultUserShortNameFormatter()
     }
 
     var reactedUserNameFormatter: Formatter<User> by lazyVar {
@@ -55,6 +56,10 @@ class SceytChatUIKitFormatters {
 
     var channelDateFormatter: Formatter<Date> by lazyVar {
         DefaultChannelDateFormatter()
+    }
+
+    var channelUnreadCountFormatter: Formatter<SceytChannel> by lazyVar {
+        DefaultChannelUnreadCountFormatter()
     }
 
     var messageBodyFormatter: Formatter<SceytMessage> by lazyVar {

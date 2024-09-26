@@ -11,9 +11,9 @@ import com.sceyt.chatuikit.providers.VisualProvider
 
 fun AvatarView.setChannelAvatar(
         channel: SceytChannel,
-        isSelf: Boolean = channel.isSelf(),
         defaultAvatarProvider: VisualProvider<SceytChannel, DefaultAvatar>
-        = SceytChatUIKit.providers.channelDefaultAvatarProvider
+        = SceytChatUIKit.providers.channelDefaultAvatarProvider,
+        isSelf: Boolean = channel.isSelf()
 ) {
     val defaultAvatar = defaultAvatarProvider.provide(channel)
     val builder = styleBuilder()

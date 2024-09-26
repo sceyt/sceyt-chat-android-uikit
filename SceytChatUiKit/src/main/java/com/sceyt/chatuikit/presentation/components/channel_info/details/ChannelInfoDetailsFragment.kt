@@ -79,7 +79,7 @@ open class ChannelInfoDetailsFragment : Fragment(), ChannelUpdateListener, Chann
 
     open fun setChannelAvatar(channel: SceytChannel) {
         with(binding) {
-            avatar.setChannelAvatar(channel, isSelf)
+            avatar.setChannelAvatar(channel, isSelf = isSelf)
         }
     }
 
@@ -89,7 +89,7 @@ open class ChannelInfoDetailsFragment : Fragment(), ChannelUpdateListener, Chann
 
     open fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
         if (isSelf) return
-        binding.avatar.setChannelAvatar(channel, isSelf)
+        binding.avatar.setChannelAvatar(channel, isSelf = isSelf)
     }
 
     fun setClickActionsListener(listener: (ClickActionsEnum) -> Unit) {

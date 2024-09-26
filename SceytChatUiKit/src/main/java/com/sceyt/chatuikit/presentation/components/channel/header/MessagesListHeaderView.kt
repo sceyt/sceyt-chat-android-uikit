@@ -213,7 +213,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private fun setAvatar(avatar: AvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
         binding.avatar.isVisible = !replyInThread
         if (!replyInThread)
-            avatar.setChannelAvatar(channel)
+            avatar.setChannelAvatar(channel, style.channelDefaultAvatarProvider)
     }
 
     private fun showMessageActionsInToolbar(vararg messages: SceytMessage, @MenuRes resId: Int,

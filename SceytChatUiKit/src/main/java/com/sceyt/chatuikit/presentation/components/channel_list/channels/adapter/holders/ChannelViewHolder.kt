@@ -37,9 +37,7 @@ import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
 import com.sceyt.chatuikit.presentation.extensions.setChannelMessageDateAndStatusIcon
 import com.sceyt.chatuikit.styles.ChannelItemStyle
-import java.text.NumberFormat
 import java.util.Date
-import java.util.Locale
 
 open class ChannelViewHolder(
         private val binding: SceytItemChannelBinding,
@@ -269,7 +267,7 @@ open class ChannelViewHolder(
     }
 
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatarView: AvatarView) {
-        avatarView.setChannelAvatar(channel, isSelf, itemStyle.channelDefaultAvatarProvider)
+        avatarView.setChannelAvatar(channel, itemStyle.channelDefaultAvatarProvider, isSelf)
     }
 
     open fun setLastMessageStatusAndDate(channel: SceytChannel, decoratedTextView: DecoratedTextView) {
@@ -296,13 +294,8 @@ open class ChannelViewHolder(
             return
         }
 
-        // User NumberFormat for arabic language
-        val title = if (unreadCount > 99L) {
-            "${NumberFormat.getInstance(Locale.getDefault()).format(99)}+"
-        } else NumberFormat.getInstance(Locale.getDefault()).format(unreadCount)
-
         textView.apply {
-            text = title
+            text = itemStyle.channelUnreadCountFormatter.format(context, channel)
             isVisible = true
             if (channel.muted)
                 itemStyle.unreadCountMutedStateTextStyle.apply(this)
