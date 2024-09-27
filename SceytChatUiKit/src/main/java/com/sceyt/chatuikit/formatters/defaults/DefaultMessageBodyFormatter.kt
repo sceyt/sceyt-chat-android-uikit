@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.styles.common.TextStyle
 
-open class DefaultMessageBodyFormatter : Formatter<SceytMessage> {
+data object DefaultMessageBodyFormatter : Formatter<SceytMessage> {
     override fun format(context: Context, from: SceytMessage): CharSequence {
         return from.getFormattedBody(context, TextStyle(
             style = Typeface.BOLD,

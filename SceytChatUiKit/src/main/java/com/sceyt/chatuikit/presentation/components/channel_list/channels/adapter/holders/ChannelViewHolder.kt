@@ -82,7 +82,7 @@ open class ChannelViewHolder(
                 setMentionUserSymbol(channel, binding.icMention)
                 setLastMessageStatusAndDate(channel, binding.dateStatus)
                 setLastMessagedText(channel, binding.lastMessage)
-                setOnlineStatus(channel, binding.onlineState)
+                setPresenceState(channel, binding.onlineState)
 
                 diff.run {
                     if (!hasDifference()) return@run
@@ -275,10 +275,11 @@ open class ChannelViewHolder(
             shouldShowStatus = shouldShowStatus)
     }
 
-    open fun setOnlineStatus(channel: SceytChannel?, onlineStatus: PresenceStateIndicatorView) {
-        val isOnline = !isSelf && channel?.isDirect() == true &&
-                channel.getPeer()?.user?.presence?.state == PresenceState.Online
-        onlineStatus.isVisible = isOnline
+    open fun setPresenceState(channel: SceytChannel?, indicatorView: PresenceStateIndicatorView) {
+        val state = channel?.getPeer()?.user?.presence?.state ?: PresenceState.Offline
+        val showState = !isSelf && channel?.isDirect() == true && state == PresenceState.Online
+        indicatorView.setIndicatorColor(itemStyle.presenceStateColorProvider.provide(context, state))
+        indicatorView.isVisible = showState
     }
 
     open fun setUnreadCount(channel: SceytChannel, textView: TextView) {
@@ -357,7 +358,6 @@ open class ChannelViewHolder(
 
     private fun SceytItemChannelBinding.setChannelItemStyle() {
         viewPinned.setBackgroundColor(itemStyle.pinnedChannelBackgroundColor)
-        onlineState.setIndicatorColor(itemStyle.onlineStateColor)
         divider.setBackgroundColor(itemStyle.dividerColor)
         icAutoDeleted.setImageDrawable(itemStyle.autoDeletedChannelIcon)
         dateStatus.styleBuilder()

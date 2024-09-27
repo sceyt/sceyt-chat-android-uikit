@@ -24,9 +24,9 @@ data class MentionUsersListStyle(
         private var backgroundColor: Int = UNSET_COLOR
 
         private var itemStyle: ListItemStyle<Formatter<User>, *, VisualProvider<User, DefaultAvatar>> = ListItemStyle(
-            titleFormatter = DefaultUserNameFormatter(),
+            titleFormatter = DefaultUserNameFormatter,
             subtitleFormatter = NoFormatter,
-            avatarProvider = DefaultUserAvatarProvider()
+            avatarProvider = DefaultUserAvatarProvider
         )
 
         fun backgroundColor(@StyleableRes index: Int, defValue: Int = backgroundColor) = apply {

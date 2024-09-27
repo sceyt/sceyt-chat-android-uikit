@@ -4,7 +4,6 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.formatters.defaults.DefaultMediaDurationFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentSizeFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAvatarInitialsFormatter
@@ -13,6 +12,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageSenderNa
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelUnreadCountFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultMediaDurationFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMentionUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageDateSeparatorFormatter
@@ -32,31 +32,31 @@ class SceytChatUIKitFormatters {
     }
 
     var userNameFormatterNew: Formatter<User> by lazyVar {
-        DefaultUserNameFormatter()
+        DefaultUserNameFormatter
     }
 
     var userShortNameFormatter: Formatter<User> by lazyVar {
-        DefaultUserShortNameFormatter()
+        DefaultUserShortNameFormatter
     }
 
     var mentionUserNameFormatterNew: Formatter<User> by lazyVar {
-        DefaultMentionUserNameFormatter()
+        DefaultMentionUserNameFormatter
     }
 
     var typingUserNameFormatter: Formatter<User> by lazyVar {
-        DefaultUserShortNameFormatter()
+        DefaultUserShortNameFormatter
     }
 
     var reactedUserNameFormatter: Formatter<User> by lazyVar {
-        DefaultUserNameFormatter()
+        DefaultUserNameFormatter
     }
 
     var channelNameFormatter: Formatter<SceytChannel> by lazyVar {
-        DefaultChannelNameFormatter()
+        DefaultChannelNameFormatter
     }
 
     var channelSubtitleFormatter: Formatter<SceytChannel> by lazyVar {
-        DefaultChannelSubtitleFormatter()
+        DefaultChannelSubtitleFormatter
     }
 
     var channelDateFormatter: Formatter<Date> by lazyVar {
@@ -64,15 +64,15 @@ class SceytChatUIKitFormatters {
     }
 
     var channelUnreadCountFormatter: Formatter<SceytChannel> by lazyVar {
-        DefaultChannelUnreadCountFormatter()
+        DefaultChannelUnreadCountFormatter
     }
 
     var channelLastMessageSenderNameFormatter: Formatter<SceytChannel> by lazyVar {
-        DefaultChannelLastMessageSenderNameFormatter()
+        DefaultChannelLastMessageSenderNameFormatter
     }
 
     var messageBodyFormatter: Formatter<SceytMessage> by lazyVar {
-        DefaultMessageBodyFormatter()
+        DefaultMessageBodyFormatter
     }
 
     var messageDateSeparatorFormatter: Formatter<Date> by lazyVar {
@@ -80,18 +80,18 @@ class SceytChatUIKitFormatters {
     }
 
     var avatarInitialsFormatter: Formatter<String> by lazyVar {
-        DefaultAvatarInitialsFormatter()
+        DefaultAvatarInitialsFormatter
     }
 
     var attachmentNameFormatter: Formatter<SceytAttachment> by lazyVar {
-        DefaultAttachmentNameFormatter()
+        DefaultAttachmentNameFormatter
     }
 
     var mediaDurationFormatter: Formatter<Long> by lazyVar {
-        DefaultMediaDurationFormatter()
+        DefaultMediaDurationFormatter
     }
 
     var attachmentSizeFormatter: Formatter<SceytAttachment> by lazyVar {
-        DefaultAttachmentSizeFormatter()
+        DefaultAttachmentSizeFormatter
     }
 }

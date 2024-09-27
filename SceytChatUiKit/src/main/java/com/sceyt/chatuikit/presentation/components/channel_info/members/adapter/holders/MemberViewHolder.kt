@@ -46,7 +46,7 @@ class MemberViewHolder(
                 userName.text = presentableName
             }
 
-            if (diff.onlineStateChanged)
+            if (diff.presenceStateChanged)
                 tvStatus.text = SceytChatUIKit.formatters.userPresenceDateFormatter.format(
                     context = itemView.context, from = member.user)
 

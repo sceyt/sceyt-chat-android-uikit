@@ -6,8 +6,6 @@
         <attr name="sceytUiChannelListBackgroundColor" format="reference|color" />
         <!--Background color of the pinned state-->
         <attr name="sceytUiChannelListPinnedBackgroundColor" format="reference|color" />
-        <!-- A color of the online indicator-->
-        <attr name="sceytUiChannelListOnlineStateColor" format="reference|color" />
         <!-- A color of the channels divider-->
         <attr name="sceytUiChannelListDividerColor" format="reference|color" />
         <!-- Show channel action as popup-->

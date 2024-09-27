@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.formatters.Formatter
 
-open class DefaultMentionUserNameFormatter : Formatter<User> {
+data object DefaultMentionUserNameFormatter : Formatter<User> {
     override fun format(context: Context, from: User): String {
         return if (from.activityState == UserState.Deleted)
             context.getString(R.string.sceyt_deleted_user)

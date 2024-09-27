@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import androidx.core.content.res.use
+import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -38,7 +39,6 @@ import java.util.Date
 /**
  * Style for [ChannelItemStyle] component.
  * @property pinnedChannelBackgroundColor - Background color of the pinned channel, default is [Colors.surface1Color].
- * @property onlineStateColor - Color of the online status indicator, default is [R.color.sceyt_color_green].
  * @property dividerColor - Color of the divider, default is [Color.TRANSPARENT].
  * @property linkTextColor - Color of the link text, default is [R.color.sceyt_auto_link_color].
  * @property mutedIcon - Icon for muted channel, default is [R.drawable.sceyt_ic_muted].
@@ -70,7 +70,6 @@ import java.util.Date
  * */
 data class ChannelItemStyle(
         @ColorInt var pinnedChannelBackgroundColor: Int,
-        @ColorInt var onlineStateColor: Int,
         @ColorInt var dividerColor: Int,
         @ColorInt var linkTextColor: Int,
         var mutedIcon: Drawable?,
@@ -98,7 +97,8 @@ data class ChannelItemStyle(
         var channelUnreadCountFormatter: Formatter<SceytChannel>,
         var attachmentNameFormatter: Formatter<SceytAttachment>,
         var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
-        var channelDefaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>
+        var channelDefaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>,
+        val presenceStateColorProvider: VisualProvider<PresenceState, Int>
 ) {
 
     companion object {
@@ -114,9 +114,6 @@ data class ChannelItemStyle(
             context.obtainStyledAttributes(attrs, R.styleable.ChannelListView).use { array ->
                 val pinnedChannelBackgroundColor = array.getColor(R.styleable.ChannelListView_sceytUiChannelListPinnedBackgroundColor,
                     context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
-
-                val onlineStateColor = array.getColor(R.styleable.ChannelListView_sceytUiChannelListOnlineStateColor,
-                    context.getCompatColor(R.color.sceyt_color_green))
 
                 val dividerColor = array.getColor(R.styleable.ChannelListView_sceytUiChannelListDividerColor, Color.TRANSPARENT)
 
@@ -148,7 +145,6 @@ data class ChannelItemStyle(
 
                 return ChannelItemStyle(
                     pinnedChannelBackgroundColor = pinnedChannelBackgroundColor,
-                    onlineStateColor = onlineStateColor,
                     dividerColor = dividerColor,
                     linkTextColor = linkTextColor,
                     mutedIcon = mutedIcon,
@@ -176,7 +172,8 @@ data class ChannelItemStyle(
                     channelUnreadCountFormatter = SceytChatUIKit.formatters.channelUnreadCountFormatter,
                     attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
                     attachmentIconProvider = SceytChatUIKit.providers.channelListAttachmentIconProvider,
-                    channelDefaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider
+                    channelDefaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider,
+                    presenceStateColorProvider = SceytChatUIKit.providers.presenceStateColorProvider
                 ).let { styleCustomizer.apply(context, it) }
             }
         }
