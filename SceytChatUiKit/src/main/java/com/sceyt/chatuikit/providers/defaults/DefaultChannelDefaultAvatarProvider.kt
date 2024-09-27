@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.providers.defaults
 
 import android.content.Context
-import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.getFirstCharIsEmoji
 import com.sceyt.chatuikit.extensions.processEmojiCompat
@@ -15,18 +15,18 @@ open class DefaultChannelDefaultAvatarProvider : VisualProvider<SceytChannel, Av
     override fun provide(context: Context, from: SceytChannel): AvatarView.DefaultAvatar {
         return when {
             from.isSelf() -> {
-                AvatarView.DefaultAvatar.FromDrawableRes(SceytChatUIKit.theme.notesAvatar)
+                AvatarView.DefaultAvatar.FromDrawableRes(R.drawable.sceyt_ic_notes)
             }
 
             from.isDirect() && from.isPeerDeleted() -> {
-                AvatarView.DefaultAvatar.FromDrawableRes(SceytChatUIKit.theme.deletedUserAvatar)
+                AvatarView.DefaultAvatar.FromDrawableRes(R.drawable.sceyt_ic_deleted_user)
             }
 
             else -> {
                 if (from.isGroup)
                     AvatarView.DefaultAvatar.Initial(getInitialText(from.channelSubject))
                 else
-                    AvatarView.DefaultAvatar.FromDrawableRes(SceytChatUIKit.theme.userDefaultAvatar)
+                    AvatarView.DefaultAvatar.FromDrawableRes(R.drawable.sceyt_ic_default_avatar)
             }
         }
     }
