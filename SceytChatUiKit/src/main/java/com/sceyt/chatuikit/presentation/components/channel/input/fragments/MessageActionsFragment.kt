@@ -35,7 +35,6 @@ import com.sceyt.chatuikit.styles.input.MessageInputStyle
 open class MessageActionsFragment : Fragment() {
     protected var binding: SceytFragmentMessageActionsBinding? = null
     protected var clickListeners: CancelReplyMessageViewClickListener? = null
-    protected var userNameFormatter = SceytChatUIKit.formatters.userNameFormatterNew
     protected lateinit var inputStyle: MessageInputStyle
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -75,7 +74,7 @@ open class MessageActionsFragment : Fragment() {
 
             tvMessageBody.text = message.getFormattedBody(root.context, TextStyle(
                 style = Typeface.BOLD,
-            ), SceytChatUIKit.formatters.attachmentNameFormatter)
+            ), style.attachmentNameFormatter)
         }
     }
 
@@ -94,7 +93,7 @@ open class MessageActionsFragment : Fragment() {
             style.titleTextStyle.apply(requireContext(), replyTitle)
 
             val senderName = message.user?.let {
-                val name = SpannableStringBuilder(userNameFormatter.format(requireContext(), it))
+                val name = SpannableStringBuilder(style.senderNameFormatter.format(requireContext(), it))
                 style.senderNameTextStyle.apply(requireContext(), name)
                 name
             } ?: ""
@@ -110,7 +109,7 @@ open class MessageActionsFragment : Fragment() {
             tvMessageBody.text = message.getFormattedBody(
                 context = requireContext(),
                 mentionTextStyle = style.mentionTextStyle,
-                attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter
+                attachmentNameFormatter = style.attachmentNameFormatter
             )
         }
     }
