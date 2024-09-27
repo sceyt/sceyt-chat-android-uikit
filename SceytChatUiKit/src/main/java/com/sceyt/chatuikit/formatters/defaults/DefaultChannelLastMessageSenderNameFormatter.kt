@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 
-open class DefaultChannelLastMessageSenderNameFormatter : Formatter<SceytChannel> {
+data object DefaultChannelLastMessageSenderNameFormatter : Formatter<SceytChannel> {
 
     override fun format(context: Context, from: SceytChannel): CharSequence {
         val message = from.lastMessage ?: return ""

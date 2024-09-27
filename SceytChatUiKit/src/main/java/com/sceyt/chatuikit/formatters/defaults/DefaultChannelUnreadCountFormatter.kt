@@ -6,7 +6,7 @@ import com.sceyt.chatuikit.formatters.Formatter
 import java.text.NumberFormat
 import java.util.Locale
 
-open class DefaultChannelUnreadCountFormatter : Formatter<SceytChannel> {
+data object DefaultChannelUnreadCountFormatter : Formatter<SceytChannel> {
 
     override fun format(context: Context, from: SceytChannel): CharSequence {
         // User NumberFormat for arabic language

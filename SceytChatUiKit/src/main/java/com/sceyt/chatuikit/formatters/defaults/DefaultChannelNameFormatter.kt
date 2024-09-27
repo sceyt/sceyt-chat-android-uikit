@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 
-open class DefaultChannelNameFormatter : Formatter<SceytChannel> {
+data object DefaultChannelNameFormatter : Formatter<SceytChannel> {
 
     override fun format(context: Context, from: SceytChannel): CharSequence {
         return when {

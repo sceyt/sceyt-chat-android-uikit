@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.toDefaultAvatar
 import com.sceyt.chatuikit.providers.VisualProvider
 
-open class DefaultUserAvatarProvider : VisualProvider<User, AvatarView.DefaultAvatar> {
+data object DefaultUserAvatarProvider : VisualProvider<User, AvatarView.DefaultAvatar> {
     override fun provide(context: Context, from: User): AvatarView.DefaultAvatar {
         return (when (from.activityState ?: UserState.Active) {
             UserState.Active -> R.drawable.sceyt_ic_default_avatar

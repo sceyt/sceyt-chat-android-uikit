@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.providers.VisualProvider
 
-open class DefaultChannelDefaultAvatarProvider : VisualProvider<SceytChannel, AvatarView.DefaultAvatar> {
+data object DefaultChannelDefaultAvatarProvider : VisualProvider<SceytChannel, AvatarView.DefaultAvatar> {
     override fun provide(context: Context, from: SceytChannel): AvatarView.DefaultAvatar {
         return when {
             from.isSelf() -> {

@@ -12,7 +12,7 @@ data class ChannelDiff(
         val lastMessageStatusChanged: Boolean,
         val unreadCountChanged: Boolean,
         val muteStateChanged: Boolean,
-        val onlineStateChanged: Boolean,
+        val presenceStateChanged: Boolean,
         val markedUsUnreadChanged: Boolean,
         val lastReadMsdChanged: Boolean,
         val peerBlockedChanged: Boolean,
@@ -25,7 +25,7 @@ data class ChannelDiff(
 ) {
     fun hasDifference(): Boolean {
         return subjectChanged || avatarViewChanged || lastMessageChanged || lastMessageStatusChanged ||
-                unreadCountChanged || muteStateChanged || onlineStateChanged || markedUsUnreadChanged ||
+                unreadCountChanged || muteStateChanged || presenceStateChanged || markedUsUnreadChanged ||
                 lastReadMsdChanged || peerBlockedChanged || typingStateChanged || membersChanged ||
                 metadataUpdated || urlUpdated || pinStateChanged || autoDeleteStateChanged
     }
@@ -38,7 +38,7 @@ data class ChannelDiff(
             lastMessageStatusChanged = true,
             unreadCountChanged = true,
             muteStateChanged = true,
-            onlineStateChanged = true,
+            presenceStateChanged = true,
             markedUsUnreadChanged = true,
             lastReadMsdChanged = true,
             peerBlockedChanged = true,
@@ -57,7 +57,7 @@ data class ChannelDiff(
             lastMessageStatusChanged = false,
             unreadCountChanged = false,
             muteStateChanged = false,
-            onlineStateChanged = false,
+            presenceStateChanged = false,
             markedUsUnreadChanged = false,
             lastReadMsdChanged = false,
             peerBlockedChanged = false,
@@ -89,7 +89,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
         lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus,
         unreadCountChanged = newMessageCount != other.newMessageCount,
         muteStateChanged = muted != other.muted,
-        onlineStateChanged = isDirect() && firstMember?.user?.presence?.state != otherFirstMember?.user?.presence?.state,
+        presenceStateChanged = isDirect() && firstMember?.user?.presence?.state != otherFirstMember?.user?.presence?.state,
         markedUsUnreadChanged = unread != other.unread,
         lastReadMsdChanged = lastDisplayedMessageId != other.lastDisplayedMessageId,
         peerBlockedChanged = peerBlockedChanged,
