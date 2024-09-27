@@ -173,7 +173,7 @@ class OutImageMsgViewHolder(
 
     private fun SceytItemOutImageMessageBinding.setMessageItemStyle() {
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outgoingBubbleColor)
-        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
+        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.colors.accentColor)
         messageBody.applyStyle(style)
     }
 }

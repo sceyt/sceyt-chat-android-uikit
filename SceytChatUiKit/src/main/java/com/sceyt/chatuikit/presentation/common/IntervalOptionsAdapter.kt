@@ -41,7 +41,7 @@ class IntervalOptionsAdapter(
         }
 
         private fun SceytItemOptionBinding.applyStyle() {
-            tvTitle.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+            tvTitle.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
         }
     }
 }

@@ -19,7 +19,7 @@ internal fun MessagesListHeaderStyle.Builder.buildTitleTextStyle(
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderTitleTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
     .setSize(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderTitleTextSize
     )
@@ -37,7 +37,7 @@ internal fun MessagesListHeaderStyle.Builder.buildSubTitleTextStyle(
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSubTitleTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
     .setSize(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSubTitleTextSize
     )
@@ -54,7 +54,7 @@ internal fun MessagesListHeaderStyle.Builder.buildSearchInputHintStyle(
 ) = HintStyle.Builder(typedArray)
     .textColor(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputHintTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textFootnoteColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor))
     .hint(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputHintText,
         defValue = context.getString(R.string.sceyt_search)
@@ -66,7 +66,7 @@ internal fun MessagesListHeaderStyle.Builder.buildSearchInputSearchTextStyle(
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
     .setSize(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputTextSize
     )
@@ -83,10 +83,10 @@ internal fun MessagesListHeaderStyle.Builder.buildSearchInputTextInputStyle(
 ) = TextInputStyle.Builder(typedArray)
     .setBackgroundColor(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.surface1Color))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
     .setBorderColor(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputBorderColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.borderColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor)
     )
     .setBorderWidth(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputBorderWidth,
@@ -107,13 +107,13 @@ internal fun MessagesListHeaderStyle.Builder.buildSearchInputTextStyle(
     .searchIcon(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputSearchIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_search)?.applyTint(
-            context, SceytChatUIKit.theme.iconSecondaryColor
+            context, SceytChatUIKit.theme.colors.iconSecondaryColor
         )
     )
     .clearIcon(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputClearIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_cancel)?.applyTint(
-            context, SceytChatUIKit.theme.iconSecondaryColor
+            context, SceytChatUIKit.theme.colors.iconSecondaryColor
         )
     )
     .textInputStyle(buildSearchInputTextInputStyle(typedArray))

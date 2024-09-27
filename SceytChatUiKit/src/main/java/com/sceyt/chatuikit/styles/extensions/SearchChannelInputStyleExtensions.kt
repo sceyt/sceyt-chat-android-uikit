@@ -17,7 +17,7 @@ internal fun SearchChannelInputStyle.Builder.buildTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
     )
     .setSize(
         index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputTextSize
@@ -35,7 +35,7 @@ internal fun SearchChannelInputStyle.Builder.buildHintStyle(
 ) = HintStyle.Builder(array)
     .textColor(
         index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputHintTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textFootnoteColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor)
     )
     .hint(
         index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputHintText,
@@ -48,10 +48,10 @@ internal fun SearchChannelInputStyle.Builder.buildTextInputStyle(
 ) = TextInputStyle.Builder(array)
     .setBackgroundColor(
         index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.surface1Color))
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
     .setBorderColor(
         index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputBorderColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.borderColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor)
     )
     .setBorderWidth(
         index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputBorderWidth,
@@ -71,12 +71,12 @@ internal fun SearchChannelInputStyle.Builder.buildSearchInputStyle(
     .searchIcon(
         index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputSearchIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_search)?.apply {
-            setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+            setTint(context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor))
         })
     .clearIcon(
         index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputClearIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_cancel)?.apply {
-            setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+            setTint(context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor))
         })
     .textInputStyle(buildTextInputStyle(array))
     .build()

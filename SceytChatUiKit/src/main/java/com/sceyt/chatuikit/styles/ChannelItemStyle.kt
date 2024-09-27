@@ -24,20 +24,20 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.extensions.buildDateTextStyle
 import com.sceyt.chatuikit.styles.extensions.buildDeletedTextStyle
 import com.sceyt.chatuikit.styles.extensions.buildDraftPrefixTextStyle
+import com.sceyt.chatuikit.styles.extensions.buildLastMessageSenderNameStyle
 import com.sceyt.chatuikit.styles.extensions.buildLastMessageTextStyle
 import com.sceyt.chatuikit.styles.extensions.buildMentionMutedTextStyle
 import com.sceyt.chatuikit.styles.extensions.buildMentionTextStyle
-import com.sceyt.chatuikit.styles.extensions.buildLastMessageSenderNameStyle
 import com.sceyt.chatuikit.styles.extensions.buildSubjectTextStyle
 import com.sceyt.chatuikit.styles.extensions.buildTypingTextStyle
 import com.sceyt.chatuikit.styles.extensions.buildUnreadCountMutedTextStyle
 import com.sceyt.chatuikit.styles.extensions.buildUnreadCountTextStyle
-import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
+import com.sceyt.chatuikit.theme.Colors
 import java.util.Date
 
 /**
  * Style for [ChannelItemStyle] component.
- * @property pinnedChannelBackgroundColor - Background color of the pinned channel, default is [SceytChatUIKitTheme.surface1Color].
+ * @property pinnedChannelBackgroundColor - Background color of the pinned channel, default is [Colors.surface1Color].
  * @property onlineStateColor - Color of the online status indicator, default is [R.color.sceyt_color_green].
  * @property dividerColor - Color of the divider, default is [Color.TRANSPARENT].
  * @property linkTextColor - Color of the link text, default is [R.color.sceyt_auto_link_color].
@@ -113,7 +113,7 @@ data class ChannelItemStyle(
         fun build(): ChannelItemStyle {
             context.obtainStyledAttributes(attrs, R.styleable.ChannelListView).use { array ->
                 val pinnedChannelBackgroundColor = array.getColor(R.styleable.ChannelListView_sceytUiChannelListPinnedBackgroundColor,
-                    context.getCompatColor(SceytChatUIKit.theme.surface1Color))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
 
                 val onlineStateColor = array.getColor(R.styleable.ChannelListView_sceytUiChannelListOnlineStateColor,
                     context.getCompatColor(R.color.sceyt_color_green))
@@ -125,12 +125,12 @@ data class ChannelItemStyle(
 
                 val mutedIcon = array.getDrawable(R.styleable.ChannelListView_sceytUiChannelListMutedIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_muted)?.apply {
-                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor))
                         }
 
                 val pinIcon = array.getDrawable(R.styleable.ChannelListView_sceytUiChannelListPinnedIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_pin_filled)?.apply {
-                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor))
                         }
 
                 val autoDeletedChannelIcon = array.getDrawable(R.styleable.ChannelListView_sceytUiChannelListAutoDeletedChannelIcon)

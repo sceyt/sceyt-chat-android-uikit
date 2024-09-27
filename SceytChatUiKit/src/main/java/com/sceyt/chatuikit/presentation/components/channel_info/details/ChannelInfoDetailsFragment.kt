@@ -110,7 +110,7 @@ open class ChannelInfoDetailsFragment : Fragment(), ChannelUpdateListener, Chann
     }
 
     private fun SceytFragmentChannelInfoDetailsBinding.applyStyle() {
-        val theme = SceytChatUIKit.theme
+        val theme = SceytChatUIKit.theme.colors
         layoutDetails.setBackgroundColor(requireContext().getCompatColor(theme.backgroundColorSections))
         title.setTextColor(requireContext().getCompatColor(theme.textPrimaryColor))
         tvSubtitle.setTextColor(requireContext().getCompatColor(theme.textSecondaryColor))

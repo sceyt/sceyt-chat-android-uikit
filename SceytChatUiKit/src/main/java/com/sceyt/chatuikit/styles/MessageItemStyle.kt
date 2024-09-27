@@ -20,17 +20,17 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultMessageBodyFormatter
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
-import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
+import com.sceyt.chatuikit.theme.Colors
 
 /**
  * Style for the message item view.
  * @property incomingBubbleColor Color for the incoming message bubble, default is [R.color.sceyt_color_bg_inc_message]
- * @property outgoingBubbleColor Color for the outgoing message bubble, default is 20% blend of [SceytChatUIKitTheme.accentColor]
+ * @property outgoingBubbleColor Color for the outgoing message bubble, default is 20% blend of [Colors.accentColor]
  * @property incomingLinkPreviewBackgroundColor Color for the incoming link preview background, default is [R.color.sceyt_color_bg_inc_link_preview]
- * @property outgoingLinkPreviewBackgroundColor Color for the outgoing link preview background, default is 30% blend of [SceytChatUIKitTheme.accentColor]
- * @property messageDateTextColor Color for the message date text, default is [SceytChatUIKitTheme.textSecondaryColor]
- * @property senderNameTextColor Color for the sender name text, default is [SceytChatUIKitTheme.accentColor]
- * @property repliedMessageBorderColor Color for the reply message line, default is [SceytChatUIKitTheme.accentColor]
+ * @property outgoingLinkPreviewBackgroundColor Color for the outgoing link preview background, default is 30% blend of [Colors.accentColor]
+ * @property messageDateTextColor Color for the message date text, default is [Colors.textSecondaryColor]
+ * @property senderNameTextColor Color for the sender name text, default is [Colors.accentColor]
+ * @property repliedMessageBorderColor Color for the reply message line, default is [Colors.accentColor]
  * @property autoLinkTextColor Color for the auto link text, default is [R.color.sceyt_auto_link_color]
  * @property mediaLoaderColor Color for the media loader, default is [R.color.sceyt_color_on_primary]
  * @property editedMessageStateText Text for the edited message state, default is [R.string.sceyt_edited]
@@ -75,7 +75,7 @@ data class MessageItemStyle(
     ) {
         fun build(): MessageItemStyle {
             context.obtainStyledAttributes(attrs, R.styleable.MessagesListView).use { array ->
-                val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+                val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
 
                 val incBubbleColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessageIncBubbleColor,
                     context.getCompatColor(R.color.sceyt_color_bg_inc_message))
@@ -106,16 +106,16 @@ data class MessageItemStyle(
                     .build()
 
                 val bodyTextColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessageBodyTextColor,
-                    context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
 
                 val messageDateTextColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessageDateTextColor,
-                    context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
 
                 val senderNameTextColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessageSenderNameTextColor,
-                    context.getCompatColor(SceytChatUIKit.theme.accentColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
 
                 val replyMessageLineColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiReplyMessageLineColor,
-                    context.getCompatColor(SceytChatUIKit.theme.accentColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
 
                 val autoLinkTextColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiAutoLinkTextColor,
                     context.getCompatColor(R.color.sceyt_auto_link_color))
@@ -126,7 +126,7 @@ data class MessageItemStyle(
                 val messageEditedTextStyle: Int = array.getInt(R.styleable.MessagesListView_sceytUiMessageEditedTextStyle, Typeface.ITALIC)
 
                 val mediaLoaderColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMediaLoaderColor,
-                    context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
 
                 val videoDurationIcon: Drawable? = array.getDrawable(R.styleable.MessagesListView_sceytUiVideoDurationIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_video)

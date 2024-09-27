@@ -32,10 +32,10 @@ data class MediaPickerStyle(
             val typedArray = context.obtainStyledAttributes(attributeSet, R.styleable.SceytGalleryPicker)
 
             val nextButtonColor = typedArray.getColor(R.styleable.SceytGalleryPicker_sceytUiPickerNextButtonColor,
-                context.getCompatColor(SceytChatUIKit.theme.accentColor))
+                context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
 
             val counterColor = typedArray.getColor(R.styleable.SceytGalleryPicker_sceytUiPickerCounterColor,
-                context.getCompatColor(SceytChatUIKit.theme.accentColor))
+                context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
 
             val checkedStateIcon = typedArray.getDrawable(R.styleable.SceytGalleryPicker_sceytUiPickerCheckedStateIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_gallery_checked_state)

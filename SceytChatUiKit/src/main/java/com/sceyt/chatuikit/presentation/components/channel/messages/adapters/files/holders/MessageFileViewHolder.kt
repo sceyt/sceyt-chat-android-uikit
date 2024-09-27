@@ -106,7 +106,7 @@ class MessageFileViewHolder(
     }
 
     private fun SceytMessageFileItemBinding.applyStyle() {
-        loadProgress.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
+        loadProgress.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
     }
 }

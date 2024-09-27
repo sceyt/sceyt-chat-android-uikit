@@ -29,16 +29,16 @@ data class MessageDeliveryStatusIcons(
     ) {
         private var pendingIcon by lazyVar {
             context.getCompatDrawable(R.drawable.sceyt_ic_status_pending)
-                ?.applyTint(context, SceytChatUIKit.theme.iconSecondaryColor)
+                ?.applyTint(context, SceytChatUIKit.theme.colors.iconSecondaryColor)
         }
         private var sentIcon = context.getCompatDrawable(R.drawable.sceyt_ic_status_sent)
-            ?.applyTint(context, SceytChatUIKit.theme.iconSecondaryColor)
+            ?.applyTint(context, SceytChatUIKit.theme.colors.iconSecondaryColor)
 
         private var receivedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_status_received)
-            ?.applyTint(context, SceytChatUIKit.theme.iconSecondaryColor)
+            ?.applyTint(context, SceytChatUIKit.theme.colors.iconSecondaryColor)
 
         private var displayedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_status_displayed)
-            ?.applyTint(context, SceytChatUIKit.theme.accentColor)
+            ?.applyTint(context, SceytChatUIKit.theme.colors.accentColor)
 
         fun setPendingIconFromStyle(@StyleableRes index: Int) = apply {
             typedArray?.getDrawable(index)?.let {

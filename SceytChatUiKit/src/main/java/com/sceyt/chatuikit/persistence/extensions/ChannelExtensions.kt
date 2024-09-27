@@ -20,17 +20,6 @@ fun SceytChannel.isPeerDeleted(): Boolean {
     return isDirect() && getPeer()?.user?.activityState == UserState.Deleted
 }
 
-fun SceytChannel.getDefaultAvatar(): Int {
-    val theme = SceytChatUIKit.theme
-    return if (isDirect()) {
-        when {
-            isPeerDeleted() -> theme.deletedUserAvatar
-            isSelf() -> theme.notesAvatar
-            else -> theme.userDefaultAvatar
-        }
-    } else 0
-}
-
 fun SceytChannel.isPeerBlocked(): Boolean {
     return isDirect() && getPeer()?.user?.blocked == true
 }

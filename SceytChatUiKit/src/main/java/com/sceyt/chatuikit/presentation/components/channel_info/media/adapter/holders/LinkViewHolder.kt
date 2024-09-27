@@ -89,16 +89,16 @@ class LinkViewHolder(
 
     private fun setDefaultStateLinkImage() {
         binding.icLinkImage.setImageDrawable(defaultImage)
-        binding.icLinkImage.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.surface2Color))
+        binding.icLinkImage.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.surface2Color))
     }
 
     private val defaultImage by lazy {
         context.getCompatDrawable(R.drawable.sceyt_ic_link)?.apply {
-            setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+            setTint(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
         }
     }
 
     private fun SceytItemChannelLinkBinding.applyStyle() {
-        root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
+        root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
     }
 }

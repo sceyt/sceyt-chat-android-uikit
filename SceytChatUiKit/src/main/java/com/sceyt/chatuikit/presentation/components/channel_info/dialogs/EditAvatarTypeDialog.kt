@@ -62,12 +62,12 @@ class EditAvatarTypeDialog(
 
     private fun SceytDialogEditAvatarTypeBinding.applyStyle() {
         setTextViewsDrawableColor(listOf(tvTakePhoto, tvGallery),
-            context.getCompatColor(SceytChatUIKit.theme.accentColor))
+            context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
 
         setTextViewsTextColor(listOf(tvTakePhoto, tvGallery),
-            context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+            context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
 
         setTextViewsTextColor(listOf(tvDelete),
-            context.getCompatColor(SceytChatUIKit.theme.errorColor))
+            context.getCompatColor(SceytChatUIKit.theme.colors.errorColor))
     }
 }

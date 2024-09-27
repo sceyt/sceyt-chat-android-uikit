@@ -224,7 +224,7 @@ class IncVideoMsgViewHolder(
     private fun SceytItemIncVideoMessageBinding.setMessageItemStyle() {
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incomingBubbleColor)
         tvUserName.setTextColor(style.senderNameTextColor)
-        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
+        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.colors.accentColor)
         tvDuration.setDrawableStart(style.videoDurationIcon)
         messageBody.applyStyle(style)
     }

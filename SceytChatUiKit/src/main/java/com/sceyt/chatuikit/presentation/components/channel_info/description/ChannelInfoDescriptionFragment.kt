@@ -71,10 +71,10 @@ open class ChannelInfoDescriptionFragment : Fragment(), ChannelUpdateListener, C
     }
 
     private fun SceytFragmentChannelInfoDescriptionBinding.applyStyle() {
-        layoutDetails.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
-        tvTitle.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
-        tvDescription.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        border.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.borderColor))
+        layoutDetails.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
+        tvTitle.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
+        tvDescription.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        border.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.borderColor))
         space.layoutParams.height = style.spaceBetweenSections
     }
 

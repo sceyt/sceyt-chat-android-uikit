@@ -13,7 +13,7 @@ internal fun ChannelItemStyle.Builder.buildSubjectTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.ChannelListView_sceytUiChannelListChannelSubjectTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
     )
     .setSize(
         index = R.styleable.ChannelListView_sceytUiChannelListChannelSubjectTextSize,
@@ -33,7 +33,7 @@ internal fun ChannelItemStyle.Builder.buildLastMessageTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.ChannelListView_sceytUiChannelListLastMessageTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
         index = R.styleable.ChannelListView_sceytUiChannelListLastMessageTextSize,
@@ -52,7 +52,7 @@ internal fun ChannelItemStyle.Builder.buildDateTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.ChannelListView_sceytUiChannelListDateTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
         index = R.styleable.ChannelListView_sceytUiChannelListDateTextSize,
@@ -71,7 +71,7 @@ internal fun ChannelItemStyle.Builder.buildLastMessageSenderNameStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.ChannelListView_sceytUiChannelListMessageSenderNameTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
     )
     .setSize(
         index = R.styleable.ChannelListView_sceytUiChannelListMessageSenderNameTextSize,
@@ -90,7 +90,7 @@ internal fun ChannelItemStyle.Builder.buildDeletedTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.ChannelListView_sceytUiChannelListDeletedTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
         index = R.styleable.ChannelListView_sceytUiChannelListDeletedTextSize,
@@ -128,7 +128,7 @@ internal fun ChannelItemStyle.Builder.buildTypingTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.ChannelListView_sceytUiChannelListTypingTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
         index = R.styleable.ChannelListView_sceytUiChannelListTypingTextSize,
@@ -147,11 +147,11 @@ internal fun ChannelItemStyle.Builder.buildUnreadCountTextStyle(
 ) = TextStyle.Builder(array)
     .setBackgroundColor(
         index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     )
     .setColor(
         index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
     )
     .setSize(
         index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountTextSize,
@@ -170,11 +170,11 @@ internal fun ChannelItemStyle.Builder.buildUnreadCountMutedTextStyle(
 ) = TextStyle.Builder(array)
     .setBackgroundColor(
         index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountMutedStateBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.surface3Color)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface3Color)
     )
     .setColor(
         index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountMutedStateTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
     )
     .setSize(
         index = R.styleable.ChannelListView_sceytUiChannelListUnreadCountMutedStateTextSize,
@@ -194,11 +194,11 @@ internal fun ChannelItemStyle.Builder.buildMentionTextStyle(
 ) = TextStyle.Builder(array)
     .setBackgroundColor(
         index = R.styleable.ChannelListView_sceytUiChannelListMentionBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     )
     .setColor(
         index = R.styleable.ChannelListView_sceytUiChannelListMentionTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
     )
     .setSize(
         index = R.styleable.ChannelListView_sceytUiChannelListMentionTextSize,
@@ -218,11 +218,11 @@ internal fun ChannelItemStyle.Builder.buildMentionMutedTextStyle(
 ) = TextStyle.Builder(array)
     .setBackgroundColor(
         index = R.styleable.ChannelListView_sceytUiChannelListMentionMutedStateBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.surface3Color)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface3Color)
     )
     .setColor(
         index = R.styleable.ChannelListView_sceytUiChannelListMentionMutedStateTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
     )
     .setSize(
         index = R.styleable.ChannelListView_sceytUiChannelListMentionMutedStateTextSize,

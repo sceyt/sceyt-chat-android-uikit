@@ -161,7 +161,7 @@ open class ChannelInfoVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerA
     }
 
     private fun SceytFragmentChannelInfoVoiceBinding.applyStyle() {
-        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
     }
 
     companion object {

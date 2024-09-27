@@ -34,7 +34,7 @@ class UserViewHolder(
             if (user.id == SceytChatUIKit.chatUIFacade.myId) {
                 avatar.styleBuilder()
                     .setImageUrl(null)
-                    .setAvatarBackgroundColorRes(SceytChatUIKit.theme.accentColor)
+                    .setAvatarBackgroundColorRes(SceytChatUIKit.theme.colors.accentColor)
                     .setDefaultAvatar(drawable.sceyt_ic_notes)
                     .build()
                 userName.text = context.getString(string.sceyt_self_notes)
@@ -52,7 +52,7 @@ class UserViewHolder(
     }
 
     private fun SceytItemUserBinding.applyStyle() {
-        userName.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        tvStatus.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
+        userName.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        tvStatus.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
     }
 }

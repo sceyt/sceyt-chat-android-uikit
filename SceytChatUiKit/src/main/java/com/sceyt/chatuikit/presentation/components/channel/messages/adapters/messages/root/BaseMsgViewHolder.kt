@@ -166,7 +166,7 @@ abstract class BaseMsgViewHolder(private val view: View,
                     },
                     mentionUsers = message.mentionedUsers,
                     mentionTextStyle = TextStyle(
-                        color = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+                        color = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
                     ),
                     mentionClickListener = {
                         messageListeners?.onMentionClick(messageBody, it)
@@ -229,7 +229,7 @@ abstract class BaseMsgViewHolder(private val view: View,
             tvName.text = getSenderName(parent.user)
             if (parent.state == MessageState.Deleted) {
                 tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.ITALIC)
-                tvMessageBody.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+                tvMessageBody.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
             } else {
                 tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.NORMAL)
                 tvMessageBody.setTextColor(style.bodyTextColor)
@@ -257,7 +257,7 @@ abstract class BaseMsgViewHolder(private val view: View,
 
                     else -> {
                         imageAttachment.isVisible = false
-                        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
+                        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
                         icFile.setImageDrawable(icon)
                         icFile.isVisible = true
                     }
@@ -350,7 +350,7 @@ abstract class BaseMsgViewHolder(private val view: View,
             val displayName = getSenderName(user)
             tvName.setTextColorRes(
                 if (user?.isDeleted() == true)
-                    SceytChatUIKit.theme.errorColor else SceytChatUIKit.theme.accentColor
+                    SceytChatUIKit.theme.colors.errorColor else SceytChatUIKit.theme.colors.accentColor
             )
             avatarView.setUserAvatar(user)
             tvName.text = displayName
@@ -387,7 +387,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (rvReactionsViewStub.parent != null)
             rvReactionsViewStub.inflate().also {
                 recyclerViewReactions = it as RecyclerView
-                it.setBackgroundTintColorRes(SceytChatUIKit.theme.backgroundColorSections)
+                it.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.backgroundColorSections)
             }
 
         with(recyclerViewReactions ?: return) {
@@ -542,7 +542,7 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     open fun highlight() {
         highlightAnim?.cancel()
-        val colorFrom = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        val colorFrom = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
         view.setBackgroundColor(colorFrom)
         val colorFro = ColorUtils.setAlphaComponent(colorFrom, (0.3 * 255).toInt())
         val colorTo: Int = Color.TRANSPARENT

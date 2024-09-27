@@ -213,7 +213,7 @@ class OutVideoMsgViewHolder(
 
     private fun SceytItemOutVideoMessageBinding.setMessageItemStyle() {
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outgoingBubbleColor)
-        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
+        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.colors.accentColor)
         tvDuration.setDrawableStart(style.videoDurationIcon)
         messageBody.applyStyle(style)
     }

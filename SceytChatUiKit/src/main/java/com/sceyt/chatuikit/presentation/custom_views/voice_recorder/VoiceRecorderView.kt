@@ -400,7 +400,7 @@ class VoiceRecorderView @JvmOverloads constructor(
         recording.isInvisible = true
         with(imageAudio) {
             setPadding(paddingNormal)
-            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
+            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.accentColor))
             setImageDrawable(style.recordingIcon)
             setColorFilter(getCompatColor(R.color.sceyt_color_on_primary))
         }
@@ -412,7 +412,7 @@ class VoiceRecorderView @JvmOverloads constructor(
         recording.isVisible = true
         with(imageAudio) {
             setPadding(paddingRecording)
-            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
+            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.accentColor))
             setImageDrawable(style.recordingIcon)
             setColorFilter(getCompatColor(R.color.sceyt_color_on_primary))
         }
@@ -422,7 +422,7 @@ class VoiceRecorderView @JvmOverloads constructor(
         imageViewAudio.translationZ = buttonZ
         imageViewAudio.cardElevation = buttonZ
         with(imageAudio) {
-            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
+            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.accentColor))
             setImageDrawable(style.sendVoiceIcon)
             setPadding(paddingRecording, paddingRecording,
                 (paddingRecording - 2), paddingRecording)
@@ -434,9 +434,9 @@ class VoiceRecorderView @JvmOverloads constructor(
         imageViewAudio.cardElevation = buttonZ
         with(imageAudio) {
             setPadding(paddingRecording)
-            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
+            backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.accentColor))
             setImageDrawable(style.deleteRecordIcon)
-            animateColor(this, getCompatColor(SceytChatUIKit.theme.accentColor), getCompatColor(R.color.sceyt_color_error))
+            animateColor(this, getCompatColor(SceytChatUIKit.theme.colors.accentColor), getCompatColor(R.color.sceyt_color_error))
         }
     }
 
@@ -447,7 +447,7 @@ class VoiceRecorderView @JvmOverloads constructor(
             setPadding(paddingRecording)
             setImageDrawable(style.recordingIcon)
             setColorFilter(context.getCompatColor(R.color.sceyt_color_on_primary))
-            animateColor(this, context.getCompatColor(R.color.sceyt_color_error), context.getCompatColor(SceytChatUIKit.theme.accentColor))
+            animateColor(this, context.getCompatColor(R.color.sceyt_color_error), context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
         }
     }
 

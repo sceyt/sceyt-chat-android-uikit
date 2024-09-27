@@ -203,13 +203,13 @@ class CreateGroupActivity : AppCompatActivity() {
     }
 
     private fun SceytActivityCreateGroupBinding.applyStyle() {
-        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.backgroundColor))
-        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.primaryColor))
-        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
-        toolbar.setTitleColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        tvContacts.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
-        tvContacts.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.surface1Color))
-        setTextViewsTextColor(listOf(tvSubject, tvDescription), getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
+        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
+        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
+        toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        tvContacts.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
+        tvContacts.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
+        setTextViewsTextColor(listOf(tvSubject, tvDescription), getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
     }
 
     companion object {

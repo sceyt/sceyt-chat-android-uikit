@@ -28,7 +28,7 @@ internal fun MessageInputStyle.Builder.buildInputTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputTextSize
@@ -47,7 +47,7 @@ internal fun MessageInputStyle.Builder.buildInputHintStyle(
 ) = HintStyle.Builder(array)
     .textColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputHintTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textFootnoteColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor)
     )
     .hint(
         index = R.styleable.MessageInputView_sceytUiMessageInputHintText,
@@ -60,11 +60,11 @@ internal fun MessageInputStyle.Builder.buildInputTextInputStyle(
 ) = TextInputStyle.Builder(array)
     .setBackgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputTextInputBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.surface1Color)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color)
     )
     .setBorderColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputBorderColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.borderColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor)
     )
     .setBorderWidth(
         index = R.styleable.MessageInputView_sceytUiMessageInputBorderWidth
@@ -86,7 +86,7 @@ internal fun MessageInputStyle.Builder.buildJoinButtonTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputJoinButtonTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputJoinButtonTextSize
@@ -105,7 +105,7 @@ internal fun MessageInputStyle.Builder.buildJoinButtonStyle(
 ) = ButtonStyle.Builder(array)
     .setBackgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputJoinButtonBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.surface1Color)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color)
     )
     .setCornerRadius(
         index = R.styleable.MessageInputView_sceytUiMessageInputJoinButtonCornersRadius
@@ -115,7 +115,7 @@ internal fun MessageInputStyle.Builder.buildJoinButtonStyle(
     )
     .setBorderColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputJoinButtonBorderColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.borderColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor)
     )
     .setTextStyle(
         textStyle = buildJoinButtonTextStyle(array)
@@ -127,7 +127,7 @@ internal fun MessageInputStyle.Builder.buildClearChatTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputClearChatTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputClearChatTextSize
@@ -165,7 +165,7 @@ internal fun MessageInputStyle.Builder.buildLinkPreviewDescriptionTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputLinkPreviewDescriptionTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputLinkPreviewDescriptionTextSize
@@ -184,11 +184,11 @@ internal fun MessageInputStyle.Builder.buildLinkPreviewStyle(
 ) = LinkPreviewStyle.Builder(array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputLinkPreviewBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.surface1Color)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color)
     )
     .dividerColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputLinkPreviewDividerColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.borderColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor)
     )
     .titleStyle(
         titleStyle = buildLinkPreviewTitleTextStyle(array)
@@ -199,7 +199,7 @@ internal fun MessageInputStyle.Builder.buildLinkPreviewStyle(
     .placeHolder(
         index = R.styleable.MessageInputView_sceytUiMessageInputLinkPreviewPlaceHolder,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_link).applyTint(
-            context, SceytChatUIKit.theme.accentColor
+            context, SceytChatUIKit.theme.colors.accentColor
         )
     )
     .build()
@@ -209,7 +209,7 @@ internal fun MessageInputStyle.Builder.buildReplyMessageTitleTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageTitleTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageTitleTextSize
@@ -228,7 +228,7 @@ internal fun MessageInputStyle.Builder.buildReplyMessageSenderNameTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageSenderNameTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageSenderNameTextSize
@@ -247,7 +247,7 @@ internal fun MessageInputStyle.Builder.buildReplyMessageBodyTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageBodyTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageBodyTextSize
@@ -266,7 +266,7 @@ internal fun MessageInputStyle.Builder.buildReplyMessageMentionTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageMentionTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageMentionTextSize
@@ -286,7 +286,7 @@ internal fun MessageInputStyle.Builder.buildReplyMessageAttachmentDurationTextSt
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageAttachmentDurationTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageAttachmentDurationTextSize
@@ -305,7 +305,7 @@ internal fun MessageInputStyle.Builder.buildReplyMessageStyle(
 ) = InputReplyMessageStyle.Builder(array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.surface1Color)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color)
     )
     .replyIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageIcon,
@@ -333,7 +333,7 @@ internal fun MessageInputStyle.Builder.buildEditMessageTitleTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageTitleTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageTitleTextSize
@@ -352,7 +352,7 @@ internal fun MessageInputStyle.Builder.buildEditMessageBodyTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageBodyTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageBodyTextSize
@@ -371,7 +371,7 @@ internal fun MessageInputStyle.Builder.buildEditMessageAttachmentDurationTextSty
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageAttachmentDurationTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageAttachmentDurationTextSize
@@ -390,7 +390,7 @@ internal fun MessageInputStyle.Builder.buildEditMessageStyle(
 ) = InputEditMessageStyle.Builder(array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.surface1Color)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color)
     )
     .editIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageEditIcon,
@@ -412,7 +412,7 @@ internal fun MessageInputStyle.Builder.buildSelectedMediaAttachmentDurationTextS
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputSelectedMediaAttachmentDurationTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputSelectedMediaAttachmentDurationTextSize
@@ -431,7 +431,7 @@ internal fun MessageInputStyle.Builder.buildSelectedMediaFileAttachmentNameTextS
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputSelectedMediaFileAttachmentNameTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputSelectedMediaFileAttachmentNameTextSize
@@ -450,7 +450,7 @@ internal fun MessageInputStyle.Builder.buildSelectedMediaFileAttachmentSizeTextS
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputSelectedMediaFileAttachmentSizeTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputSelectedMediaFileAttachmentSizeTextSize
@@ -469,16 +469,16 @@ internal fun MessageInputStyle.Builder.buildSelectedMediaStyle(
 ) = InputSelectedMediaStyle.Builder(array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputSelectedMediaBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.backgroundColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
     )
     .fileAttachmentBackgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputSelectedMediaFileAttachmentBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.surface1Color)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color)
     )
     .removeAttachmentIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputSelectedMediaRemoveAttachmentIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_close).applyTint(
-            context, SceytChatUIKit.theme.iconSecondaryColor
+            context, SceytChatUIKit.theme.colors.iconSecondaryColor
         )
     )
     .attachmentDurationTextStyle(
@@ -497,7 +497,7 @@ internal fun MessageInputStyle.Builder.buildVoiceRecorderViewSlideToCancelTextSt
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderSlideToCancelTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderSlideToCancelTextSize
@@ -516,7 +516,7 @@ internal fun MessageInputStyle.Builder.buildVoiceRecorderViewDurationTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderDurationTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderDurationTextSize
@@ -535,7 +535,7 @@ internal fun MessageInputStyle.Builder.buildVoiceRecorderViewCancelTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderCancelTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderCancelTextSize
@@ -554,7 +554,7 @@ internal fun MessageInputStyle.Builder.buildVoiceRecorderViewStyle(
 ) = VoiceRecorderViewStyle.Builder(array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.backgroundColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
     )
     .recordingIndicatorColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderRecordingIndicatorColor,
@@ -571,19 +571,19 @@ internal fun MessageInputStyle.Builder.buildVoiceRecorderViewStyle(
     .recordingIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderRecordingIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_voice_white).applyTint(
-            context, SceytChatUIKit.theme.onPrimaryColor
+            context, SceytChatUIKit.theme.colors.onPrimaryColor
         )
     )
     .deleteRecordIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderDeleteRecordIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_delete_record).applyTint(
-            context, SceytChatUIKit.theme.onPrimaryColor
+            context, SceytChatUIKit.theme.colors.onPrimaryColor
         )
     )
     .lockRecordingIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderLockRecordingIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_lock).applyTint(
-            context, SceytChatUIKit.theme.iconSecondaryColor
+            context, SceytChatUIKit.theme.colors.iconSecondaryColor
         )
     )
     .arrowToLockIcon(
@@ -593,13 +593,13 @@ internal fun MessageInputStyle.Builder.buildVoiceRecorderViewStyle(
     .stopRecordingIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderStopRecordingIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_stop_voice).applyTint(
-            context, SceytChatUIKit.theme.accentColor
+            context, SceytChatUIKit.theme.colors.accentColor
         )
     )
     .sendVoiceIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderSendVoiceIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_arrow_up)?.applyTint(
-            context, SceytChatUIKit.theme.onPrimaryColor
+            context, SceytChatUIKit.theme.colors.onPrimaryColor
         )
     )
     .slideToCancelTextStyle(
@@ -619,7 +619,7 @@ internal fun MessageInputStyle.Builder.buildVoiceRecordPlaybackViewDurationTextS
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackDurationTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackDurationTextSize
@@ -638,42 +638,42 @@ internal fun MessageInputStyle.Builder.buildVoiceRecordPlaybackViewStyle(
 ) = VoiceRecordPlaybackViewStyle.Builder(array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.backgroundColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
     )
     .playerBackgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackPlayerBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.surface1Color)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color)
     )
     .trackColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackTrackColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
     )
     .progressColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackProgressColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     )
     .closeIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackCloseIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_close)?.applyTint(
-            context, SceytChatUIKit.theme.iconSecondaryColor
+            context, SceytChatUIKit.theme.colors.iconSecondaryColor
         )
     )
     .playIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackPlayIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_play)?.applyTint(
-            context, SceytChatUIKit.theme.iconSecondaryColor
+            context, SceytChatUIKit.theme.colors.iconSecondaryColor
         )
     )
     .pauseIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackPauseIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_pause)?.applyTint(
-            context, SceytChatUIKit.theme.iconSecondaryColor
+            context, SceytChatUIKit.theme.colors.iconSecondaryColor
         )
     )
     .sendVoiceIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackSendVoiceIcon,
         defValue = context.getCompatDrawable(R.drawable.sceyt_ic_send_message)?.applyTint(
-            context, SceytChatUIKit.theme.onPrimaryColor
+            context, SceytChatUIKit.theme.colors.onPrimaryColor
         )
     )
     .durationTextStyle(
@@ -687,7 +687,7 @@ internal fun MessageInputStyle.Builder.buildMessageSearchControlTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputSearchControlResultTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputSearchControlResultTextSize
@@ -706,7 +706,7 @@ internal fun MessageInputStyle.Builder.buildMessageSearchControlStyle(
 ) = MessageSearchControlsStyle.Builder(array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputSearchControlBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.backgroundColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
     )
     .previousIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputSearchControlPreviousIcon,
@@ -728,7 +728,7 @@ internal fun MessageInputStyle.Builder.buildInputCoverTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputCoverTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputCoverTextSize
@@ -746,11 +746,11 @@ internal fun MessageInputStyle.Builder.buildInputCoverStyle(
 ) = InputCoverStyle.Builder(array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputCoverBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.backgroundColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
     )
     .dividerColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputCoverDividerColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.borderColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor)
     )
     .textStyle(
         textStyle = buildInputCoverTextStyle(array)
@@ -763,6 +763,6 @@ internal fun MessageInputStyle.Builder.buildMentionUsersListStyle(
 ) = MentionUsersListStyle.Builder(array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputMentionUsersListBackgroundColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
     )
     .build()

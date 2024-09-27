@@ -123,7 +123,7 @@ class VoiceRecordPlaybackView @JvmOverloads constructor(
         with(binding) {
             root.setBackgroundColor(style.backgroundColor)
             layoutVoiceRecord.setBackgroundTint(style.playerBackgroundColor)
-            icSendMessage.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
+            icSendMessage.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
             waveformSeekBar.waveBackgroundColor = style.trackColor
             waveformSeekBar.waveProgressColor = style.progressColor
             deleteVoiceRecord.setImageDrawable(style.closeIcon)

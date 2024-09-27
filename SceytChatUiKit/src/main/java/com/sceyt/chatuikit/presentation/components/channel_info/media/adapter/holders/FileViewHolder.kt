@@ -63,9 +63,9 @@ class FileViewHolder(
         get() = binding.loadProgress
 
     private fun SceytItemChannelFileBinding.applyStyle() {
-        val colorOnPrimary = context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor)
-        root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
-        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
+        val colorOnPrimary = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+        root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
+        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
         loadProgress.setIconTintColor(colorOnPrimary)
         loadProgress.setProgressColor(colorOnPrimary)
     }

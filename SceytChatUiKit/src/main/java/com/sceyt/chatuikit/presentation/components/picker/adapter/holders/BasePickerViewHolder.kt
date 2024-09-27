@@ -38,7 +38,7 @@ abstract class BasePickerViewHolder(
     protected fun setGalleryItemCheckedState(image: ImageView, isChecked: Boolean) {
         with(image) {
             if (isChecked) {
-                setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
+                setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
                 setImageDrawable(style.checkedStateIcon)
             } else {
                 setBackgroundTint(Color.TRANSPARENT)

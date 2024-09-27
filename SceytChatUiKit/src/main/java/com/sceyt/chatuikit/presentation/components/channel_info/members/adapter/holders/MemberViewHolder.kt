@@ -66,8 +66,8 @@ class MemberViewHolder(
     }
 
     private fun SceytItemChannelMembersBinding.applyStyle() {
-        userName.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        tvStatus.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
-        roleName.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
+        userName.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        tvStatus.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
+        roleName.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
     }
 }

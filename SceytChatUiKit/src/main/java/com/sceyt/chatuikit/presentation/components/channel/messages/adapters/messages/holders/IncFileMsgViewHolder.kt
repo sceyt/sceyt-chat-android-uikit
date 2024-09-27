@@ -176,14 +176,14 @@ class IncFileMsgViewHolder(
     }
 
     private fun SceytItemIncFileMessageBinding.setMessageItemStyle() {
-        val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incomingBubbleColor)
         tvUserName.setTextColor(style.senderNameTextColor)
         tvForwarded.setTextAndDrawableByColor(accentColor)
         loadProgress.setBackgroundColor(accentColor)
         icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
         messageBody.applyStyle(style)
-        tvFileSize.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
-        tvFileName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+        tvFileSize.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
+        tvFileName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
     }
 }

@@ -95,10 +95,10 @@ open class ChannelInfoSettingsFragment : Fragment(), ChannelUpdateListener, Chan
     }
 
     private fun SceytFragmentChannelInfoSettingsBinding.applyStyle() {
-        layoutDetails.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
-        notification.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        autoDeleteMessages.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        border.setDividerColorResource(SceytChatUIKit.theme.borderColor)
+        layoutDetails.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
+        notification.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        autoDeleteMessages.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        border.setDividerColorResource(SceytChatUIKit.theme.colors.borderColor)
         space.layoutParams.height = style.spaceBetweenSections
     }
 

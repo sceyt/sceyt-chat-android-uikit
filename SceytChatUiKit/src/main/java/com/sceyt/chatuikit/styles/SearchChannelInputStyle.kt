@@ -8,11 +8,11 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.styles.common.SearchInputStyle
 import com.sceyt.chatuikit.styles.extensions.buildSearchInputStyle
-import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
+import com.sceyt.chatuikit.theme.Colors
 
 /**
  * Style for the search channel input view.
- * @property backgroundColor Background color for the input, default is [SceytChatUIKitTheme.surface1Color]
+ * @property backgroundColor Background color for the input, default is [Colors.surface1Color]
  * @property searchInputStyle Style for the search input, default is [buildSearchInputStyle].
  * */
 data class SearchChannelInputStyle(
@@ -31,7 +31,7 @@ data class SearchChannelInputStyle(
         fun build(): SearchChannelInputStyle {
             context.obtainStyledAttributes(attrs, R.styleable.SearchChannelInputView).use { array ->
                 val backgroundColor = array.getColor(R.styleable.SearchChannelInputView_sceytUiSearchChannelInputBackgroundColor,
-                    context.getCompatColor(SceytChatUIKit.theme.surface1Color))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
 
                 return SearchChannelInputStyle(
                     backgroundColor = backgroundColor,

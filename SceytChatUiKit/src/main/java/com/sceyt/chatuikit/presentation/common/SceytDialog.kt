@@ -125,8 +125,8 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle
                 setNegativeButtonTitle(negativeBtnTitle)
                 setPositiveButtonClickListener(positiveCb)
                 setNegativeButtonClickListener(negativeCb)
-                setPositiveButtonTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-                setNegativeButtonTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+                setPositiveButtonTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+                setNegativeButtonTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
                 show()
                 setOnDismissListener { lastDialog = null }
                 lastDialog = this

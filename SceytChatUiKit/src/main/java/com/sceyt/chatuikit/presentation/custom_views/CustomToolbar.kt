@@ -23,8 +23,8 @@ class CustomToolbar @JvmOverloads constructor(
     private var navigationIconId = R.drawable.sceyt_ic_arrow_back
     private var menuIconId: Int = 0
     private var title = ""
-    private var titleColor = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
-    private var iconsTint = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+    private var titleColor = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+    private var iconsTint = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     private var enableDivider = true
 
     init {

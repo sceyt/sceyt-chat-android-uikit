@@ -26,7 +26,7 @@ class CircleCheckBox @JvmOverloads constructor(
     private fun createStateListDrawable(): Drawable {
         val pressedState = android.R.attr.state_pressed
         val checkedState = android.R.attr.state_checked
-        val colorCheckBox = getCompatColor(SceytChatUIKit.theme.accentColor)
+        val colorCheckBox = getCompatColor(SceytChatUIKit.theme.colors.accentColor)
         val stateListDrawable = StateListDrawable()
         // Checked state
         val circleDrawable = ShapeDrawable(OvalShape())

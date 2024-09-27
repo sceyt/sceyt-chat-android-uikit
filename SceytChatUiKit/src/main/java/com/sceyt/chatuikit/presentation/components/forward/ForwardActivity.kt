@@ -58,9 +58,9 @@ open class ForwardActivity : ShareableActivity() {
     }
 
     protected open fun SceytActivityForwardBinding.applyStyle() {
-        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.backgroundColor))
-        btnForward.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
-        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
+        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
+        btnForward.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
     }
 
     protected open fun sendForwardMessage(markOwnMessageAsForwarded: Boolean) {

@@ -10,11 +10,11 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
-import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
+import com.sceyt.chatuikit.theme.Colors
 
 /**
  * Style for [ChannelListView] component.
- * @property backgroundColor - Background color of the channel list, default is [SceytChatUIKitTheme.backgroundColor].
+ * @property backgroundColor - Background color of the channel list, default is [Colors.backgroundColor].
  * @property emptyState - Layout for empty state, default is [R.layout.sceyt_channel_list_empty_state].
  * @property emptySearchState - Layout for empty search state, default is [R.layout.sceyt_search_channels_empty_state].
  * @property loadingState - Layout for loading state, default is [R.layout.sceyt_channels_page_loading_state].
@@ -45,7 +45,7 @@ data class ChannelListViewStyle(
         fun build(): ChannelListViewStyle {
             context.obtainStyledAttributes(attrs, R.styleable.ChannelListView).use { array ->
                 val backgroundColor = array.getColor(R.styleable.ChannelListView_sceytUiChannelListBackgroundColor,
-                    context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
 
                 val emptyState = array.getResourceId(R.styleable.ChannelListView_sceytUiChannelListEmptyStateView,
                     R.layout.sceyt_channel_list_empty_state)

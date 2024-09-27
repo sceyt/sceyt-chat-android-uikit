@@ -470,12 +470,12 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
     }
 
     private fun SceytFragmentChannelMembersBinding.applyStyle() {
-        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
-        toolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.primaryColor))
-        toolbar.setTitleColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
-        icAddMembers.setTintColorRes(SceytChatUIKit.theme.accentColor)
-        addMembers.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
+        toolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
+        toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
+        icAddMembers.setTintColorRes(SceytChatUIKit.theme.colors.accentColor)
+        addMembers.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
     }
 
     companion object {

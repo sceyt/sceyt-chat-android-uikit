@@ -14,7 +14,7 @@ class LoadingMoreMessagesViewHolder(binding: SceytItemLoadingMoreBinding,
     }
 
     private fun SceytItemLoadingMoreBinding.applyStyle() {
-        adapterListLoadingProgressBar.setProgressColor(SceytChatUIKit.theme.accentColor)
+        adapterListLoadingProgressBar.setProgressColor(SceytChatUIKit.theme.colors.accentColor)
     }
 
     override val enableReply = false

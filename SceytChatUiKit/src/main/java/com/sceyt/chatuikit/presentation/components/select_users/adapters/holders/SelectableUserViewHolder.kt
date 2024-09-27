@@ -47,8 +47,8 @@ class SelectableUserViewHolder(
 
     private fun SceytItemSelectUserBinding.applyStyle() {
         with(layoutDetails) {
-            userName.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-            tvStatus.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
+            userName.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+            tvStatus.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
         }
     }
 }

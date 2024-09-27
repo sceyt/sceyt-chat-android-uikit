@@ -54,11 +54,11 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
                 setCountAndSmile(score.score, score.key)
 
                 if (item.selected) {
-                    setReactionBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+                    setReactionBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
                     setCountTextColor(Color.WHITE)
                 } else {
                     setReactionBackgroundColor(Color.TRANSPARENT)
-                    setCountTextColor(context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+                    setCountTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
                 }
             }
 
@@ -77,18 +77,18 @@ class ReactionsHeaderAdapter(private val data: ArrayList<ReactionHeaderItem>,
 
                 if (item.selected) {
                     background = GradientDrawable().apply {
-                        color = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
+                        color = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.accentColor))
                         cornerRadius = dpToPx(30f).toFloat()
-                        setStroke(3, getCompatColor(SceytChatUIKit.theme.borderColor))
+                        setStroke(3, getCompatColor(SceytChatUIKit.theme.colors.borderColor))
                     }
-                    setTextColor(getCompatColor(SceytChatUIKit.theme.onPrimaryColor))
+                    setTextColor(getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
                 } else {
                     background = GradientDrawable().apply {
                         color = ColorStateList.valueOf(Color.TRANSPARENT)
                         cornerRadius = dpToPx(30f).toFloat()
-                        setStroke(3, getCompatColor(SceytChatUIKit.theme.borderColor))
+                        setStroke(3, getCompatColor(SceytChatUIKit.theme.colors.borderColor))
                     }
-                    setTextColor(getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+                    setTextColor(getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
                 }
 
                 binding.root.setOnClickListener {
