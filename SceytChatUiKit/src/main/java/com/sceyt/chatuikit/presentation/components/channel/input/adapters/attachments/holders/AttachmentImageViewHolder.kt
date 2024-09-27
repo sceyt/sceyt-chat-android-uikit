@@ -7,9 +7,13 @@ import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentItem
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.AttachmentClickListeners
+import com.sceyt.chatuikit.styles.input.InputSelectedMediaStyle
 
-class AttachmentImageViewHolder(private val binding: SceytItemInputImageAttachmentBinding,
-                                private val clickListeners: AttachmentClickListeners.ClickListeners) : BaseViewHolder<AttachmentItem>(binding.root) {
+class AttachmentImageViewHolder(
+        private val binding: SceytItemInputImageAttachmentBinding,
+        private val clickListeners: AttachmentClickListeners.ClickListeners,
+        private val style: InputSelectedMediaStyle
+) : BaseViewHolder<AttachmentItem>(binding.root) {
 
     init {
         binding.setStyle()
@@ -27,5 +31,6 @@ class AttachmentImageViewHolder(private val binding: SceytItemInputImageAttachme
     private fun SceytItemInputImageAttachmentBinding.setStyle() {
         btnRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
         layoutRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.backgroundColor)
+        btnRemove.setImageDrawable(style.removeAttachmentIcon)
     }
 }

@@ -8,10 +8,8 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.providers.VisualProvider
 
-open class DefaultAttachmentIconProvider(
-        private val context: Context
-) : VisualProvider<SceytAttachment, Drawable?> {
-    override fun provide(from: SceytAttachment): Drawable? {
+open class DefaultAttachmentIconProvider : VisualProvider<SceytAttachment, Drawable?> {
+    override fun provide(context: Context, from: SceytAttachment): Drawable? {
         val drawableId = when (from.type) {
             AttachmentTypeEnum.File.value() -> R.drawable.sceyt_ic_file_filled
             AttachmentTypeEnum.Link.value() -> R.drawable.sceyt_ic_link_attachment

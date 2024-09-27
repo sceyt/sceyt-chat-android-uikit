@@ -15,13 +15,13 @@
         <!--Input text style-->
         <attr name="sceytUiSearchChannelInputTextColor" format="reference|color" />
         <attr name="sceytUiSearchChannelInputTextSize" format="dimension" />
-        <attr name= "sceytUiSearchChannelInputTextStyle">
+        <attr name="sceytUiSearchChannelInputTextStyle">
             <flag name="normal" value="0" />
             <flag name="bold" value="1" />
             <flag name="italic" value="2" />
         </attr>
         <attr name="sceytUiSearchChannelInputTextFont" format="reference" />
-        
+
         <attr name="sceytUiSearchChannelInputHintText" format="string" localization="suggested" />
         <attr name="sceytUiSearchChannelInputHintTextColor" format="reference|color" />
     </declare-styleable>

@@ -51,7 +51,7 @@ class FileViewHolder(
             }
 
             TransferState.Downloaded -> {
-                val icon = style.attachmentIconProvider.provide(fileItem.file)
+                val icon = style.attachmentIconProvider.provide(context, fileItem.file)
                 binding.icFile.setImageDrawable(icon)
             }
 

@@ -72,7 +72,7 @@ object ChannelActionConfirmationWithDialog {
         MuteNotificationDialog.showDialog(
             context = context,
             title = context.getString(R.string.sceyt_mute_chat),
-            options = SceytChatUIKit.config.muteChannelNotificationOptions) {
+            options = SceytChatUIKit.config.muteChannelNotificationOptions.getOptions(context)) {
             action(it.timeInterval)
         }
     }

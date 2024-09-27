@@ -13,25 +13,22 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.databinding.SceytFragmentLinkPreviewBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.glideRequestListener
-import com.sceyt.chatuikit.extensions.setTextColorRes
-import com.sceyt.chatuikit.extensions.setTintColorRes
-import com.sceyt.chatuikit.persistence.lazyVar
-import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.CancelLinkPreviewClickListener
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.styles.MessageInputStyle
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.CancelLinkPreviewClickListener
 import com.sceyt.chatuikit.shared.utils.ViewUtil
+import com.sceyt.chatuikit.styles.input.MessageInputStyle
 
+@Suppress("MemberVisibilityCanBePrivate")
 open class LinkPreviewFragment : Fragment() {
     protected var binding: SceytFragmentLinkPreviewBinding? = null
     protected var clickListeners: CancelLinkPreviewClickListener? = null
     protected val debounceHelper by lazy { DebounceHelper(300, lifecycleScope) }
     protected var showHideAnimator: ValueAnimator? = null
+    protected var inputStyle: MessageInputStyle? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentLinkPreviewBinding.inflate(inflater, container, false).also {
@@ -42,7 +39,9 @@ open class LinkPreviewFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding?.applyStyle()
+        inputStyle?.let {
+            binding?.applyStyle(it)
+        }
         initViews()
     }
 
@@ -52,9 +51,8 @@ open class LinkPreviewFragment : Fragment() {
         }
     }
 
-    internal fun setStyle(style: MessageInputStyle) {
-        defaultImage = style.linkIcon
-        binding?.icLinkImage?.setImageDrawable(defaultImage)
+    internal fun setStyle(inputStyle: MessageInputStyle) {
+        this.inputStyle = inputStyle
     }
 
     open fun showLinkDetails(data: LinkPreviewDetails) {
@@ -130,16 +128,16 @@ open class LinkPreviewFragment : Fragment() {
         }
     }
 
-    protected open var defaultImage: Drawable? by lazyVar {
-        requireContext().getCompatDrawable(R.drawable.sceyt_ic_link)?.apply {
-            mutate().setTint(requireContext().getCompatColor(SceytChatUIKit.theme.accentColor))
-        }
-    }
+    protected open val defaultImage: Drawable?
+        get() = inputStyle?.linkPreviewStyle?.placeHolder
 
-    private fun SceytFragmentLinkPreviewBinding.applyStyle() {
-        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.surface1Color))
-        icClose.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
-        tvLinkDescription.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
-        viewTop.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.borderColor))
+    private fun SceytFragmentLinkPreviewBinding.applyStyle(inputStyle: MessageInputStyle) {
+        val style = inputStyle.linkPreviewStyle
+        root.setBackgroundColor(style.backgroundColor)
+        icClose.setImageDrawable(inputStyle.closeIcon)
+        icLinkImage.setImageDrawable(defaultImage)
+        style.titleStyle.apply(tvLinkUrl)
+        style.descriptionStyle.apply(tvLinkDescription)
+        viewTop.setBackgroundColor(style.dividerColor)
     }
 }

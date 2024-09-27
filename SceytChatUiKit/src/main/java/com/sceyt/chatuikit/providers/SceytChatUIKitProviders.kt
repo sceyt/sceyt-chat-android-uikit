@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.providers
 
-import android.content.Context
 import android.graphics.drawable.Drawable
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -14,15 +13,13 @@ import com.sceyt.chatuikit.providers.defaults.DefaultChannelURIValidationMessage
 import com.sceyt.chatuikit.providers.defaults.DefaultUserAvatarProvider
 import com.sceyt.chatuikit.providers.defaults.URIValidationType
 
-class SceytChatUIKitProviders(
-        private val context: Context
-) {
+class SceytChatUIKitProviders {
     var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?> by lazyVar {
-        DefaultAttachmentIconProvider(context)
+        DefaultAttachmentIconProvider()
     }
 
     var channelListAttachmentIconProvider: VisualProvider<SceytAttachment, Drawable?> by lazyVar {
-        DefaultChannelListAttachmentIconProvider(context)
+        DefaultChannelListAttachmentIconProvider()
     }
 
     var channelDefaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar> by lazyVar {
@@ -34,6 +31,6 @@ class SceytChatUIKitProviders(
     }
 
     var channelURIValidationMessageProvider: VisualProvider<URIValidationType, String> by lazyVar {
-        DefaultChannelURIValidationMessageProvider(context)
+        DefaultChannelURIValidationMessageProvider()
     }
 }

@@ -151,7 +151,7 @@ open class ChannelViewHolder(
         )
         val senderName = itemStyle.lastMessageSenderNameFormatter.format(context, channel)
         val attachmentIcon = message.attachments?.getOrNull(0)?.let {
-            itemStyle.attachmentIconProvider.provide(it)
+            itemStyle.attachmentIconProvider.provide(context, it)
         }
 
         setTextAutoLinkMasks(textView, message.body)

@@ -27,7 +27,7 @@ class AutoDeleteDialog(
     }
 
     private fun setOptions() {
-        val options = SceytChatUIKit.config.messageAutoDeleteOptions
+        val options = SceytChatUIKit.config.messageAutoDeleteOptions.getOptions(context)
         binding.rvOptions.adapter = IntervalOptionsAdapter(options) {
             chooseListener?.invoke(it)
             dismiss()

@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:background="?selectableItemBackgroundBorderless"
-        android:src="@drawable/sceyt_close_btn"
+        android:src="@drawable/sceyt_ic_close"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -53,7 +53,7 @@
             app:layout_constraintEnd_toStartOf="@id/voice_record_duration"
             app:layout_constraintStart_toEndOf="@id/play_voice_record"
             app:layout_constraintTop_toTopOf="parent"
-            app:wave_background_color="#A0A1B0"
+            app:wave_background_color="@color/sceyt_color_text_secondary"
             app:wave_corner_radius="2dp"
             app:wave_gap="1.5dp"
             app:wave_gravity="center"

@@ -199,7 +199,7 @@ open class ChannelEditFragment : Fragment(), SceytKoinComponent {
             URIValidationType.FreeToUse -> R.color.sceyt_color_success
         }
         binding?.uriWarning?.apply {
-            text = provider.provide(type)
+            text = provider.provide(requireContext(), type)
             setTextColor(requireContext().getCompatColor(colorRes))
             isVisible = true
         }

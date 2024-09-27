@@ -144,7 +144,7 @@ class AvatarView @JvmOverloads constructor(
 
     private fun getAvatarRandomColor(initials: CharSequence): Int {
         val colors = if (isInEditMode)
-            listOf(1) else SceytChatUIKit.config.defaultAvatarBackgroundColors
+            listOf(1) else SceytChatUIKit.config.defaultAvatarBackgroundColors.getColors(context)
         return colors[abs(initials.hashCode()) % colors.size]
     }
 

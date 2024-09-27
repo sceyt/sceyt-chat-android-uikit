@@ -18,7 +18,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_scroll_up_button" />
+        app:srcCompat="@drawable/sceyt_scroll_prev_button" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icDown"
@@ -32,7 +32,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/icUp"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_scroll_down_button" />
+        app:srcCompat="@drawable/sceyt_scroll_next_button" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvResult"

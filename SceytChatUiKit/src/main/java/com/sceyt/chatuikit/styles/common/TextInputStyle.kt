@@ -29,10 +29,9 @@ data class TextInputStyle(
                 setStroke(borderWidth, borderColor)
                 setColor(backgroundColor)
             }
-            if (inputRoot != null)
-                inputRoot.background = background
-            else
-                textInput.background = background
+            val view = inputRoot ?: textInput
+            view.backgroundTintList = null
+            view.background = background
         }
     }
 

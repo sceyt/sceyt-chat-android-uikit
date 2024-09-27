@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attach
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.holders.AttachmentVideoViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.AttachmentClickListenersImpl
-import com.sceyt.chatuikit.styles.MessageInputStyle
+import com.sceyt.chatuikit.styles.input.MessageInputStyle
 
 open class AttachmentsViewHolderFactory(
         context: Context,
@@ -33,17 +33,17 @@ open class AttachmentsViewHolderFactory(
 
     open fun createImageViewHolder(parent: ViewGroup): BaseViewHolder<AttachmentItem> {
         val binding = SceytItemInputImageAttachmentBinding.inflate(layoutInflater, parent, false)
-        return AttachmentImageViewHolder(binding, clickListeners)
+        return AttachmentImageViewHolder(binding, clickListeners, inputStyle.selectedMediaStyle)
     }
 
     open fun createVideoViewHolder(parent: ViewGroup): BaseViewHolder<AttachmentItem> {
         val binding = SceytItemInputVideoAttachmentBinding.inflate(layoutInflater, parent, false)
-        return AttachmentVideoViewHolder(binding, clickListeners)
+        return AttachmentVideoViewHolder(binding, clickListeners, inputStyle.selectedMediaStyle)
     }
 
     open fun createFileViewHolder(parent: ViewGroup): BaseViewHolder<AttachmentItem> {
         val binding = SceytItemInputFileAttachmentBinding.inflate(layoutInflater, parent, false)
-        return AttachmentFileViewHolder(binding, inputStyle, clickListeners)
+        return AttachmentFileViewHolder(binding, clickListeners, inputStyle.selectedMediaStyle)
     }
 
     open fun getItemViewType(item: AttachmentItem): Int {

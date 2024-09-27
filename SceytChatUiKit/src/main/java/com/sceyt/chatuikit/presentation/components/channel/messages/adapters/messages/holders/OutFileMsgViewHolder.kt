@@ -133,7 +133,7 @@ class OutFileMsgViewHolder(
         super.updateState(data, isOnBind)
         when (data.state) {
             Uploaded, Downloaded -> {
-                val icon = style.attachmentIconProvider.provide(fileItem.file)
+                val icon = style.attachmentIconProvider.provide(context, fileItem.file)
                 binding.icFile.setImageDrawable(icon)
                 binding.tvFileSize.text = data.fileTotalSize
                         ?: fileItem.file.fileSize.toPrettySize()

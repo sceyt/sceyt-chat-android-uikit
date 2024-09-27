@@ -1,17 +1,15 @@
 package com.sceyt.chatuikit.config
 
-import android.content.Context
 import androidx.annotation.IntRange
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chatuikit.config.defaults.DefaultAutoDeleteMessagesOptions
 import com.sceyt.chatuikit.config.defaults.DefaultAvatarBackgroundColors
 import com.sceyt.chatuikit.config.defaults.DefaultMuteNotificationOptions
 import com.sceyt.chatuikit.persistence.lazyVar
+import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import kotlin.time.Duration.Companion.hours
 
-class SceytChatUIKitConfig(
-        appContext: Context
-) {
+class SceytChatUIKitConfig {
     var queryLimits: QueryLimits by lazyVar { QueryLimits() }
     var presenceConfig: PresenceConfig by lazyVar { PresenceConfig() }
     var channelURIConfig: ChannelURIConfig by lazyVar { ChannelURIConfig() }
@@ -27,15 +25,19 @@ class SceytChatUIKitConfig(
     var channelListOrder: ChannelListOrder = ChannelListOrder.ListQueryChannelOrderLastMessage
     var defaultReactions: List<String> = listOf("😎", "😂", "👌", "😍", "👍", "😏")
     var mentionTriggerPrefix = '@'
-    var uploadNotificationPendingIntentData: UploadNotificationPendingIntentData? = null
-    var muteChannelNotificationOptions: List<IntervalOption> by lazyVar {
-        DefaultMuteNotificationOptions(appContext).options
+    var uploadNotificationPendingIntentData: UploadNotificationPendingIntentData? by lazyVar {
+        UploadNotificationPendingIntentData(
+            ChannelActivity::class.java, ChannelActivity.CHANNEL
+        )
     }
-    var messageAutoDeleteOptions: List<IntervalOption> by lazyVar {
-        DefaultAutoDeleteMessagesOptions(appContext).options
+    var muteChannelNotificationOptions: MuteNotificationOptions by lazyVar {
+        DefaultMuteNotificationOptions
     }
-    var defaultAvatarBackgroundColors: List<Int> by lazyVar {
-        DefaultAvatarBackgroundColors(appContext).colors
+    var messageAutoDeleteOptions: AutoDeleteMessagesOptions by lazyVar {
+        DefaultAutoDeleteMessagesOptions
+    }
+    var defaultAvatarBackgroundColors: AvatarBackgroundColors by lazyVar {
+        DefaultAvatarBackgroundColors
     }
 
     @IntRange(from = 1, to = 6)

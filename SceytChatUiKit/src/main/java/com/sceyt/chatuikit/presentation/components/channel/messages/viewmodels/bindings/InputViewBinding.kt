@@ -21,14 +21,14 @@ import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
 import com.sceyt.chatuikit.presentation.common.SceytDialog
-import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
+import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionUserHelper.getValueData
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionValidatorWatcher
-import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
+import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
+import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.filter
@@ -38,9 +38,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
-fun MessageListViewModel.bind(messageInputView: MessageInputView,
-                              replyInThreadMessage: SceytMessage?,
-                              lifecycleOwner: LifecycleOwner) {
+fun MessageListViewModel.bind(
+        messageInputView: MessageInputView,
+        replyInThreadMessage: SceytMessage?,
+        lifecycleOwner: LifecycleOwner
+) {
 
     messageActionBridge.setInputView(messageInputView)
 
@@ -52,8 +54,6 @@ fun MessageListViewModel.bind(messageInputView: MessageInputView,
     messageInputView.setReplyInThreadMessageId(replyInThreadMessage?.id)
     messageInputView.checkIsParticipant(channel)
     messageInputView.setSaveUrlsPlace(placeToSavePathsList)
-    messageInputView.needMessagesListViewStyleCallback = { messageActionBridge.messagesListView?.style }
-
     messageInputView.setMentionValidator(object : MentionValidatorWatcher.MentionValidator {
         override fun getInvalidMentionAnnotations(mentionAnnotations: List<Annotation>?): List<Annotation>? {
             return runBlocking {

@@ -175,7 +175,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 (layoutParams as MarginLayoutParams).setMargins(binding.avatar.marginLeft, marginTop, marginRight, marginBottom)
             }
         } else {
-            val title = style.channelTitleFormatter.format(context, channel)
+            val title = style.titleFormatter.format(context, channel)
             if (titleTextView.text.equals(title)) return
             titleTextView.text = title
         }
@@ -188,7 +188,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
         post {
             if (!replyInThread) {
-                val title = style.channelSubtitleFormatter.format(context, channel)
+                val title = style.subtitleFormatter.format(context, channel)
                 setSubTitleText(subjectTextView, title, title.isNotBlank() && !typingUsersHelper.isTyping)
             } else {
                 val fullName = replyMessage?.user?.fullName
@@ -213,7 +213,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private fun setAvatar(avatar: AvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
         binding.avatar.isVisible = !replyInThread
         if (!replyInThread)
-            avatar.setChannelAvatar(channel, style.channelDefaultAvatarProvider)
+            avatar.setChannelAvatar(channel, style.defaultAvatarProvider)
     }
 
     private fun showMessageActionsInToolbar(vararg messages: SceytMessage, @MenuRes resId: Int,

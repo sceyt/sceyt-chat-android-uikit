@@ -15,7 +15,7 @@ fun AvatarView.setChannelAvatar(
         = SceytChatUIKit.providers.channelDefaultAvatarProvider,
         isSelf: Boolean = channel.isSelf()
 ) {
-    val defaultAvatar = defaultAvatarProvider.provide(channel)
+    val defaultAvatar = defaultAvatarProvider.provide(context, channel)
     val builder = styleBuilder()
         .setDefaultAvatar(defaultAvatar)
 
@@ -27,14 +27,18 @@ fun AvatarView.setChannelAvatar(
     builder.build()
 }
 
-fun AvatarView.setUserAvatar(user: User?) {
+
+fun AvatarView.setUserAvatar(
+        user: User?,
+        avatarProvider: VisualProvider<User, DefaultAvatar>
+        = SceytChatUIKit.providers.userDefaultAvatarProvider
+) {
     if (user == null) {
         setImageUrl(null)
         return
     }
-    val defaultAvatar = SceytChatUIKit.providers.userDefaultAvatarProvider.provide(user)
     styleBuilder()
-        .setDefaultAvatar(defaultAvatar)
+        .setDefaultAvatar(avatarProvider.provide(context, user))
         .setAvatarBackgroundColor(0)
         .setImageUrl(user.avatarURL)
         .build()

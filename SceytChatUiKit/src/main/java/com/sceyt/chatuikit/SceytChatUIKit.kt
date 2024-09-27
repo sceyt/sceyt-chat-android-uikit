@@ -42,8 +42,8 @@ object SceytChatUIKit : SceytKoinComponent {
     private lateinit var appContext: Context
     val chatUIFacade: SceytChatUIFacade by inject()
     var theme: SceytChatUIKitTheme by lazyVar { SceytChatUIKitTheme() }
-    var config: SceytChatUIKitConfig by lazyVar { SceytChatUIKitConfig(appContext) }
-    var providers: SceytChatUIKitProviders by lazyVar { SceytChatUIKitProviders(appContext) }
+    var config: SceytChatUIKitConfig by lazyVar { SceytChatUIKitConfig() }
+    var providers: SceytChatUIKitProviders by lazyVar { SceytChatUIKitProviders() }
     var formatters: SceytChatUIKitFormatters by lazyVar { SceytChatUIKitFormatters() }
 
     @JvmField

@@ -6,14 +6,18 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemInputVideoAttachmentBinding
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
-import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentItem
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.AttachmentClickListeners
-import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
+import com.sceyt.chatuikit.styles.input.InputSelectedMediaStyle
+import kotlin.time.Duration.Companion.milliseconds
 
-class AttachmentVideoViewHolder(private val binding: SceytItemInputVideoAttachmentBinding,
-                                private val clickListeners: AttachmentClickListeners.ClickListeners) : BaseViewHolder<AttachmentItem>(binding.root) {
+class AttachmentVideoViewHolder(
+        private val binding: SceytItemInputVideoAttachmentBinding,
+        private val clickListeners: AttachmentClickListeners.ClickListeners,
+        private val style: InputSelectedMediaStyle
+) : BaseViewHolder<AttachmentItem>(binding.root) {
 
     init {
         binding.setStyle()
@@ -32,7 +36,7 @@ class AttachmentVideoViewHolder(private val binding: SceytItemInputVideoAttachme
 
                 tvDuration.apply {
                     if (durationMillis > 0)
-                        text = DateTimeUtil.secondsToTime(durationMillis / 1000)
+                        text = style.mediaDurationFormatter.format(context, durationMillis.milliseconds.inWholeSeconds)
                     isVisible = durationMillis > 0
                 }
             }
@@ -44,5 +48,6 @@ class AttachmentVideoViewHolder(private val binding: SceytItemInputVideoAttachme
     private fun SceytItemInputVideoAttachmentBinding.setStyle() {
         btnRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
         layoutRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.backgroundColor)
+        btnRemove.setImageDrawable(style.removeAttachmentIcon)
     }
 }

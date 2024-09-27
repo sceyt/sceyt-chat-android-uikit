@@ -25,7 +25,7 @@ import java.util.Date
  * @property emptyStateForSelfChannel Layout resource for the empty state view for self channel, default is [R.layout.sceyt_messages_empty_state_self_channel]
  * @property loadingState Layout resource for the loading state view, default is [R.layout.sceyt_loading_state]
  * @property downScrollerUnreadCountColor Color for the unread count in the down scroller, default is [SceytChatUIKitTheme.accentColor]
- * @property downScrollerIcon Icon for the down scroller, default is [R.drawable.sceyt_scroll_down_button]
+ * @property downScrollerIcon Icon for the down scroller, default is [R.drawable.sceyt_scroll_next_button]
  * @property dateSeparatorTextFont Font for the date separator item text, default is -1
  * @property dateSeparatorTextStyle Style for the date separator item text, default is [Typeface.NORMAL]
  * @property dateSeparatorItemBackgroundColor Color for the date separator item background, default is [R.color.sceyt_color_overlay_background_2]
@@ -92,7 +92,7 @@ data class MessagesListViewStyle(
                     context.getCompatColor(SceytChatUIKit.theme.accentColor))
 
                 val downScrollerIcon = array.getDrawable(R.styleable.MessagesListView_sceytUiDownScrollerIcon)
-                        ?: context.getCompatDrawable(R.drawable.sceyt_scroll_down_button)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_scroll_next_button)
 
                 val dateSeparatorTextFont = array.getResourceId(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextFont, -1)
 

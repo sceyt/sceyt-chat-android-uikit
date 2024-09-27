@@ -18,7 +18,6 @@ import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.databinding.FragmentProfileBinding
 import com.sceyt.chat.demo.presentation.login.LoginActivity
 import com.sceyt.chat.models.user.User
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.defaults.DefaultMuteNotificationOptions
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -129,7 +128,7 @@ class ProfileFragment : Fragment() {
                 MuteNotificationDialog.showDialog(
                     context = requireContext(),
                     title = requireContext().getString(R.string.mute_notifications),
-                    options = DefaultMuteNotificationOptions(requireContext()).options) {
+                    options = DefaultMuteNotificationOptions.getOptions(requireContext())) {
                     viewModel.muteNotifications(it.timeInterval)
                     switchNotifications.isChecked = false
                 }
