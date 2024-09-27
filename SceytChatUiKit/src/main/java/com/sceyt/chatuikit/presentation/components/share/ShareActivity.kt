@@ -98,9 +98,9 @@ open class ShareActivity : ShareableActivity() {
     }
 
     protected open fun SceytActivityShareBinding.applyStyle() {
-        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.backgroundColor))
-        btnShare.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
-        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
+        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
+        btnShare.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
     }
 
     protected open fun sendTextMessage() {

@@ -11,6 +11,14 @@ data class Colors(
         @ColorRes
         val accentColor: Int = R.color.sceyt_color_accent,
         @ColorRes
+        val accentColor2: Int = R.color.sceyt_color_accent_2,
+        @ColorRes
+        val accentColor3: Int = R.color.sceyt_color_accent_3,
+        @ColorRes
+        val accentColor4: Int = R.color.sceyt_color_accent_4,
+        @ColorRes
+        val accentColor5: Int = R.color.sceyt_color_accent_5,
+        @ColorRes
         val onPrimaryColor: Int = R.color.sceyt_color_on_primary,
         @ColorRes
         val backgroundColor: Int = R.color.sceyt_color_background,
@@ -44,4 +52,6 @@ data class Colors(
         val errorColor: Int = R.color.sceyt_color_error,
         @ColorRes
         val successColor: Int = R.color.sceyt_color_green,
+        @ColorRes
+        val warningColor: Int = R.color.sceyt_color_warning
 )

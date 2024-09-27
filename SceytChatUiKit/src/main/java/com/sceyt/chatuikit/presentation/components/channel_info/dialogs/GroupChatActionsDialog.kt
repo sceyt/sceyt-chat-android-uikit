@@ -107,13 +107,13 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
 
     private fun SceytDialogGroupChannelActionsBinding.applyStyle() {
         setTextViewsDrawableColor(listOf(pin, unPin, clearHistory, report),
-            context.getCompatColor(SceytChatUIKit.theme.accentColor))
+            context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
         setTextViewsDrawableColor(listOf(leaveChat, delete),
-            context.getCompatColor(SceytChatUIKit.theme.errorColor))
+            context.getCompatColor(SceytChatUIKit.theme.colors.errorColor))
         setTextViewsTextColor(listOf(pin, unPin, clearHistory, report),
-            context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+            context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
         setTextViewsTextColor(listOf(leaveChat, delete),
-            context.getCompatColor(SceytChatUIKit.theme.errorColor))
+            context.getCompatColor(SceytChatUIKit.theme.colors.errorColor))
     }
 
     companion object {

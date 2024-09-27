@@ -38,8 +38,8 @@ class AttachmentFileViewHolder(
     }
 
     private fun SceytItemInputFileAttachmentBinding.applyStyle() {
-        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
-        layoutRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.backgroundColor)
+        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
+        layoutRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.backgroundColor)
         imageCont.setCardBackgroundColor(style.fileAttachmentBackgroundColor)
         btnRemove.setImageDrawable(style.removeAttachmentIcon)
         style.fileAttachmentNameTextStyle.apply(tvFileName)

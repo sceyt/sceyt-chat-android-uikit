@@ -40,7 +40,7 @@ open class ChannelMembersViewHolderFactory(context: Context) {
             }
 
             private fun SceytItemLoadingMoreBinding.applyStyle() {
-                adapterListLoadingProgressBar.setProgressColor(SceytChatUIKit.theme.accentColor)
+                adapterListLoadingProgressBar.setProgressColor(SceytChatUIKit.theme.colors.accentColor)
             }
         }
     }

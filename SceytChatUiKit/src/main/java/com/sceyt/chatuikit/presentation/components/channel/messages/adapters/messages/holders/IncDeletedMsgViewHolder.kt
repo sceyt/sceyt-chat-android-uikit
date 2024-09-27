@@ -51,6 +51,6 @@ class IncDeletedMsgViewHolder(
     private fun SceytItemIncDeletedMessageBinding.setMessageItemStyle() {
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incomingBubbleColor)
         tvUserName.setTextColor(style.senderNameTextColor)
-        messageBody.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+        messageBody.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
     }
 }

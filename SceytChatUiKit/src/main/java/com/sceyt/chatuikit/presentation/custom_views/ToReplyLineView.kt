@@ -21,7 +21,7 @@ class ToReplyLineView @JvmOverloads constructor(
     private var paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val strokeWidth = dpToPxAsFloat(1.8f)
     private var isToLeft = false
-    private var strokeColor = context.getCompatColor(SceytChatUIKit.theme.borderColor)
+    private var strokeColor = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor)
     private var connectedViewTopId: Int
     private var connectedViewBottomId: Int
     private var connectedViewTopHalfHeight = 0f

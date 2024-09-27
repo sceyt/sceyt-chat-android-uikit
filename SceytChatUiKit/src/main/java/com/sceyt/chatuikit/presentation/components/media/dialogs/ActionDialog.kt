@@ -57,7 +57,7 @@ class ActionDialog(
     }
 
     private fun SceytDialogMediaActionsBinding.applyStyle() {
-        setTextViewsDrawableColor(listOf(save, share, forward), context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        setTextViewsDrawableColor(listOf(save, share, forward), context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
     }
 
     enum class Action {

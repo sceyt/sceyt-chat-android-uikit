@@ -26,7 +26,7 @@ class ScrollToDownView @JvmOverloads constructor(
 
     internal fun setStyle(style: MessagesListViewStyle) {
         binding.unreadCount.setBackgroundTint(style.downScrollerUnreadCountColor)
-        binding.fabNext.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
+        binding.fabNext.setTintColorRes(SceytChatUIKit.theme.colors.iconSecondaryColor)
         binding.fabNext.setImageDrawable(style.downScrollerIcon)
     }
 

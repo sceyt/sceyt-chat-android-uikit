@@ -256,7 +256,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }.attach()
 
         tabLayout.apply {
-            val color = getCompatColor(SceytChatUIKit.theme.accentColor)
+            val color = getCompatColor(SceytChatUIKit.theme.colors.accentColor)
             setSelectedTabIndicatorColor(color)
             tabRippleColor = ColorStateList.valueOf(color)
         }
@@ -661,7 +661,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open fun applyStyle() {
         with(binding ?: return) {
-            val theme = SceytChatUIKit.theme
+            val theme = SceytChatUIKit.theme.colors
             root.setBackgroundColor(getCompatColor(theme.backgroundColorSecondary))
             viewTopTabLayout.setBackgroundTintColorRes(theme.borderColor)
             underlineTab.setBackgroundTintColorRes(theme.borderColor)

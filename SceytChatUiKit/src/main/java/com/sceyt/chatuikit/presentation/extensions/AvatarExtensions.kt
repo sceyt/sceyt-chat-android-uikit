@@ -23,7 +23,7 @@ fun AvatarView.setChannelAvatar(
         builder.setImageUrl(null)
     } else builder.setImageUrl(channel.iconUrl)
 
-    builder.setAvatarBackgroundColorRes(if (isSelf) SceytChatUIKit.theme.accentColor else 0)
+    builder.setAvatarBackgroundColorRes(if (isSelf) SceytChatUIKit.theme.colors.accentColor else 0)
     builder.build()
 }
 

@@ -11,6 +11,6 @@ class ChannelLoadingMoreViewHolder(binding: SceytItemLoadingMoreBinding) : BaseC
     }
 
     private fun SceytItemLoadingMoreBinding.applyStyle() {
-        adapterListLoadingProgressBar.indeterminateDrawable.setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        adapterListLoadingProgressBar.indeterminateDrawable.setTint(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
     }
 }

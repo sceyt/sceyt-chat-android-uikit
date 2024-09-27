@@ -114,8 +114,8 @@ class ChannelMediaAdapter(
             dateFormatter = factory.getMediaStyle().mediaDateSeparatorFormat)
 
         header.tvDate.text = date
-        header.tvDate.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
-        header.root.setBackgroundColor(header.root.context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
+        header.tvDate.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
+        header.root.setBackgroundColor(header.root.context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
     }
 
     override fun isHeader(itemPosition: Int): Boolean {

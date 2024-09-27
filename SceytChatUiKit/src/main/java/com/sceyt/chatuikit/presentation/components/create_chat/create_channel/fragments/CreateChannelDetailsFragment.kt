@@ -228,11 +228,11 @@ open class CreateChannelDetailsFragment : Fragment() {
     }
 
     private fun SceytFragmentCreateChannelDetailsBinding.applyStyle() {
-        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
         setTextViewsTextColor(listOf(inputSubject, inputUri, inputDescription, uriPrefix),
-            requireContext().getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+            requireContext().getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
         setTextViewsHintTextColorRes(listOf(inputSubject, inputUri, inputDescription),
-            SceytChatUIKit.theme.textFootnoteColor)
-        uriWarning.setTextColor(requireContext().getCompatColor(SceytChatUIKit.theme.errorColor))
+            SceytChatUIKit.theme.colors.textFootnoteColor)
+        uriWarning.setTextColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.errorColor))
     }
 }

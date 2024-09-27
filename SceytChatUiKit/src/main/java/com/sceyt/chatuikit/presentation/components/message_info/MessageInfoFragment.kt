@@ -201,7 +201,7 @@ open class MessageInfoFragment : Fragment() {
         toolbar.setTitleColor(style.titleColor)
         toolbar.setTitle(style.title)
         setTextViewsTextColor(listOf(tvSentDate, tvPlayedByHint, tvReadByHint, tvDeliveredToHint),
-            requireContext().getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+            requireContext().getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
         divider.setBackgroundColor(style.borderColor)
         dividerPlayed.setBackgroundColor(style.borderColor)
         dividerRead.setBackgroundColor(style.borderColor)

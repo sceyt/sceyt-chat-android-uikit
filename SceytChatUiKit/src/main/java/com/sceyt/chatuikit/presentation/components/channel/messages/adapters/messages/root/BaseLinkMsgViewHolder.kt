@@ -134,7 +134,7 @@ abstract class BaseLinkMsgViewHolder(
             style.incomingLinkPreviewBackgroundColor
         else style.outgoingLinkPreviewBackgroundColor
         root.setBackgroundTint(color)
-        tvLinkTitle.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        tvLinkDesc.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
+        tvLinkTitle.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        tvLinkDesc.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
     }
 }

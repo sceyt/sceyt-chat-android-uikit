@@ -45,9 +45,9 @@ class ImagePreviewActivity : AppCompatActivity() {
     }
 
     private fun SceytFragmentPhotoPreviewBinding.applyStyle() {
-        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
-        toolbar.setTitleColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.primaryColor))
+        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
+        toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
     }
 
     companion object {

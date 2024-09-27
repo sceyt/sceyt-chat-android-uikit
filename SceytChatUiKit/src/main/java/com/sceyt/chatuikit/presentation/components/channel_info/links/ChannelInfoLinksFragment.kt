@@ -178,7 +178,7 @@ open class ChannelInfoLinksFragment : Fragment(), SceytKoinComponent, ViewPagerA
     }
 
     private fun SceytFragmentChannelInfoLinksBinding.applyStyle() {
-        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
     }
 
     companion object {

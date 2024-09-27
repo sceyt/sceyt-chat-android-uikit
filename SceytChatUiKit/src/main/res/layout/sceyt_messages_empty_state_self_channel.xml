@@ -14,7 +14,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icEditPhoto"
-            setTintColor="@{SceytChatUIKit.INSTANCE.theme.accentColor}"
+            setTintColor="@{SceytChatUIKit.INSTANCE.theme.colors.accentColor}"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_gravity="center"
@@ -32,7 +32,7 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/title"
-            setTextColor="@{SceytChatUIKit.INSTANCE.theme.textPrimaryColor}"
+            setTextColor="@{SceytChatUIKit.INSTANCE.theme.colors.textPrimaryColor}"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -50,7 +50,7 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/desc"
-            setTextColor="@{SceytChatUIKit.INSTANCE.theme.textSecondaryColor}"
+            setTextColor="@{SceytChatUIKit.INSTANCE.theme.colors.textSecondaryColor}"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

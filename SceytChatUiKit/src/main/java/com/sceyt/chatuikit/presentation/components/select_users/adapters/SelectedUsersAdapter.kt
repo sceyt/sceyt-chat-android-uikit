@@ -46,7 +46,7 @@ class SelectedUsersAdapter(private val users: ArrayList<UserItem.User>,
         }
 
         private fun SceytItemSelectedUserBinding.applyStyle() {
-            userName.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+            userName.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
         }
     }
 

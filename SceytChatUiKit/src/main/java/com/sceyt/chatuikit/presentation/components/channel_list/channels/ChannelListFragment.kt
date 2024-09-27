@@ -76,10 +76,10 @@ class ChannelListFragment : Fragment() {
     }
 
     private fun SceytFragmentChannelsBinding.applyStyle() {
-        layoutToolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.primaryColor))
-        searchAppBarLayout.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
-        title.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        underline.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.borderColor))
-        fabNewChannel.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
+        layoutToolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
+        searchAppBarLayout.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
+        title.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        underline.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.borderColor))
+        fabNewChannel.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
     }
 }

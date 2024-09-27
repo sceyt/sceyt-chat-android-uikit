@@ -295,10 +295,10 @@ class IncVoiceMsgViewHolder(
     }
 
     private fun SceytItemIncVoiceMessageBinding.setMessageItemStyle() {
-        val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
         layoutDetails.setBackgroundTint(style.incomingBubbleColor)
         tvUserName.setTextColor(style.senderNameTextColor)
-        voiceDuration.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+        voiceDuration.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
         playPauseButton.setBackgroundTint(accentColor)
         seekBar.waveProgressColor = accentColor
         tvForwarded.setTextAndDrawableByColor(accentColor)

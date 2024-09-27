@@ -263,14 +263,14 @@ open class ChannelEditFragment : Fragment(), SceytKoinComponent {
     }
 
     private fun SceytFragmentChannelEditBinding.applyStyle() {
-        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColor))
-        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
-        toolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.primaryColor))
-        toolbar.setTitleColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        uriWarning.setTextColor(requireContext().getCompatColor(SceytChatUIKit.theme.errorColor))
-        icSave.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
-        setTextViewsTextColorRes(listOf(tvSubject, tvDescription, uriPrefix, inputUri), SceytChatUIKit.theme.textPrimaryColor)
-        setTextViewsHintTextColorRes(listOf(tvSubject, tvDescription, inputUri), SceytChatUIKit.theme.textFootnoteColor)
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
+        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
+        toolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
+        toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        uriWarning.setTextColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.errorColor))
+        icSave.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
+        setTextViewsTextColorRes(listOf(tvSubject, tvDescription, uriPrefix, inputUri), SceytChatUIKit.theme.colors.textPrimaryColor)
+        setTextViewsHintTextColorRes(listOf(tvSubject, tvDescription, inputUri), SceytChatUIKit.theme.colors.textFootnoteColor)
     }
 
     companion object {

@@ -81,8 +81,8 @@ open class ChannelInfoURIFragment : Fragment(), ChannelUpdateListener, ChannelIn
     }
 
     private fun SceytFragmentChannelInfoUriBinding.applyStyle() {
-        link.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
-        link.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        link.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
+        link.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
         space.layoutParams.height = style.spaceBetweenSections
     }
 

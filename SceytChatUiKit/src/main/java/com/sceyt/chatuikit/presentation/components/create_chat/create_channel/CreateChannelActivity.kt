@@ -117,9 +117,9 @@ class CreateChannelActivity : AppCompatActivity() {
     }
 
     private fun SceytActivityCreateChannelBinding.applyStyle() {
-        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.backgroundColor))
-        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.primaryColor))
-        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
-        toolbar.setTitleColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
+        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
+        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
+        toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
     }
 }

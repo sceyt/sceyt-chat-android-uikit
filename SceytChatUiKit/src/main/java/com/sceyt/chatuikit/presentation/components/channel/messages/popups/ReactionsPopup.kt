@@ -102,6 +102,6 @@ open class ReactionsPopup(
     }
 
     protected open fun SceytPopupAddReactionBinding.applyStyle() {
-        cardView.setCardBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
+        cardView.setCardBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
     }
 }

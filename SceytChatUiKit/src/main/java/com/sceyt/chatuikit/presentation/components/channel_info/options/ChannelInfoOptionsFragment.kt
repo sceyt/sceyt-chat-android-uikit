@@ -98,16 +98,16 @@ open class ChannelInfoOptionsFragment : Fragment(), ChannelUpdateListener, Chann
     }
 
     private fun SceytFragmentChannelInfoOptionsBinding.applyStyle() {
-        val textPrimaryColor = requireContext().getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
-        val backgroundColorSections = requireContext().getCompatColor(SceytChatUIKit.theme.backgroundColorSections)
+        val textPrimaryColor = requireContext().getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+        val backgroundColorSections = requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
         members.setTextColor(textPrimaryColor)
         members.setBackgroundColor(backgroundColorSections)
         admins.setTextColor(textPrimaryColor)
         admins.setBackgroundColor(backgroundColorSections)
         searchMessages.setTextColor(textPrimaryColor)
         searchMessages.setBackgroundColor(backgroundColorSections)
-        borderBetweenMembersAndAdmins.setDividerColorResource(SceytChatUIKit.theme.borderColor)
-        borderBetweenAdminsAndSearch.setDividerColorResource(SceytChatUIKit.theme.borderColor)
+        borderBetweenMembersAndAdmins.setDividerColorResource(SceytChatUIKit.theme.colors.borderColor)
+        borderBetweenAdminsAndSearch.setDividerColorResource(SceytChatUIKit.theme.colors.borderColor)
         space.layoutParams.height = style.spaceBetweenSections
     }
 

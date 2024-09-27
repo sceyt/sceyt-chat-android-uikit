@@ -31,9 +31,9 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
  * Style for [MessageInputView] component.
- * @param backgroundColor Background color for the input root view, default is [SceytChatUIKitTheme.backgroundColor]
- * @param dividerColor Color for the divider, default is [SceytChatUIKitTheme.borderColor]
- * @param sendIconBackgroundColor Background color for the send icon, default is [SceytChatUIKitTheme.accentColor]
+ * @param backgroundColor Background color for the input root view, default is [Colors.backgroundColor]
+ * @param dividerColor Color for the divider, default is [Colors.borderColor]
+ * @param sendIconBackgroundColor Background color for the send icon, default is [Colors.accentColor]
  * @param attachmentIcon Icon for attachment button, default is [R.drawable.sceyt_ic_upload_file]
  * @param sendMessageIcon Icon for send message button, default is [R.drawable.sceyt_ic_send_message]
  * @param voiceRecordIcon Icon for voice record button, default is [R.drawable.sceyt_ic_voice_white]
@@ -93,17 +93,17 @@ data class MessageInputStyle(
         fun build(): MessageInputStyle {
             context.obtainStyledAttributes(attrs, R.styleable.MessageInputView).use { array ->
                 val inputBackgroundColor = array.getColor(R.styleable.MessageInputView_sceytUiMessageInputBackgroundColor,
-                    context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
 
                 val dividerColor = array.getColor(R.styleable.MessageInputView_sceytUiMessageInputDividerColor,
-                    context.getCompatColor(SceytChatUIKit.theme.borderColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.borderColor))
 
                 val sendIconBackgroundColor = array.getColor(R.styleable.MessageInputView_sceytUiMessageInputSendIconBackgroundColor,
-                    context.getCompatColor(SceytChatUIKit.theme.accentColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
 
                 val attachmentIcon = array.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputAttachmentIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_upload_file)?.apply {
-                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor))
                         }
 
                 val sendMessageIcon = array.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputSendIcon)
@@ -114,12 +114,12 @@ data class MessageInputStyle(
 
                 val sendVoiceMessageIcon = array.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputSendVoiceRecordIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_up)?.apply {
-                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor))
+                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
                         }
 
                 val closeIcon = array.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputCloseIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_cancel)?.apply {
-                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.iconSecondaryColor))
+                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor))
                         }
 
                 val enableVoiceRecord = array.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableVoiceRecord,

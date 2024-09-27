@@ -89,13 +89,13 @@ class ReactedUsersAdapter(
         }
 
         private fun SceytItemReactedUserBinding.applyStyle() {
-            userName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+            userName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
         }
     }
 
     inner class LoadingMoreViewHolder(val binding: SceytItemLoadingMoreBinding) : BaseViewHolder<ReactedUserItem>(binding.root) {
         override fun bind(item: ReactedUserItem) {
-            binding.adapterListLoadingProgressBar.indeterminateDrawable.setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+            binding.adapterListLoadingProgressBar.indeterminateDrawable.setTint(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
         }
     }
 

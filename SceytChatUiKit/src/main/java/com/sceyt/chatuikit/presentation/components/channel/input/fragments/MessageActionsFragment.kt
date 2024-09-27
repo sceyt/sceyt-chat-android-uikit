@@ -221,7 +221,7 @@ open class MessageActionsFragment : Fragment() {
     }
 
     private fun SceytFragmentMessageActionsBinding.applyStyle(inputStyle: MessageInputStyle) {
-        fileAttachment.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
+        fileAttachment.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
         icCancel.setImageDrawable(inputStyle.closeIcon)
     }
 }

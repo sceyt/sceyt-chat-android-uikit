@@ -44,6 +44,6 @@ class AutoDeleteDialog(
     }
 
     private fun SceytDialogAutoDeleteBinding.applyStyle() {
-        tvTitle.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        tvTitle.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
     }
 }

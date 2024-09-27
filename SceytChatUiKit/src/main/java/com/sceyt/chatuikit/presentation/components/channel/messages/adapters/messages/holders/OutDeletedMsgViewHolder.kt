@@ -40,6 +40,6 @@ class OutDeletedMsgViewHolder(
 
     private fun SceytItemOutDeletedMessageBinding.setMessageItemStyle() {
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outgoingBubbleColor)
-        messageBody.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+        messageBody.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
     }
 }

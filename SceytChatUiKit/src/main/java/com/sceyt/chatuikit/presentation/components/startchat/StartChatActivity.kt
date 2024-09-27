@@ -161,15 +161,15 @@ class StartChatActivity : AppCompatActivity() {
     }
 
     private fun SceytActivityStartChatBinding.applyStyle() {
-        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.backgroundColor))
-        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.primaryColor))
-        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
-        toolbar.setTitleColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        tvNewGroup.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        tvNewChannel.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        setTextViewsDrawableColor(listOf(tvNewChannel, tvNewGroup), getCompatColor(SceytChatUIKit.theme.accentColor))
-        tvUsers.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
-        tvUsers.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.surface1Color))
+        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
+        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
+        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
+        toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        tvNewGroup.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        tvNewChannel.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        setTextViewsDrawableColor(listOf(tvNewChannel, tvNewGroup), getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+        tvUsers.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
+        tvUsers.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
     }
 
     override fun finish() {

@@ -39,7 +39,7 @@ class PickerVideoViewHolder(
             Glide.with(itemView.context)
                 .load(item.media.realPath)
                 .override(itemView.width)
-                .placeholder(SceytChatUIKit.theme.backgroundColorSecondary)
+                .placeholder(SceytChatUIKit.theme.colors.backgroundColorSecondary)
                 .error(R.drawable.sceyt_ic_broken_image)
                 .into(binding.ivImage)
         }

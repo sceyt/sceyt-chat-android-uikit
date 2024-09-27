@@ -42,8 +42,8 @@ open class ChannelActivity : AppCompatActivity() {
             .root)
 
         statusBarIconsColorWithBackground(
-            statusBarColor = SceytChatUIKit.theme.statusBarColor,
-            navigationBarColor = SceytChatUIKit.theme.primaryColor)
+            statusBarColor = SceytChatUIKit.theme.colors.statusBarColor,
+            navigationBarColor = SceytChatUIKit.theme.colors.primaryColor)
 
         getDataFromIntent()
 

@@ -288,10 +288,10 @@ class OutVoiceMsgViewHolder(
     }
 
     private fun SceytItemOutVoiceMessageBinding.setMessageItemStyle() {
-        val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
+        val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
         layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
         playPauseButton.setBackgroundTint(accentColor)
-        voiceDuration.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+        voiceDuration.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
         seekBar.waveProgressColor = accentColor
         tvForwarded.setTextAndDrawableByColor(accentColor)
     }

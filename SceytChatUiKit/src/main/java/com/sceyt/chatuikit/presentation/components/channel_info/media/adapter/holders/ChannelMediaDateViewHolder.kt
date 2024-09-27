@@ -27,7 +27,7 @@ class ChannelMediaDateViewHolder(
     }
 
     private fun SceytItemChannelMediaDateBinding.applyStyle() {
-        root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
-        tvDate.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+        root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
+        tvDate.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
     }
 }

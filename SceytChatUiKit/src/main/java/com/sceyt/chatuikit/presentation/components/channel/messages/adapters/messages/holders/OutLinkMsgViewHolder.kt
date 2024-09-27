@@ -85,7 +85,7 @@ class OutLinkMsgViewHolder(
 
     private fun SceytItemOutLinkMessageBinding.setMessageItemStyle() {
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outgoingBubbleColor)
-        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.accentColor)
+        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.colors.accentColor)
         messageBody.applyStyle(style)
     }
 }

@@ -23,13 +23,12 @@ import com.sceyt.chatuikit.styles.extensions.buildMessageActionsMenuStyle
 import com.sceyt.chatuikit.styles.extensions.buildSearchInputTextStyle
 import com.sceyt.chatuikit.styles.extensions.buildSubTitleTextStyle
 import com.sceyt.chatuikit.styles.extensions.buildTitleTextStyle
-import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
-
+import com.sceyt.chatuikit.theme.Colors
 
 /**
  * Style for [MessagesListHeaderView] component.
- * @property backgroundColor background color of the header, default is [SceytChatUIKitTheme.primaryColor]
- * @property underlineColor color of the underline, default is [SceytChatUIKitTheme.borderColor]
+ * @property backgroundColor background color of the header, default is [Colors.primaryColor]
+ * @property underlineColor color of the underline, default is [Colors.borderColor]
  * @property navigationIcon icon for back button, default is [R.drawable.sceyt_ic_arrow_back]
  * @property showUnderline enable underline, default is true
  * @property titleTextStyle style for the title, default is [buildTitleTextStyle]
@@ -66,14 +65,14 @@ data class MessagesListHeaderStyle(
         fun build(): MessagesListHeaderStyle {
             context.obtainStyledAttributes(attrs, R.styleable.MessagesListHeaderView).use { array ->
                 val backgroundColor = array.getColor(R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderBackground,
-                    context.getCompatColor(SceytChatUIKit.theme.primaryColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
 
                 val navigationIcon = array.getDrawable(R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderNavigationIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back)
-                            ?.applyTint(context, SceytChatUIKit.theme.accentColor)
+                            ?.applyTint(context, SceytChatUIKit.theme.colors.accentColor)
 
                 val underlineColor = array.getColor(R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderUnderlineColor,
-                    context.getCompatColor(SceytChatUIKit.theme.borderColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.borderColor))
 
                 val showUnderline = array.getBoolean(R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderShowUnderline,
                     true)

@@ -169,12 +169,12 @@ open class SelectUsersActivity : AppCompatActivity() {
     }
 
     protected open fun SceytActivityAddMembersBinding.applyStyle() {
-        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.backgroundColor))
-        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.primaryColor))
-        toolbar.setIconsTint(SceytChatUIKit.theme.accentColor)
-        toolbar.setTitleColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        divider.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
-        divider.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.surface1Color))
+        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
+        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
+        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
+        toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        divider.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
+        divider.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
     }
 
     companion object {

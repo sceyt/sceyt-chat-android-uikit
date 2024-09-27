@@ -20,6 +20,8 @@ class SceytLoadingDialog(context: Context) : Dialog(context) {
         setContentView(binding.root)
         setCancelable(false)
 
-        binding.progressBar.indeterminateDrawable.setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        binding.progressBar.indeterminateDrawable.setTint(
+            context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+        )
     }
 }

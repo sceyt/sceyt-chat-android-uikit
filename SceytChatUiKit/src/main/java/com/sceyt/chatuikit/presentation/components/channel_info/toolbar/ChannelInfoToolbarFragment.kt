@@ -166,16 +166,16 @@ open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, Chann
     }
 
     private fun SceytFragmentChannelInfoToolbarBinding.applyStyle() {
-        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.primaryColor))
-        titleToolbar.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        tvToolbarInfo.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
-        subTitleToolbar.setTextColorRes(SceytChatUIKit.theme.textSecondaryColor)
+        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
+        titleToolbar.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        tvToolbarInfo.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        subTitleToolbar.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
         icBack.setImageDrawable(style.navigationIcon)
         icEdit.setImageDrawable(style.editIcon)
         icMore.setImageDrawable(style.moreIcon)
-        icBack.setTintColorRes(SceytChatUIKit.theme.accentColor)
-        icEdit.setTintColorRes(SceytChatUIKit.theme.accentColor)
-        icMore.setTintColorRes(SceytChatUIKit.theme.accentColor)
+        icBack.setTintColorRes(SceytChatUIKit.theme.colors.accentColor)
+        icEdit.setTintColorRes(SceytChatUIKit.theme.colors.accentColor)
+        icMore.setTintColorRes(SceytChatUIKit.theme.colors.accentColor)
     }
 
     companion object {

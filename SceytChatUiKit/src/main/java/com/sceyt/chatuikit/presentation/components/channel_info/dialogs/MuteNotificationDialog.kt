@@ -54,7 +54,7 @@ class MuteNotificationDialog(
     }
 
     private fun SceytDialogMuteNotificationsBinding.applyStyle() {
-        tvTitle.setTextColorRes(SceytChatUIKit.theme.textPrimaryColor)
+        tvTitle.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
     }
 
     companion object {

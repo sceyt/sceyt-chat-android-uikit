@@ -30,9 +30,9 @@ class MessageActionsToolbar @JvmOverloads constructor(
         private set
 
     private fun initMenu(vararg messages: SceytMessage) {
-        overflowIcon?.setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        overflowIcon?.setTint(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
         menu.forEach {
-            it.icon?.setTint(context.getCompatColor(SceytChatUIKit.theme.accentColor))
+            it.icon?.setTint(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
         }
 
         setOnMenuItemClickListener {

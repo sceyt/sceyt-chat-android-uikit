@@ -23,7 +23,7 @@ class CustomFloatingActonButton @JvmOverloads constructor(
     fun setEnabledOrNot(enabled: Boolean) {
         isEnabledClick = enabled
         setBackgroundTintColorRes(if (enabled)
-            SceytChatUIKit.theme.accentColor else SceytChatUIKit.theme.iconInactiveColor)
+            SceytChatUIKit.theme.colors.accentColor else SceytChatUIKit.theme.colors.iconInactiveColor)
     }
 
     private fun initClickListener() {

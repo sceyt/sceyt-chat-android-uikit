@@ -163,9 +163,9 @@ class VoiceViewHolder(private val binding: SceytItemChannelVoiceBinding,
         get() = binding.loadProgress
 
     private fun SceytItemChannelVoiceBinding.applyStyle() {
-        val accentColor = context.getCompatColor(SceytChatUIKit.theme.accentColor)
-        val colorOnPrimary = context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor)
-        root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColorSections))
+        val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+        val colorOnPrimary = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+        root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
         icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
         loadProgress.setIconTintColor(colorOnPrimary)
         loadProgress.setProgressColor(colorOnPrimary)

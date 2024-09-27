@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
-import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
+import com.sceyt.chatuikit.theme.Colors
 import java.util.Date
 
 /**
@@ -24,15 +24,15 @@ import java.util.Date
  * @property emptyState Layout resource for the empty state view, default is [R.layout.sceyt_messages_empty_state]
  * @property emptyStateForSelfChannel Layout resource for the empty state view for self channel, default is [R.layout.sceyt_messages_empty_state_self_channel]
  * @property loadingState Layout resource for the loading state view, default is [R.layout.sceyt_loading_state]
- * @property downScrollerUnreadCountColor Color for the unread count in the down scroller, default is [SceytChatUIKitTheme.accentColor]
+ * @property downScrollerUnreadCountColor Color for the unread count in the down scroller, default is [Colors.accentColor]
  * @property downScrollerIcon Icon for the down scroller, default is [R.drawable.sceyt_scroll_next_button]
  * @property dateSeparatorTextFont Font for the date separator item text, default is -1
  * @property dateSeparatorTextStyle Style for the date separator item text, default is [Typeface.NORMAL]
  * @property dateSeparatorItemBackgroundColor Color for the date separator item background, default is [R.color.sceyt_color_overlay_background_2]
  * @property dateSeparatorItemTextColor Color for the date separator item text, default is [R.color.sceyt_color_on_primary]
  * @property unreadMessagesSeparatorTextStyle Style for the unread messages separator text, default is [Typeface.NORMAL]
- * @property unreadMessagesTextColor Color for the unread messages separator text, default is [SceytChatUIKitTheme.textSecondaryColor]
- * @property unreadMessagesBackendColor Background color for the unread messages separator, default is [SceytChatUIKitTheme.surface1Color]
+ * @property unreadMessagesTextColor Color for the unread messages separator text, default is [Colors.textSecondaryColor]
+ * @property unreadMessagesBackendColor Background color for the unread messages separator, default is [Colors.surface1Color]
  * @property sameSenderMsgDistance Distance between the same sender messages, default is 4dp
  * @property differentSenderMsgDistance Distance between the different sender messages, default is 8dp
  * @property enableScrollDownButton Enable scroll down button, default is true
@@ -77,7 +77,7 @@ data class MessagesListViewStyle(
                 val messageItemStyle = MessageItemStyle.Builder(context, attrs).build()
 
                 val backgroundColor = array.getColor(R.styleable.MessagesListView_sceytUiMessageListBackgroundColor,
-                    context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
 
                 val emptyState = array.getResourceId(R.styleable.MessagesListView_sceytUiEmptyStateLayout,
                     R.layout.sceyt_messages_empty_state)
@@ -89,7 +89,7 @@ data class MessagesListViewStyle(
                     R.layout.sceyt_loading_state)
 
                 val downScrollerUnreadCountColor = array.getColor(R.styleable.MessagesListView_sceytUiDownScrollerUnreadCountColor,
-                    context.getCompatColor(SceytChatUIKit.theme.accentColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
 
                 val downScrollerIcon = array.getDrawable(R.styleable.MessagesListView_sceytUiDownScrollerIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_scroll_next_button)
@@ -99,18 +99,18 @@ data class MessagesListViewStyle(
                 val dateSeparatorTextStyle = array.getInt(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextStyle, Typeface.NORMAL)
 
                 val dateSeparatorItemBackgroundColor = array.getColor(R.styleable.MessagesListView_sceytUiDateSeparatorItemBackgroundColor,
-                    context.getCompatColor(SceytChatUIKit.theme.overlayBackgroundColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.overlayBackgroundColor))
 
                 val dateSeparatorItemTextColor = array.getColor(R.styleable.MessagesListView_sceytUiDateSeparatorItemTextColor,
-                    context.getCompatColor(SceytChatUIKit.theme.onPrimaryColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
 
                 val unreadMessagesSeparatorTextStyle = array.getInt(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorTextStyle, Typeface.NORMAL)
 
                 val unreadMessagesBackgroundColor = array.getColor(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorBackgroundColor,
-                    context.getCompatColor(SceytChatUIKit.theme.surface1Color))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
 
                 val unreadMessagesTextColor = array.getColor(R.styleable.MessagesListView_sceytUiUnreadMessagesSeparatorTextColor,
-                    context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+                    context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
 
                 val sameSenderMsgDistance: Int = array.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiSameSenderMessageDistance,
                     dpToPx(4f))

@@ -64,7 +64,7 @@ class ChooseFileTypeDialog(context: Context) : Dialog(context, R.style.SceytDial
 
     private fun SceytDialogChooseFileTypeBinding.applyStyle() {
         val texts = listOf(takePhoto, takeVideo, gallery, file)
-        setTextViewsDrawableColor(texts, context.getCompatColor(SceytChatUIKit.theme.accentColor))
-        setTextViewsTextColor(texts, context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
+        setTextViewsDrawableColor(texts, context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+        setTextViewsTextColor(texts, context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
     }
 }

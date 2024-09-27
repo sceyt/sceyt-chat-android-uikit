@@ -37,7 +37,7 @@ class ReactionView @JvmOverloads constructor(
     private var innerPaddingVertical = 0
     private var innerPaddingHorizontal = 0
     private var strokeColor = "#CDCDCF".toColorInt()
-    private var countTetColor = context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor)
+    private var countTetColor = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
     private var strikeWidth = 0
     private var cornerRadius = 30
     private var smileTextSize = 40
