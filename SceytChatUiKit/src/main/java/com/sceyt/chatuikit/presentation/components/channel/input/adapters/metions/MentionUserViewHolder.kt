@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.presentation.components.channel.input.adapters.metio
 
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.user.PresenceState
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytItemMemberBinding
 import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
@@ -24,6 +25,9 @@ class MentionUserViewHolder(
         with(binding) {
             avatar.setUserAvatar(user, style.itemStyle.avatarProvider)
             userName.text = style.itemStyle.titleFormatter.format(context, user)
+
+            val indicatorColor = SceytChatUIKit.providers.presenceStateColorProvider.provide(context, user.presence.state)
+            onlineStatus.setBackgroundColor(indicatorColor)
             onlineStatus.isVisible = user.presence?.state == PresenceState.Online
 
             itemView.setOnClickListener {
