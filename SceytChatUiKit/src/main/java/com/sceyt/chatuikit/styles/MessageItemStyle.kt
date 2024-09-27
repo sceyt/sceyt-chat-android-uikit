@@ -42,26 +42,26 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property replyMessageAttachmentIconProvider - Provider for attachment icon, default is [SceytChatUIKitProviders.attachmentIconProvider].
  * */
 data class MessageItemStyle(
-        @ColorInt val incomingBubbleColor: Int,
-        @ColorInt val outgoingBubbleColor: Int,
-        @ColorInt val incomingReplyBackgroundColor: Int,
-        @ColorInt val outgoingReplyBackgroundColor: Int,
-        @ColorInt val incomingLinkPreviewBackgroundColor: Int,
-        @ColorInt val outgoingLinkPreviewBackgroundColor: Int,
-        @ColorInt val bodyTextColor: Int,
-        @ColorInt val messageDateTextColor: Int,
-        @ColorInt val senderNameTextColor: Int,
-        @ColorInt val repliedMessageBorderColor: Int,
-        @ColorInt val autoLinkTextColor: Int,
-        @ColorInt val mediaLoaderColor: Int,
-        val messageDeliveryStatusIcons: MessageDeliveryStatusIcons,
-        val editedMessageStateText: String,
-        val messageEditedTextStyle: Int = Typeface.ITALIC,
-        val videoDurationIcon: Drawable?,
-        val swipeReplyIcon: Drawable?,
-        val replyMessageBodyFormatter: Formatter<SceytMessage>,
-        val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
-        val replyMessageAttachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
+        @ColorInt var incomingBubbleColor: Int,
+        @ColorInt var outgoingBubbleColor: Int,
+        @ColorInt var incomingReplyBackgroundColor: Int,
+        @ColorInt var outgoingReplyBackgroundColor: Int,
+        @ColorInt var incomingLinkPreviewBackgroundColor: Int,
+        @ColorInt var outgoingLinkPreviewBackgroundColor: Int,
+        @ColorInt var bodyTextColor: Int,
+        @ColorInt var messageDateTextColor: Int,
+        @ColorInt var senderNameTextColor: Int,
+        @ColorInt var repliedMessageBorderColor: Int,
+        @ColorInt var autoLinkTextColor: Int,
+        @ColorInt var mediaLoaderColor: Int,
+        var messageDeliveryStatusIcons: MessageDeliveryStatusIcons,
+        var editedMessageStateText: String,
+        var messageEditedTextStyle: Int = Typeface.ITALIC,
+        var videoDurationIcon: Drawable?,
+        var swipeReplyIcon: Drawable?,
+        var replyMessageBodyFormatter: Formatter<SceytMessage>,
+        var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
+        var replyMessageAttachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
 
     companion object {

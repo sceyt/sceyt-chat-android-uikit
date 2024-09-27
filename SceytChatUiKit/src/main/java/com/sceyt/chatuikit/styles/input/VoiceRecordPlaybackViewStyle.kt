@@ -10,16 +10,16 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class VoiceRecordPlaybackViewStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val playerBackgroundColor: Int,
-        @ColorInt val trackColor: Int,
-        @ColorInt val progressColor: Int,
-        val closeIcon: Drawable?,
-        val playIcon: Drawable?,
-        val pauseIcon: Drawable?,
-        val sendVoiceIcon: Drawable?,
-        val durationTextStyle: TextStyle,
-        val durationFormatter: Formatter<Long>
+        @ColorInt var backgroundColor: Int,
+        @ColorInt var playerBackgroundColor: Int,
+        @ColorInt var trackColor: Int,
+        @ColorInt var progressColor: Int,
+        var closeIcon: Drawable?,
+        var playIcon: Drawable?,
+        var pauseIcon: Drawable?,
+        var sendVoiceIcon: Drawable?,
+        var durationTextStyle: TextStyle,
+        var durationFormatter: Formatter<Long>
 ) {
     internal class Builder(
             private val typedArray: TypedArray
