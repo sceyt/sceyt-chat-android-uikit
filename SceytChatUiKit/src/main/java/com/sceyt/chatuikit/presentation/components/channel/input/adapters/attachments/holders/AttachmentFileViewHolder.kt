@@ -2,21 +2,18 @@ package com.sceyt.chatuikit.presentation.components.channel.input.adapters.attac
 
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemInputFileAttachmentBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
-import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.attachments.AttachmentItem
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
-import com.sceyt.chatuikit.styles.MessageInputStyle
+import com.sceyt.chatuikit.styles.input.InputSelectedMediaStyle
 
 class AttachmentFileViewHolder(
         private val binding: SceytItemInputFileAttachmentBinding,
-        private val inputStyle: MessageInputStyle,
-        private val clickListeners: AttachmentClickListeners.ClickListeners
+        private val clickListeners: AttachmentClickListeners.ClickListeners,
+        private val style: InputSelectedMediaStyle
 ) : BaseViewHolder<AttachmentItem>(binding.root) {
 
     init {
@@ -26,11 +23,13 @@ class AttachmentFileViewHolder(
     override fun bind(item: AttachmentItem) {
         with(binding) {
             tvFileName.text = item.attachment.name
-            tvFileSize.text = getFileSize(item.attachment.filePath.toString()).toPrettySize()
-
-            inputStyle.selectedAttachmentIconProvider.provide(item.attachment.toSceytAttachment(
+            val sceytAttachment = item.attachment.toSceytAttachment(
                 messageTid = 0L,
-                transferState = TransferState.PendingUpload))?.let {
+                transferState = TransferState.PendingUpload)
+
+            tvFileSize.text = style.fileAttachmentSizeFormatter.format(context, sceytAttachment)
+
+            style.fileAttachmentIconProvider.provide(context, sceytAttachment)?.let {
                 icFile.setImageDrawable(it)
             }
         }
@@ -40,8 +39,10 @@ class AttachmentFileViewHolder(
 
     private fun SceytItemInputFileAttachmentBinding.applyStyle() {
         icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.accentColor)
-        imageCont.setCardBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.surface1Color))
-        btnRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
         layoutRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.backgroundColor)
+        imageCont.setCardBackgroundColor(style.fileAttachmentBackgroundColor)
+        btnRemove.setImageDrawable(style.removeAttachmentIcon)
+        style.fileAttachmentNameTextStyle.apply(tvFileName)
+        style.fileAttachmentSizeTextStyle.apply(tvFileSize)
     }
 }

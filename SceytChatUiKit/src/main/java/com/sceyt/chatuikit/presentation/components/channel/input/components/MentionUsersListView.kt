@@ -3,16 +3,21 @@ package com.sceyt.chatuikit.presentation.components.channel.input.components
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Rect
+import android.graphics.drawable.LayerDrawable
+import android.graphics.drawable.ShapeDrawable
+import android.graphics.drawable.shapes.RoundRectShape
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.annotation.ColorInt
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
@@ -21,6 +26,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputVie
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.metions.MentionUserViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel.input.adapters.metions.UsersAdapter
 import com.sceyt.chatuikit.shared.utils.ViewUtil
+import com.sceyt.chatuikit.styles.input.MentionUsersListStyle
 
 class MentionUsersListView @JvmOverloads constructor(
         context: Context,
@@ -31,6 +37,7 @@ class MentionUsersListView @JvmOverloads constructor(
     private var showAnimation: ValueAnimator? = null
     private var hideAnimation: ValueAnimator? = null
     private var userClickListener: UsersAdapter.ClickListener? = null
+    private lateinit var style: MentionUsersListStyle
 
     var recyclerView: RecyclerView? = null
         private set
@@ -42,7 +49,7 @@ class MentionUsersListView @JvmOverloads constructor(
                 gravity = Gravity.BOTTOM
                 setMargins(0, 0, 0, view.height)
             }
-            background = context.getCompatDrawable(R.drawable.sceyt_bg_mention_users)
+            background = getBackgroundDrawable(style.backgroundColor)
             layoutManager = MaxHeightLinearLayoutManager(context, (screenHeightPx() * 0.4f).toInt())
             recyclerView = this
             isVisible = false
@@ -54,10 +61,14 @@ class MentionUsersListView @JvmOverloads constructor(
         if (users.isEmpty() && mentionUsersAdapter == null) return
 
         if (mentionUsersAdapter == null) {
-            mentionUsersAdapter = UsersAdapter(users.toArrayList(), MentionUserViewHolderFactory(context) {
-                userClickListener?.onClick(it)
-                hide()
-            })
+            mentionUsersAdapter = UsersAdapter(users.toArrayList(), MentionUserViewHolderFactory(
+                context = context,
+                style = style,
+                listeners = {
+                    userClickListener?.onClick(it)
+                    hide()
+                }
+            ))
 
             with(recyclerView ?: return) {
                 adapter = mentionUsersAdapter
@@ -94,14 +105,36 @@ class MentionUsersListView @JvmOverloads constructor(
         }
     }
 
+    private fun getBackgroundDrawable(@ColorInt bgColor: Int): LayerDrawable {
+        val shadowDrawable = context.getCompatDrawable(R.drawable.sceyt_shadow_124645)
+        val cornerRadius = dpToPx(16f).toFloat()
+        val outerRadii = floatArrayOf(
+            cornerRadius, cornerRadius, // Top-left and top-right corners
+            cornerRadius, cornerRadius, // Bottom-left and bottom-right corners
+            0f, 0f, 0f, 0f // No corners for bottom left/right
+        )
+
+        val shapeDrawable = ShapeDrawable(RoundRectShape(outerRadii, null, null)).apply {
+            paint.color = bgColor
+        }
+
+        val layers = arrayOf(shadowDrawable, shapeDrawable)
+        val layerDrawable = LayerDrawable(layers)
+        return layerDrawable
+    }
+
     fun setUserClickListener(listener: UsersAdapter.ClickListener) {
         userClickListener = listener
     }
 
-    fun onInputSizeChanged(height: Int) {
+    internal fun onInputSizeChanged(height: Int) {
         recyclerView?.updateLayoutParams<MarginLayoutParams> {
             setMargins(0, 0, 0, height)
         }
+    }
+
+    internal fun setStyle(style: MentionUsersListStyle) {
+        this.style = style
     }
 
     class FirstLastItemDecoration(private val verticalPadding: Int) : RecyclerView.ItemDecoration() {

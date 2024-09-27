@@ -24,7 +24,7 @@
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/tvMessageBody"
         app:layout_constraintStart_toStartOf="@+id/guidBegin"
-        app:layout_constraintTop_toTopOf="@+id/icReplyOrEdit"
+        app:layout_constraintTop_toTopOf="@+id/tvName"
         tools:visibility="visible">
 
         <com.google.android.material.imageview.ShapeableImageView
@@ -77,9 +77,10 @@
         android:singleLine="true"
         android:textColor="@color/sceyt_color_accent"
         android:textSize="13sp"
-        app:layout_constraintEnd_toStartOf="@+id/icCancelReply"
+        app:layout_constraintEnd_toStartOf="@+id/icCancel"
         app:layout_constraintStart_toEndOf="@+id/icReplyOrEdit"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginStart="0dp"
         tools:text="Henry Willian" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -94,20 +95,19 @@
         android:textSize="@dimen/smallTextSize"
         app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/icCancelReply"
+        app:layout_constraintEnd_toStartOf="@+id/icCancel"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="@+id/icReplyOrEdit"
         app:layout_constraintTop_toBottomOf="@+id/tvName"
         tools:text="Waiting for your answer." />
 
     <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/icCancelReply"
+        android:id="@+id/icCancel"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="6dp"
         android:scaleType="center"
-        android:tint="#898B99"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/guidEnd"
         app:layout_constraintTop_toTopOf="parent"

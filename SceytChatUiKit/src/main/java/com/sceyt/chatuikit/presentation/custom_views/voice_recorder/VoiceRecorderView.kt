@@ -36,17 +36,17 @@ import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.animatorListener
 import com.sceyt.chatuikit.extensions.checkAndAskPermissions
 import com.sceyt.chatuikit.extensions.dpToPx
-import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.initPermissionLauncher
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.permissionIgnored
 import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.screenWidthPx
-import com.sceyt.chatuikit.extensions.setTintColorRes
+import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.presentation.common.SceytDialog
-import com.sceyt.chatuikit.styles.MessageInputStyle
+import com.sceyt.chatuikit.styles.input.MessageInputStyle
+import com.sceyt.chatuikit.styles.input.VoiceRecorderViewStyle
 import java.util.Timer
 import java.util.TimerTask
 import kotlin.math.abs
@@ -63,7 +63,7 @@ class VoiceRecorderView @JvmOverloads constructor(
     private var stopTrackingAction = false
     var isRecording = false
         private set
-    private var audioTotalTime = 0
+    private var audioTotalTimeSeconds = 0L
     private var timerTask: TimerTask? = null
     private var audioTimer: Timer? = null
     private var lastX = 0f
@@ -78,7 +78,7 @@ class VoiceRecorderView @JvmOverloads constructor(
     private var recordingListener: RecordingListener? = null
     private var isLayoutDirectionRightToLeft = false
     private var colorAnimation: ValueAnimator? = null
-    private lateinit var style: MessageInputStyle
+    private lateinit var style: VoiceRecorderViewStyle
 
     init {
         init()
@@ -103,14 +103,14 @@ class VoiceRecorderView @JvmOverloads constructor(
     private fun SceytRecordViewBinding.initViews() {
         showDefaultRecordButton()
         setupRecorder()
-        applyStyle()
+        applyStyle(style)
 
-        btnCancel.setOnClickListener {
+        tvCancel.setOnClickListener {
             isLocked = false
             stopRecording(RecordingBehaviour.CANCELED)
         }
 
-        lockViewStopButton.setOnClickListener {
+        icStopRecording.setOnClickListener {
             isLocked = false
             stopRecording(RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW)
         }
@@ -122,7 +122,7 @@ class VoiceRecorderView @JvmOverloads constructor(
     }
 
     internal fun setStyle(style: MessageInputStyle) {
-        this.style = style
+        this.style = style.voiceRecorderViewStyle
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -221,11 +221,11 @@ class VoiceRecorderView @JvmOverloads constructor(
         if (if (isLayoutDirectionRightToLeft) x > cancelOffset else x < -cancelOffset) {
             canceled()
             imageViewAudio.translationX = 0f
-            textViewSlideCancel.translationX = 0f
+            tvSlideCancel.translationX = 0f
             return
         }
         imageViewAudio.translationX = x
-        textViewSlideCancel.translationX = x
+        tvSlideCancel.translationX = x
         layoutLock.translationY = 0f
         imageViewAudio.translationY = 0f
         if (abs(x) < imageAudio.width) {
@@ -280,12 +280,12 @@ class VoiceRecorderView @JvmOverloads constructor(
         lastX = 0f
         lastY = 0f
         userBehaviour = UserBehaviour.NONE
-        textViewSlideCancel.translationX = 0f
-        textViewSlideCancel.visibility = View.GONE
+        tvSlideCancel.translationX = 0f
+        tvSlideCancel.visibility = View.GONE
         layoutLock.visibility = View.GONE
         layoutLock.translationY = 0f
-        imageViewLockArrow.clearAnimation()
-        imageViewLock.clearAnimation()
+        icArrowToLock.clearAnimation()
+        icLock.clearAnimation()
 
         if (isLocked)
             return
@@ -293,7 +293,7 @@ class VoiceRecorderView @JvmOverloads constructor(
         when (recordingBehaviour) {
             RecordingBehaviour.LOCKED -> {
                 lockViewContainer.visibility = View.VISIBLE
-                btnCancel.visibility = View.VISIBLE
+                tvCancel.visibility = View.VISIBLE
                 imageViewAudio.animate()
                     .translationX(0f)
                     .translationY(0f)
@@ -335,13 +335,13 @@ class VoiceRecorderView @JvmOverloads constructor(
             start()
         }
 
-        icPoint.clearAnimation()
-        textViewTime.visibility = View.GONE
-        icPoint.visibility = View.GONE
+        recordingIndicatorView.clearAnimation()
+        tvDuration.visibility = View.GONE
+        recordingIndicatorView.visibility = View.GONE
         lockViewContainer.visibility = View.GONE
         layoutEffect2.visibility = View.GONE
         layoutEffect1.visibility = View.GONE
-        btnCancel.visibility = View.GONE
+        tvCancel.visibility = View.GONE
         timerTask?.cancel()
     }
 
@@ -359,30 +359,33 @@ class VoiceRecorderView @JvmOverloads constructor(
             .setDuration(200)
             .setInterpolator(OvershootInterpolator())
             .start()
-        textViewTime.visibility = View.VISIBLE
+        tvDuration.visibility = View.VISIBLE
         layoutLock.visibility = View.VISIBLE
-        textViewSlideCancel.visibility = View.VISIBLE
-        icPoint.visibility = View.VISIBLE
+        tvSlideCancel.visibility = View.VISIBLE
+        recordingIndicatorView.visibility = View.VISIBLE
         layoutEffect2.visibility = View.VISIBLE
         layoutEffect1.visibility = View.VISIBLE
-        icPoint.startAnimation(animBlink)
-        imageViewLockArrow.clearAnimation()
-        imageViewLock.clearAnimation()
-        imageViewLockArrow.startAnimation(animJumpFast)
-        imageViewLock.startAnimation(animJump)
+        recordingIndicatorView.startAnimation(animBlink)
+        icArrowToLock.clearAnimation()
+        icLock.clearAnimation()
+        icArrowToLock.startAnimation(animJumpFast)
+        icLock.startAnimation(animJump)
 
         if (audioTimer == null)
             audioTimer = Timer()
 
         timerTask = object : TimerTask() {
             override fun run() {
-                textViewTime.post {
-                    textViewTime.text = (audioTotalTime * 1000L).durationToMinSecShort()
-                    audioTotalTime++
+                tvDuration.post {
+                    tvDuration.text = style.durationFormatter.format(
+                        context = context,
+                        from = audioTotalTimeSeconds,
+                    )
+                    audioTotalTimeSeconds++
                 }
             }
         }
-        audioTotalTime = 0
+        audioTotalTimeSeconds = 0
         audioTimer?.schedule(timerTask, 0L, 1000L)
     }
 
@@ -398,7 +401,7 @@ class VoiceRecorderView @JvmOverloads constructor(
         with(imageAudio) {
             setPadding(paddingNormal)
             backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
-            setImageDrawable(style.voiceRecordIcon)
+            setImageDrawable(style.recordingIcon)
             setColorFilter(getCompatColor(R.color.sceyt_color_on_primary))
         }
     }
@@ -410,7 +413,7 @@ class VoiceRecorderView @JvmOverloads constructor(
         with(imageAudio) {
             setPadding(paddingRecording)
             backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
-            setImageDrawable(style.voiceRecordIcon)
+            setImageDrawable(style.recordingIcon)
             setColorFilter(getCompatColor(R.color.sceyt_color_on_primary))
         }
     }
@@ -420,7 +423,7 @@ class VoiceRecorderView @JvmOverloads constructor(
         imageViewAudio.cardElevation = buttonZ
         with(imageAudio) {
             backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
-            setImageDrawable(style.sendVoiceMessageIcon)
+            setImageDrawable(style.sendVoiceIcon)
             setPadding(paddingRecording, paddingRecording,
                 (paddingRecording - 2), paddingRecording)
         }
@@ -432,7 +435,7 @@ class VoiceRecorderView @JvmOverloads constructor(
         with(imageAudio) {
             setPadding(paddingRecording)
             backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.accentColor))
-            setImageResource(R.drawable.sceyt_ic_delete_record)
+            setImageDrawable(style.deleteRecordIcon)
             animateColor(this, getCompatColor(SceytChatUIKit.theme.accentColor), getCompatColor(R.color.sceyt_color_error))
         }
     }
@@ -440,10 +443,12 @@ class VoiceRecorderView @JvmOverloads constructor(
     private fun SceytRecordViewBinding.showRecordingFromDeleteButton() {
         imageViewAudio.translationZ = buttonZ
         imageViewAudio.cardElevation = buttonZ
-        imageAudio.setPadding(paddingRecording)
-        imageAudio.setImageDrawable(style.voiceRecordIcon)
-        imageAudio.setColorFilter(context.getCompatColor(R.color.sceyt_color_on_primary))
-        animateColor(imageAudio, context.getCompatColor(R.color.sceyt_color_error), context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        with(imageAudio) {
+            setPadding(paddingRecording)
+            setImageDrawable(style.recordingIcon)
+            setColorFilter(context.getCompatColor(R.color.sceyt_color_on_primary))
+            animateColor(this, context.getCompatColor(R.color.sceyt_color_error), context.getCompatColor(SceytChatUIKit.theme.accentColor))
+        }
     }
 
     private fun animateColor(view: View, colorFrom: Int, colorTo: Int) {
@@ -455,14 +460,17 @@ class VoiceRecorderView @JvmOverloads constructor(
         colorAnimation?.start()
     }
 
-    private fun SceytRecordViewBinding.applyStyle() {
-        recording.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.backgroundColor))
-        imageViewLockArrow.setTintColorRes(SceytChatUIKit.theme.accentColor)
-        lockViewStopButton.setTintColorRes(SceytChatUIKit.theme.accentColor)
-        imageViewLock.setTintColorRes(SceytChatUIKit.theme.iconSecondaryColor)
-        btnCancel.setTextColor(context.getCompatColor(SceytChatUIKit.theme.accentColor))
-        textViewTime.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textPrimaryColor))
-        textViewSlideCancel.setTextColor(context.getCompatColor(SceytChatUIKit.theme.textSecondaryColor))
+    internal fun SceytRecordViewBinding.applyStyle(style: VoiceRecorderViewStyle) {
+        recording.setBackgroundColor(style.backgroundColor)
+        recordingIndicatorView.setBackgroundTint(style.recordingIndicatorColor)
+        tvSlideCancel.text = style.slideToCancelText
+        tvCancel.text = style.cancelText
+        icLock.setImageDrawable(style.lockRecordingIcon)
+        icArrowToLock.setImageDrawable(style.arrowToLockIcon)
+        icStopRecording.setImageDrawable(style.stopRecordingIcon)
+        style.slideToCancelTextStyle.apply(tvSlideCancel)
+        style.durationTextStyle.apply(tvDuration)
+        style.cancelTextStyle.apply(tvCancel)
     }
 
     private fun showPermissionSettingsDialog() {

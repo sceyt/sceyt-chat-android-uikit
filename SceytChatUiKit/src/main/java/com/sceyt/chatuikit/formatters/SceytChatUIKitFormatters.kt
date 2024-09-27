@@ -4,7 +4,9 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.formatters.defaults.DefaultMediaDurationFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentNameFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentSizeFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAvatarInitialsFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageSenderNameFormatter
@@ -83,5 +85,13 @@ class SceytChatUIKitFormatters {
 
     var attachmentNameFormatter: Formatter<SceytAttachment> by lazyVar {
         DefaultAttachmentNameFormatter()
+    }
+
+    var mediaDurationFormatter: Formatter<Long> by lazyVar {
+        DefaultMediaDurationFormatter()
+    }
+
+    var attachmentSizeFormatter: Formatter<SceytAttachment> by lazyVar {
+        DefaultAttachmentSizeFormatter()
     }
 }

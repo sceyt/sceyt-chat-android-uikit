@@ -51,7 +51,7 @@
         app:layout_constraintTop_toBottomOf="@+id/frameLayoutMessageActions" />
 
     <View
-        android:id="@+id/view3"
+        android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/sceyt_color_border"
@@ -70,8 +70,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="8dp"
-            android:background="@drawable/sceyt_bg_corners_20"
-            android:backgroundTint="@color/sceyt_color_surface_1"
             android:gravity="center_vertical"
             android:hint="@string/sceyt_write_a_message"
             android:includeFontPadding="false"
@@ -86,7 +84,9 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/icSendMessage"
             app:layout_constraintStart_toEndOf="@+id/icAddAttachments"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:background="@drawable/sceyt_bg_corners_20"
+            tools:backgroundTint="@color/sceyt_color_surface_1" />
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/icAddAttachments"
@@ -114,7 +114,7 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.sceyt.chatuikit.presentation.custom_views.voice_recorder.VoiceRecordPlaybackView
-        android:id="@+id/VoiceRecordPlaybackView"
+        android:id="@+id/voiceRecordPlaybackView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clickable="true"
@@ -166,8 +166,8 @@
         tools:ignore="UnusedAttribute" />
 
     <include
-        android:id="@+id/layoutInputSearchResult"
-        layout="@layout/sceyt_layout_input_search_result"
+        android:id="@+id/layoutSearchControl"
+        layout="@layout/sceyt_layout_input_search_control"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"

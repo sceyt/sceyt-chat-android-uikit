@@ -36,9 +36,9 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property subTitleStyle style for the subtitle, default is [buildSubTitleTextStyle]
  * @property searchInputStyle style for the search input, default is [buildSearchInputTextStyle]
  * @property messageActionsMenuStyle style for the toolbar menu, default is [buildMessageActionsMenuStyle]
- * @property channelTitleFormatter formatter for the channel title, default is [SceytChatUIKitFormatters.channelNameFormatter]
- * @property channelSubtitleFormatter formatter for the channel subtitle, default is [SceytChatUIKitFormatters.channelSubtitleFormatter]
- * @property channelDefaultAvatarProvider provider for the channel default avatar, default is [DefaultChannelDefaultAvatarProvider]
+ * @property titleFormatter formatter for the channel title, default is [SceytChatUIKitFormatters.channelNameFormatter]
+ * @property subtitleFormatter formatter for the channel subtitle, default is [SceytChatUIKitFormatters.channelSubtitleFormatter]
+ * @property defaultAvatarProvider provider for the channel default avatar, default is [DefaultChannelDefaultAvatarProvider]
  * */
 data class MessagesListHeaderStyle(
         @ColorInt val backgroundColor: Int,
@@ -49,9 +49,9 @@ data class MessagesListHeaderStyle(
         val subTitleStyle: TextStyle,
         val searchInputStyle: SearchInputStyle,
         val messageActionsMenuStyle: MenuStyle,
-        val channelTitleFormatter: Formatter<SceytChannel>,
-        val channelSubtitleFormatter: Formatter<SceytChannel>,
-        val channelDefaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>
+        val titleFormatter: Formatter<SceytChannel>,
+        val subtitleFormatter: Formatter<SceytChannel>,
+        val defaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>
 ) {
 
     companion object {
@@ -87,9 +87,9 @@ data class MessagesListHeaderStyle(
                     subTitleStyle = buildSubTitleTextStyle(array),
                     searchInputStyle = buildSearchInputTextStyle(array),
                     messageActionsMenuStyle = buildMessageActionsMenuStyle(array),
-                    channelTitleFormatter = SceytChatUIKit.formatters.channelNameFormatter,
-                    channelSubtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter,
-                    channelDefaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider
+                    titleFormatter = SceytChatUIKit.formatters.channelNameFormatter,
+                    subtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter,
+                    defaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider
                 ).let { styleCustomizer.apply(context, it) }
             }
         }
