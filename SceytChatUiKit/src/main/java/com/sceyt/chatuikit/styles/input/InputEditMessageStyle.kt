@@ -12,13 +12,13 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class InputEditMessageStyle(
-        @ColorInt val backgroundColor: Int,
-        val editIcon: Drawable?,
-        val titleTextStyle: TextStyle,
-        val bodyTextStyle: TextStyle,
-        val attachmentDurationTextStyle: TextStyle,
-        val attachmentDurationFormatter: Formatter<Long>,
-        val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
+        @ColorInt var backgroundColor: Int,
+        var editIcon: Drawable?,
+        var titleTextStyle: TextStyle,
+        var bodyTextStyle: TextStyle,
+        var attachmentDurationTextStyle: TextStyle,
+        var attachmentDurationFormatter: Formatter<Long>,
+        var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
     internal class Builder(
             private val typedArray: TypedArray

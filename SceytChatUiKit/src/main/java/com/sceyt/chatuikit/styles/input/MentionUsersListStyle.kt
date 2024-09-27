@@ -14,8 +14,8 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.ListItemStyle
 
 data class MentionUsersListStyle(
-        @ColorInt val backgroundColor: Int,
-        val itemStyle: ListItemStyle<Formatter<User>, *, VisualProvider<User, DefaultAvatar>>
+        @ColorInt var backgroundColor: Int,
+        var itemStyle: ListItemStyle<Formatter<User>, *, VisualProvider<User, DefaultAvatar>>
 ) {
     internal class Builder(
             private val typedArray: TypedArray

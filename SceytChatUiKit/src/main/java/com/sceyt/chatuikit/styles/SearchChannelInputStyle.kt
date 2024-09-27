@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * */
 data class SearchChannelInputStyle(
         @ColorInt var backgroundColor: Int,
-        val searchInputStyle: SearchInputStyle
+        var searchInputStyle: SearchInputStyle
 ) {
 
     companion object {

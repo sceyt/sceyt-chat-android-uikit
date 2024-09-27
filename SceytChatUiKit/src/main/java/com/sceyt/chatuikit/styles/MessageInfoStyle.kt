@@ -21,12 +21,12 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property backIcon Icon for the back button, default is [R.drawable.sceyt_ic_arrow_back]
  * */
 data class MessageInfoStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val toolbarColor: Int,
-        @ColorInt val titleColor: Int,
-        @ColorInt val borderColor: Int,
-        val title: String,
-        val backIcon: Drawable?,
+        @ColorInt var backgroundColor: Int,
+        @ColorInt var toolbarColor: Int,
+        @ColorInt var titleColor: Int,
+        @ColorInt var borderColor: Int,
+        var title: String,
+        var backIcon: Drawable?,
 ) {
 
     companion object {

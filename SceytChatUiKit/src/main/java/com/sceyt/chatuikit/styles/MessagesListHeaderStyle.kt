@@ -41,17 +41,17 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property defaultAvatarProvider provider for the channel default avatar, default is [DefaultChannelDefaultAvatarProvider]
  * */
 data class MessagesListHeaderStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val underlineColor: Int,
+        @ColorInt var backgroundColor: Int,
+        @ColorInt var underlineColor: Int,
         var navigationIcon: Drawable?,
         var showUnderline: Boolean,
-        val titleTextStyle: TextStyle,
-        val subTitleStyle: TextStyle,
-        val searchInputStyle: SearchInputStyle,
-        val messageActionsMenuStyle: MenuStyle,
-        val titleFormatter: Formatter<SceytChannel>,
-        val subtitleFormatter: Formatter<SceytChannel>,
-        val defaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>
+        var titleTextStyle: TextStyle,
+        var subTitleStyle: TextStyle,
+        var searchInputStyle: SearchInputStyle,
+        var messageActionsMenuStyle: MenuStyle,
+        var titleFormatter: Formatter<SceytChannel>,
+        var subtitleFormatter: Formatter<SceytChannel>,
+        var defaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>
 ) {
 
     companion object {

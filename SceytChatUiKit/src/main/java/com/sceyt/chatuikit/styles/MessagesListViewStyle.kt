@@ -41,25 +41,25 @@ import java.util.Date
  * @property messageItemStyle Style for the message item view
  **/
 data class MessagesListViewStyle(
-        @ColorInt val backgroundColor: Int,
-        @LayoutRes val emptyState: Int,
-        @LayoutRes val emptyStateForSelfChannel: Int,
-        @LayoutRes val loadingState: Int,
-        @ColorInt val downScrollerUnreadCountColor: Int,
-        val downScrollerIcon: Drawable?,
-        @FontRes val dateSeparatorTextFont: Int = -1,
-        val dateSeparatorTextStyle: Int = Typeface.NORMAL,
-        @ColorInt val dateSeparatorItemBackgroundColor: Int,
-        @ColorInt val dateSeparatorItemTextColor: Int,
-        val unreadMessagesSeparatorTextStyle: Int = Typeface.NORMAL,
-        @ColorInt val unreadMessagesTextColor: Int,
-        @ColorInt val unreadMessagesBackendColor: Int,
-        val enableScrollDownButton: Boolean,
-        val enableDateSeparator: Boolean,
-        @Dimension val sameSenderMsgDistance: Int = dpToPx(4f),
-        @Dimension val differentSenderMsgDistance: Int = dpToPx(8f),
-        val dateSeparatorDateFormat: Formatter<Date>,
-        val messageItemStyle: MessageItemStyle
+        @ColorInt var backgroundColor: Int,
+        @LayoutRes var emptyState: Int,
+        @LayoutRes var emptyStateForSelfChannel: Int,
+        @LayoutRes var loadingState: Int,
+        @ColorInt var downScrollerUnreadCountColor: Int,
+        var downScrollerIcon: Drawable?,
+        @FontRes var dateSeparatorTextFont: Int = -1,
+        var dateSeparatorTextStyle: Int = Typeface.NORMAL,
+        @ColorInt var dateSeparatorItemBackgroundColor: Int,
+        @ColorInt var dateSeparatorItemTextColor: Int,
+        var unreadMessagesSeparatorTextStyle: Int = Typeface.NORMAL,
+        @ColorInt var unreadMessagesTextColor: Int,
+        @ColorInt var unreadMessagesBackendColor: Int,
+        var enableScrollDownButton: Boolean,
+        var enableDateSeparator: Boolean,
+        @Dimension var sameSenderMsgDistance: Int = dpToPx(4f),
+        @Dimension var differentSenderMsgDistance: Int = dpToPx(8f),
+        var dateSeparatorDateFormat: Formatter<Date>,
+        var messageItemStyle: MessageItemStyle
 ) {
     companion object {
         @JvmField

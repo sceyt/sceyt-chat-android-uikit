@@ -12,15 +12,15 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class InputReplyMessageStyle(
-        @ColorInt val backgroundColor: Int,
-        val replyIcon: Drawable?,
-        val titleTextStyle: TextStyle,
-        val senderNameTextStyle: TextStyle,
-        val bodyTextStyle: TextStyle,
-        val mentionTextStyle: TextStyle,
-        val attachmentDurationTextStyle: TextStyle,
-        val attachmentDurationFormatter: Formatter<Long>,
-        val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
+        @ColorInt var backgroundColor: Int,
+        var replyIcon: Drawable?,
+        var titleTextStyle: TextStyle,
+        var senderNameTextStyle: TextStyle,
+        var bodyTextStyle: TextStyle,
+        var mentionTextStyle: TextStyle,
+        var attachmentDurationTextStyle: TextStyle,
+        var attachmentDurationFormatter: Formatter<Long>,
+        var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
     internal class Builder(
             private val typedArray: TypedArray
