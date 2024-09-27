@@ -18,6 +18,7 @@ data class InputEditMessageStyle(
         var bodyTextStyle: TextStyle,
         var attachmentDurationTextStyle: TextStyle,
         var attachmentDurationFormatter: Formatter<Long>,
+        var attachmentNameFormatter: Formatter<SceytAttachment>,
         var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
     internal class Builder(
@@ -29,8 +30,6 @@ data class InputEditMessageStyle(
         private var titleTextStyle: TextStyle = TextStyle()
         private var bodyTextStyle: TextStyle = TextStyle()
         private var attachmentDurationTextStyle: TextStyle = TextStyle()
-        private var attachmentDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter
-        private var attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider
 
         fun backgroundColor(@StyleableRes index: Int, defValue: Int = backgroundColor) = apply {
             this.backgroundColor = typedArray.getColor(index, defValue)
@@ -58,8 +57,9 @@ data class InputEditMessageStyle(
             titleTextStyle = titleTextStyle,
             bodyTextStyle = bodyTextStyle,
             attachmentDurationTextStyle = attachmentDurationTextStyle,
-            attachmentIconProvider = attachmentIconProvider,
-            attachmentDurationFormatter = attachmentDurationFormatter
+            attachmentDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
+            attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
+            attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider
         )
     }
 }

@@ -4,6 +4,7 @@ import android.content.res.TypedArray
 import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
+import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.formatters.Formatter
@@ -20,6 +21,8 @@ data class InputReplyMessageStyle(
         var mentionTextStyle: TextStyle,
         var attachmentDurationTextStyle: TextStyle,
         var attachmentDurationFormatter: Formatter<Long>,
+        var attachmentNameFormatter: Formatter<SceytAttachment>,
+        var senderNameFormatter: Formatter<User>,
         var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
     internal class Builder(
@@ -33,8 +36,6 @@ data class InputReplyMessageStyle(
         private var bodyTextStyle: TextStyle = TextStyle()
         private var mentionTextStyle: TextStyle = TextStyle()
         private var attachmentDurationTextStyle: TextStyle = TextStyle()
-        private var attachmentDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter
-        private var attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider
 
         fun backgroundColor(@StyleableRes index: Int, defValue: Int = backgroundColor) = apply {
             this.backgroundColor = typedArray.getColor(index, defValue)
@@ -72,8 +73,10 @@ data class InputReplyMessageStyle(
             bodyTextStyle = bodyTextStyle,
             mentionTextStyle = mentionTextStyle,
             attachmentDurationTextStyle = attachmentDurationTextStyle,
-            attachmentDurationFormatter = attachmentDurationFormatter,
-            attachmentIconProvider = attachmentIconProvider
+            attachmentDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
+            attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
+            senderNameFormatter = SceytChatUIKit.formatters.userNameFormatterNew,
+            attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider
         )
     }
 }
