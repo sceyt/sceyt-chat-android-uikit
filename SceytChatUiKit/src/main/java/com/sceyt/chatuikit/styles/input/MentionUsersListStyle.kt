@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.providers.defaults.DefaultUserAvatarProvider
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.ListItemStyle
+import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class MentionUsersListStyle(
         @ColorInt var backgroundColor: Int,
@@ -22,15 +23,23 @@ data class MentionUsersListStyle(
     ) {
         @ColorInt
         private var backgroundColor: Int = UNSET_COLOR
+        private var titleTextStyle: TextStyle = TextStyle()
 
-        private var itemStyle: ListItemStyle<Formatter<User>, *, VisualProvider<User, DefaultAvatar>> = ListItemStyle(
-            titleFormatter = DefaultUserNameFormatter,
-            subtitleFormatter = NoFormatter,
-            avatarProvider = DefaultUserAvatarProvider
-        )
+        private val itemStyle: ListItemStyle<Formatter<User>, *, VisualProvider<User, DefaultAvatar>> by lazy {
+            ListItemStyle(
+                titleTextStyle = titleTextStyle,
+                titleFormatter = DefaultUserNameFormatter,
+                subtitleFormatter = NoFormatter,
+                avatarProvider = DefaultUserAvatarProvider
+            )
+        }
 
         fun backgroundColor(@StyleableRes index: Int, defValue: Int = backgroundColor) = apply {
             this.backgroundColor = typedArray.getColor(index, defValue)
+        }
+
+        fun titleTextStyle(titleTextStyle: TextStyle) = apply {
+            this.titleTextStyle = titleTextStyle
         }
 
         fun build() = MentionUsersListStyle(

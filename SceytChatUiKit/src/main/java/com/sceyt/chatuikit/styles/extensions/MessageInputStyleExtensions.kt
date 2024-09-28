@@ -758,11 +758,33 @@ internal fun MessageInputStyle.Builder.buildInputCoverStyle(
     .build()
 
 /* Mention users list */
+internal fun MessageInputStyle.Builder.buildMentionUsersListTextStyle(
+        array: TypedArray
+) = TextStyle.Builder(array)
+    .setColor(
+        index = R.styleable.MessageInputView_sceytUiMessageInputMentionUsersListTextColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+    )
+    .setSize(
+        index = R.styleable.MessageInputView_sceytUiMessageInputMentionUsersListTextSize
+    )
+    .setStyle(
+        index = R.styleable.MessageInputView_sceytUiMessageInputMentionUsersListTextStyle
+    )
+    .setFont(
+        index = R.styleable.MessageInputView_sceytUiMessageInputMentionUsersListTextFont,
+        defValue = R.font.roboto_regular
+    )
+    .build()
+
 internal fun MessageInputStyle.Builder.buildMentionUsersListStyle(
         array: TypedArray
 ) = MentionUsersListStyle.Builder(array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputMentionUsersListBackgroundColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
+    )
+    .titleTextStyle(
+        titleTextStyle = buildMentionUsersListTextStyle(array)
     )
     .build()
