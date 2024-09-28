@@ -16,6 +16,7 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.extensions.getStringOrNull
+import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import org.json.JSONObject
 
@@ -128,7 +129,7 @@ fun getReactionFromPushJson(json: String?, messageId: Long?, user: User?): Sceyt
         val createdAt = jsonObject.getString("created_at").toLongOrNull() ?: return null
 
         if (key.isEmpty() || score == 0 || messageId == null || user == null) return null
-        SceytReaction(id, messageId, key, score, reason, createdAt, user, false)
+        SceytReaction(id, messageId, key, score, reason, createdAt, user.toSceytUser(), false)
     } catch (e: Exception) {
         e.printStackTrace()
         null

@@ -37,6 +37,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum.Received
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.toDeliveryStatus
@@ -78,6 +79,7 @@ import com.sceyt.chatuikit.persistence.mappers.toMessageEntity
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiMessage
+import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
 import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
@@ -381,7 +383,8 @@ internal class PersistenceMessagesLogicImpl(
         messageToSend.forEach {
             val tmpMessage = it.toSceytUiMessage().copy(
                 createdAt = System.currentTimeMillis(),
-                user = ClientWrapper.currentUser ?: User(preference.getUserId())
+                user = ClientWrapper.currentUser?.toSceytUser() ?: SceytUser(preference.getUserId()
+                        ?: ""),
             )
             MessageEventManager.emitOutgoingMessage(tmpMessage)
             insertTmpMessageToDb(tmpMessage)
@@ -462,7 +465,8 @@ internal class PersistenceMessagesLogicImpl(
         val sceytMessage = message.toSceytUiMessage()
         val tmpMessage = sceytMessage.copy(
             createdAt = System.currentTimeMillis(),
-            user = ClientWrapper.currentUser ?: User(preference.getUserId()),
+            user = ClientWrapper.currentUser?.toSceytUser() ?: SceytUser(preference.getUserId()
+                    ?: ""),
             channelId = channelId,
             attachments = sceytMessage.attachments?.map {
                 val isLink = it.isLink()
@@ -993,7 +997,8 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun getRetentionPeriodByChannelId(channelId: Long): Long {
-        val period = channelCache.get(channelId)?.messageRetentionPeriod ?: persistenceChannelsLogic.getRetentionPeriodByChannelId(channelId)
+        val period = channelCache.get(channelId)?.messageRetentionPeriod
+                ?: persistenceChannelsLogic.getRetentionPeriodByChannelId(channelId)
         return period
     }
 

@@ -5,9 +5,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytItemUserMarkerBinding
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
@@ -41,7 +41,7 @@ class UserMarkerAdapter : ListAdapter<SceytMarker, UserMarkerAdapter.SimpleUserV
 
         fun bind(marker: SceytMarker) {
             with(binding) {
-                val user = marker.user ?: User(marker.userId)
+                val user = marker.user ?: SceytUser(marker.userId)
                 val name = SceytChatUIKit.formatters.userNameFormatter?.format(user)
                         ?: user.getPresentableName()
                 avatar.setUserAvatar(marker.user)

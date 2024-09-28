@@ -4,7 +4,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.databinding.SceytItemReactedUserBinding
@@ -74,7 +73,7 @@ class ReactedUsersAdapter(
 
         override fun bind(item: ReactedUserItem) {
             with(binding) {
-                val user: User? = (item as ReactedUserItem.Item).reaction.user
+                val user = (item as ReactedUserItem.Item).reaction.user
                 val userPresentableName = user?.let { SceytChatUIKit.formatters.userNameFormatter?.format(it) }
                         ?: user?.getPresentableName()
                 avatar.setUserAvatar(user)

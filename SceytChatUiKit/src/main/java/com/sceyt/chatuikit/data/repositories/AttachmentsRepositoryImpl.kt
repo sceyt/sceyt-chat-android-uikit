@@ -10,9 +10,11 @@ import com.sceyt.chat.sceyt_callbacks.AttachmentsCallback
 import com.sceyt.chat.sceyt_callbacks.LinkDetailsCallback
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
+import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.repositories.AttachmentsRepository
 import kotlinx.coroutines.suspendCancellableCoroutine
 
@@ -24,12 +26,16 @@ class AttachmentsRepositoryImpl : AttachmentsRepository {
         .build()
 
 
-    override suspend fun getPrevAttachments(conversationId: Long, lastAttachmentId: Long, types: List<String>): SceytResponse<Pair<List<Attachment>, Map<String, User>>> {
+    override suspend fun getPrevAttachments(
+            conversationId: Long,
+            lastAttachmentId: Long,
+            types: List<String>
+    ): SceytResponse<Pair<List<Attachment>, Map<String, SceytUser>>> {
         return suspendCancellableCoroutine { continuation ->
             getQuery(conversationId, types).loadPrev(lastAttachmentId, object : AttachmentsCallback {
                 override fun onResult(attachments: MutableList<Attachment>?, userMutableMap: MutableMap<String, User>?) {
-                    continuation.safeResume(SceytResponse.Success(Pair(attachments
-                            ?: listOf(), userMutableMap ?: mapOf())))
+                    continuation.safeResume(SceytResponse.Success(Pair(attachments ?: listOf(),
+                        userMutableMap?.mapValues { it.value.toSceytUser() } ?: mapOf())))
                 }
 
                 override fun onError(e: SceytException?) {
@@ -40,12 +46,16 @@ class AttachmentsRepositoryImpl : AttachmentsRepository {
         }
     }
 
-    override suspend fun getNextAttachments(conversationId: Long, lastAttachmentId: Long, types: List<String>): SceytResponse<Pair<List<Attachment>, Map<String, User>>> {
+    override suspend fun getNextAttachments(
+            conversationId: Long,
+            lastAttachmentId: Long,
+            types: List<String>
+    ): SceytResponse<Pair<List<Attachment>, Map<String, SceytUser>>> {
         return suspendCancellableCoroutine { continuation ->
             getQuery(conversationId, types).loadNext(lastAttachmentId, object : AttachmentsCallback {
                 override fun onResult(attachments: MutableList<Attachment>?, userMutableMap: MutableMap<String, User>?) {
-                    continuation.safeResume(SceytResponse.Success(Pair(attachments
-                            ?: listOf(), userMutableMap ?: mapOf())))
+                    continuation.safeResume(SceytResponse.Success(Pair(attachments ?: listOf(),
+                        userMutableMap?.mapValues { it.value.toSceytUser() } ?: mapOf())))
                 }
 
                 override fun onError(e: SceytException?) {
@@ -56,12 +66,16 @@ class AttachmentsRepositoryImpl : AttachmentsRepository {
         }
     }
 
-    override suspend fun getNearAttachments(conversationId: Long, attachmentId: Long, types: List<String>): SceytResponse<Pair<List<Attachment>, Map<String, User>>> {
+    override suspend fun getNearAttachments(
+            conversationId: Long,
+            attachmentId: Long,
+            types: List<String>
+    ): SceytResponse<Pair<List<Attachment>, Map<String, SceytUser>>> {
         return suspendCancellableCoroutine { continuation ->
             getQuery(conversationId, types).loadNear(attachmentId, object : AttachmentsCallback {
                 override fun onResult(attachments: MutableList<Attachment>?, userMutableMap: MutableMap<String, User>?) {
-                    continuation.safeResume(SceytResponse.Success(Pair(attachments
-                            ?: listOf(), userMutableMap ?: mapOf())))
+                    continuation.safeResume(SceytResponse.Success(Pair(attachments ?: listOf(),
+                        userMutableMap?.mapValues { it.value.toSceytUser() } ?: mapOf())))
                 }
 
                 override fun onError(e: SceytException?) {

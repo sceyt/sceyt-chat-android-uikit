@@ -34,12 +34,12 @@ import com.google.android.flexbox.FlexWrap
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytRecyclerReplyContainerBinding
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.extractLinks
@@ -519,7 +519,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         return min(5, reactionsSize)
     }
 
-    protected open fun getSenderName(user: User?): String {
+    protected open fun getSenderName(user: SceytUser?): String {
         user ?: return ""
         return userNameFormatter?.format(user) ?: user.getPresentableNameCheckDeleted(context)
     }

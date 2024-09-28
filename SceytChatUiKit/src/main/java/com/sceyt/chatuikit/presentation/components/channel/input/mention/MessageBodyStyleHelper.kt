@@ -3,8 +3,8 @@ package com.sceyt.chatuikit.presentation.components.channel.input.mention
 import android.content.Context
 import android.text.SpannableStringBuilder
 import com.sceyt.chat.models.message.BodyAttribute
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyAttributeType
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyler
 import com.sceyt.chatuikit.presentation.components.channel.input.format.StyleType
@@ -37,7 +37,7 @@ object MessageBodyStyleHelper {
     fun buildWithAttributes(
             context: Context,
             body: CharSequence,
-            mentionUsers: List<User>?,
+            mentionUsers: List<SceytUser>?,
             bodyAttributes: List<BodyAttribute>?,
             mentionTextStyle: TextStyle
     ): CharSequence {
@@ -54,7 +54,7 @@ object MessageBodyStyleHelper {
             context: Context,
             body: CharSequence,
             list: List<BodyAttribute>?,
-            mentionUsers: List<User>?,
+            mentionUsers: List<SceytUser>?,
             mentionTextStyle: TextStyle
     ): CharSequence {
         list ?: return body

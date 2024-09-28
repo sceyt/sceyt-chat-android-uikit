@@ -11,9 +11,10 @@ import com.sceyt.chatuikit.presentation.components.startchat.adapters.holders.Us
 import com.sceyt.chatuikit.shared.utils.MyDiffUtil
 
 class UsersAdapter(
-        private var usersList: ArrayList<UserItem>,
+        list: List<UserItem>,
         private val factory: UserViewHolderFactory,
 ) : RecyclerView.Adapter<BaseViewHolder<UserItem>>() {
+    private var usersList: ArrayList<UserItem> = list.toArrayList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<UserItem> {
         return factory.createViewHolder(parent, viewType)

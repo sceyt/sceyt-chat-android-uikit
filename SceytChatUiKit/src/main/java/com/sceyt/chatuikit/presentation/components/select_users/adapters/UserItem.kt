@@ -1,8 +1,10 @@
 package com.sceyt.chatuikit.presentation.components.select_users.adapters
 
+import com.sceyt.chatuikit.data.models.messages.SceytUser
+
 sealed class UserItem {
     data class User(
-            val user: com.sceyt.chat.models.user.User
+            val user: SceytUser
     ) : UserItem() {
         var chosen = false
     }
@@ -14,6 +16,7 @@ sealed class UserItem {
             this is User && other is User -> {
                 return user.id == other.user.id
             }
+
             else -> super.equals(other)
         }
     }

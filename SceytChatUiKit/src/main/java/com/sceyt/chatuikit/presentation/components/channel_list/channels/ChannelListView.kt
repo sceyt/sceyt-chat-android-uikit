@@ -8,12 +8,11 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.copy
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytChannelListViewBinding
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.differs.diff
@@ -139,7 +138,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
             binding.pageStateView.updateState(PageState.StateEmpty(searchQuery))
     }
 
-    internal fun userBlocked(data: List<User>?) {
+    internal fun userBlocked(data: List<SceytUser>?) {
         data?.forEach { user ->
             channelsRV.getChannels()?.find {
                 it.channel.isDirect() && it.channel.getPeer()?.id == user.id

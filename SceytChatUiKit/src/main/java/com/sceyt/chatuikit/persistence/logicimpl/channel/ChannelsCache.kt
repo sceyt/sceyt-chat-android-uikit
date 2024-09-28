@@ -1,10 +1,9 @@
 package com.sceyt.chatuikit.persistence.logicimpl.channel
 
-import com.sceyt.chat.models.user.User
-import com.sceyt.chatuikit.data.copy
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsComparatorDescBy
@@ -286,12 +285,13 @@ class ChannelsCache {
         }
     }
 
-    fun updateChannelPeer(id: Long, user: User) {
+    fun updateChannelPeer(id: Long, user: SceytUser) {
         synchronized(lock) {
             cachedData[id]?.let { channel ->
                 val updatedChannel = channel.copy(
                     members = channel.members?.map { member ->
-                        if (member.user.id == user.id) member.copy(user = user.copy())
+                        if (member.user.id == user.id)
+                            member.copy(user = user.copy())
                         else member
                     }
                 )

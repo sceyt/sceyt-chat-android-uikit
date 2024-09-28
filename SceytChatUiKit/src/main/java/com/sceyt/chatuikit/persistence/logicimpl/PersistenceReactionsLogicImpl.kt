@@ -30,6 +30,7 @@ import com.sceyt.chatuikit.persistence.mappers.toReactionEntity
 import com.sceyt.chatuikit.persistence.mappers.toReactionTotalEntity
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
+import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
 import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ReactionsRepository
@@ -289,7 +290,8 @@ internal class PersistenceReactionsLogicImpl(
                     messagesCache.messageUpdated(channelId, message)
 
                     if (!message.incoming) {
-                        val reaction = SceytReaction(0, messageId, key, 1, "", 0, ClientWrapper.currentUser, false)
+                        val reaction = SceytReaction(0, messageId, key, 1, "", 0,
+                            ClientWrapper.currentUser?.toSceytUser(), false)
                         handleChannelReaction(ReactionUpdateEventData(message, reaction, Remove), message)
                     }
                 }

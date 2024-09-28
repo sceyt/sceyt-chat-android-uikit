@@ -1,15 +1,14 @@
 package com.sceyt.chatuikit.data.models.channels
 
 import android.os.Parcelable
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.messages.PendingReactionData
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isGroup
-import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -25,7 +24,7 @@ data class SceytChannel(
         val updatedAt: Long,
         val messagesClearedAt: Long,
         val memberCount: Long,
-        val createdBy: User?,
+        val createdBy: SceytUser?,
         val userRole: String?,
         val unread: Boolean,
         val newMessageCount: Long,

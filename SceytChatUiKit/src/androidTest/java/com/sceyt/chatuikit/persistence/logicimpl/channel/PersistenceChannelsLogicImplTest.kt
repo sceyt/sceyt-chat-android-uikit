@@ -8,7 +8,6 @@ import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.CreateChannelRequest
 import com.sceyt.chat.models.channel.DeleteChannelRequest
 import com.sceyt.chat.models.role.Role
-import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.sceyt_callbacks.ChannelCallback
 import com.sceyt.chat.wrapper.ClientWrapper
@@ -18,8 +17,10 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.toMember
 import com.sceyt.chatuikit.extensions.toSha256
+import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertTrue
@@ -50,13 +51,13 @@ class PersistenceChannelsLogicImplTest {
         val createdBy = ClientWrapper.currentUser
 
         val role = Role(RoleTypeEnum.Owner.toString())
-        val members = setOf(SceytMember(role, User("1234")), SceytMember(role, createdBy)).toList()
+        val members = setOf(SceytMember(role, SceytUser("1234")), SceytMember(role, createdBy.toSceytUser())).toList()
         val channelId = members.map { it.id }.toSet().sorted().joinToString(separator = "$").toSha256()
 
         val createdChannel = suspendCancellableCoroutine {
             initCreateChannelRequest(CreateChannelData(
                 channelType = ChannelTypeEnum.Direct.toString(),
-                members = members.map { sceytMember -> sceytMember.toMember() },
+                members = members,
                 uri = "",
                 metadata = "",
             )).execute(object : ChannelCallback {
@@ -94,7 +95,7 @@ class PersistenceChannelsLogicImplTest {
 
     private fun initCreateChannelRequest(channelData: CreateChannelData): CreateChannelRequest {
         return CreateChannelRequest.Builder(channelData.channelType)
-            .withMembers(channelData.members)
+            .withMembers(channelData.members.map { it.toMember() })
             .withUri(channelData.uri)
             .withAvatarUrl(channelData.avatarUrl)
             .withSubject(channelData.subject)

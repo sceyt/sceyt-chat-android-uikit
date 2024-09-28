@@ -11,8 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
-import com.sceyt.chat.models.user.User
-import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytMember
@@ -26,7 +24,6 @@ import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.members.MemberTypeEnum
 import com.sceyt.chatuikit.presentation.components.create_chat.create_channel.CreateChannelActivity
@@ -119,11 +116,11 @@ class StartChatActivity : AppCompatActivity() {
 
     private fun setupUsersList(list: List<UserItem>) {
         val listWithSelf = list.toMutableList()
-        listWithSelf.add(0, UserItem.User(ClientWrapper.currentUser
-                ?: User(SceytChatUIKit.chatUIFacade.myId.toString())))
-
+        SceytChatUIKit.currentUser?.let {
+            listWithSelf.add(0, UserItem.User(it))
+        }
         if (::usersAdapter.isInitialized.not()) {
-            binding.rvUsers.adapter = UsersAdapter(listWithSelf.toArrayList(), UserViewHolderFactory(this) {
+            binding.rvUsers.adapter = UsersAdapter(listWithSelf, UserViewHolderFactory(this) {
                 if (creatingChannel) return@UserViewHolderFactory
                 creatingChannel = true
                 viewModel.findOrCreateDirectChannel(it.user)

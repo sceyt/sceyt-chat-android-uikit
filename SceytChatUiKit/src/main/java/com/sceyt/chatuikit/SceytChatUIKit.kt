@@ -9,6 +9,7 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
 import com.sceyt.chatuikit.config.SceytChatUIKitConfig
 import com.sceyt.chatuikit.data.di.repositoryModule
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.transformers.MessageTransformer
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
@@ -24,6 +25,7 @@ import com.sceyt.chatuikit.persistence.di.databaseModule
 import com.sceyt.chatuikit.persistence.di.interactorModule
 import com.sceyt.chatuikit.persistence.di.logicModule
 import com.sceyt.chatuikit.persistence.lazyVar
+import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.presentation.di.viewModelModule
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
@@ -51,6 +53,9 @@ object SceytChatUIKit : SceytKoinComponent {
 
     val chatClient: ChatClient
         get() = ChatClient.getClient()
+
+    val currentUser: SceytUser?
+        get() = chatUIFacade.userInteractor.getCurrentUserNonSuspend()
 
     fun initialize(
             appContext: Context,

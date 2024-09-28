@@ -16,13 +16,13 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytMessagesListViewBinding
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asActivity
@@ -51,8 +51,6 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.persistence.mappers.isLink
 import com.sceyt.chatuikit.presentation.common.KeyboardEventListener
-import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
-import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
@@ -75,10 +73,12 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.ReactionPopupClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.ReactionPopupClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.MessageActionsPopupMenu
-import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.PopupReactionsAdapter
+import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
 import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
+import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -675,7 +675,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         })
     }
 
-    fun setUserNameFormatter(builder: (User) -> String) {
+    fun setUserNameFormatter(builder: (SceytUser) -> String) {
         messagesRV.getViewHolderFactory().setUserNameFormatter(builder)
     }
 

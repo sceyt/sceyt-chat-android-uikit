@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.extensions
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
@@ -29,8 +30,8 @@ fun AvatarView.setChannelAvatar(
 
 
 fun AvatarView.setUserAvatar(
-        user: User?,
-        avatarProvider: VisualProvider<User, DefaultAvatar>
+        user: SceytUser?,
+        avatarProvider: VisualProvider<SceytUser, DefaultAvatar>
         = SceytChatUIKit.providers.userDefaultAvatarProvider
 ) {
     if (user == null) {

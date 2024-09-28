@@ -15,7 +15,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.PaginationResponse
@@ -25,6 +24,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivityMediaBinding
 import com.sceyt.chatuikit.extensions.checkAndAskPermissions
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -39,7 +39,6 @@ import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.saveToGallery
-import com.sceyt.chatuikit.extensions.serializable
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
@@ -146,7 +145,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         val attachment = intent?.extras?.parcelable<SceytAttachment>(KEY_ATTACHMENT).also {
             openedWithAttachment = it
         }
-        val user = intent?.extras?.serializable(KEY_USER) as? User
+        val user = intent?.extras?.parcelable<SceytUser>(KEY_USER)
 
         if (attachment == null) {
             viewModel.loadPrevAttachments(channelId, 0, false, mediaTypes, 0)
@@ -369,7 +368,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         private const val KEY_CHANNEL_ID = "KEY_CHANNEL_ID"
         private const val KEY_REVERSED = "KEY_REVERSED"
 
-        fun launch(context: Context, attachment: SceytAttachment, from: User?, channelId: Long, reversed: Boolean = false) {
+        fun launch(context: Context, attachment: SceytAttachment, from: SceytUser?, channelId: Long, reversed: Boolean = false) {
             context.launchActivity<MediaPreviewActivity> {
                 putExtra(KEY_ATTACHMENT, attachment)
                 putExtra(KEY_USER, from)

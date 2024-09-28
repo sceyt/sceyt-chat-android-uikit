@@ -12,8 +12,6 @@ import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.models.user.User
-import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.ClearedHistory
@@ -32,6 +30,7 @@ import com.sceyt.chatuikit.data.models.getLoadKey
 import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.centerVisibleItemPosition
@@ -49,13 +48,13 @@ import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
-import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
+import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -409,8 +408,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             if (response is SceytResponse.Success) {
                 val data = response.data ?: return@Observer
                 viewModelScope.launch(Dispatchers.Default) {
-                    val user = ClientWrapper.currentUser ?: User(SceytChatUIKit.chatUIFacade.myId
-                            ?: return@launch)
+                    val user = SceytChatUIKit.currentUser ?: return@launch
                     val messages = messagesListView.getData()
                     messages.forEachIndexed { index, listItem ->
                         (listItem as? MessageItem)?.message?.let { message ->
@@ -650,8 +648,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             is MessageCommandEvent.UserClick -> {
                 if (event.userId == SceytChatUIKit.chatUIFacade.myId) return@setMessageCommandEventListener
                 viewModelScope.launch(Dispatchers.IO) {
-                    val user = userInteractor.getUserDbById(event.userId)
-                            ?: User(event.userId)
+                    val user = userInteractor.getUserDbById(event.userId) ?: SceytUser(event.userId)
                     val response = channelInteractor.findOrCreateDirectChannel(user)
                     if (response is SceytResponse.Success)
                         response.data?.let {

@@ -37,7 +37,7 @@ class SelectedUsersAdapter(private val users: ArrayList<UserItem.User>,
             val presentableName = item.user.getPresentableName()
             binding.userName.text = presentableName
             binding.avatar.setUserAvatar(item.user)
-            binding.onlineStatus.isVisible = item.user.presence.state == PresenceState.Online
+            binding.onlineStatus.isVisible = item.user.presence?.state == PresenceState.Online
 
             binding.icRemove.setOnClickListener {
                 listener.onRemoveClick(item)

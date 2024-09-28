@@ -18,16 +18,15 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.copy
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Direct
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Group
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivityChannelInfoBinding
 import com.sceyt.chatuikit.extensions.TAG_NAME
 import com.sceyt.chatuikit.extensions.createIntent
@@ -493,7 +492,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         customToastSnackBar(getString(R.string.sceyt_history_was_successfully_cleared))
     }
 
-    protected open fun onBlockedOrUnblockedUser(users: List<User>) {
+    protected open fun onBlockedOrUnblockedUser(users: List<SceytUser>) {
         val members = channel.members?.toArrayList() ?: return
         users.forEach { user ->
             members.findIndexed { it.id == user.id }?.let { (index, member) ->
