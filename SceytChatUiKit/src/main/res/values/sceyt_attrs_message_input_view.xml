@@ -5,6 +5,14 @@
         <attr name="sceytUiMessageInputBackgroundColor" format="reference|color" />
         <attr name="sceytUiMessageInputTextInputBackgroundColor" format="reference|color" />
         <attr name="sceytUiMessageInputMentionUsersListBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputMentionUsersListTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputMentionUsersListTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputMentionUsersListTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputMentionUsersListTextFont" format="reference" />
 
         <!-- Corners-->
         <attr name="sceytUiMessageInputCornersRadius" format="dimension" />
