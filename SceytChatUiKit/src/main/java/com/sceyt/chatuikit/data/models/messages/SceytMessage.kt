@@ -7,7 +7,6 @@ import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.message.ReactionTotal
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import kotlinx.parcelize.Parcelize
@@ -27,13 +26,13 @@ data class SceytMessage(
         val silent: Boolean,
         val deliveryStatus: DeliveryStatus,
         val state: MessageState,
-        val user: User?,
+        val user: SceytUser?,
         val attachments: List<SceytAttachment>?,
         val userReactions: List<SceytReaction>?,
         val reactionTotals: List<ReactionTotal>?,
         val markerTotals: List<MarkerTotal>?,
         val userMarkers: List<SceytMarker>?,
-        val mentionedUsers: List<User>?,
+        val mentionedUsers: List<SceytUser>?,
         val parentMessage: SceytMessage?,
         val replyCount: Long,
         val displayCount: Short,

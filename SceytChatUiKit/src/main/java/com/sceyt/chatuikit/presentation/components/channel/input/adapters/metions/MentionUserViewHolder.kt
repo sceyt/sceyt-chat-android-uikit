@@ -26,7 +26,8 @@ class MentionUserViewHolder(
             avatar.setUserAvatar(user, style.itemStyle.avatarProvider)
             userName.text = style.itemStyle.titleFormatter.format(context, user)
 
-            val indicatorColor = SceytChatUIKit.providers.presenceStateColorProvider.provide(context, user.presence.state)
+            val indicatorColor = SceytChatUIKit.providers.presenceStateColorProvider.provide(context, user.presence?.state
+                    ?: PresenceState.Offline)
             onlineStatus.setBackgroundColor(indicatorColor)
             onlineStatus.isVisible = user.presence?.state == PresenceState.Online
 

@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.data.models.messages
 
 import android.os.Parcelable
-import com.sceyt.chat.models.user.User
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -12,6 +11,6 @@ data class SceytReaction(
         val score: Int,
         val reason: String,
         val createdAt: Long,
-        val user: User?,
+        val user: SceytUser?,
         val pending: Boolean
 ) : Parcelable

@@ -12,15 +12,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
-import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.role.Role
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
-import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityCreateGroupBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -136,9 +132,7 @@ class CreateGroupActivity : AppCompatActivity() {
                 subject = tvSubject.text.toString().trim()
                 channelType = ChannelTypeEnum.Group.getString()
                 metadata = Gson().toJson(ChannelDescriptionData(tvDescription.text.toString().trim()))
-                members = this@CreateGroupActivity.members.map {
-                    Member(Role(RoleTypeEnum.Member.toString()), User(it.id))
-                }
+                members = this@CreateGroupActivity.members
             }
 
             viewModel.createChat(createChannelData)
@@ -147,7 +141,7 @@ class CreateGroupActivity : AppCompatActivity() {
     }
 
     private fun setMembersAdapter() {
-        val data: ArrayList<UserItem> = ArrayList(members.map { UserItem.User(it.user) })
+        val data = members.map { UserItem.User(it.user) }
         binding.rvMembers.adapter = UsersAdapter(data, UserViewHolderFactory(this) {})
     }
 

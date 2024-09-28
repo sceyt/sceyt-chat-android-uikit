@@ -3,11 +3,11 @@ package com.sceyt.chatuikit.presentation.components.select_users.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,7 +42,7 @@ class UsersViewModel : BaseViewModel() {
         }
     }
 
-    private fun mapToUserItems(list: List<User>?, hasNext: Boolean): List<UserItem> {
+    private fun mapToUserItems(list: List<SceytUser>?, hasNext: Boolean): List<UserItem> {
         val memberItems: MutableList<UserItem> = (list
                 ?: return arrayListOf()).map { UserItem.User(it) }.toMutableList()
         if (hasNext)
@@ -50,7 +50,7 @@ class UsersViewModel : BaseViewModel() {
         return memberItems
     }
 
-    fun findOrCreateDirectChannel(user: User) {
+    fun findOrCreateDirectChannel(user: SceytUser) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = SceytChatUIKit.chatUIFacade.channelInteractor.findOrCreateDirectChannel(user)
             notifyResponseAndPageState(_createChannelLiveData, response)

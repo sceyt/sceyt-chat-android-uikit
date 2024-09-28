@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel.header.listeners.event
 
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 
 open class HeaderEventsListenerImpl(view: MessagesListHeaderView) : HeaderEventsListener.EventListeners {
@@ -14,7 +14,7 @@ open class HeaderEventsListenerImpl(view: MessagesListHeaderView) : HeaderEvents
         typingListener?.onTypingEvent(data)
     }
 
-    override fun onPresenceUpdateEvent(user: User) {
+    override fun onPresenceUpdateEvent(user: SceytUser) {
         defaultListeners.onPresenceUpdateEvent(user)
         presenceUpdateListener?.onPresenceUpdateEvent(user)
     }

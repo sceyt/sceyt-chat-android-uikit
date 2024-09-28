@@ -7,11 +7,11 @@ import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import androidx.core.content.res.use
 import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
@@ -91,9 +91,9 @@ data class ChannelItemStyle(
         var channelNameFormatter: Formatter<SceytChannel>,
         var channelDateFormatter: Formatter<Date>,
         var lastMessageSenderNameFormatter: Formatter<SceytChannel>,
-        var mentionUserNameFormatter: Formatter<User>,
-        var reactedUserNameFormatter: Formatter<User>,
-        var typingUserNameFormatter: Formatter<User>,
+        var mentionUserNameFormatter: Formatter<SceytUser>,
+        var reactedUserNameFormatter: Formatter<SceytUser>,
+        var typingUserNameFormatter: Formatter<SceytUser>,
         var channelUnreadCountFormatter: Formatter<SceytChannel>,
         var attachmentNameFormatter: Formatter<SceytAttachment>,
         var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,

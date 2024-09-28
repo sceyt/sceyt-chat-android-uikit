@@ -4,11 +4,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.settings.UserSettings
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
@@ -18,11 +19,11 @@ import org.koin.core.component.inject
 class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
     private val userInteractor: UserInteractor by inject()
 
-    private val _currentUserLiveData = MutableLiveData<User>()
-    val currentUserLiveData: LiveData<User> = _currentUserLiveData
+    private val _currentUserLiveData = MutableLiveData<SceytUser>()
+    val currentUserLiveData = _currentUserLiveData.asLiveData()
 
-    private val _editProfileLiveData = MutableLiveData<User>()
-    val editProfileLiveData: LiveData<User> = _editProfileLiveData
+    private val _editProfileLiveData = MutableLiveData<SceytUser>()
+    val editProfileLiveData = _editProfileLiveData.asLiveData()
 
     private val _muteUnMuteLiveData = MutableLiveData<Boolean>()
     val muteUnMuteLiveData: LiveData<Boolean> = _muteUnMuteLiveData

@@ -4,7 +4,6 @@ import android.util.Size
 import androidx.lifecycle.asFlow
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.attachment.Attachment
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.LoadNearData
@@ -19,6 +18,7 @@ import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
@@ -44,7 +44,7 @@ import com.sceyt.chatuikit.persistence.mappers.toLinkDetailsEntity
 import com.sceyt.chatuikit.persistence.mappers.toLinkPreviewDetails
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
-import com.sceyt.chatuikit.persistence.mappers.toUser
+import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.repositories.AttachmentsRepository
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.Dispatchers
@@ -224,7 +224,7 @@ internal class PersistenceAttachmentLogicImpl(
         val data = arrayListOf<AttachmentWithUserData>()
 
         attachments.map {
-            data.add(AttachmentWithUserData(it, users.find { userEntity -> userEntity.id == it.userId }?.toUser()))
+            data.add(AttachmentWithUserData(it, users.find { userEntity -> userEntity.id == it.userId }?.toSceytUser()))
         }
         attachmentsCache.addAll(attachments, false)
 
@@ -246,13 +246,15 @@ internal class PersistenceAttachmentLogicImpl(
         return attachmentDao.getNearAttachments(channelId, attachmentId, attachmentsLoadSize, types)
     }
 
-    private suspend fun getAttachmentsServerByLoadType(loadType: PaginationResponse.LoadType, conversationId: Long,
-                                                       attachmentId: Long, types: List<String>,
-                                                       loadKey: LoadKeyData, offset: Int, ignoreDb: Boolean): PaginationResponse<AttachmentWithUserData> {
+    private suspend fun getAttachmentsServerByLoadType(
+            loadType: PaginationResponse.LoadType, conversationId: Long,
+            attachmentId: Long, types: List<String>,
+            loadKey: LoadKeyData, offset: Int, ignoreDb: Boolean
+    ): PaginationResponse<AttachmentWithUserData> {
         var hasNext = false
         var hasPrev = false
         var hasDiff = false
-        val response: SceytResponse<Pair<List<Attachment>, Map<String, User>>>
+        val response: SceytResponse<Pair<List<Attachment>, Map<String, SceytUser>>>
 
         when (loadType) {
             LoadPrev -> {
@@ -305,8 +307,10 @@ internal class PersistenceAttachmentLogicImpl(
             hasPrev = hasPrev, loadType = loadType, ignoredDb = ignoreDb)
     }
 
-    private suspend fun handelServerResponse(conversationId: Long,
-                                             response: SceytResponse<Pair<List<Attachment>, Map<String, User>>>): SceytResponse<List<AttachmentWithUserData>> {
+    private suspend fun handelServerResponse(
+            conversationId: Long,
+            response: SceytResponse<Pair<List<Attachment>, Map<String, SceytUser>>>
+    ): SceytResponse<List<AttachmentWithUserData>> {
         when (response) {
             is SceytResponse.Success -> {
                 if (response.data?.first.isNullOrEmpty()) return SceytResponse.Success(emptyList())

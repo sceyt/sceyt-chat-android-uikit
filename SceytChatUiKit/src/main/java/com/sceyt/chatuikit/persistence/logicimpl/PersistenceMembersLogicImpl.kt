@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
-import com.sceyt.chat.models.member.Member
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
@@ -187,7 +186,9 @@ internal class PersistenceMembersLogicImpl(
     }
 
     override suspend fun changeChannelMemberRole(channelId: Long, vararg member: SceytMember): SceytResponse<SceytChannel> {
-        val response = channelsRepository.changeChannelMemberRole(channelId, *member.map { it.toMember() }.toTypedArray())
+        val response = channelsRepository.changeChannelMemberRole(channelId, *member.map {
+            it.toMember()
+        }.toTypedArray())
 
         if (response is SceytResponse.Success) {
             response.data?.members?.let { members ->
@@ -203,8 +204,8 @@ internal class PersistenceMembersLogicImpl(
         return response
     }
 
-    override suspend fun addMembersToChannel(channelId: Long, members: List<Member>): SceytResponse<SceytChannel> {
-        val response = channelsRepository.addMembersToChannel(channelId, members)
+    override suspend fun addMembersToChannel(channelId: Long, members: List<SceytMember>): SceytResponse<SceytChannel> {
+        val response = channelsRepository.addMembersToChannel(channelId, members.map { it.toMember() })
 
         if (response is SceytResponse.Success) {
             usersDao.insertUsers(members.map { it.toUserEntity() })

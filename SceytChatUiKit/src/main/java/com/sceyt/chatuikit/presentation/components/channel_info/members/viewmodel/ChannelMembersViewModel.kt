@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.channel_info.members.viewmod
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
@@ -15,7 +14,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
-import com.sceyt.chatuikit.data.toMember
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
@@ -172,27 +171,26 @@ class ChannelMembersViewModel(private val channelsLogic: PersistenceChannelsLogi
         }
     }
 
-    fun addMembersToChannel(channelId: Long, users: ArrayList<SceytMember>) {
+    fun addMembersToChannel(channelId: Long, members: List<SceytMember>) {
         viewModelScope.launch(Dispatchers.IO) {
-            val membersToAdd = users.map { it.toMember() }
-            val response = membersLogic.addMembersToChannel(channelId, membersToAdd)
+            val response = membersLogic.addMembersToChannel(channelId, members)
             if (response is SceytResponse.Success) {
                 val channel = response.data ?: return@launch
-                val members = channel.members ?: return@launch
+                val responseMembers = channel.members ?: return@launch
 
                 _channelMemberEventLiveData.postValue(ChannelMembersEventData(
                     channel = channel,
-                    members = members,
+                    members = responseMembers,
                     eventType = ChannelMembersEventEnum.Added
                 ))
-                _channelAddMemberLiveData.postValue(members)
+                _channelAddMemberLiveData.postValue(responseMembers)
             }
 
             notifyPageStateWithResponse(response)
         }
     }
 
-    fun findOrCreateChat(user: User) {
+    fun findOrCreateChat(user: SceytUser) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelsLogic.findOrCreateDirectChannel(user)
             if (response is SceytResponse.Success)

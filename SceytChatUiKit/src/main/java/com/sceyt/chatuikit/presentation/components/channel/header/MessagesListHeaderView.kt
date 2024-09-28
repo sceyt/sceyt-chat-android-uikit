@@ -25,14 +25,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.AppBarLayout
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.copy
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytMessagesListHeaderViewBinding
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.asComponentActivity
@@ -281,7 +280,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun setPresenceUpdated(user: User) {
+    private fun setPresenceUpdated(user: SceytUser) {
         if (::channel.isInitialized.not() || channel.isGroup || enablePresence.not()) return
         channel.getPeer()?.let { member ->
             if (member.user.id == user.id) {
@@ -320,7 +319,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         eventListeners.onTypingEvent(data)
     }
 
-    internal fun onPresenceUpdate(user: User) {
+    internal fun onPresenceUpdate(user: SceytUser) {
         eventListeners.onPresenceUpdateEvent(user)
     }
 
@@ -415,7 +414,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         typingUsersHelper.onTypingEvent(data)
     }
 
-    override fun onPresenceUpdateEvent(user: User) {
+    override fun onPresenceUpdateEvent(user: SceytUser) {
         setPresenceUpdated(user)
     }
 

@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.toMember
 import com.sceyt.chatuikit.data.toSceytMember
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
@@ -205,7 +206,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
 
     private fun initCreateChannelRequest(channelData: CreateChannelData): CreateChannelRequest? {
         return CreateChannelRequest.Builder(channelData.channelType)
-            .withMembers(channelData.members)
+            .withMembers(channelData.members.map { it.toMember() })
             .withUri(channelData.uri)
             .withAvatarUrl(channelData.avatarUrl)
             .withSubject(channelData.subject)

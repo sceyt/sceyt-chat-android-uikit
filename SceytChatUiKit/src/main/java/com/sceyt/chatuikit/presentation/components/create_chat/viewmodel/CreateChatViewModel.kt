@@ -8,7 +8,6 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
-import com.sceyt.chatuikit.data.toMember
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,10 +33,9 @@ class CreateChatViewModel : BaseViewModel() {
         }
     }
 
-    fun addMembers(channelId: Long, users: List<SceytMember>) {
+    fun addMembers(channelId: Long, members: List<SceytMember>) {
         notifyPageLoadingState(false)
         viewModelScope.launch(Dispatchers.IO) {
-            val members = users.map { it.toMember() }
             val response = channelMemberInteractor.addMembersToChannel(channelId, members)
             notifyResponseAndPageState(_addMembersLiveData, response)
         }

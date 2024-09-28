@@ -6,7 +6,6 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.role.Role
-import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -35,7 +34,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.channels.SelfChannelMetadata
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
-import com.sceyt.chatuikit.data.toMember
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.toSha256
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -67,17 +66,17 @@ import com.sceyt.chatuikit.persistence.mappers.toReactionData
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
-import com.sceyt.chatuikit.persistence.mappers.toUser
+import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
 import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
+import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.extensions.isDeleted
 import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
 import com.sceyt.chatuikit.presentation.extensions.isHardDeleted
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
-import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.push.RemoteMessageData
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.channels.awaitClose
@@ -452,7 +451,7 @@ internal class PersistenceChannelsLogicImpl(
             } else {
                 val members = arrayListOf<SceytMember>()
                 channel.getPeer()?.let {
-                    if (it.user.activityState == UserState.Deleted)
+                    if (it.user.state == UserState.Deleted)
                         directChatsWithDeletedPeers.add(channel.id)
                     members.add(it)
                 }
@@ -475,7 +474,7 @@ internal class PersistenceChannelsLogicImpl(
         return updatedList
     }
 
-    override suspend fun findOrCreateDirectChannel(user: User): SceytResponse<SceytChannel> {
+    override suspend fun findOrCreateDirectChannel(user: SceytUser): SceytResponse<SceytChannel> {
         var metadata = ""
         val channelDb = if (user.id == myId) {
             metadata = Gson().toJson(SelfChannelMetadata(1))
@@ -489,8 +488,9 @@ internal class PersistenceChannelsLogicImpl(
 
         val fail = SceytResponse.Error<SceytChannel>(SceytException(0, "Failed to create direct channel myId is null"))
         val myId = myId ?: return fail
-        val createdBy = ClientWrapper.currentUser ?: usersDao.getUserById(myId)?.toUser()
-        ?: User(myId)
+        val createdBy = ClientWrapper.currentUser?.toSceytUser()
+                ?: usersDao.getUserById(myId)?.toSceytUser()
+                ?: SceytUser(myId)
 
         val role = Role(RoleTypeEnum.Owner.toString())
         val members = setOf(SceytMember(role, user), SceytMember(role, createdBy)).toList()
@@ -525,7 +525,7 @@ internal class PersistenceChannelsLogicImpl(
             subject = channel.subject ?: "",
             avatarUrl = channel.avatarUrl ?: "",
             metadata = channel.metadata ?: "",
-            members = channel.members?.map { it.toMember() } ?: arrayListOf()))
+            members = channel.members ?: arrayListOf()))
         if (response is SceytResponse.Success) {
             var newChannel = response.data
                     ?: return SceytResponse.Error(SceytException(0, "create channel response is success, but channel is null"))

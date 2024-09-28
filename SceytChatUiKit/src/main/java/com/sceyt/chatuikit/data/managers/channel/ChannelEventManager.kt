@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.toSceytMember
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
+import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -212,15 +213,18 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
             }
 
             override fun onDeliveryReceiptReceived(channel: Channel, from: User, marker: MessageListMarker) {
-                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Received, marker))
+                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(),
+                    from.toSceytUser(), DeliveryStatus.Received, marker))
             }
 
             override fun onMarkerReceived(channel: Channel, user: User, marker: MessageListMarker) {
-                eventManager.onMarkerReceived(MessageMarkerEventData(channel.toSceytUiChannel(), user, marker))
+                eventManager.onMarkerReceived(MessageMarkerEventData(channel.toSceytUiChannel(),
+                    user.toSceytUser(), marker))
             }
 
             override fun onReadReceiptReceived(channel: Channel, from: User, marker: MessageListMarker) {
-                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(), from, DeliveryStatus.Displayed, marker))
+                eventManager.onMessageStatusEvent(MessageStatusChangeData(channel.toSceytUiChannel(),
+                    from.toSceytUser(), DeliveryStatus.Displayed, marker))
             }
 
             override fun onChannelEvent(channel: Channel?, event: ChannelEvent?) {
@@ -237,7 +241,8 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
     }
 
     override fun onOwnerChanged(channel: SceytChannel, newOwner: Member, oldOwner: Member) {
-        onChannelOwnerChangedEventFlow_.tryEmit(ChannelOwnerChangedEventData(channel, newOwner, oldOwner))
+        onChannelOwnerChangedEventFlow_.tryEmit(ChannelOwnerChangedEventData(
+            channel, newOwner.toSceytMember(), oldOwner.toSceytMember()))
     }
 
     override fun onChannelTypingEvent(data: ChannelTypingEventData) {

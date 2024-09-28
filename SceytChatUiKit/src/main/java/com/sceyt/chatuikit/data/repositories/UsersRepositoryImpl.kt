@@ -9,16 +9,18 @@ import com.sceyt.chat.models.user.UserListQueryByIds
 import com.sceyt.chat.sceyt_callbacks.UsersCallback
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
+import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.repositories.UsersRepository
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 class UsersRepositoryImpl : UsersRepository {
     private lateinit var usersQuery: UserListQuery
 
-    override suspend fun loadUsers(query: String): SceytResponse<List<User>> {
+    override suspend fun loadUsers(query: String): SceytResponse<List<SceytUser>> {
         return suspendCancellableCoroutine { continuation ->
             val userListQuery = UserListQuery.Builder()
                 .order(UserListQuery.UserListQueryOrderKeyType.UserListQueryOrderKeyFirstName)
@@ -32,7 +34,9 @@ class UsersRepositoryImpl : UsersRepository {
                     if (users.isNullOrEmpty())
                         continuation.safeResume(SceytResponse.Success(arrayListOf()))
                     else {
-                        continuation.safeResume(SceytResponse.Success(users))
+                        continuation.safeResume(SceytResponse.Success(users.map {
+                            it.toSceytUser()
+                        }))
                     }
                 }
 
@@ -45,14 +49,16 @@ class UsersRepositoryImpl : UsersRepository {
     }
 
 
-    override suspend fun loadMoreUsers(): SceytResponse<List<User>> {
+    override suspend fun loadMoreUsers(): SceytResponse<List<SceytUser>> {
         return suspendCancellableCoroutine { continuation ->
             usersQuery.loadNext(object : UsersCallback {
                 override fun onResult(users: MutableList<User>?) {
                     if (users.isNullOrEmpty())
                         continuation.safeResume(SceytResponse.Success(arrayListOf()))
                     else {
-                        continuation.safeResume(SceytResponse.Success(users))
+                        continuation.safeResume(SceytResponse.Success(users.map {
+                            it.toSceytUser()
+                        }))
                     }
                 }
 
@@ -64,7 +70,7 @@ class UsersRepositoryImpl : UsersRepository {
         }
     }
 
-    override suspend fun getSceytUsersByIds(ids: List<String>): SceytResponse<List<User>> {
+    override suspend fun getSceytUsersByIds(ids: List<String>): SceytResponse<List<SceytUser>> {
         return suspendCancellableCoroutine { continuation ->
             val builder = UserListQueryByIds.Builder()
                 .setIds(ids)
@@ -72,7 +78,9 @@ class UsersRepositoryImpl : UsersRepository {
 
             builder.load(object : UsersCallback {
                 override fun onResult(users: MutableList<User>) {
-                    continuation.safeResume(SceytResponse.Success(users))
+                    continuation.safeResume(SceytResponse.Success(users.map {
+                        it.toSceytUser()
+                    }))
                 }
 
                 override fun onError(e: SceytException?) {
@@ -83,7 +91,7 @@ class UsersRepositoryImpl : UsersRepository {
         }
     }
 
-    override suspend fun getSceytUserById(id: String): SceytResponse<User> {
+    override suspend fun getSceytUserById(id: String): SceytResponse<SceytUser> {
         return suspendCancellableCoroutine { continuation ->
             val builder = UserListQueryByIds.Builder()
                 .setIds(listOf(id))
@@ -92,7 +100,7 @@ class UsersRepositoryImpl : UsersRepository {
             builder.load(object : UsersCallback {
                 override fun onResult(users: MutableList<User>) {
                     if (users.isNotEmpty())
-                        continuation.safeResume(SceytResponse.Success(users[0]))
+                        continuation.safeResume(SceytResponse.Success(users[0].toSceytUser()))
                     else continuation.safeResume(SceytResponse.Error(SceytException(0, "User not found")))
                 }
 
@@ -104,11 +112,13 @@ class UsersRepositoryImpl : UsersRepository {
         }
     }
 
-    override suspend fun blockUser(userId: String): SceytResponse<List<User>> {
+    override suspend fun blockUser(userId: String): SceytResponse<List<SceytUser>> {
         return suspendCancellableCoroutine { continuation ->
             BlockUserRequest(userId).execute(object : UsersCallback {
                 override fun onResult(data: MutableList<User>?) {
-                    continuation.safeResume(SceytResponse.Success(data))
+                    continuation.safeResume(SceytResponse.Success(data?.map {
+                        it.toSceytUser()
+                    }))
                 }
 
                 override fun onError(e: SceytException?) {
@@ -119,11 +129,13 @@ class UsersRepositoryImpl : UsersRepository {
         }
     }
 
-    override suspend fun unblockUser(userId: String): SceytResponse<List<User>> {
+    override suspend fun unblockUser(userId: String): SceytResponse<List<SceytUser>> {
         return suspendCancellableCoroutine { continuation ->
             UnBlockUserRequest(userId).execute(object : UsersCallback {
                 override fun onResult(data: MutableList<User>?) {
-                    continuation.safeResume(SceytResponse.Success(data))
+                    continuation.safeResume(SceytResponse.Success(data?.map {
+                        it.toSceytUser()
+                    }))
                 }
 
                 override fun onError(e: SceytException?) {

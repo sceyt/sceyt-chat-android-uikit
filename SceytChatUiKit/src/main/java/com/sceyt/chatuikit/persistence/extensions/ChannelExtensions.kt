@@ -17,7 +17,7 @@ fun SceytChannel.checkIsMemberInChannel(): Boolean {
 }
 
 fun SceytChannel.isPeerDeleted(): Boolean {
-    return isDirect() && getPeer()?.user?.activityState == UserState.Deleted
+    return isDirect() && getPeer()?.user?.state == UserState.Deleted
 }
 
 fun SceytChannel.isPeerBlocked(): Boolean {

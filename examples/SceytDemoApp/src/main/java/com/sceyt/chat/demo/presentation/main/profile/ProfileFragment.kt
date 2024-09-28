@@ -17,8 +17,8 @@ import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.databinding.FragmentProfileBinding
 import com.sceyt.chat.demo.presentation.login.LoginActivity
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.config.defaults.DefaultMuteNotificationOptions
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.hideKeyboard
@@ -43,7 +43,7 @@ class ProfileFragment : Fragment() {
     private val viewModel by viewModels<ProfileViewModel>()
     private val preference by inject<AppSharedPreference>()
     private val filePickerHelper = FilePickerHelper(this)
-    private var currentUser: User? = null
+    private var currentUser: SceytUser? = null
     private var avatarUrl: String? = null
     private var isEditMode = false
     private var isSaveLoading = false
@@ -195,7 +195,7 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun setUserDetails(user: User?) {
+    private fun setUserDetails(user: SceytUser?) {
         currentUser = user
         avatarUrl = user?.avatarURL
         user?.apply {

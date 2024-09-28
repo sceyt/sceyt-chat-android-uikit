@@ -9,8 +9,8 @@ import android.text.style.ClickableSpan
 import android.view.View
 import com.google.gson.Gson
 import com.sceyt.chat.models.message.BodyAttribute
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -32,7 +32,7 @@ object MentionUserHelper {
             context: Context,
             body: CharSequence,
             mentionAttributes: List<BodyAttribute>?,
-            mentionUsers: List<User>?,
+            mentionUsers: List<SceytUser>?,
             mentionTextStyle: TextStyle,
             mentionClickListener: ((String) -> Unit)? = null,
     ): CharSequence {
@@ -62,13 +62,13 @@ object MentionUserHelper {
         }
     }
 
-    fun getMentionsIndexed(attributes: List<BodyAttribute>?, mentionUsers: List<User>?): List<Mention> {
+    fun getMentionsIndexed(attributes: List<BodyAttribute>?, mentionUsers: List<SceytUser>?): List<Mention> {
         val list = arrayListOf<Mention>()
         val data = attributes?.filter { it.type == MENTION } ?: return list
 
         data.forEach { entry ->
             val userId = entry.metadata ?: return@forEach
-            val user = mentionUsers?.find { it.id == entry.metadata } ?: User(userId)
+            val user = mentionUsers?.find { it.id == entry.metadata } ?: SceytUser(userId)
             val name = userNameFormatter?.format(user) ?: user.getPresentableName()
             list.add(Mention(userId, name, entry.offset, entry.length))
         }
@@ -76,7 +76,7 @@ object MentionUserHelper {
     }
 
     private fun setNewBodyWithName(
-            mentionUsers: List<User>?,
+            mentionUsers: List<SceytUser>?,
             newBody: SpannableStringBuilder,
             item: BodyAttribute
     ): String {

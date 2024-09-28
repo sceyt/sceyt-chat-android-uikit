@@ -1,9 +1,9 @@
 package com.sceyt.chatuikit.formatters
 
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentSizeFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAvatarInitialsFormatter
@@ -27,27 +27,27 @@ class SceytChatUIKitFormatters {
     var userNameFormatter: UserNameFormatter? = null
     val mentionUserNameFormatter: UserNameFormatter? = null
 
-    var userPresenceDateFormatter: Formatter<User> by lazyVar {
+    var userPresenceDateFormatter: Formatter<SceytUser> by lazyVar {
         DefaultUserPresenceDateFormatter()
     }
 
-    var userNameFormatterNew: Formatter<User> by lazyVar {
+    var userNameFormatterNew: Formatter<SceytUser> by lazyVar {
         DefaultUserNameFormatter
     }
 
-    var userShortNameFormatter: Formatter<User> by lazyVar {
+    var userShortNameFormatter: Formatter<SceytUser> by lazyVar {
         DefaultUserShortNameFormatter
     }
 
-    var mentionUserNameFormatterNew: Formatter<User> by lazyVar {
+    var mentionUserNameFormatterNew: Formatter<SceytUser> by lazyVar {
         DefaultMentionUserNameFormatter
     }
 
-    var typingUserNameFormatter: Formatter<User> by lazyVar {
+    var typingUserNameFormatter: Formatter<SceytUser> by lazyVar {
         DefaultUserShortNameFormatter
     }
 
-    var reactedUserNameFormatter: Formatter<User> by lazyVar {
+    var reactedUserNameFormatter: Formatter<SceytUser> by lazyVar {
         DefaultUserNameFormatter
     }
 

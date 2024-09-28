@@ -1,12 +1,12 @@
 package com.sceyt.chatuikit.services
 
 import com.sceyt.chat.models.user.Presence
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.isAppOnForeground
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
@@ -31,8 +31,8 @@ object SceytPresenceChecker : SceytKoinComponent {
 
     @Volatile
     private var presenceCheckTimer: Timer? = null
-    private val presenceCheckUsers = Collections.synchronizedMap(object : LinkedHashMap<String, User>(presenceCheckCapacity) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, User>): Boolean {
+    private val presenceCheckUsers = Collections.synchronizedMap(object : LinkedHashMap<String, SceytUser>(presenceCheckCapacity) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, SceytUser>): Boolean {
             return size > presenceCheckCapacity
         }
     })
@@ -59,21 +59,21 @@ object SceytPresenceChecker : SceytKoinComponent {
         }
     }
 
-    private fun updateUserPresence(user: User) {
+    private fun updateUserPresence(user: SceytUser) {
         val oldUser = presenceCheckUsers[user.id]
         if (oldUser != null) presenceCheckUsers[user.id] = user
     }
 
     fun addNewUserToPresenceCheck(userId: String?) {
         userId ?: return
-        presenceCheckUsers[userId] = User(userId)
+        presenceCheckUsers[userId] = SceytUser(userId)
     }
 
     fun removeFromPresenceCheck(userId: String) {
         presenceCheckUsers.remove(userId)
     }
 
-    fun getUser(id: String): User? {
+    fun getUser(id: String): SceytUser? {
         return presenceCheckUsers[id]
     }
 
@@ -87,10 +87,10 @@ object SceytPresenceChecker : SceytKoinComponent {
         }
     }
 
-    data class PresenceUser(val user: User) {
+    data class PresenceUser(val user: SceytUser) {
 
-        private fun arePresencesEquals(one: Presence, two: Presence): Boolean {
-            return one.status == two.status && one.state == two.state && one.lastActiveAt == two.lastActiveAt
+        private fun arePresencesEquals(one: Presence?, two: Presence?): Boolean {
+            return one?.status == two?.status && one?.state == two?.state && one?.lastActiveAt == two?.lastActiveAt
         }
 
         override fun equals(other: Any?): Boolean {

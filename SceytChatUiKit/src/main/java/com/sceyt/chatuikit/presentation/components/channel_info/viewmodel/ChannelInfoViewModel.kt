@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.channel_info.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
@@ -13,7 +12,7 @@ import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
-import com.sceyt.chatuikit.data.toMember
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
@@ -50,8 +49,8 @@ class ChannelInfoViewModel : BaseViewModel(), SceytKoinComponent {
     private val _clearHistoryLiveData = MutableLiveData<Long>()
     val clearHistoryLiveData: LiveData<Long> = _clearHistoryLiveData
 
-    private val _blockUnblockUserLiveData = MutableLiveData<List<User>>()
-    val blockUnblockUserLiveData: LiveData<List<User>> = _blockUnblockUserLiveData
+    private val _blockUnblockUserLiveData = MutableLiveData<List<SceytUser>>()
+    val blockUnblockUserLiveData: LiveData<List<SceytUser>> = _blockUnblockUserLiveData
 
     private val _muteUnMuteLiveData = MutableLiveData<SceytChannel>()
     val muteUnMuteLiveData: LiveData<SceytChannel> = _muteUnMuteLiveData
@@ -227,9 +226,8 @@ class ChannelInfoViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun addMembersToChannel(channelId: Long, users: List<SceytMember>) {
+    fun addMembersToChannel(channelId: Long, members: List<SceytMember>) {
         viewModelScope.launch(Dispatchers.IO) {
-            val members = users.map { it.toMember() }
             val response = channelMemberInteractor.addMembersToChannel(channelId, members)
             if (response is SceytResponse.Success) {
                 val groupChannel = (response.data ?: return@launch)

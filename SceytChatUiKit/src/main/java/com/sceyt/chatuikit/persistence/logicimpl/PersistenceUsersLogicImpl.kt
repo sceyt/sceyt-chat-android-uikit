@@ -6,12 +6,13 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.dao.UserDao
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
-import com.sceyt.chatuikit.persistence.mappers.toUser
+import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
 import com.sceyt.chatuikit.persistence.repositories.ProfileRepository
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
@@ -32,7 +33,7 @@ internal class PersistenceUsersLogicImpl(
 ) : PersistenceUsersLogic, SceytKoinComponent {
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
 
-    override suspend fun loadUsers(query: String): SceytResponse<List<User>> {
+    override suspend fun loadUsers(query: String): SceytResponse<List<SceytUser>> {
         val response = userRepository.loadUsers(query)
 
         if (response is SceytResponse.Success) {
@@ -44,7 +45,7 @@ internal class PersistenceUsersLogicImpl(
         return response
     }
 
-    override suspend fun loadMoreUsers(): SceytResponse<List<User>> {
+    override suspend fun loadMoreUsers(): SceytResponse<List<SceytUser>> {
         val response = userRepository.loadMoreUsers()
 
         if (response is SceytResponse.Success) {
@@ -56,7 +57,7 @@ internal class PersistenceUsersLogicImpl(
         return response
     }
 
-    override suspend fun getSceytUsers(ids: List<String>): SceytResponse<List<User>> {
+    override suspend fun getSceytUsers(ids: List<String>): SceytResponse<List<SceytUser>> {
         val response = userRepository.getSceytUsersByIds(ids)
 
         if (response is SceytResponse.Success) {
@@ -68,27 +69,35 @@ internal class PersistenceUsersLogicImpl(
         return response
     }
 
-    override suspend fun getUserDbById(id: String): User? {
-        return userDao.getUserById(id)?.toUser()
+    override suspend fun getUserDbById(id: String): SceytUser? {
+        return userDao.getUserById(id)?.toSceytUser()
     }
 
-    override suspend fun getUsersDbByIds(id: List<String>): List<User> {
-        return userDao.getUsersById(id).map { it.toUser() }
+    override suspend fun getUsersDbByIds(id: List<String>): List<SceytUser> {
+        return userDao.getUsersById(id).map { it.toSceytUser() }
     }
 
-    override suspend fun getCurrentUser(): User? {
-        var clientUser = ClientWrapper.currentUser
-        if (clientUser?.id.isNullOrBlank())
-            clientUser = null
+    override suspend fun getCurrentUser(): SceytUser? {
+        val clientUser = ClientWrapper.currentUser
+        if (!clientUser?.id.isNullOrBlank())
+            return clientUser?.toSceytUser()
 
         return preference.getUserId()?.let {
-            userDao.getUserById(it)?.toUser()
-        } ?: clientUser
+            userDao.getUserById(it)?.toSceytUser()
+        }
     }
 
-    override fun getCurrentUserAsFlow(): Flow<User> {
+    override fun getCurrentUserNonSuspend(): SceytUser? {
+        val clientUser = ClientWrapper.currentUser
+        if (!clientUser?.id.isNullOrBlank())
+            return clientUser?.toSceytUser()
+
+        return preference.getUserId()?.let { SceytUser(it) }
+    }
+
+    override fun getCurrentUserAsFlow(): Flow<SceytUser> {
         (preference.getUserId() ?: ClientWrapper.currentUser?.id)?.let {
-            return userDao.getUserByIdAsFlow(it).filterNotNull().map { entity -> entity.toUser() }
+            return userDao.getUserByIdAsFlow(it).filterNotNull().map { entity -> entity.toSceytUser() }
         } ?: return emptyFlow()
     }
 
@@ -96,8 +105,12 @@ internal class PersistenceUsersLogicImpl(
         return profileRepo.uploadAvatar(avatarUrl)
     }
 
-    override suspend fun updateProfile(firstName: String?, lastName: String?,
-                                       avatarUri: String?, metaData: String?): SceytResponse<User> {
+    override suspend fun updateProfile(
+            firstName: String?,
+            lastName: String?,
+            avatarUri: String?,
+            metaData: String?
+    ): SceytResponse<SceytUser> {
         val request = User.setProfileRequest().apply {
             avatarUri?.let { uri ->
                 setAvatar(uri)
@@ -167,7 +180,7 @@ internal class PersistenceUsersLogicImpl(
         userDao.updateUsers(users.map { it.user.toUserEntity() })
     }
 
-    override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>> {
+    override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<SceytUser>> {
         val response = if (block) {
             userRepository.blockUser(userId)
         } else

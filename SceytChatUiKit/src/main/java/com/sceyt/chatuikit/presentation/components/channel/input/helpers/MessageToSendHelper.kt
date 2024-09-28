@@ -5,11 +5,11 @@ import android.text.SpannableStringBuilder
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.Message
-import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.extractLinks
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.isValidUrl
@@ -22,12 +22,13 @@ import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toMetadata
 import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
+import com.sceyt.chatuikit.persistence.mappers.toUser
+import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
+import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyler
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.action.InputActionsListener
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionAnnotation
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionUserHelper
-import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
-import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyler
 import java.io.File
 
 class MessageToSendHelper(private val context: Context,
@@ -73,7 +74,7 @@ class MessageToSendHelper(private val context: Context,
 
         if (withMentionedUsers) {
             val (bodyAttributes, mentionedUsers) = getMentionUsersAndAttributes(body)
-            message.setMentionedUsers(mentionedUsers.toTypedArray())
+            message.setMentionedUsers(mentionedUsers.map { it.toUser() }.toTypedArray())
             message.setBodyAttributes(bodyAttributes.toTypedArray())
         }
 
@@ -141,9 +142,9 @@ class MessageToSendHelper(private val context: Context,
         return true
     }
 
-    private fun getMentionUsersAndAttributes(body: CharSequence): Pair<List<BodyAttribute>, List<User>> {
+    private fun getMentionUsersAndAttributes(body: CharSequence): Pair<List<BodyAttribute>, List<SceytUser>> {
         val bodyAttributes = arrayListOf<BodyAttribute>()
-        var mentionUsers = listOf<User>()
+        var mentionUsers = listOf<SceytUser>()
         val mentions = MentionAnnotation.getMentionsFromAnnotations(body)
         val styling = BodyStyler.getStyling(body)
         val attributes = initBodyAttributes(styling, mentions)

@@ -1,12 +1,10 @@
 package com.sceyt.chatuikit.persistence
 
-import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
@@ -36,6 +34,7 @@ import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentPayLoadDb
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -193,7 +192,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.leaveChannel(channelId)
     }
 
-    override suspend fun findOrCreateDirectChannel(user: User): SceytResponse<SceytChannel> {
+    override suspend fun findOrCreateDirectChannel(user: SceytUser): SceytResponse<SceytChannel> {
         return channelLogic.findOrCreateDirectChannel(user)
     }
 
@@ -290,7 +289,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return membersLogic.changeChannelMemberRole(channelId, *member)
     }
 
-    override suspend fun addMembersToChannel(channelId: Long, members: List<Member>): SceytResponse<SceytChannel> {
+    override suspend fun addMembersToChannel(channelId: Long, members: List<SceytMember>): SceytResponse<SceytChannel> {
         return membersLogic.addMembersToChannel(channelId, members)
     }
 
@@ -479,31 +478,35 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         attachmentsLogic.upsertLinkPreviewData(linkDetails)
     }
 
-    override suspend fun loadUsers(query: String): SceytResponse<List<User>> {
+    override suspend fun loadUsers(query: String): SceytResponse<List<SceytUser>> {
         return usersLogic.loadUsers(query)
     }
 
-    override suspend fun loadMoreUsers(): SceytResponse<List<User>> {
+    override suspend fun loadMoreUsers(): SceytResponse<List<SceytUser>> {
         return usersLogic.loadMoreUsers()
     }
 
-    override suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<User>> {
+    override suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<SceytUser>> {
         return usersLogic.getSceytUsers(ids)
     }
 
-    override suspend fun getUserDbById(id: String): User? {
+    override suspend fun getUserDbById(id: String): SceytUser? {
         return usersLogic.getUserDbById(id)
     }
 
-    override suspend fun getUsersDbByIds(id: List<String>): List<User> {
+    override suspend fun getUsersDbByIds(id: List<String>): List<SceytUser> {
         return usersLogic.getUsersDbByIds(id)
     }
 
-    override suspend fun getCurrentUser(): User? {
+    override suspend fun getCurrentUser(): SceytUser? {
         return usersLogic.getCurrentUser()
     }
 
-    override fun getCurrentUserAsFlow(): Flow<User> {
+    override fun getCurrentUserNonSuspend(): SceytUser? {
+        return usersLogic.getCurrentUserNonSuspend()
+    }
+
+    override fun getCurrentUserAsFlow(): Flow<SceytUser> {
         return usersLogic.getCurrentUserAsFlow()
     }
 
@@ -513,7 +516,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     override suspend fun updateProfile(firsName: String?, lastName: String?,
                                        avatarUrl: String?,
-                                       metadata: String?): SceytResponse<User> {
+                                       metadata: String?): SceytResponse<SceytUser> {
         return usersLogic.updateProfile(firsName, lastName, avatarUrl, metadata)
     }
 
@@ -537,7 +540,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return usersLogic.unMuteNotifications()
     }
 
-    override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>> {
+    override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<SceytUser>> {
         return usersLogic.blockUnBlockUser(userId, block)
     }
 

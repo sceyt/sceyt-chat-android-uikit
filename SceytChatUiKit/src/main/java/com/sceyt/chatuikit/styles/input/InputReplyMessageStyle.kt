@@ -4,9 +4,9 @@ import android.content.res.TypedArray
 import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
@@ -22,7 +22,7 @@ data class InputReplyMessageStyle(
         var attachmentDurationTextStyle: TextStyle,
         var attachmentDurationFormatter: Formatter<Long>,
         var attachmentNameFormatter: Formatter<SceytAttachment>,
-        var senderNameFormatter: Formatter<User>,
+        var senderNameFormatter: Formatter<SceytUser>,
         var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
     internal class Builder(

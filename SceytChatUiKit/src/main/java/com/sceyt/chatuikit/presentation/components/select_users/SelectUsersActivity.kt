@@ -11,9 +11,9 @@ import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivityAddMembersBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
@@ -33,7 +33,7 @@ open class SelectUsersActivity : AppCompatActivity() {
     private val viewModel: UsersViewModel by viewModels()
     private lateinit var usersAdapter: SelectableUsersAdapter
     private lateinit var selectedUsersAdapter: SelectedUsersAdapter
-    private var selectedUsers = arrayListOf<User>()
+    private var selectedUsers = arrayListOf<SceytUser>()
     private val pageArgs by lazy { intent.parcelable<SelectUsersPageArgs>(PAGE_ARGS) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -200,5 +200,5 @@ data class SelectUsersPageArgs(
 
 @Parcelize
 data class SelectUsersResult(
-        val selectedUsers: List<User>
+        val selectedUsers: List<SceytUser>
 ) : Parcelable
