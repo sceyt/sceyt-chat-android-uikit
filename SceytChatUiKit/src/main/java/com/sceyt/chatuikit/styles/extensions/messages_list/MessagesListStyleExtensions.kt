@@ -5,6 +5,7 @@ import android.graphics.Typeface
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTint
+import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.spToPx
@@ -63,6 +64,9 @@ internal fun MessagesListViewStyle.Builder.buildDateSeparatorTextStyle(
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListDateSeparatorTextSize
     )
+    .setStyle(
+        index = R.styleable.MessagesListView_sceytUiMessagesListDateSeparatorTextStyle
+    )
     .setFont(
         index = R.styleable.MessagesListView_sceytUiMessagesListDateSeparatorTextFont
     )
@@ -74,6 +78,17 @@ internal fun MessagesListViewStyle.Builder.buildDateSeparatorStyle(
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListDateSeparatorBackgroundColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.overlayBackgroundColor)
+    )
+    .cornerRadius(
+        index = R.styleable.MessagesListView_sceytUiMessagesListDateSeparatorCornersRadius,
+        defValue = dpToPx(20f).toFloat()
+    )
+    .borderColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListDateSeparatorBorderColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor)
+    )
+    .borderWidth(
+        index = R.styleable.MessagesListView_sceytUiMessagesListDateSeparatorBorderWidth
     )
     .textStyle(buildDateSeparatorTextStyle(typedArray))
     .build()

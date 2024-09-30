@@ -8,8 +8,6 @@ import android.widget.FrameLayout
 import com.sceyt.chatuikit.databinding.SceytItemMessageDateSeparatorBinding
 import com.sceyt.chatuikit.extensions.changeAlphaWithValueAnim
 import com.sceyt.chatuikit.extensions.getLifecycleScope
-import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -79,9 +77,7 @@ class StickyDateHeaderView @JvmOverloads constructor(
         val style = listViewStyle.dateSeparatorStyle
         with(binding) {
             style.textStyle.apply(messageDay)
-
-            if (style.backgroundColor != UNSET_COLOR)
-                messageDay.setBackgroundTint(style.backgroundColor)
+            style.backgroundStyle.apply(messageDay)
         }
     }
 }

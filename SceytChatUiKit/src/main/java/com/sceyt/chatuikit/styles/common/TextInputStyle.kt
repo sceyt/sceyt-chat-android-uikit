@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.styles.common
 
 import android.content.res.TypedArray
-import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.widget.EditText
 import androidx.annotation.ColorInt
@@ -12,27 +11,15 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_CORNER_RADIUS
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
 
 data class TextInputStyle(
-        @ColorInt val backgroundColor: Int = UNSET_COLOR,
-        @ColorInt val borderColor: Int = UNSET_COLOR,
-        @Px val borderWidth: Int = UNSET_SIZE,
-        @Px val cornerRadius: Float = UNSET_CORNER_RADIUS,
+        val backgroundStyle: BackgroundStyle = BackgroundStyle(),
         val textStyle: TextStyle = TextStyle(),
         val hintStyle: HintStyle = HintStyle(),
 ) {
     fun apply(textInput: EditText, inputRoot: View?) {
         textStyle.apply(textInput)
         hintStyle.apply(textInput)
-        if (backgroundColor != UNSET_COLOR) {
-            val background = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = this@TextInputStyle.cornerRadius
-                setStroke(borderWidth, borderColor)
-                setColor(backgroundColor)
-            }
-            val view = inputRoot ?: textInput
-            view.backgroundTintList = null
-            view.background = background
-        }
+        val view = inputRoot ?: textInput
+        backgroundStyle.apply(view)
     }
 
     internal class Builder(private val typedArray: TypedArray) {
@@ -76,12 +63,16 @@ data class TextInputStyle(
         }
 
         fun build() = TextInputStyle(
+            backgroundStyle = buildBackgroundStyle(),
+            textStyle = textStyle,
+            hintStyle = hintStyle
+        )
+
+        private fun buildBackgroundStyle() = BackgroundStyle(
             backgroundColor = backgroundColor,
             borderColor = borderColor,
             borderWidth = borderWidth,
-            cornerRadius = cornerRadius,
-            textStyle = textStyle,
-            hintStyle = hintStyle
+            cornerRadius = cornerRadius
         )
     }
 }

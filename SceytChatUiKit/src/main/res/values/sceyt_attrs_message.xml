@@ -24,6 +24,10 @@
         <!-- Date separator style -->
         <attr name="sceytUiMessagesListDateSeparatorBackgroundColor" format="reference|color" />
         <attr name="sceytUiMessagesListDateSeparatorTextBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListDateSeparatorCornersRadius" format="dimension" />
+        <attr name="sceytUiMessagesListDateSeparatorBorderWidth" format="dimension" />
+        <attr name="sceytUiMessagesListDateSeparatorBorderColor" format="reference|color" />
+
         <attr name="sceytUiMessagesListDateSeparatorTextColor" format="reference|color" />
         <attr name="sceytUiMessagesListDateSeparatorTextSize" format="dimension" />
         <attr name="sceytUiMessagesListDateSeparatorTextFont" format="reference" />
