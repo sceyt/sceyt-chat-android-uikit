@@ -216,7 +216,7 @@ internal fun ChannelItemStyle.Builder.buildUnreadMentionTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.ChannelListView_sceytUiChannelListUnreadMentionTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
     )
     .setSize(
         index = R.styleable.ChannelListView_sceytUiChannelListUnreadMentionTextSize,

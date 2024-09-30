@@ -22,6 +22,7 @@ import com.sceyt.chatuikit.styles.input.MessageInputStyle
 import com.sceyt.chatuikit.styles.input.MessageSearchControlsStyle
 import com.sceyt.chatuikit.styles.input.VoiceRecordPlaybackViewStyle
 import com.sceyt.chatuikit.styles.input.VoiceRecorderViewStyle
+import com.sceyt.chatuikit.styles.messages_list.item.AudioWaveformStyle
 
 internal fun MessageInputStyle.Builder.buildInputTextStyle(
         array: TypedArray
@@ -366,6 +367,28 @@ internal fun MessageInputStyle.Builder.buildEditMessageBodyTextStyle(
     )
     .build()
 
+//Edit mention text style
+internal fun MessageInputStyle.Builder.buildEditMessageMentionTextStyle(
+        array: TypedArray
+) = TextStyle.Builder(array)
+    .setColor(
+        index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageMentionTextColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
+    )
+    .setSize(
+        index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageMentionTextSize
+    )
+    .setStyle(
+        index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageMentionTextStyle,
+        defValue = Typeface.BOLD
+    )
+    .setFont(
+        index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageMentionTextFont,
+        defValue = R.font.roboto_regular
+    )
+    .build()
+
+
 internal fun MessageInputStyle.Builder.buildEditMessageAttachmentDurationTextStyle(
         array: TypedArray
 ) = TextStyle.Builder(array)
@@ -401,6 +424,9 @@ internal fun MessageInputStyle.Builder.buildEditMessageStyle(
     )
     .bodyTextStyle(
         bodyTextStyle = buildEditMessageBodyTextStyle(array)
+    )
+    .mentionTextStyle(
+        mentionTextStyle = buildEditMessageMentionTextStyle(array)
     )
     .attachmentDurationTextStyle(
         attachmentDurationTextStyle = buildEditMessageAttachmentDurationTextStyle(array)
@@ -633,6 +659,20 @@ internal fun MessageInputStyle.Builder.buildVoiceRecordPlaybackViewDurationTextS
     )
     .build()
 
+/*AudioWaveForm style*/
+internal fun MessageInputStyle.Builder.buildVoiceRecordPlaybackViewAudioWaveFormStyle(
+        array: TypedArray
+) = AudioWaveformStyle.Builder(array)
+    .trackColor(
+        index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackTrackColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+    )
+    .progressColor(
+        index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordPlaybackProgressColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+    )
+    .build()
+
 internal fun MessageInputStyle.Builder.buildVoiceRecordPlaybackViewStyle(
         array: TypedArray,
 ) = VoiceRecordPlaybackViewStyle.Builder(array)
@@ -678,6 +718,9 @@ internal fun MessageInputStyle.Builder.buildVoiceRecordPlaybackViewStyle(
     )
     .durationTextStyle(
         durationTextStyle = buildVoiceRecordPlaybackViewDurationTextStyle(array)
+    )
+    .audioWaveformStyle(
+        audioWaveformStyle = buildVoiceRecordPlaybackViewAudioWaveFormStyle(array)
     )
     .build()
 

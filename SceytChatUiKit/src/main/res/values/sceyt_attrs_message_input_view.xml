@@ -178,6 +178,15 @@
         </attr>
         <attr name="sceytUiMessageInputEditMessageBodyTextFont" format="reference" />
 
+        <attr name="sceytUiMessageInputEditMessageMentionTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputEditMessageMentionTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputEditMessageMentionTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputEditMessageMentionTextFont" format="reference" />
+
         <attr name="sceytUiMessageInputEditMessageAttachmentDurationTextColor" format="reference|color" />
         <attr name="sceytUiMessageInputEditMessageAttachmentDurationTextSize" format="dimension" />
         <attr name="sceytUiMessageInputEditMessageAttachmentDurationTextStyle">

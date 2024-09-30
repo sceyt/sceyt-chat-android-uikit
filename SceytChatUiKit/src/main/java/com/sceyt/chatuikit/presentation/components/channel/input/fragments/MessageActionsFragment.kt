@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.channel.input.fragments
 
-import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.text.SpannableStringBuilder
@@ -26,7 +25,6 @@ import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.shared.utils.ViewUtil
-import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.input.InputEditMessageStyle
 import com.sceyt.chatuikit.styles.input.InputReplyMessageStyle
 import com.sceyt.chatuikit.styles.input.MessageInputStyle
@@ -73,8 +71,8 @@ open class MessageActionsFragment : Fragment() {
             loadAttachmentImage(message.attachments, style.attachmentIconProvider)
 
             tvMessageBody.text = message.getFormattedBody(root.context,
-                mentionTextStyle = TextStyle(style = Typeface.BOLD),
-                mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatterNew,
+                mentionTextStyle = style.mentionTextStyle,
+                mentionUserNameFormatter = style.mentionUserNameFormatter,
                 attachmentNameFormatter = style.attachmentNameFormatter)
         }
     }
