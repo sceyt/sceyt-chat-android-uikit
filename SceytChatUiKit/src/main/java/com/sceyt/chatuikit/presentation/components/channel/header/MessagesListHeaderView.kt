@@ -41,7 +41,6 @@ import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.showSoftInput
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isSelf
@@ -78,7 +77,6 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private var replyMessage: SceytMessage? = null
     private var isReplyInThread: Boolean = false
     private var isGroup = false
-    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
     private var enablePresence: Boolean = true
     private val typingUsersHelper by lazy { initTypingUsersHelper() }
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
@@ -263,11 +261,16 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     private fun initTypingUsersHelper(): HeaderTypingUsersHelper {
-        return HeaderTypingUsersHelper(context, isGroup, typingTextUpdatedListener = {
-            binding.tvTyping.text = it
-        }, typingStateUpdated = {
-            setTypingState(it)
-        })
+        return HeaderTypingUsersHelper(context,
+            isGroup = isGroup,
+            typingUserNameFormatter = style.typingUsersFormatter,
+            typingTextUpdatedListener = {
+                binding.tvTyping.text = it
+
+            },
+            typingStateUpdated = {
+                setTypingState(it)
+            })
     }
 
     private fun setTypingState(typing: Boolean) {
@@ -367,11 +370,6 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     fun setTypingTextBuilder(builder: (SceytMember) -> String) {
         typingUsersHelper.setTypingTextBuilder(builder)
-    }
-
-    fun setUserNameFormatter(formatter: UserNameFormatter) {
-        userNameFormatter = formatter
-        typingUsersHelper.setUserNameFormatter(formatter)
     }
 
     fun invalidateUi() {

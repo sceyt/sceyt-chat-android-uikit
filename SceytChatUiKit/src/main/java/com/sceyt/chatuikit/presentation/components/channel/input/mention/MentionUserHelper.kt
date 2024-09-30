@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
+import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 object MentionUserHelper {
@@ -34,13 +35,14 @@ object MentionUserHelper {
             mentionAttributes: List<BodyAttribute>?,
             mentionUsers: List<SceytUser>?,
             mentionTextStyle: TextStyle,
+            mentionUserNameFormatter: Formatter<SceytUser>,
             mentionClickListener: ((String) -> Unit)? = null,
     ): CharSequence {
         return try {
             mentionAttributes ?: return body
             val newBody = SpannableStringBuilder(body)
             mentionAttributes.sortedByDescending { it.offset }.forEach {
-                val name = setNewBodyWithName(mentionUsers, newBody, it)
+                val name = setNewBodyWithName(context, mentionUsers, newBody, it, mentionUserNameFormatter)
                 mentionTextStyle.apply(context, newBody, it.offset, it.offset + name.length)
                 if (mentionClickListener != null) {
                     val clickableSpan = object : ClickableSpan() {
@@ -76,13 +78,15 @@ object MentionUserHelper {
     }
 
     private fun setNewBodyWithName(
+            context: Context,
             mentionUsers: List<SceytUser>?,
             newBody: SpannableStringBuilder,
-            item: BodyAttribute
-    ): String {
+            item: BodyAttribute,
+            mentionUserNameFormatter: Formatter<SceytUser>
+    ): CharSequence {
         val mentionUser = mentionUsers?.find { mentionUser -> mentionUser.id == item.metadata }
         var name = mentionUser?.let { user ->
-            userNameFormatter?.format(user) ?: user.getPresentableName()
+            mentionUserNameFormatter.format(context, user)
         } ?: item.metadata
         name = "@$name".notAutoCorrectable()
 

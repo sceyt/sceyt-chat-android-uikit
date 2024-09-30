@@ -2,11 +2,9 @@ package com.sceyt.chatuikit.formatters
 
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentSizeFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultAvatarInitialsFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageSenderNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
@@ -14,8 +12,9 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultChannelSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMediaDurationFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMentionUserNameFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultMessageBodyFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultMessageDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageDateSeparatorFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultMessageViewCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserPresenceDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserShortNameFormatter
@@ -71,16 +70,16 @@ class SceytChatUIKitFormatters {
         DefaultChannelLastMessageSenderNameFormatter
     }
 
-    var messageBodyFormatter: Formatter<SceytMessage> by lazyVar {
-        DefaultMessageBodyFormatter
+    var messageDateFormatter: Formatter<Date> by lazyVar {
+        DefaultMessageDateFormatter
     }
 
     var messageDateSeparatorFormatter: Formatter<Date> by lazyVar {
         DefaultMessageDateSeparatorFormatter()
     }
 
-    var avatarInitialsFormatter: Formatter<String> by lazyVar {
-        DefaultAvatarInitialsFormatter
+    var messageViewCountFormatter: Formatter<Long> by lazyVar {
+        DefaultMessageViewCountFormatter
     }
 
     var attachmentNameFormatter: Formatter<SceytAttachment> by lazyVar {

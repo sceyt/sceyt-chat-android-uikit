@@ -20,7 +20,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/fabNext"
+            android:id="@+id/icScrollToBottom"
             android:layout_width="42dp"
             android:layout_height="42dp"
             android:background="@drawable/sceyt_bg_circle_with_stroke"

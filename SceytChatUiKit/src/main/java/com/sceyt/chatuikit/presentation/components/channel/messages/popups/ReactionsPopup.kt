@@ -16,11 +16,11 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.databinding.SceytPopupAddReactionBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isRtl
 import com.sceyt.chatuikit.extensions.marginHorizontal
 import com.sceyt.chatuikit.extensions.screenWidthPx
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
+import com.sceyt.chatuikit.styles.messages_list.ReactionPickerStyle
 import java.lang.Integer.max
 import kotlin.math.min
 
@@ -28,12 +28,18 @@ open class ReactionsPopup(
         private var context: Context
 ) : PopupWindow(context) {
     private lateinit var binding: SceytPopupAddReactionBinding
-    private val defaultClickListener: PopupReactionsAdapter.OnItemClickListener by lazy { initClickListener() }
+    private val defaultClickListener: PopupReactionsAdapter.OnItemClickListener by lazy {
+        initClickListener()
+    }
     private var clickListener: PopupReactionsAdapter.OnItemClickListener? = null
 
-    open fun showPopup(anchorView: View, message: SceytMessage,
-                       reactions: List<String> = SceytChatUIKit.config.defaultReactions,
-                       clickListener: PopupReactionsAdapter.OnItemClickListener): ReactionsPopup {
+    protected open fun initAndShow(
+            anchorView: View,
+            message: SceytMessage,
+            reactions: List<String>,
+            style: ReactionPickerStyle,
+            clickListener: PopupReactionsAdapter.OnItemClickListener
+    ): ReactionsPopup {
         this.clickListener = clickListener
 
         val reversed = !message.incoming && !context.isRtl()
@@ -45,13 +51,13 @@ open class ReactionsPopup(
             binding = it
         }.root
 
-        binding.applyStyle()
+        binding.applyStyle(style)
 
         animationStyle = if (reversed) R.style.SceytReactionPopupAnimationReversed else R.style.SceytReactionPopupAnimationNormal
         setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         isOutsideTouchable = true
         isFocusable = false
-        setAdapter(reversed, message, reactions, defaultClickListener)
+        setAdapter(reversed, message, reactions, style, defaultClickListener)
 
         with(binding.cardView) {
             measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
@@ -68,19 +74,25 @@ open class ReactionsPopup(
         return this
     }
 
-    protected open fun setAdapter(reversed: Boolean, message: SceytMessage, reactions: List<String>,
-                                  clickListener: PopupReactionsAdapter.OnItemClickListener) {
+    protected open fun setAdapter(
+            reversed: Boolean,
+            message: SceytMessage,
+            reactions: List<String>,
+            style: ReactionPickerStyle,
+            clickListener: PopupReactionsAdapter.OnItemClickListener
+    ) {
         val reactionsItems = reactions.map {
             val reactionItem = message.messageReactions?.find { data -> data.reaction.key == it }
             val containsSelf = reactionItem?.reaction?.containsSelf ?: false
             ReactionItem.Reaction(SceytReactionTotal(it, containsSelf = containsSelf), message.tid, reactionItem?.isPending
                     ?: false)
         }.run {
-            if ((message.userReactions?.size ?: 0) < SceytChatUIKit.config.messageReactionPerUserLimit)
+            if ((message.userReactions?.size
+                            ?: 0) < SceytChatUIKit.config.messageReactionPerUserLimit)
                 plus(ReactionItem.Other(message))
             else this
         }
-        val adapter = PopupReactionsAdapter(reactionsItems, clickListener)
+        val adapter = PopupReactionsAdapter(reactionsItems, style, clickListener)
         binding.rvEmoji.adapter = adapter
         binding.rvEmoji.layoutAnimation = AnimationUtils.loadLayoutAnimation(context, R.anim.sceyt_layout_animation_linear_scale).apply {
             order = if (reversed) LayoutAnimationController.ORDER_REVERSE else LayoutAnimationController.ORDER_NORMAL
@@ -101,7 +113,21 @@ open class ReactionsPopup(
         }
     }
 
-    protected open fun SceytPopupAddReactionBinding.applyStyle() {
-        cardView.setCardBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
+    protected open fun SceytPopupAddReactionBinding.applyStyle(style: ReactionPickerStyle) {
+        cardView.setCardBackgroundColor(style.backgroundColor)
+    }
+
+    companion object {
+
+        fun showPopup(
+                anchorView: View,
+                message: SceytMessage,
+                reactions: List<String>,
+                style: ReactionPickerStyle,
+                clickListener: PopupReactionsAdapter.OnItemClickListener
+        ): ReactionsPopup {
+            return ReactionsPopup(anchorView.context)
+                .initAndShow(anchorView, message, reactions, style, clickListener)
+        }
     }
 }

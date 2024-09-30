@@ -14,6 +14,7 @@ import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem
+import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 
 abstract class BaseFileViewHolder<Item : AttachmentDataItem>(
         itemView: View,
@@ -66,7 +67,8 @@ abstract class BaseFileViewHolder<Item : AttachmentDataItem>(
     open fun updateState(data: TransferData, isOnBind: Boolean = false) {
         val isTransferring = data.isTransferring()
         if (!isOnBind && !isAttachedToWindow && isTransferring) return
-        loadingProgressView?.getProgressWithState(data.state, data.progressPercent)
+        val style = MediaLoaderStyle() //todo
+        loadingProgressView?.getProgressWithState(data.state, style, data.progressPercent)
     }
 
     open fun needThumbFor(): ThumbFor? = null
@@ -78,8 +80,9 @@ abstract class BaseFileViewHolder<Item : AttachmentDataItem>(
     override fun onViewAttachedToWindow() {
         super.onViewAttachedToWindow()
         isAttachedToWindow = true
+        val style = MediaLoaderStyle() //todo
         viewHolderHelper.transferData?.let {
-            loadingProgressView?.getProgressWithState(it.state, it.progressPercent)
+            loadingProgressView?.getProgressWithState(it.state, style, it.progressPercent)
         }
     }
 

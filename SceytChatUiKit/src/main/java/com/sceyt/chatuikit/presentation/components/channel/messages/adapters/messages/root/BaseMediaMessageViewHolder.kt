@@ -30,12 +30,12 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 abstract class BaseMediaMessageViewHolder(
-        val view: View,
-        style: MessageItemStyle,
+        view: View,
+        private val style: MessageItemStyle,
         messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)? = null,
         userNameFormatter: UserNameFormatter?,
@@ -151,14 +151,14 @@ abstract class BaseMediaMessageViewHolder(
     open fun updateState(data: TransferData, isOnBind: Boolean = false) {
         val isTransferring = data.isTransferring()
         if (!isOnBind && !isAttachedToWindow && isTransferring) return
-        loadingProgressView.getProgressWithState(data.state, data.progressPercent)
+        loadingProgressView.getProgressWithState(data.state, style.mediaLoaderStyle, data.progressPercent)
     }
 
     override fun onViewAttachedToWindow() {
         super.onViewAttachedToWindow()
         isAttachedToWindow = true
         viewHolderHelper.transferData?.let {
-            loadingProgressView.getProgressWithState(it.state, it.progressPercent)
+            loadingProgressView.getProgressWithState(it.state, style.mediaLoaderStyle, it.progressPercent)
         }
     }
 

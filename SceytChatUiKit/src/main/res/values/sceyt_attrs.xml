@@ -25,9 +25,28 @@
         <attr name="sceytUiDecoratedTextIconsTint" format="reference|color" />
         <attr name="sceytUiDecoratedTextLeadingIconPadding" format="dimension" />
         <attr name="sceytUiDecoratedTextTrailingIconPadding" format="dimension" />
-        <attr name="sceytUiDecoratedTextDateTextSize" format="dimension" />
-        <attr name="sceytUiDecoratedTextDateTextColor" format="reference|color" />
-        <attr name="sceytUiDecoratedTextDateText" format="string" />
+        <!--Text style-->
+        <attr name="sceytUiDecoratedTextTitle" format="string" />
+        <attr name="sceytUiDecoratedTextSize" format="dimension" />
+        <attr name="sceytUiDecoratedTextColor" format="reference|color" />
+        <attr name="sceytUiDecoratedTextFont" format="reference" />
+        <attr name="sceytUiDecoratedTextStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="bold" value="1" />
+            <enum name="italic" value="2" />
+        </attr>
+
+        <!--Leading text style-->
+        <attr name="sceytUiDecoratedTextLeadingText" format="string" />
+        <attr name="sceytUiDecoratedTextLeadingTextSize" format="dimension" />
+        <attr name="sceytUiDecoratedTextLeadingTextColor" format="reference|color" />
+        <attr name="sceytUiDecoratedTextLeadingTextFont" format="reference" />
+        <attr name="sceytUiDecoratedTextLeadingTextStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="bold" value="1" />
+            <enum name="italic" value="2" />
+        </attr>
+
         <attr name="sceytUiDecoratedTextIgnoreRtl" format="boolean" />
         <attr name="sceytUiDecoratedTextBackgroundColor" format="color|reference" />
         <attr name="sceytUiDecoratedTextBackgroundCornerRadius" format="dimension" />

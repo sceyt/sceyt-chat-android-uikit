@@ -1,14 +1,13 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
-import android.content.res.ColorStateList
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemOutVideoMessageBinding
+import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setDrawableStart
-import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -26,12 +25,11 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
-import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class OutVideoMsgViewHolder(
         private val binding: SceytItemOutVideoMessageBinding,
@@ -212,9 +210,17 @@ class OutVideoMsgViewHolder(
     override val selectMessageView get() = binding.selectView
 
     private fun SceytItemOutVideoMessageBinding.setMessageItemStyle() {
-        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outgoingBubbleColor)
-        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.colors.accentColor)
-        tvDuration.setDrawableStart(style.videoDurationIcon)
+        layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
+        style.forwardTitleTextStyle.apply(tvForwarded)
+        tvForwarded.setDrawableStart(style.forwardedIcon)
+        style.bodyTextStyle.apply(messageBody)
+        style.threadReplyCountTextStyle.apply(tvReplyCount)
+        style.videoDurationTextStyle.apply(tvDuration)
+        style.overlayMediaLoaderStyle.apply(loadProgress)
         messageBody.applyStyle(style)
+        playPauseItem.setImageDrawable(style.videoPlayIcon)
+        playPauseItem.setBackgroundTint(style.onOverlayColor)
+        tvDuration.setDrawableStart(style.videoIcon)
+        tvDuration.setBackgroundTint(style.onOverlayColor)
     }
 }

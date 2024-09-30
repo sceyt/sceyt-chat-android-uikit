@@ -4,13 +4,12 @@ import android.content.Context
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.asComponentActivity
-import com.sceyt.chatuikit.extensions.getPresentableFirstName
+import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -18,13 +17,13 @@ import kotlinx.coroutines.launch
 class HeaderTypingUsersHelper(
         private val context: Context,
         private val isGroup: Boolean,
-        private var typingTextUpdatedListener: (String) -> Unit,
+        private val typingUserNameFormatter: Formatter<SceytUser>,
+        private var typingTextUpdatedListener: (CharSequence) -> Unit,
         private val typingStateUpdated: (Boolean) -> Unit
 ) {
     private val typingCancelHelper by lazy { TypingCancelHelper() }
-    private var typingTextBuilder: ((SceytMember) -> String)? = null
+    private var typingTextBuilder: ((SceytMember) -> CharSequence)? = null
     private val _typingUsers by lazy { mutableSetOf<SceytMember>() }
-    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
     private val debounceHelper by lazy { DebounceHelper(200, context.asComponentActivity().lifecycleScope) }
     private var updateTypingJob: Job? = null
     var isTyping: Boolean = false
@@ -60,11 +59,10 @@ class HeaderTypingUsersHelper(
         }
     }
 
-    private fun initTypingTitle(member: SceytMember): String {
+    private fun initTypingTitle(member: SceytMember): CharSequence {
         return typingTextBuilder?.invoke(member) ?: if (isGroup)
             buildString {
-                append(userNameFormatter?.format(member.user)
-                        ?: member.getPresentableFirstName().take(10))
+                append(typingUserNameFormatter.format(context, member.user).take(10))
                 append(" ${context.getString(R.string.sceyt_typing)}")
             }
         else context.getString(R.string.sceyt_typing)
@@ -101,12 +99,8 @@ class HeaderTypingUsersHelper(
         setTyping(data)
     }
 
-    fun setTypingTextBuilder(builder: (SceytMember) -> String) {
+    fun setTypingTextBuilder(builder: (SceytMember) -> CharSequence) {
         typingTextBuilder = builder
-    }
-
-    fun setUserNameFormatter(formatter: UserNameFormatter) {
-        userNameFormatter = formatter
     }
 
     val typingUsers get() = _typingUsers.toList()

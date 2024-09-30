@@ -8,7 +8,6 @@ import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
@@ -19,12 +18,11 @@ import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.glideRequestListener
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setTextAndVisibility
-import com.sceyt.chatuikit.extensions.setTextColorRes
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 abstract class BaseLinkMsgViewHolder(
         view: View,
@@ -55,10 +53,12 @@ abstract class BaseLinkMsgViewHolder(
         }
     }
 
-    protected open fun setLinkInfo(data: LinkPreviewDetails?,
-                                   message: SceytMessage,
-                                   attachment: SceytAttachment,
-                                   viewStub: ViewStub) {
+    protected open fun setLinkInfo(
+            data: LinkPreviewDetails?,
+            message: SceytMessage,
+            attachment: SceytAttachment,
+            viewStub: ViewStub
+    ) {
         if (data == null || data.link != attachment.url) {
             viewStub.isVisible = false
             return
@@ -82,7 +82,7 @@ abstract class BaseLinkMsgViewHolder(
                 setImageSize(previewImage, data)
                 val thumb = message.files?.firstOrNull {
                     it.file.type == AttachmentTypeEnum.Link.value()
-                }?.blurredThumb?.toDrawable(context.resources)
+                }?.blurredThumb?.toDrawable(context.resources) ?: style.linkPreviewStyle.placeHolder
 
                 Glide.with(context.applicationContext)
                     .load(data.imageUrl)
@@ -130,11 +130,12 @@ abstract class BaseLinkMsgViewHolder(
     }
 
     protected open fun SceytMessageLinkPreviewContainerBinding.applyStyle() {
+        val linkStyle = style.linkPreviewStyle
         val color = if ((messageListItem as MessageListItem.MessageItem).message.incoming)
             style.incomingLinkPreviewBackgroundColor
         else style.outgoingLinkPreviewBackgroundColor
         root.setBackgroundTint(color)
-        tvLinkTitle.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-        tvLinkDesc.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
+        linkStyle.titleStyle.apply(tvLinkTitle)
+        linkStyle.descriptionStyle.apply(tvLinkDesc)
     }
 }

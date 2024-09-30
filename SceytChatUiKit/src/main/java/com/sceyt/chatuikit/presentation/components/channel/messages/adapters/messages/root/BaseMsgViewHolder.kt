@@ -4,9 +4,7 @@ import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.text.util.Linkify
 import android.view.View
@@ -18,8 +16,8 @@ import android.widget.TextView
 import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.toDrawable
+import androidx.core.text.toSpannable
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.marginStart
@@ -39,12 +37,9 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytRecyclerReplyContainerBinding
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.extractLinks
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.chatuikit.extensions.getStaticLayout
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
@@ -54,11 +49,9 @@ import com.sceyt.chatuikit.extensions.marginHorizontal
 import com.sceyt.chatuikit.extensions.screenPortraitWidthPx
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
-import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
-import com.sceyt.chatuikit.persistence.mappers.isDeleted
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyAttributeType
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionUserHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
@@ -71,22 +64,22 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.ToReplyLineView
+import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.presentation.extensions.setConversationMessageDateAndStatusIcon
 import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
-import com.sceyt.chatuikit.shared.utils.DateTimeUtil.getDateTimeString
 import com.sceyt.chatuikit.shared.utils.ViewUtil
-import com.sceyt.chatuikit.styles.MessageItemStyle
-import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
+import java.util.Date
 import kotlin.math.min
 
-abstract class BaseMsgViewHolder(private val view: View,
-                                 private val style: MessageItemStyle,
-                                 private val messageListeners: MessageClickListeners.ClickListeners? = null,
-                                 private val displayedListener: ((MessageListItem) -> Unit)? = null,
-                                 private val userNameFormatter: UserNameFormatter? = null)
-    : RecyclerView.ViewHolder(view) {
-
+abstract class BaseMsgViewHolder(
+        private val view: View,
+        private val itemStyle: MessageItemStyle,
+        private val messageListeners: MessageClickListeners.ClickListeners? = null,
+        private val displayedListener: ((MessageListItem) -> Unit)? = null,
+        private val userNameFormatter: UserNameFormatter? = null
+) : RecyclerView.ViewHolder(view) {
     protected val context: Context by lazy { view.context }
     protected val bubbleMaxWidth by lazy { calculateBubbleMaxWidth(context) }
     private var replyMessageContainerBinding: SceytRecyclerReplyContainerBinding? = null
@@ -103,6 +96,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         setMaxWidth()
         if (diff.selectionChanged || diff.statusChanged)
             selectableAnimHelper.doOnBind(selectMessageView, item)
+
         if (messageListItem.highligh)
             highlight()
     }
@@ -152,32 +146,45 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     protected open var reactionsAdapter: ReactionsAdapter? = null
 
-    protected open fun setMessageBody(messageBody: TextView, message: SceytMessage,
-                                      checkLinks: Boolean = true, isLinkViewHolder: Boolean = false) {
-        var text: CharSequence = message.body.trim()
-        if (!message.bodyAttributes.isNullOrEmpty()) {
-            text = MessageBodyStyleHelper.buildOnlyTextStyles(text, message.bodyAttributes)
-            if (!message.mentionedUsers.isNullOrEmpty())
-                text = MentionUserHelper.buildWithMentionedUsers(
-                    context = context,
-                    body = text,
-                    mentionAttributes = message.bodyAttributes.filter {
-                        it.type == BodyAttributeType.Mention.value()
-                    },
-                    mentionUsers = message.mentionedUsers,
-                    mentionTextStyle = TextStyle(
-                        color = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
-                    ),
-                    mentionClickListener = {
-                        messageListeners?.onMentionClick(messageBody, it)
-                    }
-                )
+    protected open fun setMessageBody(
+            messageBody: TextView,
+            message: SceytMessage,
+            checkLinks: Boolean = true,
+            isLinkViewHolder: Boolean = false
+    ) {
+        var body: CharSequence
+        if (itemStyle.messageBodyFormatter != null) {
+            body = itemStyle.messageBodyFormatter.format(context, message)
+        } else {
+            body = message.body.trim()
+            if (!message.bodyAttributes.isNullOrEmpty()) {
+                body = MessageBodyStyleHelper.buildOnlyTextStyles(body, message.bodyAttributes)
+                if (!message.mentionedUsers.isNullOrEmpty())
+                    body = MentionUserHelper.buildWithMentionedUsers(
+                        context = context,
+                        body = body,
+                        mentionAttributes = message.bodyAttributes.filter {
+                            it.type == BodyAttributeType.Mention.value()
+                        },
+                        mentionUsers = message.mentionedUsers,
+                        mentionTextStyle = itemStyle.mentionTextStyle,
+                        mentionClickListener = {
+                            messageListeners?.onMentionClick(messageBody, it)
+                        },
+                        mentionUserNameFormatter = itemStyle.mentionUserNameFormatter
+                    )
+            }
         }
-        setTextAutoLinkMasks(messageBody, text.toString(), checkLinks, isLinkViewHolder)
-        messageBody.setText(text, TextView.BufferType.SPANNABLE)
+        setTextAutoLinkMasks(messageBody, body, checkLinks, isLinkViewHolder)
+        messageBody.setText(body, TextView.BufferType.SPANNABLE)
     }
 
-    protected open fun setTextAutoLinkMasks(messageBody: TextView, bodyText: String, checkLinks: Boolean, isLinkViewHolder: Boolean) {
+    protected open fun setTextAutoLinkMasks(
+            messageBody: TextView,
+            bodyText: CharSequence,
+            checkLinks: Boolean,
+            isLinkViewHolder: Boolean
+    ) {
         if (isLinkViewHolder || (checkLinks && bodyText.extractLinks().isNotEmpty())) {
             messageBody.autoLinkMask = Linkify.WEB_URLS
             return
@@ -190,7 +197,11 @@ abstract class BaseMsgViewHolder(private val view: View,
     }
 
     @SuppressLint("SetTextI18n")
-    protected open fun setReplyCount(tvReplyCount: TextView, toReplyLine: ToReplyLineView, item: MessageListItem.MessageItem) {
+    protected open fun setReplyCount(
+            tvReplyCount: TextView,
+            toReplyLine: ToReplyLineView,
+            item: MessageListItem.MessageItem
+    ) {
         val replyCount = item.message.replyCount
         if (replyCount > 0) {
             tvReplyCount.text = "$replyCount ${itemView.context.getString(R.string.sceyt_replies)}"
@@ -206,8 +217,8 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     protected open fun setMessageStatusAndDateText(message: SceytMessage, messageDate: DecoratedTextView) {
         val isEdited = message.state == MessageState.Edited
-        val dateText = getDateTimeString(message.createdAt)
-        message.setConversationMessageDateAndStatusIcon(messageDate, style, dateText, isEdited)
+        val dateText = itemStyle.messageDateFormatter.format(context, Date(message.createdAt))
+        message.setConversationMessageDateAndStatusIcon(messageDate, itemStyle, dateText, isEdited)
     }
 
     // Invoke this method after invoking setOrUpdateReactions, to calculate the final width of the layout bubble
@@ -221,27 +232,36 @@ abstract class BaseMsgViewHolder(private val view: View,
             SceytRecyclerReplyContainerBinding.bind(viewStub.inflate()).also {
                 replyMessageContainerBinding = it
                 it.viewReply.setBackgroundTint(if (message.incoming)
-                    style.incomingReplyBackgroundColor else style.outgoingReplyBackgroundColor)
-                it.tvName.setTextColor(style.senderNameTextColor)
-                it.view.backgroundTintList = ColorStateList.valueOf(style.repliedMessageBorderColor)
+                    itemStyle.incomingReplyBackgroundColor else itemStyle.outgoingReplyBackgroundColor)
+                it.applyStyle()
             }
         with(replyMessageContainerBinding ?: return) {
-            tvName.text = getSenderName(parent.user)
+            val replyStyle = itemStyle.replyMessageStyle
+            tvName.text = parent.user?.let {
+                replyStyle.senderNameFormatter.format(context, it)
+            } ?: ""
             if (parent.state == MessageState.Deleted) {
-                tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.ITALIC)
-                tvMessageBody.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
+                val deletedText = context.getString(R.string.sceyt_message_was_deleted).toSpannable()
+                replyStyle.deletedMessageTextStyle.apply(context, deletedText)
+                tvMessageBody.setText(deletedText, TextView.BufferType.SPANNABLE)
             } else {
-                tvMessageBody.setTypeface(tvMessageBody.typeface, Typeface.NORMAL)
-                tvMessageBody.setTextColor(style.bodyTextColor)
+                tvMessageBody.text = itemStyle.messageBodyFormatter?.format(context, parent)
+                        ?: run {
+                            parent.getFormattedBody(
+                                context,
+                                mentionTextStyle = replyStyle.mentionTextStyle,
+                                mentionUserNameFormatter = replyStyle.mentionUserNameFormatter,
+                                attachmentNameFormatter = replyStyle.attachmentNameFormatter
+                            )
+                        }
             }
-            tvMessageBody.text = style.replyMessageBodyFormatter.format(context, parent)
 
             if (parent.attachments.isNullOrEmpty()) {
                 imageAttachment.isVisible = false
                 icFile.isVisible = false
             } else {
                 val attachment = parent.attachments.getOrNull(0)
-                val icon = attachment?.let { style.replyMessageAttachmentIconProvider.provide(context, it) }
+                val icon = attachment?.let { itemStyle.replyMessageStyle.attachmentIconProvider.provide(context, it) }
                 when {
                     attachment?.type.isEqualsVideoOrImage() -> {
                         loadReplyMessageImageOrObserveToDownload(attachment, imageAttachment)
@@ -303,6 +323,12 @@ abstract class BaseMsgViewHolder(private val view: View,
         }
     }
 
+    protected fun SceytRecyclerReplyContainerBinding.applyStyle() {
+        itemStyle.replyMessageStyle.titleTextStyle.apply(tvName)
+        itemStyle.replyMessageStyle.subtitleTextStyle.apply(tvMessageBody)
+        view.setBackgroundColor(itemStyle.replyMessageStyle.borderColor)
+    }
+
     protected open fun loadReplyMessageImageOrObserveToDownload(
             attachment: SceytAttachment?,
             imageAttachment: ImageView
@@ -347,12 +373,11 @@ abstract class BaseMsgViewHolder(private val view: View,
 
         if (message.shouldShowAvatarAndName) {
             val user = message.user
-            val displayName = getSenderName(user)
-            tvName.setTextColorRes(
-                if (user?.isDeleted() == true)
-                    SceytChatUIKit.theme.colors.errorColor else SceytChatUIKit.theme.colors.accentColor
-            )
-            avatarView.setUserAvatar(user)
+            val displayName = user?.let { itemStyle.senderNameFormatter.format(context, it) } ?: ""
+            user?.let {
+                tvName.setTextColor(itemStyle.senderNameColorProvider.provide(context, it))
+            }
+            avatarView.setUserAvatar(user, itemStyle.userDefaultAvatarProvider)
             tvName.text = displayName
             tvName.isVisible = true
             avatarView.isVisible = true
@@ -387,7 +412,7 @@ abstract class BaseMsgViewHolder(private val view: View,
         if (rvReactionsViewStub.parent != null)
             rvReactionsViewStub.inflate().also {
                 recyclerViewReactions = it as RecyclerView
-                it.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.backgroundColorSections)
+                it.setBackgroundTint(itemStyle.reactionsContainerBackgroundColor)
             }
 
         with(recyclerViewReactions ?: return) {
@@ -519,11 +544,6 @@ abstract class BaseMsgViewHolder(private val view: View,
         return min(5, reactionsSize)
     }
 
-    protected open fun getSenderName(user: SceytUser?): String {
-        user ?: return ""
-        return userNameFormatter?.format(user) ?: user.getPresentableNameCheckDeleted(context)
-    }
-
     protected open fun calculateBubbleMaxWidth(context: Context): Int {
         return (context.screenPortraitWidthPx() * 0.75f).toInt()
     }
@@ -542,11 +562,10 @@ abstract class BaseMsgViewHolder(private val view: View,
 
     open fun highlight() {
         highlightAnim?.cancel()
-        val colorFrom = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+        val colorFrom = itemStyle.highlightedMessageColor
         view.setBackgroundColor(colorFrom)
-        val colorFro = ColorUtils.setAlphaComponent(colorFrom, (0.3 * 255).toInt())
         val colorTo: Int = Color.TRANSPARENT
-        highlightAnim = ValueAnimator.ofObject(ArgbEvaluator(), colorFro, colorTo)
+        highlightAnim = ValueAnimator.ofObject(ArgbEvaluator(), colorFrom, colorTo)
         highlightAnim?.duration = 2000
         highlightAnim?.addUpdateListener { animator -> view.setBackgroundColor(animator.animatedValue as Int) }
         highlightAnim?.start()

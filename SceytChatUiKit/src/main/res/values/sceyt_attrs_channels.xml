@@ -141,16 +141,28 @@
         </attr>
         <attr name="sceytUiChannelListMentionTextFont" format="reference" />
 
-        <!-- Channel mention muted text style -->
-        <attr name="sceytUiChannelListMentionMutedStateBackgroundColor" format="reference|color" />
-        <attr name="sceytUiChannelListMentionMutedStateTextColor" format="reference|color" />
-        <attr name="sceytUiChannelListMentionMutedStateTextSize" format="dimension" />
-        <attr name="sceytUiChannelListMentionMutedStateTextStyle">
+
+        <!-- Channel unread mention text style -->
+        <attr name="sceytUiChannelListUnreadMentionBackgroundColor" format="reference|color" />
+        <attr name="sceytUiChannelListUnreadMentionTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListUnreadMentionTextSize" format="dimension" />
+        <attr name="sceytUiChannelListUnreadMentionTextFont" format="reference" />
+        <attr name="sceytUiChannelListUnreadMentionTextStyle">
             <flag name="normal" value="0" />
             <flag name="bold" value="1" />
             <flag name="italic" value="2" />
         </attr>
-        <attr name="sceytUiChannelListMentionMutedTextFont" format="reference" />
+
+        <!-- Channel unread mention muted text style  -->
+        <attr name="sceytUiChannelListUnreadMentionMutedStateBackgroundColor" format="reference|color" />
+        <attr name="sceytUiChannelListUnreadMentionMutedStateTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListUnreadMentionMutedStateTextSize" format="dimension" />
+        <attr name="sceytUiChannelListUnreadMentionMutedTextFont" format="reference" />
+        <attr name="sceytUiChannelListUnreadMentionMutedStateTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
 
         <!-- Channel link text color -->
         <attr name="sceytUiChannelListLinkTextColor" format="reference|color" />

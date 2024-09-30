@@ -7,53 +7,58 @@ import androidx.annotation.ColorInt
 import androidx.core.content.res.use
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ButtonStyle
-import com.sceyt.chatuikit.styles.common.LinkPreviewStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
-import com.sceyt.chatuikit.styles.extensions.buildClearChatTextStyle
-import com.sceyt.chatuikit.styles.extensions.buildEditMessageStyle
-import com.sceyt.chatuikit.styles.extensions.buildInputCoverStyle
-import com.sceyt.chatuikit.styles.extensions.buildInputTextInputStyle
-import com.sceyt.chatuikit.styles.extensions.buildJoinButtonStyle
-import com.sceyt.chatuikit.styles.extensions.buildLinkPreviewStyle
-import com.sceyt.chatuikit.styles.extensions.buildMentionUsersListStyle
-import com.sceyt.chatuikit.styles.extensions.buildMessageSearchControlStyle
-import com.sceyt.chatuikit.styles.extensions.buildReplyMessageStyle
-import com.sceyt.chatuikit.styles.extensions.buildSelectedMediaStyle
-import com.sceyt.chatuikit.styles.extensions.buildVoiceRecordPlaybackViewStyle
-import com.sceyt.chatuikit.styles.extensions.buildVoiceRecorderViewStyle
-import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
+import com.sceyt.chatuikit.styles.extensions.message_input.buildClearChatTextStyle
+import com.sceyt.chatuikit.styles.extensions.message_input.buildEditMessageStyle
+import com.sceyt.chatuikit.styles.extensions.message_input.buildInputCoverStyle
+import com.sceyt.chatuikit.styles.extensions.message_input.buildInputTextInputStyle
+import com.sceyt.chatuikit.styles.extensions.message_input.buildJoinButtonStyle
+import com.sceyt.chatuikit.styles.extensions.message_input.buildLinkPreviewStyle
+import com.sceyt.chatuikit.styles.extensions.message_input.buildMentionUserTextStyle
+import com.sceyt.chatuikit.styles.extensions.message_input.buildMentionUsersListStyle
+import com.sceyt.chatuikit.styles.extensions.message_input.buildMessageSearchControlStyle
+import com.sceyt.chatuikit.styles.extensions.message_input.buildReplyMessageStyle
+import com.sceyt.chatuikit.styles.extensions.message_input.buildSelectedMediaStyle
+import com.sceyt.chatuikit.styles.extensions.message_input.buildVoiceRecordPlaybackViewStyle
+import com.sceyt.chatuikit.styles.extensions.message_input.buildVoiceRecorderViewStyle
+import com.sceyt.chatuikit.theme.Colors
 
 /**
  * Style for [MessageInputView] component.
- * @param backgroundColor Background color for the input root view, default is [Colors.backgroundColor]
- * @param dividerColor Color for the divider, default is [Colors.borderColor]
- * @param sendIconBackgroundColor Background color for the send icon, default is [Colors.accentColor]
- * @param attachmentIcon Icon for attachment button, default is [R.drawable.sceyt_ic_upload_file]
- * @param sendMessageIcon Icon for send message button, default is [R.drawable.sceyt_ic_send_message]
- * @param voiceRecordIcon Icon for voice record button, default is [R.drawable.sceyt_ic_voice_white]
- * @param sendVoiceMessageIcon Icon for send voice message button, default is [R.drawable.sceyt_ic_arrow_up]
- * @param closeIcon Icon for close button, default is [R.drawable.sceyt_ic_cancel]
- * @param enableVoiceRecord Enable voice recording, default is true
- * @param enableSendAttachment Enable send attachment, default is true
- * @param enableMention Enable mention, default is true
- * @param inputStyle Style for the input text, default is [buildInputTextInputStyle]
- * @param joinButtonStyle Style for the join button, default is [buildJoinButtonStyle]
- * @param clearChatTextStyle Style for the clear chat text, default is [buildClearChatTextStyle]
- * @param linkPreviewStyle Style for the link preview, default is [buildLinkPreviewStyle]
- * @param replyMessageStyle Style for the reply message, default is [buildReplyMessageStyle]
- * @param editMessageStyle Style for the edit message, default is [buildEditMessageStyle]
- * @param selectedMediaStyle Style for the selected media, default is [buildSelectedMediaStyle]
- * @param voiceRecorderViewStyle Style for the voice recorder view, default is [buildVoiceRecorderViewStyle]
- * @param voiceRecordPlaybackViewStyle Style for the voice record playback view, default is [buildVoiceRecordPlaybackViewStyle]
- * @param messageSearchControlsStyle Style for the message search controls, default is [buildMessageSearchControlStyle]
- * @param inputCoverStyle Style for the input cover, default is [buildInputCoverStyle]
- * @param mentionUsersListStyle Style for the mention users list, default is [buildMentionUsersListStyle]
+ * @property backgroundColor Background color for the input root view, default is [Colors.backgroundColor]
+ * @property dividerColor Color for the divider, default is [Colors.borderColor]
+ * @property sendIconBackgroundColor Background color for the send icon, default is [Colors.accentColor]
+ * @property attachmentIcon Icon for attachment button, default is [R.drawable.sceyt_ic_upload_file]
+ * @property sendMessageIcon Icon for send message button, default is [R.drawable.sceyt_ic_send_message]
+ * @property voiceRecordIcon Icon for voice record button, default is [R.drawable.sceyt_ic_voice_white]
+ * @property sendVoiceMessageIcon Icon for send voice message button, default is [R.drawable.sceyt_ic_arrow_up]
+ * @property closeIcon Icon for close button, default is [R.drawable.sceyt_ic_cancel]
+ * @property enableVoiceRecord Enable voice recording, default is true
+ * @property enableSendAttachment Enable send attachment, default is true
+ * @property enableMention Enable mention, default is true
+ * @property inputStyle Style for the input text, default is [buildInputTextInputStyle]
+ * @property joinButtonStyle Style for the join button, default is [buildJoinButtonStyle]
+ * @property clearChatTextStyle Style for the clear chat text, default is [buildClearChatTextStyle]
+ * @property linkPreviewStyle Style for the link preview, default is [buildLinkPreviewStyle]
+ * @property replyMessageStyle Style for the reply message, default is [buildReplyMessageStyle]
+ * @property editMessageStyle Style for the edit message, default is [buildEditMessageStyle]
+ * @property selectedMediaStyle Style for the selected media, default is [buildSelectedMediaStyle]
+ * @property voiceRecorderViewStyle Style for the voice recorder view, default is [buildVoiceRecorderViewStyle]
+ * @property voiceRecordPlaybackViewStyle Style for the voice record playback view, default is [buildVoiceRecordPlaybackViewStyle]
+ * @property messageSearchControlsStyle Style for the message search controls, default is [buildMessageSearchControlStyle]
+ * @property inputCoverStyle Style for the input cover, default is [buildInputCoverStyle]
+ * @property mentionUsersListStyle Style for the mention users list, default is [buildMentionUsersListStyle]
+ * @property mentionTextStyle Style for the mention user name while typing, default is [buildMentionUserTextStyle]
+ * @property mentionUserNameFormatter Formatter for the mention user name, default is [SceytChatUIKitFormatters.userNameFormatterNew]
  * */
 data class MessageInputStyle(
         @ColorInt var backgroundColor: Int,
@@ -70,7 +75,8 @@ data class MessageInputStyle(
         var inputStyle: TextInputStyle,
         var joinButtonStyle: ButtonStyle,
         var clearChatTextStyle: TextStyle,
-        var linkPreviewStyle: LinkPreviewStyle,
+        val mentionTextStyle: TextStyle,
+        var linkPreviewStyle: InputLinkPreviewStyle,
         var replyMessageStyle: InputReplyMessageStyle,
         var editMessageStyle: InputEditMessageStyle,
         var selectedMediaStyle: InputSelectedMediaStyle,
@@ -78,7 +84,8 @@ data class MessageInputStyle(
         var voiceRecordPlaybackViewStyle: VoiceRecordPlaybackViewStyle,
         var messageSearchControlsStyle: MessageSearchControlsStyle,
         var inputCoverStyle: InputCoverStyle,
-        var mentionUsersListStyle: MentionUsersListStyle
+        var mentionUsersListStyle: MentionUsersListStyle,
+        var mentionUserNameFormatter: Formatter<SceytUser>,
 ) {
 
     companion object {
@@ -154,7 +161,9 @@ data class MessageInputStyle(
                     voiceRecordPlaybackViewStyle = buildVoiceRecordPlaybackViewStyle(array),
                     messageSearchControlsStyle = buildMessageSearchControlStyle(array),
                     inputCoverStyle = buildInputCoverStyle(array),
-                    mentionUsersListStyle = buildMentionUsersListStyle(array)
+                    mentionUsersListStyle = buildMentionUsersListStyle(array),
+                    mentionTextStyle = buildMentionUserTextStyle(array),
+                    mentionUserNameFormatter = SceytChatUIKit.formatters.userNameFormatterNew,
                 ).let { styleCustomizer.apply(context, it) }
             }
         }

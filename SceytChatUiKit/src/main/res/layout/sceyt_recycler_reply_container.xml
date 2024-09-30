@@ -14,10 +14,10 @@
         android:id="@+id/view"
         android:layout_width="2.1dp"
         android:layout_height="0dp"
-        android:background="@color/sceyt_color_accent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:background="@color/sceyt_color_accent" />
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/imageAttachment"

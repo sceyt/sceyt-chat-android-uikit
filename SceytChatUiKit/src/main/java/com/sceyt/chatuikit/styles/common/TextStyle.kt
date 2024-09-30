@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.Typeface
 import android.os.Build
+import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
@@ -51,10 +52,11 @@ data class TextStyle(
 
     fun apply(
             context: Context,
-            spannable: SpannableStringBuilder,
+            spannable: Spannable,
             start: Int = 0,
             end: Int = spannable.length
     ) {
+        if (end - start <= 0) return
         if (color != UNSET_COLOR) {
             spannable.setSpan(ForegroundColorSpan(color), start, end, SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE)
         }

@@ -156,10 +156,10 @@
             android:paddingEnd="6dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="parent"
-            app:sceytUiDecoratedTextDateTextColor="@color/sceyt_color_text_secondary"
-            app:sceytUiDecoratedTextDateTextSize="@dimen/tinyTextSize"
+            app:sceytUiDecoratedTextColor="@color/sceyt_color_text_secondary"
+            app:sceytUiDecoratedTextSize="@dimen/tinyTextSize"
             app:sceytUiDecoratedTextTrailingIconSize="15.5dp"
-            tools:sceytUiDecoratedTextDateText="00:37" />
+            tools:sceytUiDecoratedTextTitle="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

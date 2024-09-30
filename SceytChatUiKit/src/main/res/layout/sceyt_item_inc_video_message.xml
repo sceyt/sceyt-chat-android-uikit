@@ -149,7 +149,8 @@
             android:id="@+id/playPauseItem"
             android:layout_width="@dimen/messageProgressSize"
             android:layout_height="@dimen/messageProgressSize"
-            android:background="@drawable/sceyt_bg_play_pause_button"
+            android:background="@drawable/sceyt_bg_circle"
+            android:backgroundTint="@color/sceyt_color_overlay_background_2"
             android:padding="10dp"
             app:layout_constraintBottom_toBottomOf="@+id/imageThumb"
             app:layout_constraintEnd_toEndOf="@+id/imageThumb"
@@ -220,11 +221,11 @@
             android:layout_marginBottom="7dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/imageThumb"
-            app:sceytUiDecoratedTextDateTextColor="@color/sceyt_color_text_secondary"
-            app:sceytUiDecoratedTextDateTextSize="@dimen/tinyTextSize"
+            app:sceytUiDecoratedTextColor="@color/sceyt_color_text_secondary"
+            app:sceytUiDecoratedTextSize="@dimen/tinyTextSize"
             app:sceytUiDecoratedTextHighlighted="true"
             app:sceytUiDecoratedTextTrailingIconSize="15.5dp"
-            tools:sceytUiDecoratedTextDateText="00:37" />
+            tools:sceytUiDecoratedTextTitle="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

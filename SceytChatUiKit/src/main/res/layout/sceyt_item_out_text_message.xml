@@ -107,11 +107,11 @@
             android:paddingEnd="5dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/layoutDetails"
-            app:sceytUiDecoratedTextDateTextColor="@color/sceyt_color_text_secondary"
-            app:sceytUiDecoratedTextDateTextSize="@dimen/tinyTextSize"
+            app:sceytUiDecoratedTextColor="@color/sceyt_color_text_secondary"
+            app:sceytUiDecoratedTextSize="@dimen/tinyTextSize"
             app:sceytUiDecoratedTextTrailingIconPadding="5dp"
             app:sceytUiDecoratedTextTrailingIconSize="15.5dp"
-            tools:sceytUiDecoratedTextDateText="00:37"
+            tools:sceytUiDecoratedTextTitle="00:37"
             tools:sceytUiDecoratedTextTrailingIcon="@drawable/sceyt_ic_status_delivered" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

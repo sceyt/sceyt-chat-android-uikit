@@ -22,17 +22,18 @@ import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
 import com.sceyt.chatuikit.styles.common.TextStyle
-import com.sceyt.chatuikit.styles.extensions.buildDateTextStyle
-import com.sceyt.chatuikit.styles.extensions.buildDeletedTextStyle
-import com.sceyt.chatuikit.styles.extensions.buildDraftPrefixTextStyle
-import com.sceyt.chatuikit.styles.extensions.buildLastMessageSenderNameStyle
-import com.sceyt.chatuikit.styles.extensions.buildLastMessageTextStyle
-import com.sceyt.chatuikit.styles.extensions.buildMentionMutedTextStyle
-import com.sceyt.chatuikit.styles.extensions.buildMentionTextStyle
-import com.sceyt.chatuikit.styles.extensions.buildSubjectTextStyle
-import com.sceyt.chatuikit.styles.extensions.buildTypingTextStyle
-import com.sceyt.chatuikit.styles.extensions.buildUnreadCountMutedTextStyle
-import com.sceyt.chatuikit.styles.extensions.buildUnreadCountTextStyle
+import com.sceyt.chatuikit.styles.extensions.channel.buildDateTextStyle
+import com.sceyt.chatuikit.styles.extensions.channel.buildDeletedTextStyle
+import com.sceyt.chatuikit.styles.extensions.channel.buildDraftPrefixTextStyle
+import com.sceyt.chatuikit.styles.extensions.channel.buildLastMessageSenderNameStyle
+import com.sceyt.chatuikit.styles.extensions.channel.buildLastMessageTextStyle
+import com.sceyt.chatuikit.styles.extensions.channel.buildUnreadMentionMutedTextStyle
+import com.sceyt.chatuikit.styles.extensions.channel.buildMentionTextStyle
+import com.sceyt.chatuikit.styles.extensions.channel.buildSubjectTextStyle
+import com.sceyt.chatuikit.styles.extensions.channel.buildTypingTextStyle
+import com.sceyt.chatuikit.styles.extensions.channel.buildUnreadCountMutedTextStyle
+import com.sceyt.chatuikit.styles.extensions.channel.buildUnreadCountTextStyle
+import com.sceyt.chatuikit.styles.extensions.channel.buildUnreadMentionTextStyle
 import com.sceyt.chatuikit.theme.Colors
 import java.util.Date
 
@@ -56,7 +57,7 @@ import java.util.Date
  * @property unreadCountTextStyle - Style for unread count, default is [buildUnreadCountTextStyle].
  * @property unreadCountMutedStateTextStyle - Style for unread count in muted channel, default is [buildUnreadCountMutedTextStyle].
  * @property mentionTextStyle - Style for mention message, default is [buildMentionTextStyle].
- * @property mentionMutedStateTextStyle - Style for mention message in muted channel, default is [buildMentionMutedTextStyle].
+ * @property unreadMentionMutedStateTextStyle - Style for mention message in muted channel, default is [buildUnreadMentionMutedTextStyle].
  * @property channelNameFormatter - Formatter for channel name, default is [SceytChatUIKitFormatters.channelNameFormatter].
  * @property channelDateFormatter - Date format for channel, default is [SceytChatUIKitFormatters.channelDateFormatter].
  * @property lastMessageSenderNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.channelLastMessageSenderNameFormatter].
@@ -87,7 +88,8 @@ data class ChannelItemStyle(
         var unreadCountTextStyle: TextStyle,
         var unreadCountMutedStateTextStyle: TextStyle,
         var mentionTextStyle: TextStyle,
-        var mentionMutedStateTextStyle: TextStyle,
+        var unreadMentionTextStyle: TextStyle,
+        var unreadMentionMutedStateTextStyle: TextStyle,
         var channelNameFormatter: Formatter<SceytChannel>,
         var channelDateFormatter: Formatter<Date>,
         var lastMessageSenderNameFormatter: Formatter<SceytChannel>,
@@ -162,7 +164,8 @@ data class ChannelItemStyle(
                     unreadCountTextStyle = buildUnreadCountTextStyle(array),
                     unreadCountMutedStateTextStyle = buildUnreadCountMutedTextStyle(array),
                     mentionTextStyle = buildMentionTextStyle(array),
-                    mentionMutedStateTextStyle = buildMentionMutedTextStyle(array),
+                    unreadMentionTextStyle = buildUnreadMentionTextStyle(array),
+                    unreadMentionMutedStateTextStyle = buildUnreadMentionMutedTextStyle(array),
                     channelNameFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                     channelDateFormatter = SceytChatUIKit.formatters.channelDateFormatter,
                     lastMessageSenderNameFormatter = SceytChatUIKit.formatters.channelLastMessageSenderNameFormatter,

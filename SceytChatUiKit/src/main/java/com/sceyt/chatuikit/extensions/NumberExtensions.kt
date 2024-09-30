@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.extensions
 import android.content.res.Resources
 import android.util.DisplayMetrics
 import android.util.Size
+import android.util.TypedValue
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
@@ -75,12 +76,16 @@ fun Long.convertMSIntoHourMinSeconds(): String {
 /**
  * Transforms DP value integer to pixels, based on the screen density.
  */
-internal fun Int.dpToPx(): Int = dpToPxPrecise().roundToInt()
+fun Int.dpToPx(): Int = dpToPxPrecise().roundToInt()
 
 /**
  * Uses the display metrics to transform the value of DP to pixels.
  */
-internal fun Int.dpToPxPrecise(): Float = (this * displayMetrics().density)
+fun Int.dpToPxPrecise(): Float = (this * displayMetrics().density)
+
+fun Float.spToPx(): Float {
+    return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, this, displayMetrics())
+}
 
 /**
  * Fetches the current system display metrics based on [Resources].

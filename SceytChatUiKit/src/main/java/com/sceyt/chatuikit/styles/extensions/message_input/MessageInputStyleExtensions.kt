@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.styles.extensions
+package com.sceyt.chatuikit.styles.extensions.message_input
 
 import android.content.res.TypedArray
 import android.graphics.Typeface
@@ -10,11 +10,11 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.HintStyle
-import com.sceyt.chatuikit.styles.common.LinkPreviewStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.input.InputCoverStyle
 import com.sceyt.chatuikit.styles.input.InputEditMessageStyle
+import com.sceyt.chatuikit.styles.input.InputLinkPreviewStyle
 import com.sceyt.chatuikit.styles.input.InputReplyMessageStyle
 import com.sceyt.chatuikit.styles.input.InputSelectedMediaStyle
 import com.sceyt.chatuikit.styles.input.MentionUsersListStyle
@@ -181,7 +181,7 @@ internal fun MessageInputStyle.Builder.buildLinkPreviewDescriptionTextStyle(
 
 internal fun MessageInputStyle.Builder.buildLinkPreviewStyle(
         array: TypedArray
-) = LinkPreviewStyle.Builder(array)
+) = InputLinkPreviewStyle.Builder(array)
     .backgroundColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputLinkPreviewBackgroundColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color)
@@ -786,5 +786,26 @@ internal fun MessageInputStyle.Builder.buildMentionUsersListStyle(
     )
     .titleTextStyle(
         titleTextStyle = buildMentionUsersListTextStyle(array)
+    )
+    .build()
+
+
+/*Mention user text style */
+internal fun MessageInputStyle.Builder.buildMentionUserTextStyle(
+        array: TypedArray
+) = TextStyle.Builder(array)
+    .setColor(
+        index = R.styleable.MessageInputView_sceytUiMessageInputMentionUserTextColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+    )
+    .setSize(
+        index = R.styleable.MessageInputView_sceytUiMessageInputMentionUserTextSize
+    )
+    .setStyle(
+        index = R.styleable.MessageInputView_sceytUiMessageInputMentionUserTextStyle
+    )
+    .setFont(
+        index = R.styleable.MessageInputView_sceytUiMessageInputMentionUserTextFont,
+        defValue = R.font.roboto_regular
     )
     .build()

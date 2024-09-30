@@ -110,12 +110,12 @@
         android:layout_marginEnd="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/channelTitle"
-        app:sceytUiDecoratedTextDateTextColor="@color/sceyt_color_text_secondary"
-        app:sceytUiDecoratedTextDateTextSize="13sp"
+        app:sceytUiDecoratedTextColor="@color/sceyt_color_text_secondary"
+        app:sceytUiDecoratedTextSize="13sp"
         app:sceytUiDecoratedTextIgnoreRtl="true"
         app:sceytUiDecoratedTextLeadingIconPadding="4dp"
         app:sceytUiDecoratedTextLeadingIconSize="16dp"
-        tools:sceytUiDecoratedTextDateText="12:28"
+        tools:sceytUiDecoratedTextTitle="12:28"
         tools:sceytUiDecoratedTextLeadingIcon="@drawable/sceyt_ic_status_delivered" />
 
     <androidx.appcompat.widget.AppCompatImageView

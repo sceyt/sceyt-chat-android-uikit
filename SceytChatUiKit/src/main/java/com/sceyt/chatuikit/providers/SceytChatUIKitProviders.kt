@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.providers.defaults.DefaultChannelDefaultAvatarProvide
 import com.sceyt.chatuikit.providers.defaults.DefaultChannelListAttachmentIconProvider
 import com.sceyt.chatuikit.providers.defaults.DefaultChannelURIValidationMessageProvider
 import com.sceyt.chatuikit.providers.defaults.DefaultPresenceStateColorProvider
+import com.sceyt.chatuikit.providers.defaults.DefaultSenderNameColorProvider
 import com.sceyt.chatuikit.providers.defaults.DefaultUserAvatarProvider
 import com.sceyt.chatuikit.providers.defaults.URIValidationType
 
@@ -28,12 +29,16 @@ class SceytChatUIKitProviders {
         DefaultChannelDefaultAvatarProvider
     }
 
+    var channelURIValidationMessageProvider: VisualProvider<URIValidationType, String> by lazyVar {
+        DefaultChannelURIValidationMessageProvider
+    }
+
     var userDefaultAvatarProvider: VisualProvider<SceytUser, AvatarView.DefaultAvatar> by lazyVar {
         DefaultUserAvatarProvider
     }
 
-    var channelURIValidationMessageProvider: VisualProvider<URIValidationType, String> by lazyVar {
-        DefaultChannelURIValidationMessageProvider
+    val senderNameColorProvider: VisualProvider<SceytUser, Int> by lazyVar {
+        DefaultSenderNameColorProvider
     }
 
     var presenceStateColorProvider: VisualProvider<PresenceState, Int> by lazyVar {
