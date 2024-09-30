@@ -2,11 +2,9 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.databinding.SceytItemMessageDateSeparatorBinding
-import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
-import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import java.util.Date
 
@@ -39,8 +37,6 @@ class DateSeparatorViewHolder(
 
     private fun SceytItemMessageDateSeparatorBinding.setMessageItemStyle() {
         style.textStyle.apply(messageDay)
-
-        if (style.backgroundColor != UNSET_COLOR)
-            messageDay.setBackgroundTint(style.backgroundColor)
+        style.backgroundStyle.apply(messageDay)
     }
 }
