@@ -281,6 +281,10 @@
         <attr name="sceytUiMessagesListMediaLoaderUploadIcon" format="reference" />
         <attr name="sceytUiMessagesListMediaLoaderDownloadIcon" format="reference" />
 
+        <!-- Audio waveform style -->
+        <attr name="sceytUiMessagesListAudioWaveformTrackColor" format="reference|color" />
+        <attr name="sceytUiMessagesListAudioWaveformProgressColor" format="reference|color" />
+
         <!--Overlay Media loader style-->
         <attr name="sceytUiMessagesListOverlayMediaLoaderTrackColor" format="reference|color" />
         <attr name="sceytUiMessagesListOverlayMediaLoaderProgressColor" format="reference|color" />

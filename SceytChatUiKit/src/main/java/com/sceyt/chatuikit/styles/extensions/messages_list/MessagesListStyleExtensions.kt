@@ -195,7 +195,7 @@ internal fun MessageItemStyle.Builder.buildMessageDateTextStyle(
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListMessageDateTextSize,
-        defValue = 13f.spToPx().toInt()
+        defValue = 12f.spToPx().toInt()
     )
     .setStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListMessageDateTextStyle
@@ -213,7 +213,8 @@ internal fun MessageItemStyle.Builder.buildMessageStateTextStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListMessageStateTextColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
     .setSize(
-        index = R.styleable.MessagesListView_sceytUiMessagesListMessageStateTextSize
+        index = R.styleable.MessagesListView_sceytUiMessagesListMessageStateTextSize,
+        defValue = 12f.spToPx().toInt()
     )
     .setStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListMessageStateTextStyle,
@@ -475,14 +476,13 @@ internal fun MessageItemStyle.Builder.buildReplyMessageMentionTextStyle(
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListReplyMessageMentionTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     )
     .setSize(
         index = R.styleable.MessagesListView_sceytUiMessagesListReplyMessageMentionTextSize
     )
     .setStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListReplyMessageMentionTextStyle,
-        defValue = Typeface.BOLD
     )
     .setFont(
         index = R.styleable.MessagesListView_sceytUiMessagesListReplyMessageMentionTextFont
@@ -582,6 +582,19 @@ internal fun MessageItemStyle.Builder.buildMediaLoaderStyle(
     )
     .build()
 
+/* Audio waveform style */
+internal fun MessageItemStyle.Builder.buildAudioWaveformStyle(
+        typedArray: TypedArray
+) = com.sceyt.chatuikit.styles.messages_list.item.AudioWaveformStyle.Builder(typedArray)
+    .trackColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListAudioWaveformTrackColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+    )
+    .progressColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListAudioWaveformProgressColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+    )
+    .build()
 
 /* Overlay Media Style*/
 internal fun MessageItemStyle.Builder.buildOverlayMediaLoaderStyle(

@@ -180,7 +180,7 @@ class IncImageMsgViewHolder(
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
     private fun SceytItemIncImageMessageBinding.setMessageItemStyle() {
-        layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
+        layoutDetails.setBackgroundTint(style.incomingBubbleColor)
         style.forwardTitleTextStyle.apply(tvForwarded)
         tvForwarded.setDrawableStart(style.forwardedIcon)
         style.bodyTextStyle.apply(messageBody)
