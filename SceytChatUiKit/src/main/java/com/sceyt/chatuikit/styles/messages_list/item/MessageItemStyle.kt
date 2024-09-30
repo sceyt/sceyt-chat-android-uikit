@@ -66,6 +66,7 @@ import java.util.Date
  * @property videoPlayIcon Icon for the video play, default is [R.drawable.sceyt_ic_play]
  * @property voicePlayIcon Icon for the voice play, default is [R.drawable.sceyt_ic_play]
  * @property voicePauseIcon Icon for the voice pause, default is [R.drawable.sceyt_ic_pause]
+ * @property viewCountIcon Icon for the view count, default is [R.drawable.sceyt_ic_display_count]
  * @property messageDeliveryStatusIcons Icons for the message delivery status.
  * @property editedStateText Title for the edited state, default is [R.string.sceyt_edited].
  * @property deletedStateText Title for the deleted state, default is [R.string.sceyt_message_was_deleted].
