@@ -54,7 +54,7 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
     }
 }
 
-fun SceytMessage?.setConversationMessageDateAndStatusIcon(
+fun SceytMessage?.setChatMessageDateAndStatusIcon(
         decoratedTextView: DecoratedTextView,
         itemStyle: MessageItemStyle,
         dateText: CharSequence,
@@ -82,6 +82,7 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(
     }
     icon?.let {
         decoratedTextView.setTextAndIcons(text = dateText,
+            textStyle = itemStyle.messageDateTextStyle,
             trailingIcon = it,
             enableLeadingText = edited,
             leadingText = itemStyle.editedStateTitle,
@@ -127,8 +128,6 @@ fun SceytAttachment?.getShowName(context: Context): String {
         else -> name
     }
 }
-
-fun SceytMessage.isTextMessage() = attachments.isNullOrEmpty()
 
 fun SceytAttachment?.checkLoadedFileIsCorrect(loadedFile: File): File? {
     if (this == null) return null

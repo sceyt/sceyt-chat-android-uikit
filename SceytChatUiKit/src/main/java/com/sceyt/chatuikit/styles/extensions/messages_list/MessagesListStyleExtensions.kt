@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.extensions.spToPx
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.messages_list.DateSeparatorStyle
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
@@ -193,7 +194,8 @@ internal fun MessageItemStyle.Builder.buildMessageDateTextStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListMessageDateTextColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
     .setSize(
-        index = R.styleable.MessagesListView_sceytUiMessagesListMessageDateTextSize
+        index = R.styleable.MessagesListView_sceytUiMessagesListMessageDateTextSize,
+        defValue = 13f.spToPx().toInt()
     )
     .setStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListMessageDateTextStyle

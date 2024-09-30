@@ -65,7 +65,7 @@ import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.ToReplyLineView
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
-import com.sceyt.chatuikit.presentation.extensions.setConversationMessageDateAndStatusIcon
+import com.sceyt.chatuikit.presentation.extensions.setChatMessageDateAndStatusIcon
 import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.chatuikit.shared.utils.ViewUtil
@@ -218,7 +218,7 @@ abstract class BaseMsgViewHolder(
     protected open fun setMessageStatusAndDateText(message: SceytMessage, messageDate: DecoratedTextView) {
         val isEdited = message.state == MessageState.Edited
         val dateText = itemStyle.messageDateFormatter.format(context, Date(message.createdAt))
-        message.setConversationMessageDateAndStatusIcon(messageDate, itemStyle, dateText, isEdited)
+        message.setChatMessageDateAndStatusIcon(messageDate, itemStyle, dateText, isEdited)
     }
 
     // Invoke this method after invoking setOrUpdateReactions, to calculate the final width of the layout bubble
