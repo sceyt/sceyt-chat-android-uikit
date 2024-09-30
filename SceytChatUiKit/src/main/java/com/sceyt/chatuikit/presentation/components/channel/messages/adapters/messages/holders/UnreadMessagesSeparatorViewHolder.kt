@@ -12,14 +12,16 @@ class UnreadMessagesSeparatorViewHolder(
     private val style = listViewStyle.unreadMessagesSeparatorStyle
 
     init {
-        binding.setMessageItemStyle()
+        binding.applyStyle()
     }
 
     override val enableReply = false
+    override val incoming = false
 
-    private fun SceytItemUnreadMessagesSeparatorBinding.setMessageItemStyle() {
+    private fun SceytItemUnreadMessagesSeparatorBinding.applyStyle() {
         with(tvUnreadMessagesSeparator) {
             style.textStyle.apply(this)
+            text = style.unreadText
 
             if (style.backgroundColor != UNSET_COLOR)
                 setBackgroundColor(style.backgroundColor)

@@ -14,6 +14,7 @@ import android.view.ViewStub
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CallSuper
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.graphics.drawable.toDrawable
@@ -49,6 +50,7 @@ import com.sceyt.chatuikit.extensions.marginHorizontal
 import com.sceyt.chatuikit.extensions.screenPortraitWidthPx
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
+import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
@@ -62,6 +64,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.rea
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.holders.ReactionViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
+import com.sceyt.chatuikit.presentation.custom_views.ClickableTextView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.ToReplyLineView
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
@@ -106,6 +109,7 @@ abstract class BaseMsgViewHolder(
         messageListItem = item
     }
 
+    protected abstract val incoming: Boolean
     protected val requireMessageItem get() = messageListItem as MessageListItem.MessageItem
     protected val requireMessage get() = (messageListItem as MessageListItem.MessageItem).message
 
@@ -241,7 +245,7 @@ abstract class BaseMsgViewHolder(
                 replyStyle.senderNameFormatter.format(context, it)
             } ?: ""
             if (parent.state == MessageState.Deleted) {
-                val deletedText = context.getString(R.string.sceyt_message_was_deleted).toSpannable()
+                val deletedText = itemStyle.deletedStateText.toSpannable()
                 replyStyle.deletedMessageTextStyle.apply(context, deletedText)
                 tvMessageBody.setText(deletedText, TextView.BufferType.SPANNABLE)
             } else {
@@ -573,4 +577,29 @@ abstract class BaseMsgViewHolder(
     }
 
     open val enableReply = true
+
+    protected open fun applyCommonStyle(
+            layoutDetails: View,
+            tvForwarded: AppCompatTextView,
+            messageBody: ClickableTextView,
+            tvThreadReplyCount: AppCompatTextView,
+            toReplyLine: ToReplyLineView,
+            tvSenderName: AppCompatTextView? = null,
+    ) {
+        layoutDetails.setBackgroundTint(if (incoming)
+            itemStyle.incomingBubbleColor else itemStyle.outgoingBubbleColor)
+
+        applyForwardedStyle(tvForwarded)
+        messageBody.applyStyle(itemStyle)
+        itemStyle.threadReplyCountTextStyle.apply(tvThreadReplyCount)
+        tvSenderName?.let {
+            itemStyle.senderNameTextStyle.apply(it)
+        }
+    }
+
+    protected open fun applyForwardedStyle(tvForwarded: AppCompatTextView) {
+        itemStyle.forwardTitleTextStyle.apply(tvForwarded)
+        tvForwarded.setDrawableStart(itemStyle.forwardedIcon)
+        tvForwarded.text = itemStyle.forwardedText
+    }
 }

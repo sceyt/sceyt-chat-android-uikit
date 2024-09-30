@@ -65,7 +65,7 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
             leadingIcon = null,
             trailingIcon = null,
             enableLeadingText = edited,
-            leadingText = itemStyle.editedStateTitle,
+            leadingText = itemStyle.editedStateText,
             ignoreHighlight = false)
         return
     }
@@ -85,7 +85,7 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
             textStyle = itemStyle.messageDateTextStyle,
             trailingIcon = it,
             enableLeadingText = edited,
-            leadingText = itemStyle.editedStateTitle,
+            leadingText = itemStyle.editedStateText,
             leadingTextStyle = itemStyle.messageStateTextStyle,
             ignoreHighlight = checkIgnoreHighlight(deliveryStatus)
         )

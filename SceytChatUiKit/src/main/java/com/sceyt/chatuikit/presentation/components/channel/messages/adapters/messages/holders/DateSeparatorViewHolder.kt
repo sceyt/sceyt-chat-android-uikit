@@ -35,6 +35,8 @@ class DateSeparatorViewHolder(
 
     override val enableReply = false
 
+    override val incoming: Boolean = false
+
     private fun SceytItemMessageDateSeparatorBinding.setMessageItemStyle() {
         style.textStyle.apply(messageDay)
 

@@ -5,9 +5,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.databinding.SceytItemOutFileMessageBinding
-import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
-import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
@@ -165,20 +163,23 @@ class OutFileMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
+    override val incoming: Boolean = false
+
     override fun setMaxWidth() {
         binding.layoutDetails.layoutParams.width = bubbleMaxWidth
     }
 
     private fun SceytItemOutFileMessageBinding.setMessageItemStyle() {
         icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
-        layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
-        style.forwardTitleTextStyle.apply(tvForwarded)
-        tvForwarded.setDrawableStart(style.forwardedIcon)
-        style.bodyTextStyle.apply(messageBody)
-        style.threadReplyCountTextStyle.apply(tvReplyCount)
         style.attachmentFileSizeTextStyle.apply(tvFileSize)
         style.attachmentFileNameTextStyle.apply(tvFileName)
         style.mediaLoaderStyle.apply(loadProgress)
-        messageBody.applyStyle(style)
+        applyCommonStyle(
+            layoutDetails = layoutDetails,
+            tvForwarded = tvForwarded,
+            messageBody = messageBody,
+            tvThreadReplyCount = tvReplyCount,
+            toReplyLine = toReplyLine
+        )
     }
 }

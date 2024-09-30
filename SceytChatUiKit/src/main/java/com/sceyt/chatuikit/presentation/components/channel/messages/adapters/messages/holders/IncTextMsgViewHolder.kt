@@ -1,22 +1,19 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
-import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemIncTextMessageBinding
-import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class IncTextMsgViewHolder(
         private val binding: SceytItemIncTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
-        private val style: MessageItemStyle,
+        style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
         userNameFormatter: UserNameFormatter?
@@ -84,12 +81,17 @@ class IncTextMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-    private fun SceytItemIncTextMessageBinding.setMessageItemStyle() {
-        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incomingBubbleColor)
-        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.colors.accentColor)
-        messageBody.applyStyle(style)
-        style.senderNameTextStyle.apply(tvUserName)
-    }
-
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
+
+    override val incoming: Boolean = true
+
+    private fun SceytItemIncTextMessageBinding.setMessageItemStyle() {
+        applyCommonStyle(
+            layoutDetails = layoutDetails, tvForwarded = tvForwarded,
+            messageBody = messageBody,
+            tvThreadReplyCount = tvReplyCount,
+            toReplyLine = toReplyLine,
+            tvSenderName = tvUserName
+        )
+    }
 }

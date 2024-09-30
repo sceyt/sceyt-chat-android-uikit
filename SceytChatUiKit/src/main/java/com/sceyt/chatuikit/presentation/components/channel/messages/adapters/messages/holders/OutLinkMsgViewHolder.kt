@@ -3,8 +3,6 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemOutLinkMessageBinding
-import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
@@ -16,7 +14,7 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 class OutLinkMsgViewHolder(
         private val binding: SceytItemOutLinkMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
-        private val style: MessageItemStyle,
+        style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         userNameFormatter: UserNameFormatter?,
         needMediaDataCallback: (NeedMediaInfoData) -> Unit,
@@ -82,12 +80,15 @@ class OutLinkMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
+    override val incoming: Boolean = false
+
     private fun SceytItemOutLinkMessageBinding.setMessageItemStyle() {
-        layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
-        style.forwardTitleTextStyle.apply(tvForwarded)
-        tvForwarded.setDrawableStart(style.forwardedIcon)
-        style.bodyTextStyle.apply(messageBody)
-        style.threadReplyCountTextStyle.apply(tvReplyCount)
-        messageBody.applyStyle(style)
+        applyCommonStyle(
+            layoutDetails = layoutDetails,
+            tvForwarded = tvForwarded,
+            messageBody = messageBody,
+            tvThreadReplyCount = tvReplyCount,
+            toReplyLine = toReplyLine
+        )
     }
 }

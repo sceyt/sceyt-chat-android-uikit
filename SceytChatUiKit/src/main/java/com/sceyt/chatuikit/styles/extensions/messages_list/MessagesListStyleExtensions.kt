@@ -102,6 +102,10 @@ internal fun MessagesListViewStyle.Builder.buildUnreadMessagesSeparatorStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListUnreadMessagesSeparatorBackgroundColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color)
     )
+    .unreadText(
+        index = R.styleable.MessagesListView_sceytUiMessagesListUnreadMessagesSeparatorUnreadText,
+        defValue = context.getString(R.string.sceyt_new_messages)
+    )
     .textStyle(buildUnreadMessagesSeparatorTextStyle(typedArray))
     .build()
 
@@ -293,7 +297,8 @@ internal fun MessageItemStyle.Builder.buildForwardTitleTextStyle(
         index = R.styleable.MessagesListView_sceytUiMessagesListForwardTitleTextStyle
     )
     .setFont(
-        index = R.styleable.MessagesListView_sceytUiMessagesListForwardTitleTextFont
+        index = R.styleable.MessagesListView_sceytUiMessagesListForwardTitleTextFont,
+        defValue = R.font.roboto_medium
     )
     .build()
 

@@ -4,8 +4,6 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemOutAttachmentsMessageBinding
-import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
@@ -90,6 +88,8 @@ class OutAttachmentsMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
+    override val incoming: Boolean = false
+
     private fun setFilesAdapter(message: SceytMessage) {
         val attachments = ArrayList(message.files ?: return)
 
@@ -117,12 +117,12 @@ class OutAttachmentsMsgViewHolder(
     }
 
     private fun SceytItemOutAttachmentsMessageBinding.setMessageItemStyle() {
-        layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
-        style.forwardTitleTextStyle.apply(tvForwarded)
-        tvForwarded.setDrawableStart(style.forwardedIcon)
-        style.bodyTextStyle.apply(messageBody)
-        style.threadReplyCountTextStyle.apply(tvReplyCount)
-        messageBody.applyStyle(style)
+        applyCommonStyle(
+            layoutDetails = layoutDetails, tvForwarded = tvForwarded,
+            messageBody = messageBody,
+            tvThreadReplyCount = tvReplyCount,
+            toReplyLine = toReplyLine
+        )
     }
 
     override fun setMaxWidth() {

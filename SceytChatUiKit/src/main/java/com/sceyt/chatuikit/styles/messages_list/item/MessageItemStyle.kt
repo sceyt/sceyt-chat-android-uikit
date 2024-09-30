@@ -67,7 +67,9 @@ import java.util.Date
  * @property voicePlayIcon Icon for the voice play, default is [R.drawable.sceyt_ic_play]
  * @property voicePauseIcon Icon for the voice pause, default is [R.drawable.sceyt_ic_pause]
  * @property messageDeliveryStatusIcons Icons for the message delivery status.
- * @property editedStateTitle Title for the edited state, default is [R.string.sceyt_edited].
+ * @property editedStateText Title for the edited state, default is [R.string.sceyt_edited].
+ * @property deletedStateText Title for the deleted state, default is [R.string.sceyt_message_was_deleted].
+ * @property forwardedText Title for the forwarded message, default is [R.string.sceyt_forwarded_message].
  * @property bodyTextStyle Style for the message body, default is [buildBodyTextStyle].
  * @property deletedMessageTextStyle Style for the deleted message, default is [buildDeletedMessageTextStyle].
  * @property senderNameTextStyle Style for the sender name, default is [buildSenderNameTextStyle].
@@ -116,8 +118,11 @@ data class MessageItemStyle(
         val videoPlayIcon: Drawable?,
         val voicePlayIcon: Drawable?,
         val voicePauseIcon: Drawable?,
+        val viewCountIcon: Drawable?,
         val messageDeliveryStatusIcons: MessageDeliveryStatusIcons,
-        val editedStateTitle: String,
+        val editedStateText: String,
+        val deletedStateText: String,
+        val forwardedText: String,
         val bodyTextStyle: TextStyle,
         val deletedMessageTextStyle: TextStyle,
         val senderNameTextStyle: TextStyle,
@@ -215,6 +220,11 @@ data class MessageItemStyle(
                             context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
                         )
 
+                val viewCountIcon = array.getDrawable(R.styleable.MessagesListView_sceytUiMessagesListViewCountIcon)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_display_count).applyTint(
+                            context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+                        )
+
                 val swipeToReplyIcon = array.getDrawable(R.styleable.MessagesListView_sceytUiMessagesListSwipeToReplyIcon)
                         ?: context.getCompatDrawable(R.drawable.sceyt_is_reply_swipe).applyTint(
                             context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
@@ -237,8 +247,14 @@ data class MessageItemStyle(
                     .setDisplayedIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusDisplayedIcon)
                     .build()
 
-                val editedStateTitle = array.getString(R.styleable.MessagesListView_sceytUiMessagesListEditedStateTitle)
+                val editedStateText = array.getString(R.styleable.MessagesListView_sceytUiMessagesListEditedStateText)
                         ?: context.getString(R.string.sceyt_edited)
+
+                val deletedStateText = array.getString(R.styleable.MessagesListView_sceytUiMessagesListDeletedStateText)
+                        ?: context.getString(R.string.sceyt_message_was_deleted)
+
+                val forwardedText = array.getString(R.styleable.MessagesListView_sceytUiMessagesListForwardedText)
+                        ?: context.getString(R.string.sceyt_forwarded_message)
 
                 return MessageItemStyle(
                     incomingBubbleColor = incBubbleColor,
@@ -258,8 +274,11 @@ data class MessageItemStyle(
                     videoPlayIcon = videoPlayIcon,
                     voicePlayIcon = voicePlayIcon,
                     voicePauseIcon = voicePauseIcon,
+                    viewCountIcon = viewCountIcon,
                     messageDeliveryStatusIcons = deliveryStatusIcons,
-                    editedStateTitle = editedStateTitle,
+                    editedStateText = editedStateText,
+                    deletedStateText = deletedStateText,
+                    forwardedText = forwardedText,
                     bodyTextStyle = buildBodyTextStyle(array),
                     deletedMessageTextStyle = buildDeletedMessageTextStyle(array),
                     senderNameTextStyle = buildSenderNameTextStyle(array),

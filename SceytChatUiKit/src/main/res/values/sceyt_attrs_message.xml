@@ -35,6 +35,7 @@
 
         <!-- Unread messages separator style -->
         <attr name="sceytUiMessagesListUnreadMessagesSeparatorBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListUnreadMessagesSeparatorUnreadText" format="string" localization="suggested" />
         <attr name="sceytUiMessagesListUnreadMessagesSeparatorTextColor" format="reference|color" />
         <attr name="sceytUiMessagesListUnreadMessagesSeparatorTextSize" format="dimension" />
         <attr name="sceytUiMessagesListUnreadMessagesSeparatorTextFont" format="reference" />
@@ -72,6 +73,7 @@
         <attr name="sceytUiMessagesListVideoPlayIcon" format="reference" />
         <attr name="sceytUiMessagesListVoicePlayIcon" format="reference" />
         <attr name="sceytUiMessagesListVoicePauseIcon" format="reference" />
+        <attr name="sceytUiMessagesListViewCountIcon" format="reference" />
         <!--Message body text style-->
         <attr name="sceytUiMessagesListBodyTextColor" format="reference|color" />
         <attr name="sceytUiMessagesListBodyTextSize" format="dimension" />
@@ -118,8 +120,10 @@
             <flag name="italic" value="2" />
         </attr>
 
-        <!--Edited state title-->
-        <attr name="sceytUiMessagesListEditedStateTitle" format="reference" />
+        <!--Texts -->
+        <attr name="sceytUiMessagesListEditedStateText" format="reference" />
+        <attr name="sceytUiMessagesListDeletedStateText" format="reference" />
+        <attr name="sceytUiMessagesListForwardedText" format="reference" />
 
         <!--Mention text style-->
         <attr name="sceytUiMessagesListMentionTextColor" format="reference|color" />

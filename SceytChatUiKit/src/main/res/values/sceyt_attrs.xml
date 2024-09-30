@@ -65,8 +65,8 @@
         <attr name="sceytUiReactionStrokeColor" format="color|reference" />
         <attr name="sceytUiReactionStrokeWidth" format="integer|dimension" />
         <attr name="sceytUiReactionStrokeCornerRadius" format="integer|dimension" />
-        <attr name="sceytUiReactionCountText" format="string|reference" />
-        <attr name="sceytUiReactionSmileText" format="string|reference" />
+        <attr name="sceytUiReactionCountText" format="string" />
+        <attr name="sceytUiReactionSmileText" format="string" />
         <attr name="sceytUiReactionBackgroundColor" format="color|reference" />
         <attr name="sceytUiReactionCountTextMinWidth" format="integer|dimension" />
     </declare-styleable>
@@ -99,7 +99,7 @@
     </declare-styleable>
 
     <declare-styleable name="CustomToolbar">
-        <attr name="sceytUiToolbarTitle" format="string" />
+        <attr name="sceytUiToolbarTitle" format="string" localization="suggested" />
         <attr name="sceytUiToolbarTitleTextColor" format="color|reference" />
         <attr name="sceytUiToolbarNavigationIcon" format="reference" />
         <attr name="sceytUiToolbarMenuIcon" format="reference" />

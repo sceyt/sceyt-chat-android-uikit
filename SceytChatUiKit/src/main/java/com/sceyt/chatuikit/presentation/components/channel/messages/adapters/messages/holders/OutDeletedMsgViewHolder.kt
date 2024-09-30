@@ -34,8 +34,11 @@ class OutDeletedMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
+    override val incoming: Boolean = false
+
     private fun SceytItemOutDeletedMessageBinding.setMessageItemStyle() {
         layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
         style.deletedMessageTextStyle.apply(messageBody)
+        messageBody.text = style.deletedStateText
     }
 }

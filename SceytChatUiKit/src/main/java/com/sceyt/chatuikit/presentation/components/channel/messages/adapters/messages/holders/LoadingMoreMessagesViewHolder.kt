@@ -18,4 +18,6 @@ class LoadingMoreMessagesViewHolder(binding: SceytItemLoadingMoreBinding,
     }
 
     override val enableReply = false
+
+    override val incoming = false
 }

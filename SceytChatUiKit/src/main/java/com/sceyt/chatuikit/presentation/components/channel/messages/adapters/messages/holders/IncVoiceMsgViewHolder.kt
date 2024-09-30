@@ -17,7 +17,6 @@ import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.setPlayButtonIcon
 import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.media.audio.AudioPlayer
@@ -296,6 +295,8 @@ class IncVoiceMsgViewHolder(
     override val selectMessageView: View
         get() = binding.selectView
 
+    override val incoming: Boolean = true
+
     override fun setMaxWidth() {
         binding.layoutDetails.layoutParams.width = bubbleMaxWidth
     }
@@ -305,14 +306,16 @@ class IncVoiceMsgViewHolder(
         playPauseButton.setBackgroundTint(accentColor)
         seekBar.waveProgressColor = style.voiceWaveformStyle.progressColor
         seekBar.waveBackgroundColor = style.voiceWaveformStyle.trackColor
-        layoutDetails.setBackgroundTint(style.incomingBubbleColor)
-        style.forwardTitleTextStyle.apply(tvForwarded)
-        tvForwarded.setDrawableStart(style.forwardedIcon)
-        style.bodyTextStyle.apply(messageBody)
-        style.threadReplyCountTextStyle.apply(tvReplyCount)
         style.voiceSpeedTextStyle.apply(playBackSpeed)
         style.voiceDurationTextStyle.apply(voiceDuration)
         style.mediaLoaderStyle.apply(loadProgress)
-        style.senderNameTextStyle.apply(tvUserName)
+        applyCommonStyle(
+            layoutDetails = layoutDetails,
+            tvForwarded = tvForwarded,
+            messageBody = messageBody,
+            tvThreadReplyCount = tvReplyCount,
+            toReplyLine = toReplyLine,
+            tvSenderName = tvUserName
+        )
     }
 }
