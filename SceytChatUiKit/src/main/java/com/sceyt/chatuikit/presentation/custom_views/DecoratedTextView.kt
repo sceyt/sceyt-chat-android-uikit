@@ -365,7 +365,7 @@ class DecoratedTextView @JvmOverloads constructor(
             leadingIcon: Drawable? = null,
             trailingIcon: Drawable? = null,
             enableLeadingText: Boolean = false,
-            textColor: Int = this.textStyle.color,
+            textStyle: TextStyle = this.textStyle,
             leadingText: String = this.leadingText,
             leadingTextStyle: TextStyle = this.leadingTextStyle,
             ignoreHighlight: Boolean = false
@@ -381,7 +381,7 @@ class DecoratedTextView @JvmOverloads constructor(
         this.trailingIcon = trailing
         this.text = text
         this.enableLeadingText = enableLeadingText
-        this.textStyle = textStyle.copy(color = textColor)
+        this.textStyle = textStyle
         this.leadingText = leadingText
         this.leadingTextStyle = leadingTextStyle
         init()
