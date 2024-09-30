@@ -61,12 +61,15 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
         edited: Boolean
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
-        decoratedTextView.setTextAndIcons(text = dateText,
-            leadingIcon = null,
+        decoratedTextView.setTextAndIcons(
+            text = dateText,
+            textStyle = itemStyle.messageDateTextStyle,
             trailingIcon = null,
             enableLeadingText = edited,
             leadingText = itemStyle.editedStateText,
-            ignoreHighlight = false)
+            leadingTextStyle = itemStyle.messageStateTextStyle,
+            ignoreHighlight = false,
+            overlayColor = itemStyle.onOverlayColor)
         return
     }
     val icons = itemStyle.messageDeliveryStatusIcons
@@ -81,13 +84,15 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
         }
     }
     icon?.let {
-        decoratedTextView.setTextAndIcons(text = dateText,
+        decoratedTextView.setTextAndIcons(
+            text = dateText,
             textStyle = itemStyle.messageDateTextStyle,
             trailingIcon = it,
             enableLeadingText = edited,
             leadingText = itemStyle.editedStateText,
             leadingTextStyle = itemStyle.messageStateTextStyle,
-            ignoreHighlight = checkIgnoreHighlight(deliveryStatus)
+            ignoreHighlight = checkIgnoreHighlight(deliveryStatus),
+            overlayColor = itemStyle.onOverlayColor,
         )
         decoratedTextView.isVisible = true
     }

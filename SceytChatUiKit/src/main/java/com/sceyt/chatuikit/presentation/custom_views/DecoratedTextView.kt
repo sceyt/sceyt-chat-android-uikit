@@ -48,6 +48,9 @@ class DecoratedTextView @JvmOverloads constructor(
     private var isHighlighted = false
     private var backgroundRectF: RectF = RectF()
 
+    @ColorInt
+    private var overlayColor: Int = context.getCompatColor(R.color.sceyt_color_overlay_background)
+
     private var leadingIconRect: Rect = Rect()
         get() = if (leadingIcon == null) Rect() else field
 
@@ -116,10 +119,10 @@ class DecoratedTextView @JvmOverloads constructor(
     }
 
     private fun init() {
+        setHighlightedState(isHighlighted)
+
         backgroundPaint.color = bgColor
         backgroundPaint.style = Paint.Style.FILL
-
-        setHighlightedState(isHighlighted)
 
         initStaticLayout()
 
@@ -284,7 +287,7 @@ class DecoratedTextView @JvmOverloads constructor(
     private fun setHighlightedState(highlighted: Boolean) {
         if (highlighted) {
             setPadding(7.dpToPx(), 2.dpToPx(), 5.dpToPx(), 2.dpToPx())
-            bgColor = context.getCompatColor(R.color.sceyt_color_overlay_background)
+            bgColor = overlayColor
         } else {
             background = null
         }
@@ -368,7 +371,8 @@ class DecoratedTextView @JvmOverloads constructor(
             textStyle: TextStyle = this.textStyle,
             leadingText: String = this.leadingText,
             leadingTextStyle: TextStyle = this.leadingTextStyle,
-            ignoreHighlight: Boolean = false
+            ignoreHighlight: Boolean = false,
+            @ColorInt overlayColor: Int = this.overlayColor
     ) {
         var leading = leadingIcon
         var trailing = trailingIcon
@@ -384,6 +388,7 @@ class DecoratedTextView @JvmOverloads constructor(
         this.textStyle = textStyle
         this.leadingText = leadingText
         this.leadingTextStyle = leadingTextStyle
+        this.overlayColor = overlayColor
         init()
         requestLayout()
         invalidate()
