@@ -23,6 +23,7 @@ data class InputReplyMessageStyle(
         var attachmentDurationFormatter: Formatter<Long>,
         var attachmentNameFormatter: Formatter<SceytAttachment>,
         var senderNameFormatter: Formatter<SceytUser>,
+        var mentionUserNameFormatter: Formatter<SceytUser>,
         var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
     internal class Builder(
@@ -76,6 +77,7 @@ data class InputReplyMessageStyle(
             attachmentDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
             attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
             senderNameFormatter = SceytChatUIKit.formatters.userNameFormatterNew,
+            mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatterNew,
             attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider
         )
     }

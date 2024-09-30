@@ -19,7 +19,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:background="@drawable/sceyt_bg_play_pause_button"
+        android:background="@drawable/sceyt_bg_circle"
+        android:backgroundTint="@color/sceyt_color_overlay_background_2"
         android:padding="10dp"
         app:srcCompat="@drawable/sceyt_ic_play" />
 

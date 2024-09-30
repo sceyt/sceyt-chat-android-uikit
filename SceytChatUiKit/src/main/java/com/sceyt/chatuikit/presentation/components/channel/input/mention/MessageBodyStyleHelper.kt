@@ -5,6 +5,7 @@ import android.text.SpannableStringBuilder
 import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyAttributeType
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyler
 import com.sceyt.chatuikit.presentation.components.channel.input.format.StyleType
@@ -23,14 +24,16 @@ object MessageBodyStyleHelper {
 
     fun SceytMessage.buildWithAttributes(
             context: Context,
-            mentionTextStyle: TextStyle
+            mentionTextStyle: TextStyle,
+            mentionUserNameFormatter: Formatter<SceytUser>
     ): CharSequence {
         return buildWithAttributes(
             context = context,
             body = body,
             mentionUsers = mentionedUsers,
             bodyAttributes = bodyAttributes,
-            mentionTextStyle = mentionTextStyle
+            mentionTextStyle = mentionTextStyle,
+            mentionUserNameFormatter = mentionUserNameFormatter
         )
     }
 
@@ -39,14 +42,16 @@ object MessageBodyStyleHelper {
             body: CharSequence,
             mentionUsers: List<SceytUser>?,
             bodyAttributes: List<BodyAttribute>?,
-            mentionTextStyle: TextStyle
+            mentionTextStyle: TextStyle,
+            mentionUserNameFormatter: Formatter<SceytUser>
     ): CharSequence {
         return appendAttributes(
             context = context,
             body = body,
             list = bodyAttributes,
             mentionUsers = mentionUsers,
-            mentionTextStyle = mentionTextStyle
+            mentionTextStyle = mentionTextStyle,
+            mentionUserNameFormatter = mentionUserNameFormatter
         )
     }
 
@@ -55,7 +60,8 @@ object MessageBodyStyleHelper {
             body: CharSequence,
             list: List<BodyAttribute>?,
             mentionUsers: List<SceytUser>?,
-            mentionTextStyle: TextStyle
+            mentionTextStyle: TextStyle,
+            mentionUserNameFormatter: Formatter<SceytUser>
     ): CharSequence {
         list ?: return body
         val group = list.groupBy { it.type == BodyAttributeType.Mention.value() }
@@ -67,7 +73,8 @@ object MessageBodyStyleHelper {
                 body = spannableString,
                 mentionAttributes = it,
                 mentionUsers = mentionUsers,
-                mentionTextStyle = mentionTextStyle)
+                mentionTextStyle = mentionTextStyle,
+                mentionUserNameFormatter = mentionUserNameFormatter)
         }
 
         return spannableString

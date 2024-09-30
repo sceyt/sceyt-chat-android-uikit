@@ -5,22 +5,26 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemPopupAddReactionBinding
 import com.sceyt.chatuikit.databinding.SceytItemPopupReactionBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
+import com.sceyt.chatuikit.presentation.root.BaseViewHolder
+import com.sceyt.chatuikit.styles.messages_list.ReactionPickerStyle
 
-class PopupReactionsAdapter(private var data: List<ReactionItem>,
-                            private var listener: OnItemClickListener) : RecyclerView.Adapter<BaseViewHolder<ReactionItem>>() {
-
+class PopupReactionsAdapter(
+        private val data: List<ReactionItem>,
+        private val style: ReactionPickerStyle,
+        private val listener: OnItemClickListener
+) : RecyclerView.Adapter<BaseViewHolder<ReactionItem>>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<ReactionItem> {
-        return if (viewType == ItemType.ADD.ordinal)
-            AddViewHolder(SceytItemPopupAddReactionBinding.inflate(LayoutInflater.from(parent.context), parent, false))
-        else
-            ViewHolder(SceytItemPopupReactionBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+        return if (viewType == ItemType.ADD.ordinal) {
+            val binding = SceytItemPopupAddReactionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            AddViewHolder(binding)
+        } else {
+            val binding = SceytItemPopupReactionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            ViewHolder(binding)
+        }
     }
 
     override fun getItemCount(): Int {
@@ -38,12 +42,14 @@ class PopupReactionsAdapter(private var data: List<ReactionItem>,
         }
     }
 
-    inner class ViewHolder(val binding: SceytItemPopupReactionBinding) : BaseViewHolder<ReactionItem>(binding.root) {
+    inner class ViewHolder(
+            val binding: SceytItemPopupReactionBinding
+    ) : BaseViewHolder<ReactionItem>(binding.root) {
         override fun bind(item: ReactionItem) {
             val reaction = (item as ReactionItem.Reaction).reaction
             binding.emojiView.setSmileText(reaction.key)
             if (item.reaction.containsSelf)
-                binding.emojiView.setReactionBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.surface2Color))
+                binding.emojiView.setReactionBackgroundColor(style.selectedBackgroundColor)
             else
                 binding.emojiView.setReactionBackgroundColor(Color.TRANSPARENT)
 
@@ -53,7 +59,9 @@ class PopupReactionsAdapter(private var data: List<ReactionItem>,
         }
     }
 
-    inner class AddViewHolder(val binding: SceytItemPopupAddReactionBinding) : BaseViewHolder<ReactionItem>(binding.root) {
+    inner class AddViewHolder(
+            val binding: SceytItemPopupAddReactionBinding
+    ) : BaseViewHolder<ReactionItem>(binding.root) {
         init {
             binding.applyStyle()
         }
@@ -65,8 +73,8 @@ class PopupReactionsAdapter(private var data: List<ReactionItem>,
         }
 
         private fun SceytItemPopupAddReactionBinding.applyStyle() {
-            addEmoji.setColorFilter(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-            addEmoji.backgroundTintList = ColorStateList.valueOf(context.getCompatColor(SceytChatUIKit.theme.colors.surface2Color))
+            addEmoji.setImageDrawable(style.moreIcon)
+            addEmoji.backgroundTintList = ColorStateList.valueOf(style.moreBackgroundColor)
         }
     }
 

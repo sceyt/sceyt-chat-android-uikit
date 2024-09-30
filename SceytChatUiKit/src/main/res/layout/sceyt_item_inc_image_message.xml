@@ -165,11 +165,11 @@
             android:layout_marginBottom="7dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/fileImage"
-            app:sceytUiDecoratedTextDateTextColor="@color/sceyt_color_text_secondary"
-            app:sceytUiDecoratedTextDateTextSize="@dimen/tinyTextSize"
+            app:sceytUiDecoratedTextColor="@color/sceyt_color_text_secondary"
+            app:sceytUiDecoratedTextSize="@dimen/tinyTextSize"
             app:sceytUiDecoratedTextHighlighted="true"
             app:sceytUiDecoratedTextTrailingIconSize="15.5dp"
-            tools:sceytUiDecoratedTextDateText="00:37" />
+            tools:sceytUiDecoratedTextTitle="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

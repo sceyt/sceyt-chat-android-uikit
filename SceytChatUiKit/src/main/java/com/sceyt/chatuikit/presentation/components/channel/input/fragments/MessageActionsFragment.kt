@@ -72,9 +72,10 @@ open class MessageActionsFragment : Fragment() {
 
             loadAttachmentImage(message.attachments, style.attachmentIconProvider)
 
-            tvMessageBody.text = message.getFormattedBody(root.context, TextStyle(
-                style = Typeface.BOLD,
-            ), style.attachmentNameFormatter)
+            tvMessageBody.text = message.getFormattedBody(root.context,
+                mentionTextStyle = TextStyle(style = Typeface.BOLD),
+                mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatterNew,
+                attachmentNameFormatter = style.attachmentNameFormatter)
         }
     }
 
@@ -109,7 +110,8 @@ open class MessageActionsFragment : Fragment() {
             tvMessageBody.text = message.getFormattedBody(
                 context = requireContext(),
                 mentionTextStyle = style.mentionTextStyle,
-                attachmentNameFormatter = style.attachmentNameFormatter
+                attachmentNameFormatter = style.attachmentNameFormatter,
+                mentionUserNameFormatter = style.mentionUserNameFormatter
             )
         }
     }

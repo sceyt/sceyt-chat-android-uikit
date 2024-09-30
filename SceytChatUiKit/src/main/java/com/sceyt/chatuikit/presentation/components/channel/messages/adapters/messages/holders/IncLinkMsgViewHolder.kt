@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseLinkMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class IncLinkMsgViewHolder(
         private val binding: SceytItemIncLinkMessageBinding,
@@ -93,8 +93,8 @@ class IncLinkMsgViewHolder(
 
     private fun SceytItemIncLinkMessageBinding.setMessageItemStyle() {
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incomingBubbleColor)
-        tvUserName.setTextColor(style.senderNameTextColor)
         tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.colors.accentColor)
         messageBody.applyStyle(style)
+        style.senderNameTextStyle.apply(tvUserName)
     }
 }

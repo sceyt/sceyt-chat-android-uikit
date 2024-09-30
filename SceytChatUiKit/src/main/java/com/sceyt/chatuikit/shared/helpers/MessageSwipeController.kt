@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.screenWidthPx
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
-import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -36,7 +36,7 @@ class MessageSwipeController(context: Context,
 
     override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
         mView = viewHolder.itemView
-        imageDrawable = style.swipeReplyIcon
+        imageDrawable = style.swipeToReplyIcon
         shareRound = GradientDrawable().apply {
             shape = GradientDrawable.OVAL
             setColor("#3D000000".toColorInt())

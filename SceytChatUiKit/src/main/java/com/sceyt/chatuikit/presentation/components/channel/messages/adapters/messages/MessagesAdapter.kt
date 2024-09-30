@@ -20,7 +20,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.sticky_date.StickyDateHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.sticky_date.StickyHeaderInterface
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.styles.MessagesListViewStyle
+import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -282,7 +282,7 @@ class MessagesAdapter(
         if (lastHeaderPosition == headerPosition) return
         val date = Date(messages.getOrNull(headerPosition)?.getMessageCreatedAtForDateHeader()
                 ?: return)
-        header.setDate(style.dateSeparatorDateFormat.format(header.context, date))
+        header.setDate(style.dateSeparatorStyle.dateFormatter.format(header.context, date))
         lastHeaderPosition = headerPosition
     }
 

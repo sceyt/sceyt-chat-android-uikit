@@ -11,7 +11,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import androidx.appcompat.widget.AppCompatTextView
-import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 
 class ClickableTextView @JvmOverloads constructor(
@@ -74,7 +74,7 @@ class ClickableTextView @JvmOverloads constructor(
     }
 
     fun applyStyle(messageItemStyle: MessageItemStyle){
-        setTextColor(messageItemStyle.bodyTextColor)
-        setLinkTextColor(messageItemStyle.autoLinkTextColor)
+        messageItemStyle.bodyTextStyle.apply(this)
+        setLinkTextColor(messageItemStyle.linkTextColor)
     }
 }

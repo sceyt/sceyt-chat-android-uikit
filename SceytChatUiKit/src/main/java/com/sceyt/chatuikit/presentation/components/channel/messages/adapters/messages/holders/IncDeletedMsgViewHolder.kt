@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class IncDeletedMsgViewHolder(
         private val binding: SceytItemIncDeletedMessageBinding,
@@ -50,7 +50,7 @@ class IncDeletedMsgViewHolder(
 
     private fun SceytItemIncDeletedMessageBinding.setMessageItemStyle() {
         layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incomingBubbleColor)
-        tvUserName.setTextColor(style.senderNameTextColor)
         messageBody.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
+        style.senderNameTextStyle.apply(tvUserName)
     }
 }

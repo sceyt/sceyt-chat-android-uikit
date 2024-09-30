@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.styles.extensions
+package com.sceyt.chatuikit.styles.extensions.messages_list_header
 
 import android.content.res.TypedArray
 import com.sceyt.chatuikit.R

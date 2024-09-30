@@ -175,11 +175,11 @@ fun CharSequence?.processEmojiCompat(start: Int, end: Int, maxCount: Int, @Emoji
     }
 }
 
-fun String.notAutoCorrectable(): String {
+fun CharSequence.notAutoCorrectable(): CharSequence {
     return "\u2068${autoCorrectable()}\u2068"
 }
 
-fun String.autoCorrectable(): String {
+fun CharSequence.autoCorrectable(): String {
     return replace("\u2068".toRegex(), "")
 }
 

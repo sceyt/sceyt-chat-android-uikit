@@ -79,7 +79,7 @@ import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.MessagesListViewStyle
+import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -281,7 +281,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 .take(maxSize - reactions.size))
         }
 
-        return ReactionsPopup(context).showPopup(view, message, reactions.take(maxSize),
+        return ReactionsPopup.showPopup(view, message, reactions.take(maxSize), style.reactionPickerStyle,
             object : PopupReactionsAdapter.OnItemClickListener {
                 override fun onReactionClick(reaction: ReactionItem.Reaction) {
                     this@MessagesListView.onAddOrRemoveReaction(reaction, message)

@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.databinding.SceytMessageVideoItemBinding
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class FilesViewHolderFactory(context: Context,
                              private val messageListeners: MessageClickListeners.ClickListeners?,

@@ -266,7 +266,7 @@ class MentionSupportEditText : AppCompatEditText {
         } else (findQueryStart(text, end, false)?.index ?: -1) != -1
     }
 
-    fun replaceTextWithMention(displayName: String, recipientId: String) {
+    fun replaceTextWithMention(displayName: CharSequence, recipientId: String) {
         replaceText(createReplacementToken(displayName, recipientId), false)
     }
 

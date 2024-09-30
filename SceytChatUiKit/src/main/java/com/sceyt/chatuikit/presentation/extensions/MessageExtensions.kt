@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.formatters.Formatter
@@ -16,8 +17,8 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper.buildWithAttributes
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.styles.ChannelItemStyle
-import com.sceyt.chatuikit.styles.MessageItemStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import java.io.File
 
 fun SceytMessage?.setChannelMessageDateAndStatusIcon(
@@ -56,7 +57,7 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
 fun SceytMessage?.setConversationMessageDateAndStatusIcon(
         decoratedTextView: DecoratedTextView,
         itemStyle: MessageItemStyle,
-        dateText: String,
+        dateText: CharSequence,
         edited: Boolean
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
@@ -64,7 +65,7 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(
             leadingIcon = null,
             trailingIcon = null,
             enableLeadingText = edited,
-            leadingText = itemStyle.editedMessageStateText,
+            leadingText = itemStyle.editedStateTitle,
             ignoreHighlight = false)
         return
     }
@@ -81,12 +82,12 @@ fun SceytMessage?.setConversationMessageDateAndStatusIcon(
     }
     icon?.let {
         decoratedTextView.setTextAndIcons(text = dateText,
-            textColor = itemStyle.messageDateTextColor,
             trailingIcon = it,
             enableLeadingText = edited,
-            leadingText = itemStyle.editedMessageStateText,
-            leadingTextStyle = itemStyle.messageEditedTextStyle,
-            ignoreHighlight = checkIgnoreHighlight(deliveryStatus))
+            leadingText = itemStyle.editedStateTitle,
+            leadingTextStyle = itemStyle.messageStateTextStyle,
+            ignoreHighlight = checkIgnoreHighlight(deliveryStatus)
+        )
         decoratedTextView.isVisible = true
     }
 }
@@ -98,12 +99,13 @@ private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
 fun SceytMessage.getFormattedBody(
         context: Context,
         mentionTextStyle: TextStyle,
-        attachmentNameFormatter: Formatter<SceytAttachment>
+        attachmentNameFormatter: Formatter<SceytAttachment>,
+        mentionUserNameFormatter: Formatter<SceytUser>
 ): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() || attachments.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
-            buildWithAttributes(context, mentionTextStyle)
+            buildWithAttributes(context, mentionTextStyle, mentionUserNameFormatter)
         }
 
         attachments.size == 1 -> {

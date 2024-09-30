@@ -3,8 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 import android.graphics.Rect
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.styles.MessageItemStyle
-import com.sceyt.chatuikit.styles.MessagesListViewStyle
+import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 
 class ItemOffsetDecoration(private val style: MessagesListViewStyle) : RecyclerView.ItemDecoration() {
 
@@ -16,8 +15,8 @@ class ItemOffsetDecoration(private val style: MessagesListViewStyle) : RecyclerV
             val needOffset = (viewHolder.bindingAdapter as? MessagesAdapter)?.needTopOffset(bindPos)
                     ?: false
             if (needOffset)
-                outRect[0, style.differentSenderMsgDistance, 0] = 0
-            else outRect[0, style.sameSenderMsgDistance, 0] = 0
+                outRect[0, style.differentSenderMessageDistance, 0] = 0
+            else outRect[0, style.sameSenderMessageDistance, 0] = 0
         } catch (ignored: Exception) {
         }
     }

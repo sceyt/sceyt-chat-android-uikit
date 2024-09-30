@@ -7,6 +7,7 @@ import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
@@ -19,10 +20,10 @@ import com.sceyt.chatuikit.providers.defaults.DefaultChannelDefaultAvatarProvide
 import com.sceyt.chatuikit.styles.common.MenuStyle
 import com.sceyt.chatuikit.styles.common.SearchInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
-import com.sceyt.chatuikit.styles.extensions.buildMessageActionsMenuStyle
-import com.sceyt.chatuikit.styles.extensions.buildSearchInputTextStyle
-import com.sceyt.chatuikit.styles.extensions.buildSubTitleTextStyle
-import com.sceyt.chatuikit.styles.extensions.buildTitleTextStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list_header.buildMessageActionsMenuStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list_header.buildSearchInputTextStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list_header.buildSubTitleTextStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list_header.buildTitleTextStyle
 import com.sceyt.chatuikit.theme.Colors
 
 /**
@@ -38,6 +39,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property titleFormatter formatter for the channel title, default is [SceytChatUIKitFormatters.channelNameFormatter]
  * @property subtitleFormatter formatter for the channel subtitle, default is [SceytChatUIKitFormatters.channelSubtitleFormatter]
  * @property defaultAvatarProvider provider for the channel default avatar, default is [DefaultChannelDefaultAvatarProvider]
+ * @property typingUsersFormatter formatter for the typing users, default is [SceytChatUIKitFormatters.userShortNameFormatter]
  * */
 data class MessagesListHeaderStyle(
         @ColorInt var backgroundColor: Int,
@@ -50,7 +52,8 @@ data class MessagesListHeaderStyle(
         var messageActionsMenuStyle: MenuStyle,
         var titleFormatter: Formatter<SceytChannel>,
         var subtitleFormatter: Formatter<SceytChannel>,
-        var defaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>
+        var defaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>,
+        var typingUsersFormatter: Formatter<SceytUser>
 ) {
 
     companion object {
@@ -88,7 +91,8 @@ data class MessagesListHeaderStyle(
                     messageActionsMenuStyle = buildMessageActionsMenuStyle(array),
                     titleFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                     subtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter,
-                    defaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider
+                    defaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider,
+                    typingUsersFormatter = SceytChatUIKit.formatters.userShortNameFormatter
                 ).let { styleCustomizer.apply(context, it) }
             }
         }

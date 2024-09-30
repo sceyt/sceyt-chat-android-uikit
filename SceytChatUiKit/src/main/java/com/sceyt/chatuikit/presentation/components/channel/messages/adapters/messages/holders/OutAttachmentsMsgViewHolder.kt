@@ -1,12 +1,12 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
-import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemOutAttachmentsMessageBinding
-import com.sceyt.chatuikit.extensions.setTextAndDrawableByColorId
+import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.extensions.setDrawableStart
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.MessageFilesAdapter
@@ -14,8 +14,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class OutAttachmentsMsgViewHolder(
         private val binding: SceytItemOutAttachmentsMessageBinding,
@@ -118,8 +117,11 @@ class OutAttachmentsMsgViewHolder(
     }
 
     private fun SceytItemOutAttachmentsMessageBinding.setMessageItemStyle() {
-        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.outgoingBubbleColor)
-        tvForwarded.setTextAndDrawableByColorId(SceytChatUIKit.theme.colors.accentColor)
+        layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
+        style.forwardTitleTextStyle.apply(tvForwarded)
+        tvForwarded.setDrawableStart(style.forwardedIcon)
+        style.bodyTextStyle.apply(messageBody)
+        style.threadReplyCountTextStyle.apply(tvReplyCount)
         messageBody.applyStyle(style)
     }
 

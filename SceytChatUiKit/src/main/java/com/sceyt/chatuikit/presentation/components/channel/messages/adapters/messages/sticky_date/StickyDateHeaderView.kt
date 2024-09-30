@@ -2,15 +2,15 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 
 import android.animation.ValueAnimator
 import android.content.Context
-import android.content.res.ColorStateList
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
-import androidx.core.content.res.ResourcesCompat
 import com.sceyt.chatuikit.databinding.SceytItemMessageDateSeparatorBinding
 import com.sceyt.chatuikit.extensions.changeAlphaWithValueAnim
 import com.sceyt.chatuikit.extensions.getLifecycleScope
-import com.sceyt.chatuikit.styles.MessagesListViewStyle
+import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
+import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -75,15 +75,13 @@ class StickyDateHeaderView @JvmOverloads constructor(
         startAutoHideTimer()
     }
 
-    internal fun setStyle(style: MessagesListViewStyle) {
+    internal fun setStyle(listViewStyle: MessagesListViewStyle) {
+        val style = listViewStyle.dateSeparatorStyle
         with(binding) {
-            messageDay.apply {
-                backgroundTintList = ColorStateList.valueOf(style.dateSeparatorItemBackgroundColor)
-                setTextColor(style.dateSeparatorItemTextColor)
-                val dateTypeface = if (style.dateSeparatorTextFont != -1)
-                    ResourcesCompat.getFont(context, style.dateSeparatorTextFont) else typeface
-                setTypeface(dateTypeface, style.dateSeparatorTextStyle)
-            }
+            style.textStyle.apply(messageDay)
+
+            if (style.backgroundColor != UNSET_COLOR)
+                messageDay.setBackgroundTint(style.backgroundColor)
         }
     }
 }

@@ -17,8 +17,9 @@ import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.setPlayButtonIcon
-import com.sceyt.chatuikit.extensions.setTextAndDrawableByColor
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
@@ -39,14 +40,13 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
-import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PlaybackSpeed
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class IncVoiceMsgViewHolder(
         private val binding: SceytItemIncVoiceMessageBinding,
@@ -296,11 +296,16 @@ class IncVoiceMsgViewHolder(
 
     private fun SceytItemIncVoiceMessageBinding.setMessageItemStyle() {
         val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
-        layoutDetails.setBackgroundTint(style.incomingBubbleColor)
-        tvUserName.setTextColor(style.senderNameTextColor)
-        voiceDuration.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
         playPauseButton.setBackgroundTint(accentColor)
-        seekBar.waveProgressColor = accentColor
-        tvForwarded.setTextAndDrawableByColor(accentColor)
+        seekBar.waveProgressColor = accentColor //todo
+        layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
+        style.forwardTitleTextStyle.apply(tvForwarded)
+        tvForwarded.setDrawableStart(style.forwardedIcon)
+        //style.bodyTextStyle.apply(messageBody)
+        style.threadReplyCountTextStyle.apply(tvReplyCount)
+        style.voiceSpeedTextStyle.apply(playBackSpeed)
+        style.voiceDurationTextStyle.apply(voiceDuration)
+        style.mediaLoaderStyle.apply(loadProgress)
+        style.senderNameTextStyle.apply(tvUserName)
     }
 }

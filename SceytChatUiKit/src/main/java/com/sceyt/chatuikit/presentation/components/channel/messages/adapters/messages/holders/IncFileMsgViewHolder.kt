@@ -1,14 +1,15 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
-import android.content.res.ColorStateList
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.databinding.SceytItemIncFileMessageBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setTextAndDrawableByColor
+import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
+import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.toPrettySize
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -26,12 +27,11 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
-import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class IncFileMsgViewHolder(
         private val binding: SceytItemIncFileMessageBinding,
@@ -127,7 +127,7 @@ class IncFileMsgViewHolder(
     private fun setFileDetails(file: SceytAttachment) {
         with(binding) {
             tvFileName.text = file.name
-            tvFileSize.text = file.fileSize.toPrettySize()
+            tvFileSize.text = style.attachmentFileSizeFormatter.format(context, file)
         }
     }
 
@@ -176,14 +176,16 @@ class IncFileMsgViewHolder(
     }
 
     private fun SceytItemIncFileMessageBinding.setMessageItemStyle() {
-        val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
-        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incomingBubbleColor)
-        tvUserName.setTextColor(style.senderNameTextColor)
-        tvForwarded.setTextAndDrawableByColor(accentColor)
-        loadProgress.setBackgroundColor(accentColor)
-        icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
+        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
+        layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
+        style.forwardTitleTextStyle.apply(tvForwarded)
+        tvForwarded.setDrawableStart(style.forwardedIcon)
+        style.bodyTextStyle.apply(messageBody)
+        style.threadReplyCountTextStyle.apply(tvReplyCount)
+        style.attachmentFileSizeTextStyle.apply(tvFileSize)
+        style.attachmentFileNameTextStyle.apply(tvFileName)
+        style.mediaLoaderStyle.apply(loadProgress)
         messageBody.applyStyle(style)
-        tvFileSize.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
-        tvFileName.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
+        style.senderNameTextStyle.apply(tvUserName)
     }
 }

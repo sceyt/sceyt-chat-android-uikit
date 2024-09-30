@@ -147,7 +147,8 @@ open class ChannelViewHolder(
         val body = message.getFormattedBody(
             context = context,
             mentionTextStyle = itemStyle.mentionTextStyle,
-            attachmentNameFormatter = itemStyle.attachmentNameFormatter
+            attachmentNameFormatter = itemStyle.attachmentNameFormatter,
+            mentionUserNameFormatter = itemStyle.mentionUserNameFormatter
         )
         val senderName = itemStyle.lastMessageSenderNameFormatter.format(context, channel)
         val attachmentIcon = message.attachments?.getOrNull(0)?.let {
@@ -189,9 +190,10 @@ open class ChannelViewHolder(
 
         if (lastReaction.id > (channel.lastMessage?.id ?: 0) || lastReaction.pending) {
             val toMessage = SpannableStringBuilder(message.getFormattedBody(
-                context,
-                itemStyle.mentionTextStyle,
-                itemStyle.attachmentNameFormatter
+                context = context,
+                mentionTextStyle = itemStyle.mentionTextStyle,
+                attachmentNameFormatter = itemStyle.attachmentNameFormatter,
+                mentionUserNameFormatter = itemStyle.mentionUserNameFormatter
             ))
             val reactedWord = itemView.getString(R.string.sceyt_reacted)
 
@@ -228,7 +230,8 @@ open class ChannelViewHolder(
                     body = draftMessage.message.toString(),
                     mentionUsers = draftMessage.mentionUsers,
                     bodyAttributes = draftMessage.bodyAttributes,
-                    mentionTextStyle = itemStyle.mentionTextStyle)
+                    mentionTextStyle = itemStyle.mentionTextStyle,
+                    mentionUserNameFormatter = itemStyle.mentionUserNameFormatter)
                 )
                 itemStyle.draftPrefixTextStyle.apply(context, this, 0, draft.length + 1)
             }
@@ -312,7 +315,7 @@ open class ChannelViewHolder(
         if (showMention) {
             icMention.isVisible = true
             if (channel.muted)
-                itemStyle.mentionMutedStateTextStyle.apply(icMention)
+                itemStyle.unreadMentionMutedStateTextStyle.apply(icMention)
             else itemStyle.mentionTextStyle.apply(icMention)
         } else icMention.isVisible = false
     }

@@ -7,12 +7,11 @@ import android.view.animation.AnimationUtils
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.ScrollToBottomViewBinding
 import com.sceyt.chatuikit.extensions.animationListener
 import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.extensions.setTintColorRes
-import com.sceyt.chatuikit.styles.MessagesListViewStyle
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
+import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 
 class ScrollToDownView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -24,10 +23,14 @@ class ScrollToDownView @JvmOverloads constructor(
         binding = ScrollToBottomViewBinding.inflate(LayoutInflater.from(context), this)
     }
 
-    internal fun setStyle(style: MessagesListViewStyle) {
-        binding.unreadCount.setBackgroundTint(style.downScrollerUnreadCountColor)
-        binding.fabNext.setTintColorRes(SceytChatUIKit.theme.colors.iconSecondaryColor)
-        binding.fabNext.setImageDrawable(style.downScrollerIcon)
+    internal fun setStyle(listViewStyle: MessagesListViewStyle) {
+        val style = listViewStyle.scrollDownButtonStyle
+        style.unreadCountTextStyle.apply(binding.unreadCount)
+
+        binding.icScrollToBottom.setImageDrawable(style.icon)
+
+        if (style.backgroundColor != UNSET_COLOR)
+            binding.icScrollToBottom.setBackgroundTint(style.backgroundColor)
     }
 
     private fun setVisibilityWithAnim(visible: Boolean) {

@@ -116,7 +116,8 @@
             android:id="@+id/playPauseItem"
             android:layout_width="@dimen/messageProgressSize"
             android:layout_height="@dimen/messageProgressSize"
-            android:background="@drawable/sceyt_bg_play_pause_button"
+            android:background="@drawable/sceyt_bg_circle"
+            android:backgroundTint="@color/sceyt_color_overlay_background_2"
             android:padding="10dp"
             app:layout_constraintBottom_toBottomOf="@+id/imageThumb"
             app:layout_constraintEnd_toEndOf="@+id/imageThumb"
@@ -176,7 +177,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/loadProgress"
-            tools:text="12KB / 10.7MB" />
+            tools:text="12KB / 10.7MB"
+            tools:visibility="visible" />
 
         <com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
             android:id="@+id/messageDate"
@@ -186,12 +188,12 @@
             android:layout_marginBottom="7dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:sceytUiDecoratedTextDateTextColor="@color/sceyt_color_text_secondary"
-            app:sceytUiDecoratedTextDateTextSize="@dimen/tinyTextSize"
+            app:sceytUiDecoratedTextColor="@color/sceyt_color_text_secondary"
             app:sceytUiDecoratedTextHighlighted="true"
+            app:sceytUiDecoratedTextSize="@dimen/tinyTextSize"
             app:sceytUiDecoratedTextTrailingIconPadding="5dp"
             app:sceytUiDecoratedTextTrailingIconSize="15.5dp"
-            tools:sceytUiDecoratedTextDateText="00:37"
+            tools:sceytUiDecoratedTextTitle="00:37"
             tools:sceytUiDecoratedTextTrailingIcon="@drawable/sceyt_ic_status_delivered" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

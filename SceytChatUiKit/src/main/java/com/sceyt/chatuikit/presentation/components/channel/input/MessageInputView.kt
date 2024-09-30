@@ -649,7 +649,8 @@ class MessageInputView @JvmOverloads constructor(
                 body = body.toString(),
                 mentionUsers = draftMessage.mentionUsers,
                 bodyAttributes = draftMessage.bodyAttributes,
-                mentionTextStyle = TextStyle()
+                mentionTextStyle = style.mentionTextStyle,
+                mentionUserNameFormatter = style.mentionUserNameFormatter
             )
             if (!draftMessage.mentionUsers.isNullOrEmpty()) {
                 val data = MentionUserHelper.getMentionsIndexed(draftMessage.bodyAttributes, draftMessage.mentionUsers)
@@ -1017,8 +1018,7 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     override fun onSelectedUserToMentionClick(member: SceytMember) {
-        val name = (SceytChatUIKit.formatters.mentionUserNameFormatter?.format(member.user)
-                ?: member.getPresentableName()).notAutoCorrectable()
+        val name = style.mentionUserNameFormatter.format(context, member.user).notAutoCorrectable()
         binding.messageInput.replaceTextWithMention(name, member.id)
     }
 

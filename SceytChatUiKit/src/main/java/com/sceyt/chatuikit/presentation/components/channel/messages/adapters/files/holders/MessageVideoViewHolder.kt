@@ -24,7 +24,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUplo
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.styles.MessageItemStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
 
@@ -142,6 +142,6 @@ class MessageVideoViewHolder(
      }*/
 
     private fun SceytMessageVideoItemBinding.applyStyle() {
-        loadProgress.setProgressColor(style.mediaLoaderColor)
+        style.mediaLoaderStyle.apply(loadProgress)
     }
 }
