@@ -27,6 +27,7 @@ import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildAttachmentFileNameTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildAttachmentFileSizeTextStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildAudioWaveformStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildBodyTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildDeletedMessageTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildForwardTitleTextStyle
@@ -135,6 +136,7 @@ data class MessageItemStyle(
         val replyMessageStyle: ReplyMessageStyle,
         val mediaLoaderStyle: MediaLoaderStyle,
         val overlayMediaLoaderStyle: MediaLoaderStyle,
+        val voiceWaveformStyle: AudioWaveformStyle,
         val senderNameFormatter: Formatter<SceytUser>,
         val messageBodyFormatter: Formatter<SceytMessage>?,
         val messageViewCountFormatter: Formatter<Long>,
@@ -275,6 +277,7 @@ data class MessageItemStyle(
                     linkPreviewStyle = buildLinkPreviewStyle(array),
                     replyMessageStyle = buildReplyMessageStyle(array),
                     mediaLoaderStyle = buildMediaLoaderStyle(array),
+                    voiceWaveformStyle = buildAudioWaveformStyle(array),
                     overlayMediaLoaderStyle = buildOverlayMediaLoaderStyle(array),
                     senderNameFormatter = SceytChatUIKit.formatters.userNameFormatterNew,
                     messageBodyFormatter = null,

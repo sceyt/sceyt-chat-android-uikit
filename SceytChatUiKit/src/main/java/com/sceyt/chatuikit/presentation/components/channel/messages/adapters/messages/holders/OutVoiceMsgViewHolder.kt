@@ -103,6 +103,12 @@ class OutVoiceMsgViewHolder(
             val message = (item as MessageItem).message
             tvForwarded.isVisible = message.isForwarded
 
+            val body = message.body.trim()
+            if (body.isNotBlank()) {
+                messageBody.isVisible = true
+                setMessageBody(messageBody, message)
+            } else messageBody.isVisible = false
+
             if (diff.edited || diff.statusChanged)
                 setMessageStatusAndDateText(message, binding.messageDate)
 
@@ -290,12 +296,12 @@ class OutVoiceMsgViewHolder(
     private fun SceytItemOutVoiceMessageBinding.setMessageItemStyle() {
         val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
         playPauseButton.setBackgroundTint(accentColor)
-        seekBar.waveProgressColor = accentColor //todo
-
+        seekBar.waveProgressColor = style.voiceWaveformStyle.progressColor
+        seekBar.waveBackgroundColor = style.voiceWaveformStyle.trackColor
         layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
         style.forwardTitleTextStyle.apply(tvForwarded)
         tvForwarded.setDrawableStart(style.forwardedIcon)
-        //style.bodyTextStyle.apply(messageBody)
+        style.bodyTextStyle.apply(messageBody)
         style.threadReplyCountTextStyle.apply(tvReplyCount)
         style.voiceSpeedTextStyle.apply(playBackSpeed)
         style.voiceDurationTextStyle.apply(voiceDuration)

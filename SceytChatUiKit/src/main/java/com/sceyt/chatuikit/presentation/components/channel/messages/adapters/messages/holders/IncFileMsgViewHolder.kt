@@ -177,7 +177,7 @@ class IncFileMsgViewHolder(
 
     private fun SceytItemIncFileMessageBinding.setMessageItemStyle() {
         icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
-        layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
+        layoutDetails.setBackgroundTint(style.incomingBubbleColor)
         style.forwardTitleTextStyle.apply(tvForwarded)
         tvForwarded.setDrawableStart(style.forwardedIcon)
         style.bodyTextStyle.apply(messageBody)
