@@ -240,7 +240,7 @@
         <attr name="sceytUiMessageInputVoiceRecorderStopRecordingIcon" format="reference" />
         <attr name="sceytUiMessageInputVoiceRecorderSendVoiceIcon" format="reference" />
 
-        <attr name="sceytUiMessageInputVoiceRecorderSlideToCancelText" format="string" />
+        <attr name="sceytUiMessageInputVoiceRecorderSlideToCancelText" format="string" localization="suggested" />
         <attr name="sceytUiMessageInputVoiceRecorderSlideToCancelTextColor" format="reference|color" />
         <attr name="sceytUiMessageInputVoiceRecorderSlideToCancelTextSize" format="dimension" />
         <attr name="sceytUiMessageInputVoiceRecorderSlideToCancelTextStyle">
@@ -250,7 +250,7 @@
         </attr>
         <attr name="sceytUiMessageInputVoiceRecorderSlideToCancelTextFont" format="reference" />
 
-        <attr name="sceytUiMessageInputVoiceRecorderCancelText" format="string" />
+        <attr name="sceytUiMessageInputVoiceRecorderCancelText" format="string" localization="suggested" />
         <attr name="sceytUiMessageInputVoiceRecorderCancelTextColor" format="reference|color" />
         <attr name="sceytUiMessageInputVoiceRecorderCancelTextSize" format="dimension" />
         <attr name="sceytUiMessageInputVoiceRecorderCancelTextStyle">

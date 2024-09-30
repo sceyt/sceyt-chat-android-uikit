@@ -4,8 +4,6 @@ import android.widget.ImageView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemIncImageMessageBinding
-import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
@@ -177,16 +175,19 @@ class IncImageMsgViewHolder(
     override val loadingProgressView: CircularProgressView
         get() = binding.loadProgress
 
+    override val incoming: Boolean = true
+
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
     private fun SceytItemIncImageMessageBinding.setMessageItemStyle() {
-        layoutDetails.setBackgroundTint(style.incomingBubbleColor)
-        style.forwardTitleTextStyle.apply(tvForwarded)
-        tvForwarded.setDrawableStart(style.forwardedIcon)
-        style.bodyTextStyle.apply(messageBody)
-        style.threadReplyCountTextStyle.apply(tvReplyCount)
         style.overlayMediaLoaderStyle.apply(loadProgress)
-        messageBody.applyStyle(style)
-        style.senderNameTextStyle.apply(tvUserName)
+        applyCommonStyle(
+            layoutDetails = layoutDetails,
+            tvForwarded = tvForwarded,
+            messageBody = messageBody,
+            tvThreadReplyCount = tvReplyCount,
+            toReplyLine = toReplyLine,
+            tvSenderName = tvUserName
+        )
     }
 }

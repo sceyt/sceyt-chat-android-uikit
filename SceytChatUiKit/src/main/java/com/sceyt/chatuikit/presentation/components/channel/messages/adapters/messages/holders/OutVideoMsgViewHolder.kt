@@ -209,18 +209,21 @@ class OutVideoMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
+    override val incoming: Boolean = false
+
     private fun SceytItemOutVideoMessageBinding.setMessageItemStyle() {
-        layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
-        style.forwardTitleTextStyle.apply(tvForwarded)
-        tvForwarded.setDrawableStart(style.forwardedIcon)
-        style.bodyTextStyle.apply(messageBody)
-        style.threadReplyCountTextStyle.apply(tvReplyCount)
         style.videoDurationTextStyle.apply(tvDuration)
-        style.overlayMediaLoaderStyle.apply(loadProgress)
-        messageBody.applyStyle(style)
         playPauseItem.setImageDrawable(style.videoPlayIcon)
         playPauseItem.setBackgroundTint(style.onOverlayColor)
         tvDuration.setDrawableStart(style.videoIcon)
         tvDuration.setBackgroundTint(style.onOverlayColor)
+        style.overlayMediaLoaderStyle.apply(loadProgress)
+        applyCommonStyle(
+            layoutDetails = layoutDetails,
+            tvForwarded = tvForwarded,
+            messageBody = messageBody,
+            tvThreadReplyCount = tvReplyCount,
+            toReplyLine = toReplyLine
+        )
     }
 }

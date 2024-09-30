@@ -219,19 +219,22 @@ class IncVideoMsgViewHolder(
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
+    override val incoming: Boolean = true
+
     private fun SceytItemIncVideoMessageBinding.setMessageItemStyle() {
-        layoutDetails.setBackgroundTint(style.incomingBubbleColor)
-        style.forwardTitleTextStyle.apply(tvForwarded)
-        tvForwarded.setDrawableStart(style.forwardedIcon)
-        style.bodyTextStyle.apply(messageBody)
-        style.threadReplyCountTextStyle.apply(tvReplyCount)
         style.videoDurationTextStyle.apply(tvDuration)
-        style.overlayMediaLoaderStyle.apply(loadProgress)
-        messageBody.applyStyle(style)
         playPauseItem.setImageDrawable(style.videoPlayIcon)
         playPauseItem.setBackgroundTint(style.onOverlayColor)
         tvDuration.setDrawableStart(style.videoIcon)
         tvDuration.setBackgroundTint(style.onOverlayColor)
-        style.senderNameTextStyle.apply(tvUserName)
+        style.overlayMediaLoaderStyle.apply(loadProgress)
+        applyCommonStyle(
+            layoutDetails = layoutDetails,
+            tvForwarded = tvForwarded,
+            messageBody = messageBody,
+            tvThreadReplyCount = tvReplyCount,
+            toReplyLine = toReplyLine,
+            tvSenderName = tvUserName
+        )
     }
 }

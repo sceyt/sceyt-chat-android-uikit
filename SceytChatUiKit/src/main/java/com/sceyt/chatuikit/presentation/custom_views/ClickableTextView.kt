@@ -73,8 +73,8 @@ class ClickableTextView @JvmOverloads constructor(
         doOnClickWhenNoLink = onClick
     }
 
-    fun applyStyle(messageItemStyle: MessageItemStyle){
-        messageItemStyle.bodyTextStyle.apply(this)
-        setLinkTextColor(messageItemStyle.linkTextColor)
+    fun applyStyle(itemStyle: MessageItemStyle){
+        itemStyle.bodyTextStyle.apply(this)
+        setLinkTextColor(itemStyle.linkTextColor)
     }
 }

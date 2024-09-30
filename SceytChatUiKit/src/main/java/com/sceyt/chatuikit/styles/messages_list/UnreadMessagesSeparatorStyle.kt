@@ -8,7 +8,8 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class UnreadMessagesSeparatorStyle(
         @ColorInt val backgroundColor: Int,
-        val textStyle: TextStyle
+        val unreadText: String,
+        val textStyle: TextStyle,
 ) {
     internal class Builder(
             private val typedArray: TypedArray
@@ -16,9 +17,14 @@ data class UnreadMessagesSeparatorStyle(
         @ColorInt
         private var backgroundColor: Int = UNSET_COLOR
         private var textStyle: TextStyle = TextStyle()
+        private var unreadText: String = ""
 
         fun backgroundColor(@StyleableRes index: Int, @ColorInt defValue: Int = backgroundColor) = apply {
             this.backgroundColor = typedArray.getColor(index, defValue)
+        }
+
+        fun unreadText(@StyleableRes index: Int, defValue: String = unreadText) = apply {
+            this.unreadText = typedArray.getString(index) ?: defValue
         }
 
         fun textStyle(textStyle: TextStyle) = apply {
@@ -27,6 +33,7 @@ data class UnreadMessagesSeparatorStyle(
 
         fun build() = UnreadMessagesSeparatorStyle(
             backgroundColor = backgroundColor,
+            unreadText = unreadText,
             textStyle = textStyle
         )
     }

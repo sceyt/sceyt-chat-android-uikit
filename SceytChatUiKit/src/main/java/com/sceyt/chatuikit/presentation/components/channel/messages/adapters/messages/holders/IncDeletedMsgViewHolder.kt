@@ -1,14 +1,12 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
-import android.content.res.ColorStateList
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemIncDeletedMessageBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class IncDeletedMsgViewHolder(
@@ -48,9 +46,12 @@ class IncDeletedMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
+    override val incoming: Boolean = true
+
     private fun SceytItemIncDeletedMessageBinding.setMessageItemStyle() {
-        layoutDetails.backgroundTintList = ColorStateList.valueOf(style.incomingBubbleColor)
-        messageBody.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
+        layoutDetails.setBackgroundTint(style.incomingBubbleColor)
+        style.deletedMessageTextStyle.apply(messageBody)
         style.senderNameTextStyle.apply(tvUserName)
+        messageBody.text = style.deletedStateText
     }
 }

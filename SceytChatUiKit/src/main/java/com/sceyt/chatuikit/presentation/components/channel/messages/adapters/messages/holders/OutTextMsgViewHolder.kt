@@ -3,8 +3,6 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemOutTextMessageBinding
-import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
@@ -15,7 +13,7 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 class OutTextMsgViewHolder(
         private val binding: SceytItemOutTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
-        private val style: MessageItemStyle,
+        style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         userNameFormatter: UserNameFormatter?
 ) : BaseMsgViewHolder(binding.root, style, messageListeners, userNameFormatter = userNameFormatter) {
@@ -75,14 +73,16 @@ class OutTextMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-    private fun SceytItemOutTextMessageBinding.setMessageItemStyle() {
-        layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
-        style.forwardTitleTextStyle.apply(tvForwarded)
-        tvForwarded.setDrawableStart(style.forwardedIcon)
-        style.bodyTextStyle.apply(messageBody)
-        style.threadReplyCountTextStyle.apply(tvReplyCount)
-        messageBody.applyStyle(style)
-    }
-
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
+
+    override val incoming: Boolean = false
+
+    private fun SceytItemOutTextMessageBinding.setMessageItemStyle() {
+        applyCommonStyle(
+            layoutDetails = layoutDetails, tvForwarded = tvForwarded,
+            messageBody = messageBody,
+            tvThreadReplyCount = tvReplyCount,
+            toReplyLine = toReplyLine
+        )
+    }
 }

@@ -16,7 +16,6 @@ import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.setPlayButtonIcon
 import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.media.audio.AudioPlayer
@@ -293,18 +292,22 @@ class OutVoiceMsgViewHolder(
         binding.layoutDetails.layoutParams.width = bubbleMaxWidth
     }
 
+    override val incoming: Boolean = false
+
     private fun SceytItemOutVoiceMessageBinding.setMessageItemStyle() {
         val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
         playPauseButton.setBackgroundTint(accentColor)
         seekBar.waveProgressColor = style.voiceWaveformStyle.progressColor
         seekBar.waveBackgroundColor = style.voiceWaveformStyle.trackColor
-        layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
-        style.forwardTitleTextStyle.apply(tvForwarded)
-        tvForwarded.setDrawableStart(style.forwardedIcon)
-        style.bodyTextStyle.apply(messageBody)
-        style.threadReplyCountTextStyle.apply(tvReplyCount)
         style.voiceSpeedTextStyle.apply(playBackSpeed)
         style.voiceDurationTextStyle.apply(voiceDuration)
         style.mediaLoaderStyle.apply(loadProgress)
+        applyCommonStyle(
+            layoutDetails = layoutDetails,
+            tvForwarded = tvForwarded,
+            messageBody = messageBody,
+            tvThreadReplyCount = tvReplyCount,
+            toReplyLine = toReplyLine
+        )
     }
 }
