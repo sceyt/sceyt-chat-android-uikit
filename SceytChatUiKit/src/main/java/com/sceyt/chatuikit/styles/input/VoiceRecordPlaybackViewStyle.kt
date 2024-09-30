@@ -8,17 +8,17 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.messages_list.item.AudioWaveformStyle
 
 data class VoiceRecordPlaybackViewStyle(
         @ColorInt var backgroundColor: Int,
         @ColorInt var playerBackgroundColor: Int,
-        @ColorInt var trackColor: Int,
-        @ColorInt var progressColor: Int,
         var closeIcon: Drawable?,
         var playIcon: Drawable?,
         var pauseIcon: Drawable?,
         var sendVoiceIcon: Drawable?,
         var durationTextStyle: TextStyle,
+        var audioWaveformStyle: AudioWaveformStyle,
         var durationFormatter: Formatter<Long>
 ) {
     internal class Builder(
@@ -40,6 +40,7 @@ data class VoiceRecordPlaybackViewStyle(
         private var pauseIcon: Drawable? = null
         private var sendVoiceIcon: Drawable? = null
         private var durationTextStyle: TextStyle = TextStyle()
+        private var audioWaveformStyle: AudioWaveformStyle = AudioWaveformStyle.Builder(typedArray).build()
         private var durationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter
 
 
@@ -79,16 +80,19 @@ data class VoiceRecordPlaybackViewStyle(
             this.durationTextStyle = durationTextStyle
         }
 
+        fun audioWaveformStyle(audioWaveformStyle: AudioWaveformStyle) = apply {
+            this.audioWaveformStyle = audioWaveformStyle
+        }
+
         fun build() = VoiceRecordPlaybackViewStyle(
             backgroundColor = backgroundColor,
             playerBackgroundColor = playerBackgroundColor,
-            trackColor = trackColor,
-            progressColor = progressColor,
             closeIcon = closeIcon,
             playIcon = playIcon,
             pauseIcon = pauseIcon,
             sendVoiceIcon = sendVoiceIcon,
             durationTextStyle = durationTextStyle,
+            audioWaveformStyle = audioWaveformStyle,
             durationFormatter = durationFormatter
         )
     }

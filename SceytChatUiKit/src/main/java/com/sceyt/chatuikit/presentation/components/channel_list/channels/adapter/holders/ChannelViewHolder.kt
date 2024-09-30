@@ -316,7 +316,7 @@ open class ChannelViewHolder(
             icMention.isVisible = true
             if (channel.muted)
                 itemStyle.unreadMentionMutedStateTextStyle.apply(icMention)
-            else itemStyle.mentionTextStyle.apply(icMention)
+            else itemStyle.unreadMentionTextStyle.apply(icMention)
         } else icMention.isVisible = false
     }
 
