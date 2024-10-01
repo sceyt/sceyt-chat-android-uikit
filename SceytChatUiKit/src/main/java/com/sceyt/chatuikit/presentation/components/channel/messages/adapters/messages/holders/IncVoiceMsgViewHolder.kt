@@ -295,7 +295,8 @@ class IncVoiceMsgViewHolder(
     override val selectMessageView: View
         get() = binding.selectView
 
-    override val incoming: Boolean = true
+     override val incoming: Boolean
+        get() = true
 
     override fun setMaxWidth() {
         binding.layoutDetails.layoutParams.width = bubbleMaxWidth

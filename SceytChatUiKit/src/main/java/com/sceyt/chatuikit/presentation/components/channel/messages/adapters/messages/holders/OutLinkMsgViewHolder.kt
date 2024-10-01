@@ -80,7 +80,8 @@ class OutLinkMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-    override val incoming: Boolean = false
+     override val incoming: Boolean
+        get() = false
 
     private fun SceytItemOutLinkMessageBinding.setMessageItemStyle() {
         applyCommonStyle(

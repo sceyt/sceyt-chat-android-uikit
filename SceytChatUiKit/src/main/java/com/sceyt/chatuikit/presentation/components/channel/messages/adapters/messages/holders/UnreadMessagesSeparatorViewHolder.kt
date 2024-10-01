@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
+import android.view.View
 import com.sceyt.chatuikit.databinding.SceytItemUnreadMessagesSeparatorBinding
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
@@ -16,7 +17,12 @@ class UnreadMessagesSeparatorViewHolder(
     }
 
     override val enableReply = false
-    override val incoming = false
+
+    override val incoming: Boolean
+        get() = false
+
+    override val selectMessageView: View?
+        get() = null
 
     private fun SceytItemUnreadMessagesSeparatorBinding.applyStyle() {
         with(tvUnreadMessagesSeparator) {

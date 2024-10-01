@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewStub
+import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CallSuper
@@ -91,7 +92,6 @@ abstract class BaseMsgViewHolder(
     val isMessageListItemInitialized get() = this::messageListItem.isInitialized
     private var highlightAnim: ValueAnimator? = null
     private val selectableAnimHelper by lazy { MessageSelectableAnimHelper(this) }
-    open val selectMessageView: View? = null
 
     @CallSuper
     open fun bind(item: MessageListItem, diff: MessageDiff) {
@@ -110,6 +110,8 @@ abstract class BaseMsgViewHolder(
     }
 
     protected abstract val incoming: Boolean
+    protected abstract val selectMessageView: View?
+    open val enableReply = true
     protected val requireMessageItem get() = messageListItem as MessageListItem.MessageItem
     protected val requireMessage get() = (messageListItem as MessageListItem.MessageItem).message
 
@@ -576,8 +578,6 @@ abstract class BaseMsgViewHolder(
         messageListItem.highligh = false
     }
 
-    open val enableReply = true
-
     protected open fun applyCommonStyle(
             layoutDetails: View,
             tvForwarded: AppCompatTextView,
@@ -594,6 +594,9 @@ abstract class BaseMsgViewHolder(
         itemStyle.threadReplyCountTextStyle.apply(tvThreadReplyCount)
         tvSenderName?.let {
             itemStyle.senderNameTextStyle.apply(it)
+        }
+        (selectMessageView as? CheckBox)?.let {
+            itemStyle.selectionCheckboxStyle.apply(it)
         }
     }
 

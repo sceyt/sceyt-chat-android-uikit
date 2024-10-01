@@ -88,7 +88,8 @@ class IncLinkMsgViewHolder(
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
-    override val incoming: Boolean = true
+     override val incoming: Boolean
+        get() = true
 
     private fun SceytItemIncLinkMessageBinding.setMessageItemStyle() {
         applyCommonStyle(

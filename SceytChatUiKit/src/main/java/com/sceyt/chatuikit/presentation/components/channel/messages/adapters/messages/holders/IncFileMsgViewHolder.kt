@@ -169,7 +169,8 @@ class IncFileMsgViewHolder(
     override val loadingProgressView: CircularProgressView
         get() = binding.loadProgress
 
-    override val incoming: Boolean = true
+     override val incoming: Boolean
+        get() = true
 
     override fun setMaxWidth() {
         binding.layoutDetails.layoutParams.width = bubbleMaxWidth

@@ -22,6 +22,7 @@ import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.styles.StyleCustomizer
+import com.sceyt.chatuikit.styles.common.CheckboxStyle
 import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -39,6 +40,7 @@ import com.sceyt.chatuikit.styles.extensions.messages_list.buildMessageStateText
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildOverlayMediaLoaderStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionCountTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReplyMessageStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildSelectionCheckboxStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildSenderNameTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildThreadReplyCountTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildVideoDurationTextStyle
@@ -89,6 +91,8 @@ import java.util.Date
  * @property replyMessageStyle Style for the reply message, default is [buildReplyMessageStyle].
  * @property mediaLoaderStyle Style for the media loader, default is [buildMediaLoaderStyle].
  * @property overlayMediaLoaderStyle Style for the overlay media loader, default is [buildOverlayMediaLoaderStyle].
+ * @property voiceWaveformStyle Style for the voice waveform, default is [buildAudioWaveformStyle].
+ * @property selectionCheckboxStyle Style for the selection checkbox, default is [buildSelectionCheckboxStyle].
  * @property senderNameFormatter Formatter for the sender name, default is [SceytChatUIKitFormatters.userNameFormatterNew].
  * @property messageBodyFormatter Formatter for the message body. Use it to format the message body before displaying it, default is null.
  * @property messageViewCountFormatter Formatter for the message view count, default is [SceytChatUIKitFormatters.messageViewCountFormatter].
@@ -143,6 +147,7 @@ data class MessageItemStyle(
         val mediaLoaderStyle: MediaLoaderStyle,
         val overlayMediaLoaderStyle: MediaLoaderStyle,
         val voiceWaveformStyle: AudioWaveformStyle,
+        val selectionCheckboxStyle: CheckboxStyle,
         val senderNameFormatter: Formatter<SceytUser>,
         val messageBodyFormatter: Formatter<SceytMessage>?,
         val messageViewCountFormatter: Formatter<Long>,
@@ -299,6 +304,7 @@ data class MessageItemStyle(
                     mediaLoaderStyle = buildMediaLoaderStyle(array),
                     voiceWaveformStyle = buildAudioWaveformStyle(array),
                     overlayMediaLoaderStyle = buildOverlayMediaLoaderStyle(array),
+                    selectionCheckboxStyle = buildSelectionCheckboxStyle(array),
                     senderNameFormatter = SceytChatUIKit.formatters.userNameFormatterNew,
                     messageBodyFormatter = null,
                     messageViewCountFormatter = SceytChatUIKit.formatters.messageViewCountFormatter,

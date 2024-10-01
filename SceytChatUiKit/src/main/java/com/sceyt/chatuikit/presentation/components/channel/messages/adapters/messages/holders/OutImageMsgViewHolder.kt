@@ -168,7 +168,8 @@ class OutImageMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-    override val incoming: Boolean = false
+     override val incoming: Boolean
+        get() = false
 
     private fun SceytItemOutImageMessageBinding.setMessageItemStyle() {
         style.overlayMediaLoaderStyle.apply(loadProgress)

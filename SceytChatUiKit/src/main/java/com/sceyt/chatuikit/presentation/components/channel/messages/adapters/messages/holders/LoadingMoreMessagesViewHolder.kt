@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
+import android.view.View
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.extensions.setProgressColor
@@ -19,5 +20,9 @@ class LoadingMoreMessagesViewHolder(binding: SceytItemLoadingMoreBinding,
 
     override val enableReply = false
 
-    override val incoming = false
+    override val incoming: Boolean
+        get() = false
+
+    override val selectMessageView: View?
+        get() = null
 }

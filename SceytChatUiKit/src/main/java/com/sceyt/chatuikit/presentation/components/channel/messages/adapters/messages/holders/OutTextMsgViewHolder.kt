@@ -75,7 +75,8 @@ class OutTextMsgViewHolder(
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
-    override val incoming: Boolean = false
+     override val incoming: Boolean
+        get() = false
 
     private fun SceytItemOutTextMessageBinding.setMessageItemStyle() {
         applyCommonStyle(

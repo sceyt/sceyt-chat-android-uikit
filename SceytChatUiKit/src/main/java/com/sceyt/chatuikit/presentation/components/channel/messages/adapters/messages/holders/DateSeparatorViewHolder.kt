@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
+import android.view.View
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.databinding.SceytItemMessageDateSeparatorBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
@@ -31,9 +32,14 @@ class DateSeparatorViewHolder(
         binding.messageDay.alpha = if (show) 1f else 0f
     }
 
-    override val enableReply = false
+    override val enableReply: Boolean
+        get() = false
 
-    override val incoming: Boolean = false
+    override val incoming: Boolean
+        get() = false
+
+    override val selectMessageView: View?
+        get() = null
 
     private fun SceytItemMessageDateSeparatorBinding.setMessageItemStyle() {
         style.textStyle.apply(messageDay)
