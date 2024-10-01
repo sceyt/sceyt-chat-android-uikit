@@ -293,7 +293,7 @@ open class ChannelViewHolder(
         }
 
         textView.apply {
-            text = itemStyle.channelUnreadCountFormatter.format(context, channel)
+            text = itemStyle.unreadCountFormatter.format(context, channel.newMessageCount)
             isVisible = true
             if (channel.muted)
                 itemStyle.unreadCountMutedStateTextStyle.apply(this)

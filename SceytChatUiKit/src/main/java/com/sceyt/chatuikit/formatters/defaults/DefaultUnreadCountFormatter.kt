@@ -6,12 +6,12 @@ import com.sceyt.chatuikit.formatters.Formatter
 import java.text.NumberFormat
 import java.util.Locale
 
-data object DefaultChannelUnreadCountFormatter : Formatter<SceytChannel> {
+data object DefaultUnreadCountFormatter : Formatter<Long> {
 
-    override fun format(context: Context, from: SceytChannel): CharSequence {
+    override fun format(context: Context, from: Long): CharSequence {
         // User NumberFormat for arabic language
-        return if (from.newMessageCount > 99L) {
+        return if (from > 99L) {
             "${NumberFormat.getInstance(Locale.getDefault()).format(99)}+"
-        } else NumberFormat.getInstance(Locale.getDefault()).format(from.newMessageCount)
+        } else NumberFormat.getInstance(Locale.getDefault()).format(from)
     }
 }

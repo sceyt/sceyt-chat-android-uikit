@@ -111,6 +111,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (background == null)
             setBackgroundColor(style.backgroundColor)
 
+        binding.scrollDownView.setStyle(style.scrollDownButtonStyle)
+        binding.pageStateView.setLoadingStateView(style.loadingState)
+        binding.pageStateView.setEmptyStateView(style.emptyState)
+
         messagesRV = binding.rvMessages.also { it.setStyle(style) }
         messagesRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
         messagesRV.clipToPadding = clipToPadding
@@ -125,9 +129,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 messageCommandEventListener?.invoke(MessageCommandEvent.Reply(message))
             }
         }
-        binding.scrollDownView.setStyle(style)
-        binding.pageStateView.setLoadingStateView(style.loadingState)
-        binding.pageStateView.setEmptyStateView(style.emptyState)
 
         initClickListeners()
         addKeyBoardListener()
@@ -635,7 +636,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.deleteAllMessagesBefore(predicate)
     }
 
-    internal fun setUnreadCount(unreadCount: Int) {
+    internal fun setUnreadCount(unreadCount: Long) {
         binding.scrollDownView.setUnreadCount(unreadCount)
     }
 

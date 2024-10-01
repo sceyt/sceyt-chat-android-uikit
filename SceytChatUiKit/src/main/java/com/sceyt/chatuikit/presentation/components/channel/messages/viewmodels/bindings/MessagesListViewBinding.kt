@@ -104,7 +104,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         else ChannelsCache.currentChannelId = null
     }
 
-    messagesListView.setUnreadCount(channel.newMessageCount.toInt())
+    messagesListView.setUnreadCount(channel.newMessageCount)
 
     messagesListView.setNeedDownloadListener {
         needMediaInfo(it)
@@ -344,7 +344,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     onChannelUpdatedEventFlow.onEach {
         channel = it
-        messagesListView.setUnreadCount(it.newMessageCount.toInt())
+        messagesListView.setUnreadCount(it.newMessageCount)
         checkEnableDisableActions(channel)
         if (it.lastMessage == null)
             messagesListView.clearData()
@@ -558,7 +558,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         if (it is SceytResponse.Success) {
             it.data?.let { channel ->
                 checkEnableDisableActions(channel)
-                messagesListView.setUnreadCount(channel.newMessageCount.toInt())
+                messagesListView.setUnreadCount(channel.newMessageCount)
             }
         }
     }
