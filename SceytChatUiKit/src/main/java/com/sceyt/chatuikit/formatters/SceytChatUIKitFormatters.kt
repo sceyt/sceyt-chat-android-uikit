@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultChannelDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageSenderNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelSubtitleFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultChannelUnreadCountFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMediaDurationFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMentionUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageDateFormatter
@@ -62,10 +62,6 @@ class SceytChatUIKitFormatters {
         DefaultChannelDateFormatter()
     }
 
-    var channelUnreadCountFormatter: Formatter<SceytChannel> by lazyVar {
-        DefaultChannelUnreadCountFormatter
-    }
-
     var channelLastMessageSenderNameFormatter: Formatter<SceytChannel> by lazyVar {
         DefaultChannelLastMessageSenderNameFormatter
     }
@@ -92,5 +88,9 @@ class SceytChatUIKitFormatters {
 
     var attachmentSizeFormatter: Formatter<SceytAttachment> by lazyVar {
         DefaultAttachmentSizeFormatter
+    }
+
+    var unreadCountFormatter: Formatter<Long> by lazyVar {
+        DefaultUnreadCountFormatter
     }
 }

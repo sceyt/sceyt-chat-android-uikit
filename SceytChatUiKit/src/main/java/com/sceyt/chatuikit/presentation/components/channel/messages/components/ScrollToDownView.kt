@@ -11,20 +11,21 @@ import com.sceyt.chatuikit.databinding.ScrollToBottomViewBinding
 import com.sceyt.chatuikit.extensions.animationListener
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
-import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
+import com.sceyt.chatuikit.styles.messages_list.ScrollDownButtonStyle
 
 class ScrollToDownView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
     private val binding: ScrollToBottomViewBinding
     private var changeVisibilityWithAnim = true
+    private lateinit var style: ScrollDownButtonStyle
 
     init {
         binding = ScrollToBottomViewBinding.inflate(LayoutInflater.from(context), this)
     }
 
-    internal fun setStyle(listViewStyle: MessagesListViewStyle) {
-        val style = listViewStyle.scrollDownButtonStyle
+    internal fun setStyle(style: ScrollDownButtonStyle) {
+        this.style = style
         style.unreadCountTextStyle.apply(binding.unreadCount)
 
         binding.icScrollToBottom.setImageDrawable(style.icon)
@@ -63,10 +64,8 @@ class ScrollToDownView @JvmOverloads constructor(
             super.setVisibility(visibility)
     }
 
-    fun setUnreadCount(count: Int) {
+    fun setUnreadCount(count: Long) {
         binding.unreadCount.isVisible = count > 0
-        binding.unreadCount.text = if (count > 99) {
-            "99+"
-        } else count.toString()
+        binding.unreadCount.text = style.unreadCountFormatter.format(context, count)
     }
 }
