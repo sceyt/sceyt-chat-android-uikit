@@ -45,7 +45,7 @@
         <attr name="sceytUiMessagesListHeaderUnderlineColor" format="reference|color" />
         <attr name="sceytUiMessagesListHeaderNavigationIcon" format="reference" />
         <attr name="sceytUiMessagesListHeaderShowUnderline" format="boolean" />
-        <attr name="sceytUiMessagesListHeaderMessageActionsMenuStyle" format="reference" />
+        <attr name="sceytUiMessagesListHeaderMessageActionsMenuPopupTheme" format="reference" />
         <attr name="sceytUiMessagesListHeaderMessageActionsMenuTitleAppearance" format="reference" />
     </declare-styleable>
 </resources>

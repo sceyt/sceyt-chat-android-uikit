@@ -44,7 +44,10 @@ class MessageActionsToolbar @JvmOverloads constructor(
         visibilityInitializer?.onInitToolbarActionsMenu(*messages, menu = menu)
     }
 
-    fun setupMenuWithMessages(@MenuRes menuRes: Int, vararg messages: SceytMessage): Menu? {
+    fun setupMenuWithMessages(
+            @MenuRes menuRes: Int,
+            vararg messages: SceytMessage,
+    ): Menu? {
         menu.clear()
         inflateMenu(menuRes)
         initMenu(*messages)

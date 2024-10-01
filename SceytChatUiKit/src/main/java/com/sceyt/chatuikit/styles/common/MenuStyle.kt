@@ -7,13 +7,13 @@ import androidx.appcompat.widget.Toolbar
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_STYLE
 
 data class MenuStyle(
-        @StyleRes val style: Int = UNSET_STYLE,
+        @StyleRes val popupTheme: Int = UNSET_STYLE,
         @StyleRes val titleAppearance: Int = UNSET_STYLE
 ) {
 
     fun apply(toolbar: Toolbar){
-        if (style != UNSET_STYLE) {
-            toolbar.popupTheme = style
+        if (popupTheme != UNSET_STYLE) {
+            toolbar.popupTheme = popupTheme
         }
         if (titleAppearance != UNSET_STYLE) {
             toolbar.setTitleTextAppearance(toolbar.context, titleAppearance)
@@ -22,13 +22,13 @@ data class MenuStyle(
 
     internal class Builder(private val typedArray: TypedArray) {
         @StyleRes
-        private var style: Int = UNSET_STYLE
+        private var popupTheme: Int = UNSET_STYLE
 
         @StyleRes
         private var titleAppearance: Int = UNSET_STYLE
 
-        fun style(@StyleableRes index: Int, @StyleRes defValue: Int = style) = apply {
-            this.style = typedArray.getResourceId(index, defValue)
+        fun popupTheme(@StyleableRes index: Int, @StyleRes defValue: Int = popupTheme) = apply {
+            this.popupTheme = typedArray.getResourceId(index, defValue)
         }
 
         fun titleAppearance(
@@ -39,7 +39,7 @@ data class MenuStyle(
         }
 
         fun build() = MenuStyle(
-            style = style,
+            popupTheme = popupTheme,
             titleAppearance = titleAppearance
         )
     }
