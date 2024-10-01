@@ -263,7 +263,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private fun initTypingUsersHelper(): HeaderTypingUsersHelper {
         return HeaderTypingUsersHelper(context,
             isGroup = isGroup,
-            typingUserNameFormatter = style.typingUsersFormatter,
+            typingUserNameFormatter = style.typingUserNameFormatter,
             typingTextUpdatedListener = {
                 binding.tvTyping.text = it
 

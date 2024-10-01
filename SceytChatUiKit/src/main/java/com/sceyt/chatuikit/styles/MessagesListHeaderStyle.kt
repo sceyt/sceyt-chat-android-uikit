@@ -39,7 +39,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property titleFormatter formatter for the channel title, default is [SceytChatUIKitFormatters.channelNameFormatter]
  * @property subtitleFormatter formatter for the channel subtitle, default is [SceytChatUIKitFormatters.channelSubtitleFormatter]
  * @property defaultAvatarProvider provider for the channel default avatar, default is [DefaultChannelDefaultAvatarProvider]
- * @property typingUsersFormatter formatter for the typing users, default is [SceytChatUIKitFormatters.userShortNameFormatter]
+ * @property typingUserNameFormatter formatter for the typing users, default is [SceytChatUIKitFormatters.userShortNameFormatter]
  * */
 data class MessagesListHeaderStyle(
         @ColorInt var backgroundColor: Int,
@@ -53,7 +53,7 @@ data class MessagesListHeaderStyle(
         var titleFormatter: Formatter<SceytChannel>,
         var subtitleFormatter: Formatter<SceytChannel>,
         var defaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>,
-        var typingUsersFormatter: Formatter<SceytUser>
+        var typingUserNameFormatter: Formatter<SceytUser>
 ) {
 
     companion object {
@@ -92,7 +92,7 @@ data class MessagesListHeaderStyle(
                     titleFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                     subtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter,
                     defaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider,
-                    typingUsersFormatter = SceytChatUIKit.formatters.userShortNameFormatter
+                    typingUserNameFormatter = SceytChatUIKit.formatters.typingUserNameFormatter
                 ).let { styleCustomizer.apply(context, it) }
             }
         }
