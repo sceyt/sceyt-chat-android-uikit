@@ -50,13 +50,13 @@ class PersistenceChannelsLogicImplTest {
 
         val createdBy = ClientWrapper.currentUser
 
-        val role = Role(RoleTypeEnum.Owner.toString())
+        val role = Role(RoleTypeEnum.Owner.value)
         val members = setOf(SceytMember(role, SceytUser("1234")), SceytMember(role, createdBy.toSceytUser())).toList()
         val channelId = members.map { it.id }.toSet().sorted().joinToString(separator = "$").toSha256()
 
         val createdChannel = suspendCancellableCoroutine {
             initCreateChannelRequest(CreateChannelData(
-                channelType = ChannelTypeEnum.Direct.toString(),
+                channelType = ChannelTypeEnum.Direct.value,
                 members = members,
                 uri = "",
                 metadata = "",

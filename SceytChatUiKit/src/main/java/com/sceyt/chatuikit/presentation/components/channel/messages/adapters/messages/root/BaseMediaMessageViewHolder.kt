@@ -108,7 +108,7 @@ abstract class BaseMediaMessageViewHolder(
     }
 
     protected open fun getFileItem(item: MessageListItem.MessageItem): FileListItem? {
-        return item.message.files?.find { it.file.type != AttachmentTypeEnum.Link.value() }
+        return item.message.files?.find { it.file.type != AttachmentTypeEnum.Link.value }
     }
 
     protected open fun setVideoDuration(tvDuration: TextView) {

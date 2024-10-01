@@ -89,7 +89,7 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
 
     private fun determinateState() {
         val myRole = channel.userRole
-        val enabledActions = myRole == RoleTypeEnum.Owner.toString()
+        val enabledActions = myRole == RoleTypeEnum.Owner.value
         with(binding) {
             delete.isVisible = enabledActions
             pin.isVisible = !channel.pinned

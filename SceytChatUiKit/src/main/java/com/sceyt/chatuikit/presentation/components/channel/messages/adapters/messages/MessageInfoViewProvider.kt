@@ -15,30 +15,31 @@ import com.sceyt.chatuikit.databinding.SceytItemOutLinkMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutTextMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutVideoMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemOutVoiceMessageBinding
+import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageViewHolderFactory.MessageViewTypeEnum
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutFileMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutImageMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutLinkMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutTextMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutVideoMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutVoiceMsgViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListenersImpl
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
-import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 
-open class MessageInfoViewProvider(private val context: Context) {
+open class MessageInfoViewProvider(
+        context: Context,
+        private val messageItemStyle: MessageItemStyle
+) {
     protected val viewPoolReactions = RecyclerView.RecycledViewPool()
     protected var clickListeners = MessageClickListenersImpl()
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     protected var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
     protected var viewHolder: BaseMsgViewHolder? = null
-    protected val messageItemStyle: MessageItemStyle by lazy { getMessageListViewStyle() }
     var viewType: Int = 0
         private set
 
@@ -108,17 +109,17 @@ open class MessageInfoViewProvider(private val context: Context) {
         val type = when {
             message.state == MessageState.Deleted -> if (inc) MessageViewTypeEnum.IncDeleted else MessageViewTypeEnum.OutDeleted
             !attachments.isNullOrEmpty() -> {
-                val (links, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value() }
+                val (links, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value }
                 // Check maybe all attachments are links
                 if (links.size == attachments.size)
                     return (if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink).ordinal
 
                 val attachment = others.getOrNull(0)
                 when (attachment?.type) {
-                    AttachmentTypeEnum.Image.value() -> if (inc) MessageViewTypeEnum.IncImage else MessageViewTypeEnum.OutImage
-                    AttachmentTypeEnum.Video.value() -> if (inc) MessageViewTypeEnum.IncVideo else MessageViewTypeEnum.OutVideo
-                    AttachmentTypeEnum.File.value() -> if (inc) MessageViewTypeEnum.IncFile else MessageViewTypeEnum.OutFile
-                    AttachmentTypeEnum.Voice.value() -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice
+                    AttachmentTypeEnum.Image.value -> if (inc) MessageViewTypeEnum.IncImage else MessageViewTypeEnum.OutImage
+                    AttachmentTypeEnum.Video.value -> if (inc) MessageViewTypeEnum.IncVideo else MessageViewTypeEnum.OutVideo
+                    AttachmentTypeEnum.File.value -> if (inc) MessageViewTypeEnum.IncFile else MessageViewTypeEnum.OutFile
+                    AttachmentTypeEnum.Voice.value -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice
                     else -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
                 }
             }
@@ -126,12 +127,6 @@ open class MessageInfoViewProvider(private val context: Context) {
             else -> if (inc) MessageViewTypeEnum.IncText else MessageViewTypeEnum.OutText
         }
         return type.ordinal
-    }
-
-
-    protected open fun getMessageListViewStyle(): MessageItemStyle {
-        return MessagesListViewStyle.currentStyle?.messageItemStyle
-                ?: MessagesListViewStyle.Builder(context = context, null).build().messageItemStyle
     }
 
     fun setMessageListener(listener: MessageClickListeners) {

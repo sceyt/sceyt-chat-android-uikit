@@ -115,7 +115,7 @@ class MessageToSendHelper(private val context: Context,
                 listOf(linkAttachment)
             else {
                 val existLinkIndex = message.attachments.indexOfFirst {
-                    it.type == AttachmentTypeEnum.Link.value()
+                    it.type == AttachmentTypeEnum.Link.value
                 }
 
                 if (existLinkIndex == -1) {
@@ -128,7 +128,7 @@ class MessageToSendHelper(private val context: Context,
             }
         } else // remove link attachment if exist, because message should contain only one link attachment
             message.attachments?.filter {
-                it.type != AttachmentTypeEnum.Link.value()
+                it.type != AttachmentTypeEnum.Link.value
             }
 
         val (bodyAttributes, mentionedUsers) = getMentionUsersAndAttributes(body)
@@ -160,7 +160,7 @@ class MessageToSendHelper(private val context: Context,
                 ?: body.extractLinks().firstOrNull { it.isValidUrl(context) }
         if (validLink != null) {
             val metadata = linkDetails?.toMetadata() ?: ""
-            return Attachment.Builder("", validLink, AttachmentTypeEnum.Link.value())
+            return Attachment.Builder("", validLink, AttachmentTypeEnum.Link.value)
                 .withTid(ClientWrapper.generateTid())
                 .setName(linkDetails?.title ?: "")
                 .setMetadata(metadata)
@@ -190,7 +190,7 @@ class MessageToSendHelper(private val context: Context,
                         attachmentType: String? = null): Attachment? {
         val file = File(path)
         if (file.exists()) {
-            val type = attachmentType ?: getAttachmentType(path).value()
+            val type = attachmentType ?: getAttachmentType(path).value
             return Attachment.Builder(path, url, type)
                 .setName(File(path).name)
                 .withTid(ClientWrapper.generateTid())

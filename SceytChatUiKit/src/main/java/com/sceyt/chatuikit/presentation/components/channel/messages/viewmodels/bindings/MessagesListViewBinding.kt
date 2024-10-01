@@ -27,7 +27,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.getLoadKey
-import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -486,7 +486,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     fun onMessageDisplayed(messageItem: MessageItem) {
         val message = messageItem.message
-        if (!message.incoming || message.userMarkers?.any { it.name == MarkerTypeEnum.Displayed.value() } == true)
+        if (!message.incoming || message.userMarkers?.any { it.name == MarkerType.Displayed.value } == true)
             return
 
         if (lifecycleOwner.isResumed()) {
@@ -500,10 +500,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
 
     fun onVocePlaying(message: SceytMessage) {
-        if (message.userMarkers?.any { it.name == MarkerTypeEnum.Played.value() } == true)
+        if (message.userMarkers?.any { it.name == MarkerType.Played.value } == true)
             return
 
-        addMessageMarker(MarkerTypeEnum.Played.value(), message.id)
+        addMessageMarker(MarkerType.Played.value, message.id)
     }
 
     // todo reply in thread

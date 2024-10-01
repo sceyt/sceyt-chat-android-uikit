@@ -95,8 +95,8 @@ open class ShareableActivity : AppCompatActivity(), SceytKoinComponent {
 
     open fun filterOnlyAppropriateChannels(data: List<SceytChannel>): List<SceytChannel> {
         val filtered = data.filter {
-            ((it.isPublic() && (it.userRole != RoleTypeEnum.Owner.toString() &&
-                    it.userRole != RoleTypeEnum.Admin.toString())) || ((it.isPeerDeleted() || it.isPeerBlocked())))
+            ((it.isPublic() && (it.userRole != RoleTypeEnum.Owner.value &&
+                    it.userRole != RoleTypeEnum.Admin.value)) || ((it.isPeerDeleted() || it.isPeerBlocked())))
         }
 
         return data.minus(filtered.toSet())

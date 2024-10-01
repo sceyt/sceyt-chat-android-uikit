@@ -492,7 +492,7 @@ internal class PersistenceChannelsLogicImpl(
                 ?: usersDao.getUserById(myId)?.toSceytUser()
                 ?: SceytUser(myId)
 
-        val role = Role(RoleTypeEnum.Owner.toString())
+        val role = Role(RoleTypeEnum.Owner.value)
         val members = setOf(SceytMember(role, user), SceytMember(role, createdBy)).toList()
         val channelId = members.map { it.id }.toSet().sorted().joinToString(separator = "$").toSha256()
         val channel = createPendingDirectChannelData(channelId = channelId,

@@ -48,8 +48,8 @@ open class AttachmentsViewHolderFactory(
 
     open fun getItemViewType(item: AttachmentItem): Int {
         return when (item.attachment.type) {
-            AttachmentTypeEnum.Image.value() -> ItemType.Image.ordinal
-            AttachmentTypeEnum.Video.value() -> ItemType.Video.ordinal
+            AttachmentTypeEnum.Image.value -> ItemType.Image.ordinal
+            AttachmentTypeEnum.Video.value -> ItemType.Video.ordinal
             else -> ItemType.File.ordinal
         }
     }

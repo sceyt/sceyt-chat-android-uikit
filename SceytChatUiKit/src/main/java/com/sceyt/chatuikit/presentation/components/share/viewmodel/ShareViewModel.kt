@@ -45,7 +45,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
                 val message = MessageBuilder(channelId)
                     .setBody(body)
                     .setTid(ClientWrapper.generateTid())
-                    .setType(MessageTypeEnum.Text.value())
+                    .setType(MessageTypeEnum.Text.value)
                     .apply {
                         if (isContainsLink)
                             setAttachments(arrayOf(buildAttachment("", links[0],
@@ -92,7 +92,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
                             } else setAttachments(arrayOf(attachment))
                         }
                         .setTid(ClientWrapper.generateTid())
-                        .setType(MessageTypeEnum.Media.value())
+                        .setType(MessageTypeEnum.Media.value)
                         .build()
 
                     messageInteractor.sendSharedFileMessage(channelId, message)
@@ -105,7 +105,7 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
     }
 
     private fun buildAttachment(path: String, url: String, typeEnum: AttachmentTypeEnum, fileName: String, fileSize: Long) =
-            Attachment.Builder(path, url, typeEnum.value())
+            Attachment.Builder(path, url, typeEnum.value)
                 .setName(fileName)
                 .withTid(ClientWrapper.generateTid())
                 .setFileSize(fileSize)

@@ -9,12 +9,13 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultChannelDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageSenderNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelSubtitleFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMediaDurationFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMentionUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageDateSeparatorFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultMessageInfoDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageViewCountFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserPresenceDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserShortNameFormatter
@@ -68,6 +69,10 @@ class SceytChatUIKitFormatters {
 
     var messageDateFormatter: Formatter<Date> by lazyVar {
         DefaultMessageDateFormatter
+    }
+
+    var messageInfoDateFormatter: Formatter<Date> by lazyVar {
+        DefaultMessageInfoDateFormatter
     }
 
     var messageDateSeparatorFormatter: Formatter<Date> by lazyVar {

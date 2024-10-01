@@ -5,7 +5,7 @@ import com.sceyt.chat.models.message.DeliveryStatus.Received
 import com.sceyt.chatuikit.data.managers.channel.event.MessageMarkerEventData
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.persistence.dao.MarkerDao
 import com.sceyt.chatuikit.persistence.dao.MessageDao
@@ -27,8 +27,8 @@ class PersistenceMessageMarkerLogicImpl(
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
         val marker = when (data.status) {
-            Received -> MarkerTypeEnum.Received.value()
-            Displayed -> MarkerTypeEnum.Displayed.value()
+            Received -> MarkerType.Received.value
+            Displayed -> MarkerType.Displayed.value
             else -> return
         }
 

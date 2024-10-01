@@ -15,5 +15,5 @@ fun BodyAttribute.toBodyStyleRange(): BodyStyleRange? {
 }
 
 fun Mention.toBodyAttribute(): BodyAttribute {
-    return BodyAttribute(BodyAttributeType.Mention.value(), start, length, recipientId)
+    return BodyAttribute(BodyAttributeType.Mention.value, start, length, recipientId)
 }

@@ -44,7 +44,7 @@ interface ChannelDao {
             "order by " +
             "case when pinnedAt > 0 then pinnedAt end desc," +
             "case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
-    suspend fun getChannels(limit: Int, offset: Int, ignoreRole: String = RoleTypeEnum.None.toString()): List<ChannelDb>
+    suspend fun getChannels(limit: Int, offset: Int, ignoreRole: String = RoleTypeEnum.None.value): List<ChannelDb>
 
     @Transaction
     @Query("select * from channels where subject LIKE '%' || :query || '%' and (not pending or lastMessageTid != 0) " +
@@ -65,7 +65,7 @@ interface ChannelDao {
             "case when pinnedAt > 0 then pinnedAt end desc," +
             "case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
     suspend fun getChannelsByQueryAndUserIds(query: String, userIds: List<String>, limit: Int, offset: Int, onlyMine: Boolean,
-                                             directType: String = ChannelTypeEnum.Direct.getString()): List<ChannelDb>
+                                             directType: String = ChannelTypeEnum.Direct.value): List<ChannelDb>
 
     @Transaction
     @RawQuery
@@ -93,7 +93,7 @@ interface ChannelDao {
     @Query("select * from channels join UserChatLink as link on link.chat_id = channels.chat_id " +
             "where link.user_id =:peerId and type =:directType")
     suspend fun getDirectChannel(peerId: String,
-                                 directType: String = ChannelTypeEnum.Direct.getString()): ChannelDb?
+                                 directType: String = ChannelTypeEnum.Direct.value): ChannelDb?
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
@@ -102,7 +102,7 @@ interface ChannelDao {
             "where channels.type = :directType ")
     suspend fun getDirectChannelsWhereMemberOnlyMe(
             myId: String? = SceytChatUIKit.chatUIFacade.myId,
-            directType: String = ChannelTypeEnum.Direct.getString()): List<ChannelDb>
+            directType: String = ChannelTypeEnum.Direct.value): List<ChannelDb>
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction

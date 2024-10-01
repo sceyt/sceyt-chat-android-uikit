@@ -54,7 +54,7 @@ class MemberActionsDialog(context: Context) : Dialog(context, R.style.SceytDialo
     }
 
     private fun determinateState() {
-        val enableRevokeAdmin = member.role.name == RoleTypeEnum.Admin.toString() && currentIsOwner
+        val enableRevokeAdmin = member.role.name == RoleTypeEnum.Admin.value && currentIsOwner
         binding.revokeAdmin.isVisible = enableRevokeAdmin
     }
 

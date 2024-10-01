@@ -18,7 +18,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SendMessageResult
-import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
@@ -278,7 +278,7 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
-    override suspend fun markMessageAs(channelId: Long, marker: MarkerTypeEnum, vararg id: Long): SceytResponse<MessageListMarker> {
+    override suspend fun markMessageAs(channelId: Long, marker: MarkerType, vararg id: Long): SceytResponse<MessageListMarker> {
         return suspendCancellableCoroutine { continuation ->
             val callback = object : MessageMarkCallback {
                 override fun onResult(result: MessageListMarker) {
@@ -292,9 +292,9 @@ class MessagesRepositoryImpl : MessagesRepository {
             }
             val channelOperator = ChannelOperator.build(channelId)
             when (marker) {
-                MarkerTypeEnum.Displayed -> channelOperator.markMessagesAsDisplayed(id, callback)
-                MarkerTypeEnum.Received -> channelOperator.markMessagesAsReceived(id, callback)
-                MarkerTypeEnum.Played -> channelOperator.markMessages(id, marker.value(), callback)
+                MarkerType.Displayed -> channelOperator.markMessagesAsDisplayed(id, callback)
+                MarkerType.Received -> channelOperator.markMessagesAsReceived(id, callback)
+                else -> channelOperator.markMessages(id, marker.value, callback)
             }
         }
     }

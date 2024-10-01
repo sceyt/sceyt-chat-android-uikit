@@ -232,17 +232,17 @@ open class MessageViewHolderFactory(context: Context) {
         val type = when {
             message.state == MessageState.Deleted -> if (inc) MessageViewTypeEnum.IncDeleted else MessageViewTypeEnum.OutDeleted
             !attachments.isNullOrEmpty() -> {
-                val (links, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value() }
+                val (links, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value }
                 //Check maybe all attachments are links
                 if (links.size == attachments.size)
                     return if (inc) MessageViewTypeEnum.IncLink.ordinal else MessageViewTypeEnum.OutLink.ordinal
 
                 val attachment = others.getOrNull(0)
                 when (attachment?.type) {
-                    AttachmentTypeEnum.Image.value() -> if (inc) MessageViewTypeEnum.IncImage else MessageViewTypeEnum.OutImage
-                    AttachmentTypeEnum.Video.value() -> if (inc) MessageViewTypeEnum.IncVideo else MessageViewTypeEnum.OutVideo
-                    AttachmentTypeEnum.File.value() -> if (inc) MessageViewTypeEnum.IncFile else MessageViewTypeEnum.OutFile
-                    AttachmentTypeEnum.Voice.value() -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice
+                    AttachmentTypeEnum.Image.value -> if (inc) MessageViewTypeEnum.IncImage else MessageViewTypeEnum.OutImage
+                    AttachmentTypeEnum.Video.value -> if (inc) MessageViewTypeEnum.IncVideo else MessageViewTypeEnum.OutVideo
+                    AttachmentTypeEnum.File.value -> if (inc) MessageViewTypeEnum.IncFile else MessageViewTypeEnum.OutFile
+                    AttachmentTypeEnum.Voice.value -> if (inc) MessageViewTypeEnum.IncVoice else MessageViewTypeEnum.OutVoice
                     else -> if (inc) MessageViewTypeEnum.IncFiles else MessageViewTypeEnum.OutFiles
                 }
             }

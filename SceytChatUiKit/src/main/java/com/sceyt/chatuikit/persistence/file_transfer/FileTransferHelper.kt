@@ -192,11 +192,11 @@ object FileTransferHelper : SceytKoinComponent {
 
     private fun getDimensions(type: String, path: String): Size? {
         return when (type) {
-            AttachmentTypeEnum.Image.value() -> {
+            AttachmentTypeEnum.Image.value -> {
                 FileResizeUtil.getImageDimensionsSize(Uri.parse(path))
             }
 
-            AttachmentTypeEnum.Video.value() -> {
+            AttachmentTypeEnum.Video.value -> {
                 FileResizeUtil.getVideoSize(path)
             }
 

@@ -42,7 +42,7 @@ open class ChannelInfoFilesFragment : Fragment(), SceytKoinComponent, ViewPagerA
     protected var binding: SceytFragmentChannelInfoFilesBinding? = null
     protected var mediaAdapter: ChannelMediaAdapter? = null
     protected var pageStateView: PageStateView? = null
-    protected val mediaType = listOf(AttachmentTypeEnum.File.value())
+    protected val mediaType = listOf(AttachmentTypeEnum.File.value)
     protected lateinit var viewModel: ChannelAttachmentsViewModel
     protected lateinit var style: ChannelInfoMediaStyle
         private set

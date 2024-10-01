@@ -109,7 +109,7 @@ class AttachmentsCache {
 
             cachedAttachments.values.forEach {
                 it[updateDate.messageTid]?.let { attachment ->
-                    if (attachment.type == AttachmentTypeEnum.Link.value())
+                    if (attachment.type == AttachmentTypeEnum.Link.value)
                         return
 
                     when (updateDate.state) {
@@ -135,7 +135,7 @@ class AttachmentsCache {
 
     fun updateAttachmentLinkDetails(data: LinkPreviewDetails) {
         synchronized(lock) {
-            val map = cachedAttachments[AttachmentTypeEnum.Link.value()] ?: return
+            val map = cachedAttachments[AttachmentTypeEnum.Link.value] ?: return
             map.entries.forEach { (key, attachment) ->
                 if (attachment.url == data.link)
                     map[key] = attachment.copy(linkPreviewDetails = data)
@@ -145,7 +145,7 @@ class AttachmentsCache {
 
     fun updateLinkDetailsSize(link: String, width: Int, height: Int) {
         synchronized(lock) {
-            cachedAttachments[AttachmentTypeEnum.Link.value()]?.entries?.forEach { entry ->
+            cachedAttachments[AttachmentTypeEnum.Link.value]?.entries?.forEach { entry ->
                 val (_, attachment) = entry
                 if (attachment.url == link) {
                     val linkPreviewDetails = attachment.linkPreviewDetails?.copy(
@@ -160,7 +160,7 @@ class AttachmentsCache {
 
     fun updateThumb(link: String, thumb: String) {
         synchronized(lock) {
-            cachedAttachments[AttachmentTypeEnum.Link.value()]?.entries?.forEach { entry ->
+            cachedAttachments[AttachmentTypeEnum.Link.value]?.entries?.forEach { entry ->
                 val (_, attachment) = entry
                 if (attachment.url == link) {
                     val linkPreviewDetails = attachment.linkPreviewDetails?.copy(thumb = thumb)
@@ -197,7 +197,7 @@ class AttachmentsCache {
     private fun updateAttachmentsPayLoads(data: AttachmentPayLoadData?,
                                           attachment: SceytAttachment,
                                           linkPreviewDetails: LinkPreviewDetails?): SceytAttachment {
-        if (attachment.type == AttachmentTypeEnum.Link.value() || data == null) return attachment
+        if (attachment.type == AttachmentTypeEnum.Link.value || data == null) return attachment
         return attachment.copy(
             transferState = data.transferState,
             progressPercent = data.progressPercent,

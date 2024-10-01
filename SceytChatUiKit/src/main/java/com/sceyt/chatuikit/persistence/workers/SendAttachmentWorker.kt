@@ -93,7 +93,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                 ?: return kotlin.Result.failure(Exception("Attachments not found"))
 
         for ((index, attachment) in attachments.withIndex()) {
-            if (attachment.type == AttachmentTypeEnum.Link.value())
+            if (attachment.type == AttachmentTypeEnum.Link.value)
                 continue
 
             val payload = payloads.find { it.payLoadEntity.messageTid == attachment.messageTid }?.payLoadEntity

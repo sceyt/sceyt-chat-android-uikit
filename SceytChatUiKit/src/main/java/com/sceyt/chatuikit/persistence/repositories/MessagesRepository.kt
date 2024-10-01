@@ -6,7 +6,7 @@ import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SendMessageResult
-import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import kotlinx.coroutines.flow.Flow
 
@@ -41,7 +41,7 @@ interface MessagesRepository {
                               deleteType: DeleteMessageType): SceytResponse<SceytMessage>
 
     suspend fun editMessage(channelId: Long, message: SceytMessage): SceytResponse<SceytMessage>
-    suspend fun markMessageAs(channelId: Long, marker: MarkerTypeEnum, vararg id: Long): SceytResponse<MessageListMarker>
+    suspend fun markMessageAs(channelId: Long, marker: MarkerType, vararg id: Long): SceytResponse<MessageListMarker>
     suspend fun addMessagesMarker(channelId: Long, marker: String, vararg id: Long): SceytResponse<MessageListMarker>
     suspend fun getMessageById(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
     suspend fun sendTyping(channelId: Long, typing: Boolean)

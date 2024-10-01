@@ -85,7 +85,7 @@ class CreateChannelActivity : AppCompatActivity() {
     }
 
     private fun SceytActivityCreateChannelBinding.initViews() {
-        toolbar.navigationIcon.setOnClickListener {
+        toolbar.setNavigationClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
     }

@@ -10,15 +10,12 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytFragmentMessageInfoBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setBundleArgumentsAs
-import com.sceyt.chatuikit.extensions.setTextViewsTextColor
-import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageInfoViewProvider
@@ -29,9 +26,9 @@ import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.Messag
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.MessageInfoViewModelFactory
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.UIState
 import com.sceyt.chatuikit.styles.MessageInfoStyle
-import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import java.util.Date
 
 @Suppress("MemberVisibilityCanBePrivate")
 open class MessageInfoFragment : Fragment() {
@@ -64,7 +61,7 @@ open class MessageInfoFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        style = MessageInfoStyle.Builder(context, null).build()
+        style = MessageInfoStyle.Builder(context).build()
     }
 
     private fun getBundleArguments() {
@@ -73,7 +70,7 @@ open class MessageInfoFragment : Fragment() {
     }
 
     private fun initViews() {
-        binding?.toolbar?.setNavigationIconClickListener {
+        binding?.toolbar?.setNavigationClickListener {
             requireActivity().onBackPressedDispatcher.onBackPressed()
         }
     }
@@ -129,10 +126,9 @@ open class MessageInfoFragment : Fragment() {
     protected open fun setMessageDetails(message: SceytMessage?) {
         message ?: return
         with(binding ?: return) {
-            tvSentDate.text = DateTimeUtil.getDateTimeString(message.createdAt, "dd.MM.yy")
-            groupSizeViews.isVisible = viewModel.getMessageAttachmentSizeIfExist(message)?.let {
-                tvSize.text = it.toPrettySize()
-                it
+            tvSentDate.text = style.messageDateFormatter.format(requireContext(), Date(message.createdAt))
+            groupSizeViews.isVisible = viewModel.getMessageAttachmentToShowSizeIfExist(message)?.let {
+                tvSize.text = style.attachmentSizeFormatter.format(requireContext(), it)
             } != null
         }
     }
@@ -172,7 +168,7 @@ open class MessageInfoFragment : Fragment() {
     }
 
     protected open fun getMessageInfoViewProvider(): MessageInfoViewProvider {
-        return MessageInfoViewProvider(requireContext()).also { provider ->
+        return MessageInfoViewProvider(requireContext(), style.messageItemStyle).also { provider ->
             provider.setMessageListener(MessageClickListeners.AttachmentClickListener { _, item, message ->
                 onAttachmentClick(item, message)
             })
@@ -197,11 +193,36 @@ open class MessageInfoFragment : Fragment() {
 
     protected open fun SceytFragmentMessageInfoBinding.applyStyle() {
         root.setBackgroundColor(style.backgroundColor)
-        toolbar.setBackgroundColor(style.toolbarColor)
-        toolbar.setTitleColor(style.titleColor)
-        toolbar.setTitle(style.title)
-        setTextViewsTextColor(listOf(tvSentDate, tvPlayedByHint, tvReadByHint, tvDeliveredToHint),
-            requireContext().getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
+        style.toolbarStyle.apply(toolbar)
+
+        tvSentLabel.apply {
+            text = style.sentLabelText
+            style.descriptionTitleTextStyle.apply(this)
+        }
+
+        tvSizeLabel.apply {
+            text = style.sizeLabelText
+            style.descriptionTitleTextStyle.apply(this)
+        }
+
+        with(style.descriptionValueTextStyle) {
+            apply(tvSentDate)
+            apply(tvSize)
+        }
+
+        tvSeenByLabel.apply {
+            text = style.markerTitleProvider.provide(requireContext(), MarkerType.Displayed)
+            style.headerTextStyle.apply(this)
+        }
+        tvDeliveredToLabel.apply {
+            text = style.markerTitleProvider.provide(requireContext(), MarkerType.Received)
+            style.headerTextStyle.apply(this)
+        }
+        tvPlayedByLabel.apply {
+            text = style.markerTitleProvider.provide(requireContext(), MarkerType.Played)
+            style.headerTextStyle.apply(this)
+        }
+
         divider.setBackgroundColor(style.borderColor)
         dividerPlayed.setBackgroundColor(style.borderColor)
         dividerRead.setBackgroundColor(style.borderColor)

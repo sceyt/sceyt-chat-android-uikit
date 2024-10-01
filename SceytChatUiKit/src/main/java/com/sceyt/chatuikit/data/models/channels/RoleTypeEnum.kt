@@ -8,12 +8,11 @@ enum class RoleTypeEnum {
     Admin,
     Member;
 
-    override fun toString(): String {
-        return when (this) {
+    val value: String
+        get() = when (this) {
             None -> ""
             Owner -> SceytChatUIKit.config.memberRolesConfig.owner
             Admin -> SceytChatUIKit.config.memberRolesConfig.admin
             Member -> SceytChatUIKit.config.memberRolesConfig.participant
         }
-    }
 }

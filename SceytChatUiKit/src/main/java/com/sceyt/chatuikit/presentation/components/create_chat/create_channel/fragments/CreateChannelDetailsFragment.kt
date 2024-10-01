@@ -41,7 +41,7 @@ import java.io.File
 open class CreateChannelDetailsFragment : Fragment() {
     private lateinit var binding: SceytFragmentCreateChannelDetailsBinding
     private val filePickerHelper = FilePickerHelper(this)
-    private val createChannelData by lazy { CreateChannelData(ChannelTypeEnum.Public.getString()) }
+    private val createChannelData by lazy { CreateChannelData(ChannelTypeEnum.Public.value) }
     private val viewModel: CreateChatViewModel by viewModels()
     private val debounceHelper by lazy { DebounceHelper(200, lifecycleScope) }
     private var urlIsValidByServer = false
@@ -113,7 +113,7 @@ open class CreateChannelDetailsFragment : Fragment() {
         fabNext.setOnClickListener {
             with(createChannelData) {
                 subject = inputSubject.text.toString().trim()
-                channelType = ChannelTypeEnum.Public.getString()
+                channelType = ChannelTypeEnum.Public.value
                 uri = inputUri.text?.toString()?.trim()?.lowercase().toString()
                 metadata = Gson().toJson(ChannelDescriptionData(inputDescription.text.toString().trim()))
                 members = arrayListOf()

@@ -40,7 +40,7 @@ open class ChannelInfoVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerA
     private var binding: SceytFragmentChannelInfoVoiceBinding? = null
     protected open var mediaAdapter: ChannelMediaAdapter? = null
     protected open var pageStateView: PageStateView? = null
-    protected open val mediaType = listOf(AttachmentTypeEnum.Voice.value())
+    protected open val mediaType = listOf(AttachmentTypeEnum.Voice.value)
     private lateinit var viewModel: ChannelAttachmentsViewModel
     protected lateinit var style: ChannelInfoMediaStyle
         private set

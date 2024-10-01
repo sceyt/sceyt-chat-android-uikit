@@ -184,10 +184,10 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
     }
 
     private fun setNewOwner(newOwnerId: String) {
-        val oldOwnerPair = membersAdapter?.getMemberItemByRole(RoleTypeEnum.Owner.toString())
+        val oldOwnerPair = membersAdapter?.getMemberItemByRole(RoleTypeEnum.Owner.value)
         val newOwnerPair = membersAdapter?.getMemberItemById(newOwnerId)
-        oldOwnerPair?.let { updateMemberRole(RoleTypeEnum.Member.toString(), it) }
-        newOwnerPair?.let { updateMemberRole(RoleTypeEnum.Owner.toString(), it) }
+        oldOwnerPair?.let { updateMemberRole(RoleTypeEnum.Member.value, it) }
+        newOwnerPair?.let { updateMemberRole(RoleTypeEnum.Owner.value, it) }
     }
 
     private fun updateMemberRole(newRole: String, pair: Pair<Int, MemberItem>) {
@@ -235,7 +235,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
 
     private fun getRole(): String? {
         return when (memberType) {
-            MemberTypeEnum.Admin -> RoleTypeEnum.Admin.toString()
+            MemberTypeEnum.Admin -> RoleTypeEnum.Admin.value
             MemberTypeEnum.Subscriber -> null
             MemberTypeEnum.Member -> null
         }
@@ -250,7 +250,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
         if (currentUserIsOwnerOrAdmin().not() || item.member.id == myId) return
 
         MemberActionsDialog
-            .newInstance(requireContext(), item.member, currentUserRole?.name == RoleTypeEnum.Owner.toString())
+            .newInstance(requireContext(), item.member, currentUserRole?.name == RoleTypeEnum.Owner.value)
             .apply {
                 setChooseTypeCb {
                     when (it) {
@@ -305,7 +305,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
     }
 
     protected open fun currentUserIsOwnerOrAdmin(): Boolean {
-        return currentUserRole?.name == RoleTypeEnum.Owner.toString() || currentUserRole?.name == RoleTypeEnum.Admin.toString()
+        return currentUserRole?.name == RoleTypeEnum.Owner.value || currentUserRole?.name == RoleTypeEnum.Admin.value
     }
 
     protected open fun loadInitialMembers() {
@@ -397,7 +397,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
     }
 
     protected open fun revokeAdmin(member: SceytMember) {
-        viewModel.changeRole(channel.id, member.copy(role = Role(RoleTypeEnum.Member.toString())))
+        viewModel.changeRole(channel.id, member.copy(role = Role(RoleTypeEnum.Member.value)))
     }
 
     protected open fun changeRole(vararg member: SceytMember) {
@@ -422,7 +422,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
         when (eventData.eventType) {
             ChannelMembersEventEnum.Role -> {
                 eventData.members.forEach { member ->
-                    if (memberType == MemberTypeEnum.Admin && member.role.name != RoleTypeEnum.Admin.toString()) {
+                    if (memberType == MemberTypeEnum.Admin && member.role.name != RoleTypeEnum.Admin.value) {
                         removeMember(member.id)
                     } else
                         membersAdapter?.getMemberItemById(member.id)?.let {
