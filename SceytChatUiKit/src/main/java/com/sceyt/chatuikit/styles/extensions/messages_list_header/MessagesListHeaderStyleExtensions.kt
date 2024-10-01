@@ -124,10 +124,12 @@ internal fun MessagesListHeaderStyle.Builder.buildSearchInputTextStyle(
 internal fun MessagesListHeaderStyle.Builder.buildMessageActionsMenuStyle(
         typedArray: TypedArray
 ) = MenuStyle.Builder(typedArray)
-    .style(
-        index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderMessageActionsMenuStyle
+    .popupTheme(
+        index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderMessageActionsMenuPopupTheme,
+        defValue = R.style.SceytPopupMenuStyle
     )
     .titleAppearance(
-        index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderMessageActionsMenuTitleAppearance
+        index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderMessageActionsMenuTitleAppearance,
+        defValue = R.style.SceytMenuTitleAppearance
     )
     .build()
