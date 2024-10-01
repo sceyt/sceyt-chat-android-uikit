@@ -134,7 +134,7 @@ fun createPendingDirectChannelData(
     id = channelId,
     parentChannelId = null,
     uri = null,
-    type = ChannelTypeEnum.Direct.getString(),
+    type = ChannelTypeEnum.Direct.value,
     subject = null,
     avatarUrl = null,
     metadata = metadata,

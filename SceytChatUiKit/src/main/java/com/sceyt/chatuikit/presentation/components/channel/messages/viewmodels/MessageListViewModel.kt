@@ -30,7 +30,7 @@ import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
-import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
@@ -623,7 +623,7 @@ class MessageListViewModel(
 
     fun markMessageAsRead(vararg messageIds: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messageInteractor.markMessagesAs(channel.id, MarkerTypeEnum.Displayed, *messageIds)
+            val response = messageInteractor.markMessagesAs(channel.id, MarkerType.Displayed, *messageIds)
             _messageMarkerLiveData.postValue(response)
         }
     }
@@ -850,7 +850,7 @@ class MessageListViewModel(
         else {
             val sameSender = prevMessage.user?.id == sceytMessage.user?.id
             isGroup && (!sameSender || shouldShowDate(sceytMessage, prevMessage)
-                    || prevMessage.type == MessageTypeEnum.System.value())
+                    || prevMessage.type == MessageTypeEnum.System.value)
         }
     }
 

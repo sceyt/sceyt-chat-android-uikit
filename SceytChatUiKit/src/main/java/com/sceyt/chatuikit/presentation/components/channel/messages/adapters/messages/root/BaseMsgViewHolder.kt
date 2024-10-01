@@ -170,7 +170,7 @@ abstract class BaseMsgViewHolder(
                         context = context,
                         body = body,
                         mentionAttributes = message.bodyAttributes.filter {
-                            it.type == BodyAttributeType.Mention.value()
+                            it.type == BodyAttributeType.Mention.value
                         },
                         mentionUsers = message.mentionedUsers,
                         mentionTextStyle = itemStyle.mentionTextStyle,
@@ -275,7 +275,7 @@ abstract class BaseMsgViewHolder(
                         icFile.isVisible = false
                     }
 
-                    attachment?.type == AttachmentTypeEnum.Link.value() -> {
+                    attachment?.type == AttachmentTypeEnum.Link.value -> {
                         loadLinkImage(attachment, imageAttachment, icon)
                         imageAttachment.isVisible = true
                         icFile.isVisible = false

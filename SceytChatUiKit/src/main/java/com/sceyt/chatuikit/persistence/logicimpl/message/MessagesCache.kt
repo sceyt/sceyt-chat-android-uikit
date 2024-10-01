@@ -258,7 +258,7 @@ class MessagesCache {
         val updateLinkDetails = attachmentsLinkDetails?.run { ArrayList(this) }
         payloadData?.filter { payLoad -> payLoad.messageTid == message.tid }?.let { data ->
             message.attachments.forEachIndexed { index, attachment ->
-                if (attachment.type == AttachmentTypeEnum.Link.value()) {
+                if (attachment.type == AttachmentTypeEnum.Link.value) {
                     updateLinkDetails?.find { it.url == attachment.url }?.let {
                         updateAttachments[index] = attachment.copy(linkPreviewDetails = it)
                         updateLinkDetails.remove(it)
@@ -290,7 +290,7 @@ class MessagesCache {
     }
 
     private fun getAttachmentPayLoads(cashedMessage: SceytMessage?): List<AttachmentPayLoadData>? {
-        val payloads = cashedMessage?.attachments?.filter { it.type != AttachmentTypeEnum.Link.value() }?.map { attachment ->
+        val payloads = cashedMessage?.attachments?.filter { it.type != AttachmentTypeEnum.Link.value }?.map { attachment ->
             AttachmentPayLoadData(
                 messageTid = cashedMessage.tid,
                 transferState = attachment.transferState,
@@ -303,7 +303,7 @@ class MessagesCache {
     }
 
     private fun getAttachmentLinkDetails(cashedMessage: SceytMessage?): List<LinkPreviewDetails>? {
-        val payloads = cashedMessage?.attachments?.filter { it.type == AttachmentTypeEnum.Link.value() }?.mapNotNull { attachment ->
+        val payloads = cashedMessage?.attachments?.filter { it.type == AttachmentTypeEnum.Link.value }?.mapNotNull { attachment ->
             attachment.linkPreviewDetails
         }
         return payloads
@@ -360,7 +360,7 @@ class MessagesCache {
                 messageHashMap[updateDate.messageTid]?.let { message ->
                     val attachments = message.attachments?.toMutableList() ?: return@let
                     attachments.forEachIndexed att@{ index, attachment ->
-                        if (attachment.type == AttachmentTypeEnum.Link.value())
+                        if (attachment.type == AttachmentTypeEnum.Link.value)
                             return@att
 
                         when (updateDate.state) {
@@ -392,7 +392,7 @@ class MessagesCache {
                 messageHashMap[messageTid]?.let { message ->
                     val attachments = message.attachments?.toMutableList() ?: return@let
                     attachments.forEachIndexed att@{ index, attachment ->
-                        if (attachment.type == AttachmentTypeEnum.Link.value())
+                        if (attachment.type == AttachmentTypeEnum.Link.value)
                             return@att
                         attachments[index] = attachment.copy(
                             filePath = path,

@@ -13,7 +13,8 @@ import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
-import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MarkerType
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.toFileListItem
@@ -147,7 +148,7 @@ class MessageInfoViewModel(
 
     private fun onMarkerReceived(data: MessageMarkerEventData) {
         viewModelScope.launch(Dispatchers.Default) {
-            if (data.marker.name == MarkerTypeEnum.Played.value()) {
+            if (data.marker.name == MarkerType.Played.value) {
                 val state = _uiState.value
                 if (state is UIState.Success) {
                     if (state.playedMarkers.any { it.userId == data.user.id }) return@launch
@@ -170,7 +171,7 @@ class MessageInfoViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val read = DeliveryStatus.Displayed.name.lowercase()
             val displayed = DeliveryStatus.Received.name.lowercase()
-            val played = MarkerTypeEnum.Played.value()
+            val played = MarkerType.Played.value
 
             markerInteractor.getMessageMarkersDb(messageId, listOf(read, displayed, played), 0, limit).let { markers ->
                 markers.groupBy { it.name }.let {
@@ -284,10 +285,10 @@ class MessageInfoViewModel(
         }
     }
 
-    fun getMessageAttachmentSizeIfExist(message: SceytMessage): Long? {
+    fun getMessageAttachmentToShowSizeIfExist(message: SceytMessage): SceytAttachment? {
         return message.attachments?.find {
-            it.type != AttachmentTypeEnum.Link.value() && it.type != AttachmentTypeEnum.File.value()
-        }?.fileSize
+            it.type != AttachmentTypeEnum.Link.value && it.type != AttachmentTypeEnum.File.value
+        }
     }
 
     fun needMediaInfo(data: NeedMediaInfoData) {

@@ -80,7 +80,7 @@ fun getBlurredBytesAndSizeAsString(context: Context, metadata: String?, filePath
             var durationMilliSec: Long? = null
             var base64String: String? = null
             when (type) {
-                AttachmentTypeEnum.Image.value() -> {
+                AttachmentTypeEnum.Image.value -> {
                     size = FileResizeUtil.getImageSizeOriented(Uri.parse(path))
                     FileResizeUtil.resizeAndCompressBitmapWithFilePath(path, 100)?.let { bm ->
                         val bytes = ThumbHash.rgbaToThumbHash(bm.width, bm.height, BitmapUtil.bitmapToRgba(bm))
@@ -88,7 +88,7 @@ fun getBlurredBytesAndSizeAsString(context: Context, metadata: String?, filePath
                     }
                 }
 
-                AttachmentTypeEnum.Video.value() -> {
+                AttachmentTypeEnum.Video.value -> {
                     size = FileResizeUtil.getVideoSizeOriented(path)
                     durationMilliSec = FileResizeUtil.getVideoDuration(context, filePath)
                     FileResizeUtil.getVideoThumbByUrlAsByteArray(path, 100f)?.let { bm ->
@@ -185,7 +185,7 @@ fun Attachment.getLinkPreviewDetails(): LinkPreviewDetails? {
 }
 
 fun SceytAttachment.isLink(): Boolean {
-    return type == AttachmentTypeEnum.Link.value()
+    return type == AttachmentTypeEnum.Link.value
 }
 
 fun SceytAttachment.isHiddenLinkDetails(): Boolean {
@@ -201,7 +201,7 @@ fun AttachmentEntity.isHiddenLinkDetails(): Boolean {
 }
 
 private fun isHiddenLinkDetails(metadata: String?, type: String): Boolean {
-    if (type != AttachmentTypeEnum.Link.value()) return false
+    if (type != AttachmentTypeEnum.Link.value) return false
     try {
         val jsonObject = JSONObject(metadata ?: return false)
         return jsonObject.getBooleanOrNull(SceytConstants.HideLinkDetails) ?: false

@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
@@ -66,7 +66,7 @@ interface MessageInteractor {
     suspend fun sendAllPendingMarkers()
     suspend fun sendAllPendingMessageStateUpdates()
     suspend fun sendAllPendingReactions()
-    suspend fun markMessagesAs(channelId: Long, marker: MarkerTypeEnum,
+    suspend fun markMessagesAs(channelId: Long, marker: MarkerType,
                                vararg ids: Long): List<SceytResponse<MessageListMarker>>
 
     suspend fun addMessagesMarker(channelId: Long, marker: String,

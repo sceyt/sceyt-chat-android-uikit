@@ -78,7 +78,7 @@ open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, Chann
     open fun setChannelDetails(channel: SceytChannel) {
         with(binding) {
             val myRole = channel.userRole
-            val isOwnerOrAdmin = myRole == RoleTypeEnum.Owner.toString() || myRole == RoleTypeEnum.Admin.toString()
+            val isOwnerOrAdmin = myRole == RoleTypeEnum.Owner.value || myRole == RoleTypeEnum.Admin.value
 
             icEdit.isVisible = !channel.isDirect() && isOwnerOrAdmin
             icMore.isVisible = channel.checkIsMemberInChannel()

@@ -45,7 +45,7 @@ fun SceytAttachment.toAttachmentDb(messageId: Long, messageTid: Long, channelId:
 
 fun AttachmentDb.toAttachment(): SceytAttachment {
     with(attachmentEntity) {
-        val isLink = type == AttachmentTypeEnum.Link.value()
+        val isLink = type == AttachmentTypeEnum.Link.value
         return SceytAttachment(
             id = id,
             messageId = messageId,
@@ -67,7 +67,7 @@ fun AttachmentDb.toAttachment(): SceytAttachment {
 
 fun AttachmentDb.toSdkAttachment(upload: Boolean): Attachment {
     with(attachmentEntity) {
-        val isLink = type == AttachmentTypeEnum.Link.value()
+        val isLink = type == AttachmentTypeEnum.Link.value
         return Attachment.Builder(if (isLink) "" else filePath ?: "", url ?: "", type)
             .setMetadata(metadata ?: "")
             .setName(name)
@@ -78,7 +78,7 @@ fun AttachmentDb.toSdkAttachment(upload: Boolean): Attachment {
 
 fun AttachmentDb.toAttachmentPayLoad(messageStatus: MessageEntity): AttachmentPayLoadEntity {
     return with(attachmentEntity) {
-        val isLink = type == AttachmentTypeEnum.Link.value()
+        val isLink = type == AttachmentTypeEnum.Link.value
         AttachmentPayLoadEntity(
             messageTid = messageTid,
             transferState = if (!messageStatus.incoming && messageStatus.deliveryStatus == DeliveryStatus.Pending
@@ -179,11 +179,11 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
         val jsonObject = JSONObject(metadata
                 ?: return AttachmentDataFromJson())
         when (type) {
-            AttachmentTypeEnum.File.value() -> {
+            AttachmentTypeEnum.File.value -> {
                 return AttachmentDataFromJson()
             }
 
-            AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value(), AttachmentTypeEnum.Link.value() -> {
+            AttachmentTypeEnum.Image.value, AttachmentTypeEnum.Video.value, AttachmentTypeEnum.Link.value -> {
                 blurredThumbBitmap = getThumbFromMetadata(metadata)
 
                 val width = jsonObject.getFromJsonObject(SceytConstants.Width)?.toIntOrNull()
@@ -192,10 +192,10 @@ fun SceytAttachment.getInfoFromMetadata(): AttachmentDataFromJson {
                     size = Size(width, height)
             }
 
-            AttachmentTypeEnum.Voice.value() -> audioMetadata = getMetadataFromAttachment()
+            AttachmentTypeEnum.Voice.value -> audioMetadata = getMetadataFromAttachment()
         }
 
-        if (type == AttachmentTypeEnum.Video.value() || type == AttachmentTypeEnum.Voice.value())
+        if (type == AttachmentTypeEnum.Video.value || type == AttachmentTypeEnum.Voice.value)
             duration = jsonObject.getFromJsonObject(SceytConstants.Duration)?.toLongOrNull()
 
     } catch (_: Exception) {
@@ -235,8 +235,8 @@ fun SceytAttachment.getMetadataFromAttachment(): AudioMetadata {
 
 fun getAttachmentType(path: String?): AttachmentTypeEnum {
     return when (getMimeTypeTakeFirstPart(path)) {
-        AttachmentTypeEnum.Image.value() -> AttachmentTypeEnum.Image
-        AttachmentTypeEnum.Video.value() -> AttachmentTypeEnum.Video
+        AttachmentTypeEnum.Image.value -> AttachmentTypeEnum.Image
+        AttachmentTypeEnum.Video.value -> AttachmentTypeEnum.Video
         else -> AttachmentTypeEnum.File
     }
 }

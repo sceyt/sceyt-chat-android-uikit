@@ -81,7 +81,7 @@ abstract class BaseLinkMsgViewHolder(
             if (!data.imageUrl.isNullOrBlank()) {
                 setImageSize(previewImage, data)
                 val thumb = message.files?.firstOrNull {
-                    it.file.type == AttachmentTypeEnum.Link.value()
+                    it.file.type == AttachmentTypeEnum.Link.value
                 }?.blurredThumb?.toDrawable(context.resources) ?: style.linkPreviewStyle.placeHolder
 
                 Glide.with(context.applicationContext)

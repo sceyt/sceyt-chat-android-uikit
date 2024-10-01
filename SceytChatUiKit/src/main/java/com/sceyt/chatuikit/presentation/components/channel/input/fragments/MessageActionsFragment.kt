@@ -168,7 +168,7 @@ open class MessageActionsFragment : Fragment() {
             layoutImage.isVisible = true
             imageAttachment.isVisible = true
             fileAttachment.isVisible = false
-            val (links, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value() }
+            val (links, others) = attachments.partition { it.type == AttachmentTypeEnum.Link.value }
             if (others.isNotEmpty()) {
                 val attachment = others[0]
                 when {
@@ -176,7 +176,7 @@ open class MessageActionsFragment : Fragment() {
                         loadImage(imageAttachment, attachment.metadata, attachment.filePath)
                     }
 
-                    attachment.type == AttachmentTypeEnum.Voice.value() -> {
+                    attachment.type == AttachmentTypeEnum.Voice.value -> {
                         layoutImage.isVisible = false
                     }
 

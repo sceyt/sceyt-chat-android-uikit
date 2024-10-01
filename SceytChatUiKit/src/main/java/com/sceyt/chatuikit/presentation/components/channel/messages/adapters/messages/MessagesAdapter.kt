@@ -186,8 +186,8 @@ class MessagesAdapter(
             val prev = (messages.getOrNull(position - 1) as? MessageItem)?.message
             val current = (messages.getOrNull(position) as? MessageItem)?.message
             if (prev != null && current != null)
-                return prev.incoming != current.incoming || current.type == MessageTypeEnum.System.value()
-                        || prev.type == MessageTypeEnum.System.value()
+                return prev.incoming != current.incoming || current.type == MessageTypeEnum.System.value
+                        || prev.type == MessageTypeEnum.System.value
         } catch (ex: Exception) {
             ex.printStackTrace()
         }

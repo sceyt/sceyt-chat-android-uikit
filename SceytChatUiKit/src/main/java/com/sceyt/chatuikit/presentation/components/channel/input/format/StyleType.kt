@@ -2,16 +2,6 @@ package com.sceyt.chatuikit.presentation.components.channel.input.format
 
 enum class StyleType {
     Bold, Italic, Strikethrough, Monospace, Underline;
-
-    override fun toString(): String {
-        return when (this) {
-            Bold -> "bold"
-            Italic -> "italic"
-            Strikethrough -> "strikethrough"
-            Monospace -> "monospace"
-            Underline -> "underline"
-        }
-    }
 }
 
 fun String.toStyleType(): StyleType? {

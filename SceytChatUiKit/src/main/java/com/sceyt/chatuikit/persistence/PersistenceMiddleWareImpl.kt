@@ -30,7 +30,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
-import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
@@ -391,7 +391,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         reactionsLogic.sendAllPendingReactions()
     }
 
-    override suspend fun markMessagesAs(channelId: Long, marker: MarkerTypeEnum,
+    override suspend fun markMessagesAs(channelId: Long, marker: MarkerType,
                                         vararg ids: Long): List<SceytResponse<MessageListMarker>> {
         return messagesLogic.markMessagesAs(channelId, marker, *ids)
     }

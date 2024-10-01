@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.persistence.entity.channel.ChanelMemberDb
 interface MemberDao {
 
     @Query("select user_id from UserChatLink where chat_id =:channelId and role =:role")
-    suspend fun getChannelOwner(channelId: Long, role: String = RoleTypeEnum.Owner.toString()): String?
+    suspend fun getChannelOwner(channelId: Long, role: String = RoleTypeEnum.Owner.value): String?
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
@@ -46,16 +46,16 @@ interface MemberDao {
 
     @Transaction
     suspend fun updateOwner(channelId: Long, oldOwnerId: String, newOwnerId: String) {
-        updateMemberRole(channelId, oldOwnerId, RoleTypeEnum.Member.toString())
-        updateMemberRole(channelId, newOwnerId, RoleTypeEnum.Owner.toString())
+        updateMemberRole(channelId, oldOwnerId, RoleTypeEnum.Member.value)
+        updateMemberRole(channelId, newOwnerId, RoleTypeEnum.Owner.value)
     }
 
     @Transaction
     suspend fun updateOwner(channelId: Long, newOwnerId: String) {
         getChannelOwner(channelId)?.let {
-            updateMemberRole(channelId, it, RoleTypeEnum.Member.toString())
+            updateMemberRole(channelId, it, RoleTypeEnum.Member.value)
         }
-        updateMemberRole(channelId, newOwnerId, RoleTypeEnum.Owner.toString())
+        updateMemberRole(channelId, newOwnerId, RoleTypeEnum.Owner.value)
     }
 
     @Query("select user_id from UserChatLink where user_id in (:ids) and chat_id =:channelId")

@@ -110,7 +110,7 @@ fun SceytMessage.getFormattedBody(
 ): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
-        attachments.isNullOrEmpty() || attachments.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
+        attachments.isNullOrEmpty() || attachments.getOrNull(0)?.type == AttachmentTypeEnum.Link.value -> {
             buildWithAttributes(context, mentionTextStyle, mentionUserNameFormatter)
         }
 
@@ -126,10 +126,10 @@ fun SceytMessage.getFormattedBody(
 fun SceytAttachment?.getShowName(context: Context): String {
     this ?: return ""
     return when (type) {
-        AttachmentTypeEnum.Video.value() -> context.getString(R.string.sceyt_video)
-        AttachmentTypeEnum.Image.value() -> context.getString(R.string.sceyt_photo)
-        AttachmentTypeEnum.Voice.value() -> context.getString(R.string.sceyt_voice)
-        AttachmentTypeEnum.File.value() -> context.getString(R.string.sceyt_file)
+        AttachmentTypeEnum.Video.value -> context.getString(R.string.sceyt_video)
+        AttachmentTypeEnum.Image.value -> context.getString(R.string.sceyt_photo)
+        AttachmentTypeEnum.Voice.value -> context.getString(R.string.sceyt_voice)
+        AttachmentTypeEnum.File.value -> context.getString(R.string.sceyt_file)
         else -> name
     }
 }

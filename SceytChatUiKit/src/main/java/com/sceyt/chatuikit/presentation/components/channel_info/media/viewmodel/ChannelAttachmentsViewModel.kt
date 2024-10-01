@@ -129,11 +129,11 @@ class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
                 fileItems.add(ChannelFileItem.MediaDate(item))
             }
             val fileItem: ChannelFileItem? = when (item.attachment.type) {
-                AttachmentTypeEnum.Video.value() -> ChannelFileItem.Video(item)
-                AttachmentTypeEnum.Image.value() -> ChannelFileItem.Image(item)
-                AttachmentTypeEnum.File.value() -> ChannelFileItem.File(item)
-                AttachmentTypeEnum.Voice.value() -> ChannelFileItem.Voice(item)
-                AttachmentTypeEnum.Link.value() -> ChannelFileItem.Link(item)
+                AttachmentTypeEnum.Video.value -> ChannelFileItem.Video(item)
+                AttachmentTypeEnum.Image.value -> ChannelFileItem.Image(item)
+                AttachmentTypeEnum.File.value -> ChannelFileItem.File(item)
+                AttachmentTypeEnum.Voice.value -> ChannelFileItem.Voice(item)
+                AttachmentTypeEnum.Link.value -> ChannelFileItem.Link(item)
                 else -> null
             }
             fileItem?.let { fileItems.add(it) }

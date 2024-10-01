@@ -28,7 +28,7 @@ class ImagePreviewActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        binding.toolbar.navigationIcon.setOnClickListener {
+        binding.toolbar.setNavigationClickListener {
             finish()
         }
     }

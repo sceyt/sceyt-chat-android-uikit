@@ -57,7 +57,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     private val viewModel by viewModels<MediaViewModel>()
     private var fileToSaveAfterPermission: MediaItem? = null
     private var channelId: Long = 0L
-    private val mediaTypes = listOf(AttachmentTypeEnum.Image.value(), AttachmentTypeEnum.Video.value())
+    private val mediaTypes = listOf(AttachmentTypeEnum.Image.value, AttachmentTypeEnum.Video.value)
     private var mediaAdapter: MediaAdapter? = null
     private var currentItem: MediaItem? = null
     private var openedWithAttachment: SceytAttachment? = null
@@ -154,8 +154,8 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             val mediaFiles = arrayListOf<MediaItem>()
 
             val mediaItem = when (attachment.type) {
-                AttachmentTypeEnum.Image.value() -> MediaItem.Image(AttachmentWithUserData(attachment, user))
-                AttachmentTypeEnum.Video.value() -> MediaItem.Video(AttachmentWithUserData(attachment, user))
+                AttachmentTypeEnum.Image.value -> MediaItem.Image(AttachmentWithUserData(attachment, user))
+                AttachmentTypeEnum.Video.value -> MediaItem.Video(AttachmentWithUserData(attachment, user))
                 else -> null
             }
             if (mediaItem != null) {
@@ -214,7 +214,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
                 it.setClickListener { onMediaClick() }
             })
-            if (openedWithAttachment?.type == AttachmentTypeEnum.Video.value())
+            if (openedWithAttachment?.type == AttachmentTypeEnum.Video.value)
                 mediaAdapter?.shouldPlayVideoPath = openedWithAttachment?.filePath
 
             binding.rvMedia.apply {
@@ -350,7 +350,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     private fun getMimeTypeFrom(file: SceytAttachment): String {
         var mimeType = getMimeType(file.filePath)
-        if (mimeType.isNullOrBlank()) mimeType = if (file.type == AttachmentTypeEnum.Image.value()) "image/jpeg" else "video/mp4"
+        if (mimeType.isNullOrBlank()) mimeType = if (file.type == AttachmentTypeEnum.Image.value) "image/jpeg" else "video/mp4"
         return mimeType
     }
 

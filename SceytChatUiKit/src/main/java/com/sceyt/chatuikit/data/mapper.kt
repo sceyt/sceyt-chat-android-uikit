@@ -22,9 +22,9 @@ fun SceytMember.toMember(): Member {
 
 fun SceytAttachment.toFileListItem(): FileListItem {
     return when (type) {
-        AttachmentTypeEnum.Image.value() -> FileListItem.Image(this)
-        AttachmentTypeEnum.Video.value() -> FileListItem.Video(this)
-        AttachmentTypeEnum.Voice.value() -> FileListItem.Voice(this)
+        AttachmentTypeEnum.Image.value -> FileListItem.Image(this)
+        AttachmentTypeEnum.Video.value -> FileListItem.Video(this)
+        AttachmentTypeEnum.Voice.value -> FileListItem.Voice(this)
         else -> FileListItem.File(this)
     }
 }

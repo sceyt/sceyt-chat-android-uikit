@@ -36,9 +36,9 @@ fun SceytChannel.getPeer(): SceytMember? {
 
 fun ChannelTypeEnum?.isGroup() = this != ChannelTypeEnum.Direct
 
-fun SceytChannel.isDirect() = type == ChannelTypeEnum.Direct.getString()
+fun SceytChannel.isDirect() = type == ChannelTypeEnum.Direct.value
 
-fun SceytChannel.isPublic() = type == ChannelTypeEnum.Public.getString()
+fun SceytChannel.isPublic() = type == ChannelTypeEnum.Public.value
 
 fun SceytChannel.isSelf(): Boolean {
     val isSelf = try {
@@ -46,6 +46,6 @@ fun SceytChannel.isSelf(): Boolean {
     } catch (e: Exception) {
         false
     }
-    return type == ChannelTypeEnum.Direct.getString() && isSelf
+    return type == ChannelTypeEnum.Direct.value && isSelf
 }
 

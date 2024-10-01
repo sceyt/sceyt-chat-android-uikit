@@ -44,7 +44,7 @@
                 android:layout_height="match_parent">
 
                 <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/tvSentHint"
+                    android:id="@+id/tvSentLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="15dp"
@@ -63,13 +63,13 @@
                     android:layout_marginStart="5dp"
                     android:textColor="@color/sceyt_color_text_secondary"
                     android:textSize="14sp"
-                    app:layout_constraintBottom_toBottomOf="@+id/tvSentHint"
-                    app:layout_constraintStart_toEndOf="@+id/tvSentHint"
-                    app:layout_constraintTop_toTopOf="@+id/tvSentHint"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvSentLabel"
+                    app:layout_constraintStart_toEndOf="@+id/tvSentLabel"
+                    app:layout_constraintTop_toTopOf="@+id/tvSentLabel"
                     tools:text="22.07.23" />
 
                 <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/tvSizeHint"
+                    android:id="@+id/tvSizeLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="15dp"
@@ -79,7 +79,7 @@
                     android:textColor="@color/sceyt_color_text_primary"
                     android:textSize="14sp"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/tvSentHint" />
+                    app:layout_constraintTop_toBottomOf="@+id/tvSentLabel" />
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/tvSize"
@@ -88,9 +88,9 @@
                     android:layout_marginStart="5dp"
                     android:textColor="@color/sceyt_color_text_secondary"
                     android:textSize="14sp"
-                    app:layout_constraintBottom_toBottomOf="@+id/tvSizeHint"
-                    app:layout_constraintStart_toEndOf="@+id/tvSizeHint"
-                    app:layout_constraintTop_toTopOf="@+id/tvSizeHint"
+                    app:layout_constraintBottom_toBottomOf="@+id/tvSizeLabel"
+                    app:layout_constraintStart_toEndOf="@+id/tvSizeLabel"
+                    app:layout_constraintTop_toTopOf="@+id/tvSizeLabel"
                     tools:text="22MB" />
 
                 <androidx.constraintlayout.widget.Group
@@ -98,7 +98,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:visibility="gone"
-                    app:constraint_referenced_ids="tvSizeHint,tvSize" />
+                    app:constraint_referenced_ids="tvSizeLabel,tvSize"
+                    tools:visibility="visible" />
 
                 <View
                     android:id="@+id/divider"
@@ -117,7 +118,7 @@
                     app:layout_constraintTop_toBottomOf="@+id/tvSize" />
 
                 <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/tvPlayedByHint"
+                    android:id="@+id/tvPlayedByLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="15dp"
@@ -136,7 +137,7 @@
                     android:nestedScrollingEnabled="false"
                     android:paddingHorizontal="15dp"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                    app:layout_constraintTop_toBottomOf="@+id/tvPlayedByHint"
+                    app:layout_constraintTop_toBottomOf="@+id/tvPlayedByLabel"
                     tools:itemCount="2"
                     tools:listitem="@layout/sceyt_item_user_marker" />
 
@@ -145,7 +146,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:visibility="gone"
-                    app:constraint_referenced_ids="dividerPlayed,tvPlayedByHint,rvPlayedByUsers"
+                    app:constraint_referenced_ids="dividerPlayed,tvPlayedByLabel,rvPlayedByUsers"
                     tools:visibility="visible" />
 
                 <View
@@ -157,7 +158,7 @@
                     app:layout_constraintTop_toBottomOf="@+id/rvPlayedByUsers" />
 
                 <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/tvReadByHint"
+                    android:id="@+id/tvSeenByLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="15dp"
@@ -176,7 +177,7 @@
                     android:nestedScrollingEnabled="false"
                     android:paddingHorizontal="15dp"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                    app:layout_constraintTop_toBottomOf="@+id/tvReadByHint"
+                    app:layout_constraintTop_toBottomOf="@+id/tvSeenByLabel"
                     tools:itemCount="2"
                     tools:listitem="@layout/sceyt_item_user_marker" />
 
@@ -185,7 +186,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:visibility="gone"
-                    app:constraint_referenced_ids="tvReadByHint,rvReadByUsers,dividerRead"
+                    app:constraint_referenced_ids="tvSeenByLabel,rvReadByUsers,dividerRead"
                     tools:visibility="visible" />
 
                 <View
@@ -197,7 +198,7 @@
                     app:layout_constraintTop_toBottomOf="@+id/rvReadByUsers" />
 
                 <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/tvDeliveredToHint"
+                    android:id="@+id/tvDeliveredToLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="15dp"
@@ -216,7 +217,7 @@
                     android:nestedScrollingEnabled="false"
                     android:paddingHorizontal="15dp"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                    app:layout_constraintTop_toBottomOf="@+id/tvDeliveredToHint"
+                    app:layout_constraintTop_toBottomOf="@+id/tvDeliveredToLabel"
                     tools:itemCount="2"
                     tools:listitem="@layout/sceyt_item_user_marker" />
 
@@ -225,7 +226,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:visibility="gone"
-                    app:constraint_referenced_ids="tvDeliveredToHint,rvDeliveredToUsers,dividerDelivered"
+                    app:constraint_referenced_ids="tvDeliveredToLabel,rvDeliveredToUsers,dividerDelivered"
                     tools:visibility="visible" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>

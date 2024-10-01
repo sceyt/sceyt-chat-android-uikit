@@ -11,9 +11,9 @@ import com.sceyt.chatuikit.providers.VisualProvider
 data object DefaultAttachmentIconProvider : VisualProvider<SceytAttachment, Drawable?> {
     override fun provide(context: Context, from: SceytAttachment): Drawable? {
         val drawableId = when (from.type) {
-            AttachmentTypeEnum.File.value() -> R.drawable.sceyt_ic_file_filled
-            AttachmentTypeEnum.Link.value() -> R.drawable.sceyt_ic_link_attachment
-            AttachmentTypeEnum.Voice.value() -> R.drawable.sceyt_ic_voice_white
+            AttachmentTypeEnum.File.value -> R.drawable.sceyt_ic_file_filled
+            AttachmentTypeEnum.Link.value -> R.drawable.sceyt_ic_link_attachment
+            AttachmentTypeEnum.Voice.value -> R.drawable.sceyt_ic_voice_white
             else -> return null
         }
         return context.getCompatDrawable(drawableId)

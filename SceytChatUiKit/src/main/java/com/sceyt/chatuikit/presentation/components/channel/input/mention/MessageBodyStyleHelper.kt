@@ -64,7 +64,7 @@ object MessageBodyStyleHelper {
             mentionUserNameFormatter: Formatter<SceytUser>
     ): CharSequence {
         list ?: return body
-        val group = list.groupBy { it.type == BodyAttributeType.Mention.value() }
+        val group = list.groupBy { it.type == BodyAttributeType.Mention.value }
         var spannableString = appendTextStyle(body, group[false])
 
         group[true]?.let {

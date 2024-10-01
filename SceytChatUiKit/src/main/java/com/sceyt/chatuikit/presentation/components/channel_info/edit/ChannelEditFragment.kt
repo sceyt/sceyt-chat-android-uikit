@@ -111,7 +111,7 @@ open class ChannelEditFragment : Fragment(), SceytKoinComponent {
             checkSaveEnabled(true)
         }
 
-        toolbar.navigationIcon.setOnClickListener {
+        toolbar.setNavigationClickListener {
             requireActivity().onBackPressedDispatcher.onBackPressed()
         }
 

@@ -9,8 +9,8 @@ enum class MemberTypeEnum {
 
     fun toRole(): String {
         return when (this) {
-            Member, Subscriber -> RoleTypeEnum.Member.toString()
-            Admin -> RoleTypeEnum.Admin.toString()
+            Member, Subscriber -> RoleTypeEnum.Member.value
+            Admin -> RoleTypeEnum.Admin.value
         }
     }
 

@@ -101,8 +101,8 @@ class MediaViewModel : BaseViewModel(), SceytKoinComponent {
 
         data.map {
             val item: MediaItem? = when (it.attachment.type) {
-                AttachmentTypeEnum.Video.value() -> MediaItem.Video(it)
-                AttachmentTypeEnum.Image.value() -> MediaItem.Image(it)
+                AttachmentTypeEnum.Video.value -> MediaItem.Video(it)
+                AttachmentTypeEnum.Image.value -> MediaItem.Image(it)
                 else -> null
             }
             item?.let { fileItem -> fileItems.add(fileItem) }

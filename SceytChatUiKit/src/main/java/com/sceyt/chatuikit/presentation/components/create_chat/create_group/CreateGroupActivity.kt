@@ -47,7 +47,7 @@ class CreateGroupActivity : AppCompatActivity() {
     private lateinit var binding: SceytActivityCreateGroupBinding
     private val viewModel: CreateChatViewModel by viewModels()
     private val filePickerHelper = FilePickerHelper(this)
-    private val createChannelData by lazy { CreateChannelData(ChannelTypeEnum.Group.getString()) }
+    private val createChannelData by lazy { CreateChannelData(ChannelTypeEnum.Group.value) }
     private lateinit var members: List<SceytMember>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,7 +100,7 @@ class CreateGroupActivity : AppCompatActivity() {
             btnCreate.setEnabledOrNot(it?.trim().isNullOrBlank().not())
         }
 
-        toolbar.navigationIcon.setOnClickListener {
+        toolbar.setNavigationClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
 
@@ -130,7 +130,7 @@ class CreateGroupActivity : AppCompatActivity() {
         btnCreate.setOnClickListener {
             with(createChannelData) {
                 subject = tvSubject.text.toString().trim()
-                channelType = ChannelTypeEnum.Group.getString()
+                channelType = ChannelTypeEnum.Group.value
                 metadata = Gson().toJson(ChannelDescriptionData(tvDescription.text.toString().trim()))
                 members = this@CreateGroupActivity.members
             }

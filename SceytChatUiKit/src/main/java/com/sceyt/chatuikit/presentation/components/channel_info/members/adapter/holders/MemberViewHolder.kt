@@ -57,7 +57,7 @@ class MemberViewHolder(
 
     private fun setRole() {
         val role = memberItem.member.role
-        val showRole = role.name == RoleTypeEnum.Owner.toString() || role.name == RoleTypeEnum.Admin.toString()
+        val showRole = role.name == RoleTypeEnum.Owner.value || role.name == RoleTypeEnum.Admin.value
 
         binding.roleName.apply {
             text = memberItem.member.role.name.firstCharToUppercase()

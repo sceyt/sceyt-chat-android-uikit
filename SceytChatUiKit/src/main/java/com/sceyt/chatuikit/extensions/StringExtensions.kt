@@ -15,7 +15,7 @@ import androidx.emoji2.text.EmojiCompat
 import androidx.emoji2.text.EmojiSpan
 import com.google.gson.Gson
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MarkerType
 import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT
 import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING
 import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE
@@ -213,8 +213,8 @@ fun <T> String?.jsonToObject(clazz: Class<T>): T? {
 
 internal fun String.toDeliveryStatus(): DeliveryStatus? {
     return when (this) {
-        MarkerTypeEnum.Displayed.value() -> DeliveryStatus.Displayed
-        MarkerTypeEnum.Received.value() -> DeliveryStatus.Received
+        MarkerType.Displayed.value -> DeliveryStatus.Displayed
+        MarkerType.Received.value -> DeliveryStatus.Received
         else -> null
     }
 }

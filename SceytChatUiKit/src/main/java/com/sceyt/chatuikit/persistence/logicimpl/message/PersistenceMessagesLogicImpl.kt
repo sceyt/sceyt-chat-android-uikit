@@ -11,7 +11,6 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
@@ -34,8 +33,8 @@ import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
-import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
-import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum.Received
+import com.sceyt.chatuikit.data.models.messages.MarkerType
+import com.sceyt.chatuikit.data.models.messages.MarkerType.Received
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.TAG
@@ -389,7 +388,7 @@ internal class PersistenceMessagesLogicImpl(
             MessageEventManager.emitOutgoingMessage(tmpMessage)
             insertTmpMessageToDb(tmpMessage)
             it.attachments?.forEach { attachment ->
-                if (attachment.type != AttachmentTypeEnum.Link.value()) {
+                if (attachment.type != AttachmentTypeEnum.Link.value) {
                     var state = TransferState.PendingDownload
                     var progressPercent = 0f
                     if (attachment.filePath.isNotNullOrBlank()) {
@@ -491,7 +490,7 @@ internal class PersistenceMessagesLogicImpl(
     private fun checkHasFileAttachments(message: Message): Boolean {
         if (message.attachments.isNullOrEmpty()) return false
         message.attachments.forEach {
-            if (it.type != AttachmentTypeEnum.Link.value()) return true
+            if (it.type != AttachmentTypeEnum.Link.value) return true
         }
         return false
     }
@@ -611,7 +610,7 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    override suspend fun markMessagesAs(channelId: Long, marker: MarkerTypeEnum,
+    override suspend fun markMessagesAs(channelId: Long, marker: MarkerType,
                                         vararg ids: Long): List<SceytResponse<MessageListMarker>> {
         return markMessagesAsImpl(channelId, marker, *ids)
     }
@@ -1081,22 +1080,22 @@ internal class PersistenceMessagesLogicImpl(
 
     private suspend fun checkAndMarkChannelMessagesAsDelivered(channelId: Long, messages: List<SceytMessage>) {
         val notDisplayedMessages = messages.filter {
-            it.incoming && it.userMarkers?.any { marker -> marker.name == Received.value() } != true
+            it.incoming && it.userMarkers?.any { marker -> marker.name == Received.value } != true
         }
         if (notDisplayedMessages.isNotEmpty())
             markMessagesAsImpl(channelId, Received, *notDisplayedMessages.map { it.id }.toLongArray())
     }
 
-    private suspend fun markMessagesAsImpl(channelId: Long, marker: MarkerTypeEnum,
+    private suspend fun markMessagesAsImpl(channelId: Long, marker: MarkerType,
                                            vararg ids: Long): List<SceytResponse<MessageListMarker>> = withContext(dispatcherIO) {
         val responseList = mutableListOf<SceytResponse<MessageListMarker>>()
         ids.toList().chunked(50).forEach {
             val typedArray = it.toLongArray()
-            addPendingMarkerToDb(channelId, marker.value(), *typedArray)
+            addPendingMarkerToDb(channelId, marker.value, *typedArray)
 
             val response = messagesRepository.markMessageAs(channelId, marker, *typedArray)
 
-            onMarkerResponse(channelId, response, marker.value(), *typedArray)
+            onMarkerResponse(channelId, response, marker.value, *typedArray)
             responseList.add(response)
         }
 

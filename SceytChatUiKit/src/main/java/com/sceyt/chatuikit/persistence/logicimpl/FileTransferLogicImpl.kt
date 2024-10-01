@@ -141,7 +141,7 @@ internal class FileTransferLogicImpl(
 
     override fun pauseLoad(attachment: SceytAttachment, state: TransferState) {
         pausedTasksMap[attachment.messageTid] = attachment.messageTid
-        if (attachment.type == AttachmentTypeEnum.Video.value())
+        if (attachment.type == AttachmentTypeEnum.Video.value)
             VideoTranscodeHelper.cancel(attachment.filePath)
 
         when (state) {
@@ -367,7 +367,7 @@ internal class FileTransferLogicImpl(
             return
         }
         when (attachment.type) {
-            AttachmentTypeEnum.Image.value() -> {
+            AttachmentTypeEnum.Image.value -> {
                 resizingAttachmentsMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
                 val reqSize = SceytChatUIKit.config.imageAttachmentResizeConfig.dimensionThreshold
                 val quality = SceytChatUIKit.config.imageAttachmentResizeConfig.compressionQuality
@@ -376,7 +376,7 @@ internal class FileTransferLogicImpl(
                 callback(result)
             }
 
-            AttachmentTypeEnum.Video.value() -> {
+            AttachmentTypeEnum.Video.value -> {
                 resizingAttachmentsMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
                 transcodeVideo(context, attachment.filePath, progressCallback = {
                     if (pausedTasksMap[attachment.messageTid] == null)
@@ -424,11 +424,11 @@ internal class FileTransferLogicImpl(
         val minSize = max(size.height, size.width)
         val reqSize = if (minSize > 0) minSize.toFloat() else 800f
         val resizePath = when (attachment.type) {
-            AttachmentTypeEnum.Image.value() -> {
+            AttachmentTypeEnum.Image.value -> {
                 FileResizeUtil.getImageThumbAsFile(context, path, reqSize)?.path
             }
 
-            AttachmentTypeEnum.Video.value() -> {
+            AttachmentTypeEnum.Video.value -> {
                 FileResizeUtil.getVideoThumbAsFile(context, path, reqSize)?.path
             }
 
@@ -439,8 +439,8 @@ internal class FileTransferLogicImpl(
 
     private fun getSaveFileLocation(attachment: SceytAttachment): File {
         return when (attachment.type) {
-            AttachmentTypeEnum.Image.value() -> File(context.filesDir, "Sceyt Images")
-            AttachmentTypeEnum.Video.value() -> File(context.filesDir, "Sceyt Videos")
+            AttachmentTypeEnum.Image.value -> File(context.filesDir, "Sceyt Images")
+            AttachmentTypeEnum.Video.value -> File(context.filesDir, "Sceyt Videos")
             else -> File(context.filesDir, "Sceyt Files")
         }.apply {
             if (!exists()) mkdirs()

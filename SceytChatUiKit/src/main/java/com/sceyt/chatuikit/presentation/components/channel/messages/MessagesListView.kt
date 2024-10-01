@@ -358,7 +358,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             EmojiPickerBottomSheetFragment().also { fragment ->
                 fragment.setEmojiListener { emoji ->
                     val containsSelf = message.userReactions?.find { reaction -> reaction.key == emoji } != null
-                    onAddOrRemoveReaction(ReactionItem.Reaction(SceytReactionTotal(emoji, containsSelf = containsSelf), message.tid, true), message)
+                    onAddOrRemoveReaction(ReactionItem.Reaction(SceytReactionTotal(emoji,
+                        containsSelf = containsSelf), message.tid, true), message)
                 }
             }.show(it, null)
         }
