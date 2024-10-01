@@ -292,7 +292,8 @@ class OutVoiceMsgViewHolder(
         binding.layoutDetails.layoutParams.width = bubbleMaxWidth
     }
 
-    override val incoming: Boolean = false
+     override val incoming: Boolean
+        get() = false
 
     private fun SceytItemOutVoiceMessageBinding.setMessageItemStyle() {
         val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)

@@ -5,10 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <com.sceyt.chatuikit.presentation.custom_views.CircleCheckBox
+    <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/selectView"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -145,13 +145,13 @@
             android:layout_height="0dp"
             android:padding="1dp"
             android:visibility="gone"
-            app:sceytUiProgressIconSizeInPercent="65"
             app:layout_constraintBottom_toBottomOf="@+id/playPauseButton"
             app:layout_constraintEnd_toEndOf="@+id/playPauseButton"
             app:layout_constraintStart_toStartOf="@+id/playPauseButton"
             app:layout_constraintTop_toTopOf="@+id/playPauseButton"
-            app:sceytUiProgressMinProgress="2"
             app:sceytUiProgressColor="@color/sceyt_color_on_primary"
+            app:sceytUiProgressIconSizeInPercent="65"
+            app:sceytUiProgressMinProgress="2"
             app:sceytUiProgressTrackColor="@android:color/transparent"
             tools:visibility="visible" />
 

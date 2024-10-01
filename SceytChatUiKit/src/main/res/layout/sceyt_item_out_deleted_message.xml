@@ -7,10 +7,10 @@
     android:paddingStart="0dp"
     android:paddingEnd="12dp">
 
-    <com.sceyt.chatuikit.presentation.custom_views.CircleCheckBox
+    <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/selectView"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_gravity="center_vertical"
         android:alpha=".3"
         android:clickable="false"

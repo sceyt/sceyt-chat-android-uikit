@@ -88,7 +88,8 @@ class OutAttachmentsMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-    override val incoming: Boolean = false
+     override val incoming: Boolean
+        get() = false
 
     private fun setFilesAdapter(message: SceytMessage) {
         val attachments = ArrayList(message.files ?: return)

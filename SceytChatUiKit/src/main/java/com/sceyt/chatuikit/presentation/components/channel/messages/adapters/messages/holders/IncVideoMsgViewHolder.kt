@@ -219,7 +219,8 @@ class IncVideoMsgViewHolder(
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
-    override val incoming: Boolean = true
+     override val incoming: Boolean
+        get() = true
 
     private fun SceytItemIncVideoMessageBinding.setMessageItemStyle() {
         style.videoDurationTextStyle.apply(tvDuration)

@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.spToPx
+import com.sceyt.chatuikit.styles.common.CheckboxStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.messages_list.DateSeparatorStyle
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
@@ -613,6 +614,30 @@ internal fun MessageItemStyle.Builder.buildAudioWaveformStyle(
     .progressColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListAudioWaveformProgressColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+    )
+    .build()
+
+/* Selection checkbox style */
+internal fun MessageItemStyle.Builder.buildSelectionCheckboxStyle(
+        typedArray: TypedArray
+) = CheckboxStyle.Builder(typedArray)
+    .checkedIcon(
+        index = R.styleable.MessagesListView_sceytUiMessagesListSelectionCheckboxCheckedIcon,
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_checked_state).applyTint(
+            context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+        )
+    )
+    .uncheckedIcon(
+        index = R.styleable.MessagesListView_sceytUiMessagesListSelectionCheckboxUncheckedIcon,
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_unchecked_state).applyTint(
+            context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+        )
+    )
+    .pressedIcon(
+        index = R.styleable.MessagesListView_sceytUiMessagesListSelectionCheckboxPressedIcon,
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_pressed_state).applyTint(
+            context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+        )
     )
     .build()
 

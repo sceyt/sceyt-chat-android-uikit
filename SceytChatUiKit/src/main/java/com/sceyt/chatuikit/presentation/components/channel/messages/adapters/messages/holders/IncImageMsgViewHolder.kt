@@ -175,7 +175,8 @@ class IncImageMsgViewHolder(
     override val loadingProgressView: CircularProgressView
         get() = binding.loadProgress
 
-    override val incoming: Boolean = true
+     override val incoming: Boolean
+        get() = true
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 

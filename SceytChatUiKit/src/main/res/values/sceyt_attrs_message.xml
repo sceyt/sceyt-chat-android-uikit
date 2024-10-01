@@ -293,6 +293,11 @@
         <attr name="sceytUiMessagesListAudioWaveformTrackColor" format="reference|color" />
         <attr name="sceytUiMessagesListAudioWaveformProgressColor" format="reference|color" />
 
+        <!-- Selection checkbox style -->
+        <attr name="sceytUiMessagesListSelectionCheckboxCheckedIcon" format="reference" />
+        <attr name="sceytUiMessagesListSelectionCheckboxUncheckedIcon" format="reference" />
+        <attr name="sceytUiMessagesListSelectionCheckboxPressedIcon" format="reference" />
+
         <!--Overlay Media loader style-->
         <attr name="sceytUiMessagesListOverlayMediaLoaderTrackColor" format="reference|color" />
         <attr name="sceytUiMessagesListOverlayMediaLoaderProgressColor" format="reference|color" />

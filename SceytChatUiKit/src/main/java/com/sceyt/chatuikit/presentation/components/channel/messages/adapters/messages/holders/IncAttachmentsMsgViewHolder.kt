@@ -97,7 +97,8 @@ class IncAttachmentsMsgViewHolder(
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
 
-    override val incoming = true
+    override val incoming: Boolean
+        get() = true
 
     private fun setFilesAdapter(message: SceytMessage) {
         val attachments = message.files ?: return

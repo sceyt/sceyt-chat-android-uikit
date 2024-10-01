@@ -5,10 +5,10 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <com.sceyt.chatuikit.presentation.custom_views.CircleCheckBox
+    <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/selectView"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:alpha=".3"
         android:clickable="false"
         android:visibility="gone"

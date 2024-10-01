@@ -163,7 +163,8 @@ class OutFileMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-    override val incoming: Boolean = false
+     override val incoming: Boolean
+        get() = false
 
     override fun setMaxWidth() {
         binding.layoutDetails.layoutParams.width = bubbleMaxWidth
