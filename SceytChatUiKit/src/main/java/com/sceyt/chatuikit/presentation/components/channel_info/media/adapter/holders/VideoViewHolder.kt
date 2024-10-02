@@ -23,14 +23,13 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
-import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListenersImpl
-import com.sceyt.chatuikit.styles.ChannelInfoMediaStyle
-import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
+import com.sceyt.chatuikit.styles.channel_info.media.ChannelInfoMediaItemStyle
 
 class VideoViewHolder(
         private val binding: SceytItemChannelVideoBinding,
-        private val style: ChannelInfoMediaStyle,
-        private val clickListeners: AttachmentClickListenersImpl,
+        private val style: ChannelInfoMediaItemStyle,
+        private val clickListeners: AttachmentClickListeners.ClickListeners,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
@@ -99,18 +98,20 @@ class VideoViewHolder(
     private fun setVideoDuration() {
         with(binding.tvDuration) {
             fileItem.duration?.let {
-                text = DateTimeUtil.secondsToTime(it)
+                text = style.durationFormatter.format(context, it)
                 isVisible = true
             } ?: run { isVisible = false }
         }
     }
-
 
     override fun getThumbSize() = Size(binding.root.width, binding.root.height)
 
     override fun needThumbFor() = ThumbFor.ConversationInfo
 
     private fun SceytItemChannelVideoBinding.applyStyle() {
-        tvDuration.setDrawableStart(style.videoDurationIcon)
+        with(tvDuration) {
+            setDrawableStart(style.videoDurationIcon)
+            style.videoDurationTextStyle.apply(this)
+        }
     }
 }

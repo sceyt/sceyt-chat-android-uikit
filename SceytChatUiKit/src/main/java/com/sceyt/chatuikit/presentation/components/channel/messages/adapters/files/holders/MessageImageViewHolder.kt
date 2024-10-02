@@ -22,13 +22,15 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUplo
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
+import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 class MessageImageViewHolder(
         private val binding: SceytMessageImageItemBinding,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseMessageFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+) : BaseMessageFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
 
     init {
         binding.applyStyle()
@@ -101,8 +103,8 @@ class MessageImageViewHolder(
 
     override fun getThumbSize() = Size(1080, 1080)
 
-    override val loadingProgressView: CircularProgressView
-        get() = binding.loadProgress
+    override val loadingProgressViewWithStyle: Pair<CircularProgressView, MediaLoaderStyle>
+        get() = binding.loadProgress to style.mediaLoaderStyle
 
     override fun needThumbFor() = ThumbFor.MessagesLisView
 

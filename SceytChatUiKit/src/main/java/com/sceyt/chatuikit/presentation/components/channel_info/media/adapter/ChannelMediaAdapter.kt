@@ -4,16 +4,14 @@ import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.databinding.SceytItemChannelMediaDateBinding
+import com.sceyt.chatuikit.databinding.SceytItemChannelMediaDateSeparatorBinding
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import java.util.Date
 
 class ChannelMediaAdapter(
         private var attachments: SyncArrayList<ChannelFileItem>,
@@ -107,15 +105,15 @@ class ChannelMediaAdapter(
         attachments = SyncArrayList(data)
     }
 
-    override fun bindHeaderData(header: SceytItemChannelMediaDateBinding, headerPosition: Int) {
-        val date = DateTimeUtil.getDateTimeStringWithDateFormatter(
+    override fun bindHeaderData(header: SceytItemChannelMediaDateSeparatorBinding, headerPosition: Int) {
+        val style = factory.dateSeparatorStyle
+        val date = style.dateFormatter.format(
             context = header.root.context,
-            time = attachments.getOrNull(headerPosition)?.getCreatedAt(),
-            dateFormatter = factory.getMediaStyle().mediaDateSeparatorFormat)
+            from = Date((attachments[headerPosition]).getCreatedAt()))
 
+        style.textStyle.apply(header.tvDate)
         header.tvDate.text = date
-        header.tvDate.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
-        header.root.setBackgroundColor(header.root.context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
+        header.root.setBackgroundColor(style.backgroundColor)
     }
 
     override fun isHeader(itemPosition: Int): Boolean {

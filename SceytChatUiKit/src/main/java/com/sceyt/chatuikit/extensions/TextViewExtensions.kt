@@ -7,10 +7,9 @@ import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
-import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.isVisible
 
-fun AppCompatTextView.setDrawableEnd(@DrawableRes id: Int, @ColorRes tint: Int = 0) {
+fun TextView.setDrawableEnd(@DrawableRes id: Int, @ColorRes tint: Int = 0) {
     val drawables = compoundDrawables
     val drawableEnd = context.getCompatDrawable(id)
     if (tint != 0)
@@ -19,7 +18,7 @@ fun AppCompatTextView.setDrawableEnd(@DrawableRes id: Int, @ColorRes tint: Int =
     setCompoundDrawablesWithIntrinsicBounds(drawables[0], drawables[2], drawableEnd, drawables[3])
 }
 
-fun AppCompatTextView.setDrawableStart(@DrawableRes id: Int, @ColorRes tint: Int = 0) {
+fun TextView.setDrawableStart(@DrawableRes id: Int, @ColorRes tint: Int = 0) {
     val drawables = compoundDrawables
     val drawableStart = context.getCompatDrawable(id)
     if (tint != 0)
@@ -28,15 +27,15 @@ fun AppCompatTextView.setDrawableStart(@DrawableRes id: Int, @ColorRes tint: Int
     setCompoundDrawablesWithIntrinsicBounds(drawableStart, drawables[1], drawables[2], drawables[3])
 }
 
-fun AppCompatTextView.setDrawableStart(drawable: Drawable?, @ColorInt tint: Int = 0) {
+fun TextView.setDrawableStart(drawable: Drawable?, @ColorInt tint: Int = 0) {
     val drawables = compoundDrawables
     if (tint != 0)
-        drawable?.mutate()?.setTint(context.getCompatColor(tint))
+        drawable?.mutate()?.setTint(tint)
 
     setCompoundDrawablesWithIntrinsicBounds(drawable, drawables[1], drawables[2], drawables[3])
 }
 
-fun AppCompatTextView.setDrawableTop(@DrawableRes id: Int, @ColorRes tint: Int = 0) {
+fun TextView.setDrawableTop(@DrawableRes id: Int, @ColorRes tint: Int = 0) {
     val drawables = compoundDrawables
     val drawableTop = context.getCompatDrawable(id)
     if (tint != 0)

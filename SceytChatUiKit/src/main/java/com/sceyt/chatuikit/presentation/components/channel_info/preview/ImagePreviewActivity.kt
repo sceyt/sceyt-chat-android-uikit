@@ -54,7 +54,7 @@ class ImagePreviewActivity : AppCompatActivity() {
         private var IMAGE_PATH_KEY = "image_path_key"
         private var TOOLBAR_TITLE_KEY = "toolbar_title_key"
 
-        fun launchActivity(context: Context, imagePath: String, toolbarTitle: String?) {
+        fun launchActivity(context: Context, imagePath: String, toolbarTitle: CharSequence?) {
             context.launchActivity<ImagePreviewActivity> {
                 putExtra(IMAGE_PATH_KEY, imagePath)
                 putExtra(TOOLBAR_TITLE_KEY, toolbarTitle)

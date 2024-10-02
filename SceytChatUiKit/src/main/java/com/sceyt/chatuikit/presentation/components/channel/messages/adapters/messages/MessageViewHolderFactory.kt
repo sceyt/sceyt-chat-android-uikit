@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemIncAttachmentsMessageBinding
@@ -29,7 +28,6 @@ import com.sceyt.chatuikit.databinding.SceytItemOutVoiceMessageBinding
 import com.sceyt.chatuikit.databinding.SceytItemUnreadMessagesSeparatorBinding
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.DateSeparatorViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncAttachmentsMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.IncDeletedMsgViewHolder
@@ -49,9 +47,9 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutVideoMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.OutVoiceMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders.UnreadMessagesSeparatorViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListenersImpl
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 
 open class MessageViewHolderFactory(context: Context) {
@@ -62,7 +60,6 @@ open class MessageViewHolderFactory(context: Context) {
     private var clickListeners = MessageClickListenersImpl()
     private var displayedListener: ((MessageListItem) -> Unit)? = null
     private var voicePlayPauseListener: ((FileListItem, SceytMessage, playing: Boolean) -> Unit)? = null
-    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
     private var needMediaDataCallback: (NeedMediaInfoData) -> Unit = {}
 
     internal fun setStyle(style: MessagesListViewStyle) {
@@ -97,32 +94,32 @@ open class MessageViewHolderFactory(context: Context) {
     open fun createIncTextMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncTextMsgViewHolder(
             SceytItemIncTextMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, displayedListener, userNameFormatter)
+            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, displayedListener)
     }
 
     open fun createOutTextMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutTextMsgViewHolder(
             SceytItemOutTextMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, userNameFormatter)
+            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners)
     }
 
     open fun createIncLinkMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncLinkMsgViewHolder(
             SceytItemIncLinkMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners,
-            displayedListener, userNameFormatter, needMediaDataCallback)
+            displayedListener, needMediaDataCallback)
     }
 
     open fun createOutLinkMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutLinkMsgViewHolder(
             SceytItemOutLinkMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, userNameFormatter, needMediaDataCallback)
+            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, needMediaDataCallback)
     }
 
     open fun createIncVoiceMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncVoiceMsgViewHolder(
             SceytItemIncVoiceMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, displayedListener, userNameFormatter,
+            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, displayedListener,
             needMediaDataCallback, voicePlayPauseListener
         )
     }
@@ -130,63 +127,67 @@ open class MessageViewHolderFactory(context: Context) {
     open fun createOutVoiceMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutVoiceMsgViewHolder(
             SceytItemOutVoiceMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, userNameFormatter,
+            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners,
             needMediaDataCallback, voicePlayPauseListener)
     }
 
     open fun createIncImageMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncImageMsgViewHolder(
             SceytItemIncImageMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, displayedListener, userNameFormatter, needMediaDataCallback)
+            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners,
+            displayedListener, needMediaDataCallback)
     }
 
     open fun createOutImageMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutImageMsgViewHolder(
             SceytItemOutImageMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, userNameFormatter, needMediaDataCallback)
+            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, needMediaDataCallback)
     }
 
     open fun createIncVideoMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncVideoMsgViewHolder(
             SceytItemIncVideoMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, displayedListener, userNameFormatter, needMediaDataCallback)
+            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners,
+            displayedListener, needMediaDataCallback)
     }
 
     open fun createOutVideoMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutVideoMsgViewHolder(
             SceytItemOutVideoMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, userNameFormatter, needMediaDataCallback)
+            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, needMediaDataCallback)
     }
 
     open fun createIncFileMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncFileMsgViewHolder(
             SceytItemIncFileMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, displayedListener, userNameFormatter, needMediaDataCallback)
+            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners,
+            displayedListener, needMediaDataCallback)
     }
 
     open fun createOutFileMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutFileMsgViewHolder(
             SceytItemOutFileMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, userNameFormatter, needMediaDataCallback)
+            viewPoolReactions, messageItemStyle.messageItemStyle, clickListeners, needMediaDataCallback)
     }
 
     open fun createIncFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncAttachmentsMsgViewHolder(
             SceytItemIncAttachmentsMessageBinding.inflate(layoutInflater, parent, false),
             viewPoolReactions, viewPoolFiles, messageItemStyle.messageItemStyle,
-            clickListeners, displayedListener, userNameFormatter, needMediaDataCallback)
+            clickListeners, displayedListener, needMediaDataCallback)
     }
 
     open fun createOutFilesMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return OutAttachmentsMsgViewHolder(
             SceytItemOutAttachmentsMessageBinding.inflate(layoutInflater, parent, false),
-            viewPoolReactions, viewPoolFiles, messageItemStyle.messageItemStyle, clickListeners, userNameFormatter, needMediaDataCallback)
+            viewPoolReactions, viewPoolFiles, messageItemStyle.messageItemStyle,
+            clickListeners, needMediaDataCallback)
     }
 
     open fun createIncDeletedMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
         return IncDeletedMsgViewHolder(
             SceytItemIncDeletedMessageBinding.inflate(layoutInflater, parent, false),
-            messageItemStyle.messageItemStyle, userNameFormatter, displayedListener, clickListeners)
+            messageItemStyle.messageItemStyle, displayedListener, clickListeners)
     }
 
     open fun createOutDeletedMsgViewHolder(parent: ViewGroup): BaseMsgViewHolder {
@@ -264,10 +265,6 @@ open class MessageViewHolderFactory(context: Context) {
         voicePlayPauseListener = listener
     }
 
-    fun setUserNameFormatter(formatter: UserNameFormatter) {
-        userNameFormatter = formatter
-    }
-
     fun setNeedMediaDataCallback(callback: (NeedMediaInfoData) -> Unit) {
         needMediaDataCallback = callback
     }
@@ -277,8 +274,6 @@ open class MessageViewHolderFactory(context: Context) {
     protected fun getClickListeners() = clickListeners as MessageClickListeners.ClickListeners
 
     protected fun getDisplayedListener() = displayedListener
-
-    protected fun getuserNameFormatter() = userNameFormatter
 
     protected fun getMessagesListViewStyle() = messageItemStyle
 

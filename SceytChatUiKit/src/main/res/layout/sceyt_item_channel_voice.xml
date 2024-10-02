@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/sceyt_color_primary"
     android:padding="8dp">
 
     <androidx.appcompat.widget.AppCompatImageView
@@ -38,7 +37,7 @@
         tools:visibility="visible" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tvFileName"
+        android:id="@+id/tvUserName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="8dp"
@@ -65,7 +64,7 @@
         app:layout_constraintEnd_toStartOf="@+id/tvDuration"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@+id/icFile"
-        app:layout_constraintTop_toBottomOf="@+id/tvFileName"
+        app:layout_constraintTop_toBottomOf="@+id/tvUserName"
         tools:text="16.09.22 • 21:00" />
 
     <androidx.appcompat.widget.AppCompatTextView

@@ -79,7 +79,7 @@ data class ReplyMessageStyle(
             attachmentDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
             attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
             senderNameFormatter = SceytChatUIKit.formatters.userNameFormatterNew,
-            mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatterNew,
+            mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
             attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider
         )
     }

@@ -9,27 +9,29 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoUriBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setClipboard
-import com.sceyt.chatuikit.extensions.setTextColorRes
+import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
-import com.sceyt.chatuikit.styles.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.channel_info.ChannelInfoURIStyle
 
 open class ChannelInfoURIFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
     protected lateinit var binding: SceytFragmentChannelInfoUriBinding
         private set
     protected lateinit var channel: SceytChannel
         private set
-    protected lateinit var style: ChannelInfoStyle
+    protected lateinit var infoStyle: ChannelInfoStyle
         private set
+
+    protected val style: ChannelInfoURIStyle
+        get() = infoStyle.uriStyle
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelInfoUriBinding.inflate(layoutInflater, container, false)
@@ -51,7 +53,7 @@ open class ChannelInfoURIFragment : Fragment(), ChannelUpdateListener, ChannelIn
     }
 
     private fun SceytFragmentChannelInfoUriBinding.initViews() {
-        link.setOnClickListener {
+        uri.setOnClickListener {
             onLinkClick(channel)
         }
     }
@@ -60,7 +62,7 @@ open class ChannelInfoURIFragment : Fragment(), ChannelUpdateListener, ChannelIn
     open fun setChannelSpecification(channel: SceytChannel) {
         with(binding) {
             if (channel.isPublic()) {
-                link.text = channel.uri
+                uri.text = channel.uri
             } else binding.root.isVisible = false
         }
     }
@@ -77,13 +79,16 @@ open class ChannelInfoURIFragment : Fragment(), ChannelUpdateListener, ChannelIn
     }
 
     override fun setStyle(style: ChannelInfoStyle) {
-        this.style = style
+        this.infoStyle = style
     }
 
     private fun SceytFragmentChannelInfoUriBinding.applyStyle() {
-        link.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
-        link.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-        space.layoutParams.height = style.spaceBetweenSections
+        root.setBackgroundColor(style.backgroundColor)
+        uri.apply {
+            setDrawableStart(style.uriIcon)
+            style.titleTextStyle.apply(this)
+        }
+        space.layoutParams.height = infoStyle.spaceBetweenSections
     }
 
     companion object {

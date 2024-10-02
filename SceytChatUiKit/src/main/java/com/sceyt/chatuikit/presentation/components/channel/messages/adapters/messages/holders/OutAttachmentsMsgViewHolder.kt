@@ -4,7 +4,6 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemOutAttachmentsMessageBinding
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.MessageFilesAdapter
@@ -20,9 +19,8 @@ class OutAttachmentsMsgViewHolder(
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(binding.root, style, messageListeners, userNameFormatter = userNameFormatter) {
+) : BaseMsgViewHolder(binding.root, style, messageListeners) {
     private var filedAdapter: MessageFilesAdapter? = null
 
     init {
@@ -88,7 +86,7 @@ class OutAttachmentsMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-     override val incoming: Boolean
+    override val incoming: Boolean
         get() = false
 
     private fun setFilesAdapter(message: SceytMessage) {

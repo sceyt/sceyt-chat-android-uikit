@@ -1,33 +1,31 @@
 package com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.holders
 
-import android.content.res.ColorStateList
 import androidx.core.view.isVisible
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelVoiceBinding
 import com.sceyt.chatuikit.extensions.TAG_REF
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.runOnMainThread
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
-import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
-import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListenersImpl
-import com.sceyt.chatuikit.formatters.UserNameFormatter
-import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
+import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
+import com.sceyt.chatuikit.styles.channel_info.voice.ChannelInfoVoiceItemStyle
+import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 
 
-class VoiceViewHolder(private val binding: SceytItemChannelVoiceBinding,
-                      private val clickListener: AttachmentClickListenersImpl,
-                      private val userNameFormatter: UserNameFormatter?,
-                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+class VoiceViewHolder(
+        private val binding: SceytItemChannelVoiceBinding,
+        private val style: ChannelInfoVoiceItemStyle,
+        private val clickListener: AttachmentClickListeners.ClickListeners,
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     private var lastFilePath: String? = ""
@@ -61,10 +59,10 @@ class VoiceViewHolder(private val binding: SceytItemChannelVoiceBinding,
 
         with(binding) {
             val user = (item as ChannelFileItem.Voice).data.user
-            tvFileName.text = user?.let {
-                userNameFormatter?.format(it) ?: it.getPresentableName()
+            tvUserName.text = user?.let {
+                style.userNameFormatter.format(context, it)
             } ?: ""
-            tvDate.text = DateTimeUtil.getDateTimeString(attachment.createdAt, "dd.MM.yy • HH:mm")
+            tvDate.text = style.subtitleFormatter.format(context, attachment)
 
             setVoiceDuration()
             setPlayingState(AudioPlayerHelper.isPlaying(lastFilePath ?: ""))
@@ -126,19 +124,24 @@ class VoiceViewHolder(private val binding: SceytItemChannelVoiceBinding,
         super.updateState(data, isOnBind)
 
         when (data.state) {
-            TransferState.PendingDownload -> needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
-            TransferState.Downloaded -> {
+            TransferState.PendingDownload -> {
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                binding.icFile.setImageResource(0)
+            }
+
+            TransferState.Downloaded, TransferState.Uploaded -> {
                 lastFilePath = data.filePath
                 setPlayingState(false)
             }
-            else -> return
+
+            else -> binding.icFile.setImageResource(0)
         }
     }
 
     private fun setPlayingState(playing: Boolean) {
         if (lastFilePath.isNullOrBlank()) return
-        val iconRes = if (playing) R.drawable.sceyt_ic_pause else R.drawable.sceyt_ic_play
-        binding.icFile.setImageResource(iconRes)
+        val iconRes = if (playing) style.pauseIcon else style.playIcon
+        binding.icFile.setImageDrawable(iconRes)
 
         if (!playing)
             setVoiceDuration()
@@ -153,21 +156,21 @@ class VoiceViewHolder(private val binding: SceytItemChannelVoiceBinding,
     private fun setVoiceDuration() {
         with(binding.tvDuration) {
             fileItem.duration?.let {
-                text = DateTimeUtil.secondsToTime(it)
+                text = style.durationFormatter.format(context, it)
                 isVisible = true
             } ?: run { isVisible = false }
         }
     }
 
-    override val loadingProgressView: CircularProgressView
-        get() = binding.loadProgress
+    override val loadingProgressViewWithStyle: Pair<CircularProgressView, MediaLoaderStyle>
+        get() = binding.loadProgress to style.mediaLoaderStyle
 
     private fun SceytItemChannelVoiceBinding.applyStyle() {
-        val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
-        val colorOnPrimary = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
-        root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
-        icFile.backgroundTintList = ColorStateList.valueOf(accentColor)
-        loadProgress.setIconTintColor(colorOnPrimary)
-        loadProgress.setProgressColor(colorOnPrimary)
+        root.setBackgroundColor(style.backgroundColor)
+        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
+        style.subtitleTextStyle.apply(tvDate)
+        style.userNameTextStyle.apply(tvUserName)
+        style.durationTextStyle.apply(tvDuration)
+        style.mediaLoaderStyle.apply(loadProgress)
     }
 }

@@ -52,7 +52,6 @@ import com.sceyt.chatuikit.extensions.screenPortraitWidthPx
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setDrawableStart
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyAttributeType
@@ -81,8 +80,7 @@ abstract class BaseMsgViewHolder(
         private val view: View,
         private val itemStyle: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners? = null,
-        private val displayedListener: ((MessageListItem) -> Unit)? = null,
-        private val userNameFormatter: UserNameFormatter? = null
+        private val displayedListener: ((MessageListItem) -> Unit)? = null
 ) : RecyclerView.ViewHolder(view) {
     protected val context: Context by lazy { view.context }
     protected val bubbleMaxWidth by lazy { calculateBubbleMaxWidth(context) }

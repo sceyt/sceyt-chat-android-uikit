@@ -10,26 +10,28 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoDescriptionBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.jsonToObject
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
-import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
-import com.sceyt.chatuikit.styles.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.channel_info.ChannelInfoDescriptionStyle
+import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 
 open class ChannelInfoDescriptionFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
     protected lateinit var binding: SceytFragmentChannelInfoDescriptionBinding
         private set
     protected lateinit var channel: SceytChannel
         private set
-    protected lateinit var style: ChannelInfoStyle
+    protected lateinit var infoStyle: ChannelInfoStyle
         private set
+
+    protected val style: ChannelInfoDescriptionStyle
+        get() = infoStyle.descriptionStyle
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelInfoDescriptionBinding.inflate(layoutInflater, container, false)
@@ -67,15 +69,16 @@ open class ChannelInfoDescriptionFragment : Fragment(), ChannelUpdateListener, C
     }
 
     override fun setStyle(style: ChannelInfoStyle) {
-        this.style = style
+        this.infoStyle = style
     }
 
     private fun SceytFragmentChannelInfoDescriptionBinding.applyStyle() {
-        layoutDetails.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
-        tvTitle.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
-        tvDescription.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-        border.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.borderColor))
-        space.layoutParams.height = style.spaceBetweenSections
+        layoutDetails.setBackgroundColor(style.backgroundColor)
+        style.titleTextStyle.apply(tvTitle)
+        style.descriptionTextStyle.apply(tvDescription)
+        tvTitle.text = style.titleText
+        border.setBackgroundColor(infoStyle.borderColor)
+        space.layoutParams.height = infoStyle.spaceBetweenSections
     }
 
     companion object {

@@ -828,7 +828,9 @@ internal class PersistenceChannelsLogicImpl(
                 replyOrEditMessage?.id, isReply, attributes)
             val links = mentionUsers.map { DraftMessageUserLink(chatId = channelId, userId = it.recipientId) }
             draftMessageDao.insertWithUserLinks(draftMessageEntity, links)
-            draftMessageEntity.toDraftMessage(mentionUsers.map { createEmptyUser(it.recipientId, it.name) }, replyOrEditMessage)
+            draftMessageEntity.toDraftMessage(mentionUsers.map {
+                createEmptyUser(it.recipientId, it.name.toString())
+            }, replyOrEditMessage)
         }
         channelsCache.updateChannelDraftMessage(channelId, draftMessage)
     }

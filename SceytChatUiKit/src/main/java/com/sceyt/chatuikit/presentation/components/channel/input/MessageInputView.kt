@@ -39,7 +39,6 @@ import com.sceyt.chatuikit.extensions.asFragmentActivity
 import com.sceyt.chatuikit.extensions.checkIfInsideFragment
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.empty
-import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
@@ -92,7 +91,6 @@ import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.VoiceRecordP
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.VoiceRecorderView
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.sceyt.chatuikit.shared.helpers.picker.PickType
-import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.input.InputCoverStyle
 import com.sceyt.chatuikit.styles.input.InputSelectedMediaStyle
 import com.sceyt.chatuikit.styles.input.MessageInputStyle
@@ -598,7 +596,7 @@ class MessageInputView @JvmOverloads constructor(
         with(binding) {
             var body = MessageBodyStyleHelper.buildOnlyTextStyles(message.body, message.bodyAttributes)
             if (!message.mentionedUsers.isNullOrEmpty()) {
-                val data = MentionUserHelper.getMentionsIndexed(message.bodyAttributes, message.mentionedUsers)
+                val data = MentionUserHelper.getMentionsIndexed(context, message.bodyAttributes, message.mentionedUsers)
                 body = MentionAnnotation.setMentionAnnotations(body, data)
             }
             messageInput.setText(body)
@@ -654,7 +652,8 @@ class MessageInputView @JvmOverloads constructor(
                 mentionUserNameFormatter = style.mentionUserNameFormatter
             )
             if (!draftMessage.mentionUsers.isNullOrEmpty()) {
-                val data = MentionUserHelper.getMentionsIndexed(draftMessage.bodyAttributes, draftMessage.mentionUsers)
+                val data = MentionUserHelper.getMentionsIndexed(context, draftMessage.bodyAttributes,
+                    draftMessage.mentionUsers)
                 body = MentionAnnotation.setMentionAnnotations(body, data)
             }
             setTextAndMoveSelectionEnd(body)

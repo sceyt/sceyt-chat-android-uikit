@@ -6,6 +6,10 @@ import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentSizeFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelDateFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoAttachmentDateFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoDateSeparatorFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoFileSubtitleFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoVoiceSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageSenderNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelSubtitleFormatter
@@ -25,7 +29,6 @@ import java.util.Date
 class SceytChatUIKitFormatters {
     //Todo: Remove this formatter
     var userNameFormatter: UserNameFormatter? = null
-    val mentionUserNameFormatter: UserNameFormatter? = null
 
     var userPresenceDateFormatter: Formatter<SceytUser> by lazyVar {
         DefaultUserPresenceDateFormatter()
@@ -39,7 +42,7 @@ class SceytChatUIKitFormatters {
         DefaultUserShortNameFormatter
     }
 
-    var mentionUserNameFormatterNew: Formatter<SceytUser> by lazyVar {
+    var mentionUserNameFormatter: Formatter<SceytUser> by lazyVar {
         DefaultMentionUserNameFormatter
     }
 
@@ -79,6 +82,23 @@ class SceytChatUIKitFormatters {
         DefaultMessageDateSeparatorFormatter()
     }
 
+    var channelInfoAttachmentDateFormatter: Formatter<Date> by lazyVar {
+        DefaultChannelInfoAttachmentDateFormatter
+    }
+
+    var channelInfoDateSeparatorFormatter: Formatter<Date> by lazyVar {
+        DefaultChannelInfoDateSeparatorFormatter()
+    }
+
+
+    var channelInfoFileSubtitleFormatter: Formatter<SceytAttachment> by lazyVar {
+        DefaultChannelInfoFileSubtitleFormatter
+    }
+
+    var channelInfoVoiceSubtitleFormatter: Formatter<SceytAttachment> by lazyVar {
+        DefaultChannelInfoVoiceSubtitleFormatter
+    }
+
     var messageViewCountFormatter: Formatter<Long> by lazyVar {
         DefaultMessageViewCountFormatter
     }
@@ -87,12 +107,12 @@ class SceytChatUIKitFormatters {
         DefaultAttachmentNameFormatter
     }
 
-    var mediaDurationFormatter: Formatter<Long> by lazyVar {
-        DefaultMediaDurationFormatter
-    }
-
     var attachmentSizeFormatter: Formatter<SceytAttachment> by lazyVar {
         DefaultAttachmentSizeFormatter
+    }
+
+    var mediaDurationFormatter: Formatter<Long> by lazyVar {
+        DefaultMediaDurationFormatter
     }
 
     var unreadCountFormatter: Formatter<Long> by lazyVar {

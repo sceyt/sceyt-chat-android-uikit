@@ -169,7 +169,7 @@ data class ChannelItemStyle(
                     channelNameFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                     channelDateFormatter = SceytChatUIKit.formatters.channelDateFormatter,
                     lastMessageSenderNameFormatter = SceytChatUIKit.formatters.channelLastMessageSenderNameFormatter,
-                    mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatterNew,
+                    mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
                     reactedUserNameFormatter = SceytChatUIKit.formatters.reactedUserNameFormatter,
                     typingUserNameFormatter = SceytChatUIKit.formatters.typingUserNameFormatter,
                     unreadCountFormatter = SceytChatUIKit.formatters.unreadCountFormatter,

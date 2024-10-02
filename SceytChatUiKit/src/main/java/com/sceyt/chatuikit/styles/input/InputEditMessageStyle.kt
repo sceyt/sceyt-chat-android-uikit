@@ -68,7 +68,7 @@ data class InputEditMessageStyle(
             attachmentDurationTextStyle = attachmentDurationTextStyle,
             attachmentDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
             attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
-            mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatterNew,
+            mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
             attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider
         )
     }
