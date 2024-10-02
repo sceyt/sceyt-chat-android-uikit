@@ -7,7 +7,6 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytItemOutVideoMessageBinding
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setDrawableStart
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -36,9 +35,9 @@ class OutVideoMsgViewHolder(
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, userNameFormatter = userNameFormatter, needMediaDataCallback = needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, style, messageListeners,
+    needMediaDataCallback = needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -209,7 +208,7 @@ class OutVideoMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-     override val incoming: Boolean
+    override val incoming: Boolean
         get() = false
 
     private fun SceytItemOutVideoMessageBinding.setMessageItemStyle() {

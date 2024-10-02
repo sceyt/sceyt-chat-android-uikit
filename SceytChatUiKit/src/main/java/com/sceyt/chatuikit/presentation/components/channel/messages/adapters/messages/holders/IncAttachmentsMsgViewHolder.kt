@@ -4,7 +4,6 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemIncAttachmentsMessageBinding
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.MessageFilesAdapter
@@ -21,9 +20,8 @@ class IncAttachmentsMsgViewHolder(
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
-) : BaseMsgViewHolder(binding.root, style, messageListeners, displayedListener, userNameFormatter) {
+) : BaseMsgViewHolder(binding.root, style, messageListeners, displayedListener) {
     private var filedAdapter: MessageFilesAdapter? = null
 
     init {

@@ -4,22 +4,22 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.databinding.SceytItemChannelLinkBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.glideRequestListener
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
+import com.sceyt.chatuikit.styles.channel_info.link.ChannelInfoLinkItemStyle
 
 
 class LinkViewHolder(
         private val binding: SceytItemChannelLinkBinding,
+        private val style: ChannelInfoLinkItemStyle,
         private val clickListener: AttachmentClickListeners.AttachmentClickListener,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, {}) {
@@ -75,7 +75,7 @@ class LinkViewHolder(
                 Glide.with(root.context)
                     .load(linkUrl)
                     .override(icLinkImage.width)
-                    .placeholder(defaultImage)
+                    .placeholder(style.linkPreviewStyle.placeHolder)
                     .listener(glideRequestListener { success ->
                         if (success) {
                             icLinkImage.background = ColorDrawable(Color.TRANSPARENT)
@@ -88,17 +88,16 @@ class LinkViewHolder(
     }
 
     private fun setDefaultStateLinkImage() {
-        binding.icLinkImage.setImageDrawable(defaultImage)
+        binding.icLinkImage.setImageDrawable(style.linkPreviewStyle.placeHolder)
         binding.icLinkImage.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.surface2Color))
     }
 
-    private val defaultImage by lazy {
-        context.getCompatDrawable(R.drawable.sceyt_ic_link)?.apply {
-            setTint(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-        }
-    }
-
     private fun SceytItemChannelLinkBinding.applyStyle() {
-        root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
+        icLinkImage.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.surface2Color))
+        style.linkTextStyle.apply(tvLinkUrl)
+        with(style.linkPreviewStyle) {
+            titleStyle.apply(tvLinkName)
+            descriptionStyle.apply(tvLinkDescription)
+        }
     }
 }

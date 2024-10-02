@@ -33,11 +33,9 @@ import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
-import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
@@ -75,10 +73,10 @@ import com.sceyt.chatuikit.presentation.components.channel_info.voice.ChannelInf
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.dialogs.ChannelActionConfirmationWithDialog
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytPresenceChecker.PresenceUser
-import com.sceyt.chatuikit.styles.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 
 @Suppress("MemberVisibilityCanBePrivate")
-open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
+open class ChannelInfoActivity : AppCompatActivity(), ChannelInfoStyleProvider, SceytKoinComponent {
     protected lateinit var pagerAdapter: ViewPagerAdapter
         private set
     protected val viewModel: ChannelInfoViewModel by viewModels()
@@ -197,8 +195,10 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     /** Generic function to either retrieve an existing fragment from a container or add a new one if not present.
      * The function returns a Pair<Boolean, T?> indicating whether the fragment was already present and the fragment instance.*/
-    private fun <T : Fragment?> getOrAddFragment(container: FragmentContainerView,
-                                                 fragmentProvider: () -> T): Pair<Boolean, T?> {
+    private fun <T : Fragment?> getOrAddFragment(
+            container: FragmentContainerView,
+            fragmentProvider: () -> T
+    ): Pair<Boolean, T?> {
         val containerFragment = container.getFragment<T>()
         if (containerFragment != null) {
             return true to containerFragment
@@ -369,12 +369,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     protected open fun onAvatarClick(channel: SceytChannel) {
         val icon = channel.iconUrl
         if (!icon.isNullOrBlank()) {
-            val title = if (channel.isDirect()) {
-                val user = channel.getPeer()?.user
-                if (user != null) SceytChatUIKit.formatters.userNameFormatter?.format(user)
-                        ?: user.getPresentableName() else null
-            } else channel.subject
-
+            val title = style.detailsStyle.channelNameFormatter.format(this, channel)
             ImagePreviewActivity.launchActivity(this, icon, title)
         }
     }
@@ -594,7 +589,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open fun setChannelSpecifications(channel: SceytChannel) {
         initOrUpdateFragment(binding?.frameLayoutSpecifications ?: return) {
-            getChannelSpecificationsFragment(channel)
+            getChannelURIFragment(channel)
         }
     }
 
@@ -636,8 +631,8 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     //Additional info
     protected open fun getChannelAdditionalInfoFragment(channel: SceytChannel): Fragment? = null
 
-    //Specifications
-    protected open fun getChannelSpecificationsFragment(channel: SceytChannel): Fragment? = ChannelInfoURIFragment.newInstance(channel)
+    //URI
+    protected open fun getChannelURIFragment(channel: SceytChannel): Fragment? = ChannelInfoURIFragment.newInstance(channel)
 
     protected open fun onPageStateChanged(pageState: PageState) {
         if (pageState is PageState.StateError) {
@@ -660,12 +655,13 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open fun applyStyle() {
         with(binding ?: return) {
-            val theme = SceytChatUIKit.theme.colors
-            root.setBackgroundColor(getCompatColor(theme.backgroundColorSecondary))
-            viewTopTabLayout.setBackgroundTintColorRes(theme.borderColor)
-            underlineTab.setBackgroundTintColorRes(theme.borderColor)
-            tabLayout.setBackgroundColor(getCompatColor(theme.backgroundColorSections))
-            tabLayout.setTabTextColors(getCompatColor(theme.textSecondaryColor), getCompatColor(theme.textPrimaryColor))
+            root.setBackgroundColor(style.backgroundColor)
+            viewTopTabLayout.setBackgroundColor(style.borderColor)
+            with(style.tabBarStyle) {
+                underlineTab.setBackgroundColor(bottomBorderColor)
+                tabLayout.setBackgroundColor(backgroundColor)
+                tabLayout.setTabTextColors(textColor, selectedTextColor)
+            }
         }
     }
 
@@ -689,5 +685,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             val animOptions = ActivityOptionsCompat.makeCustomAnimation(context, R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
             launcher.launch(intent, animOptions)
         }
+    }
+
+    override fun getStyle(): ChannelInfoStyle {
+        return style
     }
 }

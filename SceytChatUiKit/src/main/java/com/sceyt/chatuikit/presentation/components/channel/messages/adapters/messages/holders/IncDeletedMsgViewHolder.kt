@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 
 import com.sceyt.chatuikit.databinding.SceytItemIncDeletedMessageBinding
 import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
@@ -12,10 +11,9 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 class IncDeletedMsgViewHolder(
         private val binding: SceytItemIncDeletedMessageBinding,
         private val style: MessageItemStyle,
-        userNameFormatter: UserNameFormatter?,
         displayedListener: ((MessageListItem) -> Unit)?,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-) : BaseMsgViewHolder(binding.root, style, userNameFormatter = userNameFormatter, displayedListener = displayedListener) {
+) : BaseMsgViewHolder(binding.root, style, displayedListener = displayedListener) {
 
     init {
         binding.setMessageItemStyle()
@@ -46,7 +44,7 @@ class IncDeletedMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-     override val incoming: Boolean
+    override val incoming: Boolean
         get() = true
 
     private fun SceytItemIncDeletedMessageBinding.setMessageItemStyle() {

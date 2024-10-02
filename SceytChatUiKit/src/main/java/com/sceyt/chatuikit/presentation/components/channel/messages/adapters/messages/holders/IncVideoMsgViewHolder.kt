@@ -7,7 +7,6 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytItemIncVideoMessageBinding
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setDrawableStart
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -37,9 +36,8 @@ class IncVideoMsgViewHolder(
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, userNameFormatter, needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -219,7 +217,7 @@ class IncVideoMsgViewHolder(
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
-     override val incoming: Boolean
+    override val incoming: Boolean
         get() = true
 
     private fun SceytItemIncVideoMessageBinding.setMessageItemStyle() {

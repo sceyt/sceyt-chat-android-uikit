@@ -9,14 +9,14 @@
         android:id="@+id/layoutDetails"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/sceyt_color_primary"
+        android:background="@color/sceyt_color_background_sections"
         android:orientation="vertical">
 
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/notification"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:drawableStart="@drawable/sceyt_ic_notification"
+            android:drawableStart="@drawable/sceyt_ic_notification_with_layers"
             android:drawablePadding="16dp"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
@@ -38,7 +38,7 @@
             android:id="@+id/autoDeleteMessages"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:drawableStart="@drawable/sceyt_ic_auto_delete_message"
+            android:drawableStart="@drawable/sceyt_ic_auto_delete_messages_with_layers"
             android:drawablePadding="16dp"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"

@@ -677,10 +677,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         })
     }
 
-    fun setUserNameFormatter(builder: (SceytUser) -> String) {
-        messagesRV.getViewHolderFactory().setUserNameFormatter(builder)
-    }
-
     fun setNeedDownloadListener(callBack: (NeedMediaInfoData) -> Unit) {
         messagesRV.getViewHolderFactory().setNeedMediaDataCallback(callBack)
     }

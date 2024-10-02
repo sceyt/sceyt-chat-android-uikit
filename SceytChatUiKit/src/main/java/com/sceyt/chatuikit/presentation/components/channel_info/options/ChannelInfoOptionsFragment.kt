@@ -6,30 +6,32 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoOptionsBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
+import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
-import com.sceyt.chatuikit.styles.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.channel_info.ChannelInfoOptionsStyle
+import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 
 open class ChannelInfoOptionsFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
     protected lateinit var binding: SceytFragmentChannelInfoOptionsBinding
         private set
     protected lateinit var channel: SceytChannel
         private set
-    protected lateinit var style: ChannelInfoStyle
+    protected lateinit var infoStyle: ChannelInfoStyle
         private set
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
     private var enableSearchMessages: Boolean = false
+
+    protected val style: ChannelInfoOptionsStyle
+        get() = infoStyle.optionsStyle
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelInfoOptionsBinding.inflate(layoutInflater, container, false)
@@ -82,8 +84,13 @@ open class ChannelInfoOptionsFragment : Fragment(), ChannelUpdateListener, Chann
 
             searchMessages.isVisible = enableSearchMessages
 
-            members.text = if (channel.isPublic())
-                getString(R.string.sceyt_subscribers) else getString(R.string.sceyt_members)
+            if (channel.isPublic()) {
+                members.text = style.subscribersTitleText
+                members.setDrawableStart(style.subscribersIcon)
+            } else {
+                members.setDrawableStart(style.membersIcon)
+                members.text = style.membersTitleText
+            }
 
             groupChannelAdmins.isVisible = isOwnerOrAdmin
         }
@@ -98,17 +105,22 @@ open class ChannelInfoOptionsFragment : Fragment(), ChannelUpdateListener, Chann
     }
 
     private fun SceytFragmentChannelInfoOptionsBinding.applyStyle() {
-        val textPrimaryColor = requireContext().getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
-        val backgroundColorSections = requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
-        members.setTextColor(textPrimaryColor)
-        members.setBackgroundColor(backgroundColorSections)
-        admins.setTextColor(textPrimaryColor)
-        admins.setBackgroundColor(backgroundColorSections)
-        searchMessages.setTextColor(textPrimaryColor)
-        searchMessages.setBackgroundColor(backgroundColorSections)
-        borderBetweenMembersAndAdmins.setDividerColorResource(SceytChatUIKit.theme.colors.borderColor)
-        borderBetweenAdminsAndSearch.setDividerColorResource(SceytChatUIKit.theme.colors.borderColor)
-        space.layoutParams.height = style.spaceBetweenSections
+        layoutDetails.setBackgroundColor(style.backgroundColor)
+        with(style.titleTextStyle) {
+            apply(members)
+            apply(admins)
+            apply(searchMessages)
+        }
+
+        members.setDrawableStart(style.membersIcon)
+        admins.setDrawableStart(style.adminsIcon)
+        admins.text = style.adminsTitleText
+        searchMessages.setDrawableStart(style.searchIcon)
+        searchMessages.text = style.searchMessagesTitleText
+
+        borderBetweenMembersAndAdmins.dividerColor = infoStyle.borderColor
+        borderBetweenAdminsAndSearch.dividerColor = infoStyle.borderColor
+        space.layoutParams.height = infoStyle.spaceBetweenSections
     }
 
     companion object {
@@ -131,6 +143,6 @@ open class ChannelInfoOptionsFragment : Fragment(), ChannelUpdateListener, Chann
     }
 
     override fun setStyle(style: ChannelInfoStyle) {
-        this.style = style
+        this.infoStyle = style
     }
 }

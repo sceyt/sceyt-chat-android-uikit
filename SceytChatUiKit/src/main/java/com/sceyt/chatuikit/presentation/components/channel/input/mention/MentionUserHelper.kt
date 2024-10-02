@@ -11,7 +11,6 @@ import com.google.gson.Gson
 import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -64,14 +63,18 @@ object MentionUserHelper {
         }
     }
 
-    fun getMentionsIndexed(attributes: List<BodyAttribute>?, mentionUsers: List<SceytUser>?): List<Mention> {
+    fun getMentionsIndexed(
+            context: Context,
+            attributes: List<BodyAttribute>?,
+            mentionUsers: List<SceytUser>?
+    ): List<Mention> {
         val list = arrayListOf<Mention>()
         val data = attributes?.filter { it.type == MENTION } ?: return list
 
         data.forEach { entry ->
             val userId = entry.metadata ?: return@forEach
             val user = mentionUsers?.find { it.id == entry.metadata } ?: SceytUser(userId)
-            val name = userNameFormatter?.format(user) ?: user.getPresentableName()
+            val name = userNameFormatter.format(context, user).toString()
             list.add(Mention(userId, name, entry.offset, entry.length))
         }
         return list

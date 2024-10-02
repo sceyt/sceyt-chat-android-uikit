@@ -6,28 +6,30 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoSettingsBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.parcelable
+import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.setOnlyClickable
-import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
-import com.sceyt.chatuikit.styles.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.channel_info.ChannelInfoSettingsStyle
+import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 
 open class ChannelInfoSettingsFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
     protected lateinit var binding: SceytFragmentChannelInfoSettingsBinding
         private set
     protected lateinit var channel: SceytChannel
         private set
-    protected lateinit var style: ChannelInfoStyle
+    protected lateinit var infoStyle: ChannelInfoStyle
         private set
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
+
+    protected val style: ChannelInfoSettingsStyle
+        get() = infoStyle.settingsStyle
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelInfoSettingsBinding.inflate(layoutInflater, container, false)
@@ -91,15 +93,25 @@ open class ChannelInfoSettingsFragment : Fragment(), ChannelUpdateListener, Chan
     }
 
     override fun setStyle(style: ChannelInfoStyle) {
-        this.style = style
+        this.infoStyle = style
     }
 
     private fun SceytFragmentChannelInfoSettingsBinding.applyStyle() {
-        layoutDetails.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
-        notification.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-        autoDeleteMessages.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-        border.setDividerColorResource(SceytChatUIKit.theme.colors.borderColor)
-        space.layoutParams.height = style.spaceBetweenSections
+        layoutDetails.setBackgroundColor(style.backgroundColor)
+        style.titleTextStyle.apply(notification)
+        style.titleTextStyle.apply(autoDeleteMessages)
+
+        notification.apply {
+            setDrawableStart(style.notificationsIcon)
+            text = style.notificationsTitleText
+        }
+        autoDeleteMessages.apply {
+            setDrawableStart(style.autoDeleteMessagesIcon)
+            text = style.autoDeleteMessagesTitleText
+        }
+
+        border.dividerColor = infoStyle.borderColor
+        space.layoutParams.height = infoStyle.spaceBetweenSections
     }
 
     companion object {

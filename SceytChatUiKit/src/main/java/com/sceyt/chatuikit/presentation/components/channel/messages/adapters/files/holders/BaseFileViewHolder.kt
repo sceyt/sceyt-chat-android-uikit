@@ -10,10 +10,10 @@ import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.getProgressWithState
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem
 import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 
 abstract class BaseFileViewHolder<Item : AttachmentDataItem>(
@@ -35,8 +35,8 @@ abstract class BaseFileViewHolder<Item : AttachmentDataItem>(
         setListener()
 
         viewHolderHelper.transferData?.let {
-            loadingProgressView?.release(it.progressPercent)
-            updateState(it, true)
+            loadingProgressViewWithStyle?.first?.release(it.progressPercent)
+            updateState(it)
             if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload && it.state != TransferState.PauseDownload)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
         }
@@ -67,22 +67,24 @@ abstract class BaseFileViewHolder<Item : AttachmentDataItem>(
     open fun updateState(data: TransferData, isOnBind: Boolean = false) {
         val isTransferring = data.isTransferring()
         if (!isOnBind && !isAttachedToWindow && isTransferring) return
-        val style = MediaLoaderStyle() //todo
-        loadingProgressView?.getProgressWithState(data.state, style, data.progressPercent)
+        loadingProgressViewWithStyle?.let { (loader, style) ->
+            loader.getProgressWithState(data.state, style, data.progressPercent)
+        }
     }
 
     open fun needThumbFor(): ThumbFor? = null
 
     open fun getThumbSize() = Size(itemView.width, itemView.height)
 
-    protected open val loadingProgressView: CircularProgressView? = null
+    protected open val loadingProgressViewWithStyle: Pair<CircularProgressView, MediaLoaderStyle>? = null
 
     override fun onViewAttachedToWindow() {
         super.onViewAttachedToWindow()
         isAttachedToWindow = true
-        val style = MediaLoaderStyle() //todo
         viewHolderHelper.transferData?.let {
-            loadingProgressView?.getProgressWithState(it.state, style, it.progressPercent)
+            loadingProgressViewWithStyle?.let { (loader, style) ->
+                loader.getProgressWithState(it.state, style, it.progressPercent)
+            }
         }
     }
 

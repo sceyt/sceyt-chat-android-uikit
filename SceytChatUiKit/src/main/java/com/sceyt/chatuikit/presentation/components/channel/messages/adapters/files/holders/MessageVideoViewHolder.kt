@@ -21,11 +21,12 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
-import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
-import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
+import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 
 class MessageVideoViewHolder(
@@ -133,8 +134,8 @@ class MessageVideoViewHolder(
 
     override fun needThumbFor() = ThumbFor.MessagesLisView
 
-    override val loadingProgressView: CircularProgressView
-        get() = binding.loadProgress
+    override val loadingProgressViewWithStyle: Pair<CircularProgressView, MediaLoaderStyle>
+        get() = binding.loadProgress to style.mediaLoaderStyle
 
     /* private fun initializePlayer(mediaPath: String?) {
           binding.videoViewController.setPlayerViewAndPath(binding.videoView, mediaPath)

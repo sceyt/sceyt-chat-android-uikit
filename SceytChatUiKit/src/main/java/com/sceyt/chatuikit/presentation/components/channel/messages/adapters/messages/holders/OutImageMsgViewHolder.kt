@@ -4,7 +4,6 @@ import android.widget.ImageView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemOutImageMessageBinding
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -34,10 +33,9 @@ class OutImageMsgViewHolder(
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseMediaMessageViewHolder(binding.root, style, messageListeners,
-    userNameFormatter = userNameFormatter, needMediaDataCallback = needMediaDataCallback) {
+    needMediaDataCallback = needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -168,7 +166,7 @@ class OutImageMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-     override val incoming: Boolean
+    override val incoming: Boolean
         get() = false
 
     private fun SceytItemOutImageMessageBinding.setMessageItemStyle() {

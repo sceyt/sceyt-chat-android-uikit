@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemOutLinkMessageBinding
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
@@ -16,10 +15,9 @@ class OutLinkMsgViewHolder(
         private val viewPool: RecyclerView.RecycledViewPool,
         style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        userNameFormatter: UserNameFormatter?,
         needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseLinkMsgViewHolder(binding.root, style, messageListeners,
-    userNameFormatter = userNameFormatter, needMediaDataCallback = needMediaDataCallback) {
+    needMediaDataCallback = needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -80,7 +78,7 @@ class OutLinkMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-     override val incoming: Boolean
+    override val incoming: Boolean
         get() = false
 
     private fun SceytItemOutLinkMessageBinding.setMessageItemStyle() {

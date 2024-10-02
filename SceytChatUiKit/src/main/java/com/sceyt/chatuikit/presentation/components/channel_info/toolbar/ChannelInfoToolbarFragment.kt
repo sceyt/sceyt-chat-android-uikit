@@ -13,12 +13,9 @@ import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoToolbarBinding
 import com.sceyt.chatuikit.extensions.changeAlphaWithAnimation
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setOnClickListenerDisableClickViewForWhile
-import com.sceyt.chatuikit.extensions.setTextColorRes
-import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
@@ -28,18 +25,21 @@ import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateLis
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
 import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
 import com.sceyt.chatuikit.services.SceytPresenceChecker
-import com.sceyt.chatuikit.styles.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.channel_info.ChannelInfoToolBarStyle
 
 open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier {
     protected lateinit var binding: SceytFragmentChannelInfoToolbarBinding
         private set
     protected lateinit var channel: SceytChannel
         private set
-    protected lateinit var style: ChannelInfoStyle
+    protected lateinit var infoStyle: ChannelInfoStyle
         private set
     private var buttonsListener: ((ClickActionsEnum) -> Unit)? = null
     private var isSelf: Boolean = false
 
+    protected val style: ChannelInfoToolBarStyle
+        get() = infoStyle.toolBarStyle
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelInfoToolbarBinding.inflate(layoutInflater, container, false)
@@ -137,7 +137,7 @@ open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, Chann
     }
 
     override fun setStyle(style: ChannelInfoStyle) {
-        this.style = style
+        this.infoStyle = style
     }
 
     fun setClickActionsListener(listener: (ClickActionsEnum) -> Unit) {
@@ -166,16 +166,14 @@ open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, Chann
     }
 
     private fun SceytFragmentChannelInfoToolbarBinding.applyStyle() {
-        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
-        titleToolbar.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-        tvToolbarInfo.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-        subTitleToolbar.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
+        root.setBackgroundColor(style.backgroundColor)
+        titleToolbar.text = style.expandedStateTitle
+        style.expandedStateTitleTextStyle.apply(titleToolbar)
+        style.collapsedStateTitleTextStyle.apply(tvToolbarInfo)
+        style.collapsedStateSubtitleTextStyle.apply(subTitleToolbar)
         icBack.setImageDrawable(style.navigationIcon)
         icEdit.setImageDrawable(style.editIcon)
         icMore.setImageDrawable(style.moreIcon)
-        icBack.setTintColorRes(SceytChatUIKit.theme.colors.accentColor)
-        icEdit.setTintColorRes(SceytChatUIKit.theme.colors.accentColor)
-        icMore.setTintColorRes(SceytChatUIKit.theme.colors.accentColor)
     }
 
     companion object {

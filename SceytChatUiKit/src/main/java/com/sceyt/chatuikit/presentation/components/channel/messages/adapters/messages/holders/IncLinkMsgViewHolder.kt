@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemIncLinkMessageBinding
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
@@ -17,9 +16,8 @@ class IncLinkMsgViewHolder(
         style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        userNameFormatter: UserNameFormatter?,
         needMediaDataCallback: (NeedMediaInfoData) -> Unit
-) : BaseLinkMsgViewHolder(binding.root, style, messageListeners, displayedListener, userNameFormatter, needMediaDataCallback) {
+) : BaseLinkMsgViewHolder(binding.root, style, messageListeners, displayedListener, needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -88,7 +86,7 @@ class IncLinkMsgViewHolder(
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
-     override val incoming: Boolean
+    override val incoming: Boolean
         get() = true
 
     private fun SceytItemIncLinkMessageBinding.setMessageItemStyle() {

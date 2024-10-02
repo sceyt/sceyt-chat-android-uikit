@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.databinding.SceytItemOutTextMessageBinding
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
@@ -15,8 +14,7 @@ class OutTextMsgViewHolder(
         private val viewPool: RecyclerView.RecycledViewPool,
         style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        userNameFormatter: UserNameFormatter?
-) : BaseMsgViewHolder(binding.root, style, messageListeners, userNameFormatter = userNameFormatter) {
+) : BaseMsgViewHolder(binding.root, style, messageListeners) {
 
     init {
         with(binding) {
@@ -75,7 +73,7 @@ class OutTextMsgViewHolder(
 
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
-     override val incoming: Boolean
+    override val incoming: Boolean
         get() = false
 
     private fun SceytItemOutTextMessageBinding.setMessageItemStyle() {

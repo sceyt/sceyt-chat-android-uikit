@@ -97,7 +97,7 @@ import java.util.Date
  * @property messageBodyFormatter Formatter for the message body. Use it to format the message body before displaying it, default is null.
  * @property messageViewCountFormatter Formatter for the message view count, default is [SceytChatUIKitFormatters.messageViewCountFormatter].
  * @property messageDateFormatter Formatter for the message date, default is [SceytChatUIKitFormatters.messageDateFormatter].
- * @property mentionUserNameFormatter Formatter for the mention user name, default is [SceytChatUIKitFormatters.mentionUserNameFormatterNew].
+ * @property mentionUserNameFormatter Formatter for the mention user name, default is [SceytChatUIKitFormatters.mentionUserNameFormatter].
  * @property voiceDurationFormatter Formatter for the voice duration, default is [SceytChatUIKitFormatters.mediaDurationFormatter].
  * @property videoDurationFormatter Formatter for the video duration, default is [SceytChatUIKitFormatters.mediaDurationFormatter].
  * @property attachmentFileSizeFormatter Formatter for the attachment file size, default is [SceytChatUIKitFormatters.attachmentSizeFormatter].
@@ -309,7 +309,7 @@ data class MessageItemStyle(
                     messageBodyFormatter = null,
                     messageViewCountFormatter = SceytChatUIKit.formatters.messageViewCountFormatter,
                     messageDateFormatter = SceytChatUIKit.formatters.messageDateFormatter,
-                    mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatterNew,
+                    mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
                     voiceDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
                     videoDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
                     attachmentFileSizeFormatter = SceytChatUIKit.formatters.attachmentSizeFormatter,

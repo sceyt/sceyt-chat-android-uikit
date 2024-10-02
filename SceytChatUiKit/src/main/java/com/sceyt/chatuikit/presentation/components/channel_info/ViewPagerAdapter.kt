@@ -9,8 +9,11 @@ import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInf
 import com.sceyt.chatuikit.presentation.components.channel_info.media.ChannelInfoMediaFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.voice.ChannelInfoVoiceFragment
 
-class ViewPagerAdapter(private val activity: AppCompatActivity,
-                       private val fragments: List<Fragment>) : FragmentStateAdapter(activity) {
+class ViewPagerAdapter(
+        private val activity: AppCompatActivity,
+        private val fragments: List<Fragment>
+) : FragmentStateAdapter(activity) {
+
 
     override fun getItemCount(): Int {
         return fragments.size
@@ -40,7 +43,7 @@ class ViewPagerAdapter(private val activity: AppCompatActivity,
         }
     }
 
-    fun interface HistoryClearedListener{
+    fun interface HistoryClearedListener {
         fun onHistoryCleared()
     }
 }

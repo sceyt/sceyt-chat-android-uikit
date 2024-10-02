@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.channel_info.media
 
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,10 +11,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoMediaBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isLandscape
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
@@ -26,6 +23,7 @@ import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem.Companion.getData
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
+import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleProvider
 import com.sceyt.chatuikit.presentation.components.channel_info.ViewPagerAdapter
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ChannelMediaAdapter
@@ -35,7 +33,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.ChannelInfoMediaStyle
+import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 import kotlinx.coroutines.launch
 
 open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
@@ -45,12 +43,8 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, ViewPagerA
     protected open val mediaType = listOf("image", "video")
     protected open var pageStateView: PageStateView? = null
     protected lateinit var viewModel: ChannelAttachmentsViewModel
-    protected lateinit var style: ChannelInfoMediaStyle
-        private set
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        style = ChannelInfoMediaStyle.Builder(context, null).build()
+    protected val infoStyle: ChannelInfoStyle by lazy {
+        (requireActivity() as ChannelInfoStyleProvider).getStyle()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -109,7 +103,7 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, ViewPagerA
     protected open fun onInitialMediaList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
             val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(
-                requireContext(), style).also {
+                requireContext(), infoStyle, infoStyle.mediaStyle.dateSeparatorStyle).also {
 
                 it.setNeedMediaDataCallback { data ->
                     viewModel.needMediaInfo(data)
@@ -192,12 +186,12 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, ViewPagerA
     }
 
     private fun SceytFragmentChannelInfoMediaBinding.applyStyle() {
-        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
+        root.setBackgroundColor(infoStyle.mediaStyle.backgroundColor)
     }
 
     companion object {
-
         const val CHANNEL = "CHANNEL"
+
         fun newInstance(channel: SceytChannel): ChannelInfoMediaFragment {
             val fragment = ChannelInfoMediaFragment()
             fragment.setBundleArguments {

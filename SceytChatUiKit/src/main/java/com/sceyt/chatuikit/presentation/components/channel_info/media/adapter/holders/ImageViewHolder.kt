@@ -21,14 +21,19 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
-import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListenersImpl
+import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
+import com.sceyt.chatuikit.styles.channel_info.media.ChannelInfoMediaItemStyle
 
-class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
-                      private val clickListeners: AttachmentClickListenersImpl,
-                      private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+class ImageViewHolder(
+        private val binding: SceytItemChannelImageBinding,
+        private val style: ChannelInfoMediaItemStyle,
+        private val clickListeners: AttachmentClickListeners.ClickListeners,
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
 
     init {
+        binding.applyStyle()
+
         binding.root.setOnClickListener {
             clickListeners.onAttachmentClick(it, fileItem)
         }
@@ -90,4 +95,8 @@ class ImageViewHolder(private val binding: SceytItemChannelImageBinding,
     override fun getThumbSize() = Size(itemView.width, itemView.height)
 
     override fun needThumbFor() = ThumbFor.ConversationInfo
+
+    private fun SceytItemChannelImageBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
+    }
 }

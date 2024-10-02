@@ -2,9 +2,7 @@ package com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.h
 
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemChannelFileBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
-import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
@@ -12,11 +10,12 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
-import com.sceyt.chatuikit.styles.ChannelInfoMediaStyle
+import com.sceyt.chatuikit.styles.channel_info.files.ChannelInfoFileItemStyle
+import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 
 class FileViewHolder(
         private val binding: SceytItemChannelFileBinding,
-        private val style: ChannelInfoMediaStyle,
+        private val style: ChannelInfoFileItemStyle,
         private val clickListeners: AttachmentClickListeners.ClickListeners,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseFileViewHolder<ChannelFileItem>(binding.root, needMediaDataCallback) {
@@ -37,8 +36,8 @@ class FileViewHolder(
         val file = (item as? ChannelFileItem.File)?.file ?: return
 
         with(binding) {
-            tvFileName.text = file.name
-            tvFileSizeAndDate.text = file.fileSize.toPrettySize()
+            tvFileName.text = style.fileNameFormatter.format(context, file)
+            tvFileSizeAndDate.text = style.subtitleFormatter.format(context, file)
         }
     }
 
@@ -47,26 +46,26 @@ class FileViewHolder(
 
         when (data.state) {
             TransferState.PendingDownload -> {
+                binding.icFile.setImageResource(0)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
 
-            TransferState.Downloaded -> {
-                val icon = style.attachmentIconProvider.provide(context, fileItem.file)
+            TransferState.Downloaded, TransferState.Uploaded -> {
+                val icon = style.iconProvider.provide(context, fileItem.file)
                 binding.icFile.setImageDrawable(icon)
             }
 
-            else -> return
+            else -> binding.icFile.setImageResource(0)
         }
     }
 
-    override val loadingProgressView: CircularProgressView
-        get() = binding.loadProgress
+    override val loadingProgressViewWithStyle: Pair<CircularProgressView, MediaLoaderStyle>
+        get() = binding.loadProgress to style.mediaLoaderStyle
 
     private fun SceytItemChannelFileBinding.applyStyle() {
-        val colorOnPrimary = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
-        root.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections))
         icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
-        loadProgress.setIconTintColor(colorOnPrimary)
-        loadProgress.setProgressColor(colorOnPrimary)
+        style.fileNameTextStyle.apply(tvFileName)
+        style.subtitleTextStyle.apply(tvFileSizeAndDate)
+        style.mediaLoaderStyle.apply(loadProgress)
     }
 }

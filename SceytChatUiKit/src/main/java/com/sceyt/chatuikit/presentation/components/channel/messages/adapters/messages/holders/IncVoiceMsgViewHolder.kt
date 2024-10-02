@@ -18,7 +18,6 @@ import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setPlayButtonIcon
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
@@ -53,10 +52,9 @@ class IncVoiceMsgViewHolder(
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners,
         displayedListener: ((MessageListItem) -> Unit)?,
-        userNameFormatter: UserNameFormatter?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
         private val voicePlayPauseListener: ((FileListItem, SceytMessage, playing: Boolean) -> Unit)?
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, userNameFormatter, needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, needMediaDataCallback) {
     private var currentPlaybackSpeed: PlaybackSpeed = PlaybackSpeed.X1
         set(value) {
             field = value
@@ -295,7 +293,7 @@ class IncVoiceMsgViewHolder(
     override val selectMessageView: View
         get() = binding.selectView
 
-     override val incoming: Boolean
+    override val incoming: Boolean
         get() = true
 
     override fun setMaxWidth() {

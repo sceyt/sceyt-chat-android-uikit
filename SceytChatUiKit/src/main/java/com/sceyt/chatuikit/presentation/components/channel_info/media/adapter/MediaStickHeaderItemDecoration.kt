@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.databinding.SceytItemChannelMediaDateBinding
+import com.sceyt.chatuikit.databinding.SceytItemChannelMediaDateSeparatorBinding
 
 class MediaStickHeaderItemDecoration(private val mListener: StickyHeaderInterface) : RecyclerView.ItemDecoration() {
     private var mStickyHeaderHeight = 0
@@ -32,8 +32,8 @@ class MediaStickHeaderItemDecoration(private val mListener: StickyHeaderInterfac
         drawHeader(c, currentHeader.root)
     }
 
-    private fun getHeaderViewForItem(headerPosition: Int, parent: RecyclerView): SceytItemChannelMediaDateBinding {
-        val header = SceytItemChannelMediaDateBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+    private fun getHeaderViewForItem(headerPosition: Int, parent: RecyclerView): SceytItemChannelMediaDateSeparatorBinding {
+        val header = SceytItemChannelMediaDateSeparatorBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         mListener.bindHeaderData(header, headerPosition)
         return header
     }
@@ -105,7 +105,7 @@ class MediaStickHeaderItemDecoration(private val mListener: StickyHeaderInterfac
          * @param header View. Header to set the data on.
          * @param headerPosition int. Position of the header item in the adapter.
          */
-        fun bindHeaderData(header: SceytItemChannelMediaDateBinding, headerPosition: Int)
+        fun bindHeaderData(header: SceytItemChannelMediaDateSeparatorBinding, headerPosition: Int)
 
         /**
          * This method gets called by [MediaStickHeaderItemDecoration] to verify whether the item represents a header.
