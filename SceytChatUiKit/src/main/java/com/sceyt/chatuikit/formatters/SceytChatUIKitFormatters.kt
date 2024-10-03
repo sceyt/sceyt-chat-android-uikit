@@ -27,14 +27,12 @@ import com.sceyt.chatuikit.persistence.lazyVar
 import java.util.Date
 
 class SceytChatUIKitFormatters {
-    //Todo: Remove this formatter
-    var userNameFormatter: UserNameFormatter? = null
 
     var userPresenceDateFormatter: Formatter<SceytUser> by lazyVar {
         DefaultUserPresenceDateFormatter()
     }
 
-    var userNameFormatterNew: Formatter<SceytUser> by lazyVar {
+    var userNameFormatter: Formatter<SceytUser> by lazyVar {
         DefaultUserNameFormatter
     }
 
@@ -89,7 +87,6 @@ class SceytChatUIKitFormatters {
     var channelInfoDateSeparatorFormatter: Formatter<Date> by lazyVar {
         DefaultChannelInfoDateSeparatorFormatter()
     }
-
 
     var channelInfoFileSubtitleFormatter: Formatter<SceytAttachment> by lazyVar {
         DefaultChannelInfoFileSubtitleFormatter

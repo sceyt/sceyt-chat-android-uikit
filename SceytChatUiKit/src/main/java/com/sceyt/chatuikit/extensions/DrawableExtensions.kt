@@ -20,6 +20,7 @@ fun Drawable?.toSpannableString(): SpannableStringBuilder {
 }
 
 fun Drawable?.applyTint(@ColorInt tintColor: Int): Drawable? {
+    if (tintColor == 0) return this
     return this?.mutate()?.apply { setTint(tintColor) }
 }
 

@@ -44,7 +44,7 @@ open class ChannelInfoLinksFragment : Fragment(), SceytKoinComponent, ViewPagerA
     protected open val mediaType = listOf("link")
     protected lateinit var viewModel: ChannelAttachmentsViewModel
     protected val infoStyle: ChannelInfoStyle by lazy {
-        (requireActivity() as ChannelInfoStyleProvider).getStyle()
+        (requireActivity() as ChannelInfoStyleProvider).provideStyle()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

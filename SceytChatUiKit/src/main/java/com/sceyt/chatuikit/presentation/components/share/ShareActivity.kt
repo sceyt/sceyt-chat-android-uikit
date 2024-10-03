@@ -82,7 +82,7 @@ open class ShareActivity : ShareableActivity() {
     protected open fun SceytActivityShareBinding.initViews() {
         determinateShareBtnState()
 
-        toolbar.setNavigationIconClickListener {
+        toolbar.setNavigationClickListener {
             finish()
         }
 

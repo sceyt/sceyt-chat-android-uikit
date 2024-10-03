@@ -32,7 +32,6 @@ import com.sceyt.chatuikit.extensions.getFileUriWithProvider
 import com.sceyt.chatuikit.extensions.getFirstVisibleItemPosition
 import com.sceyt.chatuikit.extensions.getMimeType
 import com.sceyt.chatuikit.extensions.getPermissionsForMangeStorage
-import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.initPermissionLauncher
 import com.sceyt.chatuikit.extensions.isFirstItemDisplaying
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
@@ -177,7 +176,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     private fun loadMediaDetail(item: MediaItem) {
         currentItem = item
         val name = item.data.user?.let {
-            SceytChatUIKit.formatters.userNameFormatter?.format(it) ?: it.getPresentableName()
+            SceytChatUIKit.formatters.userNameFormatter.format(this, it)
         }
         binding.tvTitle.text = name ?: ""
         binding.tvDate.text = DateTimeUtil.getDateTimeString(item.data.attachment.createdAt, "dd.MM.yy, HH:mm")

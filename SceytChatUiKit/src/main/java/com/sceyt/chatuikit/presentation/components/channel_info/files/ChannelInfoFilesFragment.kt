@@ -43,7 +43,7 @@ open class ChannelInfoFilesFragment : Fragment(), SceytKoinComponent, ViewPagerA
     protected val mediaType = listOf(AttachmentTypeEnum.File.value)
     protected lateinit var viewModel: ChannelAttachmentsViewModel
     protected val infoStyle: ChannelInfoStyle by lazy {
-        (requireActivity() as ChannelInfoStyleProvider).getStyle()
+        (requireActivity() as ChannelInfoStyleProvider).provideStyle()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

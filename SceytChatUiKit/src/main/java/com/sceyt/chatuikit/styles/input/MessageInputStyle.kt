@@ -58,7 +58,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property inputCoverStyle Style for the input cover, default is [buildInputCoverStyle]
  * @property mentionUsersListStyle Style for the mention users list, default is [buildMentionUsersListStyle]
  * @property mentionTextStyle Style for the mention user name while typing, default is [buildMentionUserTextStyle]
- * @property mentionUserNameFormatter Formatter for the mention user name, default is [SceytChatUIKitFormatters.userNameFormatterNew]
+ * @property mentionUserNameFormatter Formatter for the mention user name, default is [SceytChatUIKitFormatters.userNameFormatter]
  * */
 data class MessageInputStyle(
         @ColorInt var backgroundColor: Int,
@@ -163,7 +163,7 @@ data class MessageInputStyle(
                     inputCoverStyle = buildInputCoverStyle(array),
                     mentionUsersListStyle = buildMentionUsersListStyle(array),
                     mentionTextStyle = buildMentionUserTextStyle(array),
-                    mentionUserNameFormatter = SceytChatUIKit.formatters.userNameFormatterNew,
+                    mentionUserNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
                 ).let { styleCustomizer.apply(context, it) }
             }
         }

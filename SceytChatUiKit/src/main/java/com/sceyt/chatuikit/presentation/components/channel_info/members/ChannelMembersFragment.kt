@@ -33,20 +33,15 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelMembersBinding
 import com.sceyt.chatuikit.extensions.awaitAnimationEnd
 import com.sceyt.chatuikit.extensions.customToastSnackBar
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getPresentableNameCheckDeleted
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBoldSpan
 import com.sceyt.chatuikit.extensions.setBundleArguments
-import com.sceyt.chatuikit.extensions.setTextColorRes
-import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.ChannelMembersAdapter
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
@@ -61,10 +56,10 @@ import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActiv
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageArgs
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResult
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.channel_members.ChannelMembersStyle
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelInfoStyleApplier, SceytKoinComponent {
+open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoinComponent {
     protected val viewModel by viewModel<ChannelMembersViewModel>()
     protected var membersAdapter: ChannelMembersAdapter? = null
     protected var binding: SceytFragmentChannelMembersBinding? = null
@@ -73,7 +68,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
         private set
     protected lateinit var memberType: MemberTypeEnum
         private set
-    protected lateinit var style: ChannelInfoStyle
+    protected lateinit var style: ChannelMembersStyle
         private set
     protected var currentUserRole: Role? = null
         private set
@@ -99,6 +94,8 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
+        style = ChannelMembersStyle.Builder(context, null).build()
+
         selectUsersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 result.data?.parcelable<SelectUsersResult>(SelectUsersActivity.SELECTED_USERS_RESULT)?.let { data ->
@@ -150,7 +147,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
                 onAddMembersClick(memberType)
             }
 
-            toolbar.setNavigationIconClickListener {
+            toolbar.setNavigationClickListener {
                 requireActivity().onBackPressedDispatcher.onBackPressed()
             }
         }
@@ -269,7 +266,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
             currentUserRole = currentUser?.role
 
             membersAdapter = ChannelMembersAdapter(data.toArrayList(),
-                ChannelMembersViewHolderFactory(requireContext()).also {
+                ChannelMembersViewHolderFactory(requireContext(), style = style.itemStyle).also {
                     it.setOnClickListener(object : MemberClickListeners.ClickListeners {
                         override fun onMemberClick(view: View, item: MemberItem.Member) {
                             onMemberClick(item)
@@ -334,10 +331,9 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
         SceytDialog.showDialog(requireContext(), R.string.sceyt_revoke_admin_title, R.string.sceyt_revoke_admin_desc, R.string.sceyt_revoke, positiveCb = {
             revokeAdmin(member)
         }).apply {
-            val name = SceytChatUIKit.formatters.userNameFormatter?.format(member.user)
-                    ?: member.user.getPresentableNameCheckDeleted(requireContext())
+            val name = style.itemStyle.listItemStyle.subtitleFormatter.format(requireContext(), member.user)
             val desc = String.format(getString(R.string.sceyt_revoke_admin_desc), name)
-            val nameFromIndex = desc.lastIndexOf(name)
+            val nameFromIndex = desc.lastIndexOf(name.toString())
             val roleFromIndex = desc.lastIndexOf("“Admin”")
             var formatted = desc.setBoldSpan(nameFromIndex, nameFromIndex + name.length)
             formatted = formatted.setBoldSpan(roleFromIndex, roleFromIndex + "“Admin”".length)
@@ -364,11 +360,9 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
         SceytDialog.showDialog(requireContext(), titleId = titleId, positiveBtnTitleId = R.string.sceyt_remove, positiveCb = {
             viewModel.kickMember(channel.id, member.id, false)
         }).apply {
-            val name = SceytChatUIKit.formatters.userNameFormatter?.format(member.user)
-                    ?: member.user.getPresentableNameCheckDeleted(requireContext())
-
+            val name = style.itemStyle.listItemStyle.subtitleFormatter.format(requireContext(), member.user)
             val desc = String.format(getString(descId), name)
-            val fromIndex = desc.lastIndexOf(name)
+            val fromIndex = desc.lastIndexOf(name.toString())
             setDescription(desc.setBoldSpan(fromIndex, fromIndex + name.length))
         }
     }
@@ -465,17 +459,11 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, ChannelIn
         getCurrentUserRole()
     }
 
-    override fun setStyle(style: ChannelInfoStyle) {
-        this.style = style
-    }
-
     private fun SceytFragmentChannelMembersBinding.applyStyle() {
-        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
-        toolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
-        toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
-        icAddMembers.setTintColorRes(SceytChatUIKit.theme.colors.accentColor)
-        addMembers.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        root.setBackgroundColor(style.backgroundColor)
+        style.toolbarStyle.apply(toolbar)
+        style.addMemberTextStyle.apply(addMembers)
+        icAddMembers.setImageDrawable(style.addMembersIcon)
     }
 
     companion object {

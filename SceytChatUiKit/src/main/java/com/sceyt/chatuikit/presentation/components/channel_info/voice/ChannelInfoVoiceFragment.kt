@@ -41,7 +41,7 @@ open class ChannelInfoVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerA
     protected open val mediaType = listOf(AttachmentTypeEnum.Voice.value)
     private lateinit var viewModel: ChannelAttachmentsViewModel
     protected val infoStyle: ChannelInfoStyle by lazy {
-        (requireActivity() as ChannelInfoStyleProvider).getStyle()
+        (requireActivity() as ChannelInfoStyleProvider).provideStyle()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

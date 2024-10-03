@@ -687,7 +687,7 @@ open class ChannelInfoActivity : AppCompatActivity(), ChannelInfoStyleProvider, 
         }
     }
 
-    override fun getStyle(): ChannelInfoStyle {
+    override fun provideStyle(): ChannelInfoStyle {
         return style
     }
 }

@@ -93,7 +93,7 @@ import java.util.Date
  * @property overlayMediaLoaderStyle Style for the overlay media loader, default is [buildOverlayMediaLoaderStyle].
  * @property voiceWaveformStyle Style for the voice waveform, default is [buildAudioWaveformStyle].
  * @property selectionCheckboxStyle Style for the selection checkbox, default is [buildSelectionCheckboxStyle].
- * @property senderNameFormatter Formatter for the sender name, default is [SceytChatUIKitFormatters.userNameFormatterNew].
+ * @property senderNameFormatter Formatter for the sender name, default is [SceytChatUIKitFormatters.userNameFormatter].
  * @property messageBodyFormatter Formatter for the message body. Use it to format the message body before displaying it, default is null.
  * @property messageViewCountFormatter Formatter for the message view count, default is [SceytChatUIKitFormatters.messageViewCountFormatter].
  * @property messageDateFormatter Formatter for the message date, default is [SceytChatUIKitFormatters.messageDateFormatter].
@@ -305,7 +305,7 @@ data class MessageItemStyle(
                     voiceWaveformStyle = buildAudioWaveformStyle(array),
                     overlayMediaLoaderStyle = buildOverlayMediaLoaderStyle(array),
                     selectionCheckboxStyle = buildSelectionCheckboxStyle(array),
-                    senderNameFormatter = SceytChatUIKit.formatters.userNameFormatterNew,
+                    senderNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
                     messageBodyFormatter = null,
                     messageViewCountFormatter = SceytChatUIKit.formatters.messageViewCountFormatter,
                     messageDateFormatter = SceytChatUIKit.formatters.messageDateFormatter,
