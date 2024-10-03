@@ -8,6 +8,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 
 class CustomFloatingActonButton @JvmOverloads constructor(
         context: Context,
@@ -39,7 +40,8 @@ class CustomFloatingActonButton @JvmOverloads constructor(
         super.setOnClickListener(clickListener)
     }
 
-    fun setButtonColor(@ColorInt color: Int){
+    fun setButtonColor(@ColorInt color: Int) {
+        if (color == UNSET_COLOR) return
         buttonColor = color
     }
 
