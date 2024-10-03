@@ -51,6 +51,7 @@ class IncDeletedMsgViewHolder(
         layoutDetails.setBackgroundTint(style.incomingBubbleColor)
         style.deletedMessageTextStyle.apply(messageBody)
         style.senderNameTextStyle.apply(tvUserName)
+        style.selectionCheckboxStyle.apply(selectView)
         messageBody.text = style.deletedStateText
     }
 }

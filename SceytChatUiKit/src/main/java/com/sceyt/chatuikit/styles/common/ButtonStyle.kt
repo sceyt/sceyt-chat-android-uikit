@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
 
 data class ButtonStyle(
         val textStyle: TextStyle = TextStyle(),
+        val icon: Drawable? = null,
         val backgroundStyle: BackgroundStyle = BackgroundStyle()
 ) {
 
@@ -21,7 +22,7 @@ data class ButtonStyle(
         backgroundStyle.apply(button)
     }
 
-    fun apply(button: FloatingActionButton, icon: Drawable?) {
+    fun apply(button: FloatingActionButton) {
         backgroundStyle.apply(button)
         button.setImageDrawable(icon)
     }

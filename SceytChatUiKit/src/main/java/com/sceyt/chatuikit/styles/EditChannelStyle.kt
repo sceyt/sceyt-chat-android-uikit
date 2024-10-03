@@ -26,7 +26,6 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property dividerColor Color of the divider, default is [Colors.borderColor]
  * @property avatarBackgroundColor Background color of the avatar, default is [Colors.overlayBackground2Color]
  * @property avatarPlaceholder Placeholder for the avatar, default is [R.drawable.sceyt_ic_camera_72]
- * @property saveButtonIcon Icon for the save button, default is [R.drawable.sceyt_ic_save]
  * @property toolbarStyle Style for the toolbar
  * @property subjectTextInputStyle Style for the subject text input
  * @property aboutTextInputStyle Style for the about text input
@@ -39,7 +38,6 @@ data class EditChannelStyle(
         @ColorInt val dividerColor: Int,
         @ColorInt val avatarBackgroundColor: Int,
         val avatarPlaceholder: Drawable?,
-        val saveButtonIcon: Drawable?,
         val toolbarStyle: ToolbarStyle,
         val subjectTextInputStyle: TextInputStyle,
         val aboutTextInputStyle: TextInputStyle,
@@ -56,9 +54,6 @@ data class EditChannelStyle(
             val dividerColor = context.getCompatColor(SceytChatUIKitTheme.colors.borderColor)
             val avatarBackgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.overlayBackground2Color)
             val avatarPlaceholder = context.getCompatDrawable(R.drawable.sceyt_ic_camera_72).applyTint(
-                context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
-            )
-            val saveButtonIcon = context.getCompatDrawable(R.drawable.sceyt_ic_save).applyTint(
                 context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
             )
             val toolbarStyle = ToolbarStyle(
@@ -116,6 +111,9 @@ data class EditChannelStyle(
             val saveButtonStyle = ButtonStyle(
                 backgroundStyle = BackgroundStyle(
                     backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.accentColor),
+                ),
+                icon = context.getCompatDrawable(R.drawable.sceyt_ic_save).applyTint(
+                    context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
                 )
             )
 
@@ -124,7 +122,6 @@ data class EditChannelStyle(
                 dividerColor = dividerColor,
                 avatarBackgroundColor = avatarBackgroundColor,
                 avatarPlaceholder = avatarPlaceholder,
-                saveButtonIcon = saveButtonIcon,
                 toolbarStyle = toolbarStyle,
                 subjectTextInputStyle = subjectTextInputStyle,
                 aboutTextInputStyle = aboutTextInputStyle,

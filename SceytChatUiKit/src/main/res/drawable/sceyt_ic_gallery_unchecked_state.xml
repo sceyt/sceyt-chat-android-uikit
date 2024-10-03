@@ -4,12 +4,10 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
   <path
-      android:pathData="M12,12m-11,0a11,11 0,1 1,22 0a11,11 0,1 1,-22 0"
-      android:fillColor="@color/sceyt_color_overlay_background"
+      android:pathData="M12,0L12,0A12,12 0,0 1,24 12L24,12A12,12 0,0 1,12 24L12,24A12,12 0,0 1,0 12L0,12A12,12 0,0 1,12 0z"
+      android:fillColor="#111539"
       android:fillAlpha="0.2"/>
   <path
-      android:strokeWidth="1"
-      android:pathData="M12,12m-8.5,0a8.5,8.5 0,1 1,17 0a8.5,8.5 0,1 1,-17 0"
-      android:fillColor="#00000000"
-      android:strokeColor="#ffffff"/>
+      android:pathData="M12,1C18.076,1 23,5.925 23,12C23,18.076 18.075,23 12,23C5.924,23 1,18.075 1,12C1,5.924 5.925,1 12,1ZM12,2.375C6.684,2.375 2.375,6.683 2.375,12C2.375,17.316 6.683,21.625 12,21.625C17.316,21.625 21.625,17.317 21.625,12C21.625,6.684 17.317,2.375 12,2.375Z"
+      android:fillColor="#ffffff"/>
 </vector>

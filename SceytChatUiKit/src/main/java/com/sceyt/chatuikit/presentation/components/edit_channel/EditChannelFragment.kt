@@ -279,7 +279,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             .build()
 
         with(icSave) {
-            style.saveButtonStyle.apply(this, style.saveButtonIcon)
+            style.saveButtonStyle.apply(this)
             setButtonColor(style.saveButtonStyle.backgroundStyle.backgroundColor)
         }
     }

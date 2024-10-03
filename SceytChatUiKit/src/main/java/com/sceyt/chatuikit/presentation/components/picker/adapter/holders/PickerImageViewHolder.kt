@@ -1,8 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.picker.adapter.holders
 
 import com.bumptech.glide.Glide
-import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemPickerImageBinding
 import com.sceyt.chatuikit.persistence.differs.GalleryMediaItemDiff
 import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaAdapter
@@ -10,14 +8,16 @@ import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaItem
 import com.sceyt.chatuikit.styles.MediaPickerStyle
 
 class PickerImageViewHolder(
-        val binding: SceytItemPickerImageBinding,
-        style: MediaPickerStyle,
+        private val binding: SceytItemPickerImageBinding,
+        private val style: MediaPickerStyle,
         clickListener: MediaAdapter.MediaClickListener
-) : BasePickerViewHolder(binding.root, style, clickListener) {
+) : BasePickerViewHolder(binding.root, clickListener) {
 
     private lateinit var item: MediaItem
 
     init {
+        binding.applyStyle()
+
         itemView.setOnClickListener {
             onItemClick(item)
         }
@@ -30,12 +30,16 @@ class PickerImageViewHolder(
             Glide.with(itemView.context)
                 .load(item.media.realPath)
                 .override(itemView.width)
-                .placeholder(SceytChatUIKit.theme.colors.backgroundColorSecondary)
-                .error(R.drawable.sceyt_ic_broken_image)
+                .error(style.brokenMediaPlaceHolder)
                 .into(binding.ivImage)
         }
 
         if (diff.checkStateChanged)
-            setGalleryItemCheckedState(binding.ivSelect, item.media.selected)
+            binding.checkbox.isChecked = item.media.selected
+    }
+
+    private fun SceytItemPickerImageBinding.applyStyle() {
+        ivImage.setBackgroundColor(style.mediaBackgroundColor)
+        style.selectionCheckboxStyle.apply(checkbox)
     }
 }
