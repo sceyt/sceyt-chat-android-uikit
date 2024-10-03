@@ -9,6 +9,7 @@
         android:id="@+id/selectView"
         android:layout_width="24dp"
         android:layout_height="24dp"
+        android:clickable="false"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
