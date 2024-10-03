@@ -8,6 +8,7 @@ import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTint
+import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
@@ -44,8 +45,8 @@ data class MediaPickerStyle(
             val mediaBackgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.backgroundColorSecondary)
 
             val selectionCheckboxStyle = CheckboxStyle(
-                checkedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_checked_state).applyTint(
-                    context.getCompatColor(SceytChatUIKitTheme.colors.accentColor)
+                checkedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_checked_state_with_layers).applyTintBackgroundLayer(
+                    context.getCompatColor(SceytChatUIKitTheme.colors.accentColor),R.id.backgroundLayer
                 ),
                 uncheckedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_gallery_unchecked_state)
             )

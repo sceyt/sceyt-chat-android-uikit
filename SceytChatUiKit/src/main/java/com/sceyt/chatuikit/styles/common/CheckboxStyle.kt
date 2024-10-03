@@ -13,11 +13,10 @@ data class CheckboxStyle(
 ) {
 
     fun apply(checkbox: CheckBox) {
-        checkbox.background = null
-        checkbox.buttonDrawable = createButtonDrawable()
+        checkbox.buttonDrawable = createButtonDrawable().mutate()
     }
 
-    private fun createButtonDrawable(): Drawable {
+    private fun createButtonDrawable(): StateListDrawable {
         val pressedState = android.R.attr.state_pressed
         val checkedState = android.R.attr.state_checked
         return StateListDrawable().apply {
@@ -26,7 +25,7 @@ data class CheckboxStyle(
             // Pressed state
             addState(intArrayOf(pressedState), pressedIcon)
             // Unchecked state
-            addState(intArrayOf(), uncheckedIcon)
+            addState(intArrayOf(-pressedState), uncheckedIcon)
         }
     }
 
