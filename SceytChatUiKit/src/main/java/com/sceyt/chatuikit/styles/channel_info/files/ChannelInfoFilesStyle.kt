@@ -16,8 +16,8 @@ import com.sceyt.chatuikit.theme.Colors
  * @property itemStyle - style for file item
  * */
 data class ChannelInfoFilesStyle(
-        @ColorInt var backgroundColor: Int,
-        var dateSeparatorStyle: ChannelInfoDateSeparatorStyle,
+        @ColorInt val backgroundColor: Int,
+        val dateSeparatorStyle: ChannelInfoDateSeparatorStyle,
         val itemStyle: ChannelInfoFileItemStyle
 ) {
     internal class Builder(

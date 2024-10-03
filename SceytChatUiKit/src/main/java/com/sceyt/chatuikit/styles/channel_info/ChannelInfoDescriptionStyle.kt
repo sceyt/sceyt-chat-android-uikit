@@ -10,10 +10,10 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 data class ChannelInfoDescriptionStyle(
-        @ColorInt var backgroundColor: Int,
-        var titleText: String,
-        var titleTextStyle: TextStyle,
-        var descriptionTextStyle: TextStyle
+        @ColorInt val backgroundColor: Int,
+        val titleText: String,
+        val titleTextStyle: TextStyle,
+        val descriptionTextStyle: TextStyle
 ) {
     internal class Builder(
             private val context: Context,

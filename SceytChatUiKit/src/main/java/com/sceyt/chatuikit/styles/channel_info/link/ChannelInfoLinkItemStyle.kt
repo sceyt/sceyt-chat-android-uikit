@@ -20,9 +20,9 @@ import com.sceyt.chatuikit.styles.messages_list.item.LinkPreviewStyle
  * @property linkPreviewStyle - style for link preview
  * */
 data class ChannelInfoLinkItemStyle(
-        @ColorInt var backgroundColor: Int,
-        var linkTextStyle: TextStyle,
-        var linkPreviewStyle: LinkPreviewStyle,
+        @ColorInt val backgroundColor: Int,
+        val linkTextStyle: TextStyle,
+        val linkPreviewStyle: LinkPreviewStyle,
 ) {
     internal class Builder(
             private val context: Context,

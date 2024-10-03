@@ -8,10 +8,10 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class MessageSearchControlsStyle(
-        @ColorInt var backgroundColor: Int,
-        var previousIcon: Drawable?,
-        var nextIcon: Drawable?,
-        var resultTextStyle: TextStyle
+        @ColorInt val backgroundColor: Int,
+        val previousIcon: Drawable?,
+        val nextIcon: Drawable?,
+        val resultTextStyle: TextStyle
 ) {
     internal class Builder(
             private val typedArray: TypedArray

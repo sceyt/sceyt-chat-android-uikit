@@ -10,20 +10,20 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class VoiceRecorderViewStyle(
-        @ColorInt var backgroundColor: Int,
-        @ColorInt var recordingIndicatorColor: Int,
-        var slideToCancelText: String,
-        var cancelText: String,
-        var recordingIcon: Drawable?,
-        var deleteRecordIcon: Drawable?,
-        var lockRecordingIcon: Drawable?,
-        var arrowToLockIcon: Drawable?,
-        var stopRecordingIcon: Drawable?,
-        var sendVoiceIcon: Drawable?,
-        var slideToCancelTextStyle: TextStyle,
-        var durationTextStyle: TextStyle,
-        var cancelTextStyle: TextStyle,
-        var durationFormatter: Formatter<Long>
+        @ColorInt val backgroundColor: Int,
+        @ColorInt val recordingIndicatorColor: Int,
+        val slideToCancelText: String,
+        val cancelText: String,
+        val recordingIcon: Drawable?,
+        val deleteRecordIcon: Drawable?,
+        val lockRecordingIcon: Drawable?,
+        val arrowToLockIcon: Drawable?,
+        val stopRecordingIcon: Drawable?,
+        val sendVoiceIcon: Drawable?,
+        val slideToCancelTextStyle: TextStyle,
+        val durationTextStyle: TextStyle,
+        val cancelTextStyle: TextStyle,
+        val durationFormatter: Formatter<Long>
 ) {
     internal class Builder(
             private val typedArray: TypedArray

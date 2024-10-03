@@ -15,8 +15,8 @@ import com.sceyt.chatuikit.styles.common.ListItemStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class MentionUsersListStyle(
-        @ColorInt var backgroundColor: Int,
-        var itemStyle: ListItemStyle<Formatter<SceytUser>, *, VisualProvider<SceytUser, DefaultAvatar>>
+        @ColorInt val backgroundColor: Int,
+        val itemStyle: ListItemStyle<Formatter<SceytUser>, *, VisualProvider<SceytUser, DefaultAvatar>>
 ) {
     internal class Builder(
             private val typedArray: TypedArray

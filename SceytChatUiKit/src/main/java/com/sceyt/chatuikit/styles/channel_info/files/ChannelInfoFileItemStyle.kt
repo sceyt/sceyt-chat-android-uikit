@@ -29,12 +29,12 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  *  */
 data class ChannelInfoFileItemStyle(
         @ColorInt val backgroundColor: Int,
-        var fileNameTextStyle: TextStyle,
-        var subtitleTextStyle: TextStyle,
-        var mediaLoaderStyle: MediaLoaderStyle,
-        var fileNameFormatter: Formatter<SceytAttachment>,
-        var subtitleFormatter: Formatter<SceytAttachment>,
-        var iconProvider: VisualProvider<SceytAttachment, Drawable?>,
+        val fileNameTextStyle: TextStyle,
+        val subtitleTextStyle: TextStyle,
+        val mediaLoaderStyle: MediaLoaderStyle,
+        val fileNameFormatter: Formatter<SceytAttachment>,
+        val subtitleFormatter: Formatter<SceytAttachment>,
+        val iconProvider: VisualProvider<SceytAttachment, Drawable?>,
 ) {
     internal class Builder(
             private val context: Context,

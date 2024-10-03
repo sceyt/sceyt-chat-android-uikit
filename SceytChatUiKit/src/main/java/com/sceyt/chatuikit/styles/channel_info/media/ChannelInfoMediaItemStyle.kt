@@ -22,10 +22,10 @@ import com.sceyt.chatuikit.styles.common.TextStyle
  * @property durationFormatter - formatter for duration
  * */
 data class ChannelInfoMediaItemStyle(
-        @ColorInt var backgroundColor: Int,
-        var videoDurationIcon: Drawable?,
-        var videoDurationTextStyle: TextStyle,
-        var durationFormatter: Formatter<Long>
+        @ColorInt val backgroundColor: Int,
+        val videoDurationIcon: Drawable?,
+        val videoDurationTextStyle: TextStyle,
+        val durationFormatter: Formatter<Long>
 ) {
 
     companion object {

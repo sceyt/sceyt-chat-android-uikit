@@ -7,9 +7,9 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class InputCoverStyle(
-        @ColorInt var backgroundColor: Int,
-        @ColorInt var dividerColor: Int,
-        var textStyle: TextStyle,
+        @ColorInt val backgroundColor: Int,
+        @ColorInt val dividerColor: Int,
+        val textStyle: TextStyle,
 ) {
     internal class Builder(
             private val typedArray: TypedArray

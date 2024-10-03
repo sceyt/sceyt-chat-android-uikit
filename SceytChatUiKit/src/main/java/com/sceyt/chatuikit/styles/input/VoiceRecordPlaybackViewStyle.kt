@@ -11,15 +11,15 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.messages_list.item.AudioWaveformStyle
 
 data class VoiceRecordPlaybackViewStyle(
-        @ColorInt var backgroundColor: Int,
-        @ColorInt var playerBackgroundColor: Int,
-        var closeIcon: Drawable?,
-        var playIcon: Drawable?,
-        var pauseIcon: Drawable?,
-        var sendVoiceIcon: Drawable?,
-        var durationTextStyle: TextStyle,
-        var audioWaveformStyle: AudioWaveformStyle,
-        var durationFormatter: Formatter<Long>
+        @ColorInt val backgroundColor: Int,
+        @ColorInt val playerBackgroundColor: Int,
+        val closeIcon: Drawable?,
+        val playIcon: Drawable?,
+        val pauseIcon: Drawable?,
+        val sendVoiceIcon: Drawable?,
+        val durationTextStyle: TextStyle,
+        val audioWaveformStyle: AudioWaveformStyle,
+        val durationFormatter: Formatter<Long>
 ) {
     internal class Builder(
             private val typedArray: TypedArray

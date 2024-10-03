@@ -13,12 +13,12 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 data class ChannelInfoSettingsStyle(
-        @ColorInt var backgroundColor: Int,
-        var notificationsIcon: Drawable?,
-        var autoDeleteMessagesIcon: Drawable?,
-        var notificationsTitleText: String,
-        var autoDeleteMessagesTitleText: String,
-        var titleTextStyle: TextStyle,
+        @ColorInt val backgroundColor: Int,
+        val notificationsIcon: Drawable?,
+        val autoDeleteMessagesIcon: Drawable?,
+        val notificationsTitleText: String,
+        val autoDeleteMessagesTitleText: String,
+        val titleTextStyle: TextStyle,
 ) {
     internal class Builder(
             private val context: Context,

@@ -13,16 +13,16 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 data class ChannelInfoOptionsStyle(
-        @ColorInt var backgroundColor: Int,
-        var titleTextStyle: TextStyle,
-        var membersIcon: Drawable?,
-        var adminsIcon: Drawable?,
-        var subscribersIcon: Drawable?,
-        var searchIcon: Drawable?,
-        var subscribersTitleText: String,
-        var membersTitleText: String,
-        var adminsTitleText: String,
-        var searchMessagesTitleText: String
+        @ColorInt val backgroundColor: Int,
+        val titleTextStyle: TextStyle,
+        val membersIcon: Drawable?,
+        val adminsIcon: Drawable?,
+        val subscribersIcon: Drawable?,
+        val searchIcon: Drawable?,
+        val subscribersTitleText: String,
+        val membersTitleText: String,
+        val adminsTitleText: String,
+        val searchMessagesTitleText: String
 ) {
     internal class Builder(
             private val context: Context,

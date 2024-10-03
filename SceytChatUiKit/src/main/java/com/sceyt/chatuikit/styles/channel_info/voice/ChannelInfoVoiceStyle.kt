@@ -16,9 +16,9 @@ import com.sceyt.chatuikit.theme.Colors
  * @property itemStyle - style for voice item
  * */
 data class ChannelInfoVoiceStyle(
-        @ColorInt var backgroundColor: Int,
-        var dateSeparatorStyle: ChannelInfoDateSeparatorStyle,
-        var itemStyle: ChannelInfoVoiceItemStyle,
+        @ColorInt val backgroundColor: Int,
+        val dateSeparatorStyle: ChannelInfoDateSeparatorStyle,
+        val itemStyle: ChannelInfoVoiceItemStyle,
 ) {
 
     internal class Builder(

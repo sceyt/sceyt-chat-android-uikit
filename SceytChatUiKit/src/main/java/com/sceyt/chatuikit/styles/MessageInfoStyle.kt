@@ -43,21 +43,21 @@ import java.util.Date
  * @property markerTitleProvider Provider for the marker title, default is [SceytChatUIKitProviders.markerTitleProvider]
  * */
 data class MessageInfoStyle(
-        @ColorInt var backgroundColor: Int,
-        @ColorInt var toolbarColor: Int,
-        @ColorInt var borderColor: Int,
-        var toolbarTitle: String,
-        var sentLabelText: String,
-        var sizeLabelText: String,
-        var descriptionTitleTextStyle: TextStyle,
-        var descriptionValueTextStyle: TextStyle,
-        var headerTextStyle: TextStyle,
-        var toolbarStyle: ToolbarStyle,
-        var messageItemStyle: MessageItemStyle,
-        var listItemStyle: ListItemStyle<Formatter<SceytUser>, Formatter<Date>, VisualProvider<SceytUser, DefaultAvatar>>,
-        var messageDateFormatter: Formatter<Date>,
-        var attachmentSizeFormatter: Formatter<SceytAttachment>,
-        var markerTitleProvider: VisualProvider<MarkerType, String>
+        @ColorInt val backgroundColor: Int,
+        @ColorInt val toolbarColor: Int,
+        @ColorInt val borderColor: Int,
+        val toolbarTitle: String,
+        val sentLabelText: String,
+        val sizeLabelText: String,
+        val descriptionTitleTextStyle: TextStyle,
+        val descriptionValueTextStyle: TextStyle,
+        val headerTextStyle: TextStyle,
+        val toolbarStyle: ToolbarStyle,
+        val messageItemStyle: MessageItemStyle,
+        val listItemStyle: ListItemStyle<Formatter<SceytUser>, Formatter<Date>, VisualProvider<SceytUser, DefaultAvatar>>,
+        val messageDateFormatter: Formatter<Date>,
+        val attachmentSizeFormatter: Formatter<SceytAttachment>,
+        val markerTitleProvider: VisualProvider<MarkerType, String>
 ) {
 
     companion object {
