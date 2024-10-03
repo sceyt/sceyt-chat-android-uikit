@@ -4,8 +4,6 @@ import android.content.ContentUris
 import android.content.Context
 import android.content.res.Configuration
 import android.database.Cursor
-import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -32,7 +30,6 @@ import com.sceyt.chatuikit.extensions.getPermissionsForMangeStorage
 import com.sceyt.chatuikit.extensions.initPermissionLauncher
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.screenHeightPx
-import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.differs.GalleryMediaItemDiff
 import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaAdapter
@@ -108,7 +105,7 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
         return SceytBottomSheetMediaPickerBinding.inflate(inflater, container, false)
             .also {
                 binding = it
-                binding.initStyle()
+                binding.applyStyle()
             }
             .root
     }
@@ -153,16 +150,6 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
             })
             pickerListener = null
             dismissSafety()
-        }
-    }
-
-    private fun SceytBottomSheetMediaPickerBinding.initStyle() {
-        btnNext.setBackgroundTint(style.nextButtonColor)
-        counter.background = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadii = floatArrayOf(30f, 30f, 30f, 30f, 30f, 30f, 30f, 30f)
-            setColor(style.counterColor)
-            setStroke(5, Color.WHITE)
         }
     }
 
@@ -327,9 +314,11 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
         awaitClose()
     }
 
-    data class SelectedMediaData(val contentUri: Uri,
-                                 val realPath: String,
-                                 val mediaType: MediaType)
+    data class SelectedMediaData(
+            val contentUri: Uri,
+            val realPath: String,
+            val mediaType: MediaType
+    )
 
     enum class MediaType {
         Image,
@@ -344,6 +333,12 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
         return R.style.SceytAppBottomSheetDialogTheme
     }
 
+    private fun SceytBottomSheetMediaPickerBinding.applyStyle() {
+        style.confirmButtonStyle.apply(btnNext)
+        style.countTextStyle.apply(counter)
+        style.countBackgroundStyle.apply(counter)
+    }
+
     companion object {
         private const val LOADER_ID = 0x1337
         private const val CHUNK_SIZE = 150
@@ -354,9 +349,11 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
 
         var pickerListener: PickerListener? = null
 
-        fun instance(maxSelectCount: Int = MAX_SELECT_MEDIA_COUNT,
-                     fileFilter: PickerFilterType = PickerFilterType.All,
-                     vararg selections: String): BottomSheetMediaPicker {
+        fun instance(
+                maxSelectCount: Int = MAX_SELECT_MEDIA_COUNT,
+                fileFilter: PickerFilterType = PickerFilterType.All,
+                vararg selections: String
+        ): BottomSheetMediaPicker {
             return BottomSheetMediaPicker().apply {
                 arguments = bundleOf(
                     STATE_SELECTION to selections,

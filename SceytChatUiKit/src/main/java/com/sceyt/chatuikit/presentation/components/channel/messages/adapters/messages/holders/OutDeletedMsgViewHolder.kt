@@ -40,6 +40,7 @@ class OutDeletedMsgViewHolder(
     private fun SceytItemOutDeletedMessageBinding.setMessageItemStyle() {
         layoutDetails.setBackgroundTint(style.outgoingBubbleColor)
         style.deletedMessageTextStyle.apply(messageBody)
+        style.selectionCheckboxStyle.apply(selectView)
         messageBody.text = style.deletedStateText
     }
 }

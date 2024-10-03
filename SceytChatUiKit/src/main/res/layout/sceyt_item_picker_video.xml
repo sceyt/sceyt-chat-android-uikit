@@ -18,17 +18,13 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:src="@tools:sample/backgrounds/scenic" />
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/ivSelect"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
+    <androidx.appcompat.widget.AppCompatCheckBox
+        android:id="@+id/checkbox"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_margin="7dp"
-        android:background="@drawable/sceyt_bg_circle"
-        android:backgroundTint="#00000000"
-        android:scaleType="center"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_ic_gallery_unchecked_state" />
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvDuration"

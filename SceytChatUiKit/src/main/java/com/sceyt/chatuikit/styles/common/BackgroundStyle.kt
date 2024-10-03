@@ -15,13 +15,14 @@ data class BackgroundStyle(
         @ColorInt val borderColor: Int = UNSET_COLOR,
         @Px val borderWidth: Int = UNSET_SIZE,
         @Px val cornerRadius: Float = UNSET_CORNER_RADIUS,
+        val shape: Int = GradientDrawable.RECTANGLE
 ) {
 
     fun apply(view: View) {
         if (!shouldApplyStyle) return
 
         val background = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
+            shape = this@BackgroundStyle.shape
 
             if (this@BackgroundStyle.cornerRadius != UNSET_CORNER_RADIUS)
                 cornerRadius = this@BackgroundStyle.cornerRadius

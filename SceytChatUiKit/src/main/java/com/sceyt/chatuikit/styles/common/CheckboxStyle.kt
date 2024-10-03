@@ -7,14 +7,14 @@ import android.widget.CheckBox
 import androidx.annotation.StyleableRes
 
 data class CheckboxStyle(
-        val checkedIcon: Drawable?,
-        val uncheckedIcon: Drawable?,
-        val pressedIcon: Drawable?,
+        val checkedIcon: Drawable? = null,
+        val uncheckedIcon: Drawable? = null,
+        val pressedIcon: Drawable? = null,
 ) {
 
     fun apply(checkbox: CheckBox) {
-        checkbox.buttonDrawable = createButtonDrawable()
         checkbox.background = null
+        checkbox.buttonDrawable = createButtonDrawable()
     }
 
     private fun createButtonDrawable(): Drawable {
@@ -26,7 +26,7 @@ data class CheckboxStyle(
             // Pressed state
             addState(intArrayOf(pressedState), pressedIcon)
             // Unchecked state
-            addState(intArrayOf(-pressedState), uncheckedIcon)
+            addState(intArrayOf(), uncheckedIcon)
         }
     }
 
