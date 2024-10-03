@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.providers.VisualProvider
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
@@ -29,6 +30,10 @@ data class ChannelInfoToolBarStyle(
         val channelSubtitleFormatter: Formatter<SceytChannel>,
         val defaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<ChannelInfoToolBarStyle> { _, style -> style }
+    }
+
     internal class Builder(
             private val context: Context,
             private val attributeSet: AttributeSet?
@@ -73,7 +78,7 @@ data class ChannelInfoToolBarStyle(
                 channelNameFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                 channelSubtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter,
                 defaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider
-            )
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }

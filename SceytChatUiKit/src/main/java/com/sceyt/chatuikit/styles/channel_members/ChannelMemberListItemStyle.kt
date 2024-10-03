@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
 import com.sceyt.chatuikit.providers.VisualProvider
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ListItemStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 
@@ -16,6 +17,10 @@ data class ChannelMemberListItemStyle(
         val roleTextStyle: TextStyle,
         val listItemStyle: ListItemStyle<Formatter<SceytUser>, Formatter<SceytUser>, VisualProvider<SceytUser, DefaultAvatar>>
 ) {
+
+    companion object {
+        var styleCustomizer = StyleCustomizer<ChannelMemberListItemStyle> { _, style -> style }
+    }
 
     internal class Builder(
             private val context: Context,
@@ -45,7 +50,7 @@ data class ChannelMemberListItemStyle(
             return ChannelMemberListItemStyle(
                 roleTextStyle = roleTextStyle,
                 listItemStyle = listItemStyle
-            )
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }

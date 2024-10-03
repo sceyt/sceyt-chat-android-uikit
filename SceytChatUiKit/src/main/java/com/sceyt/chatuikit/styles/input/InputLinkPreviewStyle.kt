@@ -1,10 +1,12 @@
 package com.sceyt.chatuikit.styles.input
 
+import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class InputLinkPreviewStyle(
@@ -14,7 +16,12 @@ data class InputLinkPreviewStyle(
         val descriptionStyle: TextStyle,
         val placeHolder: Drawable?
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<InputLinkPreviewStyle> { _, style -> style }
+    }
+
     internal class Builder(
+            private val context: Context,
             private val typedArray: TypedArray
     ) {
         @ColorInt
@@ -52,6 +59,6 @@ data class InputLinkPreviewStyle(
             titleStyle = titleStyle,
             descriptionStyle = descriptionStyle,
             placeHolder = placeHolder
-        )
+        ).let { styleCustomizer.apply(context, it) }
     }
 }

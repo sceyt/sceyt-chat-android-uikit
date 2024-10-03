@@ -42,7 +42,7 @@ internal fun MessagesListViewStyle.Builder.buildScrollDownTextStyle(
 
 internal fun MessagesListViewStyle.Builder.buildScrollDownButtonStyle(
         typedArray: TypedArray
-) = ScrollDownButtonStyle.Builder(typedArray)
+) = ScrollDownButtonStyle.Builder(context, typedArray)
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListScrollDownButtonBackgroundColor
     )
@@ -76,7 +76,7 @@ internal fun MessagesListViewStyle.Builder.buildDateSeparatorTextStyle(
 
 internal fun MessagesListViewStyle.Builder.buildDateSeparatorStyle(
         typedArray: TypedArray
-) = DateSeparatorStyle.Builder(typedArray)
+) = DateSeparatorStyle.Builder(context, typedArray)
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListDateSeparatorBackgroundColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.overlayBackgroundColor)
@@ -114,7 +114,7 @@ internal fun MessagesListViewStyle.Builder.buildUnreadMessagesSeparatorTextStyle
 
 internal fun MessagesListViewStyle.Builder.buildUnreadMessagesSeparatorStyle(
         typedArray: TypedArray
-) = UnreadMessagesSeparatorStyle.Builder(typedArray)
+) = UnreadMessagesSeparatorStyle.Builder(context, typedArray)
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListUnreadMessagesSeparatorBackgroundColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color)
@@ -129,7 +129,7 @@ internal fun MessagesListViewStyle.Builder.buildUnreadMessagesSeparatorStyle(
 // ReactionPickerStyle
 internal fun MessagesListViewStyle.Builder.buildReactionPickerStyle(
         typedArray: TypedArray
-) = ReactionPickerStyle.Builder(typedArray)
+) = ReactionPickerStyle.Builder(context, typedArray)
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListReactionPickerBackgroundColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
@@ -448,7 +448,7 @@ internal fun MessageItemStyle.Builder.buildLinkPreviewDescriptionTextStyle(
 
 internal fun MessageItemStyle.Builder.buildLinkPreviewStyle(
         typedArray: TypedArray
-) = LinkPreviewStyle.Builder(typedArray)
+) = LinkPreviewStyle.Builder(context, typedArray)
     .placeHolder(
         index = R.styleable.MessagesListView_sceytUiMessagesListLinkPreviewPlaceHolder
     )
@@ -553,7 +553,7 @@ internal fun MessageItemStyle.Builder.buildReplyMessageAttachmentDurationTextSty
 
 internal fun MessageItemStyle.Builder.buildReplyMessageStyle(
         typedArray: TypedArray
-) = ReplyMessageStyle.Builder(typedArray)
+) = ReplyMessageStyle.Builder(context, typedArray)
     .borderColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListReplyMessageBorderColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
@@ -607,7 +607,7 @@ internal fun MessageItemStyle.Builder.buildMediaLoaderStyle(
 /* Audio waveform style */
 internal fun MessageItemStyle.Builder.buildAudioWaveformStyle(
         typedArray: TypedArray
-) = com.sceyt.chatuikit.styles.messages_list.item.AudioWaveformStyle.Builder(typedArray)
+) = com.sceyt.chatuikit.styles.messages_list.item.AudioWaveformStyle.Builder(context, typedArray)
     .trackColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListAudioWaveformTrackColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)

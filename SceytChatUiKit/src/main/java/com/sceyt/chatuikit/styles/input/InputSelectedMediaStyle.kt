@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.styles.input
 
+import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
@@ -9,6 +10,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class InputSelectedMediaStyle(
@@ -22,7 +24,12 @@ data class InputSelectedMediaStyle(
         val fileAttachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
         val mediaDurationFormatter: Formatter<Long>
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<InputSelectedMediaStyle> { _, style -> style }
+    }
+
     internal class Builder(
+            private val context: Context,
             private val typedArray: TypedArray
     ) {
         @ColorInt
@@ -72,6 +79,6 @@ data class InputSelectedMediaStyle(
             fileAttachmentSizeFormatter = fileAttachmentSizeFormatter,
             fileAttachmentIconProvider = fileAttachmentIconProvider,
             mediaDurationFormatter = mediaDurationFormatter
-        )
+        ).let { styleCustomizer.apply(context, it) }
     }
 }

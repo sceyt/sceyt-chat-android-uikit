@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.styles.messages_list
 
+import android.content.Context
 import android.content.res.TypedArray
 import androidx.annotation.ColorInt
 import androidx.annotation.Px
@@ -9,6 +10,7 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_CORNER_RADIUS
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import java.util.Date
@@ -18,7 +20,12 @@ data class DateSeparatorStyle(
         val textStyle: TextStyle,
         val dateFormatter: Formatter<Date>
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<DateSeparatorStyle> { _, style -> style }
+    }
+
     internal class Builder(
+            private val context: Context,
             private val typedArray: TypedArray
     ) {
         @ColorInt
@@ -59,7 +66,7 @@ data class DateSeparatorStyle(
             backgroundStyle = buildBackgroundStyle(),
             textStyle = textStyle,
             dateFormatter = SceytChatUIKit.formatters.messageDateSeparatorFormatter
-        )
+        ).let { styleCustomizer.apply(context, it) }
 
         private fun buildBackgroundStyle() = BackgroundStyle(
             backgroundColor = backgroundColor,

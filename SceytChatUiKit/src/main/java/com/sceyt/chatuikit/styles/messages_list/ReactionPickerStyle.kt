@@ -1,9 +1,11 @@
 package com.sceyt.chatuikit.styles.messages_list
 
+import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
+import com.sceyt.chatuikit.styles.StyleCustomizer
 
 data class ReactionPickerStyle(
         @ColorInt val backgroundColor: Int,
@@ -11,7 +13,12 @@ data class ReactionPickerStyle(
         @ColorInt val selectedBackgroundColor: Int,
         val moreIcon: Drawable?,
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<ReactionPickerStyle> { _, style -> style }
+    }
+
     internal class Builder(
+            private val context: Context,
             private val typedArray: TypedArray
     ) {
         @ColorInt
@@ -45,6 +52,6 @@ data class ReactionPickerStyle(
             moreBackgroundColor = moreBackgroundColor,
             selectedBackgroundColor = selectedBackgroundColor,
             moreIcon = moreIcon
-        )
+        ).let { styleCustomizer.apply(context, it) }
     }
 }

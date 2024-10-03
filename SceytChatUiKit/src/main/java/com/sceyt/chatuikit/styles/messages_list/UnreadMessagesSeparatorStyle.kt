@@ -1,9 +1,11 @@
 package com.sceyt.chatuikit.styles.messages_list
 
+import android.content.Context
 import android.content.res.TypedArray
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class UnreadMessagesSeparatorStyle(
@@ -11,7 +13,12 @@ data class UnreadMessagesSeparatorStyle(
         val unreadText: String,
         val textStyle: TextStyle,
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<UnreadMessagesSeparatorStyle> { _, style -> style }
+    }
+
     internal class Builder(
+            private val context: Context,
             private val typedArray: TypedArray
     ) {
         @ColorInt
@@ -35,6 +42,6 @@ data class UnreadMessagesSeparatorStyle(
             backgroundColor = backgroundColor,
             unreadText = unreadText,
             textStyle = textStyle
-        )
+        ).let { styleCustomizer.apply(context, it) }
     }
 }
