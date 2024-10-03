@@ -54,7 +54,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectCh
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectChatActionsDialog.ActionsEnum.UnBlockUser
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectChatActionsDialog.ActionsEnum.UnPin
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.GroupChatActionsDialog
-import com.sceyt.chatuikit.presentation.components.channel_info.edit.ChannelEditFragment
+import com.sceyt.chatuikit.presentation.components.edit_channel.EditChannelFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.files.ChannelInfoFilesFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.media.ChannelInfoMediaFragment
@@ -615,7 +615,7 @@ open class ChannelInfoActivity : AppCompatActivity(), ChannelInfoStyleProvider, 
 
     protected open fun getChannelVoiceFragment(channel: SceytChannel): Fragment? = ChannelInfoVoiceFragment.newInstance(channel)
 
-    protected open fun getEditChannelFragment(channel: SceytChannel): Fragment? = ChannelEditFragment.newInstance(channel)
+    protected open fun getEditChannelFragment(channel: SceytChannel): Fragment? = EditChannelFragment.newInstance(channel)
 
     //Description
     protected open fun getChannelDescriptionFragment(channel: SceytChannel): Fragment? = ChannelInfoDescriptionFragment.newInstance(channel)

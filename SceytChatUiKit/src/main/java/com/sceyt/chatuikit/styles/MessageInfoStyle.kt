@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
@@ -83,9 +84,11 @@ data class MessageInfoStyle(
             )
 
             val toolbarStyle = ToolbarStyle(
-                backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor),
+                backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.primaryColor),
                 borderColor = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor),
-                navigationIcon = context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back),
+                navigationIcon = context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back).applyTint(
+                    context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+                ),
                 titleTextStyle = TextStyle(
                     color = context.getCompatColor(R.color.sceyt_color_text_primary),
                     font = R.font.roboto_medium
