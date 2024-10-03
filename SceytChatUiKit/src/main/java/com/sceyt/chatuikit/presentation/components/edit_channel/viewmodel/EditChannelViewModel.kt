@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.components.channel_info.edit.viewmodel
+package com.sceyt.chatuikit.presentation.components.edit_channel.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

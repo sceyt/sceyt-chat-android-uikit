@@ -314,7 +314,8 @@ class AvatarView @JvmOverloads constructor(
             defaultAvatar = id.toDefaultAvatar()
         }
 
-        fun setDefaultAvatar(drawable: Drawable) = apply {
+        fun setDefaultAvatar(drawable: Drawable?) = apply {
+            if (drawable == null) return@apply
             defaultAvatar = DefaultAvatar.FromDrawable(drawable)
         }
 

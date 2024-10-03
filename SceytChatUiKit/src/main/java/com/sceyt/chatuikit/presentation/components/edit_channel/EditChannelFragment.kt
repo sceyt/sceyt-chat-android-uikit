@@ -1,5 +1,6 @@
-package com.sceyt.chatuikit.presentation.components.channel_info.edit
+package com.sceyt.chatuikit.presentation.components.edit_channel
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,12 +11,11 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.databinding.SceytFragmentChannelEditBinding
+import com.sceyt.chatuikit.databinding.SceytFragmentEditChannelBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
@@ -23,26 +23,24 @@ import com.sceyt.chatuikit.extensions.jsonToObject
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setBundleArguments
-import com.sceyt.chatuikit.extensions.setTextViewsHintTextColorRes
-import com.sceyt.chatuikit.extensions.setTextViewsTextColorRes
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.common.SceytLoader.showLoading
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.EditAvatarTypeDialog
-import com.sceyt.chatuikit.presentation.components.channel_info.edit.viewmodel.EditChannelViewModel
 import com.sceyt.chatuikit.presentation.components.channel_info.members.ChannelMembersFragment
 import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.URIValidation
+import com.sceyt.chatuikit.presentation.components.edit_channel.viewmodel.EditChannelViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.providers.defaults.URIValidationType
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
-import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.EditChannelStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-open class ChannelEditFragment : Fragment(), SceytKoinComponent {
-    protected var binding: SceytFragmentChannelEditBinding? = null
+open class EditChannelFragment : Fragment(), SceytKoinComponent {
+    protected var binding: SceytFragmentEditChannelBinding? = null
     protected val viewModel: EditChannelViewModel by viewModels()
     protected val filePickerHelper = FilePickerHelper(this)
     protected var avatarUrl: String? = null
@@ -50,11 +48,16 @@ open class ChannelEditFragment : Fragment(), SceytKoinComponent {
     private var checkingUrl: String? = null
     protected lateinit var channel: SceytChannel
         private set
-    protected lateinit var style: ChannelInfoStyle
+    protected lateinit var style: EditChannelStyle
         private set
 
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        style = EditChannelStyle.Builder(context, null).build()
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return SceytFragmentChannelEditBinding.inflate(inflater, container, false)
+        return SceytFragmentEditChannelBinding.inflate(inflater, container, false)
             .also { binding = it }
             .root
     }
@@ -101,7 +104,7 @@ open class ChannelEditFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    private fun SceytFragmentChannelEditBinding.initViews() {
+    private fun SceytFragmentEditChannelBinding.initViews() {
         tvSubject.doAfterTextChanged { checkSaveEnabled(false) }
 
         inputUri.doAfterTextChanged {
@@ -190,17 +193,17 @@ open class ChannelEditFragment : Fragment(), SceytKoinComponent {
 
     open fun setUriStatusText(type: URIValidationType) {
         val provider = SceytChatUIKit.providers.channelURIValidationMessageProvider
-        val colorRes = when (type) {
+        val style = when (type) {
             URIValidationType.AlreadyTaken,
             URIValidationType.TooLong,
             URIValidationType.TooShort,
-            URIValidationType.InvalidCharacters -> R.color.sceyt_color_error
+            URIValidationType.InvalidCharacters -> style.uriValidationStyle.errorTextStyle
 
-            URIValidationType.FreeToUse -> R.color.sceyt_color_success
+            URIValidationType.FreeToUse -> style.uriValidationStyle.successTextStyle
         }
         binding?.uriWarning?.apply {
             text = provider.provide(requireContext(), type)
-            setTextColor(requireContext().getCompatColor(colorRes))
+            style.apply(this)
             isVisible = true
         }
     }
@@ -262,22 +265,30 @@ open class ChannelEditFragment : Fragment(), SceytKoinComponent {
         } else requireActivity().onBackPressedDispatcher.onBackPressed()
     }
 
-    private fun SceytFragmentChannelEditBinding.applyStyle() {
-        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
-        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
-        toolbar.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
-        toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+    private fun SceytFragmentEditChannelBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
+        style.toolbarStyle.apply(toolbar)
+        style.subjectTextInputStyle.apply(tvSubject, null)
+        style.aboutTextInputStyle.apply(tvDescription, null)
+        style.uriTextInputStyle.apply(inputUri, null)
+        subjectDivider.setBackgroundColor(style.dividerColor)
+        aboutDivider.setBackgroundColor(style.dividerColor)
+        uriDivider.setBackgroundColor(style.dividerColor)
+        style.uriTextInputStyle.textStyle.apply(uriPrefix)
+        avatar.StyleBuilder()
+            .setDefaultAvatar(style.avatarPlaceholder)
+            .setAvatarBackgroundColor(style.avatarBackgroundColor)
+            .build()
         uriWarning.setTextColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.errorColor))
+        icSave.setImageDrawable(style.saveButtonIcon)
         icSave.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
-        setTextViewsTextColorRes(listOf(tvSubject, tvDescription, uriPrefix, inputUri), SceytChatUIKit.theme.colors.textPrimaryColor)
-        setTextViewsHintTextColorRes(listOf(tvSubject, tvDescription, inputUri), SceytChatUIKit.theme.colors.textFootnoteColor)
     }
 
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(channel: SceytChannel): ChannelEditFragment {
-            val fragment = ChannelEditFragment()
+        fun newInstance(channel: SceytChannel): EditChannelFragment {
+            val fragment = EditChannelFragment()
             fragment.setBundleArguments {
                 putParcelable(CHANNEL, channel)
             }
