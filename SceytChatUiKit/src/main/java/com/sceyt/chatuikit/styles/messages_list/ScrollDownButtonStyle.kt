@@ -10,9 +10,9 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class ScrollDownButtonStyle(
         @ColorInt val backgroundColor: Int,
-        var icon: Drawable?,
-        var unreadCountTextStyle: TextStyle,
-        var unreadCountFormatter: Formatter<Long>
+        val icon: Drawable?,
+        val unreadCountTextStyle: TextStyle,
+        val unreadCountFormatter: Formatter<Long>
 ) {
     internal class Builder(
             private val typedArray: TypedArray

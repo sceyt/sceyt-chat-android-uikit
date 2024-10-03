@@ -33,20 +33,20 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property linkStyle - style for the link section
  * */
 data class ChannelInfoStyle(
-        @ColorInt var backgroundColor: Int,
-        @ColorInt var borderColor: Int,
+        @ColorInt val backgroundColor: Int,
+        @ColorInt val borderColor: Int,
         @Px var spaceBetweenSections: Int,
-        var toolBarStyle: ChannelInfoToolBarStyle,
-        var detailsStyle: ChannelInfoDetailStyle,
-        var descriptionStyle: ChannelInfoDescriptionStyle,
-        var uriStyle: ChannelInfoURIStyle,
-        var settingsStyle: ChannelInfoSettingsStyle,
-        var optionsStyle: ChannelInfoOptionsStyle,
-        var tabBarStyle: ChannelInfoTabBarStyle,
-        var mediaStyle: ChannelInfoMediaStyle,
-        var filesStyle: ChannelInfoFilesStyle,
-        var voiceStyle: ChannelInfoVoiceStyle,
-        var linkStyle: ChannelInfoLinkStyle,
+        val toolBarStyle: ChannelInfoToolBarStyle,
+        val detailsStyle: ChannelInfoDetailStyle,
+        val descriptionStyle: ChannelInfoDescriptionStyle,
+        val uriStyle: ChannelInfoURIStyle,
+        val settingsStyle: ChannelInfoSettingsStyle,
+        val optionsStyle: ChannelInfoOptionsStyle,
+        val tabBarStyle: ChannelInfoTabBarStyle,
+        val mediaStyle: ChannelInfoMediaStyle,
+        val filesStyle: ChannelInfoFilesStyle,
+        val voiceStyle: ChannelInfoVoiceStyle,
+        val linkStyle: ChannelInfoLinkStyle,
 ) {
 
     companion object {

@@ -16,8 +16,8 @@ import com.sceyt.chatuikit.theme.Colors
  * @property searchInputStyle Style for the search input, default is [buildSearchInputStyle].
  * */
 data class SearchChannelInputStyle(
-        @ColorInt var backgroundColor: Int,
-        var searchInputStyle: SearchInputStyle
+        @ColorInt val backgroundColor: Int,
+        val searchInputStyle: SearchInputStyle
 ) {
 
     companion object {

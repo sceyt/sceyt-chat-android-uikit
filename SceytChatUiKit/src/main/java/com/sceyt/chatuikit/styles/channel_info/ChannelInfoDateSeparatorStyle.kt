@@ -18,9 +18,9 @@ import java.util.Date
  * @property dateFormatter - formatter for date separator text
  * */
 data class ChannelInfoDateSeparatorStyle(
-        @ColorInt var backgroundColor: Int,
-        var textStyle: TextStyle,
-        var dateFormatter: Formatter<Date>
+        @ColorInt val backgroundColor: Int,
+        val textStyle: TextStyle,
+        val dateFormatter: Formatter<Date>
 ) {
     internal class Builder(
             private val context: Context,

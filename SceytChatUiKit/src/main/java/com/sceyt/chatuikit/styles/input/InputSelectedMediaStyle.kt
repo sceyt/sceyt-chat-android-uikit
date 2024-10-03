@@ -12,15 +12,15 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class InputSelectedMediaStyle(
-        @ColorInt var backgroundColor: Int,
-        @ColorInt var fileAttachmentBackgroundColor: Int,
-        var removeAttachmentIcon: Drawable,
-        var attachmentDurationTextStyle: TextStyle,
-        var fileAttachmentNameTextStyle: TextStyle,
-        var fileAttachmentSizeTextStyle: TextStyle,
-        var fileAttachmentSizeFormatter: Formatter<SceytAttachment>,
-        var fileAttachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
-        var mediaDurationFormatter: Formatter<Long>
+        @ColorInt val backgroundColor: Int,
+        @ColorInt val fileAttachmentBackgroundColor: Int,
+        val removeAttachmentIcon: Drawable,
+        val attachmentDurationTextStyle: TextStyle,
+        val fileAttachmentNameTextStyle: TextStyle,
+        val fileAttachmentSizeTextStyle: TextStyle,
+        val fileAttachmentSizeFormatter: Formatter<SceytAttachment>,
+        val fileAttachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
+        val mediaDurationFormatter: Formatter<Long>
 ) {
     internal class Builder(
             private val typedArray: TypedArray

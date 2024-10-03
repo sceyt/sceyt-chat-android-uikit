@@ -8,11 +8,11 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 data class ChannelInfoTabBarStyle(
-        @ColorInt var backgroundColor: Int,
-        @ColorInt var indicatorColor: Int,
-        @ColorInt var bottomBorderColor: Int,
-        @ColorInt var textColor: Int,
-        @ColorInt var selectedTextColor: Int,
+        @ColorInt val backgroundColor: Int,
+        @ColorInt val indicatorColor: Int,
+        @ColorInt val bottomBorderColor: Int,
+        @ColorInt val textColor: Int,
+        @ColorInt val selectedTextColor: Int,
 ) {
     internal class Builder(
             private val context: Context,

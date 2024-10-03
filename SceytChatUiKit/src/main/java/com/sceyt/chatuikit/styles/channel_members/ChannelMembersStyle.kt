@@ -13,11 +13,11 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
 
 data class ChannelMembersStyle(
-        @ColorInt var backgroundColor: Int,
-        var addMembersIcon: Drawable?,
-        var addMemberTextStyle: TextStyle,
-        var toolbarStyle: ToolbarStyle,
-        var itemStyle: ChannelMemberListItemStyle,
+        @ColorInt val backgroundColor: Int,
+        val addMembersIcon: Drawable?,
+        val addMemberTextStyle: TextStyle,
+        val toolbarStyle: ToolbarStyle,
+        val itemStyle: ChannelMemberListItemStyle,
 ) {
     internal class Builder(
             private val context: Context,

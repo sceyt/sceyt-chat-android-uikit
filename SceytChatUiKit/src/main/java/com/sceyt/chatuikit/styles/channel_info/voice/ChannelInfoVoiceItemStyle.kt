@@ -32,15 +32,15 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * */
 data class ChannelInfoVoiceItemStyle(
         @ColorInt val backgroundColor: Int,
-        var playIcon: Drawable?,
-        var pauseIcon: Drawable?,
-        var userNameTextStyle: TextStyle,
-        var subtitleTextStyle: TextStyle,
-        var durationTextStyle: TextStyle,
-        var mediaLoaderStyle: MediaLoaderStyle,
-        var userNameFormatter: Formatter<SceytUser>,
-        var durationFormatter: Formatter<Long>,
-        var subtitleFormatter: Formatter<SceytAttachment>
+        val playIcon: Drawable?,
+        val pauseIcon: Drawable?,
+        val userNameTextStyle: TextStyle,
+        val subtitleTextStyle: TextStyle,
+        val durationTextStyle: TextStyle,
+        val mediaLoaderStyle: MediaLoaderStyle,
+        val userNameFormatter: Formatter<SceytUser>,
+        val durationFormatter: Formatter<Long>,
+        val subtitleFormatter: Formatter<SceytAttachment>
 ) {
     internal class Builder(
             private val context: Context,

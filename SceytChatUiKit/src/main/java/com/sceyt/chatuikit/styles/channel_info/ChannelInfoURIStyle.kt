@@ -13,9 +13,9 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 data class ChannelInfoURIStyle(
-        @ColorInt var backgroundColor: Int,
-        var uriIcon: Drawable?,
-        var titleTextStyle: TextStyle
+        @ColorInt val backgroundColor: Int,
+        val uriIcon: Drawable?,
+        val titleTextStyle: TextStyle
 ) {
     internal class Builder(
             private val context: Context,

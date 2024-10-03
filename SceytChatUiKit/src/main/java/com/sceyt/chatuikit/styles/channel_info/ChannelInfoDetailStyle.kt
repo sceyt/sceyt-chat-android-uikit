@@ -14,12 +14,12 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 data class ChannelInfoDetailStyle(
-        @ColorInt var backgroundColor: Int,
-        var titleTextStyle: TextStyle,
-        var subtitleTextStyle: TextStyle,
-        var channelNameFormatter: Formatter<SceytChannel>,
-        var channelSubtitleFormatter: Formatter<SceytChannel>,
-        var channelDefaultAvatarProvider: VisualProvider<SceytChannel, DefaultAvatar>
+        @ColorInt val backgroundColor: Int,
+        val titleTextStyle: TextStyle,
+        val subtitleTextStyle: TextStyle,
+        val channelNameFormatter: Formatter<SceytChannel>,
+        val channelSubtitleFormatter: Formatter<SceytChannel>,
+        val channelDefaultAvatarProvider: VisualProvider<SceytChannel, DefaultAvatar>
 ) {
     internal class Builder(
             private val context: Context,

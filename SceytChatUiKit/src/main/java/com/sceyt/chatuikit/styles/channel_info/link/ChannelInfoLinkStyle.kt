@@ -16,9 +16,9 @@ import com.sceyt.chatuikit.theme.Colors
  * @property dateSeparatorStyle - style for date separator
  * */
 data class ChannelInfoLinkStyle(
-        @ColorInt var backgroundColor: Int,
-        var itemStyle: ChannelInfoLinkItemStyle,
-        var dateSeparatorStyle: ChannelInfoDateSeparatorStyle
+        @ColorInt val backgroundColor: Int,
+        val itemStyle: ChannelInfoLinkItemStyle,
+        val dateSeparatorStyle: ChannelInfoDateSeparatorStyle
 ) {
     internal class Builder(
             private val context: Context,

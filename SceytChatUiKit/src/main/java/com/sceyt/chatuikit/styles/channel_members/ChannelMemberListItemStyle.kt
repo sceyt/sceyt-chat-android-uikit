@@ -13,8 +13,8 @@ import com.sceyt.chatuikit.styles.common.ListItemStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class ChannelMemberListItemStyle(
-        var roleTextStyle: TextStyle,
-        var listItemStyle: ListItemStyle<Formatter<SceytUser>, Formatter<SceytUser>, VisualProvider<SceytUser, DefaultAvatar>>
+        val roleTextStyle: TextStyle,
+        val listItemStyle: ListItemStyle<Formatter<SceytUser>, Formatter<SceytUser>, VisualProvider<SceytUser, DefaultAvatar>>
 ) {
 
     internal class Builder(

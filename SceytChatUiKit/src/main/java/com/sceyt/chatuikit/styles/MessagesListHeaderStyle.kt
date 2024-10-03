@@ -42,18 +42,18 @@ import com.sceyt.chatuikit.theme.Colors
  * @property typingUserNameFormatter formatter for the typing users, default is [SceytChatUIKitFormatters.userShortNameFormatter]
  * */
 data class MessagesListHeaderStyle(
-        @ColorInt var backgroundColor: Int,
-        @ColorInt var underlineColor: Int,
-        var navigationIcon: Drawable?,
-        var showUnderline: Boolean,
-        var titleTextStyle: TextStyle,
-        var subTitleStyle: TextStyle,
-        var searchInputStyle: SearchInputStyle,
-        var messageActionsMenuStyle: MenuStyle,
-        var titleFormatter: Formatter<SceytChannel>,
-        var subtitleFormatter: Formatter<SceytChannel>,
-        var defaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>,
-        var typingUserNameFormatter: Formatter<SceytUser>
+        @ColorInt val backgroundColor: Int,
+        @ColorInt val underlineColor: Int,
+        val navigationIcon: Drawable?,
+        val showUnderline: Boolean,
+        val titleTextStyle: TextStyle,
+        val subTitleStyle: TextStyle,
+        val searchInputStyle: SearchInputStyle,
+        val messageActionsMenuStyle: MenuStyle,
+        val titleFormatter: Formatter<SceytChannel>,
+        val subtitleFormatter: Formatter<SceytChannel>,
+        val defaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>,
+        val typingUserNameFormatter: Formatter<SceytUser>
 ) {
 
     companion object {
