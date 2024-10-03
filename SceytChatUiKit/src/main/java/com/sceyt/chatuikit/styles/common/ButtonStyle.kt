@@ -1,45 +1,29 @@
 package com.sceyt.chatuikit.styles.common
 
 import android.content.res.TypedArray
-import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.Drawable
 import android.widget.Button
 import androidx.annotation.ColorInt
 import androidx.annotation.Px
 import androidx.annotation.StyleableRes
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_CORNER_RADIUS
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
 
 data class ButtonStyle(
         val textStyle: TextStyle = TextStyle(),
-        @ColorInt val backgroundColor: Int = UNSET_COLOR,
-        val cornerRadius: Float = UNSET_CORNER_RADIUS,
-        @Px val borderWidth: Int = UNSET_SIZE,
-        @ColorInt val borderColor: Int = UNSET_COLOR
+        val backgroundStyle: BackgroundStyle = BackgroundStyle()
 ) {
 
     fun apply(button: Button) {
         textStyle.apply(button)
-        button.setBackgroundColor(backgroundColor)
-
-        if (backgroundColor == UNSET_COLOR)
-            return
-
-        if (cornerRadius == UNSET_CORNER_RADIUS) {
-            button.setBackgroundColor(backgroundColor)
-        } else {
-            button.setBackgroundWithCornerRadius(cornerRadius, backgroundColor)
-        }
+        backgroundStyle.apply(button)
     }
 
-    private fun Button.setBackgroundWithCornerRadius(radius: Float, backgroundColor: Int) {
-        val drawable = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = this@ButtonStyle.cornerRadius
-            setColor(backgroundColor)
-        }
-        drawable.cornerRadius = radius
-        background = drawable
+    fun apply(button: FloatingActionButton, icon: Drawable?) {
+        backgroundStyle.apply(button)
+        button.setImageDrawable(icon)
     }
 
     internal class Builder(private val typedArray: TypedArray) {
@@ -78,10 +62,12 @@ data class ButtonStyle(
         }
 
         fun build() = ButtonStyle(
-            backgroundColor = backgroundColor,
-            borderColor = borderColor,
-            borderWidth = borderWidth,
-            cornerRadius = cornerRadius,
+            backgroundStyle = BackgroundStyle(
+                backgroundColor = backgroundColor,
+                borderColor = borderColor,
+                borderWidth = borderWidth,
+                cornerRadius = cornerRadius
+            ),
             textStyle = textStyle
         )
     }

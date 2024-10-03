@@ -10,6 +10,8 @@ import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.presentation.components.edit_channel.EditChannelFragment
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
+import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.HintStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -29,6 +31,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property subjectTextInputStyle Style for the subject text input
  * @property aboutTextInputStyle Style for the about text input
  * @property uriTextInputStyle Style for the uri text input
+ * @property saveButtonStyle Style for the save button
  * @property uriValidationStyle Style for the uri validation
  * */
 data class EditChannelStyle(
@@ -41,6 +44,7 @@ data class EditChannelStyle(
         val subjectTextInputStyle: TextInputStyle,
         val aboutTextInputStyle: TextInputStyle,
         val uriTextInputStyle: TextInputStyle,
+        val saveButtonStyle: ButtonStyle,
         val uriValidationStyle: URIValidationStyle,
 ) {
     internal class Builder(
@@ -109,6 +113,12 @@ data class EditChannelStyle(
                 messageProvider = SceytChatUIKit.providers.channelURIValidationMessageProvider
             )
 
+            val saveButtonStyle = ButtonStyle(
+                backgroundStyle = BackgroundStyle(
+                    backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.accentColor),
+                )
+            )
+
             return EditChannelStyle(
                 backgroundColor = backgroundColor,
                 dividerColor = dividerColor,
@@ -119,7 +129,8 @@ data class EditChannelStyle(
                 subjectTextInputStyle = subjectTextInputStyle,
                 aboutTextInputStyle = aboutTextInputStyle,
                 uriTextInputStyle = uriTextInputStyle,
-                uriValidationStyle = uriValidationStyle
+                uriValidationStyle = uriValidationStyle,
+                saveButtonStyle = saveButtonStyle
             )
         }
     }

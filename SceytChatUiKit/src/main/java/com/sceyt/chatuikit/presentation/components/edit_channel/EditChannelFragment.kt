@@ -17,11 +17,9 @@ import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentEditChannelBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.jsonToObject
 import com.sceyt.chatuikit.extensions.parcelable
-import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.isPublic
@@ -36,6 +34,7 @@ import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.providers.defaults.URIValidationType
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.sceyt.chatuikit.styles.EditChannelStyle
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -279,9 +278,11 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             .setDefaultAvatar(style.avatarPlaceholder)
             .setAvatarBackgroundColor(style.avatarBackgroundColor)
             .build()
-        uriWarning.setTextColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.errorColor))
-        icSave.setImageDrawable(style.saveButtonIcon)
-        icSave.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
+
+        style.saveButtonStyle.apply(icSave, style.saveButtonIcon)
+
+        if (style.saveButtonStyle.backgroundStyle.backgroundColor != UNSET_COLOR)
+            icSave.setButtonColor(style.saveButtonStyle.backgroundStyle.backgroundColor)
     }
 
     companion object {

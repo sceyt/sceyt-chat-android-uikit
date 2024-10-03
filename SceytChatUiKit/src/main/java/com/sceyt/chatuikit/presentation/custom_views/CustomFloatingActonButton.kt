@@ -3,9 +3,11 @@ package com.sceyt.chatuikit.presentation.custom_views
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View.OnClickListener
+import androidx.annotation.ColorInt
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.setBackgroundTint
 
 class CustomFloatingActonButton @JvmOverloads constructor(
         context: Context,
@@ -15,15 +17,17 @@ class CustomFloatingActonButton @JvmOverloads constructor(
 
     private var isEnabledClick: Boolean = isClickable
     private var localClickListener: OnClickListener? = null
+    private var buttonColor: Int = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
 
     init {
-        setEnabledOrNot(enabled = isEnabledClick)
+        if (!isEnabledClick)
+            setEnabledOrNot(false)
     }
 
     fun setEnabledOrNot(enabled: Boolean) {
         isEnabledClick = enabled
-        setBackgroundTintColorRes(if (enabled)
-            SceytChatUIKit.theme.colors.accentColor else SceytChatUIKit.theme.colors.iconInactiveColor)
+        setBackgroundTint(if (enabled)
+            buttonColor else context.getCompatColor(SceytChatUIKit.theme.colors.iconInactiveColor))
     }
 
     private fun initClickListener() {
@@ -33,6 +37,10 @@ class CustomFloatingActonButton @JvmOverloads constructor(
             else localClickListener?.onClick(it)
         }
         super.setOnClickListener(clickListener)
+    }
+
+    fun setButtonColor(@ColorInt color: Int){
+        buttonColor = color
     }
 
     override fun setOnClickListener(l: OnClickListener?) {
