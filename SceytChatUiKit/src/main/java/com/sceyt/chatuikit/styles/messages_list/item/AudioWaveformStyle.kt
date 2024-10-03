@@ -1,15 +1,22 @@
 package com.sceyt.chatuikit.styles.messages_list.item
 
+import android.content.Context
 import android.content.res.TypedArray
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
+import com.sceyt.chatuikit.styles.StyleCustomizer
 
 data class AudioWaveformStyle(
         @ColorInt val trackColor: Int,
         @ColorInt val progressColor: Int,
-){
+) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<AudioWaveformStyle> { _, style -> style }
+    }
+
     internal class Builder(
+            private val context: Context,
             private val typedArray: TypedArray
     ) {
         @ColorInt
@@ -29,6 +36,6 @@ data class AudioWaveformStyle(
         fun build() = AudioWaveformStyle(
             trackColor = trackColor,
             progressColor = progressColor
-        )
+        ).let { styleCustomizer.apply(context, it) }
     }
 }

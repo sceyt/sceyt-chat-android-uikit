@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.Colors
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
@@ -22,6 +23,10 @@ data class ChannelInfoDateSeparatorStyle(
         val textStyle: TextStyle,
         val dateFormatter: Formatter<Date>
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<ChannelInfoDateSeparatorStyle> { _, style -> style }
+    }
+
     internal class Builder(
             private val context: Context,
             private val attributeSet: AttributeSet?
@@ -38,7 +43,7 @@ data class ChannelInfoDateSeparatorStyle(
                 backgroundColor = backgroundColor,
                 textStyle = textStyle,
                 dateFormatter = SceytChatUIKit.formatters.channelInfoDateSeparatorFormatter
-            )
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }

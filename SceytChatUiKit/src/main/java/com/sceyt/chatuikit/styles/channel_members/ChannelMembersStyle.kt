@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
 
@@ -19,6 +20,10 @@ data class ChannelMembersStyle(
         val toolbarStyle: ToolbarStyle,
         val itemStyle: ChannelMemberListItemStyle,
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<ChannelMembersStyle> { _, style -> style }
+    }
+
     internal class Builder(
             private val context: Context,
             private val attributeSet: AttributeSet?
@@ -51,7 +56,7 @@ data class ChannelMembersStyle(
                 addMemberTextStyle = addMemberTextStyle,
                 toolbarStyle = toolbarStyle,
                 itemStyle = itemStyle
-            )
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }

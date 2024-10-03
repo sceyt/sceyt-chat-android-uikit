@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.providers.VisualProvider
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
@@ -36,6 +37,10 @@ data class ChannelInfoFileItemStyle(
         val subtitleFormatter: Formatter<SceytAttachment>,
         val iconProvider: VisualProvider<SceytAttachment, Drawable?>,
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<ChannelInfoFileItemStyle> { _, style -> style }
+    }
+
     internal class Builder(
             private val context: Context,
             private val attributeSet: AttributeSet?
@@ -78,7 +83,7 @@ data class ChannelInfoFileItemStyle(
                 fileNameFormatter = fileNameFormatter,
                 subtitleFormatter = SceytChatUIKit.formatters.channelInfoFileSubtitleFormatter,
                 iconProvider = SceytChatUIKit.providers.attachmentIconProvider
-            )
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }

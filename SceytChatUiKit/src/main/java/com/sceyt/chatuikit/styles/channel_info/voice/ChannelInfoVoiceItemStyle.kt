@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
@@ -42,6 +43,10 @@ data class ChannelInfoVoiceItemStyle(
         val durationFormatter: Formatter<Long>,
         val subtitleFormatter: Formatter<SceytAttachment>
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<ChannelInfoVoiceItemStyle> { _, style -> style }
+    }
+
     internal class Builder(
             private val context: Context,
             private val attributeSet: AttributeSet?
@@ -94,7 +99,7 @@ data class ChannelInfoVoiceItemStyle(
                 userNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
                 durationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
                 subtitleFormatter = SceytChatUIKit.formatters.channelInfoVoiceSubtitleFormatter
-            )
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }

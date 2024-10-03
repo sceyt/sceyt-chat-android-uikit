@@ -1,10 +1,12 @@
 package com.sceyt.chatuikit.styles.input
 
+import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class MessageSearchControlsStyle(
@@ -13,7 +15,12 @@ data class MessageSearchControlsStyle(
         val nextIcon: Drawable?,
         val resultTextStyle: TextStyle
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<MessageSearchControlsStyle> { _, style -> style }
+    }
+
     internal class Builder(
+            private val context: Context,
             private val typedArray: TypedArray
     ) {
         @ColorInt
@@ -43,6 +50,6 @@ data class MessageSearchControlsStyle(
             previousIcon = previousIcon,
             nextIcon = nextIcon,
             resultTextStyle = resultTextStyle
-        )
+        ).let { styleCustomizer.apply(context, it) }
     }
 }

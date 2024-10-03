@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.styles.input
 
+import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
@@ -7,6 +8,7 @@ import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class VoiceRecorderViewStyle(
@@ -25,7 +27,12 @@ data class VoiceRecorderViewStyle(
         val cancelTextStyle: TextStyle,
         val durationFormatter: Formatter<Long>
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<VoiceRecorderViewStyle> { _, style -> style }
+    }
+
     internal class Builder(
+            private val context: Context,
             private val typedArray: TypedArray
     ) {
         @ColorInt
@@ -113,6 +120,6 @@ data class VoiceRecorderViewStyle(
             durationTextStyle = durationTextStyle,
             cancelTextStyle = cancelTextStyle,
             durationFormatter = durationFormatter
-        )
+        ).let { styleCustomizer.apply(context, it) }
     }
 }

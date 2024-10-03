@@ -1,9 +1,11 @@
 package com.sceyt.chatuikit.styles.input
 
+import android.content.Context
 import android.content.res.TypedArray
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class InputCoverStyle(
@@ -11,7 +13,12 @@ data class InputCoverStyle(
         @ColorInt val dividerColor: Int,
         val textStyle: TextStyle,
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<InputCoverStyle> { _, style -> style }
+    }
+
     internal class Builder(
+            private val context: Context,
             private val typedArray: TypedArray
     ) {
         @ColorInt
@@ -37,6 +44,6 @@ data class InputCoverStyle(
             backgroundColor = backgroundColor,
             dividerColor = dividerColor,
             textStyle = textStyle
-        )
+        ).let { styleCustomizer.apply(context, it) }
     }
 }

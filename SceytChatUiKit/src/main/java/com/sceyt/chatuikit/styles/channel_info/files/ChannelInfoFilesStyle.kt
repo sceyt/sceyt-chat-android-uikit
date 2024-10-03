@@ -6,6 +6,7 @@ import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel_info.files.ChannelInfoFilesFragment
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoDateSeparatorStyle
 import com.sceyt.chatuikit.theme.Colors
 
@@ -20,6 +21,10 @@ data class ChannelInfoFilesStyle(
         val dateSeparatorStyle: ChannelInfoDateSeparatorStyle,
         val itemStyle: ChannelInfoFileItemStyle
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<ChannelInfoFilesStyle> { _, style -> style }
+    }
+
     internal class Builder(
             private val context: Context,
             private val attributeSet: AttributeSet?
@@ -36,7 +41,7 @@ data class ChannelInfoFilesStyle(
                 backgroundColor = backgroundColor,
                 dateSeparatorStyle = dateSeparatorStyle,
                 itemStyle = itemStyle
-            )
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }

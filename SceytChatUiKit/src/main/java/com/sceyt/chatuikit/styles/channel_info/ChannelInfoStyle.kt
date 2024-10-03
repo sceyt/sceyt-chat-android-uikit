@@ -89,7 +89,6 @@ data class ChannelInfoStyle(
                 filesStyle = filesStyle,
                 voiceStyle = voiceStyle,
                 linkStyle = linkStyle,
-                // channelMembersStyle = channelMembersStyle
             ).let { styleCustomizer.apply(context, it) }
         }
     }

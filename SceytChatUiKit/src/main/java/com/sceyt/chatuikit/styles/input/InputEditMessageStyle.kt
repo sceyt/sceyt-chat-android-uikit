@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.styles.input
 
+import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
@@ -10,6 +11,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class InputEditMessageStyle(
@@ -24,7 +26,12 @@ data class InputEditMessageStyle(
         val mentionUserNameFormatter: Formatter<SceytUser>,
         val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<InputEditMessageStyle> { _, style -> style }
+    }
+
     internal class Builder(
+            private val context: Context,
             private val typedArray: TypedArray
     ) {
         @ColorInt
@@ -70,6 +77,6 @@ data class InputEditMessageStyle(
             attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
             mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
             attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider
-        )
+        ).let { styleCustomizer.apply(context, it) }
     }
 }

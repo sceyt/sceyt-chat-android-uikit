@@ -45,6 +45,10 @@ data class EditChannelStyle(
         val saveButtonStyle: ButtonStyle,
         val uriValidationStyle: URIValidationStyle,
 ) {
+    companion object {
+        internal var styleCustomizer = StyleCustomizer<EditChannelStyle> { _, style -> style }
+    }
+
     internal class Builder(
             private val context: Context,
             private val attributeSet: AttributeSet?
@@ -128,7 +132,7 @@ data class EditChannelStyle(
                 uriTextInputStyle = uriTextInputStyle,
                 uriValidationStyle = uriValidationStyle,
                 saveButtonStyle = saveButtonStyle
-            )
+            ).let { styleCustomizer.apply(context, it)}
         }
     }
 }

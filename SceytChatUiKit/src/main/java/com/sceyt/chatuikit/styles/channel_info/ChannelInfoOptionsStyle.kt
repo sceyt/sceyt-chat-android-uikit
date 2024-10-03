@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
@@ -24,6 +25,10 @@ data class ChannelInfoOptionsStyle(
         val adminsTitleText: String,
         val searchMessagesTitleText: String
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<ChannelInfoOptionsStyle> { _, style -> style }
+    }
+
     internal class Builder(
             private val context: Context,
             private val attributeSet: AttributeSet?
@@ -63,7 +68,7 @@ data class ChannelInfoOptionsStyle(
                 membersTitleText = membersTitleText,
                 adminsTitleText = adminsTitleText,
                 searchMessagesTitleText = searchMessagesTitleText
-            )
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }

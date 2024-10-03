@@ -98,7 +98,7 @@ data class MessagesListViewStyle(
                     reactionPickerStyle = buildReactionPickerStyle(array),
                     enableScrollDownButton = enableScrollDownButton,
                     enableDateSeparator = enableDateSeparator
-                )
+                ).let { styleCustomizer.apply(context, it) }
             }
         }
     }

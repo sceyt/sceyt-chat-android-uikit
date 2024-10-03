@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.messages_list.item.LinkPreviewStyle
 
@@ -24,6 +25,10 @@ data class ChannelInfoLinkItemStyle(
         val linkTextStyle: TextStyle,
         val linkPreviewStyle: LinkPreviewStyle,
 ) {
+    companion object {
+        var styleCustomizer = StyleCustomizer<ChannelInfoLinkItemStyle> { _, style -> style }
+    }
+
     internal class Builder(
             private val context: Context,
             private val attributeSet: AttributeSet?
@@ -58,7 +63,7 @@ data class ChannelInfoLinkItemStyle(
                 backgroundColor = backgroundColor,
                 linkTextStyle = linkTextStyle,
                 linkPreviewStyle = linkStyle
-            )
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }
