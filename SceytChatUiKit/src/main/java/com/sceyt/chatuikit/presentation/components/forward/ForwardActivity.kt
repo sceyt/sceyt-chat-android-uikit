@@ -46,7 +46,7 @@ open class ForwardActivity : ShareableActivity() {
     protected open fun SceytActivityForwardBinding.initViews() {
         determinateBtnState()
 
-        toolbar.setNavigationIconClickListener {
+        toolbar.setNavigationClickListener {
             finish()
         }
 

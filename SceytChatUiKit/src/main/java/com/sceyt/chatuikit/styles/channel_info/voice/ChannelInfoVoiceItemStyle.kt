@@ -91,7 +91,7 @@ data class ChannelInfoVoiceItemStyle(
                 subtitleTextStyle = dateTextStyle,
                 durationTextStyle = durationTextStyle,
                 mediaLoaderStyle = mediaLoaderStyle,
-                userNameFormatter = SceytChatUIKit.formatters.userNameFormatterNew,
+                userNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
                 durationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
                 subtitleFormatter = SceytChatUIKit.formatters.channelInfoVoiceSubtitleFormatter
             )

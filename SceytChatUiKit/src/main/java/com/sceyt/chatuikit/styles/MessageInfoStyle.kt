@@ -105,7 +105,7 @@ data class MessageInfoStyle(
             val listItemStyle = ListItemStyle(
                 titleTextStyle = userNameTextStyle,
                 subtitleTextStyle = dateTextStyle,
-                titleFormatter = SceytChatUIKit.formatters.userNameFormatterNew,
+                titleFormatter = SceytChatUIKit.formatters.userNameFormatter,
                 subtitleFormatter = SceytChatUIKit.formatters.messageDateFormatter,
                 avatarProvider = SceytChatUIKit.providers.userDefaultAvatarProvider
             )

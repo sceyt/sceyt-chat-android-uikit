@@ -16,7 +16,7 @@ data object DefaultChannelNameFormatter : Formatter<SceytChannel> {
             from.isSelf() -> context.getString(R.string.sceyt_self_notes)
             else -> {
                 val member = from.getPeer() ?: return ""
-                SceytChatUIKit.formatters.userNameFormatterNew.format(context, member.user)
+                SceytChatUIKit.formatters.userNameFormatter.format(context, member.user)
             }
         }
     }

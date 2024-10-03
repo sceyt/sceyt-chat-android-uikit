@@ -95,7 +95,7 @@ class StartChatActivity : AppCompatActivity() {
             viewModel.loadUsers(query, false)
         }
 
-        binding.toolbar.setNavigationIconClickListener {
+        binding.toolbar.setNavigationClickListener {
             onBackPressedDispatcher.onBackPressed()
             overrideTransitions(sceyt_anim_slide_hold, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right, false)
         }
@@ -161,7 +161,7 @@ class StartChatActivity : AppCompatActivity() {
         root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
         toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
         toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
-        toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+     ///   toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
         tvNewGroup.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
         tvNewChannel.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
         setTextViewsDrawableColor(listOf(tvNewChannel, tvNewGroup), getCompatColor(SceytChatUIKit.theme.colors.accentColor))

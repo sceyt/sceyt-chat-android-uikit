@@ -11,12 +11,14 @@ import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.listeners.MemberClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.listeners.MemberClickListenersImpl
-import com.sceyt.chatuikit.formatters.UserNameFormatter
+import com.sceyt.chatuikit.styles.channel_members.ChannelMemberListItemStyle
 
-open class ChannelMembersViewHolderFactory(context: Context) {
+open class ChannelMembersViewHolderFactory(
+        protected val context: Context,
+        protected val style: ChannelMemberListItemStyle
+) {
     private val layoutInflater = LayoutInflater.from(context)
     private val clickListeners = MemberClickListenersImpl()
-    private var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
 
     fun createViewHolder(parent: ViewGroup, viewType: Int): BaseMemberViewHolder {
         return when (viewType) {
@@ -27,8 +29,9 @@ open class ChannelMembersViewHolderFactory(context: Context) {
     }
 
     open fun createMemberViewHolder(parent: ViewGroup): BaseMemberViewHolder {
-        return MemberViewHolder(SceytItemChannelMembersBinding.inflate(layoutInflater, parent, false),
-            clickListeners, userNameFormatter)
+        return MemberViewHolder(
+            SceytItemChannelMembersBinding.inflate(layoutInflater, parent, false),
+            style, clickListeners)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseMemberViewHolder {
@@ -54,10 +57,6 @@ open class ChannelMembersViewHolderFactory(context: Context) {
 
     fun setOnClickListener(listeners: MemberClickListeners) {
         clickListeners.setListener(listeners)
-    }
-
-    fun setUserNameFormatter(formatter: UserNameFormatter) {
-        userNameFormatter = formatter
     }
 
     enum class ItemType {

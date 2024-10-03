@@ -8,7 +8,6 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.databinding.SceytItemReactedUserBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 
@@ -74,8 +73,9 @@ class ReactedUsersAdapter(
         override fun bind(item: ReactedUserItem) {
             with(binding) {
                 val user = (item as ReactedUserItem.Item).reaction.user
-                val userPresentableName = user?.let { SceytChatUIKit.formatters.userNameFormatter?.format(it) }
-                        ?: user?.getPresentableName()
+                val userPresentableName = user?.let {
+                    SceytChatUIKit.formatters.userNameFormatter.format(context, it)
+                }
                 avatar.setUserAvatar(user)
                 userName.text = userPresentableName
 

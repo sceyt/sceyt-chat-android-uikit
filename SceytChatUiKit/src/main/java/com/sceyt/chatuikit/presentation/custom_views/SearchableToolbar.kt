@@ -1,20 +1,26 @@
 package com.sceyt.chatuikit.presentation.custom_views
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.util.AttributeSet
-import android.util.TypedValue
 import android.view.LayoutInflater
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.res.use
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytLayoutSearchableToolbarBinding
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.styles.common.HintStyle
+import com.sceyt.chatuikit.styles.common.SearchInputStyle
+import com.sceyt.chatuikit.styles.common.TextInputStyle
+import com.sceyt.chatuikit.styles.common.TextStyle
 
 class SearchableToolbar @JvmOverloads constructor(
         context: Context,
@@ -25,44 +31,67 @@ class SearchableToolbar @JvmOverloads constructor(
     private var isSearchMode: Boolean = false
     private val debounceHelper by lazy { DebounceHelper(300, this) }
     private var toolbarTitle: String? = null
-    private var titleColor: Int
+    private var titleTextStyle: TextStyle = TextStyle()
+    private var searchInputStyle: SearchInputStyle = SearchInputStyle()
     private var enableSearch = true
-    private var searchIcon: Int
-    private var backIcon: Int
-    private var clearIcon: Int
-
-    @ColorInt
-    private var iconsTint: Int = 0
-    private var titleTextSize: Int
 
     init {
-        val a = context.obtainStyledAttributes(attrs, R.styleable.SearchableToolbar)
-        toolbarTitle = a.getString(R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitle)
-        titleColor = a.getColor(R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitleColor, context.getCompatColor(R.color.sceyt_color_text_primary))
-        titleTextSize = a.getDimensionPixelSize(R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitleTextSize,
-            context.resources.getDimension(R.dimen.bigTextSize).toInt())
-        enableSearch = a.getBoolean(R.styleable.SearchableToolbar_sceytUiSearchableToolbarEnableSearch, enableSearch)
-        searchIcon = a.getResourceId(R.styleable.SearchableToolbar_sceytUiSearchableToolbarSearchIcon, R.drawable.sceyt_ic_search)
-        backIcon = a.getResourceId(R.styleable.SearchableToolbar_sceytUiSearchableToolbarBackIcon, R.drawable.sceyt_ic_arrow_back)
-        clearIcon = a.getResourceId(R.styleable.SearchableToolbar_sceytUiSearchableToolbarClearIcon, R.drawable.sceyt_ic_cancel)
-        iconsTint = a.getColor(R.styleable.SearchableToolbar_sceytUiSearchableToolbarIconsTint, iconsTint)
-        a.recycle()
-
         binding = SceytLayoutSearchableToolbarBinding.inflate(LayoutInflater.from(context), this)
-        binding.initViews()
-        setIconsAndColors()
+
+        @ColorInt
+        var titleColor: Int = context.getCompatColor(R.color.sceyt_color_text_primary)
+        var titleTextSize = context.resources.getDimensionPixelSize(R.dimen.bigTextSize)
+
+        context.obtainStyledAttributes(attrs, R.styleable.SearchableToolbar).use { array ->
+            toolbarTitle = array.getString(R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitle)
+            titleColor = array.getColor(R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitleColor, titleColor)
+            titleTextSize = array.getDimensionPixelSize(R.styleable.SearchableToolbar_sceytUiSearchableToolbarTitleTextSize,
+                titleTextSize)
+            enableSearch = array.getBoolean(R.styleable.SearchableToolbar_sceytUiSearchableToolbarEnableSearch, enableSearch)
+
+            val navigationIcon = array.getDrawable(R.styleable.SearchableToolbar_sceytUiSearchableToolbarBackIcon)
+                    ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back)
+            val iconsTint = array.getColor(R.styleable.SearchableToolbar_sceytUiSearchableToolbarIconsTint, 0)
+
+            titleTextStyle = TextStyle(
+                color = titleColor,
+                size = titleTextSize,
+                font = R.font.roboto_medium
+            )
+
+            val textInputStyle = TextInputStyle(
+                textStyle = titleTextStyle,
+                hintStyle = HintStyle(
+                    hint = context.getString(R.string.sceyt_search),
+                    textColor = context.getCompatColor(R.color.sceyt_color_text_footnote)
+                )
+            )
+            searchInputStyle = SearchInputStyle.Builder(array)
+                .searchIcon(
+                    index = R.styleable.SearchableToolbar_sceytUiSearchableToolbarSearchIcon,
+                    defValue = context.getCompatDrawable(R.drawable.sceyt_ic_search))
+                .clearIcon(
+                    index = R.styleable.SearchableToolbar_sceytUiSearchableToolbarClearIcon,
+                    defValue = context.getCompatDrawable(R.drawable.sceyt_ic_cancel))
+                .textInputStyle(textInputStyle)
+                .build()
+
+            setIconsAndColors(navigationIcon, iconsTint)
+            binding.initViews()
+        }
     }
 
-    private fun setIconsAndColors() {
-        binding.icSearch.setImageResource(searchIcon)
-        binding.icBack.setImageResource(backIcon)
-        binding.tvTitle.apply {
-            setTextColor(titleColor)
-            setTextSize(TypedValue.COMPLEX_UNIT_PX, titleTextSize.toFloat())
-        }
-        if (iconsTint != 0) {
-            binding.icSearch.setColorFilter(iconsTint)
-            binding.icBack.setColorFilter(iconsTint)
+    private fun setIconsAndColors(navigationIcon: Drawable?, @ColorInt iconsTint: Int) {
+        binding.icBack.setImageDrawable(navigationIcon)
+        titleTextStyle.apply(binding.tvTitle)
+        searchInputStyle.apply(binding.input, null, binding.icSearch, binding.icClear)
+        applyIconsTint(iconsTint)
+    }
+
+    private fun applyIconsTint(@ColorInt tint: Int) {
+        if (tint != 0) {
+            binding.icSearch.setColorFilter(tint)
+            binding.icBack.setColorFilter(tint)
         }
     }
 
@@ -105,10 +134,21 @@ class SearchableToolbar @JvmOverloads constructor(
         binding.tvTitle.text = title.trim()
     }
 
-    fun setTitleColorRes(@ColorRes colorId: Int) {
-        titleColor = context.getCompatColor(colorId)
-        binding.tvTitle.setTextColor(titleColor)
-        binding.input.setTextColor(titleColor)
+    fun setTitleTextStyle(style: TextStyle) {
+        titleTextStyle = style
+        titleTextStyle.apply(binding.tvTitle)
+    }
+
+    fun setSearchInputStyle(style: SearchInputStyle) {
+        style.apply(binding.input, null, binding.icSearch, binding.icClear)
+    }
+
+    fun setBorderColor(@ColorInt color: Int) {
+        binding.underline.setBackgroundColor(color)
+    }
+
+    fun setNavigationIcon(icon: Drawable?) {
+        binding.icBack.setImageDrawable(icon)
     }
 
     fun setQueryChangeListener(listener: (String) -> Unit) {
@@ -120,11 +160,10 @@ class SearchableToolbar @JvmOverloads constructor(
     }
 
     fun setIconsTint(@ColorRes colorId: Int) {
-        iconsTint = context.getCompatColor(colorId)
-        setIconsAndColors()
+        applyIconsTint(context.getCompatColor(colorId))
     }
 
-    fun setNavigationIconClickListener(listener: OnClickListener) {
+    fun setNavigationClickListener(listener: OnClickListener) {
         binding.icBack.setOnClickListener(listener)
     }
 

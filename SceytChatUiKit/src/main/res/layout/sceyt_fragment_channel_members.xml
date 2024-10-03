@@ -4,18 +4,20 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_background">
+    android:background="@color/sceyt_color_background"
+    android:clickable="true"
+    android:focusable="true">
 
-    <com.sceyt.chatuikit.presentation.custom_views.SearchableToolbar
+    <com.sceyt.chatuikit.presentation.custom_views.CustomToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytUiSearchableToolbarEnableSearch="false"
-        app:sceytUiSearchableToolbarTitle="@string/sceyt_members" />
+        app:sceytUiToolbarTitle="@string/sceyt_members" />
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/layoutCoordinator"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"

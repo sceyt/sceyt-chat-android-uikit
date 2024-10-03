@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.shareable.adapter.holders
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.databinding.SceytItemShareChannelBinding
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
@@ -11,14 +10,11 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.ChannelLoadingMoreViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListenersImpl
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 
 @Suppress("MemberVisibilityCanBePrivate")
 open class ShareableChannelViewHolderFactory(context: Context) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     protected val channelClickListenersImpl = ChannelClickListenersImpl()
-    var userNameFormatter: UserNameFormatter? = SceytChatUIKit.formatters.userNameFormatter
-        private set
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return when (viewType) {
@@ -30,7 +26,7 @@ open class ShareableChannelViewHolderFactory(context: Context) {
 
     open fun createChannelViewHolder(parent: ViewGroup): BaseChannelViewHolder {
         val binding = SceytItemShareChannelBinding.inflate(layoutInflater, parent, false)
-        return ShareableChannelViewHolder(binding, channelClickListenersImpl, userNameFormatter)
+        return ShareableChannelViewHolder(binding, channelClickListenersImpl)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelViewHolder {
@@ -40,10 +36,6 @@ open class ShareableChannelViewHolderFactory(context: Context) {
 
     fun setChannelClickListener(listener: ChannelClickListeners.ChannelClickListener) {
         channelClickListenersImpl.setListener(listener)
-    }
-
-    fun setUserNameFormatter(formatter: UserNameFormatter) {
-        userNameFormatter = formatter
     }
 
     protected val clickListeners get() = channelClickListenersImpl as ChannelClickListeners.ClickListeners

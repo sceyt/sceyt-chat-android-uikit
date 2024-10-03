@@ -5,18 +5,16 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.databinding.SceytItemChannelMembersBinding
 import com.sceyt.chatuikit.extensions.firstCharToUppercase
-import com.sceyt.chatuikit.extensions.getPresentableNameWithYou
-import com.sceyt.chatuikit.extensions.setTextColorRes
-import com.sceyt.chatuikit.formatters.UserNameFormatter
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.diff.MemberItemPayloadDiff
-import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.listeners.MemberClickListenersImpl
+import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.listeners.MemberClickListeners
 import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
+import com.sceyt.chatuikit.styles.channel_members.ChannelMemberListItemStyle
 
 class MemberViewHolder(
         private val binding: SceytItemChannelMembersBinding,
-        private val memberClickListeners: MemberClickListenersImpl,
-        private val userNameFormatter: UserNameFormatter? = null
+        private val style: ChannelMemberListItemStyle,
+        private val memberClickListeners: MemberClickListeners.ClickListeners,
 ) : BaseMemberViewHolder(binding.root) {
 
     private lateinit var memberItem: MemberItem.Member
@@ -38,17 +36,14 @@ class MemberViewHolder(
         val member = memberItem.member
 
         with(binding) {
-            val presentableName = userNameFormatter?.format(member.user)
-                    ?: member.getPresentableNameWithYou(itemView.context)
-
             if (diff.nameChanged || diff.avatarChanged) {
-                avatar.setUserAvatar(member.user)
-                userName.text = presentableName
+                avatar.setUserAvatar(member.user, style.listItemStyle.avatarProvider)
+                userName.text = style.listItemStyle.titleFormatter.format(context, member.user)
             }
 
             if (diff.presenceStateChanged)
                 tvStatus.text = SceytChatUIKit.formatters.userPresenceDateFormatter.format(
-                    context = itemView.context, from = member.user)
+                    context = context, from = member.user)
 
             if (diff.roleChanged)
                 setRole()
@@ -66,8 +61,8 @@ class MemberViewHolder(
     }
 
     private fun SceytItemChannelMembersBinding.applyStyle() {
-        userName.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-        tvStatus.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
-        roleName.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
+        style.listItemStyle.titleTextStyle.apply(userName)
+        style.listItemStyle.subtitleTextStyle.apply(tvStatus)
+        style.roleTextStyle.apply(roleName)
     }
 }

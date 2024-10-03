@@ -81,7 +81,7 @@ open class SelectUsersActivity : AppCompatActivity() {
                 viewModel.loadUsers(query, false)
             }
 
-            toolbar.setNavigationIconClickListener {
+            toolbar.setNavigationClickListener {
                 onBackPressedDispatcher.onBackPressed()
             }
 
@@ -172,7 +172,7 @@ open class SelectUsersActivity : AppCompatActivity() {
         root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
         toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
         toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
-        toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+    //    toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
         divider.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
         divider.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
     }
