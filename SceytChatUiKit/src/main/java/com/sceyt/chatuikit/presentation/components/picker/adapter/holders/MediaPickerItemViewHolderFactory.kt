@@ -6,10 +6,10 @@ import com.sceyt.chatuikit.databinding.SceytItemPickerImageBinding
 import com.sceyt.chatuikit.databinding.SceytItemPickerVideoBinding
 import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaItem
-import com.sceyt.chatuikit.styles.MediaPickerStyle
+import com.sceyt.chatuikit.styles.media_picker.MediaPickerItemStyle
 
 open class MediaPickerItemViewHolderFactory(
-        private val style: MediaPickerStyle,
+        private val style: MediaPickerItemStyle,
         private val clickListener: MediaAdapter.MediaClickListener
 ) {
 

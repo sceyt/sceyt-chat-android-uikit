@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.persistence.differs.GalleryMediaItemDiff
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.components.picker.adapter.holders.BasePickerViewHolder
 import com.sceyt.chatuikit.presentation.components.picker.adapter.holders.MediaPickerItemViewHolderFactory
-import com.sceyt.chatuikit.styles.MediaPickerStyle
+import com.sceyt.chatuikit.styles.media_picker.MediaPickerStyle
 
 class MediaAdapter(
         private val viewHolderFactory: MediaPickerItemViewHolderFactory,
