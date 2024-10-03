@@ -24,7 +24,8 @@
         android:layout_height="24dp"
         android:layout_margin="9dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:button="@drawable/sceyt_ic_unchecked_state" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 
