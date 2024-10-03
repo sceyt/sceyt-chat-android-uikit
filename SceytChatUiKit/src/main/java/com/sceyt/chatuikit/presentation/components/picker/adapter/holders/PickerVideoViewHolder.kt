@@ -7,12 +7,12 @@ import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.persistence.differs.GalleryMediaItemDiff
 import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaItem
-import com.sceyt.chatuikit.styles.MediaPickerStyle
+import com.sceyt.chatuikit.styles.media_picker.MediaPickerItemStyle
 import kotlin.time.Duration.Companion.milliseconds
 
 class PickerVideoViewHolder(
         private val binding: SceytItemPickerVideoBinding,
-        private val style: MediaPickerStyle,
+        private val style: MediaPickerItemStyle,
         clickListener: MediaAdapter.MediaClickListener
 ) : BasePickerViewHolder(binding.root, clickListener) {
 
@@ -49,8 +49,9 @@ class PickerVideoViewHolder(
     }
 
     private fun SceytItemPickerVideoBinding.applyStyle() {
+        ivImage.setBackgroundColor(style.backgroundColor)
         tvDuration.setDrawableStart(style.videoDurationIcon)
         style.videoDurationTextStyle.apply(tvDuration)
-        style.selectionCheckboxStyle.apply(checkbox)
+        style.checkboxStyle.apply(checkbox)
     }
 }

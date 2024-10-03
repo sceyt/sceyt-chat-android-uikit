@@ -36,7 +36,7 @@ import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaData
 import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.components.picker.adapter.holders.MediaPickerItemViewHolderFactory
-import com.sceyt.chatuikit.styles.MediaPickerStyle
+import com.sceyt.chatuikit.styles.media_picker.MediaPickerStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -86,7 +86,7 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
 
     private fun initGalleryViewHolderFactory(): MediaPickerItemViewHolderFactory {
         val clickListener = MediaAdapter.MediaClickListener(::onMediaClick)
-        return MediaPickerItemViewHolderFactory(style, clickListener)
+        return MediaPickerItemViewHolderFactory(style.itemStyle, clickListener)
     }
 
     private fun checkPermissions(callBack: (Boolean) -> Unit) {

@@ -5,11 +5,11 @@ import com.sceyt.chatuikit.databinding.SceytItemPickerImageBinding
 import com.sceyt.chatuikit.persistence.differs.GalleryMediaItemDiff
 import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaItem
-import com.sceyt.chatuikit.styles.MediaPickerStyle
+import com.sceyt.chatuikit.styles.media_picker.MediaPickerItemStyle
 
 class PickerImageViewHolder(
         private val binding: SceytItemPickerImageBinding,
-        private val style: MediaPickerStyle,
+        private val style: MediaPickerItemStyle,
         clickListener: MediaAdapter.MediaClickListener
 ) : BasePickerViewHolder(binding.root, clickListener) {
 
@@ -39,7 +39,7 @@ class PickerImageViewHolder(
     }
 
     private fun SceytItemPickerImageBinding.applyStyle() {
-        ivImage.setBackgroundColor(style.mediaBackgroundColor)
-        style.selectionCheckboxStyle.apply(checkbox)
+        ivImage.setBackgroundColor(style.backgroundColor)
+        style.checkboxStyle.apply(checkbox)
     }
 }
