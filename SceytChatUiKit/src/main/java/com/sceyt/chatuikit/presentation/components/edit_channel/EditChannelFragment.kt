@@ -34,7 +34,6 @@ import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.providers.defaults.URIValidationType
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.sceyt.chatuikit.styles.EditChannelStyle
-import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -279,10 +278,10 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             .setAvatarBackgroundColor(style.avatarBackgroundColor)
             .build()
 
-        style.saveButtonStyle.apply(icSave, style.saveButtonIcon)
-
-        if (style.saveButtonStyle.backgroundStyle.backgroundColor != UNSET_COLOR)
-            icSave.setButtonColor(style.saveButtonStyle.backgroundStyle.backgroundColor)
+        with(icSave) {
+            style.saveButtonStyle.apply(this, style.saveButtonIcon)
+            setButtonColor(style.saveButtonStyle.backgroundStyle.backgroundColor)
+        }
     }
 
     companion object {
