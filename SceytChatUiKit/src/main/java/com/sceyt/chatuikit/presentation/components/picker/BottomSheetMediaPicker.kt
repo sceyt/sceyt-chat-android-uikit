@@ -334,6 +334,8 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     }
 
     private fun SceytBottomSheetMediaPickerBinding.applyStyle() {
+        tvTitle.text = style.titleText
+        style.titleTextStyle.apply(tvTitle)
         style.confirmButtonStyle.apply(btnNext)
         style.countTextStyle.apply(counter)
         style.countBackgroundStyle.apply(counter)
