@@ -310,7 +310,9 @@ internal fun MessageInputStyle.Builder.buildReplyMessageStyle(
     )
     .replyIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputReplyMessageIcon,
-        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_input_reply)
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_input_reply).applyTint(
+            context, SceytChatUIKit.theme.colors.accentColor
+        )
     )
     .titleTextStyle(
         titleTextStyle = buildReplyMessageTitleTextStyle(array)
@@ -417,7 +419,9 @@ internal fun MessageInputStyle.Builder.buildEditMessageStyle(
     )
     .editIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageEditIcon,
-        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_edit)
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_edit).applyTint(
+            context, SceytChatUIKit.theme.colors.accentColor
+        )
     )
     .titleTextStyle(
         titleTextStyle = buildEditMessageTitleTextStyle(array)
@@ -614,7 +618,9 @@ internal fun MessageInputStyle.Builder.buildVoiceRecorderViewStyle(
     )
     .arrowToLockIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderArrowToLockIcon,
-        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_arrow_lock_recording)
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_arrow_lock_recording).applyTint(
+            context, SceytChatUIKit.theme.colors.accentColor
+        )
     )
     .stopRecordingIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputVoiceRecorderStopRecordingIcon,
@@ -753,11 +759,15 @@ internal fun MessageInputStyle.Builder.buildMessageSearchControlStyle(
     )
     .previousIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputSearchControlPreviousIcon,
-        defValue = context.getCompatDrawable(R.drawable.sceyt_scroll_prev_button)
+        defValue = context.getCompatDrawable(R.drawable.sceyt_scroll_prev_button).applyTint(
+            context, SceytChatUIKit.theme.colors.accentColor
+        )
     )
     .nextIcon(
         index = R.styleable.MessageInputView_sceytUiMessageInputSearchControlNextIcon,
-        defValue = context.getCompatDrawable(R.drawable.sceyt_scroll_next_button)
+        defValue = context.getCompatDrawable(R.drawable.sceyt_scroll_next_button).applyTint(
+            context, SceytChatUIKit.theme.colors.accentColor
+        )
     )
     .resultTextStyle(
         resultTextStyle = buildMessageSearchControlTextStyle(array)

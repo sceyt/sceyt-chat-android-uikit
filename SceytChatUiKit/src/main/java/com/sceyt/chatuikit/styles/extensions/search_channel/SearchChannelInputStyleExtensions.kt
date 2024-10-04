@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.styles.extensions.search_channel
 import android.content.res.TypedArray
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
@@ -70,14 +71,15 @@ internal fun SearchChannelInputStyle.Builder.buildSearchInputStyle(
 ) = SearchInputStyle.Builder(array)
     .searchIcon(
         index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputSearchIcon,
-        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_search)?.apply {
-            setTint(context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor))
-        })
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_search)?.applyTint(
+            context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+        )
+    )
     .clearIcon(
         index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputClearIcon,
-        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_cancel)?.apply {
-            setTint(context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor))
-        })
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_cancel)?.applyTint(
+            context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor))
+    )
     .textInputStyle(buildTextInputStyle(array))
     .build()
 

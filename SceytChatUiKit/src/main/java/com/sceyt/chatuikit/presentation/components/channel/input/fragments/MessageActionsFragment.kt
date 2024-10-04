@@ -44,6 +44,7 @@ open class MessageActionsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding?.applyStyle(inputStyle)
         initViews()
     }
 
@@ -216,7 +217,6 @@ open class MessageActionsFragment : Fragment() {
 
     internal fun setStyle(inputStyle: MessageInputStyle) {
         this.inputStyle = inputStyle
-        binding?.applyStyle(inputStyle)
     }
 
     private fun SceytFragmentMessageActionsBinding.applyStyle(inputStyle: MessageInputStyle) {
