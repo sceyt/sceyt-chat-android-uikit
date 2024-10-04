@@ -15,7 +15,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
-import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.findViewTreeLifecycleOwner
@@ -63,7 +62,6 @@ import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.fragments.LinkPreviewFragment
-import com.sceyt.chatuikit.presentation.components.channel.input.fragments.MessageActionsFragment
 import com.sceyt.chatuikit.presentation.components.channel.input.helpers.MessageToSendHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.link.SingleLinkDetailsProvider
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
@@ -131,7 +129,6 @@ class MessageInputView @JvmOverloads constructor(
     private val messageToSendHelper by lazy { MessageToSendHelper(context, actionListeners) }
     private val linkDetailsProvider by lazy { SingleLinkDetailsProvider(context, getScope()) }
     private val audioRecorderHelper: AudioRecorderHelper by lazy { AudioRecorderHelper(getScope(), context) }
-    private var messageActionsFragment: MessageActionsFragment? = null
     private var linkPreviewFragment: LinkPreviewFragment? = null
     var enableVoiceRecord = true
         private set
@@ -169,6 +166,7 @@ class MessageInputView @JvmOverloads constructor(
             applyStyle()
             setOnClickListeners()
             voiceRecordPlaybackView.setStyle(style.voiceRecordPlaybackViewStyle)
+            messageActionsView.setStyle(style)
             initFragments()
             addInoutListeners()
             determineInputState()
@@ -200,20 +198,15 @@ class MessageInputView @JvmOverloads constructor(
     private fun initFragments() = post {
         val fragmentManager = checkIfInsideFragment()?.childFragmentManager
                 ?: context.asFragmentActivity().supportFragmentManager
+
         fragmentManager.commit {
-            add(R.id.frameLayoutMessageActions, MessageActionsFragment().also {
-                it.setStyle(style)
-                it.setClickListener(clickListeners)
-                messageActionsFragment = it
-            })
-            add(R.id.frameLayoutLinkPreview, LinkPreviewFragment().also {
+            replace(R.id.frameLayoutLinkPreview, LinkPreviewFragment().also {
                 it.setStyle(style)
                 it.setClickListener(clickListeners)
                 linkPreviewFragment = it
-            })
+            }, LinkPreviewFragment::class.java.simpleName)
         }
     }
-
 
     private fun addInputTextWatcher() {
         inputTextWatcher = binding.messageInput.doAfterTextChanged { text ->
@@ -278,6 +271,8 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     private fun SceytMessageInputViewBinding.setOnClickListeners() {
+        messageActionsView.setClickListener(clickListeners)
+
         icSendMessage.setOnClickListener {
             when (inputState) {
                 Text -> clickListeners.onSendMsgClick(it)
@@ -525,10 +520,7 @@ class MessageInputView @JvmOverloads constructor(
     private fun closeReplyOrEditView(readyCb: (() -> Unit?)? = null) {
         if (replyMessage == null && editMessage == null)
             readyCb?.invoke()
-        else messageActionsFragment?.close {
-            binding.frameLayoutMessageActions.isVisible = false
-            readyCb?.invoke()
-        }
+        else binding.messageActionsView.close(readyCb)
     }
 
     private fun closeLinkDetailsView(readyCb: (() -> Unit?)? = null) {
@@ -612,8 +604,7 @@ class MessageInputView @JvmOverloads constructor(
             determineInputState()
             if (!initWithDraft)
                 initInputWithEditMessage(message)
-            binding.frameLayoutMessageActions.isVisible = true
-            messageActionsFragment?.editMessage(message)
+            binding.messageActionsView.editMessage(message)
             if (!initWithDraft)
                 updateDraftMessage()
         }
@@ -623,8 +614,7 @@ class MessageInputView @JvmOverloads constructor(
         checkIfRecordingAndConfirm {
             editMessage = null
             replyMessage = message
-            binding.frameLayoutMessageActions.isVisible = true
-            messageActionsFragment?.replyMessage(message)
+            binding.messageActionsView.replyMessage(message)
 
             if (!initWithDraft) {
                 context.showSoftInput(binding.messageInput)
@@ -680,7 +670,7 @@ class MessageInputView @JvmOverloads constructor(
                 with(binding) {
                     if (isBlockedPeer) {
                         viewAttachments.isVisible = false
-                        frameLayoutMessageActions.isVisible = false
+                        messageActionsView.isVisible = false
                     }
                     isInputHidden = if (isBlockedPeer) {
                         hideInputWithMessage(getString(R.string.sceyt_you_blocked_this_user), R.drawable.sceyt_ic_warning)
@@ -860,20 +850,6 @@ class MessageInputView @JvmOverloads constructor(
         if (data.isEmpty() && mentionUsersListView == null) return
         initMentionUsersContainer()
         mentionUsersListView?.setMentionList(data.toSet().take(30))
-    }
-
-    fun setCustomMessageActionsFragment(fragment: MessageActionsFragment, fragmentManager: FragmentManager) {
-        fragment.setClickListener(clickListeners)
-        fragmentManager.commit {
-            replace(R.id.frameLayoutMessageActions, fragment)
-        }
-    }
-
-    fun setCustomLinkPreviewFragment(fragment: LinkPreviewFragment, fragmentManager: FragmentManager) {
-        fragment.setClickListener(clickListeners)
-        fragmentManager.commit {
-            replace(R.id.frameLayoutLinkPreview, fragment)
-        }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {

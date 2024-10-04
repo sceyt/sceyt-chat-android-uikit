@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@color/sceyt_color_surface_1"
-    android:visibility="gone"
-    tools:visibility="visible">
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
+    tools:showIn="@layout/sceyt_message_input_view">
 
     <View
         android:id="@+id/view3"
@@ -127,4 +124,4 @@
         android:orientation="vertical"
         app:layout_constraintGuide_end="16dp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</merge>

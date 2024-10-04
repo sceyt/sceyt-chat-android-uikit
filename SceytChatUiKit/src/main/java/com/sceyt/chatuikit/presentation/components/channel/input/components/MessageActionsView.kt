@@ -1,16 +1,15 @@
-package com.sceyt.chatuikit.presentation.components.channel.input.fragments
+package com.sceyt.chatuikit.presentation.components.channel.input.components
 
+import android.content.Context
 import android.graphics.drawable.Drawable
-import android.os.Bundle
 import android.text.SpannableStringBuilder
+import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.ImageView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.text.buildSpannedString
 import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -30,43 +29,39 @@ import com.sceyt.chatuikit.styles.input.InputReplyMessageStyle
 import com.sceyt.chatuikit.styles.input.MessageInputStyle
 
 @Suppress("MemberVisibilityCanBePrivate")
-open class MessageActionsFragment : Fragment() {
-    protected var binding: SceytFragmentMessageActionsBinding? = null
-    protected var clickListeners: CancelReplyMessageViewClickListener? = null
-    protected lateinit var inputStyle: MessageInputStyle
+class MessageActionsView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : ConstraintLayout(context, attrs, defStyleAttr) {
+    private var binding: SceytFragmentMessageActionsBinding
+    private var clickListeners: CancelReplyMessageViewClickListener? = null
+    private lateinit var inputStyle: MessageInputStyle
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return SceytFragmentMessageActionsBinding.inflate(inflater, container, false).also {
-            binding = it
-        }.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        binding?.applyStyle(inputStyle)
+    init {
+        binding = SceytFragmentMessageActionsBinding.inflate(LayoutInflater.from(context), this)
         initViews()
     }
 
-    protected fun initViews() {
-        binding?.icCancel?.setOnClickListener {
+    private fun initViews() {
+        binding.icCancel.setOnClickListener {
             clickListeners?.onCancelReplyMessageViewClick(it)
         }
     }
 
-    open fun editMessage(message: SceytMessage) {
+    fun editMessage(message: SceytMessage) {
         val style = inputStyle.editMessageStyle
-        with(binding ?: return) {
+        with(binding) {
             applyEditStyle(style)
             setCancelIcon(inputStyle.closeIcon)
 
-            if (!root.isVisible || root.height != root.measuredHeight || root.measuredHeight == 0) {
+            if (!root.isVisible || root.height != root.measuredHeight || root.measuredHeight in (0..1)) {
                 root.isVisible = true
                 ViewUtil.expandHeight(root, 0, 200)
             }
 
-            val replyTitle = SpannableStringBuilder("${getString(R.string.sceyt_edit_message)}:")
-            style.titleTextStyle.apply(requireContext(), replyTitle)
+            val replyTitle = SpannableStringBuilder("${context.getString(R.string.sceyt_edit_message)}:")
+            style.titleTextStyle.apply(context, replyTitle)
             tvName.text = replyTitle
 
             loadAttachmentImage(message.attachments, style.attachmentIconProvider)
@@ -78,23 +73,23 @@ open class MessageActionsFragment : Fragment() {
         }
     }
 
-    open fun replyMessage(message: SceytMessage) {
+    fun replyMessage(message: SceytMessage) {
         val style = inputStyle.replyMessageStyle
-        with(binding ?: return) {
+        with(binding) {
             applyRelyStyle(style)
             setCancelIcon(inputStyle.closeIcon)
 
-            if (!root.isVisible || root.height != root.measuredHeight || root.measuredHeight == 0) {
+            if (!root.isVisible || root.height != root.measuredHeight || root.measuredHeight in (0..1)) {
                 root.isVisible = true
-                ViewUtil.expandHeight(root, 0, 200)
+                ViewUtil.expandHeight(root, 1, 200)
             }
 
-            val replyTitle = SpannableStringBuilder("${getString(R.string.sceyt_reply)}:")
-            style.titleTextStyle.apply(requireContext(), replyTitle)
+            val replyTitle = SpannableStringBuilder("${context.getString(R.string.sceyt_reply)}:")
+            style.titleTextStyle.apply(context, replyTitle)
 
             val senderName = message.user?.let {
-                val name = SpannableStringBuilder(style.senderNameFormatter.format(requireContext(), it))
-                style.senderNameTextStyle.apply(requireContext(), name)
+                val name = SpannableStringBuilder(style.senderNameFormatter.format(context, it))
+                style.senderNameTextStyle.apply(context, name)
                 name
             } ?: ""
 
@@ -107,7 +102,7 @@ open class MessageActionsFragment : Fragment() {
             loadAttachmentImage(message.attachments, style.attachmentIconProvider)
 
             tvMessageBody.text = message.getFormattedBody(
-                context = requireContext(),
+                context = context,
                 mentionTextStyle = style.mentionTextStyle,
                 attachmentNameFormatter = style.attachmentNameFormatter,
                 mentionUserNameFormatter = style.mentionUserNameFormatter
@@ -115,53 +110,49 @@ open class MessageActionsFragment : Fragment() {
         }
     }
 
-    protected open fun SceytFragmentMessageActionsBinding.applyRelyStyle(
-            style: InputReplyMessageStyle
-    ) {
+    private fun SceytFragmentMessageActionsBinding.applyRelyStyle(style: InputReplyMessageStyle) {
         root.setBackgroundColor(style.backgroundColor)
         setReplyOrEditIcon(style.replyIcon)
         style.titleTextStyle.apply(tvName)
         style.bodyTextStyle.apply(tvMessageBody)
     }
 
-    protected open fun SceytFragmentMessageActionsBinding.applyEditStyle(
-            style: InputEditMessageStyle
-    ) {
+    private fun SceytFragmentMessageActionsBinding.applyEditStyle(style: InputEditMessageStyle) {
         root.setBackgroundColor(style.backgroundColor)
         setReplyOrEditIcon(style.editIcon)
         style.titleTextStyle.apply(tvName)
         style.bodyTextStyle.apply(tvMessageBody)
     }
 
-    protected open fun setReplyOrEditIcon(icon: Drawable?) {
-        binding?.icReplyOrEdit?.apply {
+    private fun setReplyOrEditIcon(icon: Drawable?) {
+        binding.icReplyOrEdit.apply {
             setImageDrawable(icon)
             isVisible = icon != null
         }
     }
 
-    protected open fun setCancelIcon(icon: Drawable?) {
-        binding?.icCancel?.setImageDrawable(icon)
+    private fun setCancelIcon(icon: Drawable?) {
+        binding.icCancel.setImageDrawable(icon)
     }
 
-    open fun close(readyCb: (() -> Unit?)? = null) {
-        with(binding ?: return) {
-            ViewUtil.collapseHeight(root, to = 0, duration = 200) {
+    fun close(readyCb: (() -> Unit?)? = null) {
+        with(binding) {
+            ViewUtil.collapseHeight(root, to = 1, duration = 200) {
                 root.isVisible = false
                 readyCb?.invoke()
             }
         }
     }
 
-    open fun setClickListener(clickListeners: CancelReplyMessageViewClickListener) {
+    fun setClickListener(clickListeners: CancelReplyMessageViewClickListener) {
         this.clickListeners = clickListeners
     }
 
-    protected open fun loadAttachmentImage(
+    private fun loadAttachmentImage(
             attachments: List<SceytAttachment>?,
             attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
     ) {
-        with(binding ?: return) {
+        with(binding) {
             if (attachments.isNullOrEmpty()) {
                 layoutImage.isVisible = false
                 return
@@ -182,7 +173,7 @@ open class MessageActionsFragment : Fragment() {
                     }
 
                     else -> {
-                        val icon = attachmentIconProvider.provide(requireContext(), attachment)
+                        val icon = attachmentIconProvider.provide(context, attachment)
                         fileAttachment.setImageDrawable(icon)
                         fileAttachment.isVisible = true
                         imageAttachment.isVisible = false
@@ -190,7 +181,7 @@ open class MessageActionsFragment : Fragment() {
                 }
             } else {
                 val attachment = links[0]
-                val icon = attachmentIconProvider.provide(requireContext(), attachment)
+                val icon = attachmentIconProvider.provide(context, attachment)
                 attachment.linkPreviewDetails?.imageUrl?.let {
                     loadImage(imageAttachment, attachment.metadata, it, icon)
                 } ?: imageAttachment.setImageDrawable(icon)
@@ -205,9 +196,9 @@ open class MessageActionsFragment : Fragment() {
             defaultPlaceHolder: Drawable? = null,
             error: Drawable? = null
     ) {
-        val placeHolder = getThumbFromMetadata(metadata)?.toDrawable(requireContext().resources)
+        val placeHolder = getThumbFromMetadata(metadata)?.toDrawable(context.resources)
             ?.mutate() ?: defaultPlaceHolder
-        Glide.with(requireContext())
+        Glide.with(context)
             .load(path)
             .placeholder(placeHolder)
             .override(100)
@@ -217,6 +208,7 @@ open class MessageActionsFragment : Fragment() {
 
     internal fun setStyle(inputStyle: MessageInputStyle) {
         this.inputStyle = inputStyle
+        binding.applyStyle(inputStyle)
     }
 
     private fun SceytFragmentMessageActionsBinding.applyStyle(inputStyle: MessageInputStyle) {
