@@ -50,12 +50,12 @@ import com.sceyt.chatuikit.persistence.dao.PendingMarkerDao
 import com.sceyt.chatuikit.persistence.dao.PendingMessageStateDao
 import com.sceyt.chatuikit.persistence.dao.ReactionDao
 import com.sceyt.chatuikit.persistence.dao.UserDao
-import com.sceyt.chatuikit.persistence.entity.UserEntity
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentPayLoadDb
 import com.sceyt.chatuikit.persistence.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.entity.pendings.PendingMarkerEntity
 import com.sceyt.chatuikit.persistence.entity.pendings.PendingMessageStateEntity
+import com.sceyt.chatuikit.persistence.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -79,7 +79,7 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
-import com.sceyt.chatuikit.persistence.mappers.toUserEntity
+import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
@@ -1017,7 +1017,7 @@ internal class PersistenceMessagesLogicImpl(
                                          unListAll: Boolean = false): List<SceytMessage> {
         if (list.isNullOrEmpty()) return emptyList()
         val pendingStates = pendingMessageStateDao.getAll()
-        val usersDb = mutableSetOf<UserEntity>()
+        val usersDb = mutableSetOf<UserDb>()
         val messagesDb = arrayListOf<MessageDb>()
         val parentMessagesDb = arrayListOf<MessageDb>()
 
@@ -1032,12 +1032,12 @@ internal class PersistenceMessagesLogicImpl(
                     if (parent.id != 0L) {
                         parentMessagesDb.add(parent.toMessageDb(true))
                         if (parent.incoming)
-                            parent.user?.let { user -> usersDb.add(user.toUserEntity()) }
+                            parent.user?.let { user -> usersDb.add(user.toUserDb()) }
                     }
                 }
             }
             message.mentionedUsers?.let {
-                usersDb.addAll(it.map { user -> user.toUserEntity() })
+                usersDb.addAll(it.map { user -> user.toUserDb() })
             }
         }
         messageDao.upsertMessages(messagesDb)
@@ -1047,10 +1047,10 @@ internal class PersistenceMessagesLogicImpl(
         // Update users
         list.filter { it.incoming && it.user != null }.mapNotNull { it.user }.toSet().let { users ->
             if (users.isNotEmpty())
-                usersDb.addAll(users.map { it.toUserEntity() })
+                usersDb.addAll(users.map { it.toUserDb() })
         }
 
-        userDao.insertUsers(usersDb.toList())
+        userDao.insertUsersWithMetadata(usersDb.toList())
         checkAndInsertAutoDeleteMessage(*mutableList.toTypedArray())
         return mutableList
     }

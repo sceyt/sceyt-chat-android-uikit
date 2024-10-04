@@ -2,14 +2,12 @@ package com.sceyt.chatuikit.data
 
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.user.Presence
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toUser
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
-
 
 fun Member.toSceytMember() = SceytMember(
     role = role,
@@ -32,12 +30,3 @@ fun SceytAttachment.toFileListItem(): FileListItem {
 fun Presence.hasDiff(other: Presence): Boolean {
     return state != other.state || status != other.status || lastActiveAt != other.lastActiveAt
 }
-
-
-fun User.copy() = User(
-    id, firstName, lastName, avatarURL, metadata, presence?.copy(), activityState, blocked
-)
-
-fun Presence.copy() = Presence(
-    state, status, lastActiveAt
-)

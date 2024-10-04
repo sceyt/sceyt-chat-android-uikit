@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
-import com.sceyt.chatuikit.persistence.mappers.toUserEntity
+import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.repositories.UsersRepository
 import com.sceyt.chatuikit.push.FirebaseMessagingDelegate
@@ -83,12 +83,14 @@ internal class PersistenceConnectionLogicImpl(
 
     private suspend fun insertCurrentUser() {
         ClientWrapper.currentUser?.let {
-            usersDao.insertUser(it.toUserEntity())
+            usersDao.insertUserWithMetadata(it.toUserDb())
         } ?: run {
             preference.getUserId()?.let {
                 val response = usersRepository.getSceytUserById(it)
                 if (response is SceytResponse.Success)
-                    response.data?.toUserEntity()?.let { entity -> usersDao.insertUser(entity) }
+                    response.data?.toUserDb()?.let { userDb ->
+                        usersDao.insertUserWithMetadata(userDb)
+                    }
             }
         }
     }

@@ -46,11 +46,11 @@ import com.sceyt.chatuikit.persistence.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.dao.MessageDao
 import com.sceyt.chatuikit.persistence.dao.PendingReactionDao
 import com.sceyt.chatuikit.persistence.dao.UserDao
-import com.sceyt.chatuikit.persistence.entity.UserEntity
 import com.sceyt.chatuikit.persistence.entity.channel.ChatUserReactionEntity
 import com.sceyt.chatuikit.persistence.entity.channel.UserChatLink
 import com.sceyt.chatuikit.persistence.entity.messages.DraftMessageEntity
 import com.sceyt.chatuikit.persistence.entity.messages.DraftMessageUserLink
+import com.sceyt.chatuikit.persistence.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
@@ -67,7 +67,7 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
-import com.sceyt.chatuikit.persistence.mappers.toUserEntity
+import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
@@ -270,13 +270,13 @@ internal class PersistenceChannelsLogicImpl(
 
     private suspend fun insertChannel(channel: SceytChannel, vararg members: SceytMember) {
         val updated = initPendingLastMessageBeforeInsert(channel)
-        val users = members.map { it.toUserEntity() }
+        val users = members.map { it.toUserDb() }
         updated.lastMessage?.let { message ->
             message.userReactions?.map { it.user }?.let { userList ->
-                (users as ArrayList).addAll(userList.mapNotNull { user -> user?.toUserEntity() })
+                (users as ArrayList).addAll(userList.mapNotNull { user -> user?.toUserDb() })
             }
         }
-        usersDao.insertUsers(members.map { it.toUserEntity() })
+        usersDao.insertUsersWithMetadata(members.map { it.toUserDb() })
         channelDao.insertChannelAndLinks(updated.toChannelEntity(), members.map {
             UserChatLink(userId = it.id, chatId = updated.id, role = it.role.name)
         })
@@ -425,7 +425,7 @@ internal class PersistenceChannelsLogicImpl(
         if (list.isEmpty()) return emptyList()
 
         val links = arrayListOf<UserChatLink>()
-        val users = arrayListOf<UserEntity>()
+        val users = arrayListOf<UserDb>()
         val directChatsWithDeletedPeers = arrayListOf<Long>()
         val lastMessages = arrayListOf<SceytMessage>()
         val userReactions = arrayListOf<ChatUserReactionEntity>()
@@ -433,7 +433,7 @@ internal class PersistenceChannelsLogicImpl(
         fun addEntitiesToLists(channelId: Long, members: List<SceytMember>?, lastMessage: SceytMessage?, userMessageReactions: List<SceytReaction>?) {
             members?.forEach { member ->
                 links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name))
-                users.add(member.toUserEntity())
+                users.add(member.toUserDb())
             }
 
             lastMessage?.let {
@@ -460,7 +460,7 @@ internal class PersistenceChannelsLogicImpl(
 
             fillChannelsNeededInfo(channel)
         }
-        usersDao.insertUsers(users)
+        usersDao.insertUsersWithMetadata(users)
         messageLogic.saveChannelLastMessagesToDb(lastMessages)
         chatUserReactionDao.replaceChannelUserReactions(userReactions)
 
@@ -829,7 +829,7 @@ internal class PersistenceChannelsLogicImpl(
             val links = mentionUsers.map { DraftMessageUserLink(chatId = channelId, userId = it.recipientId) }
             draftMessageDao.insertWithUserLinks(draftMessageEntity, links)
             draftMessageEntity.toDraftMessage(mentionUsers.map {
-                createEmptyUser(it.recipientId, it.name.toString())
+                createEmptyUser(it.recipientId, it.name)
             }, replyOrEditMessage)
         }
         channelsCache.updateChannelDraftMessage(channelId, draftMessage)

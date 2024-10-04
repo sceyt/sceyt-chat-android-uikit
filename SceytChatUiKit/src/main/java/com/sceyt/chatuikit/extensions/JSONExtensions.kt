@@ -10,7 +10,6 @@ fun JSONObject.getStringOrNull(key: String): String? {
     }
 }
 
-
 fun JSONObject.getIntOrNull(key: String): Int? {
     return try {
         getInt(key)

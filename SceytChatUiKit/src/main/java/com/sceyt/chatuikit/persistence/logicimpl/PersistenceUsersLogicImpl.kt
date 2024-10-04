@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
+import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
 import com.sceyt.chatuikit.persistence.repositories.ProfileRepository
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
@@ -38,7 +39,7 @@ internal class PersistenceUsersLogicImpl(
 
         if (response is SceytResponse.Success) {
             response.data?.let { users ->
-                userDao.updateUsers(users.map { it.toUserEntity() })
+                userDao.insertUsersWithMetadata(users.map { it.toUserDb() })
             }
         }
 
@@ -50,7 +51,7 @@ internal class PersistenceUsersLogicImpl(
 
         if (response is SceytResponse.Success) {
             response.data?.let { users ->
-                userDao.updateUsers(users.map { it.toUserEntity() })
+                userDao.insertUsersWithMetadata(users.map { it.toUserDb() })
             }
         }
 
@@ -62,7 +63,7 @@ internal class PersistenceUsersLogicImpl(
 
         if (response is SceytResponse.Success) {
             response.data?.let { users ->
-                userDao.updateUsers(users.map { it.toUserEntity() })
+                userDao.insertUsersWithMetadata(users.map { it.toUserDb() })
             }
         }
 
@@ -108,8 +109,7 @@ internal class PersistenceUsersLogicImpl(
     override suspend fun updateProfile(
             firstName: String?,
             lastName: String?,
-            avatarUri: String?,
-            metaData: String?
+            avatarUri: String?
     ): SceytResponse<SceytUser> {
         val request = User.setProfileRequest().apply {
             avatarUri?.let { uri ->
@@ -117,13 +117,12 @@ internal class PersistenceUsersLogicImpl(
             }
             setFirstName(firstName ?: "")
             setLastName(lastName ?: "")
-            setMetadata(metaData ?: "")
         }
         val response = profileRepo.updateProfile(request)
 
         if (response is SceytResponse.Success) {
             response.data?.let {
-                userDao.updateUser(it.toUserEntity())
+                userDao.insertUserWithMetadata(it.toUserDb())
             }
         }
 
@@ -198,7 +197,9 @@ internal class PersistenceUsersLogicImpl(
         (preference.getUserId() ?: ClientWrapper.currentUser?.id)?.let {
             val response = userRepository.getSceytUserById(it)
             if (response is SceytResponse.Success)
-                response.data?.toUserEntity()?.let { entity -> userDao.insertUser(entity) }
+                response.data?.toUserDb()?.let { userDb ->
+                    userDao.insertUserWithMetadata(userDb)
+                }
         }
     }
 }

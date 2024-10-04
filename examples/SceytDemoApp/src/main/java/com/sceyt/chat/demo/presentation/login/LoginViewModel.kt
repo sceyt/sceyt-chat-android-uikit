@@ -66,7 +66,7 @@ class LoginViewModel(private val preference: AppSharedPreference,
 
     private suspend fun updateProfile(displayName: String) = withContext(Dispatchers.IO) {
         val currentUser: User? = ClientWrapper.currentUser
-        userInteractor.updateProfile(displayName, currentUser?.lastName, currentUser?.avatarURL, null)
+        userInteractor.updateProfile(displayName, currentUser?.lastName, currentUser?.avatarURL)
     }
 
     private suspend fun connectUser(userId: String): Result<Boolean> {
