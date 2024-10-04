@@ -5,7 +5,6 @@ import android.graphics.Typeface
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTint
-import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
@@ -624,8 +623,8 @@ internal fun MessageItemStyle.Builder.buildSelectionCheckboxStyle(
 ) = CheckboxStyle.Builder(typedArray)
     .checkedIcon(
         index = R.styleable.MessagesListView_sceytUiMessagesListSelectionCheckboxCheckedIcon,
-        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_checked_state_with_layers).applyTintBackgroundLayer(
-            context.getCompatColor(SceytChatUIKit.theme.colors.accentColor), R.id.backgroundLayer
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_checked_state).applyTint(
+            context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
         )
     )
     .uncheckedIcon(
