@@ -1,17 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@color/sceyt_color_surface_1"
-    android:clipToPadding="false"
-    android:paddingBottom="10dp"
-    android:visibility="gone"
-    tools:visibility="visible">
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
+    tools:showIn="@layout/sceyt_message_input_view">
 
     <View
-        android:id="@+id/viewTop"
+        android:id="@+id/viewTopLinkPreview"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginBottom="10dp"
@@ -25,6 +20,13 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_begin="10dp" />
 
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineBottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_end="10dp" />
+
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/icLinkImage"
         android:layout_width="40dp"
@@ -32,7 +34,7 @@
         android:layout_marginStart="16dp"
         android:background="@drawable/sceyt_bg_link"
         android:scaleType="center"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/guidelineBottom"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/guidelineTop"
@@ -68,7 +70,7 @@
         android:singleLine="true"
         android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="13sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/guidelineBottom"
         app:layout_constraintEnd_toStartOf="@+id/icClose"
         app:layout_constraintStart_toEndOf="@+id/icLinkImage"
         app:layout_constraintTop_toBottomOf="@+id/tvLinkUrl"
@@ -81,9 +83,9 @@
         android:layout_marginEnd="16dp"
         android:padding="6dp"
         android:scaleType="center"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/guidelineBottom"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/guidelineTop"
         app:srcCompat="@drawable/sceyt_ic_cancel" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</merge>

@@ -15,10 +15,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
-import androidx.fragment.app.commit
-import androidx.lifecycle.LifecycleCoroutineScope
-import androidx.lifecycle.findViewTreeLifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
@@ -34,10 +30,9 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytDisableMessageInputBinding
 import com.sceyt.chatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.chatuikit.extensions.asComponentActivity
-import com.sceyt.chatuikit.extensions.asFragmentActivity
-import com.sceyt.chatuikit.extensions.checkIfInsideFragment
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.empty
+import com.sceyt.chatuikit.extensions.getScope
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
@@ -61,7 +56,6 @@ import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState.Voice
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
-import com.sceyt.chatuikit.presentation.components.channel.input.fragments.LinkPreviewFragment
 import com.sceyt.chatuikit.presentation.components.channel.input.helpers.MessageToSendHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.link.SingleLinkDetailsProvider
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
@@ -129,7 +123,6 @@ class MessageInputView @JvmOverloads constructor(
     private val messageToSendHelper by lazy { MessageToSendHelper(context, actionListeners) }
     private val linkDetailsProvider by lazy { SingleLinkDetailsProvider(context, getScope()) }
     private val audioRecorderHelper: AudioRecorderHelper by lazy { AudioRecorderHelper(getScope(), context) }
-    private var linkPreviewFragment: LinkPreviewFragment? = null
     var enableVoiceRecord = true
         private set
     var enableSendAttachment = true
@@ -167,7 +160,7 @@ class MessageInputView @JvmOverloads constructor(
             setOnClickListeners()
             voiceRecordPlaybackView.setStyle(style.voiceRecordPlaybackViewStyle)
             messageActionsView.setStyle(style)
-            initFragments()
+            linkPreviewView.setStyle(style)
             addInoutListeners()
             determineInputState()
             addInputTextWatcher()
@@ -188,23 +181,6 @@ class MessageInputView @JvmOverloads constructor(
                     }
                 }
             }
-        }
-    }
-
-    private fun getScope(): LifecycleCoroutineScope {
-        return (findViewTreeLifecycleOwner() ?: context.asComponentActivity()).lifecycleScope
-    }
-
-    private fun initFragments() = post {
-        val fragmentManager = checkIfInsideFragment()?.childFragmentManager
-                ?: context.asFragmentActivity().supportFragmentManager
-
-        fragmentManager.commit {
-            replace(R.id.frameLayoutLinkPreview, LinkPreviewFragment().also {
-                it.setStyle(style)
-                it.setClickListener(clickListeners)
-                linkPreviewFragment = it
-            }, LinkPreviewFragment::class.java.simpleName)
         }
     }
 
@@ -235,10 +211,7 @@ class MessageInputView @JvmOverloads constructor(
 
     private fun hideAndReleaseLinkPreview() {
         linkDetails = null
-        linkPreviewFragment?.hideLinkDetails {
-            binding.frameLayoutLinkPreview.isVisible = false
-            return@hideLinkDetails Unit
-        }
+        binding.linkPreviewView.hideLinkDetails()
     }
 
     private fun updateDraftMessage() {
@@ -255,11 +228,10 @@ class MessageInputView @JvmOverloads constructor(
             linkDetailsProvider.cancel()
         } else {
             linkDetails = null
-            linkPreviewFragment?.hideLinkDetailsWithTimeout()
+            binding.linkPreviewView.hideLinkDetailsWithTimeout()
             linkDetailsProvider.loadLinkDetails(text.toString(), detailsCallback = {
                 if (it != null) {
-                    binding.frameLayoutLinkPreview.isVisible = true
-                    linkPreviewFragment?.showLinkDetails(it)
+                    binding.linkPreviewView.showLinkDetails(it)
                     linkDetails = it
                 } else hideAndReleaseLinkPreview()
             }, imageSizeCallback = { size ->
@@ -272,6 +244,7 @@ class MessageInputView @JvmOverloads constructor(
 
     private fun SceytMessageInputViewBinding.setOnClickListeners() {
         messageActionsView.setClickListener(clickListeners)
+        linkPreviewView.setClickListener(clickListeners)
 
         icSendMessage.setOnClickListener {
             when (inputState) {
@@ -526,10 +499,7 @@ class MessageInputView @JvmOverloads constructor(
     private fun closeLinkDetailsView(readyCb: (() -> Unit?)? = null) {
         if (linkDetails == null)
             readyCb?.invoke()
-        else linkPreviewFragment?.hideLinkDetails {
-            binding.frameLayoutLinkPreview.isVisible = false
-            readyCb?.invoke()
-        }
+        else binding.linkPreviewView.hideLinkDetails(readyCb)
     }
 
     private fun hideInputWithMessage(message: String, @DrawableRes startIcon: Int) {
@@ -1033,8 +1003,7 @@ class MessageInputView @JvmOverloads constructor(
                 replyMessage?.let { replyMessage(it, initWithDraft = true) }
                 editMessage?.let { editMessage(it, initWithDraft = true) }
                 linkDetails?.let {
-                    binding.frameLayoutLinkPreview.isVisible = true
-                    linkPreviewFragment?.showLinkDetails(it)
+                    linkPreviewView.showLinkDetails(it)
                 }
                 determineInputState()
             }
