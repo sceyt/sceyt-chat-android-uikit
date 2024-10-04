@@ -27,6 +27,7 @@ import androidx.core.view.marginEnd
 import androidx.core.view.marginStart
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -242,4 +243,8 @@ private fun isViewInHierarchy(view: View, parent: View): Boolean {
         }
     }
     return false
+}
+
+fun View.getScope(): LifecycleCoroutineScope {
+    return (findViewTreeLifecycleOwner() ?: context.asComponentActivity()).lifecycleScope
 }
