@@ -36,7 +36,7 @@ fun SceytReaction.toReaction() = Reaction(
 
 fun SceytReaction.toReactionDb() = ReactionDb(
     reaction = toReactionEntity(),
-    from = user?.toUserEntity()
+    from = user?.toUserDb()
 )
 
 fun ReactionTotal.toReactionTotalEntity(messageId: Long) = ReactionTotalEntity(

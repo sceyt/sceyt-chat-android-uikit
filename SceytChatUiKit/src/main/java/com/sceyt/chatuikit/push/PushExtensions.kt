@@ -68,11 +68,12 @@ fun getUserFromPushJson(remoteMessage: RemoteMessage): User? {
     return try {
         val userJsonObject = JSONObject(userJson)
         val id = userJsonObject.getString("id")
+        val username = userJsonObject.getStringOrNull("username") ?: ""
         val fName = userJsonObject.getString("first_name")
         val lName = userJsonObject.getString("last_name")
-        val meta = userJsonObject.getString("metadata")
         val presence = userJsonObject.getString("presence_status")
-        User(id, fName, lName, "", meta, Presence(PresenceState.Online, presence, 0),
+        User(id, username, fName, lName, "", null,
+            Presence(PresenceState.Online, presence, 0),
             UserState.Active, false)
     } catch (e: Exception) {
         e.printStackTrace()

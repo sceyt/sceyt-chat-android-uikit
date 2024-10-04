@@ -31,7 +31,7 @@ import com.sceyt.chatuikit.persistence.mappers.toReactionTotalEntity
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
-import com.sceyt.chatuikit.persistence.mappers.toUserEntity
+import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ReactionsRepository
 import kotlinx.coroutines.channels.awaitClose
@@ -370,6 +370,6 @@ internal class PersistenceReactionsLogicImpl(
     private suspend fun saveReactionsToDb(list: List<SceytReaction>) {
         if (list.isEmpty()) return
         reactionDao.insertReactions(list.map { it.toReactionEntity() })
-        usersDao.insertUsers(list.mapNotNull { it.user?.toUserEntity() })
+        usersDao.insertUsersWithMetadata(list.mapNotNull { it.user?.toUserDb() })
     }
 }

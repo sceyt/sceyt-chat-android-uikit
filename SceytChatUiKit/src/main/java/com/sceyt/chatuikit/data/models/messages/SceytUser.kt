@@ -8,10 +8,11 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class SceytUser(
         val id: String,
+        val username: String,
         val firstName: String,
         val lastName: String,
         val avatarURL: String?,
-        val metadata: String?,
+        val metadataMap: Map<String, String>?,
         val presence: Presence?,
         val state: UserState,
         val blocked: Boolean
@@ -22,10 +23,11 @@ data class SceytUser(
 
     constructor(id: String) : this(
         id = id,
+        username = "",
         firstName = "",
         lastName = "",
         avatarURL = null,
-        metadata = null,
+        metadataMap = null,
         presence = null,
         state = UserState.Active,
         blocked = false)

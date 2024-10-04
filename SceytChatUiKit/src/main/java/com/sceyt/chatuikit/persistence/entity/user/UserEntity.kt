@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.persistence.entity
+package com.sceyt.chatuikit.persistence.entity.user
 
 import androidx.room.ColumnInfo
 import androidx.room.Embedded
@@ -12,10 +12,11 @@ data class UserEntity(
         @ColumnInfo(name = "user_id")
         @PrimaryKey
         val id: String,
+        @ColumnInfo(index = true, defaultValue = "")
+        val username: String,
         val firstName: String?,
         val lastName: String?,
         val avatarURL: String?,
-        val metadata: String?,
         @Embedded
         val presence: Presence? = null,
         val activityStatus: UserState? = null,

@@ -53,13 +53,13 @@ fun SceytMessage.toMessageDb(unList: Boolean): MessageDb {
     val tid = getTid(id, tid, incoming)
     return MessageDb(
         messageEntity = toMessageEntity(unList),
-        from = user?.toUserEntity(),
+        from = user?.toUserDb(),
         parent = parentMessage?.toParentMessageEntity(),
         attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },
         userMarkers = userMarkers?.map { it.toMarkerEntity() },
         reactions = userReactions?.map { it.toReactionDb() },
         reactionsTotals = reactionTotals?.map { it.toReactionTotalEntity(id) }?.toMutableList(),
-        forwardingUser = forwardingDetails?.user?.toUserEntity(),
+        forwardingUser = forwardingDetails?.user?.toUserDb(),
         pendingReactions = null,
         mentionedUsers = null
     )
@@ -115,7 +115,7 @@ fun ParentMessageDb.toSceytMessage(): SceytMessage {
 }
 
 fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
-    return ParentMessageDb(toMessageEntity(true), user?.toUserEntity(), attachments?.map {
+    return ParentMessageDb(toMessageEntity(true), user?.toUserDb(), attachments?.map {
         it.toAttachmentDb(id, getTid(id, tid, incoming), channelId)
     }, null)
 }
