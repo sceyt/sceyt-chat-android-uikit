@@ -50,7 +50,7 @@ data class MediaPickerItemStyle(
                 checkedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_checked_state_with_layers).applyTintBackgroundLayer(
                     context.getCompatColor(SceytChatUIKitTheme.colors.accentColor), R.id.backgroundLayer
                 ),
-                uncheckedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_gallery_unchecked_state)
+                uncheckedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_unchecked_state_picker)
             )
 
             val videoDurationIcon = context.getCompatDrawable(R.drawable.sceyt_ic_video)
