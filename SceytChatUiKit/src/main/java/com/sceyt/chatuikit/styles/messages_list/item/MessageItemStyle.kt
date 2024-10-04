@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.styles.messages_list.item
 
 import android.content.Context
-import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
@@ -15,7 +14,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.extensions.isAppInDarkMode
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
@@ -52,11 +50,11 @@ import java.util.Date
 /**
  * Style for the message item view.
  * @property incomingBubbleColor Color for the incoming message bubble, default is [R.color.sceyt_color_bg_inc_message]
- * @property outgoingBubbleColor Color for the outgoing message bubble, default is 20% blend of [Colors.accentColor]
+ * @property outgoingBubbleColor Color for the outgoing message bubble, default is 14% blend of [Colors.accentColor] with [Colors.backgroundColor]
  * @property incomingReplyBackgroundColor Color for the incoming reply background, default is [R.color.sceyt_color_surface_2]
- * @property outgoingReplyBackgroundColor Color for the outgoing reply background, default is 25% blend of [Colors.accentColor]
+ * @property outgoingReplyBackgroundColor Color for the outgoing reply background, default is 24% blend of [Colors.accentColor] with [Colors.backgroundColor]
  * @property incomingLinkPreviewBackgroundColor Color for the incoming link preview background, default is [R.color.sceyt_color_bg_inc_link_preview]
- * @property outgoingLinkPreviewBackgroundColor Color for the outgoing link preview background, default is 30% blend of [Colors.accentColor]
+ * @property outgoingLinkPreviewBackgroundColor Color for the outgoing link preview background, default is 24% blend of [Colors.accentColor] with [Colors.backgroundColor]
  * @property onOverlayColor Color for the overlay, default is [Colors.overlayBackground2Color]
  * @property threadReplyArrowStrokeColor Color for the thread reply arrow stroke, default is [Colors.accentColor]
  * @property reactionsContainerBackgroundColor Color for the reactions container background, default is [Colors.backgroundColorSections]
@@ -173,16 +171,16 @@ data class MessageItemStyle(
         fun build(): MessageItemStyle {
             context.obtainStyledAttributes(attrs, R.styleable.MessagesListView).use { array ->
                 val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+                val bgColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
 
                 val incBubbleColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessagesListIncomingBubbleColor,
                     context.getCompatColor(R.color.sceyt_color_bg_inc_message))
 
-                val color2 = if (context.isAppInDarkMode()) Color.BLACK else Color.WHITE
-                val defaultOutBubbleColor = ColorUtils.blendARGB(accentColor, color2, 0.8f)
+                val defaultOutBubbleColor = ColorUtils.blendARGB(accentColor, bgColor, 0.86f)
                 val outBubbleColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessagesListOutgoingBubbleColor,
                     defaultOutBubbleColor)
 
-                val defaultOutDarkColor = ColorUtils.blendARGB(accentColor, color2, 0.75f)
+                val defaultOutDarkColor = ColorUtils.blendARGB(accentColor, bgColor, 0.76f)
                 val incReplyBackgroundColor: Int = array.getColor(R.styleable.MessagesListView_sceytUiMessagesListIncomingReplyBackgroundColor,
                     context.getCompatColor(R.color.sceyt_color_surface_2))
 
