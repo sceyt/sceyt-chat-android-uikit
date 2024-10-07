@@ -1,12 +1,12 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
+import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.databinding.SceytItemIncFileMessageBinding
-import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
-import com.sceyt.chatuikit.extensions.toPrettySize
+import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.databinding.SceytItemOutVideoMessageBinding
+import com.sceyt.chatuikit.extensions.setBackgroundTint
+import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -30,14 +30,14 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
-class IncFileMsgViewHolder(
-        private val binding: SceytItemIncFileMessageBinding,
+class OutVideoMessageViewHolder(
+        private val binding: SceytItemOutVideoMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        displayedListener: ((MessageListItem) -> Unit)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, style, messageListeners,
+    needMediaDataCallback = needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -60,11 +60,11 @@ class IncFileMsgViewHolder(
                 messageListeners?.onMessageClick(it, requireMessageItem)
             }
 
-            viewHandleClick.setOnClickListener {
+            imageThumb.setOnClickListener {
                 messageListeners?.onAttachmentClick(it, fileItem, requireMessage)
             }
 
-            viewHandleClick.setOnLongClickListener {
+            imageThumb.setOnLongClickListener {
                 messageListeners?.onAttachmentLongClick(it, fileItem, requireMessage)
                 return@setOnLongClickListener true
             }
@@ -77,11 +77,11 @@ class IncFileMsgViewHolder(
 
     override fun bind(item: MessageListItem, diff: MessageDiff) {
         super.bind(item, diff)
-        setFileDetails(fileItem.file)
 
         with(binding) {
             val message = (item as MessageListItem.MessageItem).message
             tvForwarded.isVisible = message.isForwarded
+            setVideoDuration(tvDuration)
 
             val body = message.body.trim()
             if (body.isNotBlank()) {
@@ -94,98 +94,136 @@ class IncFileMsgViewHolder(
             if (diff.edited || diff.statusChanged)
                 setMessageStatusAndDateText(message, messageDate)
 
-            if (diff.avatarChanged || diff.showAvatarAndNameChanged)
-                setMessageUserAvatarAndName(avatar, tvUserName, message)
-
             if (diff.replyCountChanged)
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
-            if (diff.filesChanged)
+            if (diff.filesChanged) {
                 initAttachment()
+                setImageTopCorners(imageThumb)
+            }
 
             if (diff.reactionsChanged || diff.edited)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
+            if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
+                initWidthsDependReactions(recyclerViewReactions, layoutDetails)
+
             if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, binding.viewReply, false)
-
-            if (item.message.shouldShowAvatarAndName)
-                avatar.setOnClickListener {
-                    messageListeners?.onAvatarClick(it, item)
-                }
+                setReplyMessageContainer(message, binding.viewReply)
         }
     }
 
-    override val selectMessageView get() = binding.selectView
+    private fun setFileLoadProgress(data: TransferData) {
+        with(binding.tvLoadSize) {
+            if (data.state == Preparing) {
+                text = context.getString(R.string.sceyt_preparing)
+                isVisible = true
+                return
+            }
 
-    override val layoutBubbleConfig get() = Pair(binding.root, false)
-
-    private fun setFileDetails(file: SceytAttachment) {
-        with(binding) {
-            tvFileName.text = file.name
-            tvFileSize.text = style.attachmentFileSizeFormatter.format(context, file)
+            if (data.isTransferring()) {
+                val title = "${data.fileLoadedSize} / ${data.fileTotalSize}"
+                text = title
+                isVisible = true
+            }
         }
-    }
-
-    private fun setProgress(data: TransferData) {
-        if (!data.isCalculatedLoadedSize()) return
-        val text = "${data.fileLoadedSize} • ${data.fileTotalSize}"
-        binding.tvFileSize.text = text
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
+        val imageView = binding.imageThumb
+
         when (data.state) {
-            Uploaded, Downloaded -> {
-                val icon = style.attachmentIconProvider.provide(context, fileItem.file)
-                binding.icFile.setImageDrawable(icon)
-                binding.tvFileSize.text = data.fileTotalSize
-                        ?: fileItem.file.fileSize.toPrettySize()
+            Downloaded, Uploaded -> {
+                binding.playPauseItem.isVisible = true
+                binding.tvLoadSize.isVisible = false
+                viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }
 
-            PendingUpload -> {
-                binding.icFile.setImageResource(0)
+            PendingUpload, ErrorUpload, PauseUpload -> {
+                viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
+                binding.tvLoadSize.isVisible = false
+                binding.playPauseItem.isVisible = false
             }
 
             PendingDownload -> {
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                binding.playPauseItem.isVisible = false
+                binding.tvLoadSize.isVisible = false
+                viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
-            Downloading, Uploading, Preparing, WaitingToUpload -> {
-                binding.icFile.setImageResource(0)
-                setProgress(data)
+            Downloading -> {
+                binding.playPauseItem.isVisible = false
+                setFileLoadProgress(data)
+                if (isOnBind)
+                    viewHolderHelper.loadBlurThumb(imageView = imageView)
             }
 
-            ErrorUpload, ErrorDownload, PauseDownload, PauseUpload -> {
-                binding.icFile.setImageResource(0)
+            Uploading, Preparing -> {
+                binding.playPauseItem.isVisible = false
+                setFileLoadProgress(data)
+                if (isOnBind)
+                    viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
             }
 
-            FilePathChanged, ThumbLoaded -> return
+            WaitingToUpload -> {
+                binding.playPauseItem.isVisible = false
+                binding.tvLoadSize.isVisible = false
+                if (isOnBind)
+                    viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
+            }
+
+            PauseDownload -> {
+                binding.playPauseItem.isVisible = false
+                binding.tvLoadSize.isVisible = false
+                viewHolderHelper.loadBlurThumb(imageView = imageView)
+            }
+
+            ErrorDownload -> {
+                binding.playPauseItem.isVisible = false
+                binding.tvLoadSize.isVisible = false
+                viewHolderHelper.loadBlurThumb(imageView = imageView)
+            }
+
+            FilePathChanged -> {
+                if (fileItem.thumbPath.isNullOrBlank())
+                    requestThumb()
+            }
+
+            ThumbLoaded -> {
+                if (isValidThumb(data.thumbData))
+                    viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, imageView)
+            }
         }
     }
+
+    override val fileContainer: View
+        get() = binding.imageThumb
 
     override val loadingProgressView: CircularProgressView
         get() = binding.loadProgress
 
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
+
+    override val selectMessageView get() = binding.selectView
+
     override val incoming: Boolean
-        get() = true
+        get() = false
 
-    override fun setMaxWidth() {
-        binding.layoutDetails.layoutParams.width = bubbleMaxWidth
-    }
-
-    private fun SceytItemIncFileMessageBinding.setMessageItemStyle() {
-        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
-        style.attachmentFileSizeTextStyle.apply(tvFileSize)
-        style.attachmentFileNameTextStyle.apply(tvFileName)
-        style.mediaLoaderStyle.apply(loadProgress)
+    private fun SceytItemOutVideoMessageBinding.setMessageItemStyle() {
+        style.videoDurationTextStyle.apply(tvDuration)
+        playPauseItem.setImageDrawable(style.videoPlayIcon)
+        playPauseItem.setBackgroundTint(style.onOverlayColor)
+        tvDuration.setDrawableStart(style.videoIcon)
+        tvDuration.setBackgroundTint(style.onOverlayColor)
+        style.overlayMediaLoaderStyle.apply(loadProgress)
         applyCommonStyle(
             layoutDetails = layoutDetails,
             tvForwarded = tvForwarded,
             messageBody = messageBody,
             tvThreadReplyCount = tvReplyCount,
-            toReplyLine = toReplyLine,
-            tvSenderName = tvUserName
+            toReplyLine = toReplyLine
         )
     }
 }

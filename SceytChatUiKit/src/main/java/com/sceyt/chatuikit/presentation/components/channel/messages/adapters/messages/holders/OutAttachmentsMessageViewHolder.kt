@@ -9,18 +9,18 @@ import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.MessageFilesAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.FilesViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
-class OutAttachmentsMsgViewHolder(
+class OutAttachmentsMessageViewHolder(
         private val binding: SceytItemOutAttachmentsMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val viewPoolFiles: RecyclerView.RecycledViewPool,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(binding.root, style, messageListeners) {
+) : BaseMessageViewHolder(binding.root, style, messageListeners) {
     private var filedAdapter: MessageFilesAdapter? = null
 
     init {

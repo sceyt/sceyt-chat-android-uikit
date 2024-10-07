@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.comporators.MessageItemComparator
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.sticky_date.StickyDateHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.sticky_date.StickyHeaderInterface
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
@@ -32,22 +32,22 @@ class MessagesAdapter(
         private var messages: SyncArrayList<MessageListItem>,
         private val viewHolderFactory: MessageViewHolderFactory,
         private val style: MessagesListViewStyle
-) : RecyclerView.Adapter<BaseMsgViewHolder>(), StickyHeaderInterface {
+) : RecyclerView.Adapter<BaseMessageViewHolder>(), StickyHeaderInterface {
     private val loadingPrevItem by lazy { MessageListItem.LoadingPrevItem }
     private val loadingNextItem by lazy { MessageListItem.LoadingNextItem }
     private val debounceHelper by lazy { DebounceHelper(300) }
     private var isMultiSelectableMode = false
     private var lastHeaderPosition = -1
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMsgViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMessageViewHolder {
         return viewHolderFactory.createViewHolder(parent, viewType)
     }
 
-    override fun onBindViewHolder(holder: BaseMsgViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: BaseMessageViewHolder, position: Int) {
         holder.bind(item = messages[position], diff = MessageDiff.DEFAULT)
     }
 
-    override fun onBindViewHolder(holder: BaseMsgViewHolder, position: Int, payloads: MutableList<Any>) {
+    override fun onBindViewHolder(holder: BaseMessageViewHolder, position: Int, payloads: MutableList<Any>) {
         val diff = payloads.find { it is MessageDiff } as? MessageDiff
                 ?: MessageDiff.DEFAULT
         holder.bind(item = messages[position], diff)
@@ -65,12 +65,12 @@ class MessagesAdapter(
         return messages[position].getItemId()
     }
 
-    override fun onViewAttachedToWindow(holder: BaseMsgViewHolder) {
+    override fun onViewAttachedToWindow(holder: BaseMessageViewHolder) {
         super.onViewAttachedToWindow(holder)
         holder.onViewAttachedToWindow()
     }
 
-    override fun onViewDetachedFromWindow(holder: BaseMsgViewHolder) {
+    override fun onViewDetachedFromWindow(holder: BaseMessageViewHolder) {
         super.onViewDetachedFromWindow(holder)
         holder.onViewDetachedFromWindow()
     }

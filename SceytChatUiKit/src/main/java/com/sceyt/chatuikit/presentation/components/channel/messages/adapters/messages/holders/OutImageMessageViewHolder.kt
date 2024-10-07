@@ -1,12 +1,9 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
+import android.widget.ImageView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.databinding.SceytItemOutFileMessageBinding
-import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
-import com.sceyt.chatuikit.extensions.toPrettySize
+import com.sceyt.chatuikit.databinding.SceytItemOutImageMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -31,8 +28,8 @@ import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 
-class OutFileMsgViewHolder(
-        private val binding: SceytItemOutFileMessageBinding,
+class OutImageMessageViewHolder(
+        private val binding: SceytItemOutImageMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
@@ -61,11 +58,11 @@ class OutFileMsgViewHolder(
                 messageListeners?.onMessageClick(it, requireMessageItem)
             }
 
-            viewHandleClick.setOnClickListener {
+            fileImage.setOnClickListener {
                 messageListeners?.onAttachmentClick(it, fileItem, requireMessage)
             }
 
-            viewHandleClick.setOnLongClickListener {
+            fileImage.setOnLongClickListener {
                 messageListeners?.onAttachmentLongClick(it, fileItem, requireMessage)
                 return@setOnLongClickListener true
             }
@@ -76,10 +73,8 @@ class OutFileMsgViewHolder(
         }
     }
 
-
     override fun bind(item: MessageListItem, diff: MessageDiff) {
         super.bind(item, diff)
-        setFileDetails(fileItem.file)
 
         with(binding) {
             val message = (item as MessageListItem.MessageItem).message
@@ -99,80 +94,83 @@ class OutFileMsgViewHolder(
             if (diff.replyCountChanged)
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
-            if (diff.filesChanged)
+            if (diff.filesChanged) {
                 initAttachment()
+                setImageTopCorners(fileImage)
+            }
 
             if (diff.reactionsChanged || diff.edited)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
+            if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
+                initWidthsDependReactions(recyclerViewReactions, layoutDetails)
+
             if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, binding.viewReply, false)
+                setReplyMessageContainer(message, binding.viewReply)
         }
-    }
-
-    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
-
-    private fun setFileDetails(file: SceytAttachment) {
-        with(binding) {
-            tvFileName.text = file.name
-            tvFileSize.text = style.attachmentFileSizeFormatter.format(context, file)
-        }
-    }
-
-    private fun setProgress(data: TransferData) {
-        if (!data.isCalculatedLoadedSize()) return
-        val text = "${data.fileLoadedSize} • ${data.fileTotalSize}"
-        binding.tvFileSize.text = text
     }
 
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
         when (data.state) {
-            Uploaded, Downloaded -> {
-                val icon = style.attachmentIconProvider.provide(context, fileItem.file)
-                binding.icFile.setImageDrawable(icon)
-                binding.tvFileSize.text = data.fileTotalSize
-                        ?: fileItem.file.fileSize.toPrettySize()
+            Downloaded, Uploaded -> {
+                viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
 
-            PendingUpload -> {
-                binding.icFile.setImageResource(0)
+            PendingUpload, ErrorUpload, PauseUpload -> {
+                viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
+            }
+
+            Uploading, Preparing, WaitingToUpload -> {
+                if (isOnBind)
+                    viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
             }
 
             PendingDownload -> {
+                viewHolderHelper.loadBlurThumb(imageView = fileContainer)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
 
-            Downloading, Uploading, Preparing, WaitingToUpload -> {
-                binding.icFile.setImageResource(0)
-                setProgress(data)
+            Downloading -> {
+                if (isOnBind)
+                    viewHolderHelper.loadBlurThumb(imageView = fileContainer)
             }
 
-            ErrorUpload, ErrorDownload, PauseDownload, PauseUpload -> {
-                binding.icFile.setImageResource(0)
+            PauseDownload -> {
+                viewHolderHelper.loadBlurThumb(imageView = fileContainer)
             }
 
-            FilePathChanged, ThumbLoaded -> return
+            ErrorDownload -> {
+                viewHolderHelper.loadBlurThumb(imageView = fileContainer)
+            }
+
+            FilePathChanged -> {
+                if (fileItem.thumbPath.isNullOrBlank())
+                    requestThumb()
+            }
+
+            ThumbLoaded -> {
+                if (isValidThumb(data.thumbData))
+                    viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
+            }
         }
     }
 
+    override val fileContainer: ImageView
+        get() = binding.fileImage
+
     override val loadingProgressView: CircularProgressView
         get() = binding.loadProgress
+
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
     override val selectMessageView get() = binding.selectView
 
     override val incoming: Boolean
         get() = false
 
-    override fun setMaxWidth() {
-        binding.layoutDetails.layoutParams.width = bubbleMaxWidth
-    }
-
-    private fun SceytItemOutFileMessageBinding.setMessageItemStyle() {
-        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
-        style.attachmentFileSizeTextStyle.apply(tvFileSize)
-        style.attachmentFileNameTextStyle.apply(tvFileName)
-        style.mediaLoaderStyle.apply(loadProgress)
+    private fun SceytItemOutImageMessageBinding.setMessageItemStyle() {
+        style.overlayMediaLoaderStyle.apply(loadProgress)
         applyCommonStyle(
             layoutDetails = layoutDetails,
             tvForwarded = tvForwarded,

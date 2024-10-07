@@ -76,7 +76,7 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import java.util.Date
 import kotlin.math.min
 
-abstract class BaseMsgViewHolder(
+abstract class BaseMessageViewHolder(
         private val view: View,
         private val itemStyle: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners? = null,
