@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CallSuper
 import androidx.core.text.buildSpannedString
+import androidx.core.text.toSpannable
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
@@ -20,20 +21,20 @@ import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.setOnClickListenerAvailable
 import com.sceyt.chatuikit.extensions.setOnLongClickListenerAvailable
 import com.sceyt.chatuikit.extensions.toSpannableString
+import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChatReactionMessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.PresenceStateIndicatorView
-import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
 import com.sceyt.chatuikit.presentation.extensions.setChannelMessageDateAndStatusIcon
 import com.sceyt.chatuikit.styles.ChannelItemStyle
@@ -144,11 +145,9 @@ open class ChannelViewHolder(
             binding.dateStatus.setIcons(null)
             return
         }
-        val body = message.getFormattedBody(
-            context = context,
-            mentionTextStyle = itemStyle.mentionTextStyle,
-            attachmentNameFormatter = itemStyle.attachmentNameFormatter,
-            mentionUserNameFormatter = itemStyle.mentionUserNameFormatter
+        val body = itemStyle.lastMessageBodyFormatter.format(context, MessageBodyFormatterAttributes(
+            message = message,
+            mentionTextStyle = itemStyle.mentionTextStyle)
         )
         val senderName = itemStyle.lastMessageSenderNameFormatter.format(context, channel)
         val attachmentIcon = message.attachments?.getOrNull(0)?.let {
@@ -189,11 +188,9 @@ open class ChannelViewHolder(
                 ?: return false
 
         if (lastReaction.id > (channel.lastMessage?.id ?: 0) || lastReaction.pending) {
-            val toMessage = SpannableStringBuilder(message.getFormattedBody(
-                context = context,
-                mentionTextStyle = itemStyle.mentionTextStyle,
-                attachmentNameFormatter = itemStyle.attachmentNameFormatter,
-                mentionUserNameFormatter = itemStyle.mentionUserNameFormatter
+            val toMessage = SpannableStringBuilder(itemStyle.lastMessageBodyFormatter.format(context, MessageBodyFormatterAttributes(
+                message = message,
+                mentionTextStyle = itemStyle.mentionTextStyle)
             ))
             val reactedWord = itemView.getString(R.string.sceyt_reacted)
 
@@ -223,19 +220,18 @@ open class ChannelViewHolder(
     open fun checkHasDraftMessage(channel: SceytChannel, textView: TextView): Boolean {
         val draftMessage = channel.draftMessage
         return if (draftMessage != null) {
-            val draft = context.getString(R.string.sceyt_draft)
-            val text = SpannableStringBuilder("$draft: ").apply {
-                append(MessageBodyStyleHelper.buildWithAttributes(
-                    context = context,
-                    body = draftMessage.message.toString(),
-                    mentionUsers = draftMessage.mentionUsers,
-                    bodyAttributes = draftMessage.bodyAttributes,
-                    mentionTextStyle = itemStyle.mentionTextStyle,
-                    mentionUserNameFormatter = itemStyle.mentionUserNameFormatter)
-                )
-                itemStyle.draftPrefixTextStyle.apply(context, this, 0, draft.length + 1)
+            val draft = "${context.getString(R.string.sceyt_draft)}:".toSpannable()
+            itemStyle.draftPrefixTextStyle.apply(context, draft)
+
+            val body = buildSpannedString {
+                append(draft)
+                append(" ")
+                append(itemStyle.draftMessageBodyFormatter.format(context, DraftMessageBodyFormatterAttributes(
+                    message = draftMessage,
+                    mentionTextStyle = itemStyle.mentionTextStyle)
+                ))
             }
-            textView.text = text
+            textView.text = body
             true
         } else false
     }

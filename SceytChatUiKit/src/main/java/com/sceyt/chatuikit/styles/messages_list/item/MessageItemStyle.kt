@@ -9,13 +9,13 @@ import androidx.core.graphics.ColorUtils
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
+import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
@@ -92,10 +92,9 @@ import java.util.Date
  * @property voiceWaveformStyle Style for the voice waveform, default is [buildAudioWaveformStyle].
  * @property selectionCheckboxStyle Style for the selection checkbox, default is [buildSelectionCheckboxStyle].
  * @property senderNameFormatter Formatter for the sender name, default is [SceytChatUIKitFormatters.userNameFormatter].
- * @property messageBodyFormatter Formatter for the message body. Use it to format the message body before displaying it, default is null.
+ * @property messageBodyFormatter Formatter for the message body. Use it to format the message body, default is [SceytChatUIKitFormatters.messageBodyFormatter].
  * @property messageViewCountFormatter Formatter for the message view count, default is [SceytChatUIKitFormatters.messageViewCountFormatter].
  * @property messageDateFormatter Formatter for the message date, default is [SceytChatUIKitFormatters.messageDateFormatter].
- * @property mentionUserNameFormatter Formatter for the mention user name, default is [SceytChatUIKitFormatters.mentionUserNameFormatter].
  * @property voiceDurationFormatter Formatter for the voice duration, default is [SceytChatUIKitFormatters.mediaDurationFormatter].
  * @property videoDurationFormatter Formatter for the video duration, default is [SceytChatUIKitFormatters.mediaDurationFormatter].
  * @property attachmentFileSizeFormatter Formatter for the attachment file size, default is [SceytChatUIKitFormatters.attachmentSizeFormatter].
@@ -147,16 +146,15 @@ data class MessageItemStyle(
         val voiceWaveformStyle: AudioWaveformStyle,
         val selectionCheckboxStyle: CheckboxStyle,
         val senderNameFormatter: Formatter<SceytUser>,
-        val messageBodyFormatter: Formatter<SceytMessage>?,
+        val messageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
         val messageViewCountFormatter: Formatter<Long>,
         val messageDateFormatter: Formatter<Date>,
-        val mentionUserNameFormatter: Formatter<SceytUser>,
         val voiceDurationFormatter: Formatter<Long>,
         val videoDurationFormatter: Formatter<Long>,
         val attachmentFileSizeFormatter: Formatter<SceytAttachment>,
         val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
         val userDefaultAvatarProvider: VisualProvider<SceytUser, AvatarView.DefaultAvatar>,
-        val senderNameColorProvider: VisualProvider<SceytUser, Int>,
+        val senderNameColorProvider: VisualProvider<SceytUser, Int>
 ) {
 
     companion object {
@@ -304,10 +302,9 @@ data class MessageItemStyle(
                     overlayMediaLoaderStyle = buildOverlayMediaLoaderStyle(array),
                     selectionCheckboxStyle = buildSelectionCheckboxStyle(array),
                     senderNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
-                    messageBodyFormatter = null,
+                    messageBodyFormatter = SceytChatUIKit.formatters.messageBodyFormatter,
                     messageViewCountFormatter = SceytChatUIKit.formatters.messageViewCountFormatter,
                     messageDateFormatter = SceytChatUIKit.formatters.messageDateFormatter,
-                    mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
                     voiceDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
                     videoDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
                     attachmentFileSizeFormatter = SceytChatUIKit.formatters.attachmentSizeFormatter,

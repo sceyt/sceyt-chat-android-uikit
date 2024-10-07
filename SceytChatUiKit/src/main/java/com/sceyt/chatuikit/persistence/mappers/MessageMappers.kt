@@ -277,7 +277,7 @@ fun ForwardingDetailsDb.toForwardingDetails(channelId: Long, user: SceytUser?) =
 
 fun DraftMessageDb.toDraftMessage() = DraftMessage(
     chatId = draftMessageEntity.chatId,
-    message = draftMessageEntity.message,
+    body = draftMessageEntity.message,
     createdAt = draftMessageEntity.createdAt,
     mentionUsers = mentionUsers?.map { it.toSceytUser() },
     replyOrEditMessage = replyOrEditMessage?.toSceytMessage(),
@@ -290,7 +290,7 @@ fun DraftMessageEntity.toDraftMessage(
         replyMessage: SceytMessage?
 ) = DraftMessage(
     chatId = chatId,
-    message = message,
+    body = message,
     createdAt = createdAt,
     mentionUsers = mentionUsers,
     replyOrEditMessage = replyMessage,

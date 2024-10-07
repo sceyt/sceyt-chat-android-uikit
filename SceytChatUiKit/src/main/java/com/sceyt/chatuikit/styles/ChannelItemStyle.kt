@@ -17,6 +17,8 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
+import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
@@ -65,7 +67,8 @@ import java.util.Date
  * @property reactedUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.reactedUserNameFormatter].
  * @property typingUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.typingUserNameFormatter].
  * @property unreadCountFormatter - Formatter for unread count, default is [SceytChatUIKitFormatters.unreadCountFormatter].
- * @property attachmentNameFormatter - Formatter for attachment name, default is [SceytChatUIKitFormatters.attachmentNameFormatter].
+ * @property lastMessageBodyFormatter - Formatter for last message body, default is [SceytChatUIKitFormatters.channelLastMessageBodyFormatter].
+ * @property draftMessageBodyFormatter - Formatter for draft message body, default is [SceytChatUIKitFormatters.draftMessageBodyFormatter].
  * @property attachmentIconProvider - Provider for attachment icon, default is [SceytChatUIKitProviders.attachmentIconProvider].
  * @property channelDefaultAvatarProvider - Provider for channel default avatar, default is [SceytChatUIKitProviders.channelDefaultAvatarProvider].
  * */
@@ -97,7 +100,8 @@ data class ChannelItemStyle(
         val reactedUserNameFormatter: Formatter<SceytUser>,
         val typingUserNameFormatter: Formatter<SceytUser>,
         val unreadCountFormatter: Formatter<Long>,
-        val attachmentNameFormatter: Formatter<SceytAttachment>,
+        val lastMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
+        val draftMessageBodyFormatter: Formatter<DraftMessageBodyFormatterAttributes>,
         val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
         val channelDefaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>,
         val presenceStateColorProvider: VisualProvider<PresenceState, Int>
@@ -173,7 +177,8 @@ data class ChannelItemStyle(
                     reactedUserNameFormatter = SceytChatUIKit.formatters.reactedUserNameFormatter,
                     typingUserNameFormatter = SceytChatUIKit.formatters.typingUserNameFormatter,
                     unreadCountFormatter = SceytChatUIKit.formatters.unreadCountFormatter,
-                    attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
+                    lastMessageBodyFormatter = SceytChatUIKit.formatters.channelLastMessageBodyFormatter,
+                    draftMessageBodyFormatter = SceytChatUIKit.formatters.draftMessageBodyFormatter,
                     attachmentIconProvider = SceytChatUIKit.providers.channelListAttachmentIconProvider,
                     channelDefaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider,
                     presenceStateColorProvider = SceytChatUIKit.providers.presenceStateColorProvider

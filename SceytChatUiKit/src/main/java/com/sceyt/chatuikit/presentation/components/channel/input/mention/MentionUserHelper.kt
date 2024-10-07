@@ -35,7 +35,7 @@ object MentionUserHelper {
             mentionUsers: List<SceytUser>?,
             mentionTextStyle: TextStyle,
             mentionUserNameFormatter: Formatter<SceytUser>,
-            mentionClickListener: ((String) -> Unit)? = null,
+            mentionClickListener: ((String) -> Unit)?,
     ): CharSequence {
         return try {
             mentionAttributes ?: return body
