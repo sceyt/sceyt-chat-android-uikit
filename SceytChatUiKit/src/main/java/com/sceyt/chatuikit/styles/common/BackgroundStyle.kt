@@ -35,7 +35,7 @@ data class BackgroundStyle(
                 setColor(backgroundColor)
             }
         }
-        view.background = background
+        view.background = background.mutate()
     }
 
     fun apply(button: FloatingActionButton) {
