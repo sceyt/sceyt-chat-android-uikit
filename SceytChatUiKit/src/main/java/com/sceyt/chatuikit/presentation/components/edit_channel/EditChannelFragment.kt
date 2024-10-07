@@ -135,6 +135,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             uriPrefix.text = SceytChatUIKit.config.channelURIConfig.prefix
             tvDescription.setText(channel.metadata.jsonToObject(ChannelDescriptionData::class.java)?.description?.trim())
         }
+        checkSaveEnabled(true)
     }
 
     open fun checkSaveEnabled(checkUriFormat: Boolean) {
