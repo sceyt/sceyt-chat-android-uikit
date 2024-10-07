@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.ItemTouchHelper.RIGHT
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.screenWidthPx
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import kotlin.math.abs
 import kotlin.math.min
@@ -63,7 +63,7 @@ class MessageSwipeController(context: Context,
                              dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean) {
 
 
-        if ((viewHolder as? BaseMsgViewHolder)?.enableReply != true || !enableSwipe) return
+        if ((viewHolder as? BaseMessageViewHolder)?.enableReply != true || !enableSwipe) return
 
         if (actionState == ACTION_STATE_SWIPE) {
             setTouchListener(recyclerView, viewHolder)
