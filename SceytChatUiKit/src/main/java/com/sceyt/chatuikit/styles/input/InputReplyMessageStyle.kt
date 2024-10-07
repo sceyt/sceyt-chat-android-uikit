@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.formatters.defaults.MessageAndMentionTextStylePair
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleCustomizer
@@ -23,10 +24,9 @@ data class InputReplyMessageStyle(
         val mentionTextStyle: TextStyle,
         val attachmentDurationTextStyle: TextStyle,
         val attachmentDurationFormatter: Formatter<Long>,
-        val attachmentNameFormatter: Formatter<SceytAttachment>,
         val senderNameFormatter: Formatter<SceytUser>,
-        val mentionUserNameFormatter: Formatter<SceytUser>,
-        val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
+        val messageBodyFormatter: Formatter<MessageAndMentionTextStylePair>,
+        val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<InputReplyMessageStyle> { _, style -> style }
@@ -82,9 +82,8 @@ data class InputReplyMessageStyle(
             mentionTextStyle = mentionTextStyle,
             attachmentDurationTextStyle = attachmentDurationTextStyle,
             attachmentDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
-            attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
             senderNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
-            mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
+            messageBodyFormatter = SceytChatUIKit.formatters.messageBodyFormatter,
             attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider
         ).let { styleCustomizer.apply(context, it) }
     }
