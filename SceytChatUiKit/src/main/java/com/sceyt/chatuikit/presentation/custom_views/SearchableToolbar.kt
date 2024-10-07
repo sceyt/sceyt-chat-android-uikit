@@ -49,7 +49,7 @@ class SearchableToolbar @JvmOverloads constructor(
                 titleTextSize)
             enableSearch = array.getBoolean(R.styleable.SearchableToolbar_sceytUiSearchableToolbarEnableSearch, enableSearch)
 
-            val navigationIcon = array.getDrawable(R.styleable.SearchableToolbar_sceytUiSearchableToolbarBackIcon)
+            val navigationIcon = array.getDrawable(R.styleable.SearchableToolbar_sceytUiSearchableToolbarNavigationIcon)
                     ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back)
             val iconsTint = array.getColor(R.styleable.SearchableToolbar_sceytUiSearchableToolbarIconsTint, 0)
 
