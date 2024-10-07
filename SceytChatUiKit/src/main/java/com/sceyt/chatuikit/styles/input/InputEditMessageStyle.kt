@@ -8,7 +8,7 @@ import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.formatters.defaults.MessageAndMentionTextStylePair
+import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleCustomizer
@@ -22,7 +22,7 @@ data class InputEditMessageStyle(
         val mentionTextStyle: TextStyle,
         val attachmentDurationTextStyle: TextStyle,
         val attachmentDurationFormatter: Formatter<Long>,
-        val messageBodyFormatter: Formatter<MessageAndMentionTextStylePair>,
+        val messageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
         val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
     companion object {
@@ -73,7 +73,7 @@ data class InputEditMessageStyle(
             mentionTextStyle = mentionTextStyle,
             attachmentDurationTextStyle = attachmentDurationTextStyle,
             attachmentDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
-            messageBodyFormatter = SceytChatUIKit.formatters.messageBodyFormatter,
+            messageBodyFormatter = SceytChatUIKit.formatters.editMessageBodyFormatter,
             attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider
         ).let { styleCustomizer.apply(context, it) }
     }

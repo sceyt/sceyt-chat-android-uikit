@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytFragmentMessageActionsBinding
 import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
+import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.CancelReplyMessageViewClickListener
 import com.sceyt.chatuikit.providers.VisualProvider
@@ -67,7 +68,10 @@ class MessageActionsView @JvmOverloads constructor(
 
             tvMessageBody.text = style.messageBodyFormatter.format(
                 context = context,
-                from = message to style.mentionTextStyle
+                from = MessageBodyFormatterAttributes(
+                    message = message,
+                    mentionTextStyle = style.mentionTextStyle
+                )
             )
         }
     }
@@ -102,7 +106,10 @@ class MessageActionsView @JvmOverloads constructor(
 
             tvMessageBody.text = style.messageBodyFormatter.format(
                 context = context,
-                from = message to style.mentionTextStyle
+                from = MessageBodyFormatterAttributes(
+                    message = message,
+                    mentionTextStyle = style.mentionTextStyle
+                )
             )
         }
     }
