@@ -16,7 +16,7 @@ class CustomFloatingActonButton @JvmOverloads constructor(
         defStyleAttr: Int = 0
 ) : FloatingActionButton(context, attrs, defStyleAttr) {
 
-    private var isEnabledClick: Boolean = isClickable
+    private var isEnabledClick: Boolean = true
     private var localClickListener: OnClickListener? = null
     private var buttonColor: Int = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
 
