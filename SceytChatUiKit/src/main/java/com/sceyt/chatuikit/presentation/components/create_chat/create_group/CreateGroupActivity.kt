@@ -95,6 +95,7 @@ class CreateGroupActivity : AppCompatActivity() {
 
     private fun SceytActivityCreateGroupBinding.initViews() {
         root.layoutTransition = LayoutTransition().apply { enableTransitionType(LayoutTransition.CHANGING) }
+        btnCreate.setEnabledOrNot(false)
 
         tvSubject.doAfterTextChanged {
             btnCreate.setEnabledOrNot(it?.trim().isNullOrBlank().not())

@@ -59,6 +59,7 @@ open class CreateChannelDetailsFragment : Fragment() {
         initViewModel()
         binding.initViews()
         binding.applyStyle()
+        checkNextEnabled(false)
     }
 
     private fun initViewModel() {
