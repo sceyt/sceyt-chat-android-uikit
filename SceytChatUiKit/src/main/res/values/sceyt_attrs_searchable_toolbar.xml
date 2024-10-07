@@ -6,7 +6,7 @@
         <attr name="sceytUiSearchableToolbarTitleTextSize" format="dimension" />
         <attr name="sceytUiSearchableToolbarEnableSearch" format="boolean" />
         <attr name="sceytUiSearchableToolbarIconsTint" format="reference|color" />
-        <attr name="sceytUiSearchableToolbarBackIcon" format="reference" />
+        <attr name="sceytUiSearchableToolbarNavigationIcon" format="reference" />
         <attr name="sceytUiSearchableToolbarClearIcon" format="reference" />
         <attr name="sceytUiSearchableToolbarSearchIcon" format="reference" />
 
