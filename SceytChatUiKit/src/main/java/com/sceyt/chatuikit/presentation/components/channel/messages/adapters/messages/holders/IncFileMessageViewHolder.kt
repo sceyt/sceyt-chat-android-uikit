@@ -1,9 +1,12 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
-import android.widget.ImageView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.databinding.SceytItemIncImageMessageBinding
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.databinding.SceytItemIncFileMessageBinding
+import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
+import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -27,9 +30,8 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
-
-class IncImageMsgViewHolder(
-        private val binding: SceytItemIncImageMessageBinding,
+class IncFileMessageViewHolder(
+        private val binding: SceytItemIncFileMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
@@ -57,11 +59,12 @@ class IncImageMsgViewHolder(
             messageBody.doOnClickWhenNoLink {
                 messageListeners?.onMessageClick(it, requireMessageItem)
             }
-            fileImage.setOnClickListener {
+
+            viewHandleClick.setOnClickListener {
                 messageListeners?.onAttachmentClick(it, fileItem, requireMessage)
             }
 
-            fileImage.setOnLongClickListener {
+            viewHandleClick.setOnLongClickListener {
                 messageListeners?.onAttachmentLongClick(it, fileItem, requireMessage)
                 return@setOnLongClickListener true
             }
@@ -72,9 +75,9 @@ class IncImageMsgViewHolder(
         }
     }
 
-
     override fun bind(item: MessageListItem, diff: MessageDiff) {
         super.bind(item, diff)
+        setFileDetails(fileItem.file)
 
         with(binding) {
             val message = (item as MessageListItem.MessageItem).message
@@ -97,19 +100,14 @@ class IncImageMsgViewHolder(
             if (diff.replyCountChanged)
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
-            if (diff.filesChanged) {
+            if (diff.filesChanged)
                 initAttachment()
-                setImageTopCorners(fileImage)
-            }
 
             if (diff.reactionsChanged || diff.edited)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
-            if (diff.bodyChanged && !diff.reactionsChanged && recyclerViewReactions != null)
-                initWidthsDependReactions(recyclerViewReactions, layoutDetails)
-
             if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, binding.viewReply)
+                setReplyMessageContainer(message, binding.viewReply, false)
 
             if (item.message.shouldShowAvatarAndName)
                 avatar.setOnClickListener {
@@ -118,57 +116,53 @@ class IncImageMsgViewHolder(
         }
     }
 
+    override val selectMessageView get() = binding.selectView
+
+    override val layoutBubbleConfig get() = Pair(binding.root, false)
+
+    private fun setFileDetails(file: SceytAttachment) {
+        with(binding) {
+            tvFileName.text = file.name
+            tvFileSize.text = style.attachmentFileSizeFormatter.format(context, file)
+        }
+    }
+
+    private fun setProgress(data: TransferData) {
+        if (!data.isCalculatedLoadedSize()) return
+        val text = "${data.fileLoadedSize} • ${data.fileTotalSize}"
+        binding.tvFileSize.text = text
+    }
+
     override fun updateState(data: TransferData, isOnBind: Boolean) {
         super.updateState(data, isOnBind)
         when (data.state) {
             Uploaded, Downloaded -> {
-                viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
+                val icon = style.attachmentIconProvider.provide(context, fileItem.file)
+                binding.icFile.setImageDrawable(icon)
+                binding.tvFileSize.text = data.fileTotalSize
+                        ?: fileItem.file.fileSize.toPrettySize()
             }
 
-            PendingUpload, ErrorUpload, PauseUpload -> {
-                viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
-            }
-
-            Uploading, Preparing, WaitingToUpload -> {
-                if (isOnBind)
-                    viewHolderHelper.drawThumbOrRequest(fileContainer, ::requestThumb)
+            PendingUpload -> {
+                binding.icFile.setImageResource(0)
             }
 
             PendingDownload -> {
-                viewHolderHelper.loadBlurThumb(imageView = fileContainer)
                 needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
             }
 
-            Downloading -> {
-                if (isOnBind)
-                    viewHolderHelper.loadBlurThumb(imageView = fileContainer)
+            Downloading, Uploading, Preparing, WaitingToUpload -> {
+                binding.icFile.setImageResource(0)
+                setProgress(data)
             }
 
-            PauseDownload -> {
-                viewHolderHelper.loadBlurThumb(imageView = fileContainer)
+            ErrorUpload, ErrorDownload, PauseDownload, PauseUpload -> {
+                binding.icFile.setImageResource(0)
             }
 
-            ErrorDownload -> {
-                viewHolderHelper.loadBlurThumb(imageView = fileContainer)
-            }
-
-            FilePathChanged -> {
-                if (fileItem.thumbPath.isNullOrBlank())
-                    requestThumb()
-            }
-
-            ThumbLoaded -> {
-                if (isValidThumb(data.thumbData))
-                    viewHolderHelper.drawImageWithBlurredThumb(fileItem.thumbPath, fileContainer)
-            }
+            FilePathChanged, ThumbLoaded -> return
         }
     }
-
-    override val selectMessageView
-        get() = binding.selectView
-
-    override val fileContainer: ImageView
-        get() = binding.fileImage
 
     override val loadingProgressView: CircularProgressView
         get() = binding.loadProgress
@@ -176,10 +170,15 @@ class IncImageMsgViewHolder(
     override val incoming: Boolean
         get() = true
 
-    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
+    override fun setMaxWidth() {
+        binding.layoutDetails.layoutParams.width = bubbleMaxWidth
+    }
 
-    private fun SceytItemIncImageMessageBinding.setMessageItemStyle() {
-        style.overlayMediaLoaderStyle.apply(loadProgress)
+    private fun SceytItemIncFileMessageBinding.setMessageItemStyle() {
+        icFile.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
+        style.attachmentFileSizeTextStyle.apply(tvFileSize)
+        style.attachmentFileNameTextStyle.apply(tvFileName)
+        style.mediaLoaderStyle.apply(loadProgress)
         applyCommonStyle(
             layoutDetails = layoutDetails,
             tvForwarded = tvForwarded,

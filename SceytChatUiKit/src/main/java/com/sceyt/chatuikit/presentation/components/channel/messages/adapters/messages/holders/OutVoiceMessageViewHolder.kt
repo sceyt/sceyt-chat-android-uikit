@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
-import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.masoudss.lib.SeekBarOnProgressChanged
@@ -9,7 +8,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.databinding.SceytItemIncVoiceMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemOutVoiceMessageBinding
 import com.sceyt.chatuikit.extensions.TAG_REF
 import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.getCompatColor
@@ -40,38 +39,41 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PlaybackSpeed
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.PlaybackSpeed.Companion.fromValue
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMediaMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
-class IncVoiceMsgViewHolder(
-        private val binding: SceytItemIncVoiceMessageBinding,
+class OutVoiceMessageViewHolder(
+        private val binding: SceytItemOutVoiceMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val style: MessageItemStyle,
-        private val messageListeners: MessageClickListeners.ClickListeners,
-        displayedListener: ((MessageListItem) -> Unit)?,
+        private val messageListeners: MessageClickListeners.ClickListeners?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-        private val voicePlayPauseListener: ((FileListItem, SceytMessage, playing: Boolean) -> Unit)?
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, needMediaDataCallback) {
+        private val voicePlayPauseListener: ((FileListItem, SceytMessage, playing: Boolean) -> Unit)?,
+) : BaseMediaMessageViewHolder(binding.root, style, messageListeners,
+    needMediaDataCallback = needMediaDataCallback) {
+    private var lastFilePath: String? = ""
+
     private var currentPlaybackSpeed: PlaybackSpeed = PlaybackSpeed.X1
         set(value) {
             field = value
             binding.playBackSpeed.text = value.displayValue
         }
-    private var lastFilePath: String? = ""
 
     init {
         with(binding) {
             setMessageItemStyle()
 
             root.setOnClickListener {
-                messageListeners.onMessageClick(it, requireMessageItem)
+                messageListeners?.onMessageClick(it, messageListItem as MessageItem)
             }
 
             root.setOnLongClickListener {
-                messageListeners.onMessageLongClick(it, requireMessageItem)
+                messageListeners?.onMessageLongClick(it, messageListItem as MessageItem)
                 return@setOnLongClickListener true
             }
 
@@ -82,7 +84,7 @@ class IncVoiceMsgViewHolder(
             }
 
             loadProgress.setOnClickListener {
-                messageListeners.onAttachmentLoaderClick(it, fileItem, requireMessage)
+                messageListeners?.onAttachmentLoaderClick(it, fileItem, requireMessage)
             }
 
             playPauseButton.setOnClickListener {
@@ -96,7 +98,7 @@ class IncVoiceMsgViewHolder(
         lastFilePath = fileItem.file.filePath
 
         with(binding) {
-            val message = (item as MessageListItem.MessageItem).message
+            val message = (item as MessageItem).message
             tvForwarded.isVisible = message.isForwarded
 
             val body = message.body.trim()
@@ -106,13 +108,10 @@ class IncVoiceMsgViewHolder(
             } else messageBody.isVisible = false
 
             if (diff.edited || diff.statusChanged)
-                setMessageStatusAndDateText(message, messageDate)
-
-            if (diff.avatarChanged || diff.showAvatarAndNameChanged)
-                setMessageUserAvatarAndName(avatar, tvUserName, message)
+                setMessageStatusAndDateText(message, binding.messageDate)
 
             if (diff.replyCountChanged)
-                setReplyCount(tvReplyCount, toReplyLine, item)
+                setReplyCount(binding.tvReplyCount, toReplyLine, item)
 
             if (diff.reactionsChanged || diff.edited)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
@@ -123,18 +122,13 @@ class IncVoiceMsgViewHolder(
             if (diff.replyContainerChanged)
                 setReplyMessageContainer(message, viewReply, false)
 
-            if (item.message.shouldShowAvatarAndName)
-                avatar.setOnClickListener {
-                    messageListeners.onAvatarClick(it, item)
-                }
-
             initVoiceMessage()
         }
     }
 
-    override val layoutBubbleConfig get() = Pair(binding.root, false)
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
 
-    private fun SceytItemIncVoiceMessageBinding.initVoiceMessage() {
+    private fun SceytItemOutVoiceMessageBinding.initVoiceMessage() {
         val metaDuration: Long = fileItem.duration?.times(1000L) //convert to milliseconds
                 ?: 0
         fileItem.audioMetadata?.tmb?.let { binding.seekBar.setSampleFrom(it) }
@@ -162,7 +156,7 @@ class IncVoiceMsgViewHolder(
             binding.voiceDuration.text = playBackPos.durationToMinSecShort()
             binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(playBackPos, fileItem.duration?.times(1000L)
                     ?: 0)
-            currentPlaybackSpeed = PlaybackSpeed.fromValue(AudioPlayerHelper.getCurrentPlayer()?.getPlaybackSpeed())
+            currentPlaybackSpeed = fromValue(AudioPlayerHelper.getCurrentPlayer()?.getPlaybackSpeed())
             true
         } else {
             binding.voiceDuration.text = fileItem.duration?.times(1000L) // convert to milliseconds
@@ -176,6 +170,7 @@ class IncVoiceMsgViewHolder(
     private fun onPlayPauseClick(attachment: SceytAttachment) {
         if (attachment.transferState != Uploaded && attachment.transferState != Downloaded)
             return
+
         val path = attachment.filePath ?: return
         if (AudioPlayerHelper.alreadyInitialized(path)) {
             AudioPlayerHelper.getCurrentPlayer()?.addEventListener(playerListener, TAG_REF, path)
@@ -290,17 +285,16 @@ class IncVoiceMsgViewHolder(
     override val loadingProgressView: CircularProgressView
         get() = binding.loadProgress
 
-    override val selectMessageView: View
-        get() = binding.selectView
-
-    override val incoming: Boolean
-        get() = true
+    override val selectMessageView get() = binding.selectView
 
     override fun setMaxWidth() {
         binding.layoutDetails.layoutParams.width = bubbleMaxWidth
     }
 
-    private fun SceytItemIncVoiceMessageBinding.setMessageItemStyle() {
+     override val incoming: Boolean
+        get() = false
+
+    private fun SceytItemOutVoiceMessageBinding.setMessageItemStyle() {
         val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
         playPauseButton.setBackgroundTint(accentColor)
         seekBar.waveProgressColor = style.voiceWaveformStyle.progressColor
@@ -313,8 +307,7 @@ class IncVoiceMsgViewHolder(
             tvForwarded = tvForwarded,
             messageBody = messageBody,
             tvThreadReplyCount = tvReplyCount,
-            toReplyLine = toReplyLine,
-            tvSenderName = tvUserName
+            toReplyLine = toReplyLine
         )
     }
 }

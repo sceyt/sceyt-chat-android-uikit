@@ -2,22 +2,27 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.databinding.SceytItemIncLinkMessageBinding
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.databinding.SceytItemIncAttachmentsMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.MessageFilesAdapter
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.FilesViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseLinkMsgViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
-class IncLinkMsgViewHolder(
-        private val binding: SceytItemIncLinkMessageBinding,
+class IncAttachmentsMessageViewHolder(
+        private val binding: SceytItemIncAttachmentsMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
-        style: MessageItemStyle,
+        private val viewPoolFiles: RecyclerView.RecycledViewPool,
+        private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         displayedListener: ((MessageListItem) -> Unit)?,
-        needMediaDataCallback: (NeedMediaInfoData) -> Unit
-) : BaseLinkMsgViewHolder(binding.root, style, messageListeners, displayedListener, needMediaDataCallback) {
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+) : BaseMessageViewHolder(binding.root, style, messageListeners, displayedListener) {
+    private var filedAdapter: MessageFilesAdapter? = null
 
     init {
         with(binding) {
@@ -45,21 +50,22 @@ class IncLinkMsgViewHolder(
     override fun bind(item: MessageListItem, diff: MessageDiff) {
         super.bind(item, diff)
 
-        if (!diff.hasDifference()) return
-
         if (item is MessageListItem.MessageItem) {
             with(binding) {
                 val message = item.message
                 tvForwarded.isVisible = message.isForwarded
-                val linkAttachment = message.attachments?.getOrNull(0)
-                loadLinkPreview(message, linkAttachment, layoutLinkPreview)
 
-                if (diff.edited || diff.statusChanged)
+                val body = message.body.trim()
+                if (body.isNotBlank()) {
+                    messageBody.isVisible = true
+                    setMessageBody(messageBody, message)
+                } else messageBody.isVisible = false
+
+                if (!diff.hasDifference()) return
+
+                if (diff.edited || diff.statusChanged) {
+                    setMessageDateDependAttachments(messageDate, message.files)
                     setMessageStatusAndDateText(message, messageDate)
-
-                if (diff.edited || diff.bodyChanged) {
-                    setMessageBody(messageBody, message, checkLinks = true, isLinkViewHolder = true)
-                    setBodyTextPosition(messageBody, messageDate, layoutDetails)
                 }
 
                 if (diff.avatarChanged || diff.showAvatarAndNameChanged)
@@ -71,8 +77,11 @@ class IncLinkMsgViewHolder(
                 if (diff.reactionsChanged || diff.edited)
                     setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
+                if (diff.filesChanged)
+                    setFilesAdapter(message)
+
                 if (diff.replyContainerChanged)
-                    setReplyMessageContainer(message, binding.viewReply)
+                    setReplyMessageContainer(message, binding.viewReply, false)
 
                 if (item.message.shouldShowAvatarAndName)
                     avatar.setOnClickListener {
@@ -84,15 +93,43 @@ class IncLinkMsgViewHolder(
 
     override val selectMessageView get() = binding.selectView
 
-    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, false)
 
     override val incoming: Boolean
         get() = true
 
-    private fun SceytItemIncLinkMessageBinding.setMessageItemStyle() {
+    private fun setFilesAdapter(message: SceytMessage) {
+        val attachments = message.files ?: return
+
+        initFilesRecyclerView(message, binding.rvFiles)
+
+        if (filedAdapter == null) {
+            with(binding.rvFiles) {
+                setHasFixedSize(true)
+
+                setRecycledViewPool(viewPoolFiles)
+                itemAnimator = null
+                adapter = MessageFilesAdapter(message, attachments,
+                    FilesViewHolderFactory(context = context, messageListeners, needMediaDataCallback).apply {
+                        setStyle(style)
+                    }).also { filedAdapter = it }
+            }
+        } else filedAdapter?.notifyUpdate(attachments)
+
+    }
+
+    override fun onViewDetachedFromWindow() {
+        super.onViewDetachedFromWindow()
+        filedAdapter?.onItemDetached()
+    }
+
+    override fun setMaxWidth() {
+        binding.layoutDetails.layoutParams.width = bubbleMaxWidth
+    }
+
+    private fun SceytItemIncAttachmentsMessageBinding.setMessageItemStyle() {
         applyCommonStyle(
-            layoutDetails = layoutDetails,
-            tvForwarded = tvForwarded,
+            layoutDetails = layoutDetails, tvForwarded = tvForwarded,
             messageBody = messageBody,
             tvThreadReplyCount = tvReplyCount,
             toReplyLine = toReplyLine,
