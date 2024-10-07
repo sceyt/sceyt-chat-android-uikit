@@ -17,8 +17,10 @@ interface PersistenceUsersLogic {
     fun getCurrentUserNonSuspend(): SceytUser?
     fun getCurrentUserAsFlow(): Flow<SceytUser>
     suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String>
-    suspend fun updateProfile(firstName: String?, lastName: String?,
-                              avatarUri: String?): SceytResponse<SceytUser>
+    suspend fun updateProfile(
+            firstName: String?, lastName: String?,
+            avatarUri: String?, metadataMap: Map<String, String>?
+    ): SceytResponse<SceytUser>
 
     suspend fun setPresenceState(presenceState: PresenceState): SceytResponse<Boolean>
     suspend fun updateStatus(status: String): SceytResponse<Boolean>

@@ -55,7 +55,7 @@ data class SceytChannel(
         get() = if (isGroup) avatarUrl
         else getPeer()?.avatarUrl
 
-    val isGroup get() = stringToEnum(type).isGroup()
+    val isGroup get() = isGroup()
 
     val pinned get() = pinnedAt != null && pinnedAt != 0L
 

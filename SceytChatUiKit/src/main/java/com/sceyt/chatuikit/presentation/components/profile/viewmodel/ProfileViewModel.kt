@@ -59,7 +59,8 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
                     return@launch
                 }
             }
-            when (val response = userInteractor.updateProfile(firstName, lastName, newUrl)) {
+            when (val response = userInteractor.updateProfile(firstName, lastName, newUrl,
+                SceytChatUIKit.currentUser?.metadataMap)) {
                 is SceytResponse.Success -> {
                     _editProfileLiveData.postValue(response.data ?: return@launch)
                 }

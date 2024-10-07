@@ -515,8 +515,9 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
     }
 
     override suspend fun updateProfile(firsName: String?, lastName: String?,
-                                       avatarUrl: String?): SceytResponse<SceytUser> {
-        return usersLogic.updateProfile(firsName, lastName, avatarUrl)
+                                       avatarUrl: String?,
+                                       metadataMap: Map<String, String>?): SceytResponse<SceytUser> {
+        return usersLogic.updateProfile(firsName, lastName, avatarUrl, metadataMap)
     }
 
     override suspend fun setPresenceState(presenceState: PresenceState): SceytResponse<Boolean> {
