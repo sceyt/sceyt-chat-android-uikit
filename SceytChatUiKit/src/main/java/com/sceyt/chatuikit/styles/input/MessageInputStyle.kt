@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
+import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ButtonStyle
@@ -59,6 +60,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property mentionUsersListStyle Style for the mention users list, default is [buildMentionUsersListStyle]
  * @property mentionTextStyle Style for the mention user name while typing, default is [buildMentionUserTextStyle]
  * @property mentionUserNameFormatter Formatter for the mention user name, default is [SceytChatUIKitFormatters.userNameFormatter]
+ * @property draftMessageBodyFormatterAttributes Formatter for the draft message body, default is [SceytChatUIKitFormatters.draftMessageBodyFormatter]
  * */
 data class MessageInputStyle(
         @ColorInt val backgroundColor: Int,
@@ -86,6 +88,7 @@ data class MessageInputStyle(
         val inputCoverStyle: InputCoverStyle,
         val mentionUsersListStyle: MentionUsersListStyle,
         val mentionUserNameFormatter: Formatter<SceytUser>,
+        val draftMessageBodyFormatterAttributes: Formatter<DraftMessageBodyFormatterAttributes>,
 ) {
 
     companion object {
@@ -164,6 +167,7 @@ data class MessageInputStyle(
                     mentionUsersListStyle = buildMentionUsersListStyle(array),
                     mentionTextStyle = buildMentionUserTextStyle(array),
                     mentionUserNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
+                    draftMessageBodyFormatterAttributes = SceytChatUIKit.formatters.draftMessageBodyFormatter,
                 ).let { styleCustomizer.apply(context, it) }
             }
         }

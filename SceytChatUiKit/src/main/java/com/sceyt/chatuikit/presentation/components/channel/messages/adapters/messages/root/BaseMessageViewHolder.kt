@@ -52,11 +52,9 @@ import com.sceyt.chatuikit.extensions.screenPortraitWidthPx
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setDrawableStart
+import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
-import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyAttributeType
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionUserHelper
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
@@ -67,7 +65,6 @@ import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.ClickableTextView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.ToReplyLineView
-import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.presentation.extensions.setChatMessageDateAndStatusIcon
 import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
@@ -156,29 +153,13 @@ abstract class BaseMessageViewHolder(
             checkLinks: Boolean = true,
             isLinkViewHolder: Boolean = false
     ) {
-        var body: CharSequence
-        if (itemStyle.messageBodyFormatter != null) {
-            body = itemStyle.messageBodyFormatter.format(context, message)
-        } else {
-            body = message.body.trim()
-            if (!message.bodyAttributes.isNullOrEmpty()) {
-                body = MessageBodyStyleHelper.buildOnlyTextStyles(body, message.bodyAttributes)
-                if (!message.mentionedUsers.isNullOrEmpty())
-                    body = MentionUserHelper.buildWithMentionedUsers(
-                        context = context,
-                        body = body,
-                        mentionAttributes = message.bodyAttributes.filter {
-                            it.type == BodyAttributeType.Mention.value
-                        },
-                        mentionUsers = message.mentionedUsers,
-                        mentionTextStyle = itemStyle.mentionTextStyle,
-                        mentionClickListener = {
-                            messageListeners?.onMentionClick(messageBody, it)
-                        },
-                        mentionUserNameFormatter = itemStyle.mentionUserNameFormatter
-                    )
+        val body = itemStyle.messageBodyFormatter.format(context, MessageBodyFormatterAttributes(
+            message = message,
+            mentionTextStyle = itemStyle.mentionTextStyle,
+            mentionClickListener = {
+                messageListeners?.onMentionClick(messageBody, it)
             }
-        }
+        ))
         setTextAutoLinkMasks(messageBody, body, checkLinks, isLinkViewHolder)
         messageBody.setText(body, TextView.BufferType.SPANNABLE)
     }
@@ -249,15 +230,10 @@ abstract class BaseMessageViewHolder(
                 replyStyle.deletedMessageTextStyle.apply(context, deletedText)
                 tvMessageBody.setText(deletedText, TextView.BufferType.SPANNABLE)
             } else {
-                tvMessageBody.text = itemStyle.messageBodyFormatter?.format(context, parent)
-                        ?: run {
-                            parent.getFormattedBody(
-                                context,
-                                mentionTextStyle = replyStyle.mentionTextStyle,
-                                mentionUserNameFormatter = replyStyle.mentionUserNameFormatter,
-                                attachmentNameFormatter = replyStyle.attachmentNameFormatter
-                            )
-                        }
+                tvMessageBody.text = replyStyle.messageBodyFormatter.format(context, MessageBodyFormatterAttributes(
+                    message = parent,
+                    mentionTextStyle = replyStyle.mentionTextStyle
+                ))
             }
 
             if (parent.attachments.isNullOrEmpty()) {

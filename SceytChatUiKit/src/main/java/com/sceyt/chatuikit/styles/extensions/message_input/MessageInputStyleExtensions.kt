@@ -355,7 +355,7 @@ internal fun MessageInputStyle.Builder.buildEditMessageBodyTextStyle(
 ) = TextStyle.Builder(array)
     .setColor(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageBodyTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
         index = R.styleable.MessageInputView_sceytUiMessageInputEditMessageBodyTextSize
