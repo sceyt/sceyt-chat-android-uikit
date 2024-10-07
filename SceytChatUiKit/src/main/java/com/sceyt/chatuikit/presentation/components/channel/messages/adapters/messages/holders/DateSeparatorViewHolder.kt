@@ -5,14 +5,14 @@ import androidx.core.view.isVisible
 import com.sceyt.chatuikit.databinding.SceytItemMessageDateSeparatorBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import java.util.Date
 
 class DateSeparatorViewHolder(
         private val binding: SceytItemMessageDateSeparatorBinding,
         listStyle: MessagesListViewStyle,
-) : BaseMsgViewHolder(view = binding.root, itemStyle = listStyle.messageItemStyle) {
+) : BaseMessageViewHolder(view = binding.root, itemStyle = listStyle.messageItemStyle) {
     private val style = listStyle.dateSeparatorStyle
 
     init {

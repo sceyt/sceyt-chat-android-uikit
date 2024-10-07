@@ -2,22 +2,19 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.databinding.SceytItemOutLinkMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemOutTextMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
-import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseLinkMsgViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
-class OutLinkMsgViewHolder(
-        private val binding: SceytItemOutLinkMessageBinding,
+class OutTextMessageViewHolder(
+        private val binding: SceytItemOutTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
         style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-        needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseLinkMsgViewHolder(binding.root, style, messageListeners,
-    needMediaDataCallback = needMediaDataCallback) {
+) : BaseMessageViewHolder(binding.root, style, messageListeners) {
 
     init {
         with(binding) {
@@ -51,14 +48,12 @@ class OutLinkMsgViewHolder(
             with(binding) {
                 val message = item.message
                 tvForwarded.isVisible = message.isForwarded
-                val linkAttachment = message.attachments?.getOrNull(0)
-                loadLinkPreview(message, linkAttachment, layoutLinkPreview)
 
                 if (diff.edited || diff.statusChanged)
                     setMessageStatusAndDateText(message, messageDate)
 
                 if (diff.edited || diff.bodyChanged) {
-                    setMessageBody(messageBody, message, checkLinks = true, isLinkViewHolder = true)
+                    setMessageBody(messageBody, message, false)
                     setBodyTextPosition(messageBody, messageDate, layoutDetails)
                 }
 
@@ -74,14 +69,14 @@ class OutLinkMsgViewHolder(
         }
     }
 
-    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
-
     override val selectMessageView get() = binding.selectView
+
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
     override val incoming: Boolean
         get() = false
 
-    private fun SceytItemOutLinkMessageBinding.setMessageItemStyle() {
+    private fun SceytItemOutTextMessageBinding.setMessageItemStyle() {
         applyCommonStyle(
             layoutDetails = layoutDetails,
             tvForwarded = tvForwarded,

@@ -4,13 +4,13 @@ import com.sceyt.chatuikit.databinding.SceytItemOutDeletedMessageBinding
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
-class OutDeletedMsgViewHolder(
+class OutDeletedMessageViewHolder(
         private val binding: SceytItemOutDeletedMessageBinding,
         private val style: MessageItemStyle
-) : BaseMsgViewHolder(binding.root, style) {
+) : BaseMessageViewHolder(binding.root, style) {
 
     init {
         binding.setMessageItemStyle()

@@ -2,19 +2,20 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.me
 
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.databinding.SceytItemOutTextMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemIncTextMessageBinding
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
-class OutTextMsgViewHolder(
-        private val binding: SceytItemOutTextMessageBinding,
+class IncTextMessageViewHolder(
+        private val binding: SceytItemIncTextMessageBinding,
         private val viewPool: RecyclerView.RecycledViewPool,
         style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
-) : BaseMsgViewHolder(binding.root, style, messageListeners) {
+        displayedListener: ((MessageListItem) -> Unit)?,
+) : BaseMessageViewHolder(binding.root, style, messageListeners, displayedListener) {
 
     init {
         with(binding) {
@@ -41,7 +42,6 @@ class OutTextMsgViewHolder(
 
     override fun bind(item: MessageListItem, diff: MessageDiff) {
         super.bind(item, diff)
-
         if (!diff.hasDifference()) return
 
         if (item is MessageListItem.MessageItem) {
@@ -57,6 +57,9 @@ class OutTextMsgViewHolder(
                     setBodyTextPosition(messageBody, messageDate, layoutDetails)
                 }
 
+                if (diff.avatarChanged || diff.showAvatarAndNameChanged)
+                    setMessageUserAvatarAndName(avatar, tvUserName, message)
+
                 if (diff.replyCountChanged)
                     setReplyCount(tvReplyCount, toReplyLine, item)
 
@@ -65,6 +68,11 @@ class OutTextMsgViewHolder(
 
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, viewReply)
+
+                if (item.message.shouldShowAvatarAndName)
+                    avatar.setOnClickListener {
+                        messageListeners?.onAvatarClick(it, item)
+                    }
             }
         }
     }
@@ -74,15 +82,16 @@ class OutTextMsgViewHolder(
     override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
     override val incoming: Boolean
-        get() = false
+        get() = true
 
-    private fun SceytItemOutTextMessageBinding.setMessageItemStyle() {
+    private fun SceytItemIncTextMessageBinding.setMessageItemStyle() {
         applyCommonStyle(
             layoutDetails = layoutDetails,
             tvForwarded = tvForwarded,
             messageBody = messageBody,
             tvThreadReplyCount = tvReplyCount,
-            toReplyLine = toReplyLine
+            toReplyLine = toReplyLine,
+            tvSenderName = tvUserName
         )
     }
 }

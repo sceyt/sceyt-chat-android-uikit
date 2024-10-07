@@ -4,7 +4,7 @@ import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.databinding.SceytItemOutVideoMessageBinding
+import com.sceyt.chatuikit.databinding.SceytItemIncVideoMessageBinding
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
@@ -30,14 +30,14 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.cl
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
-class OutVideoMsgViewHolder(
-        private val binding: SceytItemOutVideoMessageBinding,
+class IncVideoMessageViewHolder(
+        private val binding: SceytItemIncVideoMessageBinding,
         private val viewPoolReactions: RecyclerView.RecycledViewPool,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
+        displayedListener: ((MessageListItem) -> Unit)?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMediaMessageViewHolder(binding.root, style, messageListeners,
-    needMediaDataCallback = needMediaDataCallback) {
+) : BaseMediaMessageViewHolder(binding.root, style, messageListeners, displayedListener, needMediaDataCallback) {
 
     init {
         with(binding) {
@@ -75,6 +75,7 @@ class OutVideoMsgViewHolder(
         }
     }
 
+
     override fun bind(item: MessageListItem, diff: MessageDiff) {
         super.bind(item, diff)
 
@@ -94,6 +95,9 @@ class OutVideoMsgViewHolder(
             if (diff.edited || diff.statusChanged)
                 setMessageStatusAndDateText(message, messageDate)
 
+            if (diff.avatarChanged || diff.showAvatarAndNameChanged)
+                setMessageUserAvatarAndName(avatar, tvUserName, message)
+
             if (diff.replyCountChanged)
                 setReplyCount(tvReplyCount, toReplyLine, item)
 
@@ -110,6 +114,11 @@ class OutVideoMsgViewHolder(
 
             if (diff.replyContainerChanged)
                 setReplyMessageContainer(message, binding.viewReply)
+
+            if (item.message.shouldShowAvatarAndName)
+                avatar.setOnClickListener {
+                    messageListeners?.onAvatarClick(it, item)
+                }
         }
     }
 
@@ -142,8 +151,8 @@ class OutVideoMsgViewHolder(
 
             PendingUpload, ErrorUpload, PauseUpload -> {
                 viewHolderHelper.drawThumbOrRequest(imageView, ::requestThumb)
-                binding.tvLoadSize.isVisible = false
                 binding.playPauseItem.isVisible = false
+                binding.tvLoadSize.isVisible = false
             }
 
             PendingDownload -> {
@@ -204,14 +213,14 @@ class OutVideoMsgViewHolder(
     override val loadingProgressView: CircularProgressView
         get() = binding.loadProgress
 
-    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
-
     override val selectMessageView get() = binding.selectView
 
-    override val incoming: Boolean
-        get() = false
+    override val layoutBubbleConfig get() = Pair(binding.layoutDetails, true)
 
-    private fun SceytItemOutVideoMessageBinding.setMessageItemStyle() {
+    override val incoming: Boolean
+        get() = true
+
+    private fun SceytItemIncVideoMessageBinding.setMessageItemStyle() {
         style.videoDurationTextStyle.apply(tvDuration)
         playPauseItem.setImageDrawable(style.videoPlayIcon)
         playPauseItem.setBackgroundTint(style.onOverlayColor)
@@ -223,7 +232,8 @@ class OutVideoMsgViewHolder(
             tvForwarded = tvForwarded,
             messageBody = messageBody,
             tvThreadReplyCount = tvReplyCount,
-            toReplyLine = toReplyLine
+            toReplyLine = toReplyLine,
+            tvSenderName = tvUserName
         )
     }
 }

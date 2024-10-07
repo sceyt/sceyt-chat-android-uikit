@@ -22,7 +22,6 @@ import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
-import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytMessagesListViewBinding
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asActivity
@@ -57,7 +56,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessagesAdapter
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMsgViewHolder
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.root.BaseMessageViewHolder
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.EmojiPickerBottomSheetFragment
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.MessagesRV
@@ -246,7 +245,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         for (i in 0 until messagesRV.childCount) {
             messagesRV.getChildAt(i)?.let {
                 val holder = messagesRV.getChildViewHolder(it)
-                (holder as? BaseMsgViewHolder)?.setSelectableState()
+                (holder as? BaseMessageViewHolder)?.setSelectableState()
             }
         }
     }
@@ -367,7 +366,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun updateItem(index: Int, item: MessageListItem, diff: MessageDiff) {
         val message = (item as? MessageItem)?.message ?: return
-        (messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMsgViewHolder)?.let {
+        (messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMessageViewHolder)?.let {
             SceytLog.i("StatusIssueTag", "updateItem: found by itemId: ${item.getItemId()}, msgId-> ${message.id}, diff ${diff.statusChanged}, status ${message.deliveryStatus}")
             it.bind(item, diff)
         } ?: run {
@@ -377,7 +376,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     private fun notifyItemUpdatedToVisibleItems(item: MessageListItem) {
-        (messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMsgViewHolder)?.itemUpdated(item)
+        (messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMessageViewHolder)?.itemUpdated(item)
     }
 
     internal fun setMessagesList(data: List<MessageListItem>, force: Boolean = false) {
@@ -691,7 +690,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 if (highlight || awaitToScroll != null) {
                     messagesRV.awaitToScrollFinish(position, callback = {
                         if (highlight)
-                            (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                            (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMessageViewHolder)?.highlight()
                         awaitToScroll?.invoke(true)
                     })
                 }
@@ -706,7 +705,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             if (highlight || awaitToScroll != null) {
                 messagesRV.awaitToScrollFinish(position, callback = {
                     if (highlight)
-                        (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMsgViewHolder)?.highlight()
+                        (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMessageViewHolder)?.highlight()
                     awaitToScroll?.invoke(true)
                 })
             }
@@ -743,7 +742,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         for (i in 0 until messagesRV.childCount) {
             messagesRV.getChildAt(i)?.let {
                 val holder = messagesRV.getChildViewHolder(it)
-                (holder as? BaseMsgViewHolder)?.cancelSelectableState()
+                (holder as? BaseMessageViewHolder)?.cancelSelectableState()
             }
         }
         messagesRV.getData().forEachIndexed { index, item ->

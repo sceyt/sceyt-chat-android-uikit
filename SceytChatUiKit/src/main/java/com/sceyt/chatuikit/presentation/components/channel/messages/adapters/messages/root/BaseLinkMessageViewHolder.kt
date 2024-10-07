@@ -23,13 +23,13 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
-abstract class BaseLinkMsgViewHolder(
+abstract class BaseLinkMessageViewHolder(
         view: View,
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners? = null,
         displayedListener: ((MessageListItem) -> Unit)? = null,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMsgViewHolder(view, style, messageListeners, displayedListener) {
+) : BaseMessageViewHolder(view, style, messageListeners, displayedListener) {
     protected var linkPreviewContainerBinding: SceytMessageLinkPreviewContainerBinding? = null
     protected open val maxSize by lazy {
         bubbleMaxWidth - dpToPx(28f) //(2*8 preview container + 2*6 root paddings ) is margins
