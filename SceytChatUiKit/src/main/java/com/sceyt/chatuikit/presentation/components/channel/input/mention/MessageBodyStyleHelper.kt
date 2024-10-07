@@ -25,7 +25,8 @@ object MessageBodyStyleHelper {
     fun SceytMessage.buildWithAttributes(
             context: Context,
             mentionTextStyle: TextStyle,
-            mentionUserNameFormatter: Formatter<SceytUser>
+            mentionUserNameFormatter: Formatter<SceytUser>,
+            mentionClickListener: ((String) -> Unit)?,
     ): CharSequence {
         return buildWithAttributes(
             context = context,
@@ -33,7 +34,8 @@ object MessageBodyStyleHelper {
             mentionUsers = mentionedUsers,
             bodyAttributes = bodyAttributes,
             mentionTextStyle = mentionTextStyle,
-            mentionUserNameFormatter = mentionUserNameFormatter
+            mentionUserNameFormatter = mentionUserNameFormatter,
+            mentionClickListener = mentionClickListener
         )
     }
 
@@ -43,7 +45,8 @@ object MessageBodyStyleHelper {
             mentionUsers: List<SceytUser>?,
             bodyAttributes: List<BodyAttribute>?,
             mentionTextStyle: TextStyle,
-            mentionUserNameFormatter: Formatter<SceytUser>
+            mentionUserNameFormatter: Formatter<SceytUser>,
+            mentionClickListener: ((String) -> Unit)?,
     ): CharSequence {
         return appendAttributes(
             context = context,
@@ -51,7 +54,8 @@ object MessageBodyStyleHelper {
             list = bodyAttributes,
             mentionUsers = mentionUsers,
             mentionTextStyle = mentionTextStyle,
-            mentionUserNameFormatter = mentionUserNameFormatter
+            mentionUserNameFormatter = mentionUserNameFormatter,
+            mentionClickListener = mentionClickListener
         )
     }
 
@@ -61,7 +65,8 @@ object MessageBodyStyleHelper {
             list: List<BodyAttribute>?,
             mentionUsers: List<SceytUser>?,
             mentionTextStyle: TextStyle,
-            mentionUserNameFormatter: Formatter<SceytUser>
+            mentionUserNameFormatter: Formatter<SceytUser>,
+            mentionClickListener: ((String) -> Unit)?,
     ): CharSequence {
         list ?: return body
         val group = list.groupBy { it.type == BodyAttributeType.Mention.value }
@@ -74,7 +79,9 @@ object MessageBodyStyleHelper {
                 mentionAttributes = it,
                 mentionUsers = mentionUsers,
                 mentionTextStyle = mentionTextStyle,
-                mentionUserNameFormatter = mentionUserNameFormatter)
+                mentionUserNameFormatter = mentionUserNameFormatter,
+                mentionClickListener = mentionClickListener
+            )
         }
 
         return spannableString

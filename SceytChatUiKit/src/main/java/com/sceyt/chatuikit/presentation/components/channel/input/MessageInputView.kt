@@ -40,6 +40,7 @@ import com.sceyt.chatuikit.extensions.notAutoCorrectable
 import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setTextAndMoveSelectionEnd
 import com.sceyt.chatuikit.extensions.showSoftInput
+import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
@@ -598,19 +599,17 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     internal fun setDraftMessage(draftMessage: DraftMessage?) {
-        if (draftMessage == null || draftMessage.message.isNullOrEmpty())
+        if (draftMessage == null || draftMessage.body.isNullOrEmpty())
             return
-        var body: CharSequence = draftMessage.message
+        var body: CharSequence
         binding.messageInput.removeTextChangedListener(inputTextWatcher)
         with(binding.messageInput) {
-            body = MessageBodyStyleHelper.buildWithAttributes(
-                context = context,
-                body = body.toString(),
-                mentionUsers = draftMessage.mentionUsers,
-                bodyAttributes = draftMessage.bodyAttributes,
-                mentionTextStyle = style.mentionTextStyle,
-                mentionUserNameFormatter = style.mentionUserNameFormatter
-            )
+            body = style.draftMessageBodyFormatterAttributes.format(context,
+                from = DraftMessageBodyFormatterAttributes(
+                    message = draftMessage,
+                    mentionTextStyle = style.mentionTextStyle,
+                    mentionUserNameFormatter = style.mentionUserNameFormatter
+                ))
             if (!draftMessage.mentionUsers.isNullOrEmpty()) {
                 val data = MentionUserHelper.getMentionsIndexed(context, draftMessage.bodyAttributes,
                     draftMessage.mentionUsers)

@@ -102,16 +102,17 @@ private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
     return deliveryStatus == DeliveryStatus.Displayed
 }
 
-fun SceytMessage.getFormattedBody(
+fun SceytMessage.getFormattedBodyWithAttachments(
         context: Context,
         mentionTextStyle: TextStyle,
         attachmentNameFormatter: Formatter<SceytAttachment>,
-        mentionUserNameFormatter: Formatter<SceytUser>
+        mentionUserNameFormatter: Formatter<SceytUser>,
+        mentionClickListener: ((String) -> Unit)?,
 ): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
         attachments.isNullOrEmpty() || attachments.getOrNull(0)?.type == AttachmentTypeEnum.Link.value -> {
-            buildWithAttributes(context, mentionTextStyle, mentionUserNameFormatter)
+            buildWithAttributes(context, mentionTextStyle, mentionUserNameFormatter, mentionClickListener)
         }
 
         attachments.size == 1 -> {
