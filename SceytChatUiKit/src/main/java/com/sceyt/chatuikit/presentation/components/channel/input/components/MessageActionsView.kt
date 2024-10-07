@@ -21,7 +21,6 @@ import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.persistence.mappers.getThumbFromMetadata
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.CancelReplyMessageViewClickListener
-import com.sceyt.chatuikit.presentation.extensions.getFormattedBody
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.shared.utils.ViewUtil
 import com.sceyt.chatuikit.styles.input.InputEditMessageStyle
@@ -66,10 +65,10 @@ class MessageActionsView @JvmOverloads constructor(
 
             loadAttachmentImage(message.attachments, style.attachmentIconProvider)
 
-            tvMessageBody.text = message.getFormattedBody(root.context,
-                mentionTextStyle = style.mentionTextStyle,
-                mentionUserNameFormatter = style.mentionUserNameFormatter,
-                attachmentNameFormatter = style.attachmentNameFormatter)
+            tvMessageBody.text = style.messageBodyFormatter.format(
+                context = context,
+                from = message to style.mentionTextStyle
+            )
         }
     }
 
@@ -101,11 +100,9 @@ class MessageActionsView @JvmOverloads constructor(
 
             loadAttachmentImage(message.attachments, style.attachmentIconProvider)
 
-            tvMessageBody.text = message.getFormattedBody(
+            tvMessageBody.text = style.messageBodyFormatter.format(
                 context = context,
-                mentionTextStyle = style.mentionTextStyle,
-                attachmentNameFormatter = style.attachmentNameFormatter,
-                mentionUserNameFormatter = style.mentionUserNameFormatter
+                from = message to style.mentionTextStyle
             )
         }
     }

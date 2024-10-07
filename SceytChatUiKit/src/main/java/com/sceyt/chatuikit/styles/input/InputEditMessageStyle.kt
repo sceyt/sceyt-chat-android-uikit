@@ -7,8 +7,8 @@ import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.formatters.defaults.MessageAndMentionTextStylePair
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleCustomizer
@@ -22,8 +22,7 @@ data class InputEditMessageStyle(
         val mentionTextStyle: TextStyle,
         val attachmentDurationTextStyle: TextStyle,
         val attachmentDurationFormatter: Formatter<Long>,
-        val attachmentNameFormatter: Formatter<SceytAttachment>,
-        val mentionUserNameFormatter: Formatter<SceytUser>,
+        val messageBodyFormatter: Formatter<MessageAndMentionTextStylePair>,
         val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>
 ) {
     companion object {
@@ -74,8 +73,7 @@ data class InputEditMessageStyle(
             mentionTextStyle = mentionTextStyle,
             attachmentDurationTextStyle = attachmentDurationTextStyle,
             attachmentDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
-            attachmentNameFormatter = SceytChatUIKit.formatters.attachmentNameFormatter,
-            mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
+            messageBodyFormatter = SceytChatUIKit.formatters.messageBodyFormatter,
             attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider
         ).let { styleCustomizer.apply(context, it) }
     }
