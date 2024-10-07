@@ -109,7 +109,8 @@ internal class PersistenceUsersLogicImpl(
     override suspend fun updateProfile(
             firstName: String?,
             lastName: String?,
-            avatarUri: String?
+            avatarUri: String?,
+            metadataMap: Map<String, String>?
     ): SceytResponse<SceytUser> {
         val request = User.setProfileRequest().apply {
             avatarUri?.let { uri ->
@@ -117,6 +118,7 @@ internal class PersistenceUsersLogicImpl(
             }
             setFirstName(firstName ?: "")
             setLastName(lastName ?: "")
+            setMetadataMap(metadataMap ?: emptyMap())
         }
         val response = profileRepo.updateProfile(request)
 
