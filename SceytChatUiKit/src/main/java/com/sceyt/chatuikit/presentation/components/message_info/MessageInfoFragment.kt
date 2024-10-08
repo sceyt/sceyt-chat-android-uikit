@@ -123,8 +123,7 @@ open class MessageInfoFragment : Fragment() {
         messageViewProvider.updateMessageStatus(message ?: return)
     }
 
-    protected open fun setMessageDetails(message: SceytMessage?) {
-        message ?: return
+    protected open fun setMessageDetails(message: SceytMessage) {
         with(binding ?: return) {
             tvSentDate.text = style.messageDateFormatter.format(requireContext(), Date(message.createdAt))
             groupSizeViews.isVisible = viewModel.getMessageAttachmentToShowSizeIfExist(message)?.let {
