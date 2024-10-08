@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.theme.Colors
 
 /**
  * Style for conversation info media
- * @property backgroundColor - background color, default is [Colors.backgroundColor]
+ * @property backgroundColor - background color, default is [Colors.backgroundColorSections]
  * @property itemStyle - style for media item
  * @property dateSeparatorStyle - style for date separator
  * */

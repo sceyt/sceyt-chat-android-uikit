@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.styles.channel_info.voice
 
 import android.content.Context
-import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
@@ -16,11 +15,12 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.theme.Colors
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
  * Style for voice item.
- * @property backgroundColor - background color, default is [Color.TRANSPARENT]
+ * @property backgroundColor - background color, default is [Colors.backgroundColorSections]
  * @property playIcon - icon for play button, default is [R.drawable.sceyt_ic_play]
  * @property pauseIcon - icon for pause button, default is [R.drawable.sceyt_ic_pause]
  * @property userNameTextStyle - style for user name
@@ -52,7 +52,7 @@ data class ChannelInfoVoiceItemStyle(
             private val attributeSet: AttributeSet?
     ) {
         fun build(): ChannelInfoVoiceItemStyle {
-            val backgroundColor = Color.TRANSPARENT
+            val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
 
             val playIcon = context.getCompatDrawable(R.drawable.sceyt_ic_play).applyTint(
                 context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)

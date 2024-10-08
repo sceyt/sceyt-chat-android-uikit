@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.theme.Colors
 
 /**
  * Style for [ChannelInfoFilesFragment] page.
- * @property backgroundColor - background color, default is [Colors.backgroundColorSections]
+ * @property backgroundColor - background color, default is [Colors.backgroundColor]
  * @property dateSeparatorStyle - style for date separator
  * @property itemStyle - style for file item
  * */
@@ -30,7 +30,7 @@ data class ChannelInfoFilesStyle(
             private val attributeSet: AttributeSet?
     ) {
         fun build(): ChannelInfoFilesStyle {
-            val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
+            val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
 
             val itemStyle = ChannelInfoFileItemStyle.Builder(context, attributeSet).build()
 

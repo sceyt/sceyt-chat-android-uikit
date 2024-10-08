@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.theme.Colors
 
 /**
  * Style for [ChannelInfoLinksFragment] page.
- * @property backgroundColor - background color, default is [Colors.backgroundColorSections]
+ * @property backgroundColor - background color, default is [Colors.backgroundColor]
  * @property itemStyle - style for link item
  * @property dateSeparatorStyle - style for date separator
  * */
@@ -30,7 +30,7 @@ data class ChannelInfoLinkStyle(
             private val attributeSet: AttributeSet?
     ) {
         fun build(): ChannelInfoLinkStyle {
-            val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
+            val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
 
             val itemStyle = ChannelInfoLinkItemStyle.Builder(context, attributeSet).build()
             val dateSeparatorStyle = ChannelInfoDateSeparatorStyle.Builder(context, attributeSet)

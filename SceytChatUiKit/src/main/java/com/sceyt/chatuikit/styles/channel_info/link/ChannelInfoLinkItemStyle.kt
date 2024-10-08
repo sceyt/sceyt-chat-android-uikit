@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.styles.channel_info.link
 
 import android.content.Context
-import android.graphics.Color
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.R
@@ -13,10 +12,11 @@ import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInf
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.messages_list.item.LinkPreviewStyle
+import com.sceyt.chatuikit.theme.Colors
 
 /**
  * Style for link item in [ChannelInfoLinksFragment]
- * @property backgroundColor - background color, default is [Color.TRANSPARENT]
+ * @property backgroundColor - background color, default is [Colors.backgroundColorSections]
  * @property linkTextStyle - style for link text
  * @property linkPreviewStyle - style for link preview
  * */
@@ -34,7 +34,7 @@ data class ChannelInfoLinkItemStyle(
             private val attributeSet: AttributeSet?
     ) {
         fun build(): ChannelInfoLinkItemStyle {
-            val backgroundColor = Color.TRANSPARENT
+            val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
 
             val linkTitleTextStyle = TextStyle(
                 color = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor),

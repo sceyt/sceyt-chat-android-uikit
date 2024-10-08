@@ -31,8 +31,7 @@ data class ChannelInfoVoiceStyle(
             private val attributeSet: AttributeSet?
     ) {
         fun build(): ChannelInfoVoiceStyle {
-            val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
-
+            val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
 
             val dateSeparatorStyle = ChannelInfoDateSeparatorStyle.Builder(context, attributeSet)
                 .build()
