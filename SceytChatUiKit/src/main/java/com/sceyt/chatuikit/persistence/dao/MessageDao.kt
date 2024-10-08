@@ -79,7 +79,7 @@ abstract class MessageDao {
         if (attachmentPairs.isNotEmpty()) {
             insertAttachments(attachmentPairs.flatMap { it.first.map { attachmentDb -> attachmentDb.attachmentEntity } })
             insertAttachmentPayLoads(attachmentPairs.flatMap { pair ->
-                pair.first.filter { it.attachmentEntity.type != AttachmentTypeEnum.Link.value() }
+                pair.first.filter { it.attachmentEntity.type != AttachmentTypeEnum.Link.value }
                     .map { it.toAttachmentPayLoad(pair.second.messageEntity) }
             })
             insertLinkDetails(attachmentPairs.flatMap { it.first.mapNotNull { attachmentDb -> attachmentDb.linkDetails } })
@@ -289,6 +289,10 @@ abstract class MessageDao {
     @Query("select * from messages where deliveryStatus = 0 and tid in (:tIds)")
     abstract suspend fun getPendingMessagesByTIds(tIds: List<Long>): List<MessageDb>
 
+    @Transaction
+    @Query("select * from messages where deliveryStatus = 0 and tid =:tid")
+    abstract suspend fun getPendingMessageByTid(tid: Long): MessageDb?
+
     @Query("select tid from messages where message_id in (:ids)")
     abstract suspend fun getMessageTIdsByIds(vararg ids: Long): List<Long>
 
@@ -339,6 +343,9 @@ abstract class MessageDao {
 
     @Query("delete from messages where tid =:tid")
     abstract fun deleteMessageByTid(tid: Long)
+
+    @Query("delete from messages where message_id in (:ids)")
+    abstract fun deleteMessagesById(ids: List<Long>)
 
     @Query("delete from messages where channelId =:channelId")
     abstract suspend fun deleteAllMessages(channelId: Long)

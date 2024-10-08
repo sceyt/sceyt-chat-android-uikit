@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
     android:background="@color/sceyt_color_black"
-    tools:context=".presentation.uicomponents.mediaview.SceytMediaActivity">
+    tools:context=".presentation.components.media.MediaPreviewActivity">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvMedia"

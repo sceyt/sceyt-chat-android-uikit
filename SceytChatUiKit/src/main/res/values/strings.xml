@@ -92,9 +92,14 @@
     <string name="sceyt_no_voice_items_yet">No voice items yet</string>
     <string name="sceyt_no_link_items_yet">No link items yet</string>
     <string name="sceyt_history_was_successfully_cleared">History was successfully cleared!</string>
+    <string name="sceyt_auto_delete">Auto-Delete Messages</string>
+    <string name="sceyt_1_day">One day</string>
+    <string name="sceyt_1_week">1 week</string>
+    <string name="sceyt_1_month">1 month</string>
+    <string name="sceyt_off">Off</string>
     <string name="sceyt_mute_chat">Mute chat:</string>
-    <string name="sceyt_mute_for_1_hour">For 1 hour</string>
-    <string name="sceyt_mute_for_8_hours">For 8 hours</string>
+    <string name="sceyt_for_1_hour">For 1 hour</string>
+    <string name="sceyt_for_8_hours">For 8 hours</string>
     <string name="sceyt_mute_forever">Forever</string>
     <string name="sceyt_mute_notifications">Mute notifications</string>
     <string name="sceyt_typing">typing</string>
@@ -169,7 +174,7 @@
     <string name="sceyt_chat">chat</string>
     <string name="sceyt_mute_">Mute</string>
     <string name="sceyt_un_mute_">Unmute</string>
-    <string name="sceyt_rich_max_message_select_count">You can select up to %1$s messages.</string>
+    <string name="sceyt_reach_max_message_select_count">You can select up to %1$s messages.</string>
     <string name="sceyt_clear_chat">Clear Chat</string>
     <string name="sceyt_bold">Bold</string>
     <string name="sceyt_italic">Italic</string>

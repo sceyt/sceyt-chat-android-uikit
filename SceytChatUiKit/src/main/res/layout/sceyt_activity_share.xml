@@ -4,15 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.sceyt.chatuikit.presentation.uicomponents.share.SceytShareActivity">
+    android:background="@color/sceyt_color_background"
+    tools:context="com.sceyt.chatuikit.presentation.components.share.ShareActivity">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytSearchableToolbar
+    <com.sceyt.chatuikit.presentation.custom_views.SearchableToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytSearchableToolbarTitle="@string/sceyt_share_with" />
+        app:sceytUiSearchableToolbarTitle="@string/sceyt_share_with" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvChannels"
@@ -35,7 +36,7 @@
         android:hint="@string/sceyt_write_a_message"
         android:padding="16dp"
         android:textColor="@color/sceyt_color_text_primary"
-        android:textColorHint="@color/sceyt_color_hint"
+        android:textColorHint="@color/sceyt_color_text_footnote"
         android:textSize="16sp"
         app:layout_constraintBottom_toTopOf="@+id/btnShare"
         app:layout_constraintEnd_toEndOf="parent"

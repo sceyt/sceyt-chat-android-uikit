@@ -43,7 +43,7 @@ This will enable your project to use libraries from Maven Central.
 
 ```groovy
 dependencies {
-    implementation 'com.sceyt:sceyt-chat-android-uikit:1.6.4'
+    implementation 'com.sceyt:sceyt-chat-android-uikit:1.7.0'
 }
 ```
 ## Usage
@@ -107,19 +107,24 @@ Here's how you can customize various aspects:
 
 ```kotlin
 // Set the primary accent color for the SceytKit UI elements to enhance visual appeal, and
-// Set avatar colors in SceytKit to assign a color array for default user avatars and channel icons.
-SceytChatUIKit.theme = SceytChatUIKitTheme(
-    accentColor = R.color.accentColor,
-    avatarColors = arrayOf("#FFC107", "#FF9800", "#FF5722", "#795548"),
+SceytChatUIKit.theme.colors = SceytChatUIKit.theme.colors.copy(
+    accentColor = R.color.accentColor
 )
+// Set avatar colors in SceytKit to assign a color array for default user avatars and channel icons.
+SceytChatUIKit.config.defaultAvatarBackgroundColors = AvatarBackgroundColors { context ->
+    listOf(
+        "#FFC107".toColorInt(),
+        "#FF5722".toColorInt(),
+        ContextCompat.getColor(context, R.color.pink),
+        ContextCompat.getColor(context, R.color.red),
+    )
+}
 
 // Set incoming and outgoing message bubble colors in SceytKit.
-MessagesListViewStyle.styleCustomizer = StyleCustomizer { context, style ->
+MessageItemStyle.styleCustomizer = StyleCustomizer { context, style ->
     style.copy(
-        messageItemStyle = style.messageItemStyle.copy(
-            incBubbleColor = context.getCompatColor(R.color.gray),
-            outBubbleColor = context.getCompatColor(R.color.pink)
-        )
+        incomingBubbleColor = ContextCompat.getColor(context, R.color.gray),
+        outgoingBubbleColor = ContextCompat.getColor(context, R.color.pink)
     )
 }
 ```

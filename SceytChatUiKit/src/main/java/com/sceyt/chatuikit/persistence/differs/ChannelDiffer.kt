@@ -12,7 +12,7 @@ data class ChannelDiff(
         val lastMessageStatusChanged: Boolean,
         val unreadCountChanged: Boolean,
         val muteStateChanged: Boolean,
-        val onlineStateChanged: Boolean,
+        val presenceStateChanged: Boolean,
         val markedUsUnreadChanged: Boolean,
         val lastReadMsdChanged: Boolean,
         val peerBlockedChanged: Boolean,
@@ -20,13 +20,14 @@ data class ChannelDiff(
         val membersChanged: Boolean,
         val metadataUpdated: Boolean,
         val urlUpdated: Boolean,
-        val pinStateChanged: Boolean
+        val pinStateChanged: Boolean,
+        val autoDeleteStateChanged: Boolean
 ) {
     fun hasDifference(): Boolean {
         return subjectChanged || avatarViewChanged || lastMessageChanged || lastMessageStatusChanged ||
-                unreadCountChanged || muteStateChanged || onlineStateChanged || markedUsUnreadChanged ||
+                unreadCountChanged || muteStateChanged || presenceStateChanged || markedUsUnreadChanged ||
                 lastReadMsdChanged || peerBlockedChanged || typingStateChanged || membersChanged ||
-                metadataUpdated || urlUpdated || pinStateChanged
+                metadataUpdated || urlUpdated || pinStateChanged || autoDeleteStateChanged
     }
 
     companion object {
@@ -37,7 +38,7 @@ data class ChannelDiff(
             lastMessageStatusChanged = true,
             unreadCountChanged = true,
             muteStateChanged = true,
-            onlineStateChanged = true,
+            presenceStateChanged = true,
             markedUsUnreadChanged = true,
             lastReadMsdChanged = true,
             peerBlockedChanged = true,
@@ -45,7 +46,8 @@ data class ChannelDiff(
             membersChanged = true,
             metadataUpdated = true,
             urlUpdated = true,
-            pinStateChanged = true
+            pinStateChanged = true,
+            autoDeleteStateChanged = true
         )
 
         val DEFAULT_FALSE = ChannelDiff(
@@ -55,7 +57,7 @@ data class ChannelDiff(
             lastMessageStatusChanged = false,
             unreadCountChanged = false,
             muteStateChanged = false,
-            onlineStateChanged = false,
+            presenceStateChanged = false,
             markedUsUnreadChanged = false,
             lastReadMsdChanged = false,
             peerBlockedChanged = false,
@@ -63,7 +65,8 @@ data class ChannelDiff(
             membersChanged = false,
             metadataUpdated = false,
             urlUpdated = false,
-            pinStateChanged = false
+            pinStateChanged = false,
+            autoDeleteStateChanged = false
         )
     }
 }
@@ -86,7 +89,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
         lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus,
         unreadCountChanged = newMessageCount != other.newMessageCount,
         muteStateChanged = muted != other.muted,
-        onlineStateChanged = isDirect() && firstMember?.user?.presence?.state != otherFirstMember?.user?.presence?.state,
+        presenceStateChanged = isDirect() && firstMember?.user?.presence?.state != otherFirstMember?.user?.presence?.state,
         markedUsUnreadChanged = unread != other.unread,
         lastReadMsdChanged = lastDisplayedMessageId != other.lastDisplayedMessageId,
         peerBlockedChanged = peerBlockedChanged,
@@ -94,6 +97,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
         membersChanged = membersCountChanged || members != other.members,
         metadataUpdated = metadata != other.metadata,
         urlUpdated = uri != other.uri,
-        pinStateChanged = pinnedAt != other.pinnedAt)
+        pinStateChanged = pinnedAt != other.pinnedAt,
+        autoDeleteStateChanged = autoDeleteEnabled != other.autoDeleteEnabled)
 }
 

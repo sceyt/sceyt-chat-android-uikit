@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.persistence.interactor
 
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -9,8 +8,9 @@ import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mention
-import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
+import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
+import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import kotlinx.coroutines.flow.Flow
 
 interface ChannelInteractor {
@@ -28,10 +28,12 @@ interface ChannelInteractor {
     suspend fun blockAndLeaveChannel(channelId: Long): SceytResponse<Long>
     suspend fun deleteChannel(channelId: Long): SceytResponse<Long>
     suspend fun leaveChannel(channelId: Long): SceytResponse<Long>
-    suspend fun findOrCreateDirectChannel(user: User): SceytResponse<SceytChannel>
+    suspend fun findOrCreateDirectChannel(user: SceytUser): SceytResponse<SceytChannel>
     suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun muteChannel(channelId: Long, muteUntil: Long): SceytResponse<SceytChannel>
     suspend fun unMuteChannel(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun enableAutoDelete(channelId: Long, period: Long): SceytResponse<SceytChannel>
+    suspend fun disableAutoDelete(channelId: Long): SceytResponse<SceytChannel>
     suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun unpinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun getChannelFromDb(channelId: Long): SceytChannel?

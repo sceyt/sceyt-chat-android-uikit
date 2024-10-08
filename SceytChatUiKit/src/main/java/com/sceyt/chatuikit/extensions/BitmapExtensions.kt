@@ -27,7 +27,7 @@ fun getBitmapFromUrl(imageUrl: String?, isCircleImage: Boolean = true): Bitmap? 
     }
 }
 
-fun Bitmap.getCircleBitmap(): Bitmap? {
+fun Bitmap.getCircleBitmap(): Bitmap {
     val output: Bitmap
     val srcRect: Rect
     val dstRect: Rect
@@ -58,7 +58,7 @@ fun Bitmap.getCircleBitmap(): Bitmap? {
     canvas.drawBitmap(this, srcRect, dstRect, paint)
     try {
         recycle()
-    } catch (ex: java.lang.Exception) {
+    } catch (_: java.lang.Exception) {
     }
     return output
 }

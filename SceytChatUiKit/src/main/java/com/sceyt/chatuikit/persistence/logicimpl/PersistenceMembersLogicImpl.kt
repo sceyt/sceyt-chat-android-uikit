@@ -1,11 +1,9 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
-import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventData
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventEnum
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -18,26 +16,22 @@ import com.sceyt.chatuikit.persistence.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.dao.MemberDao
 import com.sceyt.chatuikit.persistence.dao.MessageDao
 import com.sceyt.chatuikit.persistence.dao.UserDao
-import com.sceyt.chatuikit.persistence.entity.UserEntity
 import com.sceyt.chatuikit.persistence.entity.channel.UserChatLink
-import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
+import com.sceyt.chatuikit.persistence.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toSceytMember
-import com.sceyt.chatuikit.persistence.mappers.toUserEntity
+import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
-import com.sceyt.chatuikit.persistence.repositories.UsersRepository
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import org.koin.core.component.inject
 
 internal class PersistenceMembersLogicImpl(
         private val channelsRepository: ChannelsRepository,
-        private val usersRepository: UsersRepository,
         private val channelDao: ChannelDao,
         private val rangeDao: LoadRangeDao,
         private val messageDao: MessageDao,
@@ -45,14 +39,13 @@ internal class PersistenceMembersLogicImpl(
         private val usersDao: UserDao,
         private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent {
 
-    private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
-    private val channelMembersLoadSize get() = SceytChatUIKit.config.channelMembersLoadSize
+    private val channelMembersLoadSize get() = SceytChatUIKit.config.queryLimits.channelMemberListQueryLimit
 
     override suspend fun onChannelMemberEvent(data: ChannelMembersEventData) {
         val chatId = data.channel.id
         when (data.eventType) {
             ChannelMembersEventEnum.Role, ChannelMembersEventEnum.Added -> {
-                usersDao.insertUsers(data.members.map { it.toUserEntity() })
+                usersDao.insertUsersWithMetadata(data.members.map { it.toUserDb() })
                 channelDao.insertUserChatLinks(data.members.map {
                     UserChatLink(userId = it.id, chatId = chatId, role = it.role.name)
                 })
@@ -149,14 +142,14 @@ internal class PersistenceMembersLogicImpl(
         if (list.isNullOrEmpty()) return
 
         val links = arrayListOf<UserChatLink>()
-        val users = arrayListOf<UserEntity>()
+        val users = arrayListOf<UserDb>()
 
         list.forEach { member ->
             links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name))
-            users.add(member.toUserEntity())
+            users.add(member.toUserDb())
         }
 
-        usersDao.insertUsers(users)
+        usersDao.insertUsersWithMetadata(users)
         channelDao.insertUserChatLinks(links)
     }
 
@@ -193,7 +186,9 @@ internal class PersistenceMembersLogicImpl(
     }
 
     override suspend fun changeChannelMemberRole(channelId: Long, vararg member: SceytMember): SceytResponse<SceytChannel> {
-        val response = channelsRepository.changeChannelMemberRole(channelId, *member.map { it.toMember() }.toTypedArray())
+        val response = channelsRepository.changeChannelMemberRole(channelId, *member.map {
+            it.toMember()
+        }.toTypedArray())
 
         if (response is SceytResponse.Success) {
             response.data?.members?.let { members ->
@@ -209,11 +204,11 @@ internal class PersistenceMembersLogicImpl(
         return response
     }
 
-    override suspend fun addMembersToChannel(channelId: Long, members: List<Member>): SceytResponse<SceytChannel> {
-        val response = channelsRepository.addMembersToChannel(channelId, members)
+    override suspend fun addMembersToChannel(channelId: Long, members: List<SceytMember>): SceytResponse<SceytChannel> {
+        val response = channelsRepository.addMembersToChannel(channelId, members.map { it.toMember() })
 
         if (response is SceytResponse.Success) {
-            usersDao.insertUsers(members.map { it.toUserEntity() })
+            usersDao.insertUsersWithMetadata(members.map { it.toUserDb() })
             channelDao.insertUserChatLinks(members.map {
                 UserChatLink(userId = it.id, chatId = channelId, role = it.role.name)
             })
@@ -239,20 +234,6 @@ internal class PersistenceMembersLogicImpl(
         if (response is SceytResponse.Success) {
             channelDao.deleteUserChatLinks(channelId, memberId)
             response.data?.let { channelsCache.updateMembersCount(it) }
-        }
-
-        return response
-    }
-
-    override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>> {
-        val response = if (block) {
-            usersRepository.blockUser(userId)
-        } else
-            usersRepository.unblockUser(userId)
-
-        if (response is SceytResponse.Success) {
-            usersDao.blockUnBlockUser(userId, block)
-            persistenceChannelsLogic.blockUnBlockUser(userId, block)
         }
 
         return response

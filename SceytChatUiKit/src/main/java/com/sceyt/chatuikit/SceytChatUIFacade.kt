@@ -7,10 +7,9 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.wrapper.ClientWrapper
-import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
-import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.persistence.SceytDatabase
-import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
@@ -18,8 +17,9 @@ import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
+import com.sceyt.chatuikit.push.FirebaseMessagingDelegate
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
+@Suppress("unused", "MemberVisibilityCanBePrivate")
 class SceytChatUIFacade(
         private val context: Context,
         private val preferences: SceytSharedPreference,
@@ -44,7 +45,7 @@ class SceytChatUIFacade(
         val attachmentInteractor: AttachmentInteractor,
         val messageReactionInteractor: MessageReactionInteractor,
         val messageMarkerInteractor: MessageMarkerInteractor
-) : SceytKoinComponent {
+) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var clientUserId: String? = null
 
@@ -81,11 +82,11 @@ class SceytChatUIFacade(
     }
 
     private fun setListener() {
-        ConnectionEventsObserver.onTokenExpired.onEach {
+        ConnectionEventManager.onTokenExpired.onEach {
             _onTokenExpired.tryEmit(Unit)
         }.launchIn(scope)
 
-        ConnectionEventsObserver.onTokenWillExpire.onEach {
+        ConnectionEventManager.onTokenWillExpire.onEach {
             _onTokenWillExpire.tryEmit(Unit)
         }.launchIn(scope)
     }
@@ -98,19 +99,18 @@ class SceytChatUIFacade(
     }
 
     fun logOut(unregisterPushCallback: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
-        clearData()
+        sceytSyncManager.cancelSync()
         WorkManager.getInstance(context).cancelAllWork()
+        clearData()
         ClientWrapper.currentUser = null
         clientUserId = null
-        ChatClient.getClient().unregisterPushToken(object : ActionCallback {
-            override fun onSuccess() {
+        FirebaseMessagingDelegate.unregisterFirebaseToken { success, error ->
+            if (success) {
                 ChatClient.getClient().disconnect()
                 unregisterPushCallback?.invoke(true, null)
+            } else {
+                unregisterPushCallback?.invoke(false, error)
             }
-
-            override fun onError(exception: SceytException?) {
-                unregisterPushCallback?.invoke(false, exception?.message)
-            }
-        })
+        }
     }
 }

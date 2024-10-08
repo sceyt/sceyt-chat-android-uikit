@@ -1,19 +1,9 @@
 package com.sceyt.chatuikit.data.models.messages
 
-enum class AttachmentTypeEnum {
-    Image,
-    Video,
-    Voice,
-    Link,
-    File;
-
-    fun value(): String {
-        return when (this) {
-            Image -> "image"
-            Video -> "video"
-            Voice -> "voice"
-            Link -> "link"
-            File -> "file"
-        }
-    }
+enum class AttachmentTypeEnum(val value: String) {
+    Image("image"),
+    Video("video"),
+    Voice("voice"),
+    Link("link"),
+    File ("file");
 }

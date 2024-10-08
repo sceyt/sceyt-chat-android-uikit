@@ -11,19 +11,21 @@ import com.sceyt.chat.sceyt_callbacks.SettingsCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chat.sceyt_callbacks.UserCallback
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
+import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.repositories.ProfileRepository
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 internal class ProfileRepositoryImpl : ProfileRepository {
 
-    override suspend fun updateProfile(request: SetProfileRequest): SceytResponse<User> {
+    override suspend fun updateProfile(request: SetProfileRequest): SceytResponse<SceytUser> {
         return suspendCancellableCoroutine { continuation ->
             request.execute(object : UserCallback {
                 override fun onResult(user: User) {
-                    continuation.safeResume(SceytResponse.Success(user))
+                    continuation.safeResume(SceytResponse.Success(user.toSceytUser()))
                 }
 
                 override fun onError(e: SceytException?) {

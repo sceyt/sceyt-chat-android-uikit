@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -11,43 +13,18 @@
         android:layout_height="wrap_content"
         android:paddingHorizontal="18dp"
         android:paddingVertical="10dp"
-        android:text="@string/sceyt_mute_chat"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        tools:text="@string/sceyt_mute_chat" />
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/muteOneHour"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvOptions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:background="?selectableItemBackground"
-        android:paddingHorizontal="18dp"
-        android:paddingVertical="10dp"
-        android:text="@string/sceyt_mute_for_1_hour"
-        android:textColor="@color/sceyt_color_text_primary"
-        android:textSize="@dimen/mediumTextSize" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/muteTwoHour"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
-        android:paddingHorizontal="18dp"
-        android:paddingVertical="10dp"
-        android:text="@string/sceyt_mute_for_8_hours"
-        android:textColor="@color/sceyt_color_text_primary"
-        android:textSize="@dimen/mediumTextSize" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/muteForever"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
-        android:paddingHorizontal="18dp"
-        android:paddingVertical="10dp"
-        android:text="@string/sceyt_mute_forever"
-        android:textColor="@color/sceyt_color_text_primary"
-        android:textSize="@dimen/mediumTextSize" />
+        android:nestedScrollingEnabled="false"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:itemCount="3"
+        tools:listitem="@layout/sceyt_item_option" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>

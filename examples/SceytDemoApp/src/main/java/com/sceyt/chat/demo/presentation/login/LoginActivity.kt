@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.ActivityLoginBinding
-import com.sceyt.chat.demo.presentation.mainactivity.MainActivity
+import com.sceyt.chat.demo.presentation.main.MainActivity
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.launchActivity

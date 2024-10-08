@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <declare-styleable name="SceytGalleryPicker">
+    <declare-styleable name="MediaPicker">
         <attr name="sceytUiPickerNextButtonColor" format="reference|color" />
         <attr name="sceytUiPickerCounterColor" format="reference|color" />
         <attr name="sceytUiPickerCheckedStateIcon" format="reference" />

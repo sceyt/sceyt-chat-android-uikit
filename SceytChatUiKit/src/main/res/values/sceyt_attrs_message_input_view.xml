@@ -2,20 +2,317 @@
 <resources>
 
     <declare-styleable name="MessageInputView">
-        <attr name="sceytMessageInputAttachmentIcon" format="reference" />
-        <attr name="sceytMessageInputSendIcon" format="reference" />
-        <attr name="sceytMessageInputVoiceRecordIcon" format="reference" />
-        <attr name="sceytMessageInputSendVoiceRecordIcon" format="reference" />
-        <attr name="sceytMessageInputLinkIcon" format="reference" />
-        <attr name="sceytMessageInputHintText" format="string" localization="suggested" />
-        <attr name="sceytMessageInputTextColor" format="reference|color" />
-        <attr name="sceytMessageInputHintTextColor" format="reference|color" />
-        <attr name="sceytMessageInputRootBackgroundColor" format="reference|color" />
-        <attr name="sceytMessageInputBackgroundColor" format="reference|color" />
-        <attr name="sceytMessageInputSendIconBackgroundColor" format="reference|color" />
-        <attr name="sceytMessageInputEnableVoiceRecord" format="boolean" />
-        <attr name="sceytMessageInputEnableSendAttachment" format="boolean" />
-        <attr name="sceytMessageInputEnableMention" format="boolean" />
-        <attr name="sceytMessageInputEnableLinkPreview" format="boolean" />
+        <attr name="sceytUiMessageInputBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputTextInputBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputMentionUsersListBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputMentionUsersListTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputMentionUsersListTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputMentionUsersListTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputMentionUsersListTextFont" format="reference" />
+
+        <!-- Corners-->
+        <attr name="sceytUiMessageInputCornersRadius" format="dimension" />
+        <!-- Border-->
+        <attr name="sceytUiMessageInputBorderWidth" format="dimension" />
+        <attr name="sceytUiMessageInputBorderColor" format="reference|color" />
+
+        <!-- Icons -->
+        <attr name="sceytUiMessageInputAttachmentIcon" format="reference" />
+        <attr name="sceytUiMessageInputSendIcon" format="reference" />
+        <attr name="sceytUiMessageInputVoiceRecordIcon" format="reference" />
+        <attr name="sceytUiMessageInputSendVoiceRecordIcon" format="reference" />
+        <attr name="sceytUiMessageInputLinkIcon" format="reference" />
+        <attr name="sceytUiMessageInputCloseIcon" format="reference" />
+        <attr name="sceytUiMessageInputDividerColor" format="reference|color" />
+
+        <!-- Configs -->
+        <attr name="sceytUiMessageInputEnableVoiceRecord" format="boolean" />
+        <attr name="sceytUiMessageInputEnableSendAttachment" format="boolean" />
+        <attr name="sceytUiMessageInputEnableMention" format="boolean" />
+
+        <attr name="sceytUiMessageInputSendIconBackgroundColor" format="reference|color" />
+
+        <!--Input text style -->
+        <attr name="sceytUiMessageInputTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputTextFont" format="reference" />
+
+        <!-- Input hint style -->
+        <attr name="sceytUiMessageInputHintText" format="string" localization="suggested" />
+        <attr name="sceytUiMessageInputHintTextColor" format="reference|color" />
+
+        <!-- Input cover-->
+        <attr name="sceytUiMessageInputCoverBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputCoverDividerColor" format="reference|color" />
+        <attr name="sceytUiMessageInputCoverTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputCoverTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputCoverTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputCoverTextFont" format="reference" />
+
+        <!-- Join button style -->
+        <attr name="sceytUiMessageInputJoinButtonBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputJoinButtonCornersRadius" format="dimension" />
+        <attr name="sceytUiMessageInputJoinButtonBorderColor" format="reference|color" />
+        <attr name="sceytUiMessageInputJoinButtonBorderWidth" format="dimension" />
+        <attr name="sceytUiMessageInputJoinButtonTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputJoinButtonTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputJoinButtonTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputJoinButtonTextFont" format="reference" />
+
+        <!-- Clear chat text style -->
+        <attr name="sceytUiMessageInputClearChatTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputClearChatTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputClearChatTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputClearChatTextFont" format="reference" />
+
+        <!-- Link preview style -->
+        <attr name="sceytUiMessageInputLinkPreviewBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputLinkPreviewDividerColor" format="reference|color" />
+        <attr name="sceytUiMessageInputLinkPreviewTitleTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputLinkPreviewTitleTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputLinkPreviewTitleTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputLinkPreviewTitleTextFont" format="reference" />
+        <attr name="sceytUiMessageInputLinkPreviewDescriptionTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputLinkPreviewDescriptionTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputLinkPreviewDescriptionTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputLinkPreviewDescriptionTextFont" format="reference" />
+        <attr name="sceytUiMessageInputLinkPreviewPlaceHolder" format="reference" />
+
+
+        <!-- Reply message style -->
+        <attr name="sceytUiMessageInputReplyMessageBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputReplyMessageIcon" format="reference" />
+        <attr name="sceytUiMessageInputReplyMessageTitleTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputReplyMessageTitleTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputReplyMessageTitleTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputReplyMessageTitleTextFont" format="reference" />
+
+        <attr name="sceytUiMessageInputReplyMessageSenderNameTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputReplyMessageSenderNameTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputReplyMessageSenderNameTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputReplyMessageSenderNameTextFont" format="reference" />
+
+        <attr name="sceytUiMessageInputReplyMessageBodyTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputReplyMessageBodyTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputReplyMessageBodyTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputReplyMessageBodyTextFont" format="reference" />
+
+        <attr name="sceytUiMessageInputReplyMessageMentionTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputReplyMessageMentionTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputReplyMessageMentionTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputReplyMessageMentionTextFont" format="reference" />
+
+        <attr name="sceytUiMessageInputReplyMessageAttachmentDurationTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputReplyMessageAttachmentDurationTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputReplyMessageAttachmentDurationTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputReplyMessageAttachmentDurationTextFont" format="reference" />
+
+        <!-- Edit message style -->
+        <attr name="sceytUiMessageInputEditMessageBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputEditMessageEditIcon" format="reference" />
+
+        <attr name="sceytUiMessageInputEditMessageTitleTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputEditMessageTitleTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputEditMessageTitleTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputEditMessageTitleTextFont" format="reference" />
+
+        <attr name="sceytUiMessageInputEditMessageBodyTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputEditMessageBodyTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputEditMessageBodyTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputEditMessageBodyTextFont" format="reference" />
+
+        <attr name="sceytUiMessageInputEditMessageMentionTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputEditMessageMentionTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputEditMessageMentionTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputEditMessageMentionTextFont" format="reference" />
+
+        <attr name="sceytUiMessageInputEditMessageAttachmentDurationTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputEditMessageAttachmentDurationTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputEditMessageAttachmentDurationTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputEditMessageAttachmentDurationTextFont" format="reference" />
+
+
+        <!-- Selected media style-->
+        <attr name="sceytUiMessageInputSelectedMediaBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputSelectedMediaFileAttachmentBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputSelectedMediaRemoveAttachmentIcon" format="reference" />
+
+        <attr name="sceytUiMessageInputSelectedMediaAttachmentDurationTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputSelectedMediaAttachmentDurationTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputSelectedMediaAttachmentDurationTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputSelectedMediaAttachmentDurationTextFont" format="reference" />
+
+        <attr name="sceytUiMessageInputSelectedMediaFileAttachmentNameTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputSelectedMediaFileAttachmentNameTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputSelectedMediaFileAttachmentNameTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputSelectedMediaFileAttachmentNameTextFont" format="reference" />
+
+        <attr name="sceytUiMessageInputSelectedMediaFileAttachmentSizeTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputSelectedMediaFileAttachmentSizeTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputSelectedMediaFileAttachmentSizeTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputSelectedMediaFileAttachmentSizeTextFont" format="reference" />
+
+
+        <!--Voice record style -->
+        <attr name="sceytUiMessageInputVoiceRecorderBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputVoiceRecorderRecordingIndicatorColor" format="reference|color" />
+        <attr name="sceytUiMessageInputVoiceRecorderRecordingIcon" format="reference" />
+        <attr name="sceytUiMessageInputVoiceRecorderDeleteRecordIcon" format="reference" />
+        <attr name="sceytUiMessageInputVoiceRecorderLockRecordingIcon" format="reference" />
+        <attr name="sceytUiMessageInputVoiceRecorderArrowToLockIcon" format="reference" />
+        <attr name="sceytUiMessageInputVoiceRecorderStopRecordingIcon" format="reference" />
+        <attr name="sceytUiMessageInputVoiceRecorderSendVoiceIcon" format="reference" />
+
+        <attr name="sceytUiMessageInputVoiceRecorderSlideToCancelText" format="string" localization="suggested" />
+        <attr name="sceytUiMessageInputVoiceRecorderSlideToCancelTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputVoiceRecorderSlideToCancelTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputVoiceRecorderSlideToCancelTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputVoiceRecorderSlideToCancelTextFont" format="reference" />
+
+        <attr name="sceytUiMessageInputVoiceRecorderCancelText" format="string" localization="suggested" />
+        <attr name="sceytUiMessageInputVoiceRecorderCancelTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputVoiceRecorderCancelTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputVoiceRecorderCancelTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputVoiceRecorderCancelTextFont" format="reference" />
+
+        <attr name="sceytUiMessageInputVoiceRecorderDurationTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputVoiceRecorderDurationTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputVoiceRecorderDurationTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputVoiceRecorderDurationTextFont" format="reference" />
+
+
+        <!--Playback voice style-->
+        <attr name="sceytUiMessageInputVoiceRecordPlaybackBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputVoiceRecordPlaybackPlayerBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputVoiceRecordPlaybackTrackColor" format="reference|color" />
+        <attr name="sceytUiMessageInputVoiceRecordPlaybackProgressColor" format="reference|color" />
+        <attr name="sceytUiMessageInputVoiceRecordPlaybackCloseIcon" format="reference" />
+        <attr name="sceytUiMessageInputVoiceRecordPlaybackPlayIcon" format="reference" />
+        <attr name="sceytUiMessageInputVoiceRecordPlaybackPauseIcon" format="reference" />
+        <attr name="sceytUiMessageInputVoiceRecordPlaybackSendVoiceIcon" format="reference" />
+
+        <attr name="sceytUiMessageInputVoiceRecordPlaybackDurationTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputVoiceRecordPlaybackDurationTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputVoiceRecordPlaybackDurationTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputVoiceRecordPlaybackDurationTextFont" format="reference" />
+
+        <!--Message search control style-->
+        <attr name="sceytUiMessageInputSearchControlBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessageInputSearchControlPreviousIcon" format="reference" />
+        <attr name="sceytUiMessageInputSearchControlNextIcon" format="reference" />
+        <attr name="sceytUiMessageInputSearchControlResultTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputSearchControlResultTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputSearchControlResultTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputSearchControlResultTextFont" format="reference" />
+
+        <!--Mention user text style -->
+        <attr name="sceytUiMessageInputMentionUserTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputMentionUserTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputMentionUserTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessageInputMentionUserTextFont" format="reference" />
+
+        <!-- Not implemented yet-->
+        <attr name="sceytUiMessageInputEnableLinkPreview" format="boolean" />
     </declare-styleable>
 </resources>
