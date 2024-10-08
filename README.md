@@ -24,7 +24,7 @@ chat into your Android application with minimal coding.
 
 ## Requirements
 Minimal Android SDK version:
--  API 19 ("KitKat"; Android 4.4) or later.
+-  API 21 (Android 5.0, "Lollipop") or later.
 
 ## Installation
 1. Add the following line to the `build.gradle` file for your project:
