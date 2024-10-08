@@ -36,6 +36,7 @@ class SceytChatDemoApp : Application() {
             apiUrl = BuildConfig.API_URL,
             appId = BuildConfig.APP_ID,
             clientId = UUID.randomUUID().toString(),
-            enableDatabase = true)
+            enableDatabase = true
+        )
     }
 }
