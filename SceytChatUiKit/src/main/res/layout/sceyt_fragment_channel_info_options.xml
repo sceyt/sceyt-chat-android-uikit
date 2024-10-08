@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    tools:context="com.sceyt.chatuikit.presentation.components.channel_info.options.ChannelInfoOptionsFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutDetails"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/sceyt_color_background_sections">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/members"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/sceyt_bg_ripple"
+            android:drawableStart="@drawable/sceyt_ic_members_with_layers"
+            android:drawablePadding="16dp"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="10dp"
+            android:text="@string/sceyt_members"
+            android:textColor="@color/sceyt_color_text_primary"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="UnusedAttribute" />
+
+        <com.google.android.material.divider.MaterialDivider
+            android:id="@+id/borderBetweenMembersAndAdmins"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/sceyt_color_border"
+            app:layout_constraintTop_toBottomOf="@+id/members" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/admins"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/sceyt_bg_ripple"
+            android:drawableStart="@drawable/sceyt_ic_admin_with_layers"
+            android:drawablePadding="16dp"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="10dp"
+            android:text="@string/sceyt_admins"
+            android:textColor="@color/sceyt_color_text_primary"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/borderBetweenMembersAndAdmins"
+            tools:ignore="UnusedAttribute" />
+
+        <com.google.android.material.divider.MaterialDivider
+            android:id="@+id/borderBetweenAdminsAndSearch"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/sceyt_color_border"
+            app:layout_constraintTop_toBottomOf="@+id/admins" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/searchMessages"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/sceyt_bg_ripple"
+            android:drawableStart="@drawable/sceyt_ic_search_messages_with_layers"
+            android:drawablePadding="16dp"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="10dp"
+            android:text="@string/sceyt_search_messages"
+            android:textColor="@color/sceyt_color_text_primary"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/borderBetweenAdminsAndSearch"
+            tools:ignore="UnusedAttribute" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/group_channel_members"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="borderBetweenMembersAndAdmins,members" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/group_channel_admins"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="borderBetweenAdminsAndSearch,admins" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <Space
+        android:id="@+id/space"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/searchMessages"
+        tools:layout_height="16dp" />
+
+</LinearLayout>

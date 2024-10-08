@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.sceyt.chatuikit.presentation.uicomponents.forward.SceytForwardActivity">
+    tools:context="com.sceyt.chatuikit.presentation.components.forward.ForwardActivity">
 
-    <com.sceyt.chatuikit.presentation.customviews.SearchableToolbar
+    <com.sceyt.chatuikit.presentation.custom_views.SearchableToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -1,0 +1,9 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/backgroundLayer">
+        <shape android:shape="oval">
+            <solid android:color="@color/sceyt_color_accent_5" />
+        </shape>
+    </item>
+
+    <item android:drawable="@drawable/sceyt_ic_admin" />
+</layer-list>

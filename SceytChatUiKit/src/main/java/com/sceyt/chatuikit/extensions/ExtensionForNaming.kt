@@ -2,26 +2,21 @@ package com.sceyt.chatuikit.extensions
 
 import android.content.Context
 import androidx.fragment.app.Fragment
-import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 
-fun Member.getPresentableName(): String {
-    return (this as User).getPresentableName()
-}
-
-fun User.getPresentableName(): String {
+fun SceytUser.getPresentableName(): String {
     return fullName.ifBlank {
         id
     }.trim()
 }
 
-fun User.getPresentableFirstName(): String {
+fun SceytUser.getPresentableFirstName(): String {
     return firstName.ifBlank {
-        id ?: ""
+        id
     }.trim()
 }
 
@@ -33,7 +28,7 @@ fun SceytMember.getPresentableNameWithYou(context: Context): String {
     return user.getPresentableNameWithYou(context)
 }
 
-fun User.getPresentableNameWithYou(context: Context): String {
+fun SceytUser.getPresentableNameWithYou(context: Context): String {
     if (SceytChatUIKit.chatUIFacade.myId == id)
         return context.getString(R.string.sceyt_you)
     return getPresentableNameCheckDeleted(context)
@@ -43,14 +38,14 @@ fun SceytMember.getPresentableFirstName(): String {
     return user.getPresentableFirstName()
 }
 
-fun User.getPresentableNameCheckDeleted(context: Context): String {
-    return if (activityState == UserState.Deleted)
+fun SceytUser.getPresentableNameCheckDeleted(context: Context): String {
+    return if (state == UserState.Deleted)
         context.getString(R.string.sceyt_deleted_user)
     else getPresentableName()
 }
 
 fun SceytMember.getPresentableNameCheckDeleted(context: Context): String {
-    return if (user.activityState == UserState.Deleted)
+    return if (user.state == UserState.Deleted)
         context.getString(R.string.sceyt_deleted_user)
     else getPresentableName()
 }

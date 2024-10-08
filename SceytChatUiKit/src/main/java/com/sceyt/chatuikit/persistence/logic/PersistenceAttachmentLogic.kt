@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentPayLoadDb
-import com.sceyt.chatuikit.persistence.filetransfer.TransferData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import kotlinx.coroutines.flow.Flow
 
 interface PersistenceAttachmentLogic {

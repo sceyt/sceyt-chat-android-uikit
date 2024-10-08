@@ -8,11 +8,11 @@ import android.widget.ImageView
 import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.sceyt.chatuikit.persistence.filetransfer.ThumbData
-import com.sceyt.chatuikit.persistence.filetransfer.TransferData
-import com.sceyt.chatuikit.persistence.filetransfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
-import com.sceyt.chatuikit.presentation.uicomponents.conversation.adapters.files.AttachmentDataItem
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem
 
 class AttachmentViewHolderHelper(itemView: View) {
     private var context: Context = itemView.context

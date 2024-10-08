@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.extensions
 import android.content.res.Resources
 import android.util.DisplayMetrics
 import android.util.Size
+import android.util.TypedValue
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
@@ -57,14 +58,15 @@ fun Number.toPrettySize(format: String = "%.2f"): String {
     val sizeInKb = toDouble() / 1000
     val sizeInMb = sizeInKb / 1000f
     return when {
-        sizeInMb >= 1 -> String.format(format, sizeInMb) + "MB"
-        sizeInKb >= 1 -> String.format(format, sizeInKb) + "KB"
+        sizeInMb >= 1 -> String.format(Locale.getDefault(), format, sizeInMb) + "MB"
+        sizeInKb >= 1 -> String.format(Locale.getDefault(), format, sizeInKb) + "KB"
         else -> "${this}B"
     }
 }
 
 fun Long.convertMSIntoHourMinSeconds(): String {
-    return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(this),
+    return String.format(Locale.getDefault(), "%02d:%02d:%02d",
+        TimeUnit.MILLISECONDS.toHours(this),
         TimeUnit.MILLISECONDS.toMinutes(this) -
                 TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(this)),
         TimeUnit.MILLISECONDS.toSeconds(this) -
@@ -74,12 +76,16 @@ fun Long.convertMSIntoHourMinSeconds(): String {
 /**
  * Transforms DP value integer to pixels, based on the screen density.
  */
-internal fun Int.dpToPx(): Int = dpToPxPrecise().roundToInt()
+fun Int.dpToPx(): Int = dpToPxPrecise().roundToInt()
 
 /**
  * Uses the display metrics to transform the value of DP to pixels.
  */
-internal fun Int.dpToPxPrecise(): Float = (this * displayMetrics().density)
+fun Int.dpToPxPrecise(): Float = (this * displayMetrics().density)
+
+fun Float.spToPx(): Float {
+    return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, this, displayMetrics())
+}
 
 /**
  * Fetches the current system display metrics based on [Resources].

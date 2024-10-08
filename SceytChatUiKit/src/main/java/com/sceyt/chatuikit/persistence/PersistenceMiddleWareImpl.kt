@@ -1,23 +1,21 @@
 package com.sceyt.chatuikit.persistence
 
-import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.chat.models.user.User
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventData
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventsObserver
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelMembersEventData
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelOwnerChangedEventData
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelUnreadCountUpdatedEventData
-import com.sceyt.chatuikit.data.channeleventobserver.MessageMarkerEventData
-import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
-import com.sceyt.chatuikit.data.connectionobserver.ConnectionStateData
-import com.sceyt.chatuikit.data.messageeventobserver.MessageEventsObserver
-import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData
-import com.sceyt.chatuikit.data.messageeventobserver.ReactionUpdateEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
+import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
+import com.sceyt.chatuikit.data.managers.channel.event.MessageMarkerEventData
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
+import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
+import com.sceyt.chatuikit.data.managers.message.MessageEventManager
+import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
+import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
@@ -32,13 +30,14 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
-import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentPayLoadDb
-import com.sceyt.chatuikit.persistence.filetransfer.TransferData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
@@ -54,8 +53,8 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
-import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mention
-import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
+import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -84,19 +83,19 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     init {
         // Channel events
-        ChannelEventsObserver.onChannelEventFlow.onEach(::onChannelEvent).launchIn(scope)
-        ChannelEventsObserver.onTotalUnreadChangedFlow.onEach(::onChannelUnreadCountUpdatedEvent).launchIn(scope)
-        ChannelEventsObserver.onChannelMembersEventFlow.onEach(::onChannelMemberEvent).launchIn(scope)
-        ChannelEventsObserver.onChannelOwnerChangedEventFlow.onEach(::onChannelOwnerChangedEvent).launchIn(scope)
+        ChannelEventManager.onChannelEventFlow.onEach(::onChannelEvent).launchIn(scope)
+        ChannelEventManager.onTotalUnreadChangedFlow.onEach(::onChannelUnreadCountUpdatedEvent).launchIn(scope)
+        ChannelEventManager.onChannelMembersEventFlow.onEach(::onChannelMemberEvent).launchIn(scope)
+        ChannelEventManager.onChannelOwnerChangedEventFlow.onEach(::onChannelOwnerChangedEvent).launchIn(scope)
         // Message events
-        ChannelEventsObserver.onMessageStatusFlow.onEach(::onMessageStatusChangeEvent).launchIn(scope)
-        ChannelEventsObserver.onMarkerReceivedFlow.onEach(::onMessageMarkerEvent).launchIn(scope)
-        MessageEventsObserver.onMessageFlow.onEach(::onMessage).launchIn(scope)
-        MessageEventsObserver.onMessageReactionUpdatedFlow.onEach(::onMessageReactionUpdated).launchIn(scope)
-        MessageEventsObserver.onMessageEditedOrDeletedFlow.onEach(::onMessageEditedOrDeleted).launchIn(scope)
+        ChannelEventManager.onMessageStatusFlow.onEach(::onMessageStatusChangeEvent).launchIn(scope)
+        ChannelEventManager.onMarkerReceivedFlow.onEach(::onMessageMarkerEvent).launchIn(scope)
+        MessageEventManager.onMessageFlow.onEach(::onMessage).launchIn(scope)
+        MessageEventManager.onMessageReactionUpdatedFlow.onEach(::onMessageReactionUpdated).launchIn(scope)
+        MessageEventManager.onMessageEditedOrDeletedFlow.onEach(::onMessageEditedOrDeleted).launchIn(scope)
 
         // Connection events
-        ConnectionEventsObserver.onChangedConnectStatusFlow.onEach(::onChangedConnectStatus).launchIn(scope)
+        ConnectionEventManager.onChangedConnectStatusFlow.onEach(::onChangedConnectStatus).launchIn(scope)
 
         // Presence events
         SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach(::onPresenceChanged).launchIn(scope)
@@ -193,7 +192,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.leaveChannel(channelId)
     }
 
-    override suspend fun findOrCreateDirectChannel(user: User): SceytResponse<SceytChannel> {
+    override suspend fun findOrCreateDirectChannel(user: SceytUser): SceytResponse<SceytChannel> {
         return channelLogic.findOrCreateDirectChannel(user)
     }
 
@@ -290,7 +289,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return membersLogic.changeChannelMemberRole(channelId, *member)
     }
 
-    override suspend fun addMembersToChannel(channelId: Long, members: List<Member>): SceytResponse<SceytChannel> {
+    override suspend fun addMembersToChannel(channelId: Long, members: List<SceytMember>): SceytResponse<SceytChannel> {
         return membersLogic.addMembersToChannel(channelId, members)
     }
 
@@ -392,7 +391,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         reactionsLogic.sendAllPendingReactions()
     }
 
-    override suspend fun markMessagesAs(channelId: Long, marker: MarkerTypeEnum,
+    override suspend fun markMessagesAs(channelId: Long, marker: MarkerType,
                                         vararg ids: Long): List<SceytResponse<MessageListMarker>> {
         return messagesLogic.markMessagesAs(channelId, marker, *ids)
     }
@@ -479,31 +478,35 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         attachmentsLogic.upsertLinkPreviewData(linkDetails)
     }
 
-    override suspend fun loadUsers(query: String): SceytResponse<List<User>> {
+    override suspend fun loadUsers(query: String): SceytResponse<List<SceytUser>> {
         return usersLogic.loadUsers(query)
     }
 
-    override suspend fun loadMoreUsers(): SceytResponse<List<User>> {
+    override suspend fun loadMoreUsers(): SceytResponse<List<SceytUser>> {
         return usersLogic.loadMoreUsers()
     }
 
-    override suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<User>> {
+    override suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<SceytUser>> {
         return usersLogic.getSceytUsers(ids)
     }
 
-    override suspend fun getUserDbById(id: String): User? {
+    override suspend fun getUserDbById(id: String): SceytUser? {
         return usersLogic.getUserDbById(id)
     }
 
-    override suspend fun getUsersDbByIds(id: List<String>): List<User> {
+    override suspend fun getUsersDbByIds(id: List<String>): List<SceytUser> {
         return usersLogic.getUsersDbByIds(id)
     }
 
-    override suspend fun getCurrentUser(): User? {
+    override suspend fun getCurrentUser(): SceytUser? {
         return usersLogic.getCurrentUser()
     }
 
-    override fun getCurrentUserAsFlow(): Flow<User> {
+    override fun getCurrentUserNonSuspend(): SceytUser? {
+        return usersLogic.getCurrentUserNonSuspend()
+    }
+
+    override fun getCurrentUserAsFlow(): Flow<SceytUser> {
         return usersLogic.getCurrentUserAsFlow()
     }
 
@@ -513,8 +516,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
 
     override suspend fun updateProfile(firsName: String?, lastName: String?,
                                        avatarUrl: String?,
-                                       metadata: String?): SceytResponse<User> {
-        return usersLogic.updateProfile(firsName, lastName, avatarUrl, metadata)
+                                       metadataMap: Map<String, String>?): SceytResponse<SceytUser> {
+        return usersLogic.updateProfile(firsName, lastName, avatarUrl, metadataMap)
     }
 
     override suspend fun setPresenceState(presenceState: PresenceState): SceytResponse<Boolean> {
@@ -537,7 +540,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return usersLogic.unMuteNotifications()
     }
 
-    override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<User>> {
+    override suspend fun blockUnBlockUser(userId: String, block: Boolean): SceytResponse<List<SceytUser>> {
         return usersLogic.blockUnBlockUser(userId, block)
     }
 

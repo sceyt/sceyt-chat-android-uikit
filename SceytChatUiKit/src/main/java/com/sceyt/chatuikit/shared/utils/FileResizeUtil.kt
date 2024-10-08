@@ -21,16 +21,23 @@ import kotlin.math.roundToInt
 
 object FileResizeUtil {
 
-    fun resizeAndCompressImage(context: Context, filePath: String,
-                               reqSize: Int = 800, reqWith: Int = reqSize, reqHeight: Int = reqSize): File? {
+    fun resizeAndCompressImage(
+            context: Context,
+            filePath: String,
+            reqSize: Int = 800,
+            reqWith: Int = reqSize,
+            reqHeight: Int = reqSize,
+            preferQuality: Int = 80
+    ): File? {
         if (filePath.isBlank()) return null
         return try {
             val initialSize = getImageDimensionsSize(Uri.parse(filePath))
             if (initialSize.width == -1 || initialSize.height == -1) return null
 
             val inSimpleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
-            val quality = calculateQuality(filePath, inSimpleSize)
+            val quality = calculateQuality(filePath, inSimpleSize, preferQuality)
 
+            // No need to resize
             if (inSimpleSize == 1 && quality == 100)
                 return File(filePath)
 
@@ -303,12 +310,14 @@ object FileResizeUtil {
         return inSampleSize
     }
 
-    private fun calculateQuality(filePath: String, isSimpleSize: Int): Int {
+    private fun calculateQuality(filePath: String, isSimpleSize: Int, preferQuality: Int): Int {
         return if (isSimpleSize > 1)
-            80
+            preferQuality
         else {
+            // If the file size is greater than 1 MB, then we can use prefer quality,
+            // otherwise we don't use prefer quality, because it will be bad quality.
             if (getFileSizeMb(filePath) > 1)
-                80 else 100
+                preferQuality else 100
         }
     }
 

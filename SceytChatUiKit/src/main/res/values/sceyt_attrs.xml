@@ -4,7 +4,6 @@
     <declare-styleable name="AvatarView">
         <attr name="sceytUiAvatarImageUrl" format="string" />
         <attr name="sceytUiAvatarFullName" format="string" />
-        <attr name="sceytUiAvatarIsGroup" format="boolean" />
         <attr name="sceytUiAvatarTextSize" format="dimension|integer" />
         <attr name="sceytUiAvatarColor" format="color|reference" />
         <attr name="sceytUiAvatarDefaultIcon" format="reference" />
@@ -18,21 +17,40 @@
         <attr name="sceytUiToReplyLineConnectedViewBottom" format="reference" />
     </declare-styleable>
 
-    <declare-styleable name="DateStatusView">
-        <attr name="sceytUiDateStatusLeadingIcon" format="reference" />
-        <attr name="sceytUiDateStatusTrailingIcon" format="reference" />
-        <attr name="sceytUiDateStatusLeadingIconSize" format="dimension" />
-        <attr name="sceytUiDateStatusTrailingIconSize" format="dimension" />
-        <attr name="sceytUiDateStatusIconsTint" format="reference|color" />
-        <attr name="sceytUiDateStatusLeadingIconPadding" format="dimension" />
-        <attr name="sceytUiDateStatusTrailingIconPadding" format="dimension" />
-        <attr name="sceytUiDateStatusDateTextSize" format="dimension" />
-        <attr name="sceytUiDateStatusDateTextColor" format="reference|color" />
-        <attr name="sceytUiDateStatusDateText" format="string" />
-        <attr name="sceytUiDateStatusIgnoreRtl" format="boolean" />
-        <attr name="sceytUiDateStatusBackgroundColor" format="color|reference" />
-        <attr name="sceytUiDateStatusBackgroundCornerRadius" format="dimension" />
-        <attr name="sceytUiDateStatusHighlighted" format="boolean" />
+    <declare-styleable name="DecoratedTextView">
+        <attr name="sceytUiDecoratedTextLeadingIcon" format="reference" />
+        <attr name="sceytUiDecoratedTextTrailingIcon" format="reference" />
+        <attr name="sceytUiDecoratedTextLeadingIconSize" format="dimension" />
+        <attr name="sceytUiDecoratedTextTrailingIconSize" format="dimension" />
+        <attr name="sceytUiDecoratedTextIconsTint" format="reference|color" />
+        <attr name="sceytUiDecoratedTextLeadingIconPadding" format="dimension" />
+        <attr name="sceytUiDecoratedTextTrailingIconPadding" format="dimension" />
+        <!--Text style-->
+        <attr name="sceytUiDecoratedTextTitle" format="string" />
+        <attr name="sceytUiDecoratedTextSize" format="dimension" />
+        <attr name="sceytUiDecoratedTextColor" format="reference|color" />
+        <attr name="sceytUiDecoratedTextFont" format="reference" />
+        <attr name="sceytUiDecoratedTextStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="bold" value="1" />
+            <enum name="italic" value="2" />
+        </attr>
+
+        <!--Leading text style-->
+        <attr name="sceytUiDecoratedTextLeadingText" format="string" />
+        <attr name="sceytUiDecoratedTextLeadingTextSize" format="dimension" />
+        <attr name="sceytUiDecoratedTextLeadingTextColor" format="reference|color" />
+        <attr name="sceytUiDecoratedTextLeadingTextFont" format="reference" />
+        <attr name="sceytUiDecoratedTextLeadingTextStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="bold" value="1" />
+            <enum name="italic" value="2" />
+        </attr>
+
+        <attr name="sceytUiDecoratedTextIgnoreRtl" format="boolean" />
+        <attr name="sceytUiDecoratedTextBackgroundColor" format="color|reference" />
+        <attr name="sceytUiDecoratedTextBackgroundCornerRadius" format="dimension" />
+        <attr name="sceytUiDecoratedTextHighlighted" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="ReactionView">
@@ -47,8 +65,8 @@
         <attr name="sceytUiReactionStrokeColor" format="color|reference" />
         <attr name="sceytUiReactionStrokeWidth" format="integer|dimension" />
         <attr name="sceytUiReactionStrokeCornerRadius" format="integer|dimension" />
-        <attr name="sceytUiReactionCountText" format="string|reference" />
-        <attr name="sceytUiReactionSmileText" format="string|reference" />
+        <attr name="sceytUiReactionCountText" format="string" />
+        <attr name="sceytUiReactionSmileText" format="string" />
         <attr name="sceytUiReactionBackgroundColor" format="color|reference" />
         <attr name="sceytUiReactionCountTextMinWidth" format="integer|dimension" />
     </declare-styleable>
@@ -81,7 +99,7 @@
     </declare-styleable>
 
     <declare-styleable name="CustomToolbar">
-        <attr name="sceytUiToolbarTitle" format="string" />
+        <attr name="sceytUiToolbarTitle" format="string" localization="suggested" />
         <attr name="sceytUiToolbarTitleTextColor" format="color|reference" />
         <attr name="sceytUiToolbarNavigationIcon" format="reference" />
         <attr name="sceytUiToolbarMenuIcon" format="reference" />

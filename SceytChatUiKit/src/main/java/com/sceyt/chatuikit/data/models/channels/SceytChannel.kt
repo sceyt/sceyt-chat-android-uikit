@@ -1,15 +1,14 @@
 package com.sceyt.chatuikit.data.models.channels
 
 import android.os.Parcelable
-import com.sceyt.chat.models.user.User
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelTypingEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.messages.PendingReactionData
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isGroup
-import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -25,7 +24,7 @@ data class SceytChannel(
         val updatedAt: Long,
         val messagesClearedAt: Long,
         val memberCount: Long,
-        val createdBy: User?,
+        val createdBy: SceytUser?,
         val userRole: String?,
         val unread: Boolean,
         val newMessageCount: Long,
@@ -45,7 +44,9 @@ data class SceytChannel(
         val newReactions: List<SceytReaction>?,
         val pendingReactions: List<PendingReactionData>?,
         val pending: Boolean,
-        val draftMessage: DraftMessage?) : Parcelable {
+        val draftMessage: DraftMessage?,
+        val typingData: ChannelTypingEventData? = null
+) : Parcelable {
 
     val channelSubject: String
         get() = (if (isGroup) subject
@@ -55,14 +56,11 @@ data class SceytChannel(
         get() = if (isGroup) avatarUrl
         else getPeer()?.avatarUrl
 
-    val isGroup get() = stringToEnum(type).isGroup()
+    val isGroup get() = isGroup()
 
     val pinned get() = pinnedAt != null && pinnedAt != 0L
 
     val autoDeleteEnabled get() = messageRetentionPeriod > 0
-
-    @IgnoredOnParcel
-    var typingData: ChannelTypingEventData? = null
 
     override fun equals(other: Any?): Boolean {
         if (other == null || other !is SceytChannel) return false

@@ -1,11 +1,7 @@
 package com.sceyt.chatuikit.presentation.extensions
 
 import android.content.Context
-import android.graphics.drawable.Drawable
-import android.text.Spannable
 import android.text.SpannableString
-import android.text.SpannableStringBuilder
-import android.text.style.ImageSpan
 import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
@@ -13,83 +9,92 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
-import com.sceyt.chatuikit.extensions.isNotNullOrBlank
+import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.presentation.customviews.DateStatusView
-import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.MessageBodyStyleHelper
-import com.sceyt.chatuikit.sceytstyles.ChannelListViewStyle
-import com.sceyt.chatuikit.sceytstyles.MessageItemStyle
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper.buildWithAttributes
+import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
+import com.sceyt.chatuikit.styles.ChannelItemStyle
+import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import java.io.File
 
 fun SceytMessage?.setChannelMessageDateAndStatusIcon(
-        dateStatusView: DateStatusView,
-        channelStyle: ChannelListViewStyle,
-        dateText: String, edited: Boolean,
+        decoratedTextView: DecoratedTextView,
+        itemStyle: ChannelItemStyle,
+        dateText: CharSequence,
+        edited: Boolean,
         shouldShowStatus: Boolean
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || !shouldShowStatus) {
-        dateStatusView.setDateAndStatusIcon(
+        decoratedTextView.setTextAndIcons(
             text = dateText,
             leadingIcon = null,
             trailingIcon = null,
-            edited = edited, ignoreHighlight = false)
+            enableLeadingText = edited, ignoreHighlight = false)
         return
     }
+    val icons = itemStyle.messageDeliveryStatusIcons
     val icon = when (deliveryStatus) {
-        DeliveryStatus.Pending -> channelStyle.statusIndicatorPendingIcon
-        DeliveryStatus.Sent -> channelStyle.statusIndicatorSentIcon
-        DeliveryStatus.Received -> channelStyle.statusIndicatorDeliveredIcon
-        DeliveryStatus.Displayed -> channelStyle.statusIndicatorReadIcon
+        DeliveryStatus.Pending -> icons.pendingIcon
+        DeliveryStatus.Sent -> icons.sentIcon
+        DeliveryStatus.Received -> icons.receivedIcon
+        DeliveryStatus.Displayed -> icons.displayedIcon
         else -> null
     }
     icon?.let {
-        dateStatusView.setDateAndStatusIcon(
+        decoratedTextView.setTextAndIcons(
             text = dateText,
-            textColor = channelStyle.dateTextColor,
             leadingIcon = it,
-            edited = edited,
+            enableLeadingText = edited,
             ignoreHighlight = checkIgnoreHighlight(deliveryStatus))
-        dateStatusView.isVisible = true
+        decoratedTextView.isVisible = true
     }
 }
 
-
-fun SceytMessage?.setConversationMessageDateAndStatusIcon(
-        dateStatusView: DateStatusView,
-        style: MessageItemStyle,
-        dateText: String,
+fun SceytMessage?.setChatMessageDateAndStatusIcon(
+        decoratedTextView: DecoratedTextView,
+        itemStyle: MessageItemStyle,
+        dateText: CharSequence,
         edited: Boolean
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
-        dateStatusView.setDateAndStatusIcon(text = dateText,
-            leadingIcon = null,
+        decoratedTextView.setTextAndIcons(
+            text = dateText,
+            textStyle = itemStyle.messageDateTextStyle,
             trailingIcon = null,
-            edited = edited,
-            editedText = style.editedMessageStateText,
-            ignoreHighlight = false)
+            enableLeadingText = edited,
+            leadingText = itemStyle.editedStateText,
+            leadingTextStyle = itemStyle.messageStateTextStyle,
+            ignoreHighlight = false,
+            overlayColor = itemStyle.onOverlayColor)
         return
     }
+    val icons = itemStyle.messageDeliveryStatusIcons
     val icon = when (deliveryStatus) {
-        DeliveryStatus.Pending -> style.messageStatusPendingIcon
-        DeliveryStatus.Sent -> style.messageStatusSentIcon
-        DeliveryStatus.Received -> style.messageStatusDeliveredIcon
-        DeliveryStatus.Displayed -> style.messageStatusReadIcon
+        DeliveryStatus.Pending -> icons.pendingIcon
+        DeliveryStatus.Sent -> icons.sentIcon
+        DeliveryStatus.Received -> icons.receivedIcon
+        DeliveryStatus.Displayed -> icons.displayedIcon
         else -> {
             SceytLog.e(TAG, "Unknown delivery status: $deliveryStatus for message: $id, tid: $tid, body: $body")
             null
         }
     }
     icon?.let {
-        dateStatusView.setDateAndStatusIcon(text = dateText,
-            textColor = style.messageDateTextColor,
+        decoratedTextView.setTextAndIcons(
+            text = dateText,
+            textStyle = itemStyle.messageDateTextStyle,
             trailingIcon = it,
-            edited = edited,
-            editedText = style.editedMessageStateText,
-            editedTextStyle = style.messageEditedTextStyle,
-            ignoreHighlight = checkIgnoreHighlight(deliveryStatus))
-        dateStatusView.isVisible = true
+            enableLeadingText = edited,
+            leadingText = itemStyle.editedStateText,
+            leadingTextStyle = itemStyle.messageStateTextStyle,
+            ignoreHighlight = checkIgnoreHighlight(deliveryStatus),
+            overlayColor = itemStyle.onOverlayColor,
+        )
+        decoratedTextView.isVisible = true
     }
 }
 
@@ -97,15 +102,21 @@ private fun checkIgnoreHighlight(deliveryStatus: DeliveryStatus?): Boolean {
     return deliveryStatus == DeliveryStatus.Displayed
 }
 
-fun SceytMessage.getFormattedBody(context: Context): SpannableString {
+fun SceytMessage.getFormattedBodyWithAttachments(
+        context: Context,
+        mentionTextStyle: TextStyle,
+        attachmentNameFormatter: Formatter<SceytAttachment>,
+        mentionUserNameFormatter: Formatter<SceytUser>,
+        mentionClickListener: ((String) -> Unit)?,
+): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
-        attachments.isNullOrEmpty() || attachments.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
-            MessageBodyStyleHelper.buildWithMentionsAndAttributes(context, this)
+        attachments.isNullOrEmpty() || attachments.getOrNull(0)?.type == AttachmentTypeEnum.Link.value -> {
+            buildWithAttributes(context, mentionTextStyle, mentionUserNameFormatter, mentionClickListener)
         }
 
         attachments.size == 1 -> {
-            attachments.getOrNull(0)?.getShowName(context, body)
+            body.ifEmpty { attachmentNameFormatter.format(context, attachments[0]) }
         }
 
         else -> context.getString(R.string.sceyt_file)
@@ -113,55 +124,16 @@ fun SceytMessage.getFormattedBody(context: Context): SpannableString {
     return SpannableString(body)
 }
 
-fun SceytMessage.getFormattedLastMessageBody(context: Context): SpannableString {
-    val body = when {
-        state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
-        attachments.isNullOrEmpty() || attachments.getOrNull(0)?.type == AttachmentTypeEnum.Link.value() -> {
-            MessageBodyStyleHelper.buildOnlyBoldMentionsAndStylesWithAttributes(this)
-        }
-
-        attachments.size == 1 -> {
-            attachments.getOrNull(0)?.getShowName(context, body)
-        }
-
-        else -> context.getString(R.string.sceyt_file)
-    }
-    return SpannableString(body)
-}
-
-fun SceytAttachment?.getShowName(context: Context, body: String): String {
+fun SceytAttachment?.getShowName(context: Context): String {
     this ?: return ""
-    if (body.isNotNullOrBlank()) return body
     return when (type) {
-        AttachmentTypeEnum.Video.value() -> context.getString(R.string.sceyt_video)
-        AttachmentTypeEnum.Image.value() -> context.getString(R.string.sceyt_photo)
-        AttachmentTypeEnum.Voice.value() -> context.getString(R.string.sceyt_voice)
-        AttachmentTypeEnum.File.value() -> context.getString(R.string.sceyt_file)
+        AttachmentTypeEnum.Video.value -> context.getString(R.string.sceyt_video)
+        AttachmentTypeEnum.Image.value -> context.getString(R.string.sceyt_photo)
+        AttachmentTypeEnum.Voice.value -> context.getString(R.string.sceyt_voice)
+        AttachmentTypeEnum.File.value -> context.getString(R.string.sceyt_file)
         else -> name
     }
 }
-
-fun SceytMessage.getAttachmentIconAsString(channelStyle: ChannelListViewStyle): SpannableStringBuilder {
-    val icRes = getAttachmentIconId(channelStyle) ?: return SpannableStringBuilder()
-    val builder = SpannableStringBuilder(". ")
-    icRes.setBounds(0, 0, icRes.intrinsicWidth, icRes.intrinsicHeight)
-    builder.setSpan(ImageSpan(icRes), 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-    return builder
-}
-
-fun SceytMessage.getAttachmentIconId(channelStyle: ChannelListViewStyle): Drawable? {
-    return attachments?.getOrNull(0)?.let {
-        when (it.type) {
-            AttachmentTypeEnum.Video.value() -> channelStyle.bodyVideoAttachmentIcon
-            AttachmentTypeEnum.Image.value() -> channelStyle.bodyImageAttachmentIcon
-            AttachmentTypeEnum.Voice.value() -> channelStyle.bodyVoiceAttachmentIcon
-            AttachmentTypeEnum.File.value() -> channelStyle.bodyFileAttachmentIcon
-            else -> null
-        }
-    }
-}
-
-fun SceytMessage.isTextMessage() = attachments.isNullOrEmpty()
 
 fun SceytAttachment?.checkLoadedFileIsCorrect(loadedFile: File): File? {
     if (this == null) return null

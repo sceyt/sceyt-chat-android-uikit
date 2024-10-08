@@ -5,10 +5,10 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <com.sceyt.chatuikit.presentation.customviews.CircleCheckBox
+    <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/selectView"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:alpha=".3"
         android:clickable="false"
         android:visibility="gone"
@@ -16,7 +16,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.sceyt.chatuikit.presentation.customviews.AvatarView
+    <com.sceyt.chatuikit.presentation.custom_views.AvatarView
         android:id="@+id/avatar"
         android:layout_width="@dimen/_28sdp"
         android:layout_height="@dimen/_28sdp"
@@ -77,7 +77,7 @@
             app:layout_constraintStart_toStartOf="@+id/layoutDetails"
             app:layout_constraintTop_toBottomOf="@+id/tvUserName" />
 
-        <com.sceyt.chatuikit.presentation.customviews.DateStatusView
+        <com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
             android:id="@+id/messageDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -85,10 +85,10 @@
             android:layout_marginBottom="5dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/layoutDetails"
-            app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
-            app:sceytUiDateStatusDateTextSize="@dimen/tinyTextSize"
-            app:sceytUiDateStatusTrailingIconSize="15.5dp"
-            tools:sceytUiDateStatusDateText="00:37" />
+            app:sceytUiDecoratedTextColor="@color/sceyt_color_text_secondary"
+            app:sceytUiDecoratedTextSize="@dimen/tinyTextSize"
+            app:sceytUiDecoratedTextTrailingIconSize="15.5dp"
+            tools:sceytUiDecoratedTextTitle="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

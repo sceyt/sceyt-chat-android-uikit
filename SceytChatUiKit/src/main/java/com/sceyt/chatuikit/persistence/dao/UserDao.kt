@@ -1,27 +1,50 @@
 package com.sceyt.chatuikit.persistence.dao
 
-import androidx.room.*
-import com.sceyt.chat.models.user.Presence
-import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.chatuikit.persistence.entity.UserEntity
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Update
+import com.sceyt.chatuikit.persistence.entity.user.UserDb
+import com.sceyt.chatuikit.persistence.entity.user.UserEntity
+import com.sceyt.chatuikit.persistence.entity.user.UserMetadataEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertUser(user: UserEntity)
+    suspend fun insertUser(user: UserEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUsers(users: List<UserEntity>)
 
-    @Query("select * from users where user_id =:id")
-    suspend fun getUserById(id: String): UserEntity?
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMetadata(list: List<UserMetadataEntity>)
 
-    @Query("select * from users where user_id =:id")
-    fun getUserByIdAsFlow(id: String): Flow<UserEntity?>
+    @Transaction
+    suspend fun insertUserWithMetadata(user: UserDb) {
+        insertUser(user.user)
+        insertMetadata(user.metadata)
+    }
 
+    @Transaction
+    suspend fun insertUsersWithMetadata(users: List<UserDb>) {
+        insertUsers(users.map { it.user })
+        insertMetadata(users.flatMap { it.metadata })
+    }
+
+    @Transaction
+    @Query("select * from users where user_id =:id")
+    suspend fun getUserById(id: String): UserDb?
+
+    @Transaction
+    @Query("select * from users where user_id =:id")
+    fun getUserByIdAsFlow(id: String): Flow<UserDb?>
+
+    @Transaction
     @Query("select * from users where user_id in (:id)")
-    suspend fun getUsersById(id: List<String>): List<UserEntity>
+    suspend fun getUsersById(id: List<String>): List<UserDb>
 
     @Query("select user_id from users where firstName like '%' || :searchQuery || '%' " +
             "or lastName like  '%' || :searchQuery || '%' or (firstName || ' ' || lastName) like :searchQuery || '%'")
@@ -32,13 +55,6 @@ interface UserDao {
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateUsers(users: List<UserEntity>)
-
-    suspend fun updatePresence(userId: String, presence: Presence) {
-        updatePresence(userId, presence.state, presence.status, presence.lastActiveAt)
-    }
-
-    @Query("update users set state =:state, status =:status, lastActiveAt =:lastActiveAt where user_id =:userId")
-    suspend fun updatePresence(userId: String, state: PresenceState, status: String, lastActiveAt: Long)
 
     @Query("update users set status =:status where user_id =:userId")
     suspend fun updateUserStatus(userId: String, status: String)

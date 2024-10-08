@@ -17,7 +17,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.sceyt.chatuikit.presentation.customviews.AvatarView
+    <com.sceyt.chatuikit.presentation.custom_views.AvatarView
         android:id="@+id/avatar"
         android:layout_width="@dimen/_45sdp"
         android:layout_height="@dimen/_45sdp"
@@ -28,7 +28,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/iv_auto_deleted"
+        android:id="@+id/icAutoDeleted"
         android:layout_width="22dp"
         android:layout_height="22dp"
         android:layout_marginTop="-4dp"
@@ -39,18 +39,18 @@
         app:srcCompat="@drawable/sceyt_ic_auto_deleted_channel"
         tools:visibility="visible" />
 
-    <com.sceyt.chatuikit.presentation.customviews.OnlineView
-        android:id="@+id/onlineStatus"
+    <com.sceyt.chatuikit.presentation.custom_views.PresenceStateIndicatorView
+        android:id="@+id/onlineState"
         android:layout_width="14dp"
         android:layout_height="14dp"
         android:layout_margin="1dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/avatar"
         app:layout_constraintEnd_toEndOf="@id/avatar"
-        app:sceytUiOnlineViewChangeVisibilityWithAnim="true"
-        app:sceytUiOnlineViewIndicatorColor="@color/sceyt_color_green"
-        app:sceytUiOnlineViewStrokeColor="@color/sceyt_color_background"
-        app:sceytUiOnlineViewStrokeWidth="1.5dp"
+        app:sceytUiIndicatorChangeVisibilityWithAnim="true"
+        app:sceytUiIndicatorColor="@color/sceyt_color_green"
+        app:sceytUiIndicatorStrokeColor="@color/sceyt_color_background"
+        app:sceytUiIndicatorStrokeWidth="1.5dp"
         tools:visibility="visible" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -74,7 +74,7 @@
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="Title" />
 
-    <com.sceyt.chatuikit.presentation.customviews.ColorSpannableTextView
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/lastMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -83,6 +83,7 @@
         android:ellipsize="end"
         android:includeFontPadding="false"
         android:lines="2"
+        android:linksClickable="false"
         android:maxLines="2"
         android:textAlignment="viewStart"
         android:textColor="@color/sceyt_color_text_secondary"
@@ -103,20 +104,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/channelTitle" />
 
-    <com.sceyt.chatuikit.presentation.customviews.DateStatusView
+    <com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
         android:id="@+id/dateStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/channelTitle"
-        app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
-        app:sceytUiDateStatusDateTextSize="13sp"
-        app:sceytUiDateStatusIgnoreRtl="true"
-        app:sceytUiDateStatusLeadingIconPadding="4dp"
-        app:sceytUiDateStatusLeadingIconSize="16dp"
-        tools:sceytUiDateStatusDateText="12:28"
-        tools:sceytUiDateStatusLeadingIcon="@drawable/sceyt_ic_status_delivered" />
+        app:sceytUiDecoratedTextColor="@color/sceyt_color_text_secondary"
+        app:sceytUiDecoratedTextIgnoreRtl="true"
+        app:sceytUiDecoratedTextLeadingIconPadding="4dp"
+        app:sceytUiDecoratedTextLeadingIconSize="16dp"
+        app:sceytUiDecoratedTextSize="13sp"
+        tools:sceytUiDecoratedTextLeadingIcon="@drawable/sceyt_ic_status_delivered"
+        tools:sceytUiDecoratedTextTitle="12:28" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icPinned"
@@ -130,19 +131,21 @@
         app:srcCompat="@drawable/sceyt_ic_pin_filled"
         tools:visibility="visible" />
 
-    <androidx.appcompat.widget.AppCompatImageView
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/icMention"
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:layout_marginTop="5dp"
         android:layout_marginEnd="8dp"
         android:background="@drawable/sceyt_bg_circle"
-        android:gravity="center"
-        android:padding="2dp"
+        android:gravity="center_horizontal"
+        android:includeFontPadding="false"
+        android:text="\@"
+        android:textColor="@color/sceyt_color_on_primary"
         android:visibility="gone"
         app:layout_constraintEnd_toStartOf="@+id/unreadMessagesCount"
         app:layout_constraintTop_toBottomOf="@+id/dateStatus"
-        app:srcCompat="@drawable/sceyt_ic_mention"
+        tools:ignore="HardcodedText"
         tools:visibility="visible" />
 
     <androidx.appcompat.widget.AppCompatTextView

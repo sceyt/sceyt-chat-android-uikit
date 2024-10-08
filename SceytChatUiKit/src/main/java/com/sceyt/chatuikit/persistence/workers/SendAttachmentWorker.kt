@@ -20,7 +20,7 @@ import androidx.work.WorkerParameters
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
@@ -33,10 +33,10 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.dao.FileChecksumDao
 import com.sceyt.chatuikit.persistence.entity.FileChecksumEntity
 import com.sceyt.chatuikit.persistence.extensions.safeResume
-import com.sceyt.chatuikit.persistence.filetransfer.FileTransferHelper
-import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
-import com.sceyt.chatuikit.persistence.filetransfer.TransferData
-import com.sceyt.chatuikit.persistence.filetransfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
@@ -93,7 +93,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                 ?: return kotlin.Result.failure(Exception("Attachments not found"))
 
         for ((index, attachment) in attachments.withIndex()) {
-            if (attachment.type == AttachmentTypeEnum.Link.value())
+            if (attachment.type == AttachmentTypeEnum.Link.value)
                 continue
 
             val payload = payloads.find { it.payLoadEntity.messageTid == attachment.messageTid }?.payLoadEntity
@@ -177,7 +177,7 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         return if (result.isSuccess && !isStopped) {
             val messageToSend  = tmpMessage.copy(attachments = result.getOrThrow()).toMessage()
 
-            ConnectionEventsObserver.awaitToConnectSceyt()
+            ConnectionEventManager.awaitToConnectSceyt()
             val response = messageLogic.sendMessageWithUploadedAttachments(tmpMessage.channelId, messageToSend)
             if (response is SceytResponse.Success) {
                 response.data?.let {
@@ -211,13 +211,13 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setSmallIcon(R.drawable.sceyt_ic_upload)
 
-        val clickData = SceytChatUIKit.config.uploadNotificationClickHandleData
+        val clickData = SceytChatUIKit.config.uploadNotificationPendingIntentData
         val channel = if (clickData != null)
             channelLogic.getChannelFromDb(channelId) else null
 
         if (channel != null && clickData != null) {
             val pendingIntent = applicationContext.initPendingIntent(Intent(applicationContext, clickData.classToOpen).apply {
-                clickData.channelToParcelKey?.let {
+                clickData.extraKey?.let {
                     putExtra(it, channel)
                 }
                 clickData.intentFlags?.let {

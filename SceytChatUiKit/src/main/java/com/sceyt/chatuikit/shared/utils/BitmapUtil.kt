@@ -24,7 +24,7 @@ object BitmapUtil {
         return bytes
     }
 
-    fun bitmapFromRgba(width: Int, height: Int, bytes: ByteArray): Bitmap? {
+    fun bitmapFromRgba(width: Int, height: Int, bytes: ByteArray): Bitmap {
         val pixels = IntArray(bytes.size / 4)
         var j = 0
         for (i in pixels.indices) {

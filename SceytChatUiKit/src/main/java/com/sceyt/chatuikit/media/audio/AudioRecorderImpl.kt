@@ -81,7 +81,7 @@ class AudioRecorderImpl(private var context: Context,
 
     override fun getRecordingDuration(): Int {
         val durationSec = ((System.currentTimeMillis() - startTime) / 1000).toInt()
-        return max(durationSec, 0);
+        return max(durationSec, 0)
     }
 
     override fun getRecordingAmplitudes(): Array<Int> {
@@ -134,7 +134,7 @@ class AudioRecorderImpl(private var context: Context,
     }
 
     fun clampDecibels(value: Double): Int {
-        return max(0.0, min(160.0, value)).toInt();
+        return max(0.0, min(160.0, value)).toInt()
     }
 
     private fun stopTimer() {

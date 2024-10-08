@@ -19,7 +19,7 @@
         tools:visibility="visible">
 
         <TextView
-            android:id="@+id/textViewSlideCancel"
+            android:id="@+id/tvSlideCancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -34,8 +34,8 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:visibility="visible" />
 
-        <TextView
-            android:id="@+id/btnCancel"
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvCancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -76,8 +76,8 @@
             app:layout_constraintTop_toTopOf="@+id/layoutEffect1"
             tools:visibility="visible" />
 
-        <ImageView
-            android:id="@+id/icPoint"
+        <View
+            android:id="@+id/recordingIndicatorView"
             android:layout_width="8dp"
             android:layout_height="8dp"
             android:layout_gravity="center_vertical"
@@ -92,8 +92,8 @@
             tools:ignore="ContentDescription"
             tools:visibility="visible" />
 
-        <TextView
-            android:id="@+id/textViewTime"
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvDuration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
@@ -104,7 +104,7 @@
             android:textSize="18sp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/icPoint"
+            app:layout_constraintStart_toEndOf="@+id/recordingIndicatorView"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="HardcodedText"
             tools:visibility="visible" />
@@ -135,7 +135,7 @@
             android:orientation="vertical">
 
             <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/imageViewLock"
+                android:id="@+id/icLock"
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:layout_marginTop="16dp"
@@ -146,7 +146,7 @@
                 app:tint="@color/sceyt_color_icon_secondary" />
 
             <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/imageViewLockArrow"
+                android:id="@+id/icArrowToLock"
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:layout_marginTop="12dp"
@@ -154,7 +154,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/imageViewLock"
+                app:layout_constraintTop_toBottomOf="@+id/icLock"
                 app:srcCompat="@drawable/sceyt_ic_arrow_lock_recording" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -178,7 +178,7 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/lockViewStopButton"
+            android:id="@+id/icStopRecording"
             android:layout_width="42dp"
             android:layout_height="42dp"
             android:background="@drawable/sceyt_bg_circle"

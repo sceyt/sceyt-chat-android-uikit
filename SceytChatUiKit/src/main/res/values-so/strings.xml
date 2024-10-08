@@ -90,8 +90,8 @@
     <string name="sceyt_no_link_items_yet">No link items yet</string>
     <string name="sceyt_history_was_successfully_cleared">History was successfully cleared!</string>
     <string name="sceyt_mute_chat">Mute chat:</string>
-    <string name="sceyt_mute_for_1_hour">Hal saac</string>
-    <string name="sceyt_mute_for_8_hours">Sideed Saac</string>
+    <string name="sceyt_for_1_hour">Hal saac</string>
+    <string name="sceyt_for_8_hours">Sideed Saac</string>
     <string name="sceyt_mute_forever">Forever</string>
     <string name="sceyt_mute_notifications">Mute notifications</string>
     <string name="sceyt_typing">typing</string>
