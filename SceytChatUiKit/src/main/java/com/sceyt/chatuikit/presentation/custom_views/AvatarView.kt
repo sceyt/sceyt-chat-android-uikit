@@ -257,6 +257,11 @@ class AvatarView @JvmOverloads constructor(
         loadAvatarImage(oldImageUrl)
     }
 
+    fun setDefaultAvatar(avatar: DefaultAvatar) {
+        defaultAvatar = avatar
+        invalidate()
+    }
+
     fun setAvatarImageLoadListener(cb: (Boolean) -> Unit) {
         avatarLoadCb = cb
     }

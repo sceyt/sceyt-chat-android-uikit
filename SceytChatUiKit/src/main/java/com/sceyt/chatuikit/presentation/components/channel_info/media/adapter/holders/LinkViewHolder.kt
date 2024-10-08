@@ -93,6 +93,7 @@ class LinkViewHolder(
     }
 
     private fun SceytItemChannelLinkBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
         icLinkImage.setBackgroundColor(context.getCompatColor(SceytChatUIKit.theme.colors.surface2Color))
         style.linkTextStyle.apply(tvLinkUrl)
         with(style.linkPreviewStyle) {

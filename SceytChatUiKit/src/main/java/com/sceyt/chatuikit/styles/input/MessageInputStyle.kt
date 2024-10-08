@@ -8,6 +8,7 @@ import androidx.core.content.res.use
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
@@ -112,25 +113,29 @@ data class MessageInputStyle(
                     context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
 
                 val attachmentIcon = array.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputAttachmentIcon)
-                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_upload_file)?.apply {
-                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor))
-                        }
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_upload_file)?.applyTint(
+                            context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+                        )
 
                 val sendMessageIcon = array.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputSendIcon)
-                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_send_message)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_send_message).applyTint(
+                            context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+                        )
 
                 val voiceRecordIcon = array.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputVoiceRecordIcon)
-                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_voice_white)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_voice_white).applyTint(
+                            context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+                        )
 
                 val sendVoiceMessageIcon = array.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputSendVoiceRecordIcon)
-                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_up)?.apply {
-                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
-                        }
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_up)?.applyTint(
+                            context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+                        )
 
                 val closeIcon = array.getDrawable(R.styleable.MessageInputView_sceytUiMessageInputCloseIcon)
-                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_cancel)?.apply {
-                            mutate().setTint(context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor))
-                        }
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_cancel)?.applyTint(
+                            context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+                        )
 
                 val enableVoiceRecord = array.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableVoiceRecord,
                     true)

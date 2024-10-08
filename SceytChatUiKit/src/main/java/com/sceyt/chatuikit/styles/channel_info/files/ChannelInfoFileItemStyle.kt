@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.styles.channel_info.files
 
 import android.content.Context
-import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
@@ -16,11 +15,12 @@ import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.theme.Colors
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 /**
  * Style for conversation info file item
- * @property backgroundColor - background color, default is [Color.TRANSPARENT]
+ * @property backgroundColor - background color, default is [Colors.backgroundColorSections]
  * @property fileNameTextStyle - style for file name
  * @property subtitleTextStyle - style for subtitle
  * @property mediaLoaderStyle - style for media loader
@@ -46,8 +46,7 @@ data class ChannelInfoFileItemStyle(
             private val attributeSet: AttributeSet?
     ) {
         fun build(): ChannelInfoFileItemStyle {
-
-            val backgroundColor = Color.TRANSPARENT
+            val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
 
             val fileNameTextStyle = TextStyle(
                 color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
