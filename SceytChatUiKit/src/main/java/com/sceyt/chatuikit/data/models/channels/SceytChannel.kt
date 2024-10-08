@@ -45,7 +45,8 @@ data class SceytChannel(
         val pendingReactions: List<PendingReactionData>?,
         val pending: Boolean,
         val draftMessage: DraftMessage?,
-        val typingData: ChannelTypingEventData? = null) : Parcelable {
+        val typingData: ChannelTypingEventData? = null
+) : Parcelable {
 
     val channelSubject: String
         get() = (if (isGroup) subject
