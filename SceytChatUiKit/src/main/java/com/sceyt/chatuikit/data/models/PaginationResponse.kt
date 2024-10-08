@@ -1,6 +1,6 @@
 package com.sceyt.chatuikit.data.models
 
-sealed class PaginationResponse<T> {
+sealed interface PaginationResponse<T> {
 
     /**
      * @param data is items from database.
@@ -9,14 +9,14 @@ sealed class PaginationResponse<T> {
      * @param query is the search query, which has been set in request.
      * */
     data class DBResponse<T>(
-            var data: List<T>,
-            var loadKey: LoadKeyData?,
-            var offset: Int,
-            var hasNext: Boolean = false,
-            var hasPrev: Boolean = false,
-            var loadType: LoadType = LoadType.LoadNext,
+            val data: List<T>,
+            val loadKey: LoadKeyData?,
+            val offset: Int,
+            val hasNext: Boolean = false,
+            val hasPrev: Boolean = false,
+            val loadType: LoadType = LoadType.LoadNext,
             val query: String = "",
-    ) : PaginationResponse<T>()
+    ) : PaginationResponse<T>
 
     /**
      * @param data is items from server.
@@ -32,22 +32,22 @@ sealed class PaginationResponse<T> {
      *
      * */
     data class ServerResponse<T>(
-            var data: SceytResponse<List<T>>,
-            var cacheData: List<T>,
-            var loadKey: LoadKeyData?,
-            var offset: Int,
-            var hasDiff: Boolean,
-            var hasNext: Boolean,
-            var hasPrev: Boolean,
-            var loadType: LoadType,
-            var ignoredDb: Boolean,
-            var dbResultWasEmpty: Boolean = false,
+            val data: SceytResponse<List<T>>,
+            val cacheData: List<T>,
+            val loadKey: LoadKeyData?,
+            val offset: Int,
+            val hasDiff: Boolean,
+            val hasNext: Boolean,
+            val hasPrev: Boolean,
+            val loadType: LoadType,
+            val ignoredDb: Boolean,
+            val dbResultWasEmpty: Boolean = false,
             val query: String = "",
-    ) : PaginationResponse<T>()
+    ) : PaginationResponse<T>
 
 
     /** Default value */
-    class Nothing<T> : PaginationResponse<T>()
+    class Nothing<T> : PaginationResponse<T>
 
     enum class LoadType {
         LoadPrev, LoadNext, LoadNear, LoadNewest

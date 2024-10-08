@@ -11,14 +11,17 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.shared.LiveEvent
 import com.sceyt.chatuikit.presentation.common.ConcurrentHashSet
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 
 class SceytSyncManager(private val channelInteractor: ChannelInteractor,
@@ -30,6 +33,7 @@ class SceytSyncManager(private val channelInteractor: ChannelInteractor,
     @Volatile
     private var syncIsInProcess: Boolean = false
     private val syncResultCallbacks = ConcurrentHashSet<(Result<SyncResultData>) -> Unit>()
+    private var syncContext: CoroutineContext? = null
 
     companion object {
         private val syncChannelsFinished_ = LiveEvent<SyncChannelData>()
@@ -40,7 +44,6 @@ class SceytSyncManager(private val channelInteractor: ChannelInteractor,
 
     suspend fun startSync(force: Boolean, resultCallback: ((Result<SyncResultData>) -> Unit)? = null) {
         resultCallback?.let { syncResultCallbacks.add(it) }
-
         if (syncIsInProcess)
             return
 
@@ -50,8 +53,8 @@ class SceytSyncManager(private val channelInteractor: ChannelInteractor,
             SceytLog.e(TAG, errorMessage)
             return
         }
-
-        withContext(Dispatchers.IO) {
+        val coroutineContext = getCoroutineContext().also { syncContext = it }
+        withContext(coroutineContext) {
             syncIsInProcess = true
             syncResultData = SyncResultData()
             val result = getChannels()
@@ -71,12 +74,18 @@ class SceytSyncManager(private val channelInteractor: ChannelInteractor,
             syncMessagesAfter(response.data, fromMessageId, true)
     }
 
+    fun cancelSync() {
+        syncContext?.cancel()
+        syncResultCallbacks.clear()
+    }
+
     private suspend fun getChannels(): SyncResultData {
         return coroutineScope {
             suspendCancellableCoroutine { cont ->
                 launch(Dispatchers.IO) {
                     val syncChannelData = SyncChannelData(mutableSetOf(), false)
-                    channelInteractor.syncChannels(SceytChatUIKit.config.channelsLoadSize).collect {
+                    val limit = SceytChatUIKit.config.queryLimits.channelListQueryLimit
+                    channelInteractor.syncChannels(limit).collect {
                         when (it) {
                             is GetAllChannelsResponse.Error -> {
                                 syncChannelData.withError = true
@@ -118,7 +127,7 @@ class SceytSyncManager(private val channelInteractor: ChannelInteractor,
     }
 
     private suspend fun loadMessages(channel: SceytChannel) {
-        if (channel.lastMessage == null || channel.lastDisplayedMessageId == channel.lastMessage?.id)
+        if (channel.lastMessage == null || channel.lastDisplayedMessageId == channel.lastMessage.id)
             return
 
         syncMessagesAfter(channel, channel.lastDisplayedMessageId, false)
@@ -140,6 +149,10 @@ class SceytSyncManager(private val channelInteractor: ChannelInteractor,
             it(Result.failure(exception))
         }
         syncResultCallbacks.clear()
+    }
+
+    private fun getCoroutineContext(): CoroutineContext {
+        return Dispatchers.IO + Job()
     }
 
     data class SyncChannelData(

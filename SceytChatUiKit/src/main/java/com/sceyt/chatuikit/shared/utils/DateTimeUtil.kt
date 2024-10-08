@@ -3,9 +3,9 @@ package com.sceyt.chatuikit.shared.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import android.text.format.DateFormat
-import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.sceytconfigs.dateformaters.BaseDateFormatter
-import com.sceyt.chatuikit.sceytconfigs.dateformaters.DateFormatData
+import com.sceyt.chatuikit.formatters.date.DateFormatData
+import com.sceyt.chatuikit.formatters.date.PresenceDateFormatter
+import com.sceyt.chatuikit.formatters.date.SceytDateFormatter
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -152,7 +152,7 @@ object DateTimeUtil {
             )
     }
 
-    fun getDateTimeStringWithDateFormatter(context: Context, time: Long?, dateFormatter: BaseDateFormatter): String {
+    fun getDateTimeStringWithDateFormatter(context: Context, time: Long?, dateFormatter: SceytDateFormatter): String {
         if (time == null) return ""
         val now = Calendar.getInstance()
         val cal = Calendar.getInstance()
@@ -201,7 +201,11 @@ object DateTimeUtil {
         }
     }
 
-    fun getPresenceDateFormatData(context: Context, date: Date): String {
+    fun getPresenceDateFormatData(
+            context: Context,
+            date: Date,
+            dateFormatter: PresenceDateFormatter
+    ): String {
         val now = Calendar.getInstance()
         val sdf = SimpleDateFormat(SERVER_DATE_PATTERN, Locale.getDefault())
         sdf.timeZone = TimeZone.getTimeZone("UTC")
@@ -219,7 +223,6 @@ object DateTimeUtil {
             val hoursDiff = TimeUnit.MILLISECONDS.toHours(now.timeInMillis - date2.timeInMillis).toInt().absoluteValue
             val minDiff = TimeUnit.MILLISECONDS.toMinutes(now.timeInMillis - date2.timeInMillis).toInt().absoluteValue
 
-            val dateFormatter = SceytChatUIKit.userPresenceDateFormatter
             return when {
                 yearsDiff > 0 -> {
                     getDateText(date, dateFormatter.olderThisYear(context, date))
@@ -281,14 +284,14 @@ object DateTimeUtil {
 
         return if (hours > 0)
             if (hours > 9)
-                String.format("%02d:%02d:%02d", hours, minutes, seconds)
+                String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds)
             else
-                String.format("%d:%02d:%02d", hours, minutes, seconds)
+                String.format(Locale.getDefault(), "%d:%02d:%02d", hours, minutes, seconds)
         else
             if (minutes > 9)
-                String.format("%02d:%02d", minutes, seconds)
+                String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
             else
-                String.format("%d:%02d", minutes, seconds)
+                String.format(Locale.getDefault(), "%d:%02d", minutes, seconds)
     }
 
     fun secondsToTime(seconds: Long): String {

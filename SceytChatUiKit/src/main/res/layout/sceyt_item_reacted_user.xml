@@ -7,7 +7,7 @@
     android:background="?selectableItemBackground"
     android:paddingHorizontal="16dp">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
+    <com.sceyt.chatuikit.presentation.custom_views.AvatarView
         android:id="@+id/avatar"
         android:layout_width="40dp"
         android:layout_height="40dp"
@@ -15,9 +15,9 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytAvatarEnableRipple="false"
-        app:sceytAvatarViewTextSize="15sp"
-        tools:sceytAvatarViewFullName="Art d" />
+        app:sceytUiAvatarEnableRipple="false"
+        app:sceytUiAvatarTextSize="15sp"
+        tools:sceytUiAvatarFullName="Art d" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/userName"
@@ -35,14 +35,14 @@
         app:layout_constraintTop_toTopOf="@id/avatar"
         tools:text="John" />
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytReactionView
+    <com.sceyt.chatuikit.presentation.custom_views.ReactionView
         android:id="@+id/reaction"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytReactionViewSmileTextSize="24sp"
-        tools:sceytReactionViewSmileText="😍" />
+        app:sceytUiReactionSmileTextSize="24sp"
+        tools:sceytUiReactionSmileText="😍" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

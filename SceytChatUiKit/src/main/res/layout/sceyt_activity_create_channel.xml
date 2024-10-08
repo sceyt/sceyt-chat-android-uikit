@@ -4,20 +4,20 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".presentation.uicomponents.createchat.createchannel.SceytCreateChannelActivity">
+    tools:context=".presentation.components.create_chat.create_channel.CreateChannelActivity">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytCustomToolbar
+    <com.sceyt.chatuikit.presentation.custom_views.CustomToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:title="@string/sceyt_new_channel"
-        app:titleTextColor="@color/sceyt_color_text_primary" />
+        app:sceytUiToolbarTitle="@string/sceyt_new_channel"
+        app:sceytUiToolbarTitleTextColor="@color/sceyt_color_text_primary" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragment_container"
-        android:name="com.sceyt.chatuikit.presentation.uicomponents.createchat.createchannel.fragments.ChannelDetailsFragment"
+        android:name="com.sceyt.chatuikit.presentation.components.create_chat.create_channel.fragments.CreateChannelDetailsFragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"

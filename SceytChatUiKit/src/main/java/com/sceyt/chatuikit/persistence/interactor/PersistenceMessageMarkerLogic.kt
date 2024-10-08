@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.persistence.interactor
 
-import com.sceyt.chatuikit.data.channeleventobserver.MessageMarkerEventData
-import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData
+import com.sceyt.chatuikit.data.managers.channel.event.MessageMarkerEventData
+import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 

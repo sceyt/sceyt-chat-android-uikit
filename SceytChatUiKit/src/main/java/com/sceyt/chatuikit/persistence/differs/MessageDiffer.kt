@@ -66,7 +66,7 @@ fun SceytMessage.diff(other: SceytMessage): MessageDiff {
         nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
         replyCountChanged = replyCount != other.replyCount,
         replyContainerChanged = parentMessage != other.parentMessage || parentMessage?.user != other.parentMessage?.user
-                || parentMessage?.state != other.parentMessage?.state,
+                || parentMessage?.state != other.parentMessage?.state || parentMessage?.body != other.parentMessage?.body,
         reactionsChanged = messageReactions?.equalsIgnoreNull(other.messageReactions)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = shouldShowAvatarAndName != other.shouldShowAvatarAndName
@@ -85,7 +85,7 @@ fun SceytMessage.diffContent(other: SceytMessage): MessageDiff {
         nameChanged = user?.fullName.equalsIgnoreNull(other.user?.fullName).not(),
         replyCountChanged = replyCount != other.replyCount,
         replyContainerChanged = parentMessage != other.parentMessage || parentMessage?.user != other.parentMessage?.user
-                || parentMessage?.state != other.parentMessage?.state,
+                || parentMessage?.state != other.parentMessage?.state || parentMessage?.body != other.parentMessage?.body,
         reactionsChanged = reactionTotals?.equalsIgnoreNull(other.reactionTotals)?.not()
                 ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = false,

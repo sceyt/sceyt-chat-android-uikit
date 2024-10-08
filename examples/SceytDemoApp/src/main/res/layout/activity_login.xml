@@ -59,7 +59,7 @@
                     android:layout_marginTop="35dp"
                     android:background="@android:color/transparent"
                     android:hint="@string/username"
-                    android:textColorHint="@color/sceyt_color_hint"
+                    android:textColorHint="@color/sceyt_color_text_footnote"
                     app:boxBackgroundColor="@android:color/transparent"
                     app:boxCollapsedPaddingTop="5dp"
                     app:boxStrokeColor="@color/sceyt_color_accent"
@@ -69,7 +69,7 @@
                     app:hintTextColor="@color/sceyt_color_accent"
                     app:layout_constraintTop_toBottomOf="@id/subTitle"
                     app:placeholderText="@string/enter_username"
-                    app:placeholderTextColor="@color/sceyt_color_hint">
+                    app:placeholderTextColor="@color/sceyt_color_text_footnote">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/userNameInput"
@@ -93,7 +93,7 @@
                     android:hint="@string/display_name"
                     android:paddingStart="0dp"
                     android:paddingEnd="-10dp"
-                    android:textColorHint="@color/sceyt_color_hint"
+                    android:textColorHint="@color/sceyt_color_text_footnote"
                     app:boxBackgroundColor="@android:color/transparent"
                     app:boxCollapsedPaddingTop="5dp"
                     app:boxStrokeColor="@color/sceyt_color_accent"
@@ -103,7 +103,7 @@
                     app:hintTextColor="@color/sceyt_color_accent"
                     app:layout_constraintTop_toBottomOf="@id/userNameTextField"
                     app:placeholderText="@string/enter_display_name"
-                    app:placeholderTextColor="@color/sceyt_color_hint">
+                    app:placeholderTextColor="@color/sceyt_color_text_footnote">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/displayNameInput"

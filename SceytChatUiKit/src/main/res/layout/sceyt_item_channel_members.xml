@@ -7,7 +7,7 @@
     android:background="?selectableItemBackground"
     android:paddingHorizontal="16dp">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
+    <com.sceyt.chatuikit.presentation.custom_views.AvatarView
         android:id="@+id/avatar"
         android:layout_width="40dp"
         android:layout_height="40dp"
@@ -15,9 +15,9 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytAvatarEnableRipple="false"
-        app:sceytAvatarViewFullName="Art d"
-        app:sceytAvatarViewTextSize="15sp" />
+        app:sceytUiAvatarEnableRipple="false"
+        app:sceytUiAvatarFullName="Art d"
+        app:sceytUiAvatarTextSize="15sp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/userName"
@@ -54,14 +54,12 @@
         android:id="@+id/roleName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/sceyt_bg_corners_20"
-        android:backgroundTint="#1A4F6AFF"
         android:fontFamily="@font/roboto_medium"
         android:includeFontPadding="false"
         android:lines="1"
         android:paddingHorizontal="8dp"
         android:paddingVertical="3dp"
-        android:textColor="@color/sceyt_color_accent"
+        android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

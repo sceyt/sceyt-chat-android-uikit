@@ -5,16 +5,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.sceyt.chatuikit.presentation.uicomponents.startchat.SceytStartChatActivity">
+    tools:context="com.sceyt.chatuikit.presentation.components.startchat.StartChatActivity">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytSearchableToolbar
+    <com.sceyt.chatuikit.presentation.custom_views.SearchableToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytSearchableToolbarIconsTint="@color/colorAccent"
-        app:sceytSearchableToolbarTitle="@string/sceyt_start_chat" />
+        app:sceytUiSearchableToolbarIconsTint="@color/colorAccent"
+        app:sceytUiSearchableToolbarTitle="@string/sceyt_start_chat" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvNewGroup"

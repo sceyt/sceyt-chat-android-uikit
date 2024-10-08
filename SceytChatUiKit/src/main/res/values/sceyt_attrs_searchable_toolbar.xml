@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="SceytSearchableToolbar">
-
-        <attr name="sceytSearchableToolbarTitle" format="string" localization="suggested" />
-        <attr name="sceytSearchableToolbarTitleColor" format="reference|color" />
-        <attr name="sceytSearchableToolbarTitleTextSize" format="dimension" />
-        <attr name="sceytSearchableToolbarEnableSearch" format="boolean" />
-        <attr name="sceytSearchableToolbarIconsTint" format="reference|color" />
-        <attr name="sceytSearchableToolbarBackIcon" format="reference" />
-        <attr name="sceytSearchableToolbarClearIcon" format="reference" />
-        <attr name="sceytSearchableToolbarSearchIcon" format="reference" />
+    <declare-styleable name="SearchableToolbar">
+        <attr name="sceytUiSearchableToolbarTitle" format="string" localization="suggested" />
+        <attr name="sceytUiSearchableToolbarTitleColor" format="reference|color" />
+        <attr name="sceytUiSearchableToolbarTitleTextSize" format="dimension" />
+        <attr name="sceytUiSearchableToolbarEnableSearch" format="boolean" />
+        <attr name="sceytUiSearchableToolbarIconsTint" format="reference|color" />
+        <attr name="sceytUiSearchableToolbarNavigationIcon" format="reference" />
+        <attr name="sceytUiSearchableToolbarClearIcon" format="reference" />
+        <attr name="sceytUiSearchableToolbarSearchIcon" format="reference" />
 
     </declare-styleable>
 </resources>

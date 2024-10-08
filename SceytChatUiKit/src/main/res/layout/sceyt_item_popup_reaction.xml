@@ -6,15 +6,15 @@
     android:layout_height="wrap_content"
     android:padding="1dp">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytReactionView
+    <com.sceyt.chatuikit.presentation.custom_views.ReactionView
         android:id="@+id/emojiView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackgroundBorderless"
-        app:sceytReactionViewEnableStroke="false"
-        app:sceytReactionViewInnerPadding="4.5dp"
-        app:sceytReactionViewSmileTextSize="25sp"
-        app:sceytReactionViewStrokeCornerRadius="30dp"
-        tools:sceytReactionViewSmileText="😍" />
+        app:sceytUiReactionEnableStroke="false"
+        app:sceytUiReactionInnerPadding="4.5dp"
+        app:sceytUiReactionSmileTextSize="25sp"
+        app:sceytUiReactionStrokeCornerRadius="30dp"
+        tools:sceytUiReactionSmileText="😍" />
 
 </FrameLayout>

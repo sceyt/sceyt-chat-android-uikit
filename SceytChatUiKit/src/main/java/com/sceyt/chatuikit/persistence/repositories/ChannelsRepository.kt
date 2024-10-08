@@ -1,9 +1,12 @@
 package com.sceyt.chatuikit.persistence.repositories
 
 import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.data.models.channels.*
+import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.EditChannelData
+import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.channels.SceytMember
 import kotlinx.coroutines.flow.Flow
 
 interface ChannelsRepository {
@@ -12,7 +15,6 @@ interface ChannelsRepository {
     suspend fun getChannels(query: String): SceytResponse<List<SceytChannel>>
     suspend fun getAllChannels(limit: Int): Flow<GetAllChannelsResponse>
     suspend fun loadMoreChannels(): SceytResponse<List<SceytChannel>>
-    suspend fun createDirectChannel(user: User): SceytResponse<SceytChannel>
     suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun leaveChannel(channelId: Long): SceytResponse<Long>
     suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long>
@@ -32,6 +34,8 @@ interface ChannelsRepository {
     suspend fun blockAndDeleteMember(channelId: Long, userId: String): SceytResponse<SceytChannel>
     suspend fun unMuteChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun muteChannel(channelId: Long, muteUntil: Long): SceytResponse<SceytChannel>
+    suspend fun enableAutoDelete(channelId: Long, period: Long): SceytResponse<SceytChannel>
+    suspend fun disableAutoDelete(channelId: Long): SceytResponse<SceytChannel>
     suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun unpinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>

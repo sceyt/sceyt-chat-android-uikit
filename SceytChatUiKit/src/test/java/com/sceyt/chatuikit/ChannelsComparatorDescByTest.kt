@@ -1,12 +1,12 @@
 package com.sceyt.chatuikit
 
 import com.google.common.truth.Truth
+import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.uicomponents.channels.adapter.ChannelsComparatorDescBy
-import com.sceyt.chatuikit.sceytconfigs.ChannelSortType
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsComparatorDescBy
 import org.junit.Test
 
 
@@ -20,7 +20,7 @@ class ChannelsComparatorDescByTest {
         channels.add(createChannel(1, 0, 1))
         channels.add(createChannel(1, 0, 3))
 
-        channels.sortWith(ChannelsComparatorDescBy(ChannelSortType.ByChannelCreatedAt))
+        channels.sortWith(ChannelsComparatorDescBy(ChannelListOrder.ListQueryChannelOrderCreatedAt))
 
         Truth.assertThat(channels.map { it.createdAt }.also {
             println("channels: $it")
@@ -36,7 +36,7 @@ class ChannelsComparatorDescByTest {
         channels.add(createChannel(3, 2, 2))
         channels.add(createChannel(4, 0, 3))
 
-        channels.sortWith(ChannelsComparatorDescBy(ChannelSortType.ByChannelCreatedAt))
+        channels.sortWith(ChannelsComparatorDescBy(ChannelListOrder.ListQueryChannelOrderCreatedAt))
 
         Truth.assertThat(channels.map { it.id }.also {
             println("channels: $it")
@@ -51,7 +51,7 @@ class ChannelsComparatorDescByTest {
         channels.add(createChannel(3L, 0, 3, createMessage(1)))
         channels.add(createChannel(4L, 0, 4, createMessage(3)))
 
-        channels.sortWith(ChannelsComparatorDescBy(ChannelSortType.ByLastMsg))
+        channels.sortWith(ChannelsComparatorDescBy(ChannelListOrder.ListQueryChannelOrderLastMessage))
 
         Truth.assertThat(channels.map { it.id }.also {
             println("channels: $it")
@@ -66,7 +66,7 @@ class ChannelsComparatorDescByTest {
         channels.add(createChannel(3L, 2, 3, createMessage(1)))
         channels.add(createChannel(4L, 0, 4, createMessage(3)))
 
-        channels.sortWith(ChannelsComparatorDescBy(ChannelSortType.ByLastMsg))
+        channels.sortWith(ChannelsComparatorDescBy(ChannelListOrder.ListQueryChannelOrderLastMessage))
 
         Truth.assertThat(channels.map { it.id }.also {
             println("channels: $it")
@@ -82,7 +82,7 @@ class ChannelsComparatorDescByTest {
         channels.add(createChannel(4, 0, 4))
         channels.add(createChannel(5, 0, 5, createMessage(3)))
 
-        channels.sortWith(ChannelsComparatorDescBy(ChannelSortType.ByLastMsg))
+        channels.sortWith(ChannelsComparatorDescBy(ChannelListOrder.ListQueryChannelOrderLastMessage))
 
         Truth.assertThat(channels.map { it.id }.also {
             println("channels: $it")
@@ -98,7 +98,7 @@ class ChannelsComparatorDescByTest {
         channels.add(createChannel(4, 1, 4))
         channels.add(createChannel(5, 0, 5, createMessage(3)))
 
-        channels.sortWith(ChannelsComparatorDescBy(ChannelSortType.ByLastMsg))
+        channels.sortWith(ChannelsComparatorDescBy(ChannelListOrder.ListQueryChannelOrderLastMessage))
 
         Truth.assertThat(channels.map { it.id }.also {
             println("channels: $it")

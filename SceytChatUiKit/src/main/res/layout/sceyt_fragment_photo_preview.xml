@@ -5,15 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".presentation.uicomponents.conversationinfo.photopreview.SceytPhotoPreviewActivity">
+    tools:context=".presentation.components.channel_info.preview.ImagePreviewActivity">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytCustomToolbar
+    <com.sceyt.chatuikit.presentation.custom_views.CustomToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:titleTextColor="@color/sceyt_color_text_primary" />
+        app:sceytUiToolbarTitleTextColor="@color/sceyt_color_text_primary" />
 
     <com.github.chrisbanes.photoview.PhotoView
         android:id="@+id/imageView"

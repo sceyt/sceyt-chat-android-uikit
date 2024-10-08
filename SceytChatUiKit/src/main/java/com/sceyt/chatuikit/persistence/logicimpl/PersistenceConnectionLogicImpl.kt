@@ -4,22 +4,21 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.sceyt.chat.models.ConnectionState
-import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
-import com.sceyt.chatuikit.data.connectionobserver.ConnectionStateData
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
+import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.dao.UserDao
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
-import com.sceyt.chatuikit.persistence.mappers.toUserEntity
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.repositories.UsersRepository
-import com.sceyt.chatuikit.pushes.SceytFirebaseMessagingDelegate
+import com.sceyt.chatuikit.push.FirebaseMessagingDelegate
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.CoroutineScope
@@ -42,15 +41,17 @@ internal class PersistenceConnectionLogicImpl(
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     init {
-        if (ConnectionEventsObserver.connectionState == ConnectionState.Connected)
+        if (ConnectionEventManager.connectionState == ConnectionState.Connected)
             scope.launch(Dispatchers.IO) {
                 onChangedConnectStatus(ConnectionStateData(ConnectionState.Connected))
             }
 
         scope.launch {
             ProcessLifecycleOwner.get().repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                if (ConnectionEventsObserver.isConnected)
-                    SceytChatUIKit.chatUIFacade.userInteractor.setPresenceState(PresenceState.Online)
+                if (ConnectionEventManager.isConnected) {
+                    val state = SceytChatUIKit.config.presenceConfig.defaultPresenceState
+                    SceytChatUIKit.chatUIFacade.userInteractor.setPresenceState(state)
+                }
             }
         }
     }
@@ -61,7 +62,7 @@ internal class PersistenceConnectionLogicImpl(
                 ClientWrapper.currentUser?.id?.let { preference.setUserId(it) }
                 insertCurrentUser()
                 SceytPresenceChecker.startPresenceCheck()
-                SceytFirebaseMessagingDelegate.checkNeedRegisterForPushToken()
+                FirebaseMessagingDelegate.checkNeedRegisterForPushToken()
             }
 
             scope.launch(Dispatchers.IO) {
@@ -69,21 +70,27 @@ internal class PersistenceConnectionLogicImpl(
                 messageLogic.sendAllPendingMessages()
                 messageLogic.sendAllPendingMessageStateUpdates()
                 reactionsLogic.sendAllPendingReactions()
-                if (!channelsCache.initialized)
-                    delay(1000) // Await 1 second maybe channel cache will be initialized
-                sceytSyncManager.startSync(false)
+                if (SceytChatUIKit.config.syncChannelsAfterConnect) {
+                    if (!channelsCache.initialized)
+                    // Await 1 second before sync maybe channel cache will be initialized,
+                    // otherwise no need to sync
+                        delay(1000)
+                    sceytSyncManager.startSync(false)
+                }
             }
         } else SceytPresenceChecker.stopPresenceCheck()
     }
 
     private suspend fun insertCurrentUser() {
         ClientWrapper.currentUser?.let {
-            usersDao.insertUser(it.toUserEntity())
+            usersDao.insertUserWithMetadata(it.toUserDb())
         } ?: run {
             preference.getUserId()?.let {
                 val response = usersRepository.getSceytUserById(it)
                 if (response is SceytResponse.Success)
-                    response.data?.toUserEntity()?.let { entity -> usersDao.insertUser(entity) }
+                    response.data?.toUserDb()?.let { userDb ->
+                        usersDao.insertUserWithMetadata(userDb)
+                    }
             }
         }
     }

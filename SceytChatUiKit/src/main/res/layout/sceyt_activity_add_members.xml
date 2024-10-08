@@ -5,15 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.sceyt.chatuikit.presentation.uicomponents.addmembers.SceytAddMembersActivity">
+    tools:context="com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytSearchableToolbar
+    <com.sceyt.chatuikit.presentation.custom_views.SearchableToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytSearchableToolbarTitle="@string/sceyt_add_members" />
+        app:sceytUiSearchableToolbarTitle="@string/sceyt_add_members" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvSelectedUsers"
@@ -56,13 +56,13 @@
         tools:itemCount="20"
         tools:listitem="@layout/sceyt_item_select_user" />
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytCustomFloatingActonButton
+    <com.sceyt.chatuikit.presentation.custom_views.CustomFloatingActonButton
         android:id="@+id/fabNext"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:clickable="false"
-        android:src="@drawable/ic_arrow_forward"
+        android:src="@drawable/sceyt_ic_arrow_next"
         android:tint="@color/sceyt_color_on_primary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

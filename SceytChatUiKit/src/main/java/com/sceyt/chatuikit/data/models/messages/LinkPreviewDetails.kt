@@ -1,6 +1,6 @@
 package com.sceyt.chatuikit.data.models.messages
 
-import com.vanniktech.ui.Parcelable
+import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -12,8 +12,8 @@ data class LinkPreviewDetails(
         val siteName: String?,
         val faviconUrl: String?,
         val imageUrl: String?,
-        var imageWidth: Int?,
-        var imageHeight: Int?,
-        var thumb: String?,
+        val imageWidth: Int?,
+        val imageHeight: Int?,
+        val thumb: String?,
         val hideDetails: Boolean,
 ) : Parcelable

@@ -1,13 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="ConversationHeaderView">
-        <attr name="sceytConvHeaderBackground" format="reference|color" />
-        <attr name="sceytConvHeaderTitleColor" format="reference|color" />
-        <attr name="sceytConvHeaderSubTitleColor" format="reference|color" />
-        <attr name="sceytConvHeaderUnderlineColor" format="reference|color" />
-        <attr name="sceytConvHeaderBackIcon" format="reference" />
-        <attr name="sceytConvHeaderEnableUnderline" format="boolean" />
-        <attr name="sceytConvHeaderToolbarMenuStyle" format="reference" />
-        <attr name="sceytConvHeaderToolbarMenuTitleAppearance" format="reference" />
+    <declare-styleable name="MessagesListHeaderView">
+        <attr name="sceytUiMessagesListHeaderBackground" format="reference|color" />
+
+        <!--Title text style-->
+        <attr name="sceytUiMessagesListHeaderTitleTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListHeaderTitleTextSize" format="dimension" />
+        <attr name= "sceytUiMessagesListHeaderTitleTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListHeaderTitleTextFont" format="reference" />
+
+        <!--SubTitle text style-->
+        <attr name="sceytUiMessagesListHeaderSubTitleTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListHeaderSubTitleTextSize" format="dimension" />
+        <attr name= "sceytUiMessagesListHeaderSubTitleTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListHeaderSubTitleTextFont" format="reference" />
+
+        <!-- Search input style-->
+        <attr name="sceytUiMessagesListHeaderSearchInputBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListHeaderSearchInputCornerRadius" format="dimension" />
+        <attr name="sceytUiMessagesListHeaderSearchInputBorderWidth" format="dimension" />
+        <attr name="sceytUiMessagesListHeaderSearchInputBorderColor" format="reference|color" />
+        <attr name="sceytUiMessagesListHeaderSearchInputSearchIcon" format="reference" />
+        <attr name="sceytUiMessagesListHeaderSearchInputClearIcon" format="reference" />
+        <attr name="sceytUiMessagesListHeaderSearchInputTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListHeaderSearchInputTextSize" format="dimension" />
+        <attr name= "sceytUiMessagesListHeaderSearchInputTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListHeaderSearchInputTextFont" format="reference" />
+        <attr name="sceytUiMessagesListHeaderSearchInputHintText" format="string" localization="suggested" />
+        <attr name="sceytUiMessagesListHeaderSearchInputHintTextColor" format="reference|color" />
+
+
+        <attr name="sceytUiMessagesListHeaderUnderlineColor" format="reference|color" />
+        <attr name="sceytUiMessagesListHeaderNavigationIcon" format="reference" />
+        <attr name="sceytUiMessagesListHeaderShowUnderline" format="boolean" />
+        <attr name="sceytUiMessagesListHeaderMessageActionsMenuPopupTheme" format="reference" />
+        <attr name="sceytUiMessagesListHeaderMessageActionsMenuTitleAppearance" format="reference" />
     </declare-styleable>
 </resources>

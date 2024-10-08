@@ -13,7 +13,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/appCompatImageView"
-            setTintColor="@{SceytChatUIKit.INSTANCE.theme.accentColor}"
+            setTintColor="@{SceytChatUIKit.INSTANCE.theme.colors.accentColor}"
             android:layout_width="50dp"
             android:layout_height="0dp"
             app:layout_constraintBottom_toTopOf="@+id/textView"
@@ -28,7 +28,7 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/textView"
-            setTextColor="@{SceytChatUIKit.INSTANCE.theme.textPrimaryColor}"
+            setTextColor="@{SceytChatUIKit.INSTANCE.theme.colors.textPrimaryColor}"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -46,7 +46,7 @@
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvDesc"
-            setTextColor="@{SceytChatUIKit.INSTANCE.theme.textSecondaryColor}"
+            setTextColor="@{SceytChatUIKit.INSTANCE.theme.colors.textSecondaryColor}"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

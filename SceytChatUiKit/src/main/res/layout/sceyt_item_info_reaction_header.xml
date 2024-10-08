@@ -6,23 +6,23 @@
     android:layout_height="wrap_content"
     android:paddingHorizontal="2dp">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytReactionView
+    <com.sceyt.chatuikit.presentation.custom_views.ReactionView
         android:id="@+id/reaction"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytReactionViewCountText="2"
-        app:sceytReactionViewCountTextColor="@color/sceyt_color_text_primary"
-        app:sceytReactionViewCountTextMargin="5dp"
-        app:sceytReactionViewCountTextSize="15sp"
-        app:sceytReactionViewEnableStroke="true"
-        app:sceytReactionViewInnerPaddingHorizontal="12dp"
-        app:sceytReactionViewInnerPaddingVertical="8dp"
-        app:sceytReactionViewSmileTextSize="15sp"
-        app:sceytReactionViewStrokeColor="@color/sceyt_color_border"
-        app:sceytReactionViewStrokeCornerRadius="30dp"
-        app:sceytReactionViewStrokeWidth="1dp"
-        tools:sceytReactionViewSmileText="😍" />
+        app:sceytUiReactionCountText="2"
+        app:sceytUiReactionCountTextColor="@color/sceyt_color_text_primary"
+        app:sceytUiReactionCountTextMargin="5dp"
+        app:sceytUiReactionCountTextSize="15sp"
+        app:sceytUiReactionEnableStroke="true"
+        app:sceytUiReactionInnerPaddingHorizontal="12dp"
+        app:sceytUiReactionInnerPaddingVertical="8dp"
+        app:sceytUiReactionSmileTextSize="15sp"
+        app:sceytUiReactionStrokeColor="@color/sceyt_color_border"
+        app:sceytUiReactionStrokeCornerRadius="30dp"
+        app:sceytUiReactionStrokeWidth="1dp"
+        tools:sceytUiReactionSmileText="😍" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

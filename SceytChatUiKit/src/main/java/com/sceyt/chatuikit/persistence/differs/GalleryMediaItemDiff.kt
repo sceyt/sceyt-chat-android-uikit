@@ -1,6 +1,6 @@
 package com.sceyt.chatuikit.persistence.differs
 
-import com.sceyt.chatuikit.presentation.uicomponents.imagepicker.adapter.MediaData
+import com.sceyt.chatuikit.presentation.components.picker.adapter.MediaData
 
 data class GalleryMediaItemDiff(
         var filePathChanged: Boolean,

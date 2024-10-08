@@ -5,7 +5,7 @@
     <item
         android:id="@+id/sceyt_edit_message"
         android:icon="@drawable/sceyt_ic_edit_stroked"
-        android:title="@string/sceyt_edit_message"
+        android:title="@string/sceyt_edit"
         app:showAsAction="always" />
 
     <item

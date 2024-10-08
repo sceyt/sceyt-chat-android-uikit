@@ -8,7 +8,7 @@
     android:paddingEnd="5dp"
     android:paddingBottom="6dp">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytAvatarView
+    <com.sceyt.chatuikit.presentation.custom_views.AvatarView
         android:id="@+id/avatar"
         android:layout_width="56dp"
         android:layout_height="56dp"
@@ -16,7 +16,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar" />
+        app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icRemove"
@@ -28,7 +28,7 @@
         app:layout_constraintTop_toTopOf="@+id/avatar"
         app:srcCompat="@drawable/sceyt_ic_remove" />
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytOnlineView
+    <com.sceyt.chatuikit.presentation.custom_views.PresenceStateIndicatorView
         android:id="@+id/onlineStatus"
         android:layout_width="12dp"
         android:layout_height="12dp"
@@ -36,9 +36,9 @@
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@id/avatar"
         app:layout_constraintEnd_toEndOf="@id/avatar"
-        app:sceytOnlineViewIndicatorColor="@color/sceyt_color_green"
-        app:sceytOnlineViewStrokeColor="@color/sceyt_color_background"
-        app:sceytOnlineViewStrokeWidth="1dp" />
+        app:sceytUiIndicatorColor="@color/sceyt_color_green"
+        app:sceytUiIndicatorStrokeColor="@color/sceyt_color_background"
+        app:sceytUiIndicatorStrokeWidth="1dp" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/userName"

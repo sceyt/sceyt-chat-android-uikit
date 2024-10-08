@@ -17,18 +17,7 @@ fun SceytChannel.checkIsMemberInChannel(): Boolean {
 }
 
 fun SceytChannel.isPeerDeleted(): Boolean {
-    return isDirect() && getPeer()?.user?.activityState == UserState.Deleted
-}
-
-fun SceytChannel.getDefaultAvatar(): Int {
-    val theme = SceytChatUIKit.theme
-    return if (isDirect()) {
-        when {
-            isPeerDeleted() -> theme.deletedUserAvatar
-            isSelf() -> theme.notesAvatar
-            else -> theme.userDefaultAvatar
-        }
-    } else 0
+    return isDirect() && getPeer()?.user?.state == UserState.Deleted
 }
 
 fun SceytChannel.isPeerBlocked(): Boolean {
@@ -47,11 +36,11 @@ fun SceytChannel.getPeer(): SceytMember? {
 
 fun ChannelTypeEnum?.isGroup() = this != ChannelTypeEnum.Direct
 
-fun SceytChannel.isDirect() = type == ChannelTypeEnum.Direct.getString()
+fun SceytChannel.isDirect() = type == ChannelTypeEnum.Direct.value
 
-fun SceytChannel.isPrivate() = type == ChannelTypeEnum.Private.getString() || type == ChannelTypeEnum.Group.getString()
+fun SceytChannel.isPublic() = type == ChannelTypeEnum.Public.value
 
-fun SceytChannel.isPublic() = type == ChannelTypeEnum.Public.getString() || type == ChannelTypeEnum.Broadcast.getString()
+fun SceytChannel.isGroup() = type != ChannelTypeEnum.Direct.value
 
 fun SceytChannel.isSelf(): Boolean {
     val isSelf = try {
@@ -59,6 +48,6 @@ fun SceytChannel.isSelf(): Boolean {
     } catch (e: Exception) {
         false
     }
-    return type == ChannelTypeEnum.Direct.getString() && isSelf
+    return type == ChannelTypeEnum.Direct.value && isSelf
 }
 

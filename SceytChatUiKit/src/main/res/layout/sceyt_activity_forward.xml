@@ -4,15 +4,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.sceyt.chatuikit.presentation.uicomponents.forward.SceytForwardActivity">
+    tools:context="com.sceyt.chatuikit.presentation.components.forward.ForwardActivity">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytSearchableToolbar
+    <com.sceyt.chatuikit.presentation.custom_views.SearchableToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytSearchableToolbarTitle="@string/sceyt_forward_message" />
+        app:sceytUiSearchableToolbarTitle="@string/sceyt_forward_message" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvChannels"

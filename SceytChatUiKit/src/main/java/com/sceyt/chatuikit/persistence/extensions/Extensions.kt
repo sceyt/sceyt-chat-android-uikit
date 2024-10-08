@@ -20,11 +20,7 @@ inline fun <reified T> Array<T>?.equalsIgnoreNull(other: Array<T>?): Boolean {
 }
 
 fun <T> List<T>.toArrayList(): ArrayList<T> {
-    return try {
-        this as ArrayList
-    } catch (ex: Exception) {
-        ArrayList(this)
-    }
+    return ArrayList(this)
 }
 
 inline fun <T> Continuation<T>.safeResume(value: T, onExceptionCalled: () -> Unit = {}) {
@@ -37,4 +33,17 @@ inline fun <T> Continuation<T>.safeResume(value: T, onExceptionCalled: () -> Uni
 
 fun <T> MutableLiveData<T>.asLiveData(): LiveData<T> {
     return this
+}
+
+fun <T> MutableCollection<T>.removeFirstIf(filter: (T) -> Boolean): Int {
+    val each = iterator()
+    var index = 0
+    while (each.hasNext()) {
+        if (filter(each.next())) {
+            each.remove()
+            return index
+        }
+        index++
+    }
+    return -1
 }

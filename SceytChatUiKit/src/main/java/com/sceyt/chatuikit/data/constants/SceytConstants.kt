@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.data.constants
 
+@Suppress("ConstPropertyName")
 object SceytConstants {
     const val Thumb = "tmb"
     const val Width = "szw"

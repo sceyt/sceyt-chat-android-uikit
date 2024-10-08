@@ -7,8 +7,8 @@ import com.sceyt.chatuikit.SceytChatUIFacade
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.PersistenceMiddleWareImpl
 import com.sceyt.chatuikit.persistence.SceytDatabase
-import com.sceyt.chatuikit.persistence.filetransfer.FileTransferService
-import com.sceyt.chatuikit.persistence.filetransfer.FileTransferServiceImpl
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
@@ -31,13 +31,13 @@ import com.sceyt.chatuikit.persistence.logicimpl.PersistenceMembersLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceMessageMarkerLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceReactionsLogicImpl
 import com.sceyt.chatuikit.persistence.logicimpl.PersistenceUsersLogicImpl
-import com.sceyt.chatuikit.persistence.logicimpl.attachmentlogic.AttachmentsCache
-import com.sceyt.chatuikit.persistence.logicimpl.attachmentlogic.PersistenceAttachmentLogicImpl
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.PersistenceChannelsLogicImpl
-import com.sceyt.chatuikit.persistence.logicimpl.messageslogic.MessageLoadRangeUpdater
-import com.sceyt.chatuikit.persistence.logicimpl.messageslogic.MessagesCache
-import com.sceyt.chatuikit.persistence.logicimpl.messageslogic.PersistenceMessagesLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.attachment.AttachmentsCache
+import com.sceyt.chatuikit.persistence.logicimpl.attachment.PersistenceAttachmentLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessageLoadRangeUpdater
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
+import com.sceyt.chatuikit.persistence.logicimpl.message.PersistenceMessagesLogicImpl
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -88,6 +88,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     single { get<SceytDatabase>().linkDao() }
     single { get<SceytDatabase>().loadRangeDao() }
     single { get<SceytDatabase>().markerDao() }
+    single { get<SceytDatabase>().autoDeleteMessageDao() }
 }
 
 internal val interactorModule = module {
@@ -104,10 +105,10 @@ internal val interactorModule = module {
 
 internal val logicModule = module {
     single<PersistenceChannelsLogic> { PersistenceChannelsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistenceMessagesLogic> { PersistenceMessagesLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceAttachmentLogic> { PersistenceAttachmentLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceReactionsLogic> { PersistenceReactionsLogicImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     single<PersistenceMessageMarkerLogic> { PersistenceMessageMarkerLogicImpl(get(), get(), get()) }
     single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get()) }

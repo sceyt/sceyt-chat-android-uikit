@@ -4,15 +4,16 @@ import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.persistence.entity.UserEntity
+import com.sceyt.chatuikit.persistence.entity.user.UserEntity
 import com.sceyt.chatuikit.persistence.entity.pendings.PendingReactionEntity
+import com.sceyt.chatuikit.persistence.entity.user.UserDb
 
 data class MessageDb(
         @Embedded
         val messageEntity: MessageEntity,
 
-        @Relation(parentColumn = "fromId", entityColumn = "user_id")
-        val from: UserEntity?,
+        @Relation(parentColumn = "fromId", entityColumn = "user_id", entity = UserEntity::class)
+        val from: UserDb?,
 
         @Relation(parentColumn = "parentId", entityColumn = "message_id", entity = MessageEntity::class)
         val parent: ParentMessageDb?,
@@ -30,13 +31,13 @@ data class MessageDb(
         val reactions: List<ReactionDb>?,
 
         @Relation(parentColumn = "message_id", entityColumn = "messageId")
-        var reactionsTotals: MutableList<ReactionTotalEntity>?,
+        val reactionsTotals: MutableList<ReactionTotalEntity>?,
 
         @Relation(parentColumn = "message_id", entityColumn = "messageId")
-        var pendingReactions: List<PendingReactionEntity>?,
+        val pendingReactions: List<PendingReactionEntity>?,
 
-        @Relation(parentColumn = "userId", entityColumn = "user_id")
-        val forwardingUser: UserEntity?,
+        @Relation(parentColumn = "userId", entityColumn = "user_id", entity = UserEntity::class)
+        val forwardingUser: UserDb?,
 
         @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = MentionUserMessageLink::class)
         val mentionedUsers: List<MentionUserDb>?

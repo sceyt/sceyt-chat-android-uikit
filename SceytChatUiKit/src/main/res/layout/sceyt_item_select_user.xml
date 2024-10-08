@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:paddingHorizontal="12dp">
 
-    <com.sceyt.chatuikit.presentation.customviews.SceytCircleCheckBox
+    <com.sceyt.chatuikit.presentation.custom_views.CircleCheckBox
         android:id="@+id/checkbox"
         android:layout_width="22dp"
         android:layout_height="22dp"
