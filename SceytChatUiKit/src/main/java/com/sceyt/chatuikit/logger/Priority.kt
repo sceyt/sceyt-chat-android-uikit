@@ -1,10 +1,12 @@
 package com.sceyt.chatuikit.logger
 
-enum class Priority(val level: Int) {
-    VERBOSE(1),
-    DEBUG(2),
-    INFO(3),
-    WARNING(4),
-    ERROR(5),
-    ASSERT(6)
+enum class Priority(
+        val level: Int
+) {
+    Verbose(1),
+    Debug(2),
+    Info(3),
+    Warning(4),
+    Error(5),
+    Assert(6)
 }

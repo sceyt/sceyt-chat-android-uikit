@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.shared.LiveEvent
 import com.sceyt.chatuikit.presentation.common.ConcurrentHashSet
 import kotlinx.coroutines.Dispatchers
@@ -84,7 +84,8 @@ class SceytSyncManager(private val channelInteractor: ChannelInteractor,
             suspendCancellableCoroutine { cont ->
                 launch(Dispatchers.IO) {
                     val syncChannelData = SyncChannelData(mutableSetOf(), false)
-                    channelInteractor.syncChannels(SceytChatUIKit.config.channelsLoadSize).collect {
+                    val limit = SceytChatUIKit.config.queryLimits.channelListQueryLimit
+                    channelInteractor.syncChannels(limit).collect {
                         when (it) {
                             is GetAllChannelsResponse.Error -> {
                                 syncChannelData.withError = true

@@ -15,7 +15,7 @@ import androidx.emoji2.text.EmojiCompat
 import androidx.emoji2.text.EmojiSpan
 import com.google.gson.Gson
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chatuikit.data.models.messages.MarkerTypeEnum
+import com.sceyt.chatuikit.data.models.messages.MarkerType
 import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT
 import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING
 import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE
@@ -103,6 +103,17 @@ fun CharSequence?.extractLinks(): Array<String> {
     return links.toTypedArray()
 }
 
+fun CharSequence?.extractLinksWithPositions(): Array<Triple<String, Int, Int>> {
+    if (this.isNullOrBlank() || isValidEmail()) return emptyArray()
+    val links = ArrayList<Triple<String, Int, Int>>()
+    val m = Patterns.WEB_URL.matcher(this)
+    while (m.find()) {
+        val url = m.group()
+        links.add(Triple(url, m.start(), m.end()))
+    }
+    return links.toTypedArray()
+}
+
 fun String?.isValidUrl(context: Context): Boolean {
     this ?: return false
     return Linkify.addLinks(TextView(context).apply { text = this@isValidUrl }, Linkify.WEB_URLS)
@@ -164,11 +175,11 @@ fun CharSequence?.processEmojiCompat(start: Int, end: Int, maxCount: Int, @Emoji
     }
 }
 
-fun String.notAutoCorrectable(): String {
+fun CharSequence.notAutoCorrectable(): CharSequence {
     return "\u2068${autoCorrectable()}\u2068"
 }
 
-fun String.autoCorrectable(): String {
+fun CharSequence.autoCorrectable(): String {
     return replace("\u2068".toRegex(), "")
 }
 
@@ -202,8 +213,8 @@ fun <T> String?.jsonToObject(clazz: Class<T>): T? {
 
 internal fun String.toDeliveryStatus(): DeliveryStatus? {
     return when (this) {
-        MarkerTypeEnum.Displayed.value() -> DeliveryStatus.Displayed
-        MarkerTypeEnum.Received.value() -> DeliveryStatus.Received
+        MarkerType.Displayed.value -> DeliveryStatus.Displayed
+        MarkerType.Received.value -> DeliveryStatus.Received
         else -> null
     }
 }

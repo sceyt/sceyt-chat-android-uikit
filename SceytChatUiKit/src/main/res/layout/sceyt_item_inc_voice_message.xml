@@ -5,16 +5,18 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <com.sceyt.chatuikit.presentation.customviews.CircleCheckBox
+    <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/selectView"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@android:color/transparent"
+        android:clickable="false"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.sceyt.chatuikit.presentation.customviews.AvatarView
+    <com.sceyt.chatuikit.presentation.custom_views.AvatarView
         android:id="@+id/avatar"
         android:layout_width="@dimen/_28sdp"
         android:layout_height="@dimen/_28sdp"
@@ -28,7 +30,7 @@
         tools:sceytUiAvatarFullName="Ar"
         tools:visibility="visible" />
 
-    <com.sceyt.chatuikit.presentation.customviews.ToReplyLineView
+    <com.sceyt.chatuikit.presentation.custom_views.ToReplyLineView
         android:id="@+id/toReplyLine"
         android:layout_width="10dp"
         android:layout_height="0dp"
@@ -109,6 +111,22 @@
             app:layout_constraintTop_toBottomOf="@+id/tvForwarded"
             tools:visibility="visible" />
 
+        <com.sceyt.chatuikit.presentation.custom_views.ClickableTextView
+            android:id="@+id/messageBody"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/sceyt_color_text_primary"
+            android:textSize="@dimen/mediumTextSize"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="@+id/layoutDetails"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintStart_toStartOf="@+id/layoutDetails"
+            app:layout_constraintTop_toBottomOf="@+id/viewReply"
+            tools:text="Lore ipsum  is the correct text which"
+            tools:visibility="visible" />
+
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/playPauseButton"
             android:layout_width="40dp"
@@ -120,22 +138,22 @@
             android:scaleType="center"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/viewReply"
+            app:layout_constraintTop_toBottomOf="@+id/messageBody"
             app:srcCompat="@drawable/sceyt_ic_play" />
 
-        <com.sceyt.chatuikit.presentation.customviews.CircularProgressView
+        <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
             android:id="@+id/loadProgress"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:padding="1dp"
             android:visibility="gone"
-            app:sceytUiProgressIconSizeInPercent="65"
             app:layout_constraintBottom_toBottomOf="@+id/playPauseButton"
             app:layout_constraintEnd_toEndOf="@+id/playPauseButton"
             app:layout_constraintStart_toStartOf="@+id/playPauseButton"
             app:layout_constraintTop_toTopOf="@+id/playPauseButton"
-            app:sceytUiProgressMinProgress="2"
             app:sceytUiProgressColor="@color/sceyt_color_on_primary"
+            app:sceytUiProgressIconSizeInPercent="65"
+            app:sceytUiProgressMinProgress="2"
             app:sceytUiProgressTrackColor="@android:color/transparent"
             tools:visibility="visible" />
 
@@ -188,7 +206,7 @@
             app:layout_constraintStart_toEndOf="@id/playPauseButton"
             tools:text="00:00" />
 
-        <com.sceyt.chatuikit.presentation.customviews.DateStatusView
+        <com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
             android:id="@+id/messageDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -197,10 +215,10 @@
             android:paddingHorizontal="6dp"
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="parent"
-            app:sceytUiDateStatusDateTextColor="@color/sceyt_color_text_secondary"
-            app:sceytUiDateStatusDateTextSize="@dimen/tinyTextSize"
-            app:sceytUiDateStatusTrailingIconSize="15.5dp"
-            tools:sceytUiDateStatusDateText="00:37" />
+            app:sceytUiDecoratedTextColor="@color/sceyt_color_text_secondary"
+            app:sceytUiDecoratedTextSize="@dimen/tinyTextSize"
+            app:sceytUiDecoratedTextTrailingIconSize="15.5dp"
+            tools:sceytUiDecoratedTextTitle="00:37" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

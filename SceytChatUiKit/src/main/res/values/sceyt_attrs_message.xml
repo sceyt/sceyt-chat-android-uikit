@@ -1,89 +1,316 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="MessagesListView">
+        <attr name="sceytUiMessagesListBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListEmptyStateLayout" format="reference" />
+        <attr name="sceytUiMessagesListEmptyStateSelfChannelLayout" format="reference" />
+        <attr name="sceytUiMessagesListLoadingStateLayout" format="reference" />
+        <attr name="sceytUiMessagesListSameSenderMessageDistance" format="dimension" />
+        <attr name="sceytUiMessagesListDifferentSenderMessageDistance" format="dimension" />
 
-        <attr name="sceytUiMessageIncBubbleColor" format="reference|color" />
-        <attr name="sceytUiMessageOutBubbleColor" format="reference|color" />
+        <!-- Scroll down button style -->
+        <attr name="sceytUiMessagesListScrollDownButtonBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListScrollDownButtonUnreadCountTextBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListScrollDownButtonUnreadCountTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListScrollDownButtonUnreadCountTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListScrollDownButtonUnreadCountTextFont" format="reference" />
+        <attr name="sceytUiMessagesListScrollDownButtonUnreadCountTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListScrollDownButtonIcon" format="reference" />
 
-        <!--Background color reply message -->
-        <attr name="sceytUiMessageIncReplyBackgroundColor" format="reference|color" />
-        <attr name="sceytUiMessageOutReplBackgroundColor" format="reference|color" />
+        <!-- Date separator style -->
+        <attr name="sceytUiMessagesListDateSeparatorBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListDateSeparatorTextBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListDateSeparatorCornersRadius" format="dimension" />
+        <attr name="sceytUiMessagesListDateSeparatorBorderWidth" format="dimension" />
+        <attr name="sceytUiMessagesListDateSeparatorBorderColor" format="reference|color" />
 
-        <!--Background color of link preview -->
-        <attr name="sceytUiMessageIncLinkPreviewBackgroundColor" format="reference|color" />
-        <attr name="sceytUiMessageOutLinkPreviewBackgroundColor" format="reference|color" />
-
-        <!-- Drawable of the message sent state indicator -->
-        <attr name="sceytUiMessageSentIcon" format="reference" />
-        <!-- Drawable of the message read state indicator -->
-        <attr name="sceytUiMessageReadIcon" format="reference" />
-        <!-- Drawable of the message delivery indicator -->
-        <attr name="sceytUiMessageDeliveredIcon" format="reference" />
-        <!-- Drawable of the message pending indicator -->
-        <attr name="sceytUiMessagePendingIcon" format="reference" />
-
-        <attr name="sceytUiMessageBodyTextColor" format="reference|color" />
-        <attr name="sceytUiMessageDateTextColor" format="reference|color" />
-
-        <attr name="sceytUiMessageSenderNameTextColor" format="reference|color" />
-        <attr name="sceytUiReplyMessageLineColor" format="reference|color" />
-
-        <!--Message edited text-->
-        <attr name="sceytUiMessageEditedText" format="reference" />
-        <attr name="sceytUiMessageEditedTextStyle">
+        <attr name="sceytUiMessagesListDateSeparatorTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListDateSeparatorTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListDateSeparatorTextFont" format="reference" />
+        <attr name="sceytUiMessagesListDateSeparatorTextStyle">
             <flag name="normal" value="0" />
             <flag name="bold" value="1" />
             <flag name="italic" value="2" />
         </attr>
 
-        <!--Date separator item-->
-        <attr name="sceytUiDateSeparatorItemTextColor" format="reference|color" />
-        <attr name="sceytUiDateSeparatorItemBackgroundColor" format="reference|color" />
-        <attr name="sceytUiDateSeparatorItemTextFont" format="reference" />
-        <attr name="sceytUiDateSeparatorItemTextStyle">
+        <!-- Unread messages separator style -->
+        <attr name="sceytUiMessagesListUnreadMessagesSeparatorBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListUnreadMessagesSeparatorUnreadText" format="string" localization="suggested" />
+        <attr name="sceytUiMessagesListUnreadMessagesSeparatorTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListUnreadMessagesSeparatorTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListUnreadMessagesSeparatorTextFont" format="reference" />
+        <attr name="sceytUiMessagesListUnreadMessagesSeparatorTextStyle">
             <flag name="normal" value="0" />
             <flag name="bold" value="1" />
             <flag name="italic" value="2" />
         </attr>
 
-        <!--Unread messages separator-->
-        <attr name="sceytUiUnreadMessagesSeparatorTextColor" format="reference|color" />
-        <attr name="sceytUiUnreadMessagesSeparatorBackgroundColor" format="reference|color" />
-        <attr name="sceytUiUnreadMessagesSeparatorTextStyle">
+        <!-- Reaction picker style -->
+        <attr name="sceytUiMessagesListReactionPickerBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListReactionPickerMoreBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListReactionPickerSelectedBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListReactionPickerMoreIcon" format="reference" />
+
+        <!-- Configs -->
+        <attr name="sceytUiEnableScrollDownButton" format="boolean" />
+        <attr name="sceytUiEnableDateSeparator" format="boolean" />
+
+        <!-- Message item style-->
+        <attr name="sceytUiMessagesListIncomingBubbleColor" format="reference|color" />
+        <attr name="sceytUiMessagesListOutgoingBubbleColor" format="reference|color" />
+        <attr name="sceytUiMessagesListIncomingReplyBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListOutgoingReplyBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListIncomingLinkPreviewBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListOutgoingLinkPreviewBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListOnOverlayColor" format="reference|color" />
+        <attr name="sceytUiMessagesListThreadReplyArrowStrokeColor" format="reference|color" />
+        <attr name="sceytUiMessagesListReactionsContainerBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListHighlightedMessageColor" format="reference|color" />
+        <attr name="sceytUiMessagesListLinkTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListVideoIcon" format="reference" />
+        <attr name="sceytUiMessagesListSwipeToReplyIcon" format="reference" />
+        <attr name="sceytUiMessagesListForwardedIcon" format="reference" />
+        <attr name="sceytUiMessagesListVideoPlayIcon" format="reference" />
+        <attr name="sceytUiMessagesListVoicePlayIcon" format="reference" />
+        <attr name="sceytUiMessagesListVoicePauseIcon" format="reference" />
+        <attr name="sceytUiMessagesListViewCountIcon" format="reference" />
+        <!--Message body text style-->
+        <attr name="sceytUiMessagesListBodyTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListBodyTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListBodyTextFont" format="reference" />
+        <attr name="sceytUiMessagesListBodyTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Deleted message text style-->
+        <attr name="sceytUiMessagesListDeletedMessageTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListDeletedMessageTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListDeletedMessageTextFont" format="reference" />
+        <attr name="sceytUiMessagesListDeletedMessageTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Sender name text style-->
+        <attr name="sceytUiMessagesListSenderNameTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListSenderNameTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListSenderNameTextFont" format="reference" />
+        <attr name="sceytUiMessagesListSenderNameTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Message date text style-->
+        <attr name="sceytUiMessagesListMessageDateTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListMessageDateTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListMessageDateTextFont" format="reference" />
+        <attr name="sceytUiMessagesListMessageDateTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Message state text style-->
+        <attr name="sceytUiMessagesListMessageStateTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListMessageStateTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListMessageStateTextFont" format="reference" />
+        <attr name="sceytUiMessagesListMessageStateTextStyle">
             <flag name="normal" value="0" />
             <flag name="bold" value="1" />
             <flag name="italic" value="2" />
         </attr>
 
-        <attr name="sceytUiEnableScrollDownButton" format="boolean"/>
-        <attr name="sceytUiEnableDateSeparator" format="boolean"/>
+        <!--Texts -->
+        <attr name="sceytUiMessagesListEditedStateText" format="reference" />
+        <attr name="sceytUiMessagesListDeletedStateText" format="reference" />
+        <attr name="sceytUiMessagesListForwardedText" format="reference" />
 
-        <!--Background color -->
-        <attr name="sceytUiMessageListBackgroundColor" format="reference|color" />
+        <!--Mention text style-->
+        <attr name="sceytUiMessagesListMentionTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListMentionTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListMentionTextFont" format="reference" />
+        <attr name="sceytUiMessagesListMentionTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
 
-        <!--Empty state-->
-        <attr name="sceytUiEmptyStateLayout" format="reference" />
-        <attr name="sceytUiEmptyStateSelfChannelLayout" format="reference" />
+        <!--Video duration text style-->
+        <attr name="sceytUiMessagesListVideoDurationTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListVideoDurationTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListVideoDurationTextFont" format="reference" />
+        <attr name="sceytUiMessagesListVideoDurationTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Thread reply count text style-->
+        <attr name="sceytUiMessagesListThreadReplyCountTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListThreadReplyCountTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListThreadReplyCountTextFont" format="reference" />
+        <attr name="sceytUiMessagesListThreadReplyCountTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Forward title text style-->
+        <attr name="sceytUiMessagesListForwardTitleTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListForwardTitleTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListForwardTitleTextFont" format="reference" />
+        <attr name="sceytUiMessagesListForwardTitleTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Reaction count text style-->
+        <attr name="sceytUiMessagesListReactionCountTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListReactionCountTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListReactionCountTextFont" format="reference" />
+        <attr name="sceytUiMessagesListReactionCountTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Voice speed text style-->
+        <attr name="sceytUiMessagesListVoiceSpeedTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListVoiceSpeedTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListVoiceSpeedTextFont" format="reference" />
+        <attr name="sceytUiMessagesListVoiceSpeedTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Voice duration text style-->
+        <attr name="sceytUiMessagesListVoiceDurationTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListVoiceDurationTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListVoiceDurationTextFont" format="reference" />
+        <attr name="sceytUiMessagesListVoiceDurationTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Attachment file name text style-->
+        <attr name="sceytUiMessagesListAttachmentFileNameTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListAttachmentFileNameTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListAttachmentFileNameTextFont" format="reference" />
+        <attr name="sceytUiMessagesListAttachmentFileNameTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--Attachment file size text style-->
+        <attr name="sceytUiMessagesListAttachmentFileSizeTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListAttachmentFileSizeTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListAttachmentFileSizeTextFont" format="reference" />
+        <attr name="sceytUiMessagesListAttachmentFileSizeTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
 
-        <!--Loading state-->
-        <attr name="sceytUiLoadingStateLayout" format="reference" />
+        <!--Link preview style-->
+        <attr name="sceytUiMessagesListLinkPreviewTitleTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListLinkPreviewTitleTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListLinkPreviewTitleTextFont" format="reference" />
+        <attr name="sceytUiMessagesListLinkPreviewTitleTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListLinkPreviewDescriptionTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListLinkPreviewDescriptionTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListLinkPreviewDescriptionTextFont" format="reference" />
+        <attr name="sceytUiMessagesListLinkPreviewDescriptionTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListLinkPreviewPlaceHolder" format="reference" />
 
-        <attr name="sceytUiAutoLinkTextColor" format="reference|color" />
+        <!--Reply message style-->
+        <attr name="sceytUiMessagesListReplyMessageBorderColor" format="reference|color" />
+        <attr name="sceytUiMessagesListReplyMessageVoiceDurationColor" format="reference|color" />
+        <attr name="sceytUiMessagesListReplyMessageTitleTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListReplyMessageTitleTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListReplyMessageTitleTextFont" format="reference" />
+        <attr name="sceytUiMessagesListReplyMessageTitleTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListReplyMessageSubtitleTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListReplyMessageSubtitleTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListReplyMessageSubtitleTextFont" format="reference" />
+        <attr name="sceytUiMessagesListReplyMessageSubtitleTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
 
-        <!--Distance between messages-->
-        <attr name="sceytUiSameSenderMessageDistance" format="dimension" />
-        <attr name="sceytUiDifferentSenderMessageDistance" format="dimension" />
+        <!--Reply message mention text style -->
+        <attr name="sceytUiMessagesListReplyMessageMentionTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListReplyMessageMentionTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListReplyMessageMentionTextFont" format="reference" />
+        <attr name="sceytUiMessagesListReplyMessageMentionTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
 
-        <attr name="sceytUiDownScrollerUnreadCountColor" format="reference|color" />
-        <attr name="sceytUiDownScrollerIcon" format="reference" />
+        <!--Reply message attachment duration text style -->
+        <attr name="sceytUiMessagesListReplyMessageAttachmentDurationTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListReplyMessageAttachmentDurationTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListReplyMessageAttachmentDurationTextFont" format="reference" />
+        <attr name="sceytUiMessagesListReplyMessageAttachmentDurationTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
 
-        <attr name="sceytUiMediaLoaderColor" format="reference|color" />
-        <attr name="sceytUiVideoDurationIcon" format="reference" />
-        <attr name="sceytUiVoiceAttachmentIcon" format="reference" />
-        <attr name="sceytUiFileAttachmentIcon" format="reference" />
-        <attr name="sceytUiLinkAttachmentIcon" format="reference" />
+        <!--Reply message deleted text style -->
+        <attr name="sceytUiMessagesListReplyMessageDeletedTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListReplyMessageDeletedTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListReplyMessageDeletedTextFont" format="reference" />
+        <attr name="sceytUiMessagesListReplyMessageDeletedTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
 
-        <attr name="sceytUiSwipeReplyIcon" format="reference" />
+        <!--Media loader style-->
+        <attr name="sceytUiMessagesListMediaLoaderTrackColor" format="reference|color" />
+        <attr name="sceytUiMessagesListMediaLoaderProgressColor" format="reference|color" />
+        <attr name="sceytUiMessagesListMediaLoaderBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListMediaLoaderCancelIcon" format="reference" />
+        <attr name="sceytUiMessagesListMediaLoaderUploadIcon" format="reference" />
+        <attr name="sceytUiMessagesListMediaLoaderDownloadIcon" format="reference" />
+
+        <!-- Audio waveform style -->
+        <attr name="sceytUiMessagesListAudioWaveformTrackColor" format="reference|color" />
+        <attr name="sceytUiMessagesListAudioWaveformProgressColor" format="reference|color" />
+
+        <!-- Selection checkbox style -->
+        <attr name="sceytUiMessagesListSelectionCheckboxCheckedIcon" format="reference" />
+        <attr name="sceytUiMessagesListSelectionCheckboxUncheckedIcon" format="reference" />
+        <attr name="sceytUiMessagesListSelectionCheckboxPressedIcon" format="reference" />
+
+        <!--Overlay Media loader style-->
+        <attr name="sceytUiMessagesListOverlayMediaLoaderTrackColor" format="reference|color" />
+        <attr name="sceytUiMessagesListOverlayMediaLoaderProgressColor" format="reference|color" />
+        <attr name="sceytUiMessagesListOverlayMediaLoaderBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListOverlayMediaLoaderCancelIcon" format="reference" />
+        <attr name="sceytUiMessagesListOverlayMediaLoaderUploadIcon" format="reference" />
+        <attr name="sceytUiMessagesListOverlayMediaLoaderDownloadIcon" format="reference" />
+
+        <!--Message delivery status icons-->
+        <attr name="sceytUiMessagesListMessageDeliveryStatusPendingIcon" format="reference" />
+        <attr name="sceytUiMessagesListMessageDeliveryStatusSentIcon" format="reference" />
+        <attr name="sceytUiMessagesListMessageDeliveryStatusReceivedIcon" format="reference" />
+        <attr name="sceytUiMessagesListMessageDeliveryStatusDisplayedIcon" format="reference" />
 
     </declare-styleable>
 </resources>

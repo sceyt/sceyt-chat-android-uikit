@@ -55,10 +55,7 @@ fun RecyclerView.isFirstItemDisplaying(): Boolean {
 fun RecyclerView.needLoadMore(limit: Int, dy: Int): Boolean {
     if (adapter?.itemCount == 0 || dy > 0) return false
     val firstVisibleItemPosition = ((layoutManager) as LinearLayoutManager).findFirstVisibleItemPosition()
-    if (firstVisibleItemPosition != RecyclerView.NO_POSITION && firstVisibleItemPosition < limit) {
-        return true
-    }
-    return false
+    return firstVisibleItemPosition != RecyclerView.NO_POSITION && firstVisibleItemPosition < limit
 }
 
 fun RecyclerView.isFirstCompletelyItemDisplaying(): Boolean {

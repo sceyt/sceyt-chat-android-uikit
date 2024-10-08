@@ -84,7 +84,7 @@
                 android:padding="16dp"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <com.sceyt.chatuikit.presentation.customviews.AvatarView
+                <com.sceyt.chatuikit.presentation.custom_views.AvatarView
                     android:id="@+id/avatar"
                     android:layout_width="72dp"
                     android:layout_height="72dp"

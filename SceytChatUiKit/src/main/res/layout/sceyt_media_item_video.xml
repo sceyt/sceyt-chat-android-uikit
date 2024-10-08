@@ -25,13 +25,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.sceyt.chatuikit.presentation.customviews.CircularProgressView
+    <com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
         android:id="@+id/progress"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:padding="3dp"
         android:visibility="gone"
-        app:sceytUiProgressBackgroundColor="@color/sceyt_progress_bg_color"
+        app:sceytUiProgressBackgroundColor="@color/sceyt_color_overlay_background_2"
         app:sceytUiProgressIconSizeInPercent="65"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

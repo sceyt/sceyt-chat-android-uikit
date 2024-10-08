@@ -47,7 +47,7 @@
     </style>
 
     <style name="SceytShapeAppearanceOverlay.CornerSize17" parent="@style/SceytShapeAppearanceOverlayRounded">
-        <item name="cornerSize">17dp</item>
+        <item name="cornerSize">16dp</item>
     </style>
 
     <style name="SceytShapeAppearanceOverlay.CornerSize5" parent="@style/SceytShapeAppearanceOverlayRounded">

@@ -1,10 +1,10 @@
 package com.sceyt.chatuikit.persistence.mappers
 
 import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.toSceytMember
 import com.sceyt.chatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.chatuikit.persistence.entity.channel.ChannelEntity
@@ -62,7 +62,7 @@ fun ChannelDb.toChannel(): SceytChannel {
             updatedAt = updatedAt,
             messagesClearedAt = messagesClearedAt,
             memberCount = memberCount,
-            createdBy = createdBy?.toUser(),
+            createdBy = createdBy?.toSceytUser(),
             userRole = userRole,
             unread = unread,
             newMessageCount = newMessageCount,
@@ -100,7 +100,7 @@ fun Channel.toSceytUiChannel(): SceytChannel {
         updatedAt = updatedAt,
         messagesClearedAt = messagesClearedAt,
         memberCount = memberCount,
-        createdBy = createdBy,
+        createdBy = createdBy?.toSceytUser(),
         userRole = userRole,
         unread = isUnread,
         newMessageCount = newMessageCount,
@@ -124,41 +124,43 @@ fun Channel.toSceytUiChannel(): SceytChannel {
     )
 }
 
-fun createPendingDirectChannelData(channelId: Long, createdBy: User,
-                                   members: List<SceytMember>, role: String,
-                                   metadata: String): SceytChannel {
-    return SceytChannel(
-        id = channelId,
-        parentChannelId = null,
-        uri = null,
-        type = ChannelTypeEnum.Direct.getString(),
-        subject = null,
-        avatarUrl = null,
-        metadata = metadata,
-        createdAt = System.currentTimeMillis(),
-        updatedAt = 0,
-        messagesClearedAt = 0,
-        memberCount = members.size.toLong(),
-        createdBy = createdBy,
-        userRole = role,
-        unread = false,
-        newMessageCount = 0,
-        newMentionCount = 0,
-        newReactedMessageCount = 0,
-        hidden = false,
-        archived = false,
-        muted = false,
-        mutedTill = 0,
-        pinnedAt = null,
-        lastReceivedMessageId = 0,
-        lastDisplayedMessageId = 0,
-        messageRetentionPeriod = 0,
-        lastMessage = null,
-        messages = null,
-        members = members,
-        newReactions = null,
-        pendingReactions = null,
-        pending = true,
-        draftMessage = null
-    )
-}
+fun createPendingDirectChannelData(
+        channelId: Long,
+        createdBy: SceytUser,
+        members: List<SceytMember>,
+        role: String,
+        metadata: String
+) = SceytChannel(
+    id = channelId,
+    parentChannelId = null,
+    uri = null,
+    type = ChannelTypeEnum.Direct.value,
+    subject = null,
+    avatarUrl = null,
+    metadata = metadata,
+    createdAt = System.currentTimeMillis(),
+    updatedAt = 0,
+    messagesClearedAt = 0,
+    memberCount = members.size.toLong(),
+    createdBy = createdBy,
+    userRole = role,
+    unread = false,
+    newMessageCount = 0,
+    newMentionCount = 0,
+    newReactedMessageCount = 0,
+    hidden = false,
+    archived = false,
+    muted = false,
+    mutedTill = 0,
+    pinnedAt = null,
+    lastReceivedMessageId = 0,
+    lastDisplayedMessageId = 0,
+    messageRetentionPeriod = 0,
+    lastMessage = null,
+    messages = null,
+    members = members,
+    newReactions = null,
+    pendingReactions = null,
+    pending = true,
+    draftMessage = null
+)

@@ -10,7 +10,7 @@ import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -66,14 +66,15 @@ class LoginViewModel(private val preference: AppSharedPreference,
 
     private suspend fun updateProfile(displayName: String) = withContext(Dispatchers.IO) {
         val currentUser: User? = ClientWrapper.currentUser
-        userInteractor.updateProfile(displayName, currentUser?.lastName, currentUser?.avatarURL, null)
+        userInteractor.updateProfile(displayName, currentUser?.lastName, currentUser?.avatarURL,
+            currentUser?.metadataMap)
     }
 
     private suspend fun connectUser(userId: String): Result<Boolean> {
         return withContext(Dispatchers.IO) {
             var job: Job? = null
             suspendCancellableCoroutine { continuation ->
-                job = ConnectionEventsObserver.onChangedConnectStatusFlow.onEach {
+                job = ConnectionEventManager.onChangedConnectStatusFlow.onEach {
                     when (it.state) {
                         ConnectionState.Connected -> {
                             continuation.resume(Result.success(true))

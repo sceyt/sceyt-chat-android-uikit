@@ -69,7 +69,7 @@ class ReactionsRepositoryImpl : ReactionsRepository {
     private fun createReactionsQuery(messageId: Long, key: String? = null): ReactionsListQuery {
         return ReactionsListQuery.Builder(messageId)
             .withReactionKey(key)
-            .setLimit(SceytChatUIKit.config.reactionsLoadSize)
+            .setLimit(SceytChatUIKit.config.queryLimits.reactionListQueryLimit)
             .build()
     }
 

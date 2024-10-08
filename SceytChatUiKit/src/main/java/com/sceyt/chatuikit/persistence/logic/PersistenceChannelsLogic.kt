@@ -1,9 +1,9 @@
 package com.sceyt.chatuikit.persistence.logic
 
 import com.sceyt.chat.models.user.User
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelEventData
-import com.sceyt.chatuikit.data.channeleventobserver.ChannelUnreadCountUpdatedEventData
-import com.sceyt.chatuikit.data.messageeventobserver.MessageStatusChangeData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
+import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -12,9 +12,10 @@ import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.uicomponents.messageinput.mention.Mention
-import com.sceyt.chatuikit.presentation.uicomponents.messageinput.style.BodyStyleRange
-import com.sceyt.chatuikit.pushes.RemoteMessageData
+import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
+import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
+import com.sceyt.chatuikit.push.RemoteMessageData
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.Flow
 
@@ -25,15 +26,15 @@ interface PersistenceChannelsLogic {
     suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>)
     suspend fun onFcmMessage(data: RemoteMessageData)
     suspend fun onMessageEditedOrDeleted(message: SceytMessage)
-    suspend fun loadChannels(offset: Int, searchQuery: String,
-                             loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
+    fun loadChannels(offset: Int, searchQuery: String,
+                     loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun searchChannelsWithUserIds(offset: Int, limit: Int, searchQuery: String,
                                           userIds: List<String>, includeUserNames: Boolean,
                                           loadKey: LoadKeyData?, onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun syncChannels(limit: Int): Flow<GetAllChannelsResponse>
-    suspend fun findOrCreateDirectChannel(user: User): SceytResponse<SceytChannel>
+    suspend fun findOrCreateDirectChannel(user: SceytUser): SceytResponse<SceytChannel>
     suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun createNewChannelInsteadOfPendingChannel(channel: SceytChannel): SceytResponse<SceytChannel>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>

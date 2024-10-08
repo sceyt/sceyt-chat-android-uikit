@@ -3,14 +3,13 @@ package com.sceyt.chatuikit.persistence.dao
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.LoadNearData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentDb
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.entity.messages.AttachmentPayLoadDb
-import com.sceyt.chatuikit.persistence.filetransfer.TransferData
-import com.sceyt.chatuikit.persistence.filetransfer.TransferState
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 
 @Dao
 abstract class AttachmentDao {
@@ -45,7 +44,7 @@ abstract class AttachmentDao {
     abstract suspend fun getAllAttachmentPayLoadsByMsgTid(vararg tid: Long): List<AttachmentPayLoadDb>
 
     @Query("select * from AttachmentEntity where type =:type and url <> ''")
-    abstract fun getAllFileAttachments(type: String = AttachmentTypeEnum.File.value()): List<AttachmentEntity>
+    abstract fun getAllFileAttachments(type: String = AttachmentTypeEnum.File.value): List<AttachmentEntity>
 
     @Query("update AttachmentEntity set id =:attachmentId, messageId =:messageId where messageTid =:messageTid and url =:attachmentUrl")
     abstract suspend fun updateAttachmentIdAndMessageId(attachmentId: Long?, messageId: Long, messageTid: Long, attachmentUrl: String?)
@@ -67,7 +66,7 @@ abstract class AttachmentDao {
     }
 
     @Query("update AttachmentEntity set filePath =:filePath, url =:url where messageTid =:msgTid and type !=:ignoreType")
-    abstract suspend fun updateAttachmentByMsgTid(msgTid: Long, filePath: String?, url: String?, ignoreType: String = AttachmentTypeEnum.Link.value())
+    abstract suspend fun updateAttachmentByMsgTid(msgTid: Long, filePath: String?, url: String?, ignoreType: String = AttachmentTypeEnum.Link.value)
 
     @Query("update AttachmentPayLoad set filePath =:filePath, url =:url," +
             "progressPercent= :progress, transferState =:state  where messageTid =:tid")
@@ -76,7 +75,7 @@ abstract class AttachmentDao {
     @Query("update AttachmentEntity set filePath =:filePath, fileSize =:fileSize, metadata =:metadata " +
             "where messageTid =:msgTid and type !=:ignoreType")
     abstract suspend fun updateAttachmentFilePathByMsgTid(msgTid: Long, filePath: String?, fileSize: Long,
-                                                          metadata: String?, ignoreType: String = AttachmentTypeEnum.Link.value())
+                                                          metadata: String?, ignoreType: String = AttachmentTypeEnum.Link.value)
 
     @Query("update AttachmentPayLoad set filePath =:filePath where messageTid =:msgTid")
     abstract suspend fun updateAttachmentPayLoadFilePathByMsgTid(msgTid: Long, filePath: String?)

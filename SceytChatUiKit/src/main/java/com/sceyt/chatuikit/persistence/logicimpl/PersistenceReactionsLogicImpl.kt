@@ -2,10 +2,10 @@ package com.sceyt.chatuikit.persistence.logicimpl
 
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.connectionobserver.ConnectionEventsObserver
-import com.sceyt.chatuikit.data.messageeventobserver.ReactionUpdateEventData
-import com.sceyt.chatuikit.data.messageeventobserver.ReactionUpdateEventEnum.Add
-import com.sceyt.chatuikit.data.messageeventobserver.ReactionUpdateEventEnum.Remove
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
+import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
+import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum.Add
+import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum.Remove
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -21,16 +21,17 @@ import com.sceyt.chatuikit.persistence.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.entity.pendings.PendingReactionEntity
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChannelsCache
-import com.sceyt.chatuikit.persistence.logicimpl.channelslogic.ChatReactionMessagesCache
-import com.sceyt.chatuikit.persistence.logicimpl.messageslogic.MessagesCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.logicimpl.channel.ChatReactionMessagesCache
+import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toReactionEntity
 import com.sceyt.chatuikit.persistence.mappers.toReactionTotalEntity
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
-import com.sceyt.chatuikit.persistence.mappers.toUserEntity
+import com.sceyt.chatuikit.persistence.mappers.toSceytUser
+import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ReactionsRepository
 import kotlinx.coroutines.channels.awaitClose
@@ -53,7 +54,7 @@ internal class PersistenceReactionsLogicImpl(
         private var messagesCache: MessagesCache) : PersistenceReactionsLogic {
 
     private val reactionUpdateMutex = Mutex()
-    private val reactionsLoadSize get() = SceytChatUIKit.config.reactionsLoadSize
+    private val reactionsLoadSize get() = SceytChatUIKit.config.queryLimits.reactionListQueryLimit
 
     override suspend fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
         reactionUpdateMutex.withLock {
@@ -115,7 +116,7 @@ internal class PersistenceReactionsLogicImpl(
             trySend(PaginationResponse.DBResponse(data = dbReactions, loadKey = loadKey, offset = offset,
                 hasNext = hasNext, hasPrev = false))
 
-            ConnectionEventsObserver.awaitToConnectSceyt()
+            ConnectionEventManager.awaitToConnectSceyt()
 
             val response = if (offset == 0) reactionsRepository.getReactions(messageId, key)
             else reactionsRepository.loadMoreReactions(messageId, key)
@@ -289,7 +290,8 @@ internal class PersistenceReactionsLogicImpl(
                     messagesCache.messageUpdated(channelId, message)
 
                     if (!message.incoming) {
-                        val reaction = SceytReaction(0, messageId, key, 1, "", 0, ClientWrapper.currentUser, false)
+                        val reaction = SceytReaction(0, messageId, key, 1, "", 0,
+                            ClientWrapper.currentUser?.toSceytUser(), false)
                         handleChannelReaction(ReactionUpdateEventData(message, reaction, Remove), message)
                     }
                 }
@@ -368,6 +370,6 @@ internal class PersistenceReactionsLogicImpl(
     private suspend fun saveReactionsToDb(list: List<SceytReaction>) {
         if (list.isEmpty()) return
         reactionDao.insertReactions(list.map { it.toReactionEntity() })
-        usersDao.insertUsers(list.mapNotNull { it.user?.toUserEntity() })
+        usersDao.insertUsersWithMetadata(list.mapNotNull { it.user?.toUserDb() })
     }
 }

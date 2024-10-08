@@ -79,7 +79,7 @@ abstract class MessageDao {
         if (attachmentPairs.isNotEmpty()) {
             insertAttachments(attachmentPairs.flatMap { it.first.map { attachmentDb -> attachmentDb.attachmentEntity } })
             insertAttachmentPayLoads(attachmentPairs.flatMap { pair ->
-                pair.first.filter { it.attachmentEntity.type != AttachmentTypeEnum.Link.value() }
+                pair.first.filter { it.attachmentEntity.type != AttachmentTypeEnum.Link.value }
                     .map { it.toAttachmentPayLoad(pair.second.messageEntity) }
             })
             insertLinkDetails(attachmentPairs.flatMap { it.first.mapNotNull { attachmentDb -> attachmentDb.linkDetails } })

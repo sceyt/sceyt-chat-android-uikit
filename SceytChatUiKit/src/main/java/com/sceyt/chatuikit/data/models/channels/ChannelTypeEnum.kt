@@ -1,24 +1,25 @@
 package com.sceyt.chatuikit.data.models.channels
 
-enum class ChannelTypeEnum {
-    Direct, Private, Public, Group, Broadcast;
+import com.sceyt.chatuikit.SceytChatUIKit
 
-    fun getString() = when (this) {
-        Direct -> "direct"
-        Private -> "private"
-        Public -> "public"
-        Group -> "group"
-        Broadcast -> "broadcast"
-    }
+enum class ChannelTypeEnum {
+    Direct,
+    Group,
+    Public;
+
+    val value: String
+        get() = when (this) {
+            Direct -> SceytChatUIKit.config.channelTypesConfig.direct
+            Group -> SceytChatUIKit.config.channelTypesConfig.group
+            Public -> SceytChatUIKit.config.channelTypesConfig.broadcast
+        }
 }
 
 fun stringToEnum(type: String): ChannelTypeEnum {
     return when (type) {
-        ChannelTypeEnum.Direct.getString() -> ChannelTypeEnum.Direct
-        ChannelTypeEnum.Private.getString() -> ChannelTypeEnum.Private
-        ChannelTypeEnum.Public.getString() -> ChannelTypeEnum.Public
-        ChannelTypeEnum.Group.getString() -> ChannelTypeEnum.Group
-        ChannelTypeEnum.Broadcast.getString() -> ChannelTypeEnum.Broadcast
-        else -> ChannelTypeEnum.Private
+        ChannelTypeEnum.Direct.value -> ChannelTypeEnum.Direct
+        ChannelTypeEnum.Public.value -> ChannelTypeEnum.Public
+        ChannelTypeEnum.Group.value -> ChannelTypeEnum.Group
+        else -> ChannelTypeEnum.Group
     }
 }
