@@ -7,6 +7,7 @@ import androidx.emoji2.text.FontRequestEmojiCompatConfig
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.ChatClient
+import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.config.SceytChatUIKitConfig
 import com.sceyt.chatuikit.data.di.repositoryModule
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -25,7 +26,7 @@ import com.sceyt.chatuikit.persistence.di.databaseModule
 import com.sceyt.chatuikit.persistence.di.interactorModule
 import com.sceyt.chatuikit.persistence.di.logicModule
 import com.sceyt.chatuikit.persistence.lazyVar
-import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
+import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.presentation.di.viewModelModule
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
@@ -54,8 +55,11 @@ object SceytChatUIKit : SceytKoinComponent {
     val chatClient: ChatClient
         get() = ChatClient.getClient()
 
+    val currentUserId: String?
+        get() = chatUIFacade.userInteractor.getCurrentUserId()
+
     val currentUser: SceytUser?
-        get() = chatUIFacade.userInteractor.getCurrentUserNonSuspend()
+        get() = ClientWrapper.currentUser?.toSceytUser()
 
     fun initialize(
             appContext: Context,

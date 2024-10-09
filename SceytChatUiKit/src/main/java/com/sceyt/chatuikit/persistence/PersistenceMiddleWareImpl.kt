@@ -502,8 +502,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return usersLogic.getCurrentUser()
     }
 
-    override fun getCurrentUserNonSuspend(): SceytUser? {
-        return usersLogic.getCurrentUserNonSuspend()
+    override fun getCurrentUserId(): String? {
+        return usersLogic.getCurrentUserId()
     }
 
     override fun getCurrentUserAsFlow(): Flow<SceytUser> {
@@ -514,10 +514,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return usersLogic.uploadAvatar(avatarUrl)
     }
 
-    override suspend fun updateProfile(firsName: String?, lastName: String?,
-                                       avatarUrl: String?,
-                                       metadataMap: Map<String, String>?): SceytResponse<SceytUser> {
-        return usersLogic.updateProfile(firsName, lastName, avatarUrl, metadataMap)
+    override suspend fun updateProfile(username: String, firsName: String?, lastName: String?,
+                                       avatarUrl: String?, metadataMap: Map<String, String>?
+    ): SceytResponse<SceytUser> {
+        return usersLogic.updateProfile(username, firsName, lastName, avatarUrl, metadataMap)
     }
 
     override suspend fun setPresenceState(presenceState: PresenceState): SceytResponse<Boolean> {

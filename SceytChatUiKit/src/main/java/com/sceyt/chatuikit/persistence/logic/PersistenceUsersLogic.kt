@@ -14,11 +14,11 @@ interface PersistenceUsersLogic {
     suspend fun getUserDbById(id: String): SceytUser?
     suspend fun getUsersDbByIds(id: List<String>): List<SceytUser>
     suspend fun getCurrentUser(): SceytUser?
-    fun getCurrentUserNonSuspend(): SceytUser?
+    fun getCurrentUserId(): String?
     fun getCurrentUserAsFlow(): Flow<SceytUser>
     suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String>
     suspend fun updateProfile(
-            firstName: String?, lastName: String?,
+            username: String, firstName: String?, lastName: String?,
             avatarUri: String?, metadataMap: Map<String, String>?
     ): SceytResponse<SceytUser>
 
