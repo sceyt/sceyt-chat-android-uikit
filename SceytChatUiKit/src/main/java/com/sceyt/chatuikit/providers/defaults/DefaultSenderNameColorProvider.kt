@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
 import com.sceyt.chatuikit.providers.VisualProvider
 
-data object DefaultSenderNameColorProvider : VisualProvider<SceytUser, Int> {
+open class DefaultSenderNameColorProvider : VisualProvider<SceytUser, Int> {
     override fun provide(context: Context, from: SceytUser): Int {
         val colorId = if (from.isDeleted())
             SceytChatUIKit.theme.colors.errorColor else SceytChatUIKit.theme.colors.accentColor

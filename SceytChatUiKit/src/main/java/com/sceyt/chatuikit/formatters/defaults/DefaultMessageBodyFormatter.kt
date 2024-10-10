@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyAttr
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionUserHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
 
-object DefaultMessageBodyFormatter : Formatter<MessageBodyFormatterAttributes> {
+open class DefaultMessageBodyFormatter : Formatter<MessageBodyFormatterAttributes> {
     override fun format(context: Context, from: MessageBodyFormatterAttributes): CharSequence {
         val message = from.message
         var body: CharSequence = message.body.trim()
