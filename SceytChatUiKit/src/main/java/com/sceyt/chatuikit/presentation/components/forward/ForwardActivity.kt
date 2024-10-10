@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.forward
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -9,7 +8,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivityForwardBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
@@ -17,10 +15,11 @@ import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.forward.viewmodel.ForwardViewModel
 import com.sceyt.chatuikit.presentation.components.shareable.ShareableActivity
+import com.sceyt.chatuikit.styles.ForwardStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-open class ForwardActivity : ShareableActivity() {
+open class ForwardActivity : ShareableActivity<ForwardStyle>() {
     protected lateinit var binding: SceytActivityForwardBinding
     protected val viewModel: ForwardViewModel by viewModels()
     protected lateinit var forwardMessages: List<SceytMessage>
@@ -39,6 +38,10 @@ open class ForwardActivity : ShareableActivity() {
         binding.applyStyle()
     }
 
+    override fun initStyle(): ForwardStyle {
+        return ForwardStyle.Builder(this, null).build()
+    }
+
     protected open fun getDataFromIntent() {
         forwardMessages = requireNotNull(intent?.parcelableArrayList(FORWARD_MESSAGES_KEY))
     }
@@ -55,12 +58,6 @@ open class ForwardActivity : ShareableActivity() {
         btnForward.setOnClickListener {
             onForwardClick(true)
         }
-    }
-
-    protected open fun SceytActivityForwardBinding.applyStyle() {
-        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
-        btnForward.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
     }
 
     protected open fun sendForwardMessage(markOwnMessageAsForwarded: Boolean) {
@@ -107,6 +104,13 @@ open class ForwardActivity : ShareableActivity() {
 
     override fun finishSharingAction() {
         super.finish()
+    }
+
+    protected open fun SceytActivityForwardBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
+        style.actionButtonStyle.apply(btnForward)
+        style.searchToolbarStyle.apply(toolbar)
+        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
     }
 
     companion object {

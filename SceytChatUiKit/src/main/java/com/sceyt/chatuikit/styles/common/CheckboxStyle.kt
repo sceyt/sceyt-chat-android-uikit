@@ -1,10 +1,16 @@
 package com.sceyt.chatuikit.styles.common
 
+import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.StateListDrawable
 import android.widget.CheckBox
 import androidx.annotation.StyleableRes
+import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.applyTint
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getCompatDrawable
 
 data class CheckboxStyle(
         val checkedIcon: Drawable? = null,
@@ -53,5 +59,19 @@ data class CheckboxStyle(
                 pressedIcon = pressedIcon,
             )
         }
+    }
+
+    companion object {
+        internal fun default(context: Context) = CheckboxStyle(
+            checkedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_checked_state).applyTint(
+                context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+            ),
+            uncheckedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_unchecked_state).applyTint(
+                context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+            ),
+            pressedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_pressed_state).applyTint(
+                context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+            ),
+        )
     }
 }

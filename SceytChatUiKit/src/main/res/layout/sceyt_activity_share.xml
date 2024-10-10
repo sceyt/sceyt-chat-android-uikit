@@ -32,7 +32,6 @@
         android:id="@+id/messageInput"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/sceyt_bg_top_bottom_lines"
         android:hint="@string/sceyt_write_a_message"
         android:padding="16dp"
         android:textColor="@color/sceyt_color_text_primary"
@@ -42,7 +41,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/rvChannels" />
+        app:layout_constraintTop_toBottomOf="@+id/rvChannels"
+        tools:background="@drawable/sceyt_bg_top_bottom_lines" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnShare"
