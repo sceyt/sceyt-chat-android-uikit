@@ -201,7 +201,8 @@ class AvatarView @JvmOverloads constructor(
         }
     }
 
-    private fun drawCircleDrawable(drawable: Drawable, canvas: Canvas) {
+    private fun drawCircleDrawable(drawable: Drawable?, canvas: Canvas) {
+        drawable ?: return
         // Get the drawable's width and height
         val drawableWidth = drawable.intrinsicWidth
         val drawableHeight = drawable.intrinsicHeight
@@ -274,7 +275,7 @@ class AvatarView @JvmOverloads constructor(
 
     sealed class DefaultAvatar {
         data class FromBitmap(val bitmap: Bitmap) : DefaultAvatar()
-        data class FromDrawable(val drawable: Drawable) : DefaultAvatar()
+        data class FromDrawable(val drawable: Drawable?) : DefaultAvatar()
         data class FromDrawableRes(@DrawableRes val id: Int) : DefaultAvatar()
         data class Initial(
                 val initial: CharSequence
