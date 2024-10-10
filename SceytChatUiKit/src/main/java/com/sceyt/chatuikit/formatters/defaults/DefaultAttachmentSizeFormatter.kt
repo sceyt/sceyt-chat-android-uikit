@@ -6,7 +6,7 @@ import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.toPrettySize
 import com.sceyt.chatuikit.formatters.Formatter
 
-data object DefaultAttachmentSizeFormatter : Formatter<SceytAttachment> {
+open class DefaultAttachmentSizeFormatter : Formatter<SceytAttachment> {
     override fun format(context: Context, from: SceytAttachment): CharSequence {
         val size = from.fileSize
         return if (size != 0L) {

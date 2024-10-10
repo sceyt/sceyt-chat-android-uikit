@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getPresentableFirstName
 import com.sceyt.chatuikit.formatters.Formatter
 
-data object DefaultUserShortNameFormatter : Formatter<SceytUser> {
+open class DefaultUserShortNameFormatter : Formatter<SceytUser> {
     override fun format(context: Context, from: SceytUser): String {
         return if (from.state == UserState.Deleted)
             context.getString(R.string.sceyt_deleted_user)

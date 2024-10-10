@@ -20,11 +20,11 @@ import com.sceyt.chatuikit.providers.defaults.URIValidationType
 
 class SceytChatUIKitProviders {
     var attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?> by lazyVar {
-        DefaultAttachmentIconProvider
+        DefaultAttachmentIconProvider()
     }
 
     var channelListAttachmentIconProvider: VisualProvider<SceytAttachment, Drawable?> by lazyVar {
-        DefaultChannelListAttachmentIconProvider
+        DefaultChannelListAttachmentIconProvider()
     }
 
     var channelDefaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar> by lazyVar {
@@ -32,22 +32,22 @@ class SceytChatUIKitProviders {
     }
 
     var channelURIValidationMessageProvider: VisualProvider<URIValidationType, String> by lazyVar {
-        DefaultChannelURIValidationMessageProvider
+        DefaultChannelURIValidationMessageProvider()
     }
 
     var userDefaultAvatarProvider: VisualProvider<SceytUser, AvatarView.DefaultAvatar> by lazyVar {
-        DefaultUserAvatarProvider
+        DefaultUserAvatarProvider()
     }
 
     val senderNameColorProvider: VisualProvider<SceytUser, Int> by lazyVar {
-        DefaultSenderNameColorProvider
+        DefaultSenderNameColorProvider()
     }
 
     var presenceStateColorProvider: VisualProvider<PresenceState, Int> by lazyVar {
-        DefaultPresenceStateColorProvider
+        DefaultPresenceStateColorProvider()
     }
 
     var markerTitleProvider: VisualProvider<MarkerType, String> by lazyVar {
-        DefaultMarkerTitleProvider
+        DefaultMarkerTitleProvider()
     }
 }

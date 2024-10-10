@@ -5,7 +5,7 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
 
-object DefaultDraftMessageBodyFormatter : Formatter<DraftMessageBodyFormatterAttributes> {
+open class DefaultDraftMessageBodyFormatter : Formatter<DraftMessageBodyFormatterAttributes> {
     override fun format(context: Context, from: DraftMessageBodyFormatterAttributes): CharSequence {
         val message = from.message
         return MessageBodyStyleHelper.buildWithAttributes(

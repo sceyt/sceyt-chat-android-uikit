@@ -4,13 +4,12 @@ import android.content.Context
 import android.content.res.TypedArray
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.NoFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
 import com.sceyt.chatuikit.providers.VisualProvider
-import com.sceyt.chatuikit.providers.defaults.DefaultUserAvatarProvider
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ListItemStyle
@@ -35,9 +34,9 @@ data class MentionUsersListStyle(
         private val itemStyle: ListItemStyle<Formatter<SceytUser>, *, VisualProvider<SceytUser, DefaultAvatar>> by lazy {
             ListItemStyle(
                 titleTextStyle = titleTextStyle,
-                titleFormatter = DefaultUserNameFormatter,
+                titleFormatter = SceytChatUIKit.formatters.userNameFormatter,
                 subtitleFormatter = NoFormatter,
-                avatarProvider = DefaultUserAvatarProvider
+                avatarProvider = SceytChatUIKit.providers.userDefaultAvatarProvider
             )
         }
 

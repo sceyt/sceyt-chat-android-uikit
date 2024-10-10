@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 
-data object DefaultChannelNameFormatter : Formatter<SceytChannel> {
+open class DefaultChannelNameFormatter : Formatter<SceytChannel> {
 
     override fun format(context: Context, from: SceytChannel): CharSequence {
         return when {
