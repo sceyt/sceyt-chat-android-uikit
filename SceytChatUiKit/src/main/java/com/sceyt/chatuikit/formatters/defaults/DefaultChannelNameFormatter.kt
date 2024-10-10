@@ -6,14 +6,13 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.persistence.extensions.getPeer
-import com.sceyt.chatuikit.persistence.extensions.isSelf
 
 data object DefaultChannelNameFormatter : Formatter<SceytChannel> {
 
     override fun format(context: Context, from: SceytChannel): CharSequence {
         return when {
             from.isGroup -> from.channelSubject
-            from.isSelf() -> context.getString(R.string.sceyt_self_notes)
+            from.isSelf -> context.getString(R.string.sceyt_self_notes)
             else -> {
                 val member = from.getPeer() ?: return ""
                 SceytChatUIKit.formatters.userNameFormatter.format(context, member.user)

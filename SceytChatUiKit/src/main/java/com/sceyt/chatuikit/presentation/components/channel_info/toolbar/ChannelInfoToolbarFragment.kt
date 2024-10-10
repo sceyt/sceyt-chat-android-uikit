@@ -19,7 +19,6 @@ import com.sceyt.chatuikit.extensions.setOnClickListenerDisableClickViewForWhile
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
-import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
@@ -58,7 +57,7 @@ open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, Chann
 
     private fun getBundleArguments() {
         channel = requireNotNull(arguments?.parcelable(ChannelInfoLinksFragment.CHANNEL))
-        isSelf = channel.isSelf()
+        isSelf = channel.isSelf
     }
 
     private fun SceytFragmentChannelInfoToolbarBinding.initViews() {

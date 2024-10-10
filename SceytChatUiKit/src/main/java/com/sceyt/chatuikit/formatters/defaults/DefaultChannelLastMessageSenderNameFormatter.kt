@@ -5,7 +5,6 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.persistence.extensions.isSelf
 
 data object DefaultChannelLastMessageSenderNameFormatter : Formatter<SceytChannel> {
 
@@ -22,7 +21,7 @@ data object DefaultChannelLastMessageSenderNameFormatter : Formatter<SceytChanne
                 } else ""
             }
 
-            from.isSelf() -> ""
+            from.isSelf -> ""
             else -> "${context.getString(R.string.sceyt_your_last_message)}: "
         }
     }

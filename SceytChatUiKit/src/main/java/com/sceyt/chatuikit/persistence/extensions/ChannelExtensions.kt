@@ -42,7 +42,7 @@ fun SceytChannel.isPublic() = type == ChannelTypeEnum.Public.value
 
 fun SceytChannel.isGroup() = type != ChannelTypeEnum.Direct.value
 
-fun SceytChannel.isSelf(): Boolean {
+internal fun SceytChannel.isSelf(): Boolean {
     val isSelf = try {
         Gson().fromJson(metadata, SelfChannelMetadata::class.java).isSelf?.toBoolean() ?: false
     } catch (e: Exception) {

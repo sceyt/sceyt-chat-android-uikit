@@ -26,7 +26,6 @@ import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
-import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChatReactionMessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
@@ -76,7 +75,7 @@ open class ChannelViewHolder(
                 val channel = item.channel
                 val name: String = channel.channelSubject
                 val url = channel.iconUrl
-                isSelf = channel.isSelf()
+                isSelf = channel.isSelf
 
                 // this ui states is changed more often, and to avoid wrong ui states we need to set them every time
                 setUnreadCount(channel, binding.unreadMessagesCount)
