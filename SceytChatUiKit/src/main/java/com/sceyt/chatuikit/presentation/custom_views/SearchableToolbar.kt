@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.styles.common.HintStyle
 import com.sceyt.chatuikit.styles.common.SearchInputStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.common.ToolbarStyle
 
 class SearchableToolbar @JvmOverloads constructor(
         context: Context,

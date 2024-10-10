@@ -62,7 +62,7 @@ data class EditChannelStyle(
             )
             val toolbarStyle = ToolbarStyle(
                 backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.primaryColor),
-                borderColor = context.getCompatColor(SceytChatUIKitTheme.colors.borderColor),
+                underlineColor = context.getCompatColor(SceytChatUIKitTheme.colors.borderColor),
                 navigationIcon = context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back).applyTint(
                     context.getCompatColor(SceytChatUIKitTheme.colors.accentColor)
                 ),

@@ -58,11 +58,12 @@ data class SceytChannel(
         get() = if (isGroup) avatarUrl
         else getPeer()?.avatarUrl
 
-    val isGroup get() = isGroup()
-
     val pinned get() = pinnedAt != null && pinnedAt != 0L
 
     val autoDeleteEnabled get() = messageRetentionPeriod > 0
+
+    @IgnoredOnParcel
+    val isGroup by lazy { isGroup() }
 
     @IgnoredOnParcel
     val isSelf by lazy { isSelf() }

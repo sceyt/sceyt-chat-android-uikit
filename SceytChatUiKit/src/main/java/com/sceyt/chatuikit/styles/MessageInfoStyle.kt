@@ -85,7 +85,7 @@ data class MessageInfoStyle(
 
             val toolbarStyle = ToolbarStyle(
                 backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.primaryColor),
-                borderColor = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor),
+                underlineColor = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor),
                 navigationIcon = context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back).applyTint(
                     context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
                 ),

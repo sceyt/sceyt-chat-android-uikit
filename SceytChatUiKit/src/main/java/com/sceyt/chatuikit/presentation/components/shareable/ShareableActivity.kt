@@ -13,9 +13,9 @@ import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isPublic
@@ -23,21 +23,26 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModel
 import com.sceyt.chatuikit.presentation.components.shareable.adapter.ShareableChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.shareable.adapter.holders.ShareableChannelViewHolderFactory
+import com.sceyt.chatuikit.styles.ShareablePageStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-open class ShareableActivity : AppCompatActivity(), SceytKoinComponent {
+abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity(), SceytKoinComponent {
     protected val channelsViewModel: ChannelsViewModel by viewModels()
     protected var channelsAdapter: ShareableChannelsAdapter? = null
-    protected val viewHolderFactory by lazy { ShareableChannelViewHolderFactory(this) }
+    protected lateinit var style: Style
+    protected val viewHolderFactory by lazy { ShareableChannelViewHolderFactory(this, style) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        style = initStyle()
         initViewModel()
         channelsViewModel.getChannels(0)
     }
+
+    abstract fun initStyle(): Style
 
     private fun initViewModel() {
         channelsViewModel.loadChannelsFlow.onEach(::initChannelsResponse).launchIn(lifecycleScope)
