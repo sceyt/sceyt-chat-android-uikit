@@ -11,11 +11,10 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.BaseChannelViewHolder
 import com.sceyt.chatuikit.presentation.components.shareable.adapter.holders.ShareableChannelViewHolderFactory
 
-class ShareableChannelsAdapter(private var channels: MutableList<ChannelListItem>,
-                               private var viewHolderFactory: ShareableChannelViewHolderFactory) :
-        RecyclerView.Adapter<BaseChannelViewHolder>() {
-
-
+class ShareableChannelsAdapter(
+        private var channels: MutableList<ChannelListItem>,
+        private var viewHolderFactory: ShareableChannelViewHolderFactory
+) : RecyclerView.Adapter<BaseChannelViewHolder>() {
     private val mLoadingItem by lazy { ChannelListItem.LoadingMoreItem }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
@@ -97,5 +96,9 @@ class ShareableChannelsAdapter(private var channels: MutableList<ChannelListItem
             channelItem.selected = selected
             notifyItemChanged(index, Unit)
         }
+    }
+
+    fun setViewHolderFactory(viewHolderFactory: ShareableChannelViewHolderFactory) {
+        this.viewHolderFactory = viewHolderFactory
     }
 }

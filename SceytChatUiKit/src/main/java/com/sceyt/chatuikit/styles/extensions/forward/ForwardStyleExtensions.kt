@@ -23,7 +23,7 @@ internal fun ForwardStyle.Builder.buildSearchInputStyle(
         array: TypedArray
 ) = SearchInputStyle(
     searchIcon = context.getCompatDrawable(R.drawable.sceyt_ic_search).applyTint(
-        context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+        context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     ),
     clearIcon = context.getCompatDrawable(R.drawable.sceyt_ic_cancel).applyTint(
         context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)

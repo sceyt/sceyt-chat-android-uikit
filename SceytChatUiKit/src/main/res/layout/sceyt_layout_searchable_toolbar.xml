@@ -13,11 +13,11 @@
         android:layout_marginStart="12dp"
         android:background="?selectableItemBackgroundBorderless"
         android:padding="4dp"
-        android:tint="@color/sceyt_color_accent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_ic_arrow_back" />
+        tools:srcCompat="@drawable/sceyt_ic_arrow_back"
+        tools:tint="@color/sceyt_color_accent" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvTitle"
@@ -82,11 +82,11 @@
         android:layout_marginEnd="12dp"
         android:background="?selectableItemBackgroundBorderless"
         android:padding="6dp"
-        android:tint="@color/sceyt_color_accent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sceyt_ic_search" />
+        tools:srcCompat="@drawable/sceyt_ic_search"
+        tools:tint="@color/sceyt_color_accent" />
 
     <View
         android:id="@+id/underline"

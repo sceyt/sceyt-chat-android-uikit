@@ -110,7 +110,6 @@ open class ForwardActivity : ShareableActivity<ForwardStyle>() {
         root.setBackgroundColor(style.backgroundColor)
         style.actionButtonStyle.apply(btnForward)
         style.searchToolbarStyle.apply(toolbar)
-        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
     }
 
     companion object {
