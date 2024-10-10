@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.presentation.components.select_users.adapters.Selecta
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
+import com.sceyt.chatuikit.styles.common.CheckboxStyle
 
 class SelectableUserViewHolder(
         private val binding: SceytItemSelectUserBinding,
@@ -49,6 +50,7 @@ class SelectableUserViewHolder(
         with(layoutDetails) {
             userName.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
             tvStatus.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
+            CheckboxStyle.default(context).apply(checkbox)
         }
     }
 }

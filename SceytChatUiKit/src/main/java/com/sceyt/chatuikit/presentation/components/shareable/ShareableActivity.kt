@@ -32,7 +32,7 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
     protected val channelsViewModel: ChannelsViewModel by viewModels()
     protected var channelsAdapter: ShareableChannelsAdapter? = null
     protected lateinit var style: Style
-    protected val viewHolderFactory by lazy { ShareableChannelViewHolderFactory(this, style) }
+    protected val viewHolderFactory by lazy { provideViewHolderFactory() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -111,6 +111,10 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
         data.forEach {
             it.selected = it is ChannelListItem.ChannelItem && selectedChannels.contains(it.channel.id)
         }
+    }
+
+    open fun provideViewHolderFactory(): ShareableChannelViewHolderFactory {
+        return ShareableChannelViewHolderFactory(this, style)
     }
 
     @CallSuper
