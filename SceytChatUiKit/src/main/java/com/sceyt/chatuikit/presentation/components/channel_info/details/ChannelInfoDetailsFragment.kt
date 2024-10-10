@@ -10,7 +10,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoDetailsBinding
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
-import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
@@ -49,7 +48,7 @@ open class ChannelInfoDetailsFragment : Fragment(), ChannelUpdateListener, Chann
 
     private fun getBundleArguments() {
         channel = requireNotNull(arguments?.parcelable(ChannelInfoLinksFragment.CHANNEL))
-        isSelf = channel.isSelf()
+        isSelf = channel.isSelf
     }
 
     private fun initViews() {

@@ -39,7 +39,7 @@ fun SceytChannel.toChannelEntity() = ChannelEntity(
     lastMessageTid = getTid(lastMessage?.id, lastMessage?.tid, lastMessage?.incoming),
     lastMessageAt = lastMessage?.createdAt,
     pending = pending,
-    isSelf = isSelf()
+    isSelf = isSelf
 )
 
 private fun getTid(msgId: Long?, tid: Long?, incoming: Boolean?): Long? {

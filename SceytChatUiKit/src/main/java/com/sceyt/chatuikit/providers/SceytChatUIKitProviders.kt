@@ -28,7 +28,7 @@ class SceytChatUIKitProviders {
     }
 
     var channelDefaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar> by lazyVar {
-        DefaultChannelDefaultAvatarProvider
+        DefaultChannelDefaultAvatarProvider()
     }
 
     var channelURIValidationMessageProvider: VisualProvider<URIValidationType, String> by lazyVar {

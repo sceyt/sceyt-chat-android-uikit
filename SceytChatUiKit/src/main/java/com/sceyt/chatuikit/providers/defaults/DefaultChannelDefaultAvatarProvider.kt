@@ -5,23 +5,29 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getFirstCharIsEmoji
 import com.sceyt.chatuikit.extensions.processEmojiCompat
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
-import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
 import com.sceyt.chatuikit.providers.VisualProvider
 
-data object DefaultChannelDefaultAvatarProvider : VisualProvider<SceytChannel, DefaultAvatar> {
+open class DefaultChannelDefaultAvatarProvider : VisualProvider<SceytChannel, DefaultAvatar> {
     override fun provide(context: Context, from: SceytChannel): DefaultAvatar {
         return when {
             from.isGroup -> {
                 DefaultAvatar.Initial(getInitialText(from.channelSubject))
             }
 
-            from.isSelf() -> {
-                DefaultAvatar.FromDrawableRes(R.drawable.sceyt_ic_notes)
+            from.isSelf -> {
+                DefaultAvatar.FromDrawable(
+                    context.getCompatDrawable(R.drawable.sceyt_ic_notes_with_bachgriund_layers)
+                        .applyTintBackgroundLayer(
+                            context.getCompatColor(SceytChatUIKit.theme.colors.accentColor), R.id.backgroundLayer
+                        ))
             }
 
             from.isDirect() -> {
@@ -35,7 +41,7 @@ data object DefaultChannelDefaultAvatarProvider : VisualProvider<SceytChannel, D
         }
     }
 
-    private fun getInitialText(title: String): CharSequence {
+    protected open fun getInitialText(title: String): CharSequence {
         if (title.isBlank()) return ""
         val strings = title.trim().split(" ").filter { it.isNotBlank() }
         if (strings.isEmpty()) return ""
