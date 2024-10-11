@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="MessagesListView">
+        <!-- View id -->
+        <attr name="android:id" format="reference" />
+
         <attr name="sceytUiMessagesListBackgroundColor" format="reference|color" />
         <attr name="sceytUiMessagesListEmptyStateLayout" format="reference" />
         <attr name="sceytUiMessagesListEmptyStateSelfChannelLayout" format="reference" />
