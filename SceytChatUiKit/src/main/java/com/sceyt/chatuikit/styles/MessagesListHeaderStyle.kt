@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.styles
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.view.View
 import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -17,6 +18,7 @@ import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHe
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.providers.defaults.DefaultChannelDefaultAvatarProvider
+import com.sceyt.chatuikit.styles.SearchChannelInputStyle.Companion.styleCustomizer
 import com.sceyt.chatuikit.styles.common.MenuStyle
 import com.sceyt.chatuikit.styles.common.SearchInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -58,6 +60,22 @@ data class MessagesListHeaderStyle(
 
     companion object {
         var styleCustomizer = StyleCustomizer<MessagesListHeaderStyle> { _, style -> style }
+
+        /**
+         * Use this method if you are using [MessagesListHeaderView] in multiple places,
+         * and want to customize the style for each view.
+         * @param viewId - Id of the current [MessagesListHeaderView] which you want to customize.
+         * @param customizer - Customizer for [MessagesListHeaderStyle].
+         *
+         * Note: If you have already set the [styleCustomizer], it will be overridden by this customizer.
+         * */
+        @Suppress("unused")
+        @JvmStatic
+        fun setStyleCustomizerForViewId(viewId: Int, customizer: StyleCustomizer<MessagesListHeaderStyle>) {
+            styleCustomizers[viewId] = customizer
+        }
+
+        private var styleCustomizers: HashMap<Int, StyleCustomizer<MessagesListHeaderStyle>> = hashMapOf()
     }
 
     internal class Builder(
@@ -67,6 +85,8 @@ data class MessagesListHeaderStyle(
     ) {
         fun build(): MessagesListHeaderStyle {
             context.obtainStyledAttributes(attrs, R.styleable.MessagesListHeaderView).use { array ->
+                val viewId = array.getResourceId(R.styleable.MessagesListHeaderView_android_id, View.NO_ID)
+
                 val backgroundColor = array.getColor(R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderBackground,
                     context.getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
 
@@ -93,7 +113,9 @@ data class MessagesListHeaderStyle(
                     subtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter,
                     defaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider,
                     typingUserNameFormatter = SceytChatUIKit.formatters.typingUserNameFormatter
-                ).let { styleCustomizer.apply(context, it) }
+                ).let {
+                    (styleCustomizers[viewId] ?: styleCustomizer).apply(context, it)
+                }
             }
         }
     }
