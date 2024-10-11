@@ -14,7 +14,6 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
@@ -27,6 +26,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -34,14 +34,15 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import org.koin.core.component.inject
 
-class ChannelAttachmentsViewModel : BaseViewModel(), SceytKoinComponent {
-    private val attachmentLogic: PersistenceAttachmentLogic by inject()
-    private val fileTransferService: FileTransferService by inject()
-    private val application: Application by inject()
+class ChannelAttachmentsViewModel(
+        private val attachmentLogic: PersistenceAttachmentLogic,
+        private val fileTransferService: FileTransferService,
+        private val application: Application
+) : BaseViewModel() {
     private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
     private val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
+    lateinit var infoStyle: ChannelInfoStyle
 
     private val _filesFlow = MutableSharedFlow<List<ChannelFileItem>>(
         extraBufferCapacity = 5,

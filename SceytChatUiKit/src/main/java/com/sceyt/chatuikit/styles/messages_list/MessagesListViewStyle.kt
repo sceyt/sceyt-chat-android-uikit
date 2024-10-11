@@ -51,8 +51,6 @@ data class MessagesListViewStyle(
     companion object {
         @JvmField
         var styleCustomizer = StyleCustomizer<MessagesListViewStyle> { _, style -> style }
-
-        internal var currentStyle: MessagesListViewStyle? = null
     }
 
     internal class Builder(

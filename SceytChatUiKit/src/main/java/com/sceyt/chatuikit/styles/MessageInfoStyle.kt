@@ -19,13 +19,12 @@ import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.styles.common.ListItemStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
-import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import com.sceyt.chatuikit.theme.Colors
 import java.util.Date
 
 /**
- * Style for [MessageInfoFragment]
+ * Style for [MessageInfoFragment].
  * @property backgroundColor Background color of the fragment, default is [Colors.backgroundColor]
  * @property toolbarColor Color of the toolbar, default is [Colors.primaryColor]
  * @property borderColor Color of the border, default is [Colors.borderColor]
@@ -36,7 +35,7 @@ import java.util.Date
  * @property descriptionValueTextStyle Style for the value of the description
  * @property headerTextStyle Style for the header text
  * @property toolbarStyle Style for the toolbar
- * @property messageItemStyle Style for the message items, default is [MessagesListViewStyle.currentStyle]
+ * @property messageItemStyle Style for the message item.
  * @property listItemStyle Style for the list items
  * @property messageDateFormatter Formatter for the message date, default is [SceytChatUIKitFormatters.messageInfoDateFormatter]
  * @property attachmentSizeFormatter Formatter for the attachment size, default is [SceytChatUIKitFormatters.attachmentSizeFormatter]
@@ -65,7 +64,8 @@ data class MessageInfoStyle(
     }
 
     internal class Builder(
-            private val context: Context
+            private val context: Context,
+            private val messageItemStyle: MessageItemStyle
     ) {
         fun build(): MessageInfoStyle {
 
@@ -125,8 +125,7 @@ data class MessageInfoStyle(
                 headerTextStyle = headerTextStyle,
                 toolbarStyle = toolbarStyle,
                 listItemStyle = listItemStyle,
-                messageItemStyle = MessagesListViewStyle.currentStyle?.messageItemStyle
-                        ?: MessageItemStyle.Builder(context, null).build(),
+                messageItemStyle = messageItemStyle,
                 messageDateFormatter = SceytChatUIKit.formatters.messageInfoDateFormatter,
                 attachmentSizeFormatter = SceytChatUIKit.formatters.attachmentSizeFormatter,
                 markerTitleProvider = SceytChatUIKit.providers.markerTitleProvider
