@@ -54,7 +54,6 @@ import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectCh
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectChatActionsDialog.ActionsEnum.UnBlockUser
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.DirectChatActionsDialog.ActionsEnum.UnPin
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.GroupChatActionsDialog
-import com.sceyt.chatuikit.presentation.components.edit_channel.EditChannelFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.files.ChannelInfoFilesFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
 import com.sceyt.chatuikit.presentation.components.channel_info.media.ChannelInfoMediaFragment
@@ -71,12 +70,13 @@ import com.sceyt.chatuikit.presentation.components.channel_info.uri.ChannelInfoU
 import com.sceyt.chatuikit.presentation.components.channel_info.viewmodel.ChannelInfoViewModel
 import com.sceyt.chatuikit.presentation.components.channel_info.voice.ChannelInfoVoiceFragment
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.dialogs.ChannelActionConfirmationWithDialog
+import com.sceyt.chatuikit.presentation.components.edit_channel.EditChannelFragment
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytPresenceChecker.PresenceUser
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 
 @Suppress("MemberVisibilityCanBePrivate")
-open class ChannelInfoActivity : AppCompatActivity(), ChannelInfoStyleProvider, SceytKoinComponent {
+open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     protected lateinit var pagerAdapter: ViewPagerAdapter
         private set
     protected val viewModel: ChannelInfoViewModel by viewModels()
@@ -607,13 +607,13 @@ open class ChannelInfoActivity : AppCompatActivity(), ChannelInfoStyleProvider, 
     protected open fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberTypeEnum): Fragment? =
             ChannelMembersFragment.newInstance(channel, memberType)
 
-    protected open fun getChannelMediaFragment(channel: SceytChannel): Fragment? = ChannelInfoMediaFragment.newInstance(channel)
+    protected open fun getChannelMediaFragment(channel: SceytChannel): Fragment? = ChannelInfoMediaFragment.newInstance(channel, style)
 
-    protected open fun getChannelFilesFragment(channel: SceytChannel): Fragment? = ChannelInfoFilesFragment.newInstance(channel)
+    protected open fun getChannelFilesFragment(channel: SceytChannel): Fragment? = ChannelInfoFilesFragment.newInstance(channel, style)
 
-    protected open fun getChannelLinksFragment(channel: SceytChannel): Fragment? = ChannelInfoLinksFragment.newInstance(channel)
+    protected open fun getChannelLinksFragment(channel: SceytChannel): Fragment? = ChannelInfoLinksFragment.newInstance(channel, style)
 
-    protected open fun getChannelVoiceFragment(channel: SceytChannel): Fragment? = ChannelInfoVoiceFragment.newInstance(channel)
+    protected open fun getChannelVoiceFragment(channel: SceytChannel): Fragment? = ChannelInfoVoiceFragment.newInstance(channel, style)
 
     protected open fun getEditChannelFragment(channel: SceytChannel): Fragment? = EditChannelFragment.newInstance(channel)
 
@@ -685,9 +685,5 @@ open class ChannelInfoActivity : AppCompatActivity(), ChannelInfoStyleProvider, 
             val animOptions = ActivityOptionsCompat.makeCustomAnimation(context, R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold)
             launcher.launch(intent, animOptions)
         }
-    }
-
-    override fun provideStyle(): ChannelInfoStyle {
-        return style
     }
 }
