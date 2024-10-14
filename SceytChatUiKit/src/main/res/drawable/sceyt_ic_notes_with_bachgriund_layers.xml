@@ -1,6 +1,6 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/backgroundLayer">
-        <shape android:shape="oval">
+        <shape android:shape="rectangle">
             <solid android:color="@color/sceyt_color_accent" />
         </shape>
 

@@ -7,15 +7,14 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
-import com.sceyt.chatuikit.providers.VisualProvider
+import com.sceyt.chatuikit.renderers.UserAvatarRenderer
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ListItemStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class ChannelMemberListItemStyle(
         val roleTextStyle: TextStyle,
-        val listItemStyle: ListItemStyle<Formatter<SceytUser>, Formatter<SceytUser>, VisualProvider<SceytUser, DefaultAvatar>>
+        val listItemStyle: ListItemStyle<Formatter<SceytUser>, Formatter<SceytUser>, UserAvatarRenderer>
 ) {
 
     companion object {
@@ -44,7 +43,7 @@ data class ChannelMemberListItemStyle(
                 ),
                 titleFormatter = SceytChatUIKit.formatters.userNameFormatter,
                 subtitleFormatter = SceytChatUIKit.formatters.userPresenceDateFormatter,
-                avatarProvider = SceytChatUIKit.providers.userDefaultAvatarProvider
+                avatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer
             )
 
             return ChannelMemberListItemStyle(

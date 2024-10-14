@@ -34,7 +34,6 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.listene
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.PresenceStateIndicatorView
-import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
 import com.sceyt.chatuikit.presentation.extensions.setChannelMessageDateAndStatusIcon
 import com.sceyt.chatuikit.styles.ChannelItemStyle
 import java.util.Date
@@ -259,7 +258,12 @@ open class ChannelViewHolder(
     }
 
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatarView: AvatarView) {
-        avatarView.setChannelAvatar(channel, itemStyle.channelDefaultAvatarProvider, isSelf)
+        itemStyle.channelAvatarRenderer.render(
+            context = context,
+            channel = channel,
+            style = itemStyle.avatarStyle,
+            avatarView = avatarView
+        )
     }
 
     open fun setLastMessageStatusAndDate(channel: SceytChannel, decoratedTextView: DecoratedTextView) {
@@ -363,6 +367,7 @@ open class ChannelViewHolder(
             .setTextStyle(itemStyle.dateTextStyle)
             .setLeadingText(context.getString(R.string.sceyt_edited))
             .build()
+        itemStyle.avatarStyle.apply(avatar)
         lastMessage.setLinkTextColor(itemStyle.linkTextColor)
         itemStyle.subjectTextStyle.apply(channelTitle)
         itemStyle.lastMessageTextStyle.apply(lastMessage)

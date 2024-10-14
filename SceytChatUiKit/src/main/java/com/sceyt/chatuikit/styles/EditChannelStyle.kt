@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.presentation.components.edit_channel.EditChannelFragment
+import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.HintStyle
@@ -24,9 +25,9 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * Style for [EditChannelFragment]
  * @property backgroundColor Background color of the fragment, default is [Colors.backgroundColor]
  * @property dividerColor Color of the divider, default is [Colors.borderColor]
- * @property avatarBackgroundColor Background color of the avatar, default is [Colors.overlayBackground2Color]
  * @property avatarPlaceholder Placeholder for the avatar, default is [R.drawable.sceyt_ic_camera_72]
  * @property toolbarStyle Style for the toolbar
+ * @property avatarStyle Style for the avatar
  * @property subjectTextInputStyle Style for the subject text input
  * @property aboutTextInputStyle Style for the about text input
  * @property uriTextInputStyle Style for the uri text input
@@ -36,9 +37,9 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 data class EditChannelStyle(
         @ColorInt val backgroundColor: Int,
         @ColorInt val dividerColor: Int,
-        @ColorInt val avatarBackgroundColor: Int,
         val avatarPlaceholder: Drawable?,
         val toolbarStyle: ToolbarStyle,
+        val avatarStyle: AvatarStyle,
         val subjectTextInputStyle: TextInputStyle,
         val aboutTextInputStyle: TextInputStyle,
         val uriTextInputStyle: TextInputStyle,
@@ -56,7 +57,6 @@ data class EditChannelStyle(
         fun build(): EditChannelStyle {
             val backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.backgroundColor)
             val dividerColor = context.getCompatColor(SceytChatUIKitTheme.colors.borderColor)
-            val avatarBackgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.overlayBackground2Color)
             val avatarPlaceholder = context.getCompatDrawable(R.drawable.sceyt_ic_camera_72).applyTint(
                 context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
             )
@@ -70,6 +70,10 @@ data class EditChannelStyle(
                     color = context.getCompatColor(R.color.sceyt_color_text_primary),
                     font = R.font.roboto_medium
                 )
+            )
+
+            val avatarStyle = AvatarStyle(
+                avatarBackgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.overlayBackground2Color),
             )
 
             val subjectTextInputStyle = TextInputStyle(
@@ -124,15 +128,15 @@ data class EditChannelStyle(
             return EditChannelStyle(
                 backgroundColor = backgroundColor,
                 dividerColor = dividerColor,
-                avatarBackgroundColor = avatarBackgroundColor,
                 avatarPlaceholder = avatarPlaceholder,
                 toolbarStyle = toolbarStyle,
+                avatarStyle = avatarStyle,
                 subjectTextInputStyle = subjectTextInputStyle,
                 aboutTextInputStyle = aboutTextInputStyle,
                 uriTextInputStyle = uriTextInputStyle,
                 uriValidationStyle = uriValidationStyle,
                 saveButtonStyle = saveButtonStyle
-            ).let { styleCustomizer.apply(context, it)}
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }

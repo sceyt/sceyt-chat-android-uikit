@@ -274,10 +274,11 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         aboutDivider.setBackgroundColor(style.dividerColor)
         uriDivider.setBackgroundColor(style.dividerColor)
         style.uriTextInputStyle.textStyle.apply(uriPrefix)
-        avatar.StyleBuilder()
+        avatar.appearanceBuilder()
             .setDefaultAvatar(style.avatarPlaceholder)
-            .setAvatarBackgroundColor(style.avatarBackgroundColor)
+            .setStyle(style.avatarStyle)
             .build()
+            .applyToAvatar()
 
         with(icSave) {
             style.saveButtonStyle.apply(this)

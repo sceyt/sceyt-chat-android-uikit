@@ -16,10 +16,12 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
-import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
+import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
+import com.sceyt.chatuikit.renderers.UserAvatarRenderer
 import com.sceyt.chatuikit.styles.StyleCustomizer
+import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.CheckboxStyle
 import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
@@ -27,6 +29,7 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildAttachmentFileNameTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildAttachmentFileSizeTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildAudioWaveformStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.buildAvatarStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildBodyTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildDeletedMessageTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildForwardTitleTextStyle
@@ -85,6 +88,7 @@ import java.util.Date
  * @property voiceDurationTextStyle Style for the voice duration, default is [buildVoiceDurationTextStyle].
  * @property attachmentFileNameTextStyle Style for the attachment file name, default is [buildAttachmentFileNameTextStyle].
  * @property attachmentFileSizeTextStyle Style for the attachment file size, default is [buildAttachmentFileSizeTextStyle].
+ * @property avatarStyle Style for the avatar, default is [buildAvatarStyle].
  * @property linkPreviewStyle Style for the link preview, default is [buildLinkPreviewStyle].
  * @property replyMessageStyle Style for the reply message, default is [buildReplyMessageStyle].
  * @property mediaLoaderStyle Style for the media loader, default is [buildMediaLoaderStyle].
@@ -99,8 +103,8 @@ import java.util.Date
  * @property videoDurationFormatter Formatter for the video duration, default is [SceytChatUIKitFormatters.mediaDurationFormatter].
  * @property attachmentFileSizeFormatter Formatter for the attachment file size, default is [SceytChatUIKitFormatters.attachmentSizeFormatter].
  * @property attachmentIconProvider Visual provider for the attachment icon, default is [SceytChatUIKitProviders.attachmentIconProvider].
- * @property userDefaultAvatarProvider Visual provider for the user default avatar, default is [SceytChatUIKitProviders.userDefaultAvatarProvider].
  * @property senderNameColorProvider Visual provider for the sender name color, default is [SceytChatUIKitProviders.senderNameColorProvider].
+ * @property userAvatarRenderer User avatar renderer, default is [SceytChatUIKitRenderers.userAvatarRenderer].
  * */
 data class MessageItemStyle(
         @ColorInt val incomingBubbleColor: Int,
@@ -139,6 +143,7 @@ data class MessageItemStyle(
         val voiceDurationTextStyle: TextStyle,
         val attachmentFileNameTextStyle: TextStyle,
         val attachmentFileSizeTextStyle: TextStyle,
+        val avatarStyle: AvatarStyle,
         val linkPreviewStyle: LinkPreviewStyle,
         val replyMessageStyle: ReplyMessageStyle,
         val mediaLoaderStyle: MediaLoaderStyle,
@@ -153,8 +158,8 @@ data class MessageItemStyle(
         val videoDurationFormatter: Formatter<Long>,
         val attachmentFileSizeFormatter: Formatter<SceytAttachment>,
         val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
-        val userDefaultAvatarProvider: VisualProvider<SceytUser, AvatarView.DefaultAvatar>,
-        val senderNameColorProvider: VisualProvider<SceytUser, Int>
+        val senderNameColorProvider: VisualProvider<SceytUser, Int>,
+        val userAvatarRenderer: UserAvatarRenderer
 ) {
 
     companion object {
@@ -295,6 +300,7 @@ data class MessageItemStyle(
                     voiceDurationTextStyle = buildVoiceDurationTextStyle(array),
                     attachmentFileNameTextStyle = buildAttachmentFileNameTextStyle(array),
                     attachmentFileSizeTextStyle = buildAttachmentFileSizeTextStyle(array),
+                    avatarStyle = buildAvatarStyle(array),
                     linkPreviewStyle = buildLinkPreviewStyle(array),
                     replyMessageStyle = buildReplyMessageStyle(array),
                     mediaLoaderStyle = buildMediaLoaderStyle(array),
@@ -309,8 +315,8 @@ data class MessageItemStyle(
                     videoDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
                     attachmentFileSizeFormatter = SceytChatUIKit.formatters.attachmentSizeFormatter,
                     attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider,
-                    userDefaultAvatarProvider = SceytChatUIKit.providers.userDefaultAvatarProvider,
                     senderNameColorProvider = SceytChatUIKit.providers.senderNameColorProvider,
+                    userAvatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer
                 ).let { styleCustomizer.apply(context, it) }
             }
         }

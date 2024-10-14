@@ -9,8 +9,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.presentation.components.share.ShareActivity
-import com.sceyt.chatuikit.presentation.custom_views.AvatarView
-import com.sceyt.chatuikit.providers.VisualProvider
+import com.sceyt.chatuikit.renderers.ChannelAvatarRenderer
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.SearchToolbarStyle
 import com.sceyt.chatuikit.styles.common.SelectableListItemStyle
@@ -25,7 +24,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 typealias ShareChannelItemStyle = SelectableListItemStyle<
         Formatter<SceytChannel>,
         Formatter<SceytChannel>,
-        VisualProvider<SceytChannel, AvatarView.DefaultAvatar>>
+        ChannelAvatarRenderer>
 
 /**
  * Style for [ShareActivity].

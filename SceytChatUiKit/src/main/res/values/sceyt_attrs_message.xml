@@ -215,6 +215,22 @@
             <flag name="italic" value="2" />
         </attr>
 
+        <!-- Channel avatar style  -->
+        <attr name="sceytUiMessagesListAvatarBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListAvatarTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListAvatarTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListAvatarTextFont" format="reference" />
+        <attr name="sceytUiMessagesListAvatarTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListAvatarShape">
+            <flag name="circle" value="0" />
+            <flag name="rounded" value="1" />
+        </attr>
+        <attr name="sceytUiMessagesListAvatarCornerRadius" format="dimension" />
+
         <!--Link preview style-->
         <attr name="sceytUiMessagesListLinkPreviewTitleTextColor" format="reference|color" />
         <attr name="sceytUiMessagesListLinkPreviewTitleTextSize" format="dimension" />

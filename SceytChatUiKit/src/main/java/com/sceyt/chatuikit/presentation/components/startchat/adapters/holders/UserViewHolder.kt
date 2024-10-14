@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemUserBinding
 import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
@@ -37,10 +38,11 @@ class UserViewHolder(
 
         with(binding) {
             if (user.id == SceytChatUIKit.chatUIFacade.myId) {
-                avatar.styleBuilder()
+                avatar.appearanceBuilder()
                     .setImageUrl(null)
                     .setDefaultAvatar(userDefaultAvatar)
                     .build()
+                    .applyToAvatar()
                 userName.text = context.getString(string.sceyt_self_notes)
                 tvStatus.isVisible = false
             } else {
@@ -57,7 +59,7 @@ class UserViewHolder(
 
     private fun SceytItemUserBinding.applyStyle() {
         userDefaultAvatar = AvatarView.DefaultAvatar.FromDrawable(
-            context.getDrawable(drawable.sceyt_ic_notes_with_bachgriund_layers)?.applyTintBackgroundLayer(
+            context.getCompatDrawable(drawable.sceyt_ic_notes_with_bachgriund_layers)?.applyTintBackgroundLayer(
                 context.getCompatColor(SceytChatUIKit.theme.colors.accentColor), R.id.backgroundLayer
             )
         )

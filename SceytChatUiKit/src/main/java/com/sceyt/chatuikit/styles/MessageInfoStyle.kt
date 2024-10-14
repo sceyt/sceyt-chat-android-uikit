@@ -13,9 +13,10 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoFragment
-import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
+import com.sceyt.chatuikit.renderers.UserAvatarRenderer
+import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.ListItemStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
@@ -36,6 +37,7 @@ import java.util.Date
  * @property headerTextStyle Style for the header text
  * @property toolbarStyle Style for the toolbar
  * @property messageItemStyle Style for the message item.
+ * @property avatarStyle Style for the avatar
  * @property listItemStyle Style for the list items
  * @property messageDateFormatter Formatter for the message date, default is [SceytChatUIKitFormatters.messageInfoDateFormatter]
  * @property attachmentSizeFormatter Formatter for the attachment size, default is [SceytChatUIKitFormatters.attachmentSizeFormatter]
@@ -53,7 +55,8 @@ data class MessageInfoStyle(
         val headerTextStyle: TextStyle,
         val toolbarStyle: ToolbarStyle,
         val messageItemStyle: MessageItemStyle,
-        val listItemStyle: ListItemStyle<Formatter<SceytUser>, Formatter<Date>, VisualProvider<SceytUser, DefaultAvatar>>,
+        val avatarStyle: AvatarStyle,
+        val listItemStyle: ListItemStyle<Formatter<SceytUser>, Formatter<Date>, UserAvatarRenderer>,
         val messageDateFormatter: Formatter<Date>,
         val attachmentSizeFormatter: Formatter<SceytAttachment>,
         val markerTitleProvider: VisualProvider<MarkerType, String>
@@ -110,7 +113,7 @@ data class MessageInfoStyle(
                 subtitleTextStyle = dateTextStyle,
                 titleFormatter = SceytChatUIKit.formatters.userNameFormatter,
                 subtitleFormatter = SceytChatUIKit.formatters.messageDateFormatter,
-                avatarProvider = SceytChatUIKit.providers.userDefaultAvatarProvider
+                avatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer
             )
 
             return MessageInfoStyle(
@@ -125,6 +128,7 @@ data class MessageInfoStyle(
                 headerTextStyle = headerTextStyle,
                 toolbarStyle = toolbarStyle,
                 listItemStyle = listItemStyle,
+                avatarStyle = AvatarStyle(),
                 messageItemStyle = messageItemStyle,
                 messageDateFormatter = SceytChatUIKit.formatters.messageInfoDateFormatter,
                 attachmentSizeFormatter = SceytChatUIKit.formatters.attachmentSizeFormatter,
