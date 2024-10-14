@@ -32,7 +32,7 @@ class MentionUserViewHolder(
                 context, user.presence?.state ?: PresenceState.Offline
             )
 
-            onlineStatus.setBackgroundColor(indicatorColor)
+            onlineStatus.setIndicatorColor(indicatorColor)
             onlineStatus.isVisible = user.presence?.state == PresenceState.Online
 
             itemView.setOnClickListener {
