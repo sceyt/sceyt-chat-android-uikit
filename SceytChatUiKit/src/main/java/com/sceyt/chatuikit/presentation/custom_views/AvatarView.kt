@@ -83,12 +83,31 @@ class AvatarView @JvmOverloads constructor(
         }
 
         initPaints()
+        initShape(shape)
     }
 
     private fun initPaints() {
         imagePaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
         backgroundPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.FILL
+        }
+    }
+
+    private fun initShape(shape: Shape) {
+        shapeAppearanceModel = when (shape) {
+            Shape.Circle -> {
+                ShapeAppearanceModel()
+                    .toBuilder()
+                    .setAllCornerSizes(RelativeCornerSize(0.5f))
+                    .build()
+            }
+
+            is Shape.RoundedRectangle -> {
+                ShapeAppearanceModel()
+                    .toBuilder()
+                    .setAllCornerSizes(AbsoluteCornerSize(shape.radius))
+                    .build()
+            }
         }
     }
 
@@ -255,22 +274,7 @@ class AvatarView @JvmOverloads constructor(
             avatarBackgroundColor = style.avatarBackgroundColor
         }
         shape = style.shape
-
-        shapeAppearanceModel = when (style.shape) {
-            Shape.Circle -> {
-                ShapeAppearanceModel()
-                    .toBuilder()
-                    .setAllCornerSizes(RelativeCornerSize(0.5f))
-                    .build()
-            }
-
-            is Shape.RoundedRectangle -> {
-                ShapeAppearanceModel()
-                    .toBuilder()
-                    .setAllCornerSizes(AbsoluteCornerSize(style.shape.radius))
-                    .build()
-            }
-        }
+        initShape(shape)
     }
 
     sealed class DefaultAvatar {
