@@ -459,7 +459,7 @@ class DecoratedTextView @JvmOverloads constructor(
             return this
         }
 
-        fun trailingIcon(drawable: Drawable?): AppearanceBuilder {
+        fun setTrailingIcon(drawable: Drawable?): AppearanceBuilder {
             trailingIcon = drawable
             return this
         }
@@ -474,12 +474,12 @@ class DecoratedTextView @JvmOverloads constructor(
             return this
         }
 
-        fun text(text: CharSequence): AppearanceBuilder {
+        fun setText(text: CharSequence): AppearanceBuilder {
             this.text = text
             return this
         }
 
-        fun leadingText(text: CharSequence): AppearanceBuilder {
+        fun setLeadingText(text: CharSequence): AppearanceBuilder {
             this.leadingText = text
             return this
         }
@@ -489,17 +489,17 @@ class DecoratedTextView @JvmOverloads constructor(
             return this
         }
 
-        fun textStyle(textStyle: TextStyle): AppearanceBuilder {
+        fun setTextStyle(textStyle: TextStyle): AppearanceBuilder {
             this.textStyle = textStyle
             return this
         }
 
-        fun leadingTextStyle(textStyle: TextStyle): AppearanceBuilder {
+        fun setLeadingTextStyle(textStyle: TextStyle): AppearanceBuilder {
             this.leadingTextStyle = textStyle
             return this
         }
 
-        fun overlayColor(@ColorInt onOverlayColor: Int): AppearanceBuilder {
+        fun setOverlayColor(@ColorInt onOverlayColor: Int): AppearanceBuilder {
             this.overlayColor = onOverlayColor
             return this
         }
