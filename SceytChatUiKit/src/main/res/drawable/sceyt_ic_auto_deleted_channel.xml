@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:drawable="@drawable/sceyt_bg_circle_primary"/>
-    <item android:drawable="@drawable/sceyt_bg_circle"
+    <item android:drawable="@drawable/sceyt_bg_circle_primary" />
+
+    <item
+        android:id="@+id/backgroundLayer"
         android:bottom="1.5dp"
-        android:top="1.5dp"
+        android:drawable="@drawable/sceyt_bg_circle"
         android:left="1.5dp"
-        android:right="1.5dp"/>
-    <item android:drawable="@drawable/sceyt_ic_clock"
+        android:right="1.5dp"
+        android:top="1.5dp" />
+    <item
         android:bottom="2.5dp"
-        android:top="2.5dp"
+        android:drawable="@drawable/sceyt_ic_clock"
         android:left="2.5dp"
-        android:right="2.5dp"/>
+        android:right="2.5dp"
+        android:top="2.5dp" />
 
 </layer-list>
