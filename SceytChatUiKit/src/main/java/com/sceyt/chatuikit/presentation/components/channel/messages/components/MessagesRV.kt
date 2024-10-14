@@ -307,7 +307,7 @@ class MessagesRV @JvmOverloads constructor(
     /** Call this function to customise MessageViewHolderFactory and set your own.
      * Note: Call this function before initialising messages adapter.*/
     fun setViewHolderFactory(factory: MessageViewHolderFactory) {
-        check(::mAdapter.isInitialized.not()) { "Adapter was already initialized, please set ChannelViewHolderFactory first" }
+        check(::mAdapter.isInitialized.not()) { "Adapter was already initialized, please set MessageViewHolderFactory first" }
         viewHolderFactory = factory
     }
 
