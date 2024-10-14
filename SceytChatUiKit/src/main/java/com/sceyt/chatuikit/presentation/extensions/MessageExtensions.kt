@@ -30,9 +30,9 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || !shouldShowStatus) {
         decoratedTextView.appearanceBuilder()
-            .text(dateText)
+            .setText(dateText)
             .setLeadingIcon(null)
-            .trailingIcon(null)
+            .setTrailingIcon(null)
             .enableLeadingText(edited)
             .build()
             .apply()
@@ -48,7 +48,7 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
     }
     icon?.let {
         decoratedTextView.appearanceBuilder()
-            .text(dateText)
+            .setText(dateText)
             .setLeadingIcon(it)
             .enableLeadingText(edited)
             .build()
@@ -66,13 +66,13 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
         decoratedTextView.appearanceBuilder()
-            .text(dateText)
-            .textStyle(itemStyle.messageDateTextStyle)
-            .trailingIcon(null)
+            .setText(dateText)
+            .setTextStyle(itemStyle.messageDateTextStyle)
+            .setTrailingIcon(null)
             .enableLeadingText(edited)
-            .leadingText(itemStyle.editedStateText)
-            .leadingTextStyle(itemStyle.messageStateTextStyle)
-            .overlayColor(itemStyle.onOverlayColor)
+            .setLeadingText(itemStyle.editedStateText)
+            .setLeadingTextStyle(itemStyle.messageStateTextStyle)
+            .setOverlayColor(itemStyle.onOverlayColor)
             .build()
             .apply()
         return
@@ -90,13 +90,13 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
     }
     icon?.let {
         decoratedTextView.appearanceBuilder()
-            .text(dateText)
-            .textStyle(itemStyle.messageDateTextStyle)
-            .trailingIcon(it)
+            .setText(dateText)
+            .setTextStyle(itemStyle.messageDateTextStyle)
+            .setTrailingIcon(it)
             .enableLeadingText(edited)
-            .leadingText(itemStyle.editedStateText)
-            .leadingTextStyle(itemStyle.messageStateTextStyle)
-            .overlayColor(itemStyle.onOverlayColor)
+            .setLeadingText(itemStyle.editedStateText)
+            .setLeadingTextStyle(itemStyle.messageStateTextStyle)
+            .setOverlayColor(itemStyle.onOverlayColor)
             .build()
             .apply(checkIgnoreHighlight(deliveryStatus))
         decoratedTextView.isVisible = true
