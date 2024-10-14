@@ -135,7 +135,7 @@ class AvatarView @JvmOverloads constructor(
 
     private fun drawInitials(canvas: Canvas, name: CharSequence) {
         textPaint.textSize = if (textStyle.size > 0) textStyle.size.toFloat() else width * 0.38f
-        textPaint.color = textStyle.color
+        textPaint.color = Color.WHITE
 
         val spannable = name.toSpannable()
         textStyle.apply(context, spannable)
