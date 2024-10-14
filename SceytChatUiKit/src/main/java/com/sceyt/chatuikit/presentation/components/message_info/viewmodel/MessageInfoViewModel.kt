@@ -26,6 +26,7 @@ import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
 import com.sceyt.chatuikit.persistence.mappers.isLink
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.BufferOverflow
@@ -56,19 +57,21 @@ sealed interface UIState {
 
 class MessageInfoViewModel(
         private val messageId: Long,
-        private val channelId: Long
+        private val channelId: Long,
 ) : ViewModel(), SceytKoinComponent {
     private val markerInteractor: MessageMarkerInteractor by inject()
     private val messageInteractor: MessageInteractor by inject()
     private val fileTransferService: FileTransferService by inject()
     private val application: Application by inject()
     private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
+    lateinit var messageItemStyle: MessageItemStyle
 
     private val _uiState = MutableStateFlow<UIState>(UIState.Loading)
     val uiState = _uiState.asStateFlow()
 
     private val _initMessageViewFlow = MutableSharedFlow<SceytMessage>(
         extraBufferCapacity = 1,
+        replay = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val initMessageViewFlow = _initMessageViewFlow.asSharedFlow()
 

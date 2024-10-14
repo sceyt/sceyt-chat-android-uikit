@@ -5,7 +5,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.providers.VisualProvider
 
-data object DefaultMarkerTitleProvider : VisualProvider<MarkerType, String> {
+open class DefaultMarkerTitleProvider : VisualProvider<MarkerType, String> {
     override fun provide(context: Context, from: MarkerType): String {
         return when (from) {
             MarkerType.Displayed -> context.getString(R.string.sceyt_seen_by)

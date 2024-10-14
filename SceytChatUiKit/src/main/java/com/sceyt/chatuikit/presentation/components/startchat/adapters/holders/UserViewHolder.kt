@@ -1,14 +1,19 @@
 package com.sceyt.chatuikit.presentation.components.startchat.adapters.holders
 
 import androidx.core.view.isVisible
+import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.R.drawable
 import com.sceyt.chatuikit.R.string
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemUserBinding
+import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
+import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapter
+import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 
@@ -17,6 +22,7 @@ class UserViewHolder(
         private val itemClickListener: UsersAdapter.ClickListener
 ) : BaseViewHolder<UserItem>(binding.root) {
     private lateinit var bindItem: UserItem.User
+    private lateinit var userDefaultAvatar: AvatarView.DefaultAvatar
 
     init {
         binding.applyStyle()
@@ -32,11 +38,11 @@ class UserViewHolder(
 
         with(binding) {
             if (user.id == SceytChatUIKit.chatUIFacade.myId) {
-                avatar.styleBuilder()
+                avatar.appearanceBuilder()
                     .setImageUrl(null)
-                    .setAvatarBackgroundColorRes(SceytChatUIKit.theme.colors.accentColor)
-                    .setDefaultAvatar(drawable.sceyt_ic_notes)
+                    .setDefaultAvatar(userDefaultAvatar)
                     .build()
+                    .applyToAvatar()
                 userName.text = context.getString(string.sceyt_self_notes)
                 tvStatus.isVisible = false
             } else {
@@ -52,6 +58,11 @@ class UserViewHolder(
     }
 
     private fun SceytItemUserBinding.applyStyle() {
+        userDefaultAvatar = AvatarView.DefaultAvatar.FromDrawable(
+            context.getCompatDrawable(drawable.sceyt_ic_notes_with_bachgriund_layers)?.applyTintBackgroundLayer(
+                context.getCompatColor(SceytChatUIKit.theme.colors.accentColor), R.id.backgroundLayer
+            )
+        )
         userName.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
         tvStatus.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
     }

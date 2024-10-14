@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="ChannelListView">
+        <!--View id -->
+        <attr name="android:id" format="reference" />
 
         <!--Background color channel list view-->
         <attr name="sceytUiChannelListBackgroundColor" format="reference|color" />
@@ -163,6 +165,25 @@
             <flag name="bold" value="1" />
             <flag name="italic" value="2" />
         </attr>
+
+        <!-- Channel avatar style  -->
+        <attr name="sceytUiChannelListAvatarBackgroundColor" format="reference|color" />
+
+        <attr name="sceytUiChannelListAvatarTextColor" format="reference" />
+        <attr name="sceytUiChannelListAvatarTextSize" format="dimension" />
+        <attr name="sceytUiChannelListAvatarTextFont" format="reference" />
+        <attr name="sceytUiChannelListAvatarTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+
+        <attr name="sceytUiChannelListAvatarShape">
+            <flag name="circle" value="0" />
+            <flag name="rounded" value="1" />
+        </attr>
+        <attr name="sceytUiChannelListAvatarCornerRadius" format="dimension" />
+
 
         <!-- Channel link text color -->
         <attr name="sceytUiChannelListLinkTextColor" format="reference|color" />

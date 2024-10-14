@@ -2,6 +2,9 @@
 <resources>
 
     <declare-styleable name="SearchChannelInputView">
+        <!-- View id-->
+        <attr name="android:id" format="reference" />
+
         <attr name="sceytUiSearchChannelInputBackgroundColor" format="reference|color" />
         <attr name="sceytUiSearchChannelInputCornerRadius" format="dimension" />
         <!-- Border-->

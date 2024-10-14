@@ -10,9 +10,13 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.ChannelLoadingMoreViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListenersImpl
+import com.sceyt.chatuikit.styles.ShareablePageStyle
 
 @Suppress("MemberVisibilityCanBePrivate")
-open class ShareableChannelViewHolderFactory(context: Context) {
+open class ShareableChannelViewHolderFactory(
+        protected val context: Context,
+        protected val style: ShareablePageStyle
+) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     protected val channelClickListenersImpl = ChannelClickListenersImpl()
 
@@ -26,7 +30,7 @@ open class ShareableChannelViewHolderFactory(context: Context) {
 
     open fun createChannelViewHolder(parent: ViewGroup): BaseChannelViewHolder {
         val binding = SceytItemShareChannelBinding.inflate(layoutInflater, parent, false)
-        return ShareableChannelViewHolder(binding, channelClickListenersImpl)
+        return ShareableChannelViewHolder(binding, style.channelItemStyle, channelClickListenersImpl)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelViewHolder {

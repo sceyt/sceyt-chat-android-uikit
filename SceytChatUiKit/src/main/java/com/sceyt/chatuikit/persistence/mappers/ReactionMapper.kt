@@ -94,4 +94,4 @@ fun ReactionTotalEntity.toReactionTotal(): ReactionTotal = ReactionTotal(key, co
 fun PendingReactionEntity.toReactionData() = PendingReactionData(messageId, key, score, count, createdAt, isAdd, incomingMsg)
 
 fun PendingReactionData.toSceytReaction() = SceytReaction(0, messageId, key, score, "", createdAt,
-    SceytChatUIKit.currentUser, true)
+    SceytChatUIKit.currentUser ?: SceytChatUIKit.currentUserId?.let { SceytUser(it) }, true)

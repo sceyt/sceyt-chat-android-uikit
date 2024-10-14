@@ -7,10 +7,11 @@ import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.data.Constants
 import com.sceyt.chat.models.ConnectionState
-import com.sceyt.chat.models.user.User
-import com.sceyt.chat.wrapper.ClientWrapper
+import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
+import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -65,9 +66,11 @@ class LoginViewModel(private val preference: AppSharedPreference,
     fun isLoggedIn() = preference.getString(AppSharedPreference.PREF_USER_ID).isNullOrBlank().not()
 
     private suspend fun updateProfile(displayName: String) = withContext(Dispatchers.IO) {
-        val currentUser: User? = ClientWrapper.currentUser
-        userInteractor.updateProfile(displayName, currentUser?.lastName, currentUser?.avatarURL,
-            currentUser?.metadataMap)
+        val currentUser = SceytChatUIKit.currentUser ?: userInteractor.getCurrentUser()
+        ?: return@withContext SceytResponse.Error<SceytUser>(SceytException(0, "User not found"))
+        userInteractor.updateProfile(currentUser.username, displayName, currentUser.lastName,
+            currentUser.avatarURL,
+            currentUser.metadataMap)
     }
 
     private suspend fun connectUser(userId: String): Result<Boolean> {

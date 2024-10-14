@@ -9,6 +9,8 @@ import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isGroup
+import com.sceyt.chatuikit.persistence.extensions.isSelf
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -56,11 +58,15 @@ data class SceytChannel(
         get() = if (isGroup) avatarUrl
         else getPeer()?.avatarUrl
 
-    val isGroup get() = isGroup()
-
     val pinned get() = pinnedAt != null && pinnedAt != 0L
 
     val autoDeleteEnabled get() = messageRetentionPeriod > 0
+
+    @IgnoredOnParcel
+    val isGroup by lazy { isGroup() }
+
+    @IgnoredOnParcel
+    val isSelf by lazy { isSelf() }
 
     override fun equals(other: Any?): Boolean {
         if (other == null || other !is SceytChannel) return false

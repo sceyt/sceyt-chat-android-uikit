@@ -26,7 +26,6 @@ import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
-import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChatReactionMessagesCache
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
@@ -35,7 +34,6 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.listene
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.PresenceStateIndicatorView
-import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
 import com.sceyt.chatuikit.presentation.extensions.setChannelMessageDateAndStatusIcon
 import com.sceyt.chatuikit.styles.ChannelItemStyle
 import java.util.Date
@@ -76,7 +74,7 @@ open class ChannelViewHolder(
                 val channel = item.channel
                 val name: String = channel.channelSubject
                 val url = channel.iconUrl
-                isSelf = channel.isSelf()
+                isSelf = channel.isSelf
 
                 // this ui states is changed more often, and to avoid wrong ui states we need to set them every time
                 setUnreadCount(channel, binding.unreadMessagesCount)
@@ -260,7 +258,12 @@ open class ChannelViewHolder(
     }
 
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatarView: AvatarView) {
-        avatarView.setChannelAvatar(channel, itemStyle.channelDefaultAvatarProvider, isSelf)
+        itemStyle.channelAvatarRenderer.render(
+            context = context,
+            channel = channel,
+            style = itemStyle.avatarStyle,
+            avatarView = avatarView
+        )
     }
 
     open fun setLastMessageStatusAndDate(channel: SceytChannel, decoratedTextView: DecoratedTextView) {
@@ -359,11 +362,12 @@ open class ChannelViewHolder(
         viewPinned.setBackgroundColor(itemStyle.pinnedChannelBackgroundColor)
         divider.setBackgroundColor(itemStyle.dividerColor)
         icAutoDeleted.setImageDrawable(itemStyle.autoDeletedChannelIcon)
-        dateStatus.styleBuilder()
+        dateStatus.appearanceBuilder()
             .setLeadingIconSize(itemStyle.deliveryStatusIndicatorSize)
             .setTextStyle(itemStyle.dateTextStyle)
             .setLeadingText(context.getString(R.string.sceyt_edited))
             .build()
+        itemStyle.avatarStyle.apply(avatar)
         lastMessage.setLinkTextColor(itemStyle.linkTextColor)
         itemStyle.subjectTextStyle.apply(channelTitle)
         itemStyle.lastMessageTextStyle.apply(lastMessage)

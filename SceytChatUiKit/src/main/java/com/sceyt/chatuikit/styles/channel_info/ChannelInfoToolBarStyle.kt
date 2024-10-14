@@ -11,9 +11,9 @@ import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.presentation.custom_views.AvatarView
-import com.sceyt.chatuikit.providers.VisualProvider
+import com.sceyt.chatuikit.renderers.ChannelAvatarRenderer
 import com.sceyt.chatuikit.styles.StyleCustomizer
+import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
@@ -26,9 +26,10 @@ data class ChannelInfoToolBarStyle(
         val expandedStateTitleTextStyle: TextStyle,
         val collapsedStateTitleTextStyle: TextStyle,
         val collapsedStateSubtitleTextStyle: TextStyle,
+        val avatarStyle: AvatarStyle,
         val channelNameFormatter: Formatter<SceytChannel>,
         val channelSubtitleFormatter: Formatter<SceytChannel>,
-        val defaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>
+        val channelAvatarRenderer: ChannelAvatarRenderer
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<ChannelInfoToolBarStyle> { _, style -> style }
@@ -75,9 +76,10 @@ data class ChannelInfoToolBarStyle(
                 expandedStateTitleTextStyle = expandedStateTitleTextStyle,
                 collapsedStateTitleTextStyle = collapsedStateTitleTextStyle,
                 collapsedStateSubtitleTextStyle = collapsedStateSubtitleTextStyle,
+                avatarStyle = AvatarStyle(),
                 channelNameFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                 channelSubtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter,
-                defaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider
+                channelAvatarRenderer = SceytChatUIKit.renderers.channelAvatarRenderer
             ).let { styleCustomizer.apply(context, it) }
         }
     }

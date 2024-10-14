@@ -5,7 +5,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.presentation.extensions.getShowName
 
-data object DefaultAttachmentNameFormatter : Formatter<SceytAttachment> {
+open class DefaultAttachmentNameFormatter : Formatter<SceytAttachment> {
     override fun format(context: Context, from: SceytAttachment): CharSequence {
         return from.getShowName(context)
     }

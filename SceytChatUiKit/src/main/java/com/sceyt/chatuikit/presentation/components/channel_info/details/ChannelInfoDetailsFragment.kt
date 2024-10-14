@@ -10,11 +10,9 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoDetailsBinding
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
-import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
-import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoDetailStyle
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
@@ -49,7 +47,7 @@ open class ChannelInfoDetailsFragment : Fragment(), ChannelUpdateListener, Chann
 
     private fun getBundleArguments() {
         channel = requireNotNull(arguments?.parcelable(ChannelInfoLinksFragment.CHANNEL))
-        isSelf = channel.isSelf()
+        isSelf = channel.isSelf
     }
 
     private fun initViews() {
@@ -79,13 +77,7 @@ open class ChannelInfoDetailsFragment : Fragment(), ChannelUpdateListener, Chann
     }
 
     open fun setChannelAvatar(channel: SceytChannel) {
-        with(binding) {
-            avatar.setChannelAvatar(
-                channel = channel,
-                defaultAvatarProvider = style.channelDefaultAvatarProvider,
-                isSelf = isSelf
-            )
-        }
+        style.channelAvatarRenderer.render(requireContext(), channel, style.avatarStyle, binding.avatar)
     }
 
     open fun onAvatarClick(channel: SceytChannel) {
@@ -118,6 +110,7 @@ open class ChannelInfoDetailsFragment : Fragment(), ChannelUpdateListener, Chann
         layoutDetails.setBackgroundColor(style.backgroundColor)
         style.titleTextStyle.apply(title)
         style.subtitleTextStyle.apply(tvSubtitle)
+        style.avatarStyle.apply(avatar)
         dividerTop.dividerColor = infoStyle.borderColor
         space.layoutParams.height = infoStyle.spaceBetweenSections
     }

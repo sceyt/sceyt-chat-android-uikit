@@ -129,7 +129,7 @@ interface ChannelDao {
     suspend fun getAllChannelsCount(): Int
 
     @Query("select messageRetentionPeriod from channels where chat_id = :channelId")
-    suspend fun getRetentionPeriodByChannelId(channelId: Long): Long
+    suspend fun getRetentionPeriodByChannelId(channelId: Long): Long?
 
     @Update
     suspend fun updateChannel(channelEntity: ChannelEntity)

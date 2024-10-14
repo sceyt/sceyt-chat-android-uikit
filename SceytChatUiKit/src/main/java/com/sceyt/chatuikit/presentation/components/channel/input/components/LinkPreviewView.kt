@@ -48,7 +48,7 @@ class LinkPreviewView @JvmOverloads constructor(
         debounceHelper.cancelLastDebounce()
         showHideAnimator?.cancel()
         with(binding) {
-            if (!root.isVisible || root.height != root.measuredHeight) {
+            if (!root.isVisible || root.height != root.measuredHeight || root.measuredHeight in (0..1)) {
                 root.isVisible = true
                 showHideAnimator = ViewUtil.expandHeight(root, 1, 200)
             }

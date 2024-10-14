@@ -38,31 +38,31 @@ class SceytChatUIKitFormatters {
     }
 
     var userNameFormatter: Formatter<SceytUser> by lazyVar {
-        DefaultUserNameFormatter
+        DefaultUserNameFormatter()
     }
 
     var userShortNameFormatter: Formatter<SceytUser> by lazyVar {
-        DefaultUserShortNameFormatter
+        DefaultUserShortNameFormatter()
     }
 
     var mentionUserNameFormatter: Formatter<SceytUser> by lazyVar {
-        DefaultMentionUserNameFormatter
+        DefaultMentionUserNameFormatter()
     }
 
     var typingUserNameFormatter: Formatter<SceytUser> by lazyVar {
-        DefaultUserShortNameFormatter
+        DefaultUserShortNameFormatter()
     }
 
     var reactedUserNameFormatter: Formatter<SceytUser> by lazyVar {
-        DefaultUserNameFormatter
+        DefaultUserNameFormatter()
     }
 
     var channelNameFormatter: Formatter<SceytChannel> by lazyVar {
-        DefaultChannelNameFormatter
+        DefaultChannelNameFormatter()
     }
 
     var channelSubtitleFormatter: Formatter<SceytChannel> by lazyVar {
-        DefaultChannelSubtitleFormatter
+        DefaultChannelSubtitleFormatter()
     }
 
     var channelDateFormatter: Formatter<Date> by lazyVar {
@@ -70,39 +70,39 @@ class SceytChatUIKitFormatters {
     }
 
     var channelLastMessageSenderNameFormatter: Formatter<SceytChannel> by lazyVar {
-        DefaultChannelLastMessageSenderNameFormatter
+        DefaultChannelLastMessageSenderNameFormatter()
     }
 
     var messageBodyFormatter: Formatter<MessageBodyFormatterAttributes> by lazyVar {
-        DefaultMessageBodyFormatter
+        DefaultMessageBodyFormatter()
     }
 
     var channelLastMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes> by lazyVar {
-        DefaultMessageBodyWithAttachmentsFormatter
+        DefaultMessageBodyWithAttachmentsFormatter()
     }
 
     var editMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes> by lazyVar {
-        DefaultMessageBodyWithAttachmentsFormatter
+        DefaultMessageBodyWithAttachmentsFormatter()
     }
 
     var replyMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes> by lazyVar {
-        DefaultMessageBodyWithAttachmentsFormatter
+        DefaultMessageBodyWithAttachmentsFormatter()
     }
 
     var repliedMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes> by lazyVar {
-        DefaultMessageBodyWithAttachmentsFormatter
+        DefaultMessageBodyWithAttachmentsFormatter()
     }
 
     var draftMessageBodyFormatter: Formatter<DraftMessageBodyFormatterAttributes> by lazyVar {
-        DefaultDraftMessageBodyFormatter
+        DefaultDraftMessageBodyFormatter()
     }
 
     var messageDateFormatter: Formatter<Date> by lazyVar {
-        DefaultMessageDateFormatter
+        DefaultMessageDateFormatter()
     }
 
     var messageInfoDateFormatter: Formatter<Date> by lazyVar {
-        DefaultMessageInfoDateFormatter
+        DefaultMessageInfoDateFormatter()
     }
 
     var messageDateSeparatorFormatter: Formatter<Date> by lazyVar {
@@ -110,7 +110,7 @@ class SceytChatUIKitFormatters {
     }
 
     var channelInfoAttachmentDateFormatter: Formatter<Date> by lazyVar {
-        DefaultChannelInfoAttachmentDateFormatter
+        DefaultChannelInfoAttachmentDateFormatter()
     }
 
     var channelInfoDateSeparatorFormatter: Formatter<Date> by lazyVar {
@@ -118,30 +118,30 @@ class SceytChatUIKitFormatters {
     }
 
     var channelInfoFileSubtitleFormatter: Formatter<SceytAttachment> by lazyVar {
-        DefaultChannelInfoFileSubtitleFormatter
+        DefaultChannelInfoFileSubtitleFormatter()
     }
 
     var channelInfoVoiceSubtitleFormatter: Formatter<SceytAttachment> by lazyVar {
-        DefaultChannelInfoVoiceSubtitleFormatter
+        DefaultChannelInfoVoiceSubtitleFormatter()
     }
 
     var messageViewCountFormatter: Formatter<Long> by lazyVar {
-        DefaultMessageViewCountFormatter
+        DefaultMessageViewCountFormatter()
     }
 
     var attachmentNameFormatter: Formatter<SceytAttachment> by lazyVar {
-        DefaultAttachmentNameFormatter
+        DefaultAttachmentNameFormatter()
     }
 
     var attachmentSizeFormatter: Formatter<SceytAttachment> by lazyVar {
-        DefaultAttachmentSizeFormatter
+        DefaultAttachmentSizeFormatter()
     }
 
     var mediaDurationFormatter: Formatter<Long> by lazyVar {
-        DefaultMediaDurationFormatter
+        DefaultMediaDurationFormatter()
     }
 
     var unreadCountFormatter: Formatter<Long> by lazyVar {
-        DefaultUnreadCountFormatter
+        DefaultUnreadCountFormatter()
     }
 }

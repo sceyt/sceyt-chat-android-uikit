@@ -12,7 +12,6 @@ import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.setOnlyClickable
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
-import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
@@ -65,7 +64,7 @@ open class ChannelInfoSettingsFragment : Fragment(), ChannelUpdateListener, Chan
     }
 
     private fun setChannelDetails(channel: SceytChannel) {
-        binding.root.isVisible = channel.checkIsMemberInChannel() && !channel.isSelf()
+        binding.root.isVisible = channel.checkIsMemberInChannel() && !channel.isSelf
         binding.notification.isChecked = !channel.muted
         binding.autoDeleteMessages.isChecked = channel.autoDeleteEnabled
     }

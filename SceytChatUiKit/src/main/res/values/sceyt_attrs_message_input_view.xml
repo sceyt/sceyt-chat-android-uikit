@@ -2,6 +2,9 @@
 <resources>
 
     <declare-styleable name="MessageInputView">
+        <!-- View id -->
+        <attr name="android:id" format="reference" />
+
         <attr name="sceytUiMessageInputBackgroundColor" format="reference|color" />
         <attr name="sceytUiMessageInputTextInputBackgroundColor" format="reference|color" />
         <attr name="sceytUiMessageInputMentionUsersListBackgroundColor" format="reference|color" />

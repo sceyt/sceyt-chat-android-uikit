@@ -36,7 +36,7 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="@id/avatar"
         app:layout_constraintTop_toTopOf="@id/avatar"
-        app:srcCompat="@drawable/sceyt_ic_auto_deleted_channel"
+        tools:srcCompat="@drawable/sceyt_ic_auto_deleted_channel"
         tools:visibility="visible" />
 
     <com.sceyt.chatuikit.presentation.custom_views.PresenceStateIndicatorView

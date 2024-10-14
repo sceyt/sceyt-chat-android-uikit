@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="MessagesListView">
+        <!-- View id -->
+        <attr name="android:id" format="reference" />
+
         <attr name="sceytUiMessagesListBackgroundColor" format="reference|color" />
         <attr name="sceytUiMessagesListEmptyStateLayout" format="reference" />
         <attr name="sceytUiMessagesListEmptyStateSelfChannelLayout" format="reference" />
@@ -211,6 +214,22 @@
             <flag name="bold" value="1" />
             <flag name="italic" value="2" />
         </attr>
+
+        <!-- Channel avatar style  -->
+        <attr name="sceytUiMessagesListAvatarBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListAvatarTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListAvatarTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListAvatarTextFont" format="reference" />
+        <attr name="sceytUiMessagesListAvatarTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListAvatarShape">
+            <flag name="circle" value="0" />
+            <flag name="rounded" value="1" />
+        </attr>
+        <attr name="sceytUiMessagesListAvatarCornerRadius" format="dimension" />
 
         <!--Link preview style-->
         <attr name="sceytUiMessagesListLinkPreviewTitleTextColor" format="reference|color" />

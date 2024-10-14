@@ -13,10 +13,10 @@ interface UserInteractor {
     suspend fun getUserDbById(id: String): SceytUser?
     suspend fun getUsersDbByIds(id: List<String>): List<SceytUser>
     suspend fun getCurrentUser(): SceytUser?
-    fun getCurrentUserNonSuspend(): SceytUser?
+    fun getCurrentUserId(): String?
     fun getCurrentUserAsFlow(): Flow<SceytUser>
     suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String>
-    suspend fun updateProfile(firsName: String?, lastName: String?,
+    suspend fun updateProfile(username: String, firsName: String?, lastName: String?,
                               avatarUrl: String?, metadataMap: Map<String, String>?
     ): SceytResponse<SceytUser>
 

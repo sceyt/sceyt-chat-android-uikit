@@ -8,9 +8,9 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
-import com.sceyt.chatuikit.providers.VisualProvider
+import com.sceyt.chatuikit.renderers.ChannelAvatarRenderer
 import com.sceyt.chatuikit.styles.StyleCustomizer
+import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
@@ -18,9 +18,10 @@ data class ChannelInfoDetailStyle(
         @ColorInt val backgroundColor: Int,
         val titleTextStyle: TextStyle,
         val subtitleTextStyle: TextStyle,
+        val avatarStyle: AvatarStyle,
         val channelNameFormatter: Formatter<SceytChannel>,
         val channelSubtitleFormatter: Formatter<SceytChannel>,
-        val channelDefaultAvatarProvider: VisualProvider<SceytChannel, DefaultAvatar>
+        val channelAvatarRenderer: ChannelAvatarRenderer
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<ChannelInfoDetailStyle> { _, style -> style }
@@ -46,10 +47,11 @@ data class ChannelInfoDetailStyle(
                 backgroundColor = backgroundColor,
                 titleTextStyle = titleTextStyle,
                 subtitleTextStyle = descriptionTextStyle,
+                avatarStyle = AvatarStyle(),
                 channelNameFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                 channelSubtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter,
-                channelDefaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider
-            ).let { styleCustomizer.apply(context, it)}
+                channelAvatarRenderer = SceytChatUIKit.renderers.channelAvatarRenderer
+            ).let { styleCustomizer.apply(context, it) }
         }
     }
 }

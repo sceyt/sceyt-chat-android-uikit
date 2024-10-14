@@ -133,7 +133,8 @@ class IncAttachmentsMessageViewHolder(
             messageBody = messageBody,
             tvThreadReplyCount = tvReplyCount,
             toReplyLine = toReplyLine,
-            tvSenderName = tvUserName
+            tvSenderName = tvUserName,
+            avatarView = avatar
         )
     }
 }
