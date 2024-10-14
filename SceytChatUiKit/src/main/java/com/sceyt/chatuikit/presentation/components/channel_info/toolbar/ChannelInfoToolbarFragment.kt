@@ -22,7 +22,6 @@ import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelUpdateListener
 import com.sceyt.chatuikit.presentation.components.channel_info.links.ChannelInfoLinksFragment
-import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoToolBarStyle
@@ -127,7 +126,7 @@ open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, Chann
     }
 
     protected open fun setChannelToolbarAvatar(channel: SceytChannel) {
-        binding.toolbarAvatar.setChannelAvatar(channel)
+        style.channelAvatarRenderer.render(requireContext(), channel, style.avatarStyle, binding.toolbarAvatar)
     }
 
     override fun onChannelUpdated(channel: SceytChannel) {
@@ -145,7 +144,7 @@ open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, Chann
 
     open fun onUserPresenceUpdated(presenceUser: SceytPresenceChecker.PresenceUser) {
         if (isSelf) return
-        binding.toolbarAvatar.setChannelAvatar(channel, isSelf = isSelf)
+        setChannelToolbarAvatar(channel)
     }
 
     protected open fun onBackClick() {
@@ -170,6 +169,7 @@ open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, Chann
         style.expandedStateTitleTextStyle.apply(titleToolbar)
         style.collapsedStateTitleTextStyle.apply(tvToolbarInfo)
         style.collapsedStateSubtitleTextStyle.apply(subTitleToolbar)
+        style.avatarStyle.apply(toolbarAvatar)
         icBack.setImageDrawable(style.navigationIcon)
         icEdit.setImageDrawable(style.editIcon)
         icMore.setImageDrawable(style.moreIcon)

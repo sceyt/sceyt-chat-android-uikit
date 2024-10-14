@@ -8,8 +8,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.NoFormatter
-import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
-import com.sceyt.chatuikit.providers.VisualProvider
+import com.sceyt.chatuikit.renderers.UserAvatarRenderer
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ListItemStyle
@@ -17,7 +16,7 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class MentionUsersListStyle(
         @ColorInt val backgroundColor: Int,
-        val itemStyle: ListItemStyle<Formatter<SceytUser>, *, VisualProvider<SceytUser, DefaultAvatar>>
+        val itemStyle: ListItemStyle<Formatter<SceytUser>, *, UserAvatarRenderer>
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<MentionUsersListStyle> { _, style -> style }
@@ -31,12 +30,12 @@ data class MentionUsersListStyle(
         private var backgroundColor: Int = UNSET_COLOR
         private var titleTextStyle: TextStyle = TextStyle()
 
-        private val itemStyle: ListItemStyle<Formatter<SceytUser>, *, VisualProvider<SceytUser, DefaultAvatar>> by lazy {
+        private val itemStyle: ListItemStyle<Formatter<SceytUser>, *, UserAvatarRenderer> by lazy {
             ListItemStyle(
                 titleTextStyle = titleTextStyle,
                 titleFormatter = SceytChatUIKit.formatters.userNameFormatter,
                 subtitleFormatter = NoFormatter,
-                avatarProvider = SceytChatUIKit.providers.userDefaultAvatarProvider
+                avatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer
             )
         }
 

@@ -66,7 +66,6 @@ import com.sceyt.chatuikit.presentation.custom_views.ClickableTextView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.ToReplyLineView
 import com.sceyt.chatuikit.presentation.extensions.setChatMessageDateAndStatusIcon
-import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
 import com.sceyt.chatuikit.shared.utils.ViewUtil
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
@@ -356,8 +355,8 @@ abstract class BaseMessageViewHolder(
             val displayName = user?.let { itemStyle.senderNameFormatter.format(context, it) } ?: ""
             user?.let {
                 tvName.setTextColor(itemStyle.senderNameColorProvider.provide(context, it))
+                itemStyle.userAvatarRenderer.render(context, user, itemStyle.avatarStyle, avatarView)
             }
-            avatarView.setUserAvatar(user, itemStyle.userDefaultAvatarProvider)
             tvName.text = displayName
             tvName.isVisible = true
             avatarView.isVisible = true
@@ -559,6 +558,7 @@ abstract class BaseMessageViewHolder(
             tvThreadReplyCount: AppCompatTextView,
             toReplyLine: ToReplyLineView,
             tvSenderName: AppCompatTextView? = null,
+            avatarView: AvatarView? = null,
     ) {
         layoutDetails.setBackgroundTint(if (incoming)
             itemStyle.incomingBubbleColor else itemStyle.outgoingBubbleColor)
@@ -568,6 +568,9 @@ abstract class BaseMessageViewHolder(
         itemStyle.threadReplyCountTextStyle.apply(tvThreadReplyCount)
         tvSenderName?.let {
             itemStyle.senderNameTextStyle.apply(it)
+        }
+        avatarView?.let {
+            itemStyle.avatarStyle.apply(it)
         }
         (selectMessageView as? CheckBox)?.let {
             itemStyle.selectionCheckboxStyle.apply(it)

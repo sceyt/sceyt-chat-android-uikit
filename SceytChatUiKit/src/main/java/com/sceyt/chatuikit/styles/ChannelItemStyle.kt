@@ -19,22 +19,25 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
-import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
+import com.sceyt.chatuikit.renderers.ChannelAvatarRenderer
+import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
+import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.extensions.channel.buildAvatarStyle
 import com.sceyt.chatuikit.styles.extensions.channel.buildDateTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel.buildDeletedTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel.buildDraftPrefixTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel.buildLastMessageSenderNameStyle
 import com.sceyt.chatuikit.styles.extensions.channel.buildLastMessageTextStyle
-import com.sceyt.chatuikit.styles.extensions.channel.buildUnreadMentionMutedTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel.buildMentionTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel.buildSubjectTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel.buildTypingTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel.buildUnreadCountMutedTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel.buildUnreadCountTextStyle
+import com.sceyt.chatuikit.styles.extensions.channel.buildUnreadMentionMutedTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel.buildUnreadMentionTextStyle
 import com.sceyt.chatuikit.theme.Colors
 import java.util.Date
@@ -59,6 +62,8 @@ import java.util.Date
  * @property unreadCountTextStyle - Style for unread count, default is [buildUnreadCountTextStyle].
  * @property unreadCountMutedStateTextStyle - Style for unread count in muted channel, default is [buildUnreadCountMutedTextStyle].
  * @property mentionTextStyle - Style for mention message, default is [buildMentionTextStyle].
+ * @property unreadMentionTextStyle - Style for unread mention message, default is [buildUnreadMentionTextStyle].
+ * @property avatarStyle - Style for avatar, default is [buildAvatarStyle].
  * @property unreadMentionMutedStateTextStyle - Style for mention message in muted channel, default is [buildUnreadMentionMutedTextStyle].
  * @property channelNameFormatter - Formatter for channel name, default is [SceytChatUIKitFormatters.channelNameFormatter].
  * @property channelDateFormatter - Date format for channel, default is [SceytChatUIKitFormatters.channelDateFormatter].
@@ -70,7 +75,8 @@ import java.util.Date
  * @property lastMessageBodyFormatter - Formatter for last message body, default is [SceytChatUIKitFormatters.channelLastMessageBodyFormatter].
  * @property draftMessageBodyFormatter - Formatter for draft message body, default is [SceytChatUIKitFormatters.draftMessageBodyFormatter].
  * @property attachmentIconProvider - Provider for attachment icon, default is [SceytChatUIKitProviders.attachmentIconProvider].
- * @property channelDefaultAvatarProvider - Provider for channel default avatar, default is [SceytChatUIKitProviders.channelDefaultAvatarProvider].
+ * @property presenceStateColorProvider - Provider for presence state color, default is [SceytChatUIKitProviders.presenceStateColorProvider].
+ * @property channelAvatarRenderer - Renderer for channel avatar, default is [SceytChatUIKitRenderers.channelAvatarRenderer].
  * */
 data class ChannelItemStyle(
         @ColorInt val pinnedChannelBackgroundColor: Int,
@@ -92,6 +98,7 @@ data class ChannelItemStyle(
         val unreadCountMutedStateTextStyle: TextStyle,
         val mentionTextStyle: TextStyle,
         val unreadMentionTextStyle: TextStyle,
+        val avatarStyle: AvatarStyle,
         val unreadMentionMutedStateTextStyle: TextStyle,
         val channelNameFormatter: Formatter<SceytChannel>,
         val channelDateFormatter: Formatter<Date>,
@@ -103,8 +110,8 @@ data class ChannelItemStyle(
         val lastMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
         val draftMessageBodyFormatter: Formatter<DraftMessageBodyFormatterAttributes>,
         val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
-        val channelDefaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>,
-        val presenceStateColorProvider: VisualProvider<PresenceState, Int>
+        val presenceStateColorProvider: VisualProvider<PresenceState, Int>,
+        val channelAvatarRenderer: ChannelAvatarRenderer
 ) {
 
     companion object {
@@ -170,6 +177,7 @@ data class ChannelItemStyle(
                     mentionTextStyle = buildMentionTextStyle(array),
                     unreadMentionTextStyle = buildUnreadMentionTextStyle(array),
                     unreadMentionMutedStateTextStyle = buildUnreadMentionMutedTextStyle(array),
+                    avatarStyle = buildAvatarStyle(array),
                     channelNameFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                     channelDateFormatter = SceytChatUIKit.formatters.channelDateFormatter,
                     lastMessageSenderNameFormatter = SceytChatUIKit.formatters.channelLastMessageSenderNameFormatter,
@@ -180,8 +188,8 @@ data class ChannelItemStyle(
                     lastMessageBodyFormatter = SceytChatUIKit.formatters.channelLastMessageBodyFormatter,
                     draftMessageBodyFormatter = SceytChatUIKit.formatters.draftMessageBodyFormatter,
                     attachmentIconProvider = SceytChatUIKit.providers.channelListAttachmentIconProvider,
-                    channelDefaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider,
-                    presenceStateColorProvider = SceytChatUIKit.providers.presenceStateColorProvider
+                    presenceStateColorProvider = SceytChatUIKit.providers.presenceStateColorProvider,
+                    channelAvatarRenderer = SceytChatUIKit.renderers.channelAvatarRenderer
                 ).let { styleCustomizer.apply(context, it) }
             }
         }

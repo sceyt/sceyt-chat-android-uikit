@@ -7,6 +7,8 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.spToPx
 import com.sceyt.chatuikit.styles.ChannelItemStyle
+import com.sceyt.chatuikit.styles.common.AvatarStyle
+import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 internal fun ChannelItemStyle.Builder.buildSubjectTextStyle(
@@ -258,3 +260,43 @@ internal fun ChannelItemStyle.Builder.buildUnreadMentionMutedTextStyle(
     )
     .build()
 
+
+internal fun ChannelItemStyle.Builder.buildAvatarTextStyle(
+        array: TypedArray
+) = TextStyle.Builder(array)
+    .setColor(
+        index = R.styleable.ChannelListView_sceytUiChannelListAvatarTextColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
+    )
+    .setSize(
+        index = R.styleable.ChannelListView_sceytUiChannelListAvatarTextSize
+    )
+    .setStyle(
+        index = R.styleable.ChannelListView_sceytUiChannelListAvatarTextStyle,
+        defValue = Typeface.NORMAL
+    )
+    .setFont(
+        index = R.styleable.ChannelListView_sceytUiChannelListAvatarTextFont
+    )
+    .build()
+
+
+internal fun ChannelItemStyle.Builder.buildAvatarShape(
+        array: TypedArray
+): Shape {
+    val value = array.getInt(R.styleable.ChannelListView_sceytUiChannelListAvatarShape, 0)
+    val cornerRadius = array.getDimension(R.styleable.ChannelListView_sceytUiChannelListAvatarCornerRadius, 0f)
+    return if (value == 1) {
+        Shape.RoundedRectangle(cornerRadius)
+    } else Shape.Circle
+}
+
+internal fun ChannelItemStyle.Builder.buildAvatarStyle(
+        array: TypedArray
+) = AvatarStyle.Builder(array)
+    .avatarBackgroundColor(
+        index = R.styleable.ChannelListView_sceytUiChannelListAvatarBackgroundColor
+    )
+    .textStyle(buildAvatarTextStyle(array))
+    .shape(buildAvatarShape(array))
+    .build()

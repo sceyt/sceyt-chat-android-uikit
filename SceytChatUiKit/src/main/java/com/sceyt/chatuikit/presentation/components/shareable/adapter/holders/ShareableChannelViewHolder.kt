@@ -8,16 +8,14 @@ import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.BaseChannelViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
-import com.sceyt.chatuikit.presentation.custom_views.AvatarView
-import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
-import com.sceyt.chatuikit.providers.VisualProvider
+import com.sceyt.chatuikit.renderers.ChannelAvatarRenderer
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.SelectableListItemStyle
 
 open class ShareableChannelViewHolder(
         protected val binding: SceytItemShareChannelBinding,
         protected val itemStyle: SelectableListItemStyle<Formatter<SceytChannel>,
-                Formatter<SceytChannel>, VisualProvider<SceytChannel, AvatarView.DefaultAvatar>>,
+                Formatter<SceytChannel>, ChannelAvatarRenderer>,
         protected val clickListener: ChannelClickListeners.ChannelClickListener
 ) : BaseChannelViewHolder(binding.root) {
 
@@ -42,7 +40,7 @@ open class ShareableChannelViewHolder(
     }
 
     open fun setAvatar(channel: SceytChannel) {
-        binding.avatar.setChannelAvatar(channel)
+        itemStyle.avatarRenderer.render(context, channel, itemStyle.avatarStyle, binding.avatar)
     }
 
     open fun setTitle(channel: SceytChannel) {
@@ -66,5 +64,6 @@ open class ShareableChannelViewHolder(
         itemStyle.checkboxStyle.apply(checkbox)
         itemStyle.titleTextStyle.apply(tvTitle)
         itemStyle.subtitleTextStyle.apply(tvSubtitle)
+        itemStyle.avatarStyle.apply(avatar)
     }
 }

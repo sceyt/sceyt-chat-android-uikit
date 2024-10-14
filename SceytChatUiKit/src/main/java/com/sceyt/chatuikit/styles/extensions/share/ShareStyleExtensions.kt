@@ -100,5 +100,5 @@ internal fun ShareStyle.Builder.buildChannelItemStyle(
     ),
     titleFormatter = SceytChatUIKit.formatters.channelNameFormatter,
     subtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter,
-    avatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider,
+    avatarRenderer = SceytChatUIKit.renderers.channelAvatarRenderer,
 )

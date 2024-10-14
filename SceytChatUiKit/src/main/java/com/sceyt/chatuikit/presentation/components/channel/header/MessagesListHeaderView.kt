@@ -54,7 +54,6 @@ import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.H
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
-import com.sceyt.chatuikit.presentation.extensions.setChannelAvatar
 import com.sceyt.chatuikit.styles.MessagesListHeaderStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -162,6 +161,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             searchIconImage = icSearch,
             clearIconImage = icClear)
         style.messageActionsMenuStyle.apply(toolbarMessageActions)
+        style.avatarStyle.apply(avatar)
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -210,7 +210,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private fun setAvatar(avatar: AvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
         binding.avatar.isVisible = !replyInThread
         if (!replyInThread)
-            avatar.setChannelAvatar(channel, style.defaultAvatarProvider)
+            style.channelAvatarRenderer.render(context, channel, style.avatarStyle, avatar)
     }
 
     private fun showMessageActionsInToolbar(vararg messages: SceytMessage, @MenuRes resId: Int,
