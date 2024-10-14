@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
@@ -144,7 +145,9 @@ data class ChannelItemStyle(
                         }
 
                 val autoDeletedChannelIcon = array.getDrawable(R.styleable.ChannelListView_sceytUiChannelListAutoDeletedChannelIcon)
-                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_auto_deleted_channel)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_auto_deleted_channel).applyTintBackgroundLayer(
+                            context.getCompatColor(SceytChatUIKit.theme.colors.accentColor), R.id.backgroundLayer
+                        )
 
                 val messageDeliveryStatusIcons = MessageDeliveryStatusIcons.Builder(context, array)
                     .setPendingIconFromStyle(R.styleable.ChannelListView_sceytUiChannelListStatusPendingIndicator)
