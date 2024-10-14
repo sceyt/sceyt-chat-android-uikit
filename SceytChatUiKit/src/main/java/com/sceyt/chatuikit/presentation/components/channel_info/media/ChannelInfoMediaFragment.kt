@@ -1,12 +1,12 @@
 package com.sceyt.chatuikit.presentation.components.channel_info.media
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -23,7 +23,6 @@ import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem.Companion.getData
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleProvider
 import com.sceyt.chatuikit.presentation.components.channel_info.ViewPagerAdapter
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ChannelMediaAdapter
@@ -32,9 +31,11 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.li
 import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.ChannelAttachmentsViewModel
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
+import com.sceyt.chatuikit.presentation.di.ChannelInfoMediaViewModelQualifier
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
     protected lateinit var channel: SceytChannel
@@ -42,9 +43,17 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, ViewPagerA
     protected open var mediaAdapter: ChannelMediaAdapter? = null
     protected open val mediaType = listOf("image", "video")
     protected open var pageStateView: PageStateView? = null
-    protected lateinit var viewModel: ChannelAttachmentsViewModel
-    protected val infoStyle: ChannelInfoStyle by lazy {
-        (requireActivity() as ChannelInfoStyleProvider).provideStyle()
+    protected val viewModel: ChannelAttachmentsViewModel by viewModel(ChannelInfoMediaViewModelQualifier)
+    protected lateinit var infoStyle: ChannelInfoStyle
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        // Keep the style in the view model. If the style is not initialized,
+        // it will be taken from the view model.
+        if (::infoStyle.isInitialized)
+            viewModel.infoStyle = infoStyle
+        else
+            infoStyle = viewModel.infoStyle
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -68,8 +77,6 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, ViewPagerA
     }
 
     private fun initViewModel() {
-        viewModel = viewModels<ChannelAttachmentsViewModel>().value
-
         viewModel.observeToUpdateAfterOnResume(this)
 
         lifecycleScope.launch {
@@ -192,12 +199,14 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, ViewPagerA
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(channel: SceytChannel): ChannelInfoMediaFragment {
-            val fragment = ChannelInfoMediaFragment()
-            fragment.setBundleArguments {
+        fun newInstance(
+                channel: SceytChannel,
+                infoStyle: ChannelInfoStyle
+        ) = ChannelInfoMediaFragment().apply {
+            this.infoStyle = infoStyle
+            setBundleArguments {
                 putParcelable(CHANNEL, channel)
             }
-            return fragment
         }
     }
 }

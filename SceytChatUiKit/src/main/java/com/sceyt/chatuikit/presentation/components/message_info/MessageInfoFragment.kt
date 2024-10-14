@@ -26,6 +26,7 @@ import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.Messag
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.MessageInfoViewModelFactory
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.UIState
 import com.sceyt.chatuikit.styles.MessageInfoStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.util.Date
@@ -35,13 +36,26 @@ open class MessageInfoFragment : Fragment() {
     protected var binding: SceytFragmentMessageInfoBinding? = null
     protected var messageId: Long = 0
     protected var channelId: Long = 0
-    protected val viewModelFactory by lazy { MessageInfoViewModelFactory(messageId, channelId) }
+    protected val viewModelFactory by lazy { provideViewModelFactory() }
     protected val viewModel: MessageInfoViewModel by viewModels { viewModelFactory }
     protected val messageViewProvider: MessageInfoViewProvider by lazy { getMessageInfoViewProvider() }
     protected var readMarkersAdapter: UserMarkerAdapter? = null
     protected var deliveredMarkersAdapter: UserMarkerAdapter? = null
     protected var playedMarkersAdapter: UserMarkerAdapter? = null
     protected lateinit var style: MessageInfoStyle
+    protected lateinit var messageItemStyle: MessageItemStyle
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        // Keep the style in the view model. If the style is not initialized,
+        // it will be taken from the view model.
+        if (::messageItemStyle.isInitialized)
+            viewModel.messageItemStyle = messageItemStyle
+        else
+            messageItemStyle = viewModel.messageItemStyle
+
+        style = MessageInfoStyle.Builder(context, messageItemStyle).build()
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentMessageInfoBinding.inflate(inflater, container, false).also {
@@ -53,15 +67,10 @@ open class MessageInfoFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         getBundleArguments()
+        initViewModel()
 
         binding?.applyStyle()
         initViews()
-        initViewModel()
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        style = MessageInfoStyle.Builder(context).build()
     }
 
     private fun getBundleArguments() {
@@ -229,21 +238,37 @@ open class MessageInfoFragment : Fragment() {
         dividerDelivered.setBackgroundColor(style.borderColor)
     }
 
+    protected fun provideViewModelFactory(): MessageInfoViewModelFactory {
+        getBundleArguments()
+        return MessageInfoViewModelFactory(messageId, channelId)
+    }
+
     companion object {
         const val KEY_MESSAGE_ID = "key_message_id"
         const val KEY_CHANNEL_ID = "key_channel_id"
 
-        fun newInstance(message: SceytMessage): MessageInfoFragment {
-            return MessageInfoFragment().setBundleArgumentsAs {
+        fun newInstance(
+                message: SceytMessage,
+                messageItemStyle: MessageItemStyle
+        ): MessageInfoFragment {
+            return MessageInfoFragment().setBundleArgumentsAs<MessageInfoFragment> {
                 putLong(KEY_MESSAGE_ID, message.id)
                 putLong(KEY_CHANNEL_ID, message.channelId)
+            }.apply {
+                this.messageItemStyle = messageItemStyle
             }
         }
 
-        fun newInstance(messageId: Long, channelId: Long): MessageInfoFragment {
-            return MessageInfoFragment().setBundleArgumentsAs {
+        fun newInstance(
+                messageId: Long,
+                channelId: Long,
+                messageItemStyle: MessageItemStyle
+        ): MessageInfoFragment {
+            return MessageInfoFragment().setBundleArgumentsAs<MessageInfoFragment> {
                 putLong(KEY_MESSAGE_ID, messageId)
                 putLong(KEY_CHANNEL_ID, channelId)
+            }.apply {
+                this.messageItemStyle = messageItemStyle
             }
         }
     }

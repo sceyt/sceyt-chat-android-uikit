@@ -4,7 +4,7 @@ import android.content.Context
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 
-data object DefaultMediaDurationFormatter : Formatter<Long> {
+open class DefaultMediaDurationFormatter : Formatter<Long> {
 
     override fun format(context: Context, from: Long): CharSequence {
         return DateTimeUtil.secondsToTime(from)

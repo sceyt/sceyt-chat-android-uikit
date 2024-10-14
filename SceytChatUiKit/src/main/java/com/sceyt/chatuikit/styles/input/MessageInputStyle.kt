@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.styles.input
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.view.View
 import androidx.annotation.ColorInt
 import androidx.core.content.res.use
 import com.sceyt.chatuikit.R
@@ -15,6 +16,8 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
+import com.sceyt.chatuikit.styles.MessagesListHeaderStyle.Companion.styleCustomizer
+import com.sceyt.chatuikit.styles.SearchChannelInputStyle.Companion.styleCustomizer
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle
@@ -32,6 +35,7 @@ import com.sceyt.chatuikit.styles.extensions.message_input.buildReplyMessageStyl
 import com.sceyt.chatuikit.styles.extensions.message_input.buildSelectedMediaStyle
 import com.sceyt.chatuikit.styles.extensions.message_input.buildVoiceRecordPlaybackViewStyle
 import com.sceyt.chatuikit.styles.extensions.message_input.buildVoiceRecorderViewStyle
+import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle.Companion.styleCustomizer
 import com.sceyt.chatuikit.theme.Colors
 
 /**
@@ -95,6 +99,22 @@ data class MessageInputStyle(
     companion object {
         @JvmField
         var styleCustomizer = StyleCustomizer<MessageInputStyle> { _, style -> style }
+
+        /**
+         * Use this method if you are using [MessageInputView] in multiple places,
+         * and want to customize the style for each view.
+         * @param viewId - Id of the current [MessageInputView] which you want to customize.
+         * @param customizer - Customizer for [MessageInputStyle].
+         *
+         * Note: If you have already set the [styleCustomizer], it will be overridden by this customizer.
+         * */
+        @Suppress("unused")
+        @JvmStatic
+        fun setStyleCustomizerForViewId(viewId: Int, customizer: StyleCustomizer<MessageInputStyle>) {
+            styleCustomizers[viewId] = customizer
+        }
+
+        private var styleCustomizers: HashMap<Int, StyleCustomizer<MessageInputStyle>> = hashMapOf()
     }
 
     internal class Builder(
@@ -103,6 +123,8 @@ data class MessageInputStyle(
     ) {
         fun build(): MessageInputStyle {
             context.obtainStyledAttributes(attrs, R.styleable.MessageInputView).use { array ->
+                val viewId = array.getResourceId(R.styleable.MessageInputView_android_id, View.NO_ID)
+
                 val inputBackgroundColor = array.getColor(R.styleable.MessageInputView_sceytUiMessageInputBackgroundColor,
                     context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
 
@@ -173,7 +195,9 @@ data class MessageInputStyle(
                     mentionTextStyle = buildMentionUserTextStyle(array),
                     mentionUserNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
                     draftMessageBodyFormatterAttributes = SceytChatUIKit.formatters.draftMessageBodyFormatter,
-                ).let { styleCustomizer.apply(context, it) }
+                ).let {
+                    (styleCustomizers[viewId] ?: styleCustomizer).apply(context, it)
+                }
             }
         }
     }

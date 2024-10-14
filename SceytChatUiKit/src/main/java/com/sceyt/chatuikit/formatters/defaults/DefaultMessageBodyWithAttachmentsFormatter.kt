@@ -5,7 +5,7 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBodyWithAttachments
 
-object DefaultMessageBodyWithAttachmentsFormatter : Formatter<MessageBodyFormatterAttributes> {
+open class DefaultMessageBodyWithAttachmentsFormatter : Formatter<MessageBodyFormatterAttributes> {
     override fun format(context: Context, from: MessageBodyFormatterAttributes): CharSequence {
         return from.message.getFormattedBodyWithAttachments(
             context = context,

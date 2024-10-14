@@ -4,7 +4,7 @@ import android.content.Context
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.providers.VisualProvider
 
-data object DefaultChannelURIValidationMessageProvider : VisualProvider<URIValidationType, String> {
+open class DefaultChannelURIValidationMessageProvider : VisualProvider<URIValidationType, String> {
     override fun provide(context: Context, from: URIValidationType): String {
         return when (from) {
             URIValidationType.FreeToUse -> context.getString(R.string.sceyt_valid_url_title)

@@ -12,7 +12,6 @@ chat into your Android application with minimal coding.
 * [Installation](#installation)
 * [Usage](#usage)
 * [Customization](#customization)
-* [Examples](#customization)
 * [Proguard](#proguard)
 * [License](#license)
 
@@ -43,7 +42,7 @@ This will enable your project to use libraries from Maven Central.
 
 ```groovy
 dependencies {
-    implementation 'com.sceyt:sceyt-chat-android-uikit:1.7.0'
+    implementation 'com.sceyt:sceyt-chat-android-uikit:1.7.1'
 }
 ```
 ## Usage

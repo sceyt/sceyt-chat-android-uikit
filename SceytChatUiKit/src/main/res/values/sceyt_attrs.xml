@@ -4,7 +4,17 @@
     <declare-styleable name="AvatarView">
         <attr name="sceytUiAvatarImageUrl" format="string" />
         <attr name="sceytUiAvatarFullName" format="string" />
+
+        <!--Text style -->
         <attr name="sceytUiAvatarTextSize" format="dimension|integer" />
+        <attr name="sceytUiAvatarTextColor" format="color|reference" />
+        <attr name="sceytUiAvatarTextFont" format="reference" />
+        <attr name="sceytUiAvatarTextStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="bold" value="1" />
+            <enum name="italic" value="2" />
+        </attr>
+
         <attr name="sceytUiAvatarColor" format="color|reference" />
         <attr name="sceytUiAvatarDefaultIcon" format="reference" />
         <attr name="sceytUiAvatarEnableRipple" format="boolean" />

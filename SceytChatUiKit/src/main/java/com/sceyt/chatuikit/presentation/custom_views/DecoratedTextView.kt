@@ -35,7 +35,7 @@ class DecoratedTextView @JvmOverloads constructor(
     private val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
     private val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var text: CharSequence = ""
-    private var leadingText: String = ""
+    private var leadingText: CharSequence = ""
     private var textStyle: TextStyle = TextStyle()
     private var leadingTextStyle: TextStyle = TextStyle()
     private var leadingIconSize = 0
@@ -363,37 +363,6 @@ class DecoratedTextView @JvmOverloads constructor(
         invalidate()
     }
 
-    fun setTextAndIcons(
-            text: CharSequence,
-            leadingIcon: Drawable? = null,
-            trailingIcon: Drawable? = null,
-            enableLeadingText: Boolean = false,
-            textStyle: TextStyle = this.textStyle,
-            leadingText: String = this.leadingText,
-            leadingTextStyle: TextStyle = this.leadingTextStyle,
-            ignoreHighlight: Boolean = false,
-            @ColorInt overlayColor: Int = this.overlayColor
-    ) {
-        var leading = leadingIcon
-        var trailing = trailingIcon
-        if (isHighlighted && !ignoreHighlight) {
-            leading = leadingIcon?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
-            trailing = trailingIcon?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
-        }
-
-        this.leadingIcon = leading
-        this.trailingIcon = trailing
-        this.text = text
-        this.enableLeadingText = enableLeadingText
-        this.textStyle = textStyle
-        this.leadingText = leadingText
-        this.leadingTextStyle = leadingTextStyle
-        this.overlayColor = overlayColor
-        init()
-        requestLayout()
-        invalidate()
-    }
-
     fun setTextColorRes(@ColorRes color: Int) {
         textPaint.color = context.getCompatColor(color)
         invalidate()
@@ -436,68 +405,30 @@ class DecoratedTextView @JvmOverloads constructor(
         setMeasuredDimension(width, height)
     }
 
-    inner class StyleBuilder {
-        private var leadingIconSize: Int = this@DecoratedTextView.leadingIconSize
-        private var trailingIconSize: Int = this@DecoratedTextView.trailingIconSize
-        private var leadingIcon: Drawable? = this@DecoratedTextView.leadingIcon
-        private var trailingIcon: Drawable? = this@DecoratedTextView.trailingIcon
+    inner class DecoratedTextViewAppearance(
+            val leadingIconSize: Int = this@DecoratedTextView.leadingIconSize,
+            val trailingIconSize: Int = this@DecoratedTextView.trailingIconSize,
+            val leadingIcon: Drawable? = this@DecoratedTextView.leadingIcon,
+            val trailingIcon: Drawable? = this@DecoratedTextView.trailingIcon,
+            val text: CharSequence = this@DecoratedTextView.text,
+            val textStyle: TextStyle = this@DecoratedTextView.textStyle,
+            val leadingText: CharSequence = this@DecoratedTextView.leadingText,
+            val leadingTextStyle: TextStyle = this@DecoratedTextView.leadingTextStyle,
+            val enableLeadingText: Boolean = this@DecoratedTextView.enableLeadingText,
+    ) {
+        fun apply(ignoreHighlight: Boolean = false) {
+            var leading = leadingIcon?.mutate()
+            var trailing = trailingIcon?.mutate()
 
-        private var text: CharSequence = this@DecoratedTextView.text
-        private var textStyle: TextStyle = this@DecoratedTextView.textStyle
-        private var leadingText: String = this@DecoratedTextView.leadingText
-        private var leadingTextStyle: TextStyle = this@DecoratedTextView.leadingTextStyle
-        private var enableLeadingText: Boolean = this@DecoratedTextView.enableLeadingText
+            if (isHighlighted && !ignoreHighlight) {
+                leading = leadingIcon?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
+                trailing = trailingIcon?.constantState?.newDrawable()?.apply { setTint(Color.WHITE) }
+            }
 
-        fun setLeadingIcon(drawable: Drawable?): StyleBuilder {
-            leadingIcon = drawable
-            return this
-        }
-
-        fun setTrailingIcon(drawable: Drawable?): StyleBuilder {
-            trailingIcon = drawable
-            return this
-        }
-
-        fun setLeadingIconSize(size: Int): StyleBuilder {
-            leadingIconSize = size
-            return this
-        }
-
-        fun setTrailingIconSize(size: Int): StyleBuilder {
-            trailingIconSize = size
-            return this
-        }
-
-        fun setText(text: String): StyleBuilder {
-            this.text = text
-            return this
-        }
-
-        fun setLeadingText(text: String): StyleBuilder {
-            this.leadingText = text
-            return this
-        }
-
-        fun enableLeading(enable: Boolean): StyleBuilder {
-            this.enableLeadingText = enable
-            return this
-        }
-
-        fun setTextStyle(textStyle: TextStyle): StyleBuilder {
-            this.textStyle = textStyle
-            return this
-        }
-
-        fun setLeadingTextStyle(textStyle: TextStyle): StyleBuilder {
-            this.leadingTextStyle = textStyle
-            return this
-        }
-
-        fun build() {
             this@DecoratedTextView.leadingIconSize = leadingIconSize
             this@DecoratedTextView.trailingIconSize = trailingIconSize
-            this@DecoratedTextView.leadingIcon = leadingIcon?.mutate()
-            this@DecoratedTextView.trailingIcon = trailingIcon?.mutate()
+            this@DecoratedTextView.leadingIcon = leading
+            this@DecoratedTextView.trailingIcon = trailing
             this@DecoratedTextView.text = text
             this@DecoratedTextView.textStyle = textStyle
             this@DecoratedTextView.leadingText = leadingText
@@ -510,5 +441,81 @@ class DecoratedTextView @JvmOverloads constructor(
         }
     }
 
-    fun styleBuilder() = StyleBuilder()
+    inner class AppearanceBuilder {
+        private var leadingIconSize = this@DecoratedTextView.leadingIconSize
+        private var trailingIconSize = this@DecoratedTextView.trailingIconSize
+        private var leadingIcon = this@DecoratedTextView.leadingIcon
+        private var trailingIcon = this@DecoratedTextView.trailingIcon
+
+        private var text = this@DecoratedTextView.text
+        private var textStyle = this@DecoratedTextView.textStyle
+        private var leadingText = this@DecoratedTextView.leadingText
+        private var leadingTextStyle = this@DecoratedTextView.leadingTextStyle
+        private var enableLeadingText = this@DecoratedTextView.enableLeadingText
+        private var overlayColor = this@DecoratedTextView.overlayColor
+
+        fun setLeadingIcon(drawable: Drawable?): AppearanceBuilder {
+            leadingIcon = drawable
+            return this
+        }
+
+        fun setTrailingIcon(drawable: Drawable?): AppearanceBuilder {
+            trailingIcon = drawable
+            return this
+        }
+
+        fun setLeadingIconSize(size: Int): AppearanceBuilder {
+            leadingIconSize = size
+            return this
+        }
+
+        fun setTrailingIconSize(size: Int): AppearanceBuilder {
+            trailingIconSize = size
+            return this
+        }
+
+        fun setText(text: CharSequence): AppearanceBuilder {
+            this.text = text
+            return this
+        }
+
+        fun setLeadingText(text: CharSequence): AppearanceBuilder {
+            this.leadingText = text
+            return this
+        }
+
+        fun enableLeadingText(enable: Boolean): AppearanceBuilder {
+            this.enableLeadingText = enable
+            return this
+        }
+
+        fun setTextStyle(textStyle: TextStyle): AppearanceBuilder {
+            this.textStyle = textStyle
+            return this
+        }
+
+        fun setLeadingTextStyle(textStyle: TextStyle): AppearanceBuilder {
+            this.leadingTextStyle = textStyle
+            return this
+        }
+
+        fun setOverlayColor(@ColorInt onOverlayColor: Int): AppearanceBuilder {
+            this.overlayColor = onOverlayColor
+            return this
+        }
+
+        fun build() = DecoratedTextViewAppearance(
+            leadingIconSize = leadingIconSize,
+            trailingIconSize = trailingIconSize,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            text = text,
+            textStyle = textStyle,
+            leadingText = leadingText,
+            leadingTextStyle = leadingTextStyle,
+            enableLeadingText = enableLeadingText
+        )
+    }
+
+    fun appearanceBuilder() = AppearanceBuilder()
 }

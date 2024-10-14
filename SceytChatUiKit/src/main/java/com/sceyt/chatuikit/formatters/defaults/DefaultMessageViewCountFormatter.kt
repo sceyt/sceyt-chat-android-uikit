@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.formatters.defaults
 import android.content.Context
 import com.sceyt.chatuikit.formatters.Formatter
 
-data object DefaultMessageViewCountFormatter : Formatter<Long> {
+open class DefaultMessageViewCountFormatter : Formatter<Long> {
     override fun format(context: Context, from: Long): CharSequence {
         return when {
             from < 1000 -> from.toString()

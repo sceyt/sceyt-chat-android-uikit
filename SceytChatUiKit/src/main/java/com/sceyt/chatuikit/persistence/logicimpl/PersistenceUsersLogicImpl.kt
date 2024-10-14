@@ -88,12 +88,12 @@ internal class PersistenceUsersLogicImpl(
         }
     }
 
-    override fun getCurrentUserNonSuspend(): SceytUser? {
+    override fun getCurrentUserId(): String? {
         val clientUser = ClientWrapper.currentUser
         if (!clientUser?.id.isNullOrBlank())
-            return clientUser?.toSceytUser()
+            return clientUser?.id
 
-        return preference.getUserId()?.let { SceytUser(it) }
+        return preference.getUserId()
     }
 
     override fun getCurrentUserAsFlow(): Flow<SceytUser> {
@@ -107,6 +107,7 @@ internal class PersistenceUsersLogicImpl(
     }
 
     override suspend fun updateProfile(
+            username: String,
             firstName: String?,
             lastName: String?,
             avatarUri: String?,
@@ -116,6 +117,7 @@ internal class PersistenceUsersLogicImpl(
             avatarUri?.let { uri ->
                 setAvatar(uri)
             }
+            setUsername(username)
             setFirstName(firstName ?: "")
             setLastName(lastName ?: "")
             setMetadataMap(metadataMap ?: emptyMap())

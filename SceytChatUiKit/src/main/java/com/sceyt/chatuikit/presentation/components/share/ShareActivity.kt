@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.components.share
 
 import android.content.Context
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
@@ -11,10 +10,8 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytActivityShareBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.parcelableArrayList
@@ -25,10 +22,11 @@ import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewMode
 import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewModel.State.Finish
 import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewModel.State.Loading
 import com.sceyt.chatuikit.presentation.components.shareable.ShareableActivity
+import com.sceyt.chatuikit.styles.ShareStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-open class ShareActivity : ShareableActivity() {
+open class ShareActivity : ShareableActivity<ShareStyle>() {
     protected lateinit var binding: SceytActivityShareBinding
     protected val viewModel: ShareViewModel by viewModels()
     protected val sharedUris = ArrayList<Uri>()
@@ -46,6 +44,10 @@ open class ShareActivity : ShareableActivity() {
         getDataFromIntent()
         binding.initViews()
         binding.applyStyle()
+    }
+
+    override fun initStyle(): ShareStyle {
+        return ShareStyle.Builder(this, null).build()
     }
 
     protected open fun getDataFromIntent() {
@@ -95,12 +97,6 @@ open class ShareActivity : ShareableActivity() {
 
     protected open fun hideInputOnSharingText() {
         binding.messageInput.isVisible = false
-    }
-
-    protected open fun SceytActivityShareBinding.applyStyle() {
-        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
-        btnShare.backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
     }
 
     protected open fun sendTextMessage() {
@@ -166,6 +162,13 @@ open class ShareActivity : ShareableActivity() {
 
             else -> finishSharingAction()
         }
+    }
+
+    protected open fun SceytActivityShareBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
+        style.actionButtonStyle.apply(btnShare)
+        style.searchToolbarStyle.apply(toolbar)
+        style.messageInputStyle.apply(messageInput, null)
     }
 
     companion object {

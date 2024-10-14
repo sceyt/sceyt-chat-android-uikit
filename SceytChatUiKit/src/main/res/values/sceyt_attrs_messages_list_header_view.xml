@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="MessagesListHeaderView">
+        <!--View id -->
+        <attr name="android:id" format="reference" />
+
         <attr name="sceytUiMessagesListHeaderBackground" format="reference|color" />
 
         <!--Title text style-->
@@ -22,6 +25,22 @@
             <flag name="italic" value="2" />
         </attr>
         <attr name="sceytUiMessagesListHeaderSubTitleTextFont" format="reference" />
+
+        <!-- Avatar style -->
+        <attr name="sceytUiMessagesListHeaderAvatarBackgroundColor" format="reference|color" />
+        <attr name="sceytUiMessagesListHeaderAvatarTextColor" format="reference|color" />
+        <attr name="sceytUiMessagesListHeaderAvatarTextSize" format="dimension" />
+        <attr name="sceytUiMessagesListHeaderAvatarTextFont" format="reference" />
+        <attr name="sceytUiMessagesListHeaderAvatarTextStyle">
+            <flag name="normal" value="0" />
+            <flag name="bold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiMessagesListHeaderAvatarShape">
+            <flag name="circle" value="0" />
+            <flag name="rounded" value="1" />
+        </attr>
+        <attr name="sceytUiMessagesListHeaderAvatarCornerRadius" format="dimension" />
 
         <!-- Search input style-->
         <attr name="sceytUiMessagesListHeaderSearchInputBackgroundColor" format="reference|color" />

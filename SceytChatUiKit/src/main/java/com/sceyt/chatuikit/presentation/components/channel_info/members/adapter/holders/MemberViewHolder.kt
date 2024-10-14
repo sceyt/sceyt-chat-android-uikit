@@ -8,7 +8,6 @@ import com.sceyt.chatuikit.extensions.firstCharToUppercase
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.diff.MemberItemPayloadDiff
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.listeners.MemberClickListeners
-import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.styles.channel_members.ChannelMemberListItemStyle
 
 class MemberViewHolder(
@@ -37,7 +36,9 @@ class MemberViewHolder(
 
         with(binding) {
             if (diff.nameChanged || diff.avatarChanged) {
-                avatar.setUserAvatar(member.user, style.listItemStyle.avatarProvider)
+                style.listItemStyle.avatarRenderer.render(
+                    context, member.user, style.listItemStyle.avatarStyle, avatar
+                )
                 userName.text = style.listItemStyle.titleFormatter.format(context, member.user)
             }
 
@@ -63,6 +64,7 @@ class MemberViewHolder(
     private fun SceytItemChannelMembersBinding.applyStyle() {
         style.listItemStyle.titleTextStyle.apply(userName)
         style.listItemStyle.subtitleTextStyle.apply(tvStatus)
+        style.listItemStyle.avatarStyle.apply(avatar)
         style.roleTextStyle.apply(roleName)
     }
 }

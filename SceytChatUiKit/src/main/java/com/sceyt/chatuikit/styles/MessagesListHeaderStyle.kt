@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.styles
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.view.View
 import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -14,12 +15,13 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
-import com.sceyt.chatuikit.presentation.custom_views.AvatarView
-import com.sceyt.chatuikit.providers.VisualProvider
-import com.sceyt.chatuikit.providers.defaults.DefaultChannelDefaultAvatarProvider
+import com.sceyt.chatuikit.renderers.ChannelAvatarRenderer
+import com.sceyt.chatuikit.styles.SearchChannelInputStyle.Companion.styleCustomizer
+import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.MenuStyle
 import com.sceyt.chatuikit.styles.common.SearchInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list_header.buildAvatarStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list_header.buildMessageActionsMenuStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list_header.buildSearchInputTextStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list_header.buildSubTitleTextStyle
@@ -38,7 +40,6 @@ import com.sceyt.chatuikit.theme.Colors
  * @property messageActionsMenuStyle style for the toolbar menu, default is [buildMessageActionsMenuStyle]
  * @property titleFormatter formatter for the channel title, default is [SceytChatUIKitFormatters.channelNameFormatter]
  * @property subtitleFormatter formatter for the channel subtitle, default is [SceytChatUIKitFormatters.channelSubtitleFormatter]
- * @property defaultAvatarProvider provider for the channel default avatar, default is [DefaultChannelDefaultAvatarProvider]
  * @property typingUserNameFormatter formatter for the typing users, default is [SceytChatUIKitFormatters.userShortNameFormatter]
  * */
 data class MessagesListHeaderStyle(
@@ -48,16 +49,33 @@ data class MessagesListHeaderStyle(
         val showUnderline: Boolean,
         val titleTextStyle: TextStyle,
         val subTitleStyle: TextStyle,
+        val avatarStyle: AvatarStyle,
         val searchInputStyle: SearchInputStyle,
         val messageActionsMenuStyle: MenuStyle,
         val titleFormatter: Formatter<SceytChannel>,
         val subtitleFormatter: Formatter<SceytChannel>,
-        val defaultAvatarProvider: VisualProvider<SceytChannel, AvatarView.DefaultAvatar>,
-        val typingUserNameFormatter: Formatter<SceytUser>
+        val typingUserNameFormatter: Formatter<SceytUser>,
+        val channelAvatarRenderer: ChannelAvatarRenderer
 ) {
 
     companion object {
         var styleCustomizer = StyleCustomizer<MessagesListHeaderStyle> { _, style -> style }
+
+        /**
+         * Use this method if you are using [MessagesListHeaderView] in multiple places,
+         * and want to customize the style for each view.
+         * @param viewId - Id of the current [MessagesListHeaderView] which you want to customize.
+         * @param customizer - Customizer for [MessagesListHeaderStyle].
+         *
+         * Note: If you have already set the [styleCustomizer], it will be overridden by this customizer.
+         * */
+        @Suppress("unused")
+        @JvmStatic
+        fun setStyleCustomizerForViewId(viewId: Int, customizer: StyleCustomizer<MessagesListHeaderStyle>) {
+            styleCustomizers[viewId] = customizer
+        }
+
+        private var styleCustomizers: HashMap<Int, StyleCustomizer<MessagesListHeaderStyle>> = hashMapOf()
     }
 
     internal class Builder(
@@ -67,6 +85,8 @@ data class MessagesListHeaderStyle(
     ) {
         fun build(): MessagesListHeaderStyle {
             context.obtainStyledAttributes(attrs, R.styleable.MessagesListHeaderView).use { array ->
+                val viewId = array.getResourceId(R.styleable.MessagesListHeaderView_android_id, View.NO_ID)
+
                 val backgroundColor = array.getColor(R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderBackground,
                     context.getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
 
@@ -87,13 +107,16 @@ data class MessagesListHeaderStyle(
                     showUnderline = showUnderline,
                     titleTextStyle = buildTitleTextStyle(array),
                     subTitleStyle = buildSubTitleTextStyle(array),
+                    avatarStyle = buildAvatarStyle(array),
                     searchInputStyle = buildSearchInputTextStyle(array),
                     messageActionsMenuStyle = buildMessageActionsMenuStyle(array),
                     titleFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                     subtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter,
-                    defaultAvatarProvider = SceytChatUIKit.providers.channelDefaultAvatarProvider,
-                    typingUserNameFormatter = SceytChatUIKit.formatters.typingUserNameFormatter
-                ).let { styleCustomizer.apply(context, it) }
+                    typingUserNameFormatter = SceytChatUIKit.formatters.typingUserNameFormatter,
+                    channelAvatarRenderer = SceytChatUIKit.renderers.channelAvatarRenderer
+                ).let {
+                    (styleCustomizers[viewId] ?: styleCustomizer).apply(context, it)
+                }
             }
         }
     }

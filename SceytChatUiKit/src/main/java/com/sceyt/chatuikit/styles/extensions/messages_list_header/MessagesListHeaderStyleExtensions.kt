@@ -8,11 +8,14 @@ import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.styles.MessagesListHeaderStyle
+import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.HintStyle
 import com.sceyt.chatuikit.styles.common.MenuStyle
 import com.sceyt.chatuikit.styles.common.SearchInputStyle
+import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 internal fun MessagesListHeaderStyle.Builder.buildTitleTextStyle(
         typedArray: TypedArray
@@ -47,6 +50,44 @@ internal fun MessagesListHeaderStyle.Builder.buildSubTitleTextStyle(
     .setFont(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSubTitleTextFont
     )
+    .build()
+
+/*Avatar style */
+internal fun MessagesListHeaderStyle.Builder.buildAvatarTextStyle(
+        typedArray: TypedArray
+) = TextStyle.Builder(typedArray)
+    .setColor(
+        index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderAvatarTextColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
+    .setSize(
+        index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderAvatarTextSize
+    )
+    .setStyle(
+        index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderAvatarTextStyle
+    )
+    .setFont(
+        index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderAvatarTextFont
+    )
+    .build()
+
+internal fun MessagesListHeaderStyle.Builder.buildAvatarShape(
+        array: TypedArray
+): Shape {
+    val value = array.getInt(R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderAvatarShape, 0)
+    val cornerRadius = array.getDimension(R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderAvatarCornerRadius, 0f)
+    return if (value == 1) {
+        Shape.RoundedRectangle(cornerRadius)
+    } else Shape.Circle
+}
+
+internal fun MessagesListHeaderStyle.Builder.buildAvatarStyle(
+        typedArray: TypedArray
+) = AvatarStyle.Builder(typedArray)
+    .avatarBackgroundColor(
+        index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderAvatarBackgroundColor
+    )
+    .textStyle(buildAvatarTextStyle(typedArray))
+    .shape(buildAvatarShape(typedArray))
     .build()
 
 internal fun MessagesListHeaderStyle.Builder.buildSearchInputHintStyle(

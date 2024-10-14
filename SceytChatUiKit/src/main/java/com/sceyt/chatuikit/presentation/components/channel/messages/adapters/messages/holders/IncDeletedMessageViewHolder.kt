@@ -52,6 +52,7 @@ class IncDeletedMessageViewHolder(
         style.deletedMessageTextStyle.apply(messageBody)
         style.senderNameTextStyle.apply(tvUserName)
         style.selectionCheckboxStyle.apply(selectView)
+        style.avatarStyle.apply(avatar)
         messageBody.text = style.deletedStateText
     }
 }

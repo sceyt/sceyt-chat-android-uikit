@@ -9,7 +9,9 @@ import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.spToPx
+import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.CheckboxStyle
+import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.messages_list.DateSeparatorStyle
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
@@ -443,6 +445,44 @@ internal fun MessageItemStyle.Builder.buildLinkPreviewDescriptionTextStyle(
     .setFont(
         index = R.styleable.MessagesListView_sceytUiMessagesListLinkPreviewDescriptionTextFont
     )
+    .build()
+
+/* Avatar style */
+internal fun MessageItemStyle.Builder.buildAvatarTextStyle(
+        typedArray: TypedArray
+) = TextStyle.Builder(typedArray)
+    .setColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListAvatarTextColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
+    .setSize(
+        index = R.styleable.MessagesListView_sceytUiMessagesListAvatarTextSize
+    )
+    .setStyle(
+        index = R.styleable.MessagesListView_sceytUiMessagesListAvatarTextStyle
+    )
+    .setFont(
+        index = R.styleable.MessagesListView_sceytUiMessagesListAvatarTextFont
+    )
+    .build()
+
+internal fun MessageItemStyle.Builder.buildAvatarShape(
+        array: TypedArray
+): Shape {
+    val value = array.getInt(R.styleable.MessagesListView_sceytUiMessagesListAvatarShape, 0)
+    val cornerRadius = array.getDimension(R.styleable.MessagesListView_sceytUiMessagesListAvatarCornerRadius, 0f)
+    return if (value == 1) {
+        Shape.RoundedRectangle(cornerRadius)
+    } else Shape.Circle
+}
+
+internal fun MessageItemStyle.Builder.buildAvatarStyle(
+        typedArray: TypedArray
+) = AvatarStyle.Builder(typedArray)
+    .avatarBackgroundColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListAvatarBackgroundColor
+    )
+    .textStyle(buildAvatarTextStyle(typedArray))
+    .shape(buildAvatarShape(typedArray))
     .build()
 
 internal fun MessageItemStyle.Builder.buildLinkPreviewStyle(

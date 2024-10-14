@@ -3,18 +3,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@drawable/sceyt_bg_underline"
-    android:paddingHorizontal="17dp">
+    android:layout_height="wrap_content">
 
-    <com.sceyt.chatuikit.presentation.custom_views.CircleCheckBox
+    <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/checkbox"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="15dp"
+        android:background="@android:color/transparent"
         android:clickable="false"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHeight_max="24dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_max="24dp"
+        tools:button="@drawable/sceyt_ic_unchecked_state" />
 
     <com.sceyt.chatuikit.presentation.custom_views.AvatarView
         android:id="@+id/avatar"
@@ -26,20 +29,22 @@
         app:layout_constraintStart_toEndOf="@+id/checkbox"
         app:layout_constraintTop_toTopOf="parent"
         app:sceytUiAvatarEnableRipple="false"
-        app:sceytUiAvatarFullName="Art d"
-        app:sceytUiAvatarTextSize="15sp" />
+        app:sceytUiAvatarTextSize="15sp"
+        tools:sceytUiAvatarColor="@color/sceyt_color_accent"
+        tools:sceytUiAvatarFullName="Art d" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/userName"
+        android:id="@+id/tvTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="12dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="15dp"
         android:fontFamily="@font/roboto_medium"
         android:lines="1"
         android:textAlignment="viewStart"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize"
-        app:layout_constraintBottom_toTopOf="@+id/tvMemberCount"
+        app:layout_constraintBottom_toTopOf="@+id/tvSubtitle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@id/avatar"
@@ -48,19 +53,24 @@
         tools:text="John" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tvMemberCount"
+        android:id="@+id/tvSubtitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
         android:lines="1"
         android:textAlignment="viewStart"
         android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="13sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/userName"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@id/avatar"
-        app:layout_constraintTop_toBottomOf="@+id/userName"
+        app:layout_constraintEnd_toEndOf="@+id/tvTitle"
+        app:layout_constraintStart_toStartOf="@+id/tvTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvTitle"
         tools:text="12 members" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:background="@color/sceyt_color_border" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

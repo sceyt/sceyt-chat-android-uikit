@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.styles.messages_list
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.View
 import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
 import androidx.annotation.LayoutRes
@@ -10,6 +11,9 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
+import com.sceyt.chatuikit.styles.MessagesListHeaderStyle.Companion.styleCustomizer
+import com.sceyt.chatuikit.styles.SearchChannelInputStyle.Companion.styleCustomizer
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildDateSeparatorStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionPickerStyle
@@ -18,7 +22,7 @@ import com.sceyt.chatuikit.styles.extensions.messages_list.buildUnreadMessagesSe
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 /**
- * Style for [MessagesListViewStyle].
+ * Style for [MessagesListView].
  * @property backgroundColor Background color of the message list view
  * @property emptyState Layout resource for the empty state view,default is [R.layout.sceyt_messages_empty_state]
  * @property emptyStateForSelfChannel Layout resource for the empty state view for self channel,default is [R.layout.sceyt_messages_empty_state_self_channel]
@@ -52,7 +56,21 @@ data class MessagesListViewStyle(
         @JvmField
         var styleCustomizer = StyleCustomizer<MessagesListViewStyle> { _, style -> style }
 
-        internal var currentStyle: MessagesListViewStyle? = null
+        /**
+         * Use this method if you are using [MessagesListView] in multiple places,
+         * and want to customize the style for each view.
+         * @param viewId - Id of the current [MessagesListView] which you want to customize.
+         * @param customizer - Customizer for [MessagesListViewStyle].
+         *
+         * Note: If you have already set the [styleCustomizer], it will be overridden by this customizer.
+         * */
+        @Suppress("unused")
+        @JvmStatic
+        fun setStyleCustomizerForViewId(viewId: Int, customizer: StyleCustomizer<MessagesListViewStyle>) {
+            styleCustomizers[viewId] = customizer
+        }
+
+        private var styleCustomizers: HashMap<Int, StyleCustomizer<MessagesListViewStyle>> = hashMapOf()
     }
 
     internal class Builder(
@@ -61,6 +79,8 @@ data class MessagesListViewStyle(
     ) {
         fun build(): MessagesListViewStyle {
             context.obtainStyledAttributes(attrs, R.styleable.MessagesListView).use { array ->
+                val viewId = array.getResourceId(R.styleable.MessagesListView_android_id, View.NO_ID)
+
                 val backgroundColor = array.getColor(R.styleable.MessagesListView_sceytUiMessagesListBackgroundColor,
                     context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
 
@@ -98,7 +118,9 @@ data class MessagesListViewStyle(
                     reactionPickerStyle = buildReactionPickerStyle(array),
                     enableScrollDownButton = enableScrollDownButton,
                     enableDateSeparator = enableDateSeparator
-                ).let { styleCustomizer.apply(context, it) }
+                ).let {
+                    (styleCustomizers[viewId] ?: styleCustomizer).apply(context, it)
+                }
             }
         }
     }

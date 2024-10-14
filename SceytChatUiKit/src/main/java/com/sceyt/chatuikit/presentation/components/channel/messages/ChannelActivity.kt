@@ -84,8 +84,14 @@ open class ChannelActivity : AppCompatActivity() {
         setMessageActionsClickListener(MessageActionsViewClickListeners.MessageInfo { message ->
             hideSoftInput()
             supportFragmentManager.commit {
-                setCustomAnimations(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right)
-                replace(R.id.frameLayout, MessageInfoFragment.newInstance(message))
+                setCustomAnimations(
+                    R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold,
+                    R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right
+                )
+                replace(R.id.frameLayout, MessageInfoFragment.newInstance(
+                    message = message,
+                    messageItemStyle = binding.messagesListView.style.messageItemStyle)
+                )
                 addToBackStack(MessageInfoFragment::class.java.name)
             }
         })

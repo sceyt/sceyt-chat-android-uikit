@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 
-data object DefaultChannelSubtitleFormatter : Formatter<SceytChannel> {
+open class DefaultChannelSubtitleFormatter : Formatter<SceytChannel> {
 
     override fun format(context: Context, from: SceytChannel): CharSequence {
         return when (from.getChannelType()) {
