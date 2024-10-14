@@ -30,7 +30,6 @@ import com.sceyt.chatuikit.extensions.roundUp
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
-import com.sceyt.chatuikit.styles.StyleConstants.UNSET_TEXT
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -307,10 +306,14 @@ class AvatarView @JvmOverloads constructor(
     }
 
     inner class AppearanceBuilder {
-        private var name: CharSequence? = UNSET_TEXT
-        private var imageUrl: String? = UNSET_TEXT
-        private var avatarStyle: AvatarStyle = AvatarStyle()
-        private var defaultAvatar: DefaultAvatar? = null
+        private var name = this@AvatarView.name
+        private var imageUrl = this@AvatarView.imageUrl
+        private var defaultAvatar = this@AvatarView.defaultAvatar
+        private var avatarStyle = AvatarStyle(
+            textStyle = this@AvatarView.textStyle,
+            shape = this@AvatarView.shape,
+            avatarBackgroundColor = this@AvatarView.avatarBackgroundColor
+        )
 
         fun setStyle(style: AvatarStyle) = apply {
             avatarStyle = style
