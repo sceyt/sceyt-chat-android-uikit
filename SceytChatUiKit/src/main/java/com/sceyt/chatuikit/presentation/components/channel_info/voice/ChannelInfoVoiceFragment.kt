@@ -21,7 +21,7 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
-import com.sceyt.chatuikit.presentation.components.channel_info.ViewPagerAdapter
+import com.sceyt.chatuikit.presentation.components.channel_info.ViewPagerAdapter.HistoryClearedListener
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ChannelMediaAdapter
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.MediaStickHeaderItemDecoration
@@ -34,7 +34,13 @@ import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-open class ChannelInfoVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
+open class ChannelInfoVoiceFragment : Fragment, SceytKoinComponent, HistoryClearedListener {
+    constructor() : super()
+
+    constructor(infoStyle: ChannelInfoStyle) : super() {
+        this.infoStyle = infoStyle
+    }
+
     private lateinit var channel: SceytChannel
     private var binding: SceytFragmentChannelInfoVoiceBinding? = null
     protected open var mediaAdapter: ChannelMediaAdapter? = null
@@ -45,8 +51,8 @@ open class ChannelInfoVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerA
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        // Keep the style in the view model. If the style is not initialized,
-        // it will be taken from the view model.
+        // Keep the style in the view model.
+        // If the style is not initialized it will be taken from the view model.
         if (::infoStyle.isInitialized)
             viewModel.infoStyle = infoStyle
         else
@@ -172,8 +178,7 @@ open class ChannelInfoVoiceFragment : Fragment(), SceytKoinComponent, ViewPagerA
         fun newInstance(
                 channel: SceytChannel,
                 infoStyle: ChannelInfoStyle
-        ) = ChannelInfoVoiceFragment().apply {
-            this.infoStyle = infoStyle
+        ) = ChannelInfoVoiceFragment(infoStyle).apply {
             setBundleArguments {
                 putParcelable(CHANNEL, channel)
             }

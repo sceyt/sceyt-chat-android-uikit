@@ -22,7 +22,7 @@ import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
-import com.sceyt.chatuikit.presentation.components.channel_info.ViewPagerAdapter
+import com.sceyt.chatuikit.presentation.components.channel_info.ViewPagerAdapter.HistoryClearedListener
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ChannelMediaAdapter
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.MediaStickHeaderItemDecoration
@@ -36,7 +36,14 @@ import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-open class ChannelInfoFilesFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
+@Suppress("MemberVisibilityCanBePrivate")
+open class ChannelInfoFilesFragment : Fragment, SceytKoinComponent, HistoryClearedListener {
+    constructor() : super()
+
+    constructor(infoStyle: ChannelInfoStyle) : super() {
+        this.infoStyle = infoStyle
+    }
+
     protected lateinit var channel: SceytChannel
     protected var binding: SceytFragmentChannelInfoFilesBinding? = null
     protected var mediaAdapter: ChannelMediaAdapter? = null
@@ -47,8 +54,8 @@ open class ChannelInfoFilesFragment : Fragment(), SceytKoinComponent, ViewPagerA
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        // Keep the style in the view model. If the style is not initialized,
-        // it will be taken from the view model.
+        // Keep the style in the view model.
+        // If the style is not initialized it will be taken from the view model.
         if (::infoStyle.isInitialized)
             viewModel.infoStyle = infoStyle
         else
@@ -177,8 +184,7 @@ open class ChannelInfoFilesFragment : Fragment(), SceytKoinComponent, ViewPagerA
         fun newInstance(
                 channel: SceytChannel,
                 infoStyle: ChannelInfoStyle
-        ) = ChannelInfoFilesFragment().apply {
-            this.infoStyle = infoStyle
+        ) = ChannelInfoFilesFragment(infoStyle).apply {
             setBundleArguments {
                 putParcelable(CHANNEL, channel)
             }

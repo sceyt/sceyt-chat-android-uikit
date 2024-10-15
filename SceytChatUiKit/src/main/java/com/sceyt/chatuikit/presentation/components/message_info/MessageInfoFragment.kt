@@ -32,7 +32,13 @@ import kotlinx.coroutines.flow.onEach
 import java.util.Date
 
 @Suppress("MemberVisibilityCanBePrivate")
-open class MessageInfoFragment : Fragment() {
+open class MessageInfoFragment : Fragment {
+    constructor() : super()
+
+    constructor(messageItemStyle: MessageItemStyle) : super() {
+        this.messageItemStyle = messageItemStyle
+    }
+
     protected var binding: SceytFragmentMessageInfoBinding? = null
     protected var messageId: Long = 0
     protected var channelId: Long = 0
@@ -47,8 +53,8 @@ open class MessageInfoFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        // Keep the style in the view model. If the style is not initialized,
-        // it will be taken from the view model.
+        // Keep the style in the view model.
+        // If the style is not initialized it will be taken from the view model.
         if (::messageItemStyle.isInitialized)
             viewModel.messageItemStyle = messageItemStyle
         else
@@ -250,26 +256,18 @@ open class MessageInfoFragment : Fragment() {
         fun newInstance(
                 message: SceytMessage,
                 messageItemStyle: MessageItemStyle
-        ): MessageInfoFragment {
-            return MessageInfoFragment().setBundleArgumentsAs<MessageInfoFragment> {
-                putLong(KEY_MESSAGE_ID, message.id)
-                putLong(KEY_CHANNEL_ID, message.channelId)
-            }.apply {
-                this.messageItemStyle = messageItemStyle
-            }
+        ) = MessageInfoFragment(messageItemStyle).setBundleArgumentsAs<MessageInfoFragment> {
+            putLong(KEY_MESSAGE_ID, message.id)
+            putLong(KEY_CHANNEL_ID, message.channelId)
         }
 
         fun newInstance(
                 messageId: Long,
                 channelId: Long,
                 messageItemStyle: MessageItemStyle
-        ): MessageInfoFragment {
-            return MessageInfoFragment().setBundleArgumentsAs<MessageInfoFragment> {
-                putLong(KEY_MESSAGE_ID, messageId)
-                putLong(KEY_CHANNEL_ID, channelId)
-            }.apply {
-                this.messageItemStyle = messageItemStyle
-            }
+        ) = MessageInfoFragment(messageItemStyle).setBundleArgumentsAs<MessageInfoFragment> {
+            putLong(KEY_MESSAGE_ID, messageId)
+            putLong(KEY_CHANNEL_ID, channelId)
         }
     }
 }
