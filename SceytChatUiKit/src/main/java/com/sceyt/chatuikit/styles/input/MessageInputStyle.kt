@@ -28,7 +28,7 @@ import com.sceyt.chatuikit.styles.extensions.message_input.buildInputCoverStyle
 import com.sceyt.chatuikit.styles.extensions.message_input.buildInputTextInputStyle
 import com.sceyt.chatuikit.styles.extensions.message_input.buildJoinButtonStyle
 import com.sceyt.chatuikit.styles.extensions.message_input.buildLinkPreviewStyle
-import com.sceyt.chatuikit.styles.extensions.message_input.buildMentionUserTextStyle
+import com.sceyt.chatuikit.styles.extensions.message_input.buildMentionTextStyle
 import com.sceyt.chatuikit.styles.extensions.message_input.buildMentionUsersListStyle
 import com.sceyt.chatuikit.styles.extensions.message_input.buildMessageSearchControlStyle
 import com.sceyt.chatuikit.styles.extensions.message_input.buildReplyMessageStyle
@@ -63,7 +63,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property messageSearchControlsStyle Style for the message search controls, default is [buildMessageSearchControlStyle]
  * @property inputCoverStyle Style for the input cover, default is [buildInputCoverStyle]
  * @property mentionUsersListStyle Style for the mention users list, default is [buildMentionUsersListStyle]
- * @property mentionTextStyle Style for the mention user name while typing, default is [buildMentionUserTextStyle]
+ * @property mentionTextStyle Style for the mention user name while typing, default is [buildMentionTextStyle]
  * @property mentionUserNameFormatter Formatter for the mention user name, default is [SceytChatUIKitFormatters.userNameFormatter]
  * @property draftMessageBodyFormatterAttributes Formatter for the draft message body, default is [SceytChatUIKitFormatters.draftMessageBodyFormatter]
  * */
@@ -192,7 +192,7 @@ data class MessageInputStyle(
                     messageSearchControlsStyle = buildMessageSearchControlStyle(array),
                     inputCoverStyle = buildInputCoverStyle(array),
                     mentionUsersListStyle = buildMentionUsersListStyle(array),
-                    mentionTextStyle = buildMentionUserTextStyle(array),
+                    mentionTextStyle = buildMentionTextStyle(array),
                     mentionUserNameFormatter = SceytChatUIKit.formatters.userNameFormatter,
                     draftMessageBodyFormatterAttributes = SceytChatUIKit.formatters.draftMessageBodyFormatter,
                 ).let {
