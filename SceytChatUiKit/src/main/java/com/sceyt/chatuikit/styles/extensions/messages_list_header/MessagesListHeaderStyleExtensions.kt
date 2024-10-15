@@ -15,7 +15,6 @@ import com.sceyt.chatuikit.styles.common.SearchInputStyle
 import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
-import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 internal fun MessagesListHeaderStyle.Builder.buildTitleTextStyle(
         typedArray: TypedArray
@@ -70,6 +69,7 @@ internal fun MessagesListHeaderStyle.Builder.buildAvatarTextStyle(
     )
     .build()
 
+@Suppress("UnusedReceiverParameter")
 internal fun MessagesListHeaderStyle.Builder.buildAvatarShape(
         array: TypedArray
 ): Shape {
