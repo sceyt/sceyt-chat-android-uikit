@@ -465,6 +465,7 @@ internal fun MessageItemStyle.Builder.buildAvatarTextStyle(
     )
     .build()
 
+@Suppress("UnusedReceiverParameter")
 internal fun MessageItemStyle.Builder.buildAvatarShape(
         array: TypedArray
 ): Shape {

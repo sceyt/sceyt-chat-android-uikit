@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_PARAMETER")
+
 package com.sceyt.chatuikit.styles.extensions.forward
 
 import android.content.res.TypedArray

@@ -280,7 +280,7 @@ internal fun ChannelItemStyle.Builder.buildAvatarTextStyle(
     )
     .build()
 
-
+@Suppress("UnusedReceiverParameter")
 internal fun ChannelItemStyle.Builder.buildAvatarShape(
         array: TypedArray
 ): Shape {
