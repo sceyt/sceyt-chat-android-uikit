@@ -162,6 +162,7 @@ class MessageInputView @JvmOverloads constructor(
             voiceRecordPlaybackView.setStyle(style.voiceRecordPlaybackViewStyle)
             messageActionsView.setStyle(style)
             linkPreviewView.setStyle(style)
+            messageInput.setMentionStyle(style.mentionTextStyle)
             addInoutListeners()
             determineInputState()
             addInputTextWatcher()
