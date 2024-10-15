@@ -191,7 +191,13 @@ fun MessageListViewModel.bind(
             sendTypingEvent(typing)
         }
 
-        override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+        override fun updateDraftMessage(
+                text: Editable?,
+                mentionUserIds: List<Mention>,
+                styling: List<BodyStyleRange>?,
+                replyOrEditMessage: SceytMessage?,
+                isReply: Boolean
+        ) {
             this@bind.updateDraftMessage(text, mentionUserIds, styling, replyOrEditMessage, isReply)
         }
 

@@ -943,7 +943,13 @@ class MessageInputView @JvmOverloads constructor(
         messageInputActionCallback?.sendTyping(typing)
     }
 
-    override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+    override fun updateDraftMessage(
+            text: Editable?,
+            mentionUserIds: List<Mention>,
+            styling: List<BodyStyleRange>?,
+            replyOrEditMessage: SceytMessage?,
+            isReply: Boolean
+    ) {
         messageInputActionCallback?.updateDraftMessage(text, mentionUserIds, styling, replyOrEditMessage, isReply)
     }
 
@@ -966,6 +972,7 @@ class MessageInputView @JvmOverloads constructor(
     override fun onSelectedUserToMentionClick(member: SceytMember) {
         val name = style.mentionUserNameFormatter.format(context, member.user).notAutoCorrectable()
         binding.messageInput.replaceTextWithMention(name, member.id)
+        messageToSendHelper.mentionedUsersCache[member.id] = member.user
     }
 
     override fun onMultiselectModeListener(isMultiselectMode: Boolean) {

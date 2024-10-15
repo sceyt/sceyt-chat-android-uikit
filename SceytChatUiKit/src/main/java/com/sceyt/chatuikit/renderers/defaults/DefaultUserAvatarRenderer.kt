@@ -16,6 +16,7 @@ open class DefaultUserAvatarRenderer : UserAvatarRenderer {
         avatarView.appearanceBuilder()
             .setStyle(style)
             .setDefaultAvatar(defaultAvatar)
+            .setImageUrl(user.avatarURL)
             .build()
             .applyToAvatar()
     }
