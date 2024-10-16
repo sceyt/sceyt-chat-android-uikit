@@ -64,8 +64,8 @@ import java.util.Date
  * @property unreadCountMutedStateTextStyle - Style for unread count in muted channel, default is [buildUnreadCountMutedTextStyle].
  * @property mentionTextStyle - Style for mention message, default is [buildMentionTextStyle].
  * @property unreadMentionTextStyle - Style for unread mention message, default is [buildUnreadMentionTextStyle].
- * @property avatarStyle - Style for avatar, default is [buildAvatarStyle].
  * @property unreadMentionMutedStateTextStyle - Style for mention message in muted channel, default is [buildUnreadMentionMutedTextStyle].
+ * @property avatarStyle - Style for avatar, default is [buildAvatarStyle].
  * @property channelNameFormatter - Formatter for channel name, default is [SceytChatUIKitFormatters.channelNameFormatter].
  * @property channelDateFormatter - Date format for channel, default is [SceytChatUIKitFormatters.channelDateFormatter].
  * @property lastMessageSenderNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.channelLastMessageSenderNameFormatter].
@@ -99,8 +99,8 @@ data class ChannelItemStyle(
         val unreadCountMutedStateTextStyle: TextStyle,
         val mentionTextStyle: TextStyle,
         val unreadMentionTextStyle: TextStyle,
-        val avatarStyle: AvatarStyle,
         val unreadMentionMutedStateTextStyle: TextStyle,
+        val avatarStyle: AvatarStyle,
         val channelNameFormatter: Formatter<SceytChannel>,
         val channelDateFormatter: Formatter<Date>,
         val lastMessageSenderNameFormatter: Formatter<SceytChannel>,
