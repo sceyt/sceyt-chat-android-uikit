@@ -15,7 +15,8 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
-import com.sceyt.chatuikit.renderers.ChannelAvatarRenderer
+import com.sceyt.chatuikit.renderers.AvatarRenderer
+import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
 import com.sceyt.chatuikit.styles.SearchChannelInputStyle.Companion.styleCustomizer
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.MenuStyle
@@ -41,6 +42,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property titleFormatter formatter for the channel title, default is [SceytChatUIKitFormatters.channelNameFormatter]
  * @property subtitleFormatter formatter for the channel subtitle, default is [SceytChatUIKitFormatters.channelSubtitleFormatter]
  * @property typingUserNameFormatter formatter for the typing users, default is [SceytChatUIKitFormatters.userShortNameFormatter]
+ * @property channelAvatarRenderer renderer for the channel avatar, default is [SceytChatUIKitRenderers.channelAvatarRenderer]
  * */
 data class MessagesListHeaderStyle(
         @ColorInt val backgroundColor: Int,
@@ -55,7 +57,7 @@ data class MessagesListHeaderStyle(
         val titleFormatter: Formatter<SceytChannel>,
         val subtitleFormatter: Formatter<SceytChannel>,
         val typingUserNameFormatter: Formatter<SceytUser>,
-        val channelAvatarRenderer: ChannelAvatarRenderer
+        val channelAvatarRenderer: AvatarRenderer<SceytChannel>
 ) {
 
     companion object {

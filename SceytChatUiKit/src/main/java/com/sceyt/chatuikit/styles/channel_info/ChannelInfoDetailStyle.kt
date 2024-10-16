@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.renderers.ChannelAvatarRenderer
+import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -21,7 +21,7 @@ data class ChannelInfoDetailStyle(
         val avatarStyle: AvatarStyle,
         val channelNameFormatter: Formatter<SceytChannel>,
         val channelSubtitleFormatter: Formatter<SceytChannel>,
-        val channelAvatarRenderer: ChannelAvatarRenderer
+        val channelAvatarRenderer: AvatarRenderer<SceytChannel>
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<ChannelInfoDetailStyle> { _, style -> style }

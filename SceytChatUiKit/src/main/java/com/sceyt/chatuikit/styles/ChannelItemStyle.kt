@@ -22,7 +22,7 @@ import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttrib
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
-import com.sceyt.chatuikit.renderers.ChannelAvatarRenderer
+import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
@@ -112,7 +112,7 @@ data class ChannelItemStyle(
         val draftMessageBodyFormatter: Formatter<DraftMessageBodyFormatterAttributes>,
         val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
         val presenceStateColorProvider: VisualProvider<PresenceState, Int>,
-        val channelAvatarRenderer: ChannelAvatarRenderer
+        val channelAvatarRenderer: AvatarRenderer<SceytChannel>
 ) {
 
     companion object {
