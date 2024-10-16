@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoFragment
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
-import com.sceyt.chatuikit.renderers.UserAvatarRenderer
+import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.ListItemStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -56,7 +56,7 @@ data class MessageInfoStyle(
         val toolbarStyle: ToolbarStyle,
         val messageItemStyle: MessageItemStyle,
         val avatarStyle: AvatarStyle,
-        val listItemStyle: ListItemStyle<Formatter<SceytUser>, Formatter<Date>, UserAvatarRenderer>,
+        val listItemStyle: ListItemStyle<Formatter<SceytUser>, Formatter<Date>, AvatarRenderer<SceytUser>>,
         val messageDateFormatter: Formatter<Date>,
         val attachmentSizeFormatter: Formatter<SceytAttachment>,
         val markerTitleProvider: VisualProvider<MarkerType, String>

@@ -260,7 +260,7 @@ open class ChannelViewHolder(
     open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatarView: AvatarView) {
         itemStyle.channelAvatarRenderer.render(
             context = context,
-            channel = channel,
+            from = channel,
             style = itemStyle.avatarStyle,
             avatarView = avatarView
         )
