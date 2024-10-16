@@ -78,7 +78,7 @@ class ChannelsAdapter(private var channels: SyncArrayList<ChannelListItem>,
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun addList(items: MutableList<ChannelListItem>) {
+    fun addList(items: List<ChannelListItem>) {
         removeLoading()
 
         val filteredItems = items.minus(channels.toSet())

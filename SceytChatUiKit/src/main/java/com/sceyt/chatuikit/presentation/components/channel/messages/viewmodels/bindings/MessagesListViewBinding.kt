@@ -49,7 +49,6 @@ import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
@@ -66,6 +65,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.collections.set
 
+@JvmName("bind")
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
@@ -752,9 +752,4 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         if (playing)
             onVocePlaying(message)
     }
-}
-
-@Suppress("unused")
-fun bindViewFromJava(viewModel: MessageListViewModel, messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
-    viewModel.bind(messagesListView, lifecycleOwner)
 }

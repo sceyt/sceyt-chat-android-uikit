@@ -38,6 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
+@JvmName("bind")
 fun MessageListViewModel.bind(
         messageInputView: MessageInputView,
         replyInThreadMessage: SceytMessage?,
@@ -243,9 +244,4 @@ fun MessageListViewModel.bind(
             scrollToSearchMessage(true)
         }
     })
-}
-
-@Suppress("unused")
-fun bindViewFromJava(viewModel: MessageListViewModel, replyInThreadMessage: SceytMessage?, messagesInputView: MessageInputView, lifecycleOwner: LifecycleOwner) {
-    viewModel.bind(messagesInputView, replyInThreadMessage, lifecycleOwner)
 }
