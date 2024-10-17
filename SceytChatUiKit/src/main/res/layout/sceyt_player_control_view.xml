@@ -44,9 +44,9 @@
             app:layout_constraintTop_toTopOf="parent"
             app:played_color="@color/sceyt_color_on_primary"
             app:scrubber_color="@color/sceyt_color_on_primary"
-            app:unplayed_color="#757D8B" />
+            app:unplayed_color="@color/sceyt_color_icon_secondary" />
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@id/exo_position"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -75,7 +75,7 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="HardcodedText" />
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@id/exo_duration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

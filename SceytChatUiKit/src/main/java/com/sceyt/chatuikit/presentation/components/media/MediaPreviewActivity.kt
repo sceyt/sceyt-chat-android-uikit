@@ -16,7 +16,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNear
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
@@ -25,7 +24,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.databinding.SceytActivityMediaBinding
+import com.sceyt.chatuikit.databinding.SceytActivityMediaPreviewBinding
 import com.sceyt.chatuikit.extensions.checkAndAskPermissions
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getFileUriWithProvider
@@ -45,15 +44,17 @@ import com.sceyt.chatuikit.presentation.components.media.adapter.MediaFilesViewH
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.components.media.dialogs.ActionDialog
 import com.sceyt.chatuikit.presentation.components.media.viewmodel.MediaViewModel
-import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import com.sceyt.chatuikit.styles.MediaPreviewStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.io.File
+import java.util.Date
 
 
 open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
-    lateinit var binding: SceytActivityMediaBinding
+    lateinit var binding: SceytActivityMediaPreviewBinding
     private val viewModel by viewModels<MediaViewModel>()
+    protected lateinit var style: MediaPreviewStyle
     private var fileToSaveAfterPermission: MediaItem? = null
     private var channelId: Long = 0L
     private val mediaTypes = listOf(AttachmentTypeEnum.Image.value, AttachmentTypeEnum.Video.value)
@@ -64,8 +65,11 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = SceytActivityMediaBinding.inflate(LayoutInflater.from(this))
+        style = MediaPreviewStyle.Builder(this, null).build()
+
+        binding = SceytActivityMediaPreviewBinding.inflate(LayoutInflater.from(this))
         setContentView(binding.root)
+        binding.applyStyle()
 
         getDataFromIntent()
         initPageWithData()
@@ -127,16 +131,18 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     private fun initViews() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        binding.layoutToolbar.applySystemWindowInsetsPadding(applyTop = true)
+        binding.toolbar.applySystemWindowInsetsPadding(applyTop = true)
 
         binding.root.post { toggleFullScreen(false) }
 
-        binding.icShare.setOnClickListener {
-            currentItem?.let { item -> showActionsDialog(item) }
+        binding.toolbar.setNavigationClickListener {
+            finish()
         }
 
-        binding.icBack.setOnClickListener {
-            finish()
+        binding.toolbar.setMenuClickListener { itemId ->
+            if (itemId == R.id.sceyt_more) {
+                currentItem?.let { showActionsDialog(it) }
+            }
         }
     }
 
@@ -176,14 +182,16 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     private fun loadMediaDetail(item: MediaItem) {
         currentItem = item
         val name = item.data.user?.let {
-            SceytChatUIKit.formatters.userNameFormatter.format(this, it)
+            style.userNameFormatter.format(this, it)
         }
-        binding.tvTitle.text = name ?: ""
-        binding.tvDate.text = DateTimeUtil.getDateTimeString(item.data.attachment.createdAt, "dd.MM.yy, HH:mm")
+        binding.toolbar.let {
+            it.setTitle(name)
+            it.setSubtitle(style.mediaDateFormatter.format(this, Date(item.data.attachment.createdAt)))
+        }
     }
 
     override fun onMediaClick() {
-        with(binding.layoutToolbar) {
+        with(binding.toolbar) {
             isVisible = !isVisible
             toggleFullScreen(!isVisible)
         }
@@ -203,16 +211,16 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         }
     }
 
-    fun isShowMediaDetail() = binding.layoutToolbar.isVisible
+    fun isVisibleToolbar() = binding.toolbar.isVisible
 
     private fun setOrUpdateMediaAdapter(data: List<MediaItem>) {
         val newData = if (reversed) data.reversed() else data
         if (mediaAdapter == null) {
-            mediaAdapter = MediaAdapter(newData.toArrayList(), MediaFilesViewHolderFactory(this).also {
-                it.setNeedMediaDataCallback { infoData -> viewModel.needMediaInfo(infoData) }
-
-                it.setClickListener { onMediaClick() }
-            })
+            mediaAdapter = MediaAdapter(newData.toArrayList(),
+                MediaFilesViewHolderFactory(this, style).also {
+                    it.setNeedMediaDataCallback { infoData -> viewModel.needMediaInfo(infoData) }
+                    it.setClickListener { onMediaClick() }
+                })
             if (openedWithAttachment?.type == AttachmentTypeEnum.Video.value)
                 mediaAdapter?.shouldPlayVideoPath = openedWithAttachment?.filePath
 
@@ -359,6 +367,11 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         } else {
             Toast.makeText(this, getString(R.string.sceyt_media_cannot_save_to_gallery), Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun SceytActivityMediaPreviewBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
+        style.toolbarStyle.apply(toolbar)
     }
 
     companion object {

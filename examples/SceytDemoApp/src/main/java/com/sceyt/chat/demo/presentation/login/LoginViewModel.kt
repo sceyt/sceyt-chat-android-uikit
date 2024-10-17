@@ -70,7 +70,8 @@ class LoginViewModel(private val preference: AppSharedPreference,
         ?: return@withContext SceytResponse.Error<SceytUser>(SceytException(0, "User not found"))
         userInteractor.updateProfile(currentUser.username, displayName, currentUser.lastName,
             currentUser.avatarURL,
-            currentUser.metadataMap)
+            currentUser.metadataMap
+        )
     }
 
     private suspend fun connectUser(userId: String): Result<Boolean> {

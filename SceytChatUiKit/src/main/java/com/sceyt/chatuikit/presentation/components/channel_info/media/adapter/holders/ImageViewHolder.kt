@@ -94,7 +94,7 @@ class ImageViewHolder(
 
     override fun getThumbSize() = Size(itemView.width, itemView.height)
 
-    override fun needThumbFor() = ThumbFor.ConversationInfo
+    override fun needThumbFor() = ThumbFor.ChannelInfo
 
     private fun SceytItemChannelImageBinding.applyStyle() {
         root.setBackgroundColor(style.backgroundColor)

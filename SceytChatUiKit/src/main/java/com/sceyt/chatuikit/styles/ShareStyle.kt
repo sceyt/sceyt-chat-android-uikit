@@ -51,7 +51,7 @@ data class ShareStyle(
             private val attributeSet: AttributeSet?
     ) {
         fun build(): ShareStyle {
-            context.obtainStyledAttributes(attributeSet, R.styleable.ChannelListView).use { array ->
+            context.obtainStyledAttributes(attributeSet, R.styleable.Share).use { array ->
                 val backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.backgroundColor)
 
                 return ShareStyle(
