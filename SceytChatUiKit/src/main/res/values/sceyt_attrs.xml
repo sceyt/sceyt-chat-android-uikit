@@ -110,11 +110,14 @@
 
     <declare-styleable name="CustomToolbar">
         <attr name="sceytUiToolbarTitle" format="string" localization="suggested" />
+        <attr name="sceytUiToolbarSubtitle" format="string" localization="suggested" />
         <attr name="sceytUiToolbarTitleTextColor" format="color|reference" />
+        <attr name="sceytUiToolbarSubtitleTextColor" format="color|reference" />
         <attr name="sceytUiToolbarNavigationIcon" format="reference" />
-        <attr name="sceytUiToolbarMenuIcon" format="reference" />
+        <attr name="sceytUiToolbarMenu" format="reference" />
         <attr name="sceytUiToolbarIconsTint" format="color|reference" />
         <attr name="sceytUiToolbarEnableDivider" format="boolean" />
+        <attr name="sceytUiToolbarDividerColor" format="color|reference" />
     </declare-styleable>
 
 </resources>

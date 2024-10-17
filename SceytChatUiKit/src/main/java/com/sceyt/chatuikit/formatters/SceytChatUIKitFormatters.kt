@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentSizeFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelDateFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoAttachmentDateFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoDateSeparatorFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoFileSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoVoiceSubtitleFormatter
@@ -110,11 +110,15 @@ class SceytChatUIKitFormatters {
     }
 
     var channelInfoAttachmentDateFormatter: Formatter<Date> by lazyVar {
-        DefaultChannelInfoAttachmentDateFormatter()
+        DefaultAttachmentDateFormatter()
     }
 
     var channelInfoDateSeparatorFormatter: Formatter<Date> by lazyVar {
         DefaultChannelInfoDateSeparatorFormatter()
+    }
+
+    var mediaPreviewDateFormatter: Formatter<Date> by lazyVar {
+        DefaultAttachmentDateFormatter()
     }
 
     var channelInfoFileSubtitleFormatter: Formatter<SceytAttachment> by lazyVar {

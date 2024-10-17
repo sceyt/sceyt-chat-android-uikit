@@ -106,7 +106,7 @@ class VideoViewHolder(
 
     override fun getThumbSize() = Size(binding.root.width, binding.root.height)
 
-    override fun needThumbFor() = ThumbFor.ConversationInfo
+    override fun needThumbFor() = ThumbFor.ChannelInfo
 
     private fun SceytItemChannelVideoBinding.applyStyle() {
         with(tvDuration) {

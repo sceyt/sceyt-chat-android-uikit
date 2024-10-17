@@ -47,7 +47,7 @@ data class ForwardStyle(
             private val attributeSet: AttributeSet?
     ) {
         fun build(): ForwardStyle {
-            context.obtainStyledAttributes(attributeSet, R.styleable.ChannelListView).use { array ->
+            context.obtainStyledAttributes(attributeSet, R.styleable.Forward).use { array ->
                 val backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.backgroundColor)
 
                 return ForwardStyle(

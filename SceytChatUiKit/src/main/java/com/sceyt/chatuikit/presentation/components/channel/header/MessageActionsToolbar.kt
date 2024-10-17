@@ -9,13 +9,13 @@ import android.view.MenuItem
 import androidx.annotation.MenuRes
 import androidx.appcompat.widget.ActionMenuView
 import androidx.appcompat.widget.Toolbar
-import androidx.core.view.forEach
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.changeAlphaWithAnim
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.setIconsTintColorRes
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.HeaderUIElementsListener.ToolbarActionsVisibilityListener
 
 class MessageActionsToolbar @JvmOverloads constructor(
@@ -31,9 +31,7 @@ class MessageActionsToolbar @JvmOverloads constructor(
 
     private fun initMenu(vararg messages: SceytMessage) {
         overflowIcon?.setTint(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-        menu.forEach {
-            it.icon?.setTint(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-        }
+        menu.setIconsTintColorRes(context, SceytChatUIKit.theme.colors.accentColor)
 
         setOnMenuItemClickListener {
             handledClick = true

@@ -18,7 +18,7 @@ import androidx.annotation.Px
 import androidx.annotation.StyleableRes
 import androidx.core.content.res.ResourcesCompat
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
-import com.sceyt.chatuikit.styles.StyleConstants.UNSET_FONT_RESOURCE
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_RESOURCE
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_STYLE
 import com.sceyt.chatuikit.styles.StyleConstants.styleOrDefault
@@ -27,7 +27,7 @@ data class TextStyle(
         @ColorInt val backgroundColor: Int = UNSET_COLOR,
         @ColorInt val color: Int = UNSET_COLOR,
         @Px val size: Int = UNSET_SIZE,
-        @FontRes val font: Int = UNSET_FONT_RESOURCE,
+        @FontRes val font: Int = UNSET_RESOURCE,
         val style: Int = UNSET_STYLE
 ) {
 
@@ -44,7 +44,7 @@ data class TextStyle(
         if (color != UNSET_COLOR) {
             textView.setTextColor(color)
         }
-        val typeface = if (font != UNSET_FONT_RESOURCE)
+        val typeface = if (font != UNSET_RESOURCE)
             ResourcesCompat.getFont(textView.context, font) else Typeface.DEFAULT
 
         textView.setTypeface(typeface, style.styleOrDefault(Typeface.NORMAL))
@@ -61,7 +61,7 @@ data class TextStyle(
             spannable.setSpan(ForegroundColorSpan(color), start, end, SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
 
-        if (font != UNSET_FONT_RESOURCE)
+        if (font != UNSET_RESOURCE)
             ResourcesCompat.getFont(context, font)?.let { typeface ->
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     spannable.setSpan(TypefaceSpan(typeface), start, end, SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -88,7 +88,7 @@ data class TextStyle(
         private var size = UNSET_SIZE
 
         @FontRes
-        private var font = UNSET_FONT_RESOURCE
+        private var font = UNSET_RESOURCE
 
         private var style = UNSET_STYLE
 
