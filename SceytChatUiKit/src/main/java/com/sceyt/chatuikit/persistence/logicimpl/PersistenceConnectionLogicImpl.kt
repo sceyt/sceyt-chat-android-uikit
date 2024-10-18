@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.dao.UserDao
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
@@ -32,7 +33,8 @@ internal class PersistenceConnectionLogicImpl(
         private var preference: SceytSharedPreference,
         private val usersDao: UserDao,
         private val usersRepository: UsersRepository,
-        private val channelsCache: ChannelsCache) : PersistenceConnectionLogic, SceytKoinComponent {
+        private val channelsCache: ChannelsCache,
+) : PersistenceConnectionLogic, SceytKoinComponent {
 
     private val messageLogic: PersistenceMessagesLogic by inject()
     private val reactionsLogic: PersistenceReactionsLogic by inject()
@@ -48,10 +50,8 @@ internal class PersistenceConnectionLogicImpl(
 
         scope.launch {
             ProcessLifecycleOwner.get().repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                if (ConnectionEventManager.isConnected) {
-                    val state = SceytChatUIKit.config.presenceConfig.defaultPresenceState
-                    SceytChatUIKit.chatUIFacade.userInteractor.setPresenceState(state)
-                }
+                if (ConnectionEventManager.isConnected)
+                    setUserPresence()
             }
         }
     }
@@ -59,10 +59,11 @@ internal class PersistenceConnectionLogicImpl(
     override fun onChangedConnectStatus(state: ConnectionStateData) {
         if (state.state == ConnectionState.Connected) {
             scope.launch {
-                ClientWrapper.currentUser?.id?.let { preference.setUserId(it) }
-                insertCurrentUser()
                 SceytPresenceChecker.startPresenceCheck()
                 FirebaseMessagingDelegate.checkNeedRegisterForPushToken()
+                insertCurrentUser()
+                if (isAppOnForeground())
+                    setUserPresence()
             }
 
             scope.launch(Dispatchers.IO) {
@@ -84,6 +85,7 @@ internal class PersistenceConnectionLogicImpl(
     private suspend fun insertCurrentUser() {
         ClientWrapper.currentUser?.let {
             usersDao.insertUserWithMetadata(it.toUserDb())
+            preference.setUserId(it.id)
         } ?: run {
             preference.getUserId()?.let {
                 val response = usersRepository.getSceytUserById(it)
@@ -93,5 +95,10 @@ internal class PersistenceConnectionLogicImpl(
                     }
             }
         }
+    }
+
+    private suspend fun setUserPresence() {
+        val state = SceytChatUIKit.config.presenceConfig.defaultPresenceState
+        SceytChatUIKit.chatUIFacade.userInteractor.setPresenceState(state)
     }
 }

@@ -98,7 +98,9 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         ConnectionEventManager.onChangedConnectStatusFlow.onEach(::onChangedConnectStatus).launchIn(scope)
 
         // Presence events
-        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged().onEach(::onPresenceChanged).launchIn(scope)
+        SceytPresenceChecker.onPresenceCheckUsersFlow.distinctUntilChanged()
+            .onEach(::onPresenceChanged)
+            .launchIn(scope)
     }
 
 
