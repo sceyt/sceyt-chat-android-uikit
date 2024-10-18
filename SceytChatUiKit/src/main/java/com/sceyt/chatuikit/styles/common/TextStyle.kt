@@ -6,6 +6,7 @@ import android.graphics.Typeface
 import android.os.Build
 import android.text.Spannable
 import android.text.SpannableStringBuilder
+import android.text.TextPaint
 import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
@@ -17,6 +18,7 @@ import androidx.annotation.FontRes
 import androidx.annotation.Px
 import androidx.annotation.StyleableRes
 import androidx.core.content.res.ResourcesCompat
+import com.sceyt.chatuikit.styles.Style
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_RESOURCE
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
@@ -28,7 +30,7 @@ data class TextStyle(
         @ColorInt val color: Int = UNSET_COLOR,
         @Px val size: Int = UNSET_SIZE,
         @FontRes val font: Int = UNSET_RESOURCE,
-        val style: Int = UNSET_STYLE
+        @Style val style: Int = UNSET_STYLE
 ) {
 
     fun apply(textView: TextView) {
@@ -74,6 +76,30 @@ data class TextStyle(
 
         if (size != UNSET_SIZE) {
             spannable.setSpan(AbsoluteSizeSpan(size), start, end, SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+    }
+
+    fun apply(context: Context, textPaint: TextPaint) {
+        if (color != UNSET_COLOR) {
+            textPaint.color = color
+        }
+
+        if (font != UNSET_RESOURCE) {
+            val style = when (style) {
+                Typeface.BOLD -> Typeface.BOLD
+                Typeface.ITALIC -> Typeface.ITALIC
+                else -> Typeface.NORMAL
+            }
+            val typeface = ResourcesCompat.getFont(context, font) ?: Typeface.DEFAULT
+            textPaint.typeface = Typeface.create(typeface, style)
+        }
+
+        if (style != UNSET_STYLE) {
+            textPaint.isFakeBoldText = style == Typeface.BOLD
+        }
+
+        if (size != UNSET_SIZE) {
+            textPaint.textSize = size.toFloat()
         }
     }
 

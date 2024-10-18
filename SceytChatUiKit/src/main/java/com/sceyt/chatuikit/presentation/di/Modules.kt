@@ -18,10 +18,11 @@ internal val viewModelModule = module {
         MessageListViewModel(params.get(), params.get(), params.get())
     }
     viewModel { ChannelMembersViewModel(get(), get()) }
-    viewModel { ReactionsInfoViewModel() }
     viewModel(qualifier = ChannelInfoMediaViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
     viewModel(qualifier = ChannelInfoFilesViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
     viewModel(qualifier = ChannelInfoLinksViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
     viewModel(qualifier = ChannelInfoVoiceViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
+    viewModel { parameters -> ReactionsInfoViewModel(get(), messageId = parameters.get(), key = parameters.get()) }
+
 }
 

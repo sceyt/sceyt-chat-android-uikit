@@ -5,6 +5,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.Layout
@@ -18,9 +20,6 @@ import androidx.core.text.toSpannable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.google.android.material.imageview.ShapeableImageView
-import com.google.android.material.shape.AbsoluteCornerSize
-import com.google.android.material.shape.RelativeCornerSize
-import com.google.android.material.shape.ShapeAppearanceModel
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatDrawable
@@ -33,6 +32,7 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.common.applyTo
 import kotlin.math.abs
 
 class AvatarView @JvmOverloads constructor(
@@ -93,21 +93,7 @@ class AvatarView @JvmOverloads constructor(
     }
 
     private fun initShape(shape: Shape) {
-        shapeAppearanceModel = when (shape) {
-            Shape.Circle -> {
-                ShapeAppearanceModel()
-                    .toBuilder()
-                    .setAllCornerSizes(RelativeCornerSize(0.5f))
-                    .build()
-            }
-
-            is Shape.RoundedRectangle -> {
-                ShapeAppearanceModel()
-                    .toBuilder()
-                    .setAllCornerSizes(AbsoluteCornerSize(shape.radius))
-                    .build()
-            }
-        }
+        shape.applyTo(this)
     }
 
     override fun draw(canvas: Canvas) {
@@ -152,14 +138,25 @@ class AvatarView @JvmOverloads constructor(
         val paint = backgroundPaint.apply { this.color = color }
         when (val avatarShape = shape) {
             Shape.Circle -> {
-                if (shape == Shape.Circle) {
-                    canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), paint)
-                }
+                canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), paint)
             }
 
-            is Shape.RoundedRectangle -> {
-                val radius = avatarShape.radius
-                canvas.drawRoundRect(0f, 0f, width.toFloat(), height.toFloat(), radius, radius, paint)
+            is Shape.RoundedCornerShape -> {
+                val rect = RectF(0f, 0f, width.toFloat(), height.toFloat())
+                val radii = floatArrayOf(
+                    avatarShape.topLeft, avatarShape.topLeft,
+                    avatarShape.topRight, avatarShape.topRight,
+                    avatarShape.bottomRight, avatarShape.bottomRight,
+                    avatarShape.bottomLeft, avatarShape.bottomLeft
+                )
+                val path = Path().apply {
+                    addRoundRect(rect, radii, Path.Direction.CW)
+                }
+                canvas.drawPath(path, paint)
+            }
+
+            Shape.UnsetShape -> {
+                canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
             }
         }
     }

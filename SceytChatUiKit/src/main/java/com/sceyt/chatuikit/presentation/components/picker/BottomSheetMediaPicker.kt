@@ -57,7 +57,7 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     private var filterType: PickerFilterType = PickerFilterType.All
     private lateinit var style: MediaPickerStyle
     private val imagesAdapter by lazy {
-        MediaAdapter(initGalleryViewHolderFactory(), style)
+        MediaAdapter(initGalleryViewHolderFactory())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

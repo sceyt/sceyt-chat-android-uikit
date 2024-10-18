@@ -5,11 +5,18 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.extensions.findIndexed
 
-class ViewPagerAdapterReactedUsers(fragment: Fragment,
-                                   private val fragments: ArrayList<FragmentReactedUsers>) : FragmentStateAdapter(fragment) {
+class ViewPagerAdapterReactedUsers(
+        fragment: Fragment,
+        fragments: List<FragmentReactedUsers>
+) : FragmentStateAdapter(fragment) {
+    private val fragments = fragments.toMutableList()
 
     override fun getItemCount(): Int {
         return fragments.size
+    }
+
+    override fun containsItem(itemId: Long): Boolean {
+        return fragments.any { it.getKey().hashCode().toLong() == itemId }
     }
 
     override fun createFragment(position: Int): FragmentReactedUsers {
@@ -17,7 +24,7 @@ class ViewPagerAdapterReactedUsers(fragment: Fragment,
     }
 
     override fun getItemId(position: Int): Long {
-        return fragments[position].hashCode().toLong()
+        return fragments[position].getKey().hashCode().toLong()
     }
 
     fun removeFragment(key: String) {

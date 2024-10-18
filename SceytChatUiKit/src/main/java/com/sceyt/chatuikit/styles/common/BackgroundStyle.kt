@@ -8,7 +8,6 @@ import androidx.annotation.ColorInt
 import androidx.annotation.Px
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
-import com.sceyt.chatuikit.styles.StyleConstants.UNSET_CORNER_RADIUS
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
 
 data class BackgroundStyle(
@@ -16,8 +15,7 @@ data class BackgroundStyle(
         @ColorInt val backgroundColor: Int = UNSET_COLOR,
         @ColorInt val borderColor: Int = UNSET_COLOR,
         @Px val borderWidth: Int = UNSET_SIZE,
-        @Px val cornerRadius: Float = UNSET_CORNER_RADIUS,
-        val shape: Int = GradientDrawable.RECTANGLE
+        val shape: Shape = Shape.UnsetShape
 ) {
 
     fun apply(view: View) {
@@ -29,10 +27,7 @@ data class BackgroundStyle(
         }
 
         val background = GradientDrawable().apply {
-            shape = this@BackgroundStyle.shape
-
-            if (this@BackgroundStyle.cornerRadius != UNSET_CORNER_RADIUS)
-                cornerRadius = this@BackgroundStyle.cornerRadius
+            this@BackgroundStyle.shape.applyTo(this)
 
             if (borderWidth != UNSET_SIZE)
                 setStroke(borderWidth, borderColor)
@@ -53,10 +48,7 @@ data class BackgroundStyle(
             return
         }
 
-        if (cornerRadius != UNSET_CORNER_RADIUS)
-            button.shapeAppearanceModel = button.shapeAppearanceModel.toBuilder()
-                .setAllCornerSizes(cornerRadius)
-                .build()
+        shape.applyTo(button)
 
         if (backgroundColor != UNSET_COLOR)
             button.backgroundTintList = ColorStateList.valueOf(backgroundColor)
@@ -64,6 +56,6 @@ data class BackgroundStyle(
 
     private val shouldApplyStyle: Boolean
         get() = backgroundColor != UNSET_COLOR ||
-                cornerRadius != UNSET_CORNER_RADIUS || borderWidth != UNSET_SIZE ||
+                shape != Shape.UnsetShape || borderWidth != UNSET_SIZE ||
                 background != null
 }

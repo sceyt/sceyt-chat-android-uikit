@@ -13,11 +13,13 @@ import android.util.AttributeSet
 import android.util.Size
 import android.view.View
 import androidx.annotation.ColorInt
+import androidx.core.content.res.use
 import androidx.core.graphics.toColorInt
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.processEmojiCompat
+import com.sceyt.chatuikit.styles.common.TextStyle
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -32,16 +34,15 @@ class ReactionView @JvmOverloads constructor(
     private lateinit var smileTextPaint: TextPaint
     private lateinit var countTextPaint: TextPaint
     private lateinit var strokePaint: Paint
+    private lateinit var countTextStyle: TextStyle
     private var countMargin = 0
     private var innerPadding = 0
     private var innerPaddingVertical = 0
     private var innerPaddingHorizontal = 0
     private var strokeColor = "#CDCDCF".toColorInt()
-    private var countTetColor = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
     private var strikeWidth = 0
     private var cornerRadius = 30
     private var smileTextSize = 40
-    private var countTextSize = 30
     private var countTitle = ""
     private var mCountMargin = 0
     private var reactionBackgroundColor: Int = 0
@@ -56,8 +57,7 @@ class ReactionView @JvmOverloads constructor(
         }
 
     init {
-        attrs?.let {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.ReactionView)
+        context.obtainStyledAttributes(attrs, R.styleable.ReactionView).use { a ->
             innerPadding = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionInnerPadding, 0)
             if (innerPadding == 0) {
                 innerPaddingVertical = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionInnerPaddingVertical, 0)
@@ -66,8 +66,7 @@ class ReactionView @JvmOverloads constructor(
             reactionBackgroundColor = a.getColor(R.styleable.ReactionView_sceytUiReactionBackgroundColor, reactionBackgroundColor)
             countMargin = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionCountTextMargin, countMargin)
             smileTextSize = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionSmileTextSize, smileTextSize)
-            countTextSize = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionCountTextSize, countTextSize)
-            countTetColor = a.getColor(R.styleable.ReactionView_sceytUiReactionCountTextColor, countTetColor)
+
             strokeColor = a.getColor(R.styleable.ReactionView_sceytUiReactionStrokeColor, strokeColor)
             enableStroke = a.getBoolean(R.styleable.ReactionView_sceytUiReactionEnableStroke, enableStroke)
             if (enableStroke)
@@ -78,20 +77,33 @@ class ReactionView @JvmOverloads constructor(
             countTitle = a.getString(R.styleable.ReactionView_sceytUiReactionCountText)
                     ?: countTitle
             counterTextMinWidth = a.getDimensionPixelSize(R.styleable.ReactionView_sceytUiReactionCountTextMinWidth, 0)
-            a.recycle()
+
+            countTextStyle = TextStyle.Builder(a)
+                .setColor(
+                    index = R.styleable.ReactionView_sceytUiReactionCountTextColor,
+                    defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor)
+                )
+                .setSize(
+                    index = R.styleable.ReactionView_sceytUiReactionCountTextSize,
+                    defValue = 30
+                )
+                .setFont(
+                    index = R.styleable.ReactionView_sceytUiReactionCountTextFont
+                )
+                .setStyle(
+                    index = R.styleable.ReactionView_sceytUiReactionCountTextStyle
+                )
+                .build()
+
+            init()
         }
-        init()
     }
 
     private fun init() {
         smileTextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             textSize = smileTextSize.toFloat()
         }
-
-        countTextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            textSize = countTextSize.toFloat()
-            color = countTetColor
-        }
+        countTextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
 
         strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
@@ -100,9 +112,15 @@ class ReactionView @JvmOverloads constructor(
         }
 
         smileStaticLayout = getStaticLayout(smileTitle)
-        countTextBoundsRect = Rect()
-        countTextPaint.getTextBounds(countTitle, 0, countTitle.length, countTextBoundsRect)
+        initCountText()
+    }
 
+    private fun initCountText() {
+        countTextBoundsRect = Rect()
+        if (countTitle.isNotBlank()) {
+            countTextStyle.apply(context, countTextPaint)
+            countTextPaint.getTextBounds(countTitle, 0, countTitle.length, countTextBoundsRect)
+        }
         mCountMargin = if (countTitle.isBlank()) {
             0
         } else countMargin
@@ -185,48 +203,53 @@ class ReactionView @JvmOverloads constructor(
         invalidate()
     }
 
-    @Suppress("UNUSED")
-    fun setReactionStrokeColor(@ColorInt color: Int) {
+    fun setStroke(
+            @ColorInt color: Int = strokeColor,
+            width: Int = strikeWidth,
+            cornerRadius: Int = this.cornerRadius
+    ) {
         strokeColor = color
         strokePaint.color = color
+        strikeWidth = width
+        this.cornerRadius = cornerRadius
         invalidate()
     }
 
     @Suppress("UNUSED")
-    fun setReactionBgAndStrokeColor(@ColorInt bgColor: Int, @ColorInt colorStroke: Int) {
+    fun setBackgroundAndStrokeColor(@ColorInt bgColor: Int, @ColorInt colorStroke: Int) {
         reactionBackgroundColor = bgColor
         strokeColor = colorStroke
         strokePaint.color = colorStroke
         invalidate()
     }
 
-    fun setCountTextColor(@ColorInt color: Int) {
-        countTetColor = color
-        countTextPaint.color = color
+    fun setCountTextStyle(style: TextStyle) {
+        countTextStyle = style
+        initCountText()
         invalidate()
     }
 
     @Suppress("UNUSED")
-    fun setCount(count: Number) {
+    fun setCounterText(count: Number) {
         countTitle = count.toString()
-        init()
+        initCountText()
         requestLayout()
     }
 
-    fun setSmileText(smileText: String) {
+    fun setSmileText(smileText: CharSequence) {
         smileTitle = smileText
         init()
         requestLayout()
     }
 
-    fun setSmileText(smileText: String, disableCount: Boolean) {
+    fun setSmileText(smileText: CharSequence, disableCount: Boolean) {
         smileTitle = smileText
         if (disableCount) countTitle = ""
         init()
         requestLayout()
     }
 
-    fun setCountAndSmile(count: Number, smileText: String) {
+    fun setCountAndSmile(count: Number, smileText: CharSequence) {
         countTitle = count.toString()
         smileTitle = smileText
         init()

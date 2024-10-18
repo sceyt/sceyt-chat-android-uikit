@@ -76,7 +76,7 @@ internal fun MessagesListHeaderStyle.Builder.buildAvatarShape(
     val value = array.getInt(R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderAvatarShape, 0)
     val cornerRadius = array.getDimension(R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderAvatarCornerRadius, 0f)
     return if (value == 1) {
-        Shape.RoundedRectangle(cornerRadius)
+        Shape.RoundedCornerShape(cornerRadius)
     } else Shape.Circle
 }
 
