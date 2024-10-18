@@ -1,12 +1,11 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
 
-import android.view.Menu
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 
 internal class MessageActionBridge {
     var messagesListView: MessagesListView? = null
@@ -36,11 +35,13 @@ internal class MessageActionBridge {
         this.inputView = inputView
     }
 
-    fun showMessageActions(vararg selectedMessages: SceytMessage): Menu? {
+    fun showMessageActions(vararg selectedMessages: SceytMessage) {
         val messageActionListener = messagesListView?.messageActionsViewClickListeners
-                ?: return null
+                ?: return
         inputView?.getEventListeners()?.onMultiselectModeListener(true)
-        return headerView?.uiElementsListeners?.onShowMessageActionsMenu(*selectedMessages, menuResId = R.menu.sceyt_menu_message_actions) { it, actionFinish ->
+        val menuStyle = headerView?.style ?: return
+        headerView?.uiElementsListeners?.onShowMessageActionsMenu(*selectedMessages,
+            menuStyle = menuStyle.messageActionsMenuStyle) { it, actionFinish ->
             val firstMessage = selectedMessages.getOrNull(0)
             when (it.itemId) {
                 R.id.sceyt_edit_message -> firstMessage?.let { message ->

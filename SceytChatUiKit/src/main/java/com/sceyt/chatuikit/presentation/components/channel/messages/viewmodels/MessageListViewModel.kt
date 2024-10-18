@@ -375,8 +375,8 @@ class MessageListViewModel(
         _onEditMessageCommandLiveData.postValue(message)
     }
 
-    fun prepareToShowMessageActions(event: MessageCommandEvent.ShowHideMessageActions): Menu? {
-        return messageActionBridge.showMessageActions(event.message)
+    fun prepareToShowMessageActions(event: MessageCommandEvent.ShowHideMessageActions) {
+        messageActionBridge.showMessageActions(event.message)
     }
 
     fun prepareToShowSearchMessage(event: MessageCommandEvent.SearchMessages) {

@@ -10,6 +10,7 @@ import android.widget.FrameLayout
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.MenuRes
+import androidx.appcompat.widget.Toolbar
 import androidx.core.content.res.use
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
@@ -169,10 +170,18 @@ class CustomToolbar @JvmOverloads constructor(
         return binding.rootToolbar.menu
     }
 
+    fun getToolbar(): Toolbar {
+        return binding.rootToolbar
+    }
+
     fun setMenuClickListener(listener: (item: Int) -> Unit) {
         binding.rootToolbar.setOnMenuItemClickListener {
             listener.invoke(it.itemId)
             true
         }
+    }
+
+    fun setOverflowIcon(overflowIcon: Drawable) {
+        binding.rootToolbar.overflowIcon = overflowIcon
     }
 }

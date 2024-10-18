@@ -5,9 +5,10 @@ import android.view.MenuItem
 import android.widget.TextView
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.custom_views.AvatarView
-import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
+import com.sceyt.chatuikit.presentation.custom_views.AvatarView
+import com.sceyt.chatuikit.styles.common.MenuStyle
 
 open class HeaderUIElementsListenerImpl(view: MessagesListHeaderView) : HeaderUIElementsListener.ElementsListeners {
     private var defaultListeners: HeaderUIElementsListener.ElementsListeners = view
@@ -33,11 +34,13 @@ open class HeaderUIElementsListenerImpl(view: MessagesListHeaderView) : HeaderUI
         avatarListener?.onAvatar(avatar, channel, replyInThread)
     }
 
-    override fun onShowMessageActionsMenu(vararg messages: SceytMessage, menuResId: Int,
-                                          listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?): Menu? {
-        val menu = defaultListeners.onShowMessageActionsMenu(*messages, menuResId = menuResId, listener = listener)
-        return actionMenuListener?.onShowMessageActionsMenu(*messages, menuResId = menuResId, listener = listener)
-                ?: menu
+    override fun onShowMessageActionsMenu(
+            vararg messages: SceytMessage,
+            menuStyle: MenuStyle,
+            listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?,
+    ) {
+        defaultListeners.onShowMessageActionsMenu(*messages, menuStyle = menuStyle, listener = listener)
+        actionMenuListener?.onShowMessageActionsMenu(*messages, menuStyle = menuStyle, listener = listener)
     }
 
     override fun onHideMessageActionsMenu() {
