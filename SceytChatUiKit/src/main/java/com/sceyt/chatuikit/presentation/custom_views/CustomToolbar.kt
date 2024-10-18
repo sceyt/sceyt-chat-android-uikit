@@ -16,6 +16,7 @@ import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytCustomToolbarBinding
+import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.setIconsTint
@@ -28,11 +29,11 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 class CustomToolbar @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+        defStyleAttr: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr) {
 
     private lateinit var binding: SceytCustomToolbarBinding
-    private var navigationIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back)
+    private var navigationIcon: Drawable? = null
     private var title = ""
     private var subTitle = ""
     private var titleTextStyle: TextStyle
@@ -53,7 +54,9 @@ class CustomToolbar @JvmOverloads constructor(
         if (attrs != null) {
             context.obtainStyledAttributes(attrs, R.styleable.CustomToolbar).use { typedArray ->
                 navigationIcon = typedArray.getDrawable(R.styleable.CustomToolbar_sceytUiToolbarNavigationIcon)
-                        ?: navigationIcon
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back).applyTint(
+                            context.getCompatColor(SceytChatUIKitTheme.colors.accentColor)
+                        )
                 title = typedArray.getString(R.styleable.CustomToolbar_sceytUiToolbarTitle) ?: title
                 subTitle = typedArray.getString(R.styleable.CustomToolbar_sceytUiToolbarSubtitle)
                         ?: subTitle
