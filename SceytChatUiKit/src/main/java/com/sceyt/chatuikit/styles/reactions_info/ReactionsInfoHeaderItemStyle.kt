@@ -20,7 +20,6 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property backgroundColor Background color of the item, default is [Color.TRANSPARENT].
  * @property selectedBackgroundColor Background color of the item when it is selected, default is [Colors.accentColor].
  * @property borderColor Border color of the item, default is [Colors.borderColor].
- * @property selectedBorderColor Border color of the item when it is selected, default is [Color.TRANSPARENT].
  * @property borderWidth Border width of the item, default is 1dp.
  * @property cornerRadius Corner radius of the item, default is 30dp.
  * @property textStyle Style for the text in the item, default is [TextStyle].
@@ -30,7 +29,6 @@ data class ReactionsInfoHeaderItemStyle(
         @ColorInt val backgroundColor: Int,
         @ColorInt val selectedBackgroundColor: Int,
         @ColorInt val borderColor: Int,
-        @ColorInt val selectedBorderColor: Int,
         val borderWidth: Int,
         val cornerRadius: Int,
         val textStyle: TextStyle,
@@ -56,7 +54,6 @@ data class ReactionsInfoHeaderItemStyle(
                     backgroundColor = backgroundColor,
                     selectedBackgroundColor = selectedBackgroundColor,
                     borderColor = borderColor,
-                    selectedBorderColor = 0,
                     borderWidth = borderWidth,
                     cornerRadius = cornerRadius,
                     textStyle = buildTextStyle(array),
