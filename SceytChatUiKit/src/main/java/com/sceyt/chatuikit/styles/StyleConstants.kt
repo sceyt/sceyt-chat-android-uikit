@@ -1,6 +1,13 @@
 package com.sceyt.chatuikit.styles
 
+import android.graphics.Typeface
 import androidx.annotation.ColorInt
+import androidx.annotation.IntDef
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_STYLE
+
+@IntDef(value = [Typeface.NORMAL, Typeface.BOLD, Typeface.ITALIC, Typeface.BOLD_ITALIC, UNSET_STYLE])
+@Retention(AnnotationRetention.SOURCE)
+annotation class Style
 
 object StyleConstants {
     const val UNSET_SIZE = -1
@@ -23,7 +30,7 @@ object StyleConstants {
         return if (this == UNSET_RESOURCE) default else this
     }
 
-    fun Int.styleOrDefault(default: Int): Int {
+    fun Int.styleOrDefault(@Style default: Int): Int {
         return if (this == UNSET_STYLE) default else this
     }
 }

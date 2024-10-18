@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_CORNER_RADIUS
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
+import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
 import java.util.Date
 
@@ -72,7 +73,7 @@ data class DateSeparatorStyle(
             backgroundColor = backgroundColor,
             borderColor = borderColor,
             borderWidth = borderWidth,
-            cornerRadius = cornerRadius
+            shape = Shape.RoundedCornerShape(cornerRadius)
         )
     }
 }

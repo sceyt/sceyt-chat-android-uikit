@@ -67,9 +67,15 @@
         <attr name="sceytUiReactionInnerPadding" format="integer|dimension" />
         <attr name="sceytUiReactionInnerPaddingHorizontal" format="integer|dimension" />
         <attr name="sceytUiReactionInnerPaddingVertical" format="integer|dimension" />
-        <attr name="sceytUiReactionCountTextSize" format="integer|dimension" />
         <attr name="sceytUiReactionSmileTextSize" format="integer|dimension" />
+        <attr name="sceytUiReactionCountTextSize" format="integer|dimension" />
         <attr name="sceytUiReactionCountTextColor" format="color|reference" />
+        <attr name="sceytUiReactionCountTextFont" format="reference" />
+        <attr name="sceytUiReactionCountTextStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="bold" value="1" />
+            <enum name="italic" value="2" />
+        </attr>
         <attr name="sceytUiReactionCountTextMargin" format="integer|dimension" />
         <attr name="sceytUiReactionEnableStroke" format="boolean" />
         <attr name="sceytUiReactionStrokeColor" format="color|reference" />

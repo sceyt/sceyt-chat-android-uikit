@@ -10,6 +10,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_CORNER_RADIUS
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
+import com.sceyt.chatuikit.styles.common.Shape.RoundedCornerShape
 
 data class ButtonStyle(
         val textStyle: TextStyle = TextStyle(),
@@ -67,7 +68,7 @@ data class ButtonStyle(
                 backgroundColor = backgroundColor,
                 borderColor = borderColor,
                 borderWidth = borderWidth,
-                cornerRadius = cornerRadius
+                shape = RoundedCornerShape(cornerRadius)
             ),
             textStyle = textStyle
         )

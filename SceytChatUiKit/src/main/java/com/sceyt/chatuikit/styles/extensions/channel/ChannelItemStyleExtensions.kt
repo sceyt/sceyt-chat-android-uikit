@@ -287,7 +287,7 @@ internal fun ChannelItemStyle.Builder.buildAvatarShape(
     val value = array.getInt(R.styleable.ChannelListView_sceytUiChannelListAvatarShape, 0)
     val cornerRadius = array.getDimension(R.styleable.ChannelListView_sceytUiChannelListAvatarCornerRadius, 0f)
     return if (value == 1) {
-        Shape.RoundedRectangle(cornerRadius)
+        Shape.RoundedCornerShape(cornerRadius)
     } else Shape.Circle
 }
 

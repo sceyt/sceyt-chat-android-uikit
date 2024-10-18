@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.styles.common.CheckboxStyle
 import com.sceyt.chatuikit.styles.common.HintStyle
 import com.sceyt.chatuikit.styles.common.SearchInputStyle
 import com.sceyt.chatuikit.styles.common.SearchToolbarStyle
+import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
@@ -67,7 +68,7 @@ internal fun ForwardStyle.Builder.buildActionButtonStyle(
     ),
     backgroundStyle = BackgroundStyle(
         backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor),
-        cornerRadius = 6.dpToPx().toFloat()
+        shape = Shape.RoundedCornerShape(6.dpToPx().toFloat())
     )
 )
 
