@@ -21,7 +21,7 @@ data class ChannelDiff(
         val metadataUpdated: Boolean,
         val urlUpdated: Boolean,
         val pinStateChanged: Boolean,
-        val autoDeleteStateChanged: Boolean
+        val autoDeleteStateChanged: Boolean,
 ) {
     fun hasDifference(): Boolean {
         return subjectChanged || avatarViewChanged || lastMessageChanged || lastMessageStatusChanged ||
@@ -89,7 +89,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
         lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus,
         unreadCountChanged = newMessageCount != other.newMessageCount,
         muteStateChanged = muted != other.muted,
-        presenceStateChanged = isDirect() && firstMember?.user?.presence?.state != otherFirstMember?.user?.presence?.state,
+        presenceStateChanged = isDirect() && firstMember?.user?.presence != otherFirstMember?.user?.presence,
         markedUsUnreadChanged = unread != other.unread,
         lastReadMsdChanged = lastDisplayedMessageId != other.lastDisplayedMessageId,
         peerBlockedChanged = peerBlockedChanged,
