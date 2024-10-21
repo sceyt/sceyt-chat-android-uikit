@@ -172,7 +172,7 @@ open class CreateChannelDetailsFragment : Fragment() {
             URIValidationType.AlreadyTaken,
             URIValidationType.TooLong,
             URIValidationType.TooShort,
-            URIValidationType.InvalidCharacters -> R.color.sceyt_color_error
+            URIValidationType.InvalidCharacters -> R.color.sceyt_color_warning
 
             URIValidationType.FreeToUse -> R.color.sceyt_color_success
         }
@@ -234,6 +234,6 @@ open class CreateChannelDetailsFragment : Fragment() {
             requireContext().getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
         setTextViewsHintTextColorRes(listOf(inputSubject, inputUri, inputDescription),
             SceytChatUIKit.theme.colors.textFootnoteColor)
-        uriWarning.setTextColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.errorColor))
+        uriWarning.setTextColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.warningColor))
     }
 }

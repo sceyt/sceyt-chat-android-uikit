@@ -29,9 +29,9 @@
     <color name="sceyt_color_text_footnote">#A0A1B0</color>
 
     <!--State-->
-    <color name="sceyt_color_error">#FA4C56</color>
+    <color name="sceyt_color_warning">#FA4C56</color>
     <color name="sceyt_color_success">#24C383</color>
-    <color name="sceyt_color_warning">#FBB019</color>
+    <color name="sceyt_color_attention">#FBB019</color>
 
 
     <color name="sceyt_color_bg_out_message">#E3E7FF</color>

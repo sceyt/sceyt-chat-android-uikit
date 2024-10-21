@@ -109,11 +109,11 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
         setTextViewsDrawableColor(listOf(pin, unPin, clearHistory, report),
             context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
         setTextViewsDrawableColor(listOf(leaveChat, delete),
-            context.getCompatColor(SceytChatUIKit.theme.colors.errorColor))
+            context.getCompatColor(SceytChatUIKit.theme.colors.warningColor))
         setTextViewsTextColor(listOf(pin, unPin, clearHistory, report),
             context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
         setTextViewsTextColor(listOf(leaveChat, delete),
-            context.getCompatColor(SceytChatUIKit.theme.colors.errorColor))
+            context.getCompatColor(SceytChatUIKit.theme.colors.warningColor))
     }
 
     companion object {
