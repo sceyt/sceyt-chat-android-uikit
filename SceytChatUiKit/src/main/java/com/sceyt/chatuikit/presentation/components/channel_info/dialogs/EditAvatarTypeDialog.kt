@@ -68,6 +68,6 @@ class EditAvatarTypeDialog(
             context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
 
         setTextViewsTextColor(listOf(tvDelete),
-            context.getCompatColor(SceytChatUIKit.theme.colors.errorColor))
+            context.getCompatColor(SceytChatUIKit.theme.colors.warningColor))
     }
 }

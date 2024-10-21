@@ -116,8 +116,8 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
         setTextViewsTextColor(listOf(pin, unPin, blockUser, unBlockUser, clearHistory),
             context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
 
-        delete.setTextViewDrawableColor(context.getCompatColor(SceytChatUIKit.theme.colors.errorColor))
-        delete.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.errorColor))
+        delete.setTextViewDrawableColor(context.getCompatColor(SceytChatUIKit.theme.colors.warningColor))
+        delete.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.warningColor))
     }
 
     companion object {

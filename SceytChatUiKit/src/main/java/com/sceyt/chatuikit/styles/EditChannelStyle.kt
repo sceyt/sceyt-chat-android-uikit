@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
+import androidx.core.content.res.use
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTint
@@ -52,91 +53,93 @@ data class EditChannelStyle(
 
     internal class Builder(
             private val context: Context,
-            private val attributeSet: AttributeSet?
+            private val attributeSet: AttributeSet?,
     ) {
         fun build(): EditChannelStyle {
-            val backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.backgroundColor)
-            val dividerColor = context.getCompatColor(SceytChatUIKitTheme.colors.borderColor)
-            val avatarPlaceholder = context.getCompatDrawable(R.drawable.sceyt_ic_camera_72).applyTint(
-                context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
-            )
-            val toolbarStyle = ToolbarStyle(
-                backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.primaryColor),
-                underlineColor = context.getCompatColor(SceytChatUIKitTheme.colors.borderColor),
-                navigationIcon = context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back).applyTint(
-                    context.getCompatColor(SceytChatUIKitTheme.colors.accentColor)
-                ),
-                titleTextStyle = TextStyle(
-                    color = context.getCompatColor(R.color.sceyt_color_text_primary),
-                    font = R.font.roboto_medium
-                )
-            )
-
-            val avatarStyle = AvatarStyle(
-                avatarBackgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.overlayBackground2Color),
-            )
-
-            val subjectTextInputStyle = TextInputStyle(
-                textStyle = TextStyle(
-                    color = context.getCompatColor(SceytChatUIKitTheme.colors.textPrimaryColor)
-                ),
-                hintStyle = HintStyle(
-                    textColor = context.getCompatColor(SceytChatUIKitTheme.colors.textFootnoteColor),
-                    hint = context.getString(R.string.sceyt_hint_channel_subject)
-                )
-            )
-
-            val aboutTextInputStyle = TextInputStyle(
-                textStyle = TextStyle(
-                    color = context.getCompatColor(SceytChatUIKitTheme.colors.textPrimaryColor)
-                ),
-                hintStyle = HintStyle(
-                    textColor = context.getCompatColor(SceytChatUIKitTheme.colors.textFootnoteColor),
-                    hint = context.getString(R.string.sceyt_about)
-                )
-            )
-
-            val uriTextInputStyle = TextInputStyle(
-                textStyle = TextStyle(
-                    color = context.getCompatColor(SceytChatUIKitTheme.colors.textPrimaryColor)
-                ),
-                hintStyle = HintStyle(
-                    textColor = context.getCompatColor(SceytChatUIKitTheme.colors.textFootnoteColor),
-                    hint = "sceytchn1"
-                )
-            )
-
-            val uriValidationStyle = URIValidationStyle(
-                successTextStyle = TextStyle(
-                    color = context.getCompatColor(SceytChatUIKitTheme.colors.successColor)
-                ),
-                errorTextStyle = TextStyle(
-                    color = context.getCompatColor(SceytChatUIKitTheme.colors.errorColor)
-                ),
-                messageProvider = SceytChatUIKit.providers.channelURIValidationMessageProvider
-            )
-
-            val saveButtonStyle = ButtonStyle(
-                backgroundStyle = BackgroundStyle(
-                    backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.accentColor),
-                ),
-                icon = context.getCompatDrawable(R.drawable.sceyt_ic_save).applyTint(
+            context.obtainStyledAttributes(attributeSet, R.styleable.EditChannel).use {
+                val backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.backgroundColor)
+                val dividerColor = context.getCompatColor(SceytChatUIKitTheme.colors.borderColor)
+                val avatarPlaceholder = context.getCompatDrawable(R.drawable.sceyt_ic_camera_72).applyTint(
                     context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
                 )
-            )
+                val toolbarStyle = ToolbarStyle(
+                    backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.primaryColor),
+                    underlineColor = context.getCompatColor(SceytChatUIKitTheme.colors.borderColor),
+                    navigationIcon = context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back).applyTint(
+                        context.getCompatColor(SceytChatUIKitTheme.colors.accentColor)
+                    ),
+                    titleTextStyle = TextStyle(
+                        color = context.getCompatColor(R.color.sceyt_color_text_primary),
+                        font = R.font.roboto_medium
+                    )
+                )
 
-            return EditChannelStyle(
-                backgroundColor = backgroundColor,
-                dividerColor = dividerColor,
-                avatarPlaceholder = avatarPlaceholder,
-                toolbarStyle = toolbarStyle,
-                avatarStyle = avatarStyle,
-                subjectTextInputStyle = subjectTextInputStyle,
-                aboutTextInputStyle = aboutTextInputStyle,
-                uriTextInputStyle = uriTextInputStyle,
-                uriValidationStyle = uriValidationStyle,
-                saveButtonStyle = saveButtonStyle
-            ).let { styleCustomizer.apply(context, it) }
+                val avatarStyle = AvatarStyle(
+                    avatarBackgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.overlayBackground2Color),
+                )
+
+                val subjectTextInputStyle = TextInputStyle(
+                    textStyle = TextStyle(
+                        color = context.getCompatColor(SceytChatUIKitTheme.colors.textPrimaryColor)
+                    ),
+                    hintStyle = HintStyle(
+                        textColor = context.getCompatColor(SceytChatUIKitTheme.colors.textFootnoteColor),
+                        hint = context.getString(R.string.sceyt_hint_channel_subject)
+                    )
+                )
+
+                val aboutTextInputStyle = TextInputStyle(
+                    textStyle = TextStyle(
+                        color = context.getCompatColor(SceytChatUIKitTheme.colors.textPrimaryColor)
+                    ),
+                    hintStyle = HintStyle(
+                        textColor = context.getCompatColor(SceytChatUIKitTheme.colors.textFootnoteColor),
+                        hint = context.getString(R.string.sceyt_about)
+                    )
+                )
+
+                val uriTextInputStyle = TextInputStyle(
+                    textStyle = TextStyle(
+                        color = context.getCompatColor(SceytChatUIKitTheme.colors.textPrimaryColor)
+                    ),
+                    hintStyle = HintStyle(
+                        textColor = context.getCompatColor(SceytChatUIKitTheme.colors.textFootnoteColor),
+                        hint = "sceytchn1"
+                    )
+                )
+
+                val uriValidationStyle = URIValidationStyle(
+                    successTextStyle = TextStyle(
+                        color = context.getCompatColor(SceytChatUIKitTheme.colors.successColor)
+                    ),
+                    errorTextStyle = TextStyle(
+                        color = context.getCompatColor(SceytChatUIKitTheme.colors.warningColor)
+                    ),
+                    messageProvider = SceytChatUIKit.providers.channelURIValidationMessageProvider
+                )
+
+                val saveButtonStyle = ButtonStyle(
+                    backgroundStyle = BackgroundStyle(
+                        backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.accentColor),
+                    ),
+                    icon = context.getCompatDrawable(R.drawable.sceyt_ic_save).applyTint(
+                        context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
+                    )
+                )
+
+                return EditChannelStyle(
+                    backgroundColor = backgroundColor,
+                    dividerColor = dividerColor,
+                    avatarPlaceholder = avatarPlaceholder,
+                    toolbarStyle = toolbarStyle,
+                    avatarStyle = avatarStyle,
+                    subjectTextInputStyle = subjectTextInputStyle,
+                    aboutTextInputStyle = aboutTextInputStyle,
+                    uriTextInputStyle = uriTextInputStyle,
+                    uriValidationStyle = uriValidationStyle,
+                    saveButtonStyle = saveButtonStyle
+                ).let { styleCustomizer.apply(context, it) }
+            }
         }
     }
 }

@@ -109,8 +109,8 @@ open class ChannelActionsDialog(context: Context) : Dialog(context, R.style.Scey
         val texts = listOf(pin, unPin, markAsRead, markAsUnRead, mute, unMute)
         setTextViewsDrawableColor(texts, context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
         setTextViewsTextColor(texts, context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
-        setTextViewsDrawableColor(listOf(delete, leave), context.getCompatColor(SceytChatUIKit.theme.colors.errorColor))
-        setTextViewsTextColor(listOf(delete, leave), context.getCompatColor(SceytChatUIKit.theme.colors.errorColor))
+        setTextViewsDrawableColor(listOf(delete, leave), context.getCompatColor(SceytChatUIKit.theme.colors.warningColor))
+        setTextViewsTextColor(listOf(delete, leave), context.getCompatColor(SceytChatUIKit.theme.colors.warningColor))
     }
 
     companion object {

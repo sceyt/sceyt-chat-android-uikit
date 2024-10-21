@@ -221,7 +221,7 @@
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="16dp"
                 android:text="@string/log_out"
-                android:textColor="@color/sceyt_color_error"
+                android:textColor="@color/sceyt_color_warning"
                 android:textSize="@dimen/mediumTextSize"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="@id/switchNotifications"
