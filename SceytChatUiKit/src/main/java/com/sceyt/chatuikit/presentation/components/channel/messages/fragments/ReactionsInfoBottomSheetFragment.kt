@@ -191,7 +191,6 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
 
     private fun SceytBottomShetReactionsInfoBinding.applyStyle() {
         style.backgroundStyle.apply(root)
-        style.headerBackgroundStyle.apply(rvReactions)
         divider.dividerColor = style.dividerColor
     }
 

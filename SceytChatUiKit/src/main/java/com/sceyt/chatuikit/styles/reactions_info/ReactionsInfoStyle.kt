@@ -10,7 +10,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.Re
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.reaction_info.buildBackgroundStyle
-import com.sceyt.chatuikit.styles.extensions.reaction_info.buildHeaderBackgroundStyle
 import com.sceyt.chatuikit.theme.Colors
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
@@ -18,14 +17,12 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * Style for [ReactionsInfoBottomSheetFragment].
  * @property dividerColor Color of the divider between the header and the list of users, default is [Colors.borderColor].
  * @property backgroundStyle Style for the background of the view, default is [buildBackgroundStyle].
- * @property headerBackgroundStyle Style for the background of the header, default is [buildHeaderBackgroundStyle].
  * @property headerItemStyle Style for the header item.
  * @property reactedUserListStyle Style for the list of users who reacted to a message.
  * */
 data class ReactionsInfoStyle(
         @ColorInt val dividerColor: Int,
         val backgroundStyle: BackgroundStyle,
-        val headerBackgroundStyle: BackgroundStyle,
         val headerItemStyle: ReactionsInfoHeaderItemStyle,
         val reactedUserListStyle: ReactedUserListStyle
 ) {
@@ -44,7 +41,6 @@ data class ReactionsInfoStyle(
                 return ReactionsInfoStyle(
                     dividerColor = dividerColor,
                     backgroundStyle = buildBackgroundStyle(array),
-                    headerBackgroundStyle = buildHeaderBackgroundStyle(array),
                     headerItemStyle = ReactionsInfoHeaderItemStyle.Builder(context, attributeSet).build(),
                     reactedUserListStyle = ReactedUserListStyle.Builder(context, attributeSet).build()
                 ).let { styleCustomizer.apply(context, it) }
