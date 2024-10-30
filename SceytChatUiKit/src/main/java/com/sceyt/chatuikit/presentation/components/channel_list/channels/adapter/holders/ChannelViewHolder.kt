@@ -359,6 +359,7 @@ open class ChannelViewHolder(
     }
 
     private fun SceytItemChannelBinding.setChannelItemStyle() {
+        root.setBackgroundColor(itemStyle.backgroundColor)
         viewPinned.setBackgroundColor(itemStyle.pinnedChannelBackgroundColor)
         divider.setBackgroundColor(itemStyle.dividerColor)
         icAutoDeleted.setImageDrawable(itemStyle.autoDeletedChannelIcon)

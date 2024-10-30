@@ -45,6 +45,7 @@ import java.util.Date
 
 /**
  * Style for [ChannelItemStyle] component.
+ * @property backgroundColor - Background color of the channel item, default is [Color.TRANSPARENT].
  * @property pinnedChannelBackgroundColor - Background color of the pinned channel, default is [Colors.surface1Color].
  * @property dividerColor - Color of the divider, default is [Color.TRANSPARENT].
  * @property linkTextColor - Color of the link text, default is [R.color.sceyt_auto_link_color].
@@ -80,6 +81,7 @@ import java.util.Date
  * @property channelAvatarRenderer - Renderer for channel avatar, default is [SceytChatUIKitRenderers.channelAvatarRenderer].
  * */
 data class ChannelItemStyle(
+        @ColorInt val backgroundColor: Int,
         @ColorInt val pinnedChannelBackgroundColor: Int,
         @ColorInt val dividerColor: Int,
         @ColorInt val linkTextColor: Int,
@@ -112,7 +114,7 @@ data class ChannelItemStyle(
         val draftMessageBodyFormatter: Formatter<DraftMessageBodyFormatterAttributes>,
         val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
         val presenceStateColorProvider: VisualProvider<PresenceState, Int>,
-        val channelAvatarRenderer: AvatarRenderer<SceytChannel>
+        val channelAvatarRenderer: AvatarRenderer<SceytChannel>,
 ) {
 
     companion object {
@@ -122,10 +124,12 @@ data class ChannelItemStyle(
 
     internal class Builder(
             internal val context: Context,
-            private val attrs: AttributeSet?
+            private val attrs: AttributeSet?,
     ) {
         fun build(): ChannelItemStyle {
             context.obtainStyledAttributes(attrs, R.styleable.ChannelListView).use { array ->
+                val backgroundColor = array.getColor(R.styleable.ChannelListView_sceytUiChannelListItemBackgroundColor,
+                    Color.TRANSPARENT)
                 val pinnedChannelBackgroundColor = array.getColor(R.styleable.ChannelListView_sceytUiChannelListPinnedBackgroundColor,
                     context.getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
 
@@ -160,6 +164,7 @@ data class ChannelItemStyle(
                     dpToPx(16f))
 
                 return ChannelItemStyle(
+                    backgroundColor = backgroundColor,
                     pinnedChannelBackgroundColor = pinnedChannelBackgroundColor,
                     dividerColor = dividerColor,
                     linkTextColor = linkTextColor,
