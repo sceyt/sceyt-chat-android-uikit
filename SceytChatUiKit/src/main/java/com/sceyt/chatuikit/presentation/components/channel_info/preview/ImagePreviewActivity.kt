@@ -6,17 +6,21 @@ import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentPhotoPreviewBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.styles.ImagePreviewStyle
 
 class ImagePreviewActivity : AppCompatActivity() {
     private lateinit var binding: SceytFragmentPhotoPreviewBinding
+    private lateinit var style: ImagePreviewStyle
+    private lateinit var channel: SceytChannel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        style = ImagePreviewStyle.Builder(this, null).build()
         setContentView(SceytFragmentPhotoPreviewBinding.inflate(LayoutInflater.from(this)).also {
             binding = it
         }.root)
@@ -25,6 +29,7 @@ class ImagePreviewActivity : AppCompatActivity() {
         binding.applyStyle()
         initViews()
         getBundleArguments()
+        setDetails()
     }
 
     private fun initViews() {
@@ -34,30 +39,29 @@ class ImagePreviewActivity : AppCompatActivity() {
     }
 
     private fun getBundleArguments() {
-        val imagePath = requireNotNull(intent?.getStringExtra(IMAGE_PATH_KEY))
-        val toolbarTitle = intent?.getStringExtra(TOOLBAR_TITLE_KEY)
-        binding.toolbar.setTitle(toolbarTitle)
+        channel = requireNotNull(intent?.parcelable(CHANNEL))
+    }
+
+    private fun setDetails() {
+        binding.toolbar.setTitle(style.channelNameFormatter.format(this, channel))
 
         Glide.with(this)
-            .load(imagePath)
+            .load(channel.iconUrl)
             .transition(DrawableTransitionOptions.withCrossFade())
             .into(binding.imageView)
     }
 
     private fun SceytFragmentPhotoPreviewBinding.applyStyle() {
-        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
-        toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
+        root.setBackgroundColor(style.backgroundColor)
+        style.toolbarStyle.apply(toolbar)
     }
 
     companion object {
-        private var IMAGE_PATH_KEY = "image_path_key"
-        private var TOOLBAR_TITLE_KEY = "toolbar_title_key"
+        private var CHANNEL = "channel"
 
-        fun launchActivity(context: Context, imagePath: String, toolbarTitle: CharSequence?) {
+        fun launchActivity(context: Context, channel: SceytChannel) {
             context.launchActivity<ImagePreviewActivity> {
-                putExtra(IMAGE_PATH_KEY, imagePath)
-                putExtra(TOOLBAR_TITLE_KEY, toolbarTitle)
+                putExtra(CHANNEL, channel)
             }
         }
     }
