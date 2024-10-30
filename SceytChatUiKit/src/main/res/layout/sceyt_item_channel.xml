@@ -25,7 +25,8 @@
         android:layout_marginStart="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icAutoDeleted"
