@@ -12,11 +12,11 @@ import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.AttachmentDataProvider
 
 class AttachmentViewHolderHelper(itemView: View) {
     private var context: Context = itemView.context
-    private lateinit var fileItem: AttachmentDataItem
+    private lateinit var fileItem: AttachmentDataProvider
     val isFileItemInitialized get() = this::fileItem.isInitialized
     var blurredThumb: Drawable? = null
         private set
@@ -28,16 +28,16 @@ class AttachmentViewHolderHelper(itemView: View) {
         private set
 
 
-    fun bind(item: AttachmentDataItem, resizedImageSize: Size? = null) {
+    fun bind(item: AttachmentDataProvider, resizedImageSize: Size? = null) {
         if (isFileItemInitialized && item.thumbPath == null && !fileItem.thumbPath.isNullOrBlank()
-                && fileItem.file.messageTid == item.file.messageTid)
-            item.thumbPath = fileItem.thumbPath
+                && fileItem.attachment.messageTid == item.attachment.messageTid)
+            item.updateThumbPath(fileItem.thumbPath)
 
         this.resizedImageSize = resizedImageSize
         fileItem = item
         blurredThumb = item.blurredThumb?.toDrawable(context.resources)
         size = item.size
-        transferData = item.file.toTransferData()
+        transferData = item.attachment.toTransferData()
     }
 
     fun drawImageWithBlurredThumb(path: String?, imageView: ImageView) {
@@ -67,20 +67,25 @@ class AttachmentViewHolderHelper(itemView: View) {
 
     fun drawOriginalFile(imageView: ImageView) {
         if (isFileItemInitialized.not()) return
-        if (!fileItem.file.filePath.isNullOrBlank())
-            drawImageWithBlurredThumb(fileItem.file.filePath, imageView)
+        if (!fileItem.attachment.filePath.isNullOrBlank())
+            drawImageWithBlurredThumb(fileItem.attachment.filePath, imageView)
         else
             loadBlurThumb(blurredThumb, imageView)
     }
 
-    fun updateTransferData(data: TransferData, item: AttachmentDataItem, isValidThumb: (thumbData: ThumbData?) -> Boolean): Boolean {
-        if (isFileItemInitialized.not() || (data.messageTid != item.file.messageTid)) return false
+    fun updateTransferData(
+            data: TransferData,
+            item: AttachmentDataProvider,
+            isValidThumb: (thumbData: ThumbData?) -> Boolean,
+    ): Boolean {
+        if (data.messageTid != item.attachment.messageTid) return false
         if (data.state == TransferState.ThumbLoaded) {
-            if (isValidThumb(data.thumbData))
-                fileItem.thumbPath = data.filePath
+            if (isValidThumb(data.thumbData)) {
+                item.updateThumbPath(data.filePath)
+            }
         } else {
-            fileItem.file = fileItem.file.getUpdatedWithTransferData(data)
-            transferData = data
+            item.updateAttachment(item.attachment.getUpdatedWithTransferData(data))
+            item.updateTransferData(data)
         }
         return true
     }

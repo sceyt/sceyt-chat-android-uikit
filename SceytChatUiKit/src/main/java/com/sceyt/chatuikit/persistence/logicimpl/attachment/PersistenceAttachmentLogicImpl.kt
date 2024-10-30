@@ -361,7 +361,7 @@ internal class PersistenceAttachmentLogicImpl(
 
             transferData.find { it.payLoadEntity.messageTid == messageTid }?.let {
                 with(it.payLoadEntity) {
-                    transferState = this.transferState ?: TransferState.PendingDownload
+                    transferState = this.transferState
                     progress = this.progressPercent ?: 0f
                     filePath = this.filePath
                 }

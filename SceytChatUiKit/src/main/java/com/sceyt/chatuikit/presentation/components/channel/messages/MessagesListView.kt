@@ -18,6 +18,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -367,10 +368,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private fun updateItem(index: Int, item: MessageListItem, diff: MessageDiff) {
         val message = (item as? MessageItem)?.message ?: return
         (messagesRV.findViewHolderForItemId(item.getItemId()) as? BaseMessageViewHolder)?.let {
-            SceytLog.i("StatusIssueTag", "updateItem: found by itemId: ${item.getItemId()}, msgId-> ${message.id}, diff ${diff.statusChanged}, status ${message.deliveryStatus}")
+            SceytLog.i("StatusIssueTag", "updateItem: found by itemId: ${item.getItemId()}, " +
+                    "msgId-> ${message.id}, diff ${diff.statusChanged}, status ${message.deliveryStatus}")
             it.bind(item, diff)
         } ?: run {
-            SceytLog.i("StatusIssueTag", "updateItem: notifyItemChanged by index $index, diff ${diff.statusChanged}, msgId-> ${message.id}, status ${message.deliveryStatus}")
+            SceytLog.i("StatusIssueTag", "updateItem: notifyItemChanged by index $index, " +
+                    "diff ${diff.statusChanged}, msgId-> ${message.id}, status ${message.deliveryStatus}")
             messagesRV.adapter?.notifyItemChanged(index, diff)
         }
     }
@@ -510,20 +513,21 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                     attachment.url == data.url
                 }
             }
-            val foundAttachmentFile = item.message.files?.find { listItem -> predicate(listItem.file) }
+            val foundAttachmentFile = item.message.files?.find { listItem ->
+                predicate(listItem.attachment)
+            }
 
             if (data.state == ThumbLoaded) {
-                if (data.thumbData?.key == ThumbFor.MessagesLisView.value)
-                    foundAttachmentFile?.let { listItem ->
-                        listItem.thumbPath = data.filePath
-                    }
+                if (data.thumbData?.key == ThumbFor.MessagesLisView.value) {
+                    foundAttachmentFile?.updateThumbPath(data.filePath)
+                }
                 return
             } else {
                 for ((attachmentIndex, sceytAttachment) in attachments.withIndex()) {
                     if (predicate(sceytAttachment)) {
-                        val updatedAttachment = sceytAttachment.getUpdatedWithTransferData(data)
-                        attachments[attachmentIndex] = updatedAttachment
-                        foundAttachmentFile?.file = updatedAttachment
+                        val attachmentWithTransfer = sceytAttachment.getUpdatedWithTransferData(data)
+                        val updatedAttachment = foundAttachmentFile?.updateAttachment(attachmentWithTransfer)
+                        attachments[attachmentIndex] = updatedAttachment ?: attachmentWithTransfer
                         val updatedItem = item.copy(message = message.copy(attachments = attachments))
                         updateAdapterItemNotifyVisible(index, updatedItem)
                         break
@@ -537,6 +541,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
         }
 
+        // Update reply message
         if (data.state == TransferState.Downloaded) {
             messages.forEachIndexed { index, item ->
                 if (item is MessageItem && item.message.parentMessage?.tid == data.messageTid) {
@@ -866,16 +871,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage) {
-        when (item) {
-            is FileListItem.Image -> {
-                MediaPreviewActivity.launch(context, item.file, message.user, message.channelId)
+        when (item.type) {
+            AttachmentTypeEnum.Image -> {
+                MediaPreviewActivity.launch(context, item.attachment, message.user, message.channelId)
             }
 
-            is FileListItem.Video -> {
-                MediaPreviewActivity.launch(context, item.file, message.user, message.channelId)
+            AttachmentTypeEnum.Video -> {
+                MediaPreviewActivity.launch(context, item.attachment, message.user, message.channelId)
             }
 
-            else -> item.file.openFile(context)
+            else -> item.attachment.openFile(context)
         }
     }
 

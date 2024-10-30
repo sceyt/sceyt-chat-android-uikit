@@ -72,7 +72,7 @@ import com.sceyt.chatuikit.persistence.entity.user.UserMetadataEntity
     UserMarkerLink::class,
     AutoDeleteMessageEntity::class,
     UserMetadataEntity::class
-], version = 14, autoMigrations = [
+], version = 15, autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
     AutoMigration(from = 3, to = 4, spec = SceytDatabase.AutoMigrationSpec3to4::class),
@@ -85,7 +85,8 @@ import com.sceyt.chatuikit.persistence.entity.user.UserMetadataEntity
     AutoMigration(from = 10, to = 11, spec = SceytDatabase.AutoMigrationSpec10To11::class),
     AutoMigration(from = 11, to = 12),
     AutoMigration(from = 12, to = 13),
-    AutoMigration(from = 13, to = 14, spec = SceytDatabase.AutoMigrationSpec13To14::class)
+    AutoMigration(from = 13, to = 14, spec = SceytDatabase.AutoMigrationSpec13To14::class),
+    AutoMigration(from = 14, to = 15)
 ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)

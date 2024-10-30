@@ -101,7 +101,7 @@ open class ChannelInfoFilesFragment : Fragment, SceytKoinComponent, HistoryClear
             val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(
                 requireContext(), infoStyle, infoStyle.filesStyle.dateSeparatorStyle).also {
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                    item.file.openFile(requireContext())
+                    item.attachment.openFile(requireContext())
                 })
 
                 it.setClickListener(AttachmentClickListeners.AttachmentLoaderClickListener { _, item ->
@@ -119,7 +119,7 @@ open class ChannelInfoFilesFragment : Fragment, SceytKoinComponent, HistoryClear
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(recyclerView, dx, dy)
                         if (isLastItemDisplaying() && viewModel.canLoadPrev())
-                            loadMoreFilesList(adapter.getLastMediaItem()?.file?.id
+                            loadMoreFilesList(adapter.getLastMediaItem()?.attachment?.id
                                     ?: 0, adapter.getFileItems().size)
                     }
                 })

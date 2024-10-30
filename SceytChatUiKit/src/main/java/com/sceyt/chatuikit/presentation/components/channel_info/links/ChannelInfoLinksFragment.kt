@@ -125,7 +125,7 @@ open class ChannelInfoLinksFragment : Fragment, SceytKoinComponent, HistoryClear
                 it.setNeedMediaDataCallback { data -> viewModel.needMediaInfo(data) }
 
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                    onLinkClick(item.file.url)
+                    onLinkClick(item.attachment.url)
                 })
             }).also { mediaAdapter = it }
 
@@ -137,7 +137,7 @@ open class ChannelInfoLinksFragment : Fragment, SceytKoinComponent, HistoryClear
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(recyclerView, dx, dy)
                         if (isLastItemDisplaying() && viewModel.canLoadPrev()) {
-                            loadMoreLinksList(adapter.getLastMediaItem()?.file?.id ?: 0,
+                            loadMoreLinksList(adapter.getLastMediaItem()?.attachment?.id ?: 0,
                                 adapter.getFileItems().size)
                         }
                     }
@@ -152,8 +152,8 @@ open class ChannelInfoLinksFragment : Fragment, SceytKoinComponent, HistoryClear
 
     open fun onLinkPreview(previewDetails: LinkPreviewDetails) {
         val data = mediaAdapter?.getData() ?: return
-        data.findIndexed { it.isMediaItem() && it.file.url == previewDetails.link }?.let { (index, item) ->
-            item.file = item.file.copy(linkPreviewDetails = previewDetails)
+        data.findIndexed { it.isMediaItem() && it.attachment.url == previewDetails.link }?.let { (index, item) ->
+            item.updateAttachment(item.attachment.copy(linkPreviewDetails = previewDetails))
             mediaAdapter?.updateItemAt(index, item)
         }
     }

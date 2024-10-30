@@ -21,7 +21,6 @@ import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem.Companion.getData
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.ViewPagerAdapter.HistoryClearedListener
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ChannelAttachmentViewHolderFactory
@@ -148,7 +147,7 @@ open class ChannelInfoMediaFragment : Fragment, SceytKoinComponent, HistoryClear
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(recyclerView, dx, dy)
                         if (isLastItemDisplaying() && viewModel.canLoadPrev())
-                            loadMoreMediaList(adapter.getLastMediaItem()?.file?.id
+                            loadMoreMediaList(adapter.getLastMediaItem()?.attachment?.id
                                     ?: 0, adapter.getFileItems().size)
                     }
                 })
@@ -163,7 +162,7 @@ open class ChannelInfoMediaFragment : Fragment, SceytKoinComponent, HistoryClear
     }
 
     protected open fun onMediaClick(item: ChannelFileItem) {
-        item.getData()?.let { data ->
+        item.getItemData()?.let { data ->
             MediaPreviewActivity.launch(requireContext(), data.attachment, data.user, channel.id, true)
         }
     }

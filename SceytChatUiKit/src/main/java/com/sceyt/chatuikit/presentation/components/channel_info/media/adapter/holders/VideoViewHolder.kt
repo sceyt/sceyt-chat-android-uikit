@@ -55,7 +55,7 @@ class VideoViewHolder(
             }
 
             PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
                 viewHolderHelper.loadBlurThumb(imageView = binding.image)
             }
 

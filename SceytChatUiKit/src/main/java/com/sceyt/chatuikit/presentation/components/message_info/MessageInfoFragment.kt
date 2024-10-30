@@ -10,6 +10,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -192,16 +193,16 @@ open class MessageInfoFragment : Fragment {
     }
 
     protected open fun onAttachmentClick(item: FileListItem, message: SceytMessage) {
-        when (item) {
-            is FileListItem.Image -> {
-                MediaPreviewActivity.launch(requireContext(), item.file, message.user, message.channelId)
+        when (item.type) {
+            AttachmentTypeEnum.Image -> {
+                MediaPreviewActivity.launch(requireContext(), item.attachment, message.user, message.channelId)
             }
 
-            is FileListItem.Video -> {
-                MediaPreviewActivity.launch(requireContext(), item.file, message.user, message.channelId)
+            AttachmentTypeEnum.Video -> {
+                MediaPreviewActivity.launch(requireContext(), item.attachment, message.user, message.channelId)
             }
 
-            else -> item.file.openFile(requireContext())
+            else -> item.attachment.openFile(requireContext())
         }
     }
 

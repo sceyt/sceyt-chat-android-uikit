@@ -88,14 +88,14 @@ class OutVoiceMessageViewHolder(
             }
 
             playPauseButton.setOnClickListener {
-                onPlayPauseClick(fileItem.file)
+                onPlayPauseClick(fileItem.attachment)
             }
         }
     }
 
     override fun bind(item: MessageListItem, diff: MessageDiff) {
         super.bind(item, diff)
-        lastFilePath = fileItem.file.filePath
+        lastFilePath = fileItem.attachment.filePath
 
         with(binding) {
             val message = (item as MessageItem).message
@@ -137,7 +137,7 @@ class OutVoiceMessageViewHolder(
             override fun onProgressChanged(waveformSeekBar: WaveformSeekBar, progress: Float, fromUser: Boolean) {
                 if (fromUser) {
                     val seekPosition = progressToMediaPlayerPosition(progress, metaDuration)
-                    AudioPlayerHelper.seek(fileItem.file.filePath, seekPosition)
+                    AudioPlayerHelper.seek(fileItem.attachment.filePath, seekPosition)
                 }
             }
         }
@@ -146,12 +146,12 @@ class OutVoiceMessageViewHolder(
         seekBar.isEnabled = isPlaying
         playBackSpeed.isEnabled = isPlaying
 
-        if (AudioPlayerHelper.alreadyInitialized(fileItem.file.filePath ?: ""))
+        if (AudioPlayerHelper.alreadyInitialized(fileItem.attachment.filePath ?: ""))
             initAudioPlayer()
     }
 
     private fun checkIsPlayingAndSetState(): Boolean {
-        return if (AudioPlayerHelper.getCurrentPlayingAudioPath() == fileItem.file.filePath) {
+        return if (AudioPlayerHelper.getCurrentPlayingAudioPath() == fileItem.attachment.filePath) {
             val playBackPos = AudioPlayerHelper.getCurrentPlayer()?.getPlaybackPosition() ?: 0
             binding.voiceDuration.text = playBackPos.durationToMinSecShort()
             binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(playBackPos, fileItem.duration?.times(1000L)
@@ -256,7 +256,7 @@ class OutVoiceMessageViewHolder(
 
             PendingDownload -> {
                 binding.playPauseButton.setImageResource(0)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
             }
 
             Downloading, Uploading, Preparing, WaitingToUpload -> {
@@ -272,14 +272,14 @@ class OutVoiceMessageViewHolder(
     }
 
     private fun getPlayPauseItemResId(): Int {
-        val isPlaying = AudioPlayerHelper.isPlaying(fileItem.file.filePath ?: "")
+        val isPlaying = AudioPlayerHelper.isPlaying(fileItem.attachment.filePath ?: "")
         return if (isPlaying) R.drawable.sceyt_ic_pause else R.drawable.sceyt_ic_play
     }
 
     private fun checkIsValid(filePath: String?): Boolean {
         filePath ?: return false
         if (!viewHolderHelper.isFileItemInitialized) return false
-        return fileItem.file.filePath == filePath
+        return fileItem.attachment.filePath == filePath
     }
 
     override val loadingProgressView: CircularProgressView

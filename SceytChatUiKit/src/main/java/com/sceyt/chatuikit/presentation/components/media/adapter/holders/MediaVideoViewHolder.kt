@@ -155,7 +155,7 @@ class MediaVideoViewHolder(
             }
 
             PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
                 viewHolderHelper.loadBlurThumb(imageView = binding.icThumb)
             }
 
@@ -194,15 +194,15 @@ class MediaVideoViewHolder(
     }
 
     private fun initPlayerHelper(playVideo: Boolean = shouldPlayVideo()) {
-        if (!fileItem.file.filePath.isNullOrBlank()) {
+        if (!fileItem.attachment.filePath.isNullOrBlank()) {
             playerHelper = initPlayer()
-            playerHelper?.setMediaPath(fileItem.file.filePath, playVideo)
+            playerHelper?.setMediaPath(fileItem.attachment.filePath, playVideo)
             if (playVideo) initWakeLock()
         }
     }
 
     private fun shouldPlayVideo(): Boolean {
-        return mediaAdapter?.shouldPlayVideoPath == fileItem.file.filePath
+        return mediaAdapter?.shouldPlayVideoPath == fileItem.attachment.filePath
     }
 
     override fun needThumbFor() = ThumbFor.MediaPreview

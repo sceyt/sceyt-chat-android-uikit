@@ -56,7 +56,7 @@ class MediaImageViewHolder(
 
             PendingDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.imageView)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
             }
 
             Downloading -> {

@@ -21,8 +21,11 @@ import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
+import com.sceyt.chatuikit.persistence.mappers.getInfoFromMetadata
+import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
+import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItemType
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
@@ -125,19 +128,29 @@ class ChannelAttachmentsViewModel(
         var prevItem: AttachmentWithUserData? = null
 
         data.sortedByDescending { it.attachment.createdAt }.forEach { item ->
-            if (prevItem == null || !DateTimeUtil.isSameDay(prevItem?.attachment?.createdAt
+            val type = if (prevItem == null || !DateTimeUtil.isSameDay(prevItem?.attachment?.createdAt
                             ?: 0, item.attachment.createdAt)) {
-                fileItems.add(ChannelFileItem.MediaDate(item))
-            }
-            val fileItem: ChannelFileItem? = when (item.attachment.type) {
-                AttachmentTypeEnum.Video.value -> ChannelFileItem.Video(item)
-                AttachmentTypeEnum.Image.value -> ChannelFileItem.Image(item)
-                AttachmentTypeEnum.File.value -> ChannelFileItem.File(item)
-                AttachmentTypeEnum.Voice.value -> ChannelFileItem.Voice(item)
-                AttachmentTypeEnum.Link.value -> ChannelFileItem.Link(item)
+
+                ChannelFileItemType.MediaDate
+            } else when (item.attachment.type) {
+                AttachmentTypeEnum.Video.value -> ChannelFileItemType.Video
+                AttachmentTypeEnum.Image.value -> ChannelFileItemType.Image
+                AttachmentTypeEnum.File.value -> ChannelFileItemType.File
+                AttachmentTypeEnum.Voice.value -> ChannelFileItemType.Voice
+                AttachmentTypeEnum.Link.value -> ChannelFileItemType.Link
                 else -> null
             }
-            fileItem?.let { fileItems.add(it) }
+
+            if (type != null) {
+                fileItems.add(ChannelFileItem.Item(
+                    data = item,
+                    type = type,
+                    _metadataPayload = item.attachment.getInfoFromMetadata(),
+                    _thumbPath = null,
+                    _transferData = item.attachment.toTransferData()
+                ))
+
+            }
             prevItem = item
         }
 
@@ -226,15 +239,14 @@ class ChannelAttachmentsViewModel(
 
     fun pauseOrResumeUpload(item: ChannelFileItem, channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            if (item.isFileItemInitialized)
-                prepareToPauseOrResumeUpload(item.file, channelId)
+            prepareToPauseOrResumeUpload(item.attachment, channelId)
         }
     }
 
     fun observeToUpdateAfterOnResume(fragment: Fragment) {
         FileTransferHelper.onTransferUpdatedLiveData.asFlow().onEach {
             viewModelScope.launch(Dispatchers.Default) {
-                if (!fragment.isResumed)
+                if (!fragment.isResumed && it.state != TransferState.Downloading && it.state != TransferState.Uploading)
                     needToUpdateTransferAfterOnResume[it.messageTid] = it
             }
         }.launchIn(viewModelScope)

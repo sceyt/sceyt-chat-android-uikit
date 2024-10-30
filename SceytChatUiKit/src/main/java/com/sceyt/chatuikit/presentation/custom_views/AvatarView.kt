@@ -108,7 +108,7 @@ class AvatarView @JvmOverloads constructor(
             } else {
                 // If default avatar is DefaultAvatar.Initial then drawDefaultImage
                 // will draw the initials and background,
-                // otherwise we should tyr to draw the avatarBackgroundColor
+                // otherwise we should try to draw the avatarBackgroundColor
                 if (default !is DefaultAvatar.Initial)
                     drawBackgroundColor(canvas, avatarBackgroundColor)
 

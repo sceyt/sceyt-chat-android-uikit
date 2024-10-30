@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fi
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.databinding.SceytMessageFileItemBinding
 import com.sceyt.chatuikit.databinding.SceytMessageImageItemBinding
 import com.sceyt.chatuikit.databinding.SceytMessageVideoItemBinding
@@ -11,9 +12,11 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
-class FilesViewHolderFactory(context: Context,
-                             private val messageListeners: MessageClickListeners.ClickListeners?,
-                             private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) {
+class FilesViewHolderFactory(
+        context: Context,
+        private val messageListeners: MessageClickListeners.ClickListeners?,
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+) {
 
     private val layoutInflater = LayoutInflater.from(context)
     private lateinit var style: MessageItemStyle
@@ -22,7 +25,7 @@ class FilesViewHolderFactory(context: Context,
         this.style = style
     }
 
-    fun createViewHolder(parent: ViewGroup, viewType: Int): BaseMessageFileViewHolder<FileListItem> {
+    fun createViewHolder(parent: ViewGroup, viewType: Int): BaseMessageFileViewHolder {
         return when (viewType) {
             FileViewType.File.ordinal -> {
                 MessageFileViewHolder(SceytMessageFileItemBinding.inflate(layoutInflater, parent, false),
@@ -39,16 +42,18 @@ class FilesViewHolderFactory(context: Context,
                     style, messageListeners, needMediaDataCallback)
             }
 
-            else -> throw RuntimeException("Not supported view type")
+            else ->  {
+                MessageFileViewHolder(SceytMessageFileItemBinding.inflate(layoutInflater, parent, false),
+                    style, messageListeners, needMediaDataCallback)
+            }
         }
     }
 
     fun getItemViewType(item: FileListItem): Int {
-        return when (item) {
-            is FileListItem.File -> FileViewType.File.ordinal
-            is FileListItem.Image -> FileViewType.Image.ordinal
-            is FileListItem.Video -> FileViewType.Video.ordinal
-            else -> throw RuntimeException("Not supported view type")
+        return when (item.type) {
+            AttachmentTypeEnum.Image -> FileViewType.Image.ordinal
+            AttachmentTypeEnum.Video -> FileViewType.Video.ordinal
+            else -> AttachmentTypeEnum.File.ordinal
         }
     }
 
