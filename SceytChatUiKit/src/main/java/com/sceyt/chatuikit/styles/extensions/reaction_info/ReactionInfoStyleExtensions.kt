@@ -29,12 +29,6 @@ internal fun ReactionsInfoStyle.Builder.buildBackgroundStyle(
     )
 }
 
-internal fun ReactionsInfoStyle.Builder.buildHeaderBackgroundStyle(
-        array: TypedArray
-): BackgroundStyle {
-    return BackgroundStyle()
-}
-
 internal fun ReactionsInfoHeaderItemStyle.Builder.buildTextStyle(
         array: TypedArray
 ) = TextStyle(
