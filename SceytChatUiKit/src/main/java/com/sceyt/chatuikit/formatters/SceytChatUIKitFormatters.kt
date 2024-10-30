@@ -23,6 +23,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultMessageBodyWithAttachments
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageDateSeparatorFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageInfoDateFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultMessageMarkerDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageViewCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
@@ -107,6 +108,10 @@ class SceytChatUIKitFormatters {
 
     var messageDateSeparatorFormatter: Formatter<Date> by lazyVar {
         DefaultMessageDateSeparatorFormatter()
+    }
+
+    var messageMarkerDateFormatter: Formatter<Date> by lazyVar {
+        DefaultMessageMarkerDateFormatter()
     }
 
     var channelInfoAttachmentDateFormatter: Formatter<Date> by lazyVar {

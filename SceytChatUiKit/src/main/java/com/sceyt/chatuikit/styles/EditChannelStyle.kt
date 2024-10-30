@@ -69,7 +69,7 @@ data class EditChannelStyle(
                         context.getCompatColor(SceytChatUIKitTheme.colors.accentColor)
                     ),
                     titleTextStyle = TextStyle(
-                        color = context.getCompatColor(R.color.sceyt_color_text_primary),
+                        color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
                         font = R.font.roboto_medium
                     )
                 )

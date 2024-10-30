@@ -23,7 +23,7 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
 
 internal fun ForwardStyle.Builder.buildSearchInputStyle(
-        array: TypedArray
+        array: TypedArray,
 ) = SearchInputStyle(
     searchIcon = context.getCompatDrawable(R.drawable.sceyt_ic_search).applyTint(
         context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
@@ -43,7 +43,7 @@ internal fun ForwardStyle.Builder.buildSearchInputStyle(
 )
 
 internal fun ForwardStyle.Builder.buildSearchToolbarStyle(
-        array: TypedArray
+        array: TypedArray,
 ) = SearchToolbarStyle(
     toolbarStyle = ToolbarStyle(
         backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.primaryColor),
@@ -52,7 +52,7 @@ internal fun ForwardStyle.Builder.buildSearchToolbarStyle(
             context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
         ),
         titleTextStyle = TextStyle(
-            color = context.getCompatColor(R.color.sceyt_color_text_primary),
+            color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
             font = R.font.roboto_medium
         )
     ),
@@ -60,7 +60,7 @@ internal fun ForwardStyle.Builder.buildSearchToolbarStyle(
 )
 
 internal fun ForwardStyle.Builder.buildActionButtonStyle(
-        array: TypedArray
+        array: TypedArray,
 ) = ButtonStyle(
     textStyle = TextStyle(
         color = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor),
@@ -73,7 +73,7 @@ internal fun ForwardStyle.Builder.buildActionButtonStyle(
 )
 
 internal fun ForwardStyle.Builder.buildChannelItemStyle(
-        array: TypedArray
+        array: TypedArray,
 ) = ForwardChannelItemStyle(
     dividerColor = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor),
     checkboxStyle = CheckboxStyle.default(context),

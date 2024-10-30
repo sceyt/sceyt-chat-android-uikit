@@ -24,6 +24,8 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import com.sceyt.chatuikit.theme.Colors
 import java.util.Date
 
+typealias MessageInfoItemStyle = ListItemStyle<Formatter<SceytUser>, Formatter<Date>, AvatarRenderer<SceytUser>>
+
 /**
  * Style for [MessageInfoFragment].
  * @property backgroundColor Background color of the fragment, default is [Colors.backgroundColor]
@@ -56,10 +58,10 @@ data class MessageInfoStyle(
         val toolbarStyle: ToolbarStyle,
         val messageItemStyle: MessageItemStyle,
         val avatarStyle: AvatarStyle,
-        val listItemStyle: ListItemStyle<Formatter<SceytUser>, Formatter<Date>, AvatarRenderer<SceytUser>>,
+        val listItemStyle: MessageInfoItemStyle,
         val messageDateFormatter: Formatter<Date>,
         val attachmentSizeFormatter: Formatter<SceytAttachment>,
-        val markerTitleProvider: VisualProvider<MarkerType, String>
+        val markerTitleProvider: VisualProvider<MarkerType, String>,
 ) {
 
     companion object {
@@ -68,7 +70,7 @@ data class MessageInfoStyle(
 
     internal class Builder(
             private val context: Context,
-            private val messageItemStyle: MessageItemStyle
+            private val messageItemStyle: MessageItemStyle,
     ) {
         fun build(): MessageInfoStyle {
 
@@ -93,18 +95,18 @@ data class MessageInfoStyle(
                     context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
                 ),
                 titleTextStyle = TextStyle(
-                    color = context.getCompatColor(R.color.sceyt_color_text_primary),
+                    color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
                     font = R.font.roboto_medium
                 )
             )
 
             val userNameTextStyle = TextStyle(
-                color = context.getCompatColor(R.color.sceyt_color_text_primary),
+                color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
                 font = R.font.roboto_regular
             )
 
             val dateTextStyle = TextStyle(
-                color = context.getCompatColor(R.color.sceyt_color_text_primary),
+                color = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor),
                 font = R.font.roboto_regular
             )
 
@@ -112,7 +114,7 @@ data class MessageInfoStyle(
                 titleTextStyle = userNameTextStyle,
                 subtitleTextStyle = dateTextStyle,
                 titleFormatter = SceytChatUIKit.formatters.userNameFormatter,
-                subtitleFormatter = SceytChatUIKit.formatters.messageDateFormatter,
+                subtitleFormatter = SceytChatUIKit.formatters.messageMarkerDateFormatter,
                 avatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer
             )
 

@@ -21,7 +21,7 @@ internal fun ImagePreviewStyle.Builder.buildToolbarStyle(
         context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     ),
     titleTextStyle = TextStyle(
-        color = context.getCompatColor(R.color.sceyt_color_text_primary),
+        color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
         font = R.font.roboto_medium
     )
 )
