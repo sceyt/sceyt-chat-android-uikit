@@ -108,19 +108,20 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
     ChannelsCache.channelUpdatedFlow.onEach { data ->
         if (!lifecycleOwner.isResumed())
             needToUpdateChannelsAfterResume[data.channel.id] = data
-
-        lifecycleOwner.lifecycleScope.launch {
-            val isCanceled = channelListView.cancelLastSort()
-            val diff = channelListView.channelUpdated(data.channel)
-            if (diff != null) {
-                if (diff.lastMessageChanged || data.needSorting || isCanceled)
-                    channelListView.sortChannelsBy(SceytChatUIKit.config.channelListOrder)
-                SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body} draft:${data.channel.draftMessage?.body}  unreadCount ${data.channel.newMessageCount}" +
-                        " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${diff.hasDifference()} lastMessageChanged: ${diff.lastMessageChanged} needSorting: ${data.needSorting}")
-            } else {
-                SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body}  unreadCount ${data.channel.newMessageCount}" +
-                        " isResumed ${lifecycleOwner.isResumed()} but started getChannels ")
-                getChannels(0, query = searchQuery)
+        else {
+            lifecycleOwner.lifecycleScope.launch {
+                val isCanceled = channelListView.cancelLastSort()
+                val diff = channelListView.channelUpdated(data.channel)
+                if (diff != null) {
+                    if (diff.lastMessageChanged || data.needSorting || isCanceled)
+                        channelListView.sortChannelsBy(SceytChatUIKit.config.channelListOrder)
+                    SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body} draft:${data.channel.draftMessage?.body}  unreadCount ${data.channel.newMessageCount}" +
+                            " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${diff.hasDifference()} lastMessageChanged: ${diff.lastMessageChanged} needSorting: ${data.needSorting}")
+                } else {
+                    SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body}  unreadCount ${data.channel.newMessageCount}" +
+                            " isResumed ${lifecycleOwner.isResumed()} but started getChannels ")
+                    getChannels(0, query = searchQuery)
+                }
             }
         }
     }.launchIn(viewModelScope)
