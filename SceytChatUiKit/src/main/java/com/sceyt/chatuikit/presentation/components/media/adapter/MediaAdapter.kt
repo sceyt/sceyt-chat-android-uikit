@@ -61,8 +61,8 @@ class MediaAdapter(
     fun addPrevItems(data: List<MediaItem>) {
         if (data.isEmpty()) return
         val items = data.toArrayList()
-        if (attachments.size == 1 && attachments[0].file.id == 0L) {
-            items.find { it.file.url == attachments[0].file.url }?.let {
+        if (attachments.size == 1 && attachments[0].attachment.id == 0L) {
+            items.find { it.attachment.url == attachments[0].attachment.url }?.let {
                 items.remove(it)
             }
         }

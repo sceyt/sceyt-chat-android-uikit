@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.extensions.setProgressColor
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
+import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItemType
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.holders.ChannelMediaDateSeparatorViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.holders.FileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.holders.ImageViewHolder
@@ -29,7 +30,7 @@ import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 open class ChannelAttachmentViewHolderFactory(
         context: Context,
         val style: ChannelInfoStyle,
-        val dateSeparatorStyle: ChannelInfoDateSeparatorStyle
+        val dateSeparatorStyle: ChannelInfoDateSeparatorStyle,
 ) {
     protected val layoutInflater = LayoutInflater.from(context)
     protected var clickListeners = AttachmentClickListenersImpl()
@@ -96,13 +97,17 @@ open class ChannelAttachmentViewHolderFactory(
 
     open fun getItemViewType(item: ChannelFileItem): Int {
         return when (item) {
-            is ChannelFileItem.Image -> ItemType.Image.ordinal
-            is ChannelFileItem.Video -> ItemType.Video.ordinal
-            is ChannelFileItem.File -> ItemType.File.ordinal
-            is ChannelFileItem.Voice -> ItemType.Voice.ordinal
-            is ChannelFileItem.Link -> ItemType.Link.ordinal
-            is ChannelFileItem.MediaDate -> ItemType.MediaDate.ordinal
             is ChannelFileItem.LoadingMoreItem -> ItemType.Loading.ordinal
+            is ChannelFileItem.Item -> {
+                when (item.type) {
+                    ChannelFileItemType.Image -> ItemType.Image.ordinal
+                    ChannelFileItemType.Video -> ItemType.Video.ordinal
+                    ChannelFileItemType.File -> ItemType.File.ordinal
+                    ChannelFileItemType.Voice -> ItemType.Voice.ordinal
+                    ChannelFileItemType.Link -> ItemType.Link.ordinal
+                    ChannelFileItemType.MediaDate -> ItemType.MediaDate.ordinal
+                }
+            }
         }
     }
 

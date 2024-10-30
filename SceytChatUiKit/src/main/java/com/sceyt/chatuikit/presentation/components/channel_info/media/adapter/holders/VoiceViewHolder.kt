@@ -41,7 +41,7 @@ class VoiceViewHolder(
         }
 
         binding.icFile.setOnClickListener {
-            val path = fileItem.file.filePath ?: return@setOnClickListener
+            val path = fileItem.attachment.filePath ?: return@setOnClickListener
             if (AudioPlayerHelper.alreadyInitialized(path)) {
                 AudioPlayerHelper.toggle(path)
             } else initAudioPlayer()
@@ -50,15 +50,15 @@ class VoiceViewHolder(
 
     override fun bind(item: ChannelFileItem) {
         super.bind(item)
-        val attachment = item.file
+        val attachment = item.attachment
 
         lastFilePath = attachment.filePath
 
-        if (AudioPlayerHelper.alreadyInitialized(fileItem.file.filePath ?: ""))
+        if (AudioPlayerHelper.alreadyInitialized(fileItem.attachment.filePath ?: ""))
             initAudioPlayer()
 
         with(binding) {
-            val user = (item as ChannelFileItem.Voice).data.user
+            val user = item.getItemData()?.user
             tvUserName.text = user?.let {
                 style.userNameFormatter.format(context, it)
             } ?: ""
@@ -70,7 +70,7 @@ class VoiceViewHolder(
     }
 
     private fun initAudioPlayer() {
-        val path = fileItem.file.filePath ?: return
+        val path = fileItem.attachment.filePath ?: return
         AudioPlayerHelper.init(path, object : OnAudioPlayer {
             override fun onInitialized(alreadyInitialized: Boolean, player: AudioPlayer, filePath: String) {
                 if (!checkIsValid(filePath)) return
@@ -125,7 +125,7 @@ class VoiceViewHolder(
 
         when (data.state) {
             TransferState.PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
                 binding.icFile.setImageResource(0)
             }
 
@@ -150,7 +150,7 @@ class VoiceViewHolder(
     private fun checkIsValid(filePath: String?): Boolean {
         filePath ?: return false
         if (!viewHolderHelper.isFileItemInitialized) return false
-        return fileItem.file.filePath == filePath
+        return fileItem.attachment.filePath == filePath
     }
 
     private fun setVoiceDuration() {

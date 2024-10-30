@@ -204,11 +204,15 @@ internal class FileTransferLogicImpl(
         } else {
             preparingThumbsMap[messageTid] = messageTid
             val result = getAttachmentThumbPath(context, attachment, size)
-            if (result.isSuccess)
+            if (result.isSuccess) {
                 result.getOrNull()?.let { path ->
                     thumbPaths[thumbKey] = ThumbPathsData(messageTid, path, size)
                     task.thumbCallback?.onThumb(path, thumbData)
                 }
+            } else {
+                SceytLog.e(TAG, "Couldn't get a thumb for messageTid: $messageTid," +
+                        " path:${attachment.filePath} with reason ${result.exceptionOrNull()}")
+            }
         }
         preparingThumbsMap.remove(messageTid)
     }
@@ -454,9 +458,11 @@ internal class FileTransferLogicImpl(
         preparingThumbsMap.clear()
     }
 
-    data class ThumbPathsData(val messageTid: Long,
-                              val path: String,
-                              val size: Size)
+    data class ThumbPathsData(
+            val messageTid: Long,
+            val path: String,
+            val size: Size
+    )
 
     data class ShareFilesData(
             val originalPath: String,

@@ -42,6 +42,7 @@ import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaFilesViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
+import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItemType
 import com.sceyt.chatuikit.presentation.components.media.dialogs.ActionDialog
 import com.sceyt.chatuikit.presentation.components.media.viewmodel.MediaViewModel
 import com.sceyt.chatuikit.styles.MediaPreviewStyle
@@ -157,12 +158,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
             return
         } else {
             val mediaFiles = arrayListOf<MediaItem>()
-
-            val mediaItem = when (attachment.type) {
-                AttachmentTypeEnum.Image.value -> MediaItem.Image(AttachmentWithUserData(attachment, user))
-                AttachmentTypeEnum.Video.value -> MediaItem.Video(AttachmentWithUserData(attachment, user))
-                else -> null
-            }
+            val mediaItem = viewModel.toMediaItem(AttachmentWithUserData(attachment, user))
             if (mediaItem != null) {
                 mediaFiles.add(mediaItem)
                 loadMediaDetail(mediaItem)
@@ -316,10 +312,10 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     protected open fun share(item: MediaItem) {
-        val fileTypeTitle = if (item is MediaItem.Image) getString(R.string.sceyt_image) else getString(R.string.sceyt_video)
-        item.file.filePath?.let { path ->
+        val fileTypeTitle = if (item.type == MediaItemType.Image) getString(R.string.sceyt_image) else getString(R.string.sceyt_video)
+        item.attachment.filePath?.let { path ->
             File(path).let {
-                val mimeType = getMimeTypeFrom(item.file)
+                val mimeType = getMimeTypeFrom(item.attachment)
                 ShareCompat.IntentBuilder(this)
                     .setStream(getFileUriWithProvider(it))
                     .setType(mimeType)
@@ -340,7 +336,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     protected open fun save(item: MediaItem) {
-        val file = item.file
+        val file = item.attachment
         val mimeType = getMimeTypeFrom(file)
 
         saveToGallery(

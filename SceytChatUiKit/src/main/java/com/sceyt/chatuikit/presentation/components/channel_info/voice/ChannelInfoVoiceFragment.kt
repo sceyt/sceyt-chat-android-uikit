@@ -113,7 +113,7 @@ open class ChannelInfoVoiceFragment : Fragment, SceytKoinComponent, HistoryClear
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(recyclerView, dx, dy)
                         if (isLastItemDisplaying() && viewModel.canLoadPrev())
-                            loadMoreFilesList(adapter.getLastMediaItem()?.file?.id ?: 0,
+                            loadMoreFilesList(adapter.getLastMediaItem()?.attachment?.id ?: 0,
                                 adapter.getFileItems().size)
                     }
                 })

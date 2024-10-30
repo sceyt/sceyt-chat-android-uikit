@@ -40,9 +40,9 @@ open class MediaFilesViewHolderFactory(
     }
 
     open fun getItemViewType(item: MediaItem): Int {
-        return when (item) {
-            is MediaItem.Image -> ItemType.Image.ordinal
-            is MediaItem.Video -> ItemType.Video.ordinal
+        return when (item.type) {
+            MediaItemType.Image -> ItemType.Image.ordinal
+            MediaItemType.Video -> ItemType.Video.ordinal
         }
     }
 

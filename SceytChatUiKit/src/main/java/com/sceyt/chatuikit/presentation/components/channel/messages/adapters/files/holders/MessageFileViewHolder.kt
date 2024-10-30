@@ -34,7 +34,7 @@ class MessageFileViewHolder(
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMessageFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
+) : BaseMessageFileViewHolder(binding.root, needMediaDataCallback) {
 
     init {
         binding.applyStyle()
@@ -55,19 +55,19 @@ class MessageFileViewHolder(
 
     override fun bind(item: FileListItem, message: SceytMessage) {
         super.bind(item, message)
-        val file = (item as? FileListItem.File)?.file ?: return
+        val attachment = item.attachment
         setListener()
 
         with(binding) {
-            tvFileName.text = file.name
-            loadProgress.release(file.progressPercent)
-            tvFileSize.text = file.fileSize.toPrettySize()
+            tvFileName.text = attachment.name
+            loadProgress.release(attachment.progressPercent)
+            tvFileSize.text = attachment.fileSize.toPrettySize()
         }
 
         viewHolderHelper.transferData?.let {
             updateState(it)
             if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(attachment))
         }
     }
 
@@ -81,7 +81,7 @@ class MessageFileViewHolder(
             }
 
             PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
             }
 
             Downloading, Uploading, Preparing, WaitingToUpload -> {
@@ -89,7 +89,7 @@ class MessageFileViewHolder(
             }
 
             Uploaded, Downloaded -> {
-                val icon = style.attachmentIconProvider.provide(context, fileItem.file)
+                val icon = style.attachmentIconProvider.provide(context, fileItem.attachment)
                 binding.icFile.setImageDrawable(icon)
             }
 

@@ -1,45 +1,110 @@
 package com.sceyt.chatuikit.presentation.components.channel_info
 
+import android.graphics.Bitmap
+import android.util.Size
 import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
+import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.persistence.file_transfer.TransferData
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentMetadataPayload
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentUpdater
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.AttachmentDataProvider
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.AttachmentDataUpdater
+import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadata
 
-sealed class ChannelFileItem : com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem {
+sealed interface ChannelFileItem : AttachmentDataProvider, AttachmentDataUpdater {
 
-    private constructor()
+    data class Item(
+            var data: AttachmentWithUserData,
+            val type: ChannelFileItemType,
+            private var _metadataPayload: AttachmentMetadataPayload,
+            private var _thumbPath: String?,
+            private var _transferData: TransferData?,
+    ) : ChannelFileItem {
 
-    constructor(file: AttachmentWithUserData) : super(file.attachment)
+        override val attachment: SceytAttachment
+            get() = data.attachment
 
-    data class File(val data: AttachmentWithUserData) : ChannelFileItem(data)
+        override val size: Size?
+            get() = _metadataPayload.size
 
-    data class Image(val data: AttachmentWithUserData) : ChannelFileItem(data)
+        override val blurredThumb: Bitmap?
+            get() = _metadataPayload.blurredThumbBitmap
 
-    data class Video(val data: AttachmentWithUserData) : ChannelFileItem(data)
+        override val thumbPath: String?
+            get() = _thumbPath
 
-    data class Voice(val data: AttachmentWithUserData) : ChannelFileItem(data)
+        override val duration: Long?
+            get() = _metadataPayload.duration
 
-    data class Link(val data: AttachmentWithUserData) : ChannelFileItem(data)
+        override val audioMetadata: AudioMetadata?
+            get() = _metadataPayload.audioMetadata
 
-    data class MediaDate(val data: AttachmentWithUserData) : ChannelFileItem(data)
-
-    data object LoadingMoreItem : ChannelFileItem()
-
-    fun getCreatedAt(): Long {
-        return if (isFileItemInitialized)
-            file.createdAt else 0
-    }
-
-    fun isMediaItem() = this !is MediaDate && this !is LoadingMoreItem
-
-    companion object {
-        fun ChannelFileItem.getData(): AttachmentWithUserData? {
-            return when (this) {
-                is File -> data
-                is Image -> data
-                is Link -> data
-                is Video -> data
-                is Voice -> data
-                is MediaDate -> data
-                is LoadingMoreItem -> null
+        override var transferData: TransferData?
+            get() = _transferData
+            set(value) {
+                _transferData = value
             }
+
+        override fun updateAttachment(file: SceytAttachment): SceytAttachment {
+            val updated = AttachmentUpdater.updateAttachment(data.attachment, file)
+            data = data.copy(attachment = updated)
+            return data.attachment
+        }
+
+        override fun updateTransferData(transferData: TransferData?) {
+            _transferData = transferData
+        }
+
+        override fun updateThumbPath(thumbPath: String?) {
+            _thumbPath = thumbPath
         }
     }
+
+    data object LoadingMoreItem : ChannelFileItem {
+        override val attachment: SceytAttachment
+            get() = throw IllegalStateException("LoadingMoreItem has no attachment")
+        override val size: Size
+            get() = throw IllegalStateException("LoadingMoreItem has no size")
+        override val blurredThumb: Bitmap
+            get() = throw IllegalStateException("LoadingMoreItem has no blurredThumb")
+        override val thumbPath: String
+            get() = throw IllegalStateException("LoadingMoreItem has no thumbPath")
+        override val duration: Long
+            get() = throw IllegalStateException("LoadingMoreItem has no duration")
+        override val audioMetadata: AudioMetadata
+            get() = throw IllegalStateException("LoadingMoreItem has no audioMetadata")
+
+        override var transferData: TransferData?
+            get() = throw IllegalStateException("LoadingMoreItem has no transferData")
+            set(value) {
+                throw IllegalStateException("LoadingMoreItem has no transferData, couldn't set $value")
+            }
+
+        override fun updateAttachment(file: SceytAttachment): SceytAttachment {
+            throw IllegalStateException("LoadingMoreItem has no attachment")
+        }
+
+        override fun updateThumbPath(thumbPath: String?) {
+            throw IllegalStateException("LoadingMoreItem has no thumbPath")
+        }
+
+        override fun updateTransferData(transferData: TransferData?) {
+            throw IllegalStateException("LoadingMoreItem has no transferData")
+        }
+    }
+
+    fun getCreatedAt(): Long {
+        return (this as? Item)?.attachment?.createdAt ?: 0
+    }
+
+    fun getItemData(): AttachmentWithUserData? {
+        return (this as? Item)?.data
+    }
+
+    fun isMediaItem() = this != LoadingMoreItem && (this as Item).type != ChannelFileItemType.MediaDate
+}
+
+
+enum class ChannelFileItemType {
+    File, Image, Video, Voice, Link, MediaDate
 }

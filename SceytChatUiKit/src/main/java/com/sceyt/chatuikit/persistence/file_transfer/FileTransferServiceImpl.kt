@@ -11,13 +11,14 @@ import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.set
 
-internal class FileTransferServiceImpl(private var context: Context,
-                                       private var fileTransferLogic: FileTransferLogic) : FileTransferService {
+internal class FileTransferServiceImpl(
+        private var context: Context,
+        private var fileTransferLogic: FileTransferLogic,
+) : FileTransferService {
     private var tasksMap = ConcurrentHashMap<String, TransferTask>()
 
     private var listeners: FileTransferListeners.Listeners = object : FileTransferListeners.Listeners {
-        override fun upload(attachment: SceytAttachment,
-                            transferTask: TransferTask) {
+        override fun upload(attachment: SceytAttachment, transferTask: TransferTask) {
             fileTransferLogic.uploadFile(attachment, transferTask)
         }
 
@@ -42,8 +43,7 @@ internal class FileTransferServiceImpl(private var context: Context,
         }
     }
 
-    override fun upload(attachment: SceytAttachment,
-                        transferTask: TransferTask) {
+    override fun upload(attachment: SceytAttachment, transferTask: TransferTask) {
         tasksMap[attachment.messageTid.toString()] = transferTask
         listeners.upload(attachment, transferTask)
     }

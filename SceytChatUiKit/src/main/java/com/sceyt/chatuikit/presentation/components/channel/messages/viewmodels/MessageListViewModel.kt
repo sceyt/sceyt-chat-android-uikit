@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
 
 import android.app.Application
 import android.text.Editable
-import android.view.Menu
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -64,7 +63,6 @@ import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
-import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
@@ -395,39 +393,36 @@ class MessageListViewModel(
         _onScrollToReplyMessageLiveData.postValue(message.parentMessage ?: return)
     }
 
-    fun prepareToPauseOrResumeUpload(item: FileListItem, message: SceytMessage) {
-        val defaultState = if (!message.incoming && message.deliveryStatus == DeliveryStatus.Pending
-                && !message.isForwarded)
-            PendingUpload else PendingDownload
-
-        when (val state = item.file.transferState ?: return) {
+    fun prepareToPauseOrResumeUpload(item: FileListItem) {
+        val attachment = item.attachment
+        val messageTid = attachment.messageTid
+        when (val state = attachment.transferState ?: return) {
             PendingUpload, ErrorUpload -> {
-                SendAttachmentWorkManager.schedule(application, item.file.messageTid, channel.id)
+                SendAttachmentWorkManager.schedule(application, messageTid, channel.id)
             }
 
             PendingDownload, ErrorDownload -> {
-                fileTransferService.download(item.file, FileTransferHelper.createTransferTask(item.file))
+                fileTransferService.download(attachment, FileTransferHelper.createTransferTask(attachment))
             }
 
             PauseDownload -> {
-                val task = fileTransferService.findTransferTask(item.file)
+                val task = fileTransferService.findTransferTask(attachment)
                 if (task != null)
-                    fileTransferService.resume(item.file.messageTid, item.file, state)
-                else fileTransferService.download(item.file, FileTransferHelper.createTransferTask(item.file))
+                    fileTransferService.resume(attachment.messageTid, attachment, state)
+                else fileTransferService.download(attachment, FileTransferHelper.createTransferTask(attachment))
             }
 
             PauseUpload -> {
-                val messageTid = item.file.messageTid
-                val task = fileTransferService.findTransferTask(item.file)
+                val task = fileTransferService.findTransferTask(attachment)
                 if (task != null)
-                    fileTransferService.resume(messageTid, item.file, state)
+                    fileTransferService.resume(messageTid, attachment, state)
                 else {
                     // Update transfer state to Uploading, otherwise SendAttachmentWorkManager will
                     // not start uploading.
                     viewModelScope.launch(Dispatchers.IO) {
                         attachmentInteractor.updateTransferDataByMsgTid(TransferData(
-                            messageTid, item.file.progressPercent
-                                    ?: 0f, Uploading, item.file.filePath, item.file.url))
+                            messageTid, attachment.progressPercent
+                                    ?: 0f, Uploading, attachment.filePath, attachment.url))
                     }
 
                     SendAttachmentWorkManager.schedule(application, messageTid, channel.id, ExistingWorkPolicy.REPLACE)
@@ -435,21 +430,26 @@ class MessageListViewModel(
             }
 
             Uploading, Downloading, Preparing, FilePathChanged, WaitingToUpload -> {
-                fileTransferService.pause(item.file.messageTid, item.file, state)
+                fileTransferService.pause(messageTid, attachment, state)
             }
 
             Uploaded, Downloaded, ThumbLoaded -> {
                 val transferData = TransferData(
-                    item.file.messageTid, item.file.progressPercent ?: 0f,
-                    item.file.transferState ?: defaultState, item.file.filePath, item.file.url)
+                    messageTid, attachment.progressPercent ?: 0f,
+                    attachment.transferState, attachment.filePath, attachment.url)
                 FileTransferHelper.emitAttachmentTransferUpdate(transferData)
             }
         }
     }
 
     @SuppressWarnings("WeakerAccess")
-    fun addReaction(message: SceytMessage, scoreKey: String, score: Int = 1,
-                    reason: String = "", enforceUnique: Boolean = false) {
+    fun addReaction(
+            message: SceytMessage,
+            scoreKey: String,
+            score: Int = 1,
+            reason: String = "",
+            enforceUnique: Boolean = false
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = messageReactionInteractor.addReaction(channel.id, message.id, scoreKey,
                 score, reason, enforceUnique)
@@ -516,8 +516,13 @@ class MessageListViewModel(
         }
     }
 
-    fun updateDraftMessage(text: Editable?, mentionUsers: List<Mention>, styling: List<BodyStyleRange>?,
-                           replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+    fun updateDraftMessage(
+            text: Editable?,
+            mentionUsers: List<Mention>,
+            styling: List<BodyStyleRange>?,
+            replyOrEditMessage: SceytMessage?,
+            isReply: Boolean
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             channelInteractor.updateDraftMessage(channel.id, text.toString(),
                 mentionUsers, styling, replyOrEditMessage, isReply)
@@ -643,8 +648,11 @@ class MessageListViewModel(
     }
 
 
-    internal fun initMessageInfoData(sceytMessage: SceytMessage, prevMessage: SceytMessage? = null,
-                                     initNameAndAvatar: Boolean = false): SceytMessage {
+    internal fun initMessageInfoData(
+            sceytMessage: SceytMessage,
+            prevMessage: SceytMessage? = null,
+            initNameAndAvatar: Boolean = false
+    ): SceytMessage {
         return sceytMessage.copy(
             isGroup = this@MessageListViewModel.isGroup,
             files = sceytMessage.attachments?.map { it.toFileListItem() },

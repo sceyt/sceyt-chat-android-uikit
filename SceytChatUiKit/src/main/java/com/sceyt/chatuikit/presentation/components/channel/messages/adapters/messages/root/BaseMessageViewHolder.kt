@@ -100,7 +100,8 @@ abstract class BaseMessageViewHolder(
 
     @CallSuper
     open fun itemUpdated(item: MessageListItem) {
-        messageListItem = item
+        if (item.getItemId() == messageListItem.getItemId())
+            messageListItem = item
     }
 
     protected abstract val incoming: Boolean
@@ -438,7 +439,7 @@ abstract class BaseMessageViewHolder(
     protected open fun setMessageDateDependAttachments(messageDate: DecoratedTextView, attachments: List<FileListItem>?) {
         messageDate.apply {
             val lastAttachment = attachments?.lastOrNull()
-            val needHighlight = lastAttachment is FileListItem.Image || lastAttachment is FileListItem.Video
+            val needHighlight = lastAttachment?.type == AttachmentTypeEnum.Image || lastAttachment?.type == AttachmentTypeEnum.Video
             setHighlighted(needHighlight)
             val marginEndBottom = if (needHighlight) Pair(25, 25) else {
                 //Set the value which is set in xml

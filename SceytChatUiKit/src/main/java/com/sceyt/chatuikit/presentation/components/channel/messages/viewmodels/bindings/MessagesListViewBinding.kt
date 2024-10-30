@@ -46,6 +46,7 @@ import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.isSelf
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
@@ -133,8 +134,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     checkEnableDisableActions(channel)
 
-    suspend fun getCompareMessage(loadType: PaginationResponse.LoadType,
-                                  proportion: List<SceytMessage>): SceytMessage? = withContext(Dispatchers.Default) {
+    suspend fun getCompareMessage(
+            loadType: PaginationResponse.LoadType,
+            proportion: List<SceytMessage>,
+    ): SceytMessage? = withContext(Dispatchers.Default) {
         if (proportion.isEmpty()) return@withContext null
         val proportionFirstId = proportion.first().id
         return@withContext when (loadType) {
@@ -571,7 +574,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         viewModelScope.launch(Dispatchers.Default) {
             if (lifecycleOwner.isResumed()) {
                 messagesListView.updateProgress(it, false)
-            } else
+            } else if (it.state != TransferState.Downloading && it.state != TransferState.Uploading)
                 needToUpdateTransferAfterOnResume[it.messageTid] = it
         }
     }.launchIn(viewModelScope)
@@ -692,7 +695,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
             is MessageCommandEvent.AttachmentLoaderClick -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    prepareToPauseOrResumeUpload(event.item, event.message)
+                    prepareToPauseOrResumeUpload(event.item)
                 }
             }
 

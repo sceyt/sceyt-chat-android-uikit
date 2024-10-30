@@ -19,9 +19,8 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
-import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
+import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
@@ -30,7 +29,7 @@ class MessageImageViewHolder(
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
-) : BaseMessageFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
+) : BaseMessageFileViewHolder(binding.root, needMediaDataCallback) {
 
     init {
         binding.applyStyle()
@@ -67,7 +66,7 @@ class MessageImageViewHolder(
 
             PendingDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.fileImage)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
             }
 
             Downloading -> {

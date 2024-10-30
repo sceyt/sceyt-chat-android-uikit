@@ -16,7 +16,7 @@ class ChannelMediaDateSeparatorViewHolder(
     }
 
     override fun bind(item: ChannelFileItem) {
-        val createdAt = (item as? ChannelFileItem.MediaDate)?.data?.attachment?.createdAt ?: return
+        val createdAt = item.getItemData()?.attachment?.createdAt ?: return
         val date = style.dateFormatter.format(context, Date(createdAt))
         binding.tvDate.text = date
     }

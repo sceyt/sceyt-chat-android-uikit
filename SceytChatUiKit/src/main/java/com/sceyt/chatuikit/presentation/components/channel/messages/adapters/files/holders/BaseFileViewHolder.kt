@@ -10,13 +10,13 @@ import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.file_transfer.getProgressWithState
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.AttachmentDataItem
+import com.sceyt.chatuikit.presentation.components.channel.messages.events.AttachmentDataProvider
 import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.presentation.helpers.AttachmentViewHolderHelper
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
 import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 
-abstract class BaseFileViewHolder<Item : AttachmentDataItem>(
+abstract class BaseFileViewHolder<Item : AttachmentDataProvider>(
         itemView: View,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
 ) : BaseViewHolder<Item>(itemView) {
@@ -38,7 +38,7 @@ abstract class BaseFileViewHolder<Item : AttachmentDataItem>(
             loadingProgressViewWithStyle?.first?.release(it.progressPercent)
             updateState(it)
             if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload && it.state != TransferState.PauseDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
         }
     }
 
@@ -54,9 +54,9 @@ abstract class BaseFileViewHolder<Item : AttachmentDataItem>(
     protected fun requestThumb() {
         val thumbFromEnum = needThumbFor() ?: return
         itemView.post {
-            if (fileItem.file.filePath.isNullOrBlank()) return@post
-            val thumbData = ThumbData(thumbFromEnum.value, getThumbSize())
-            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem.file, thumbData))
+            if (fileItem.attachment.filePath.isNullOrBlank()) return@post
+            val thumbData = ThumbData(thumbFromEnum.value, fileItem.attachment.filePath, getThumbSize())
+            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem.attachment, thumbData))
         }
     }
 
