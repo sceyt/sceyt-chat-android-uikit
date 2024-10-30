@@ -41,7 +41,7 @@ import kotlinx.coroutines.launch
 class ChannelAttachmentsViewModel(
         private val attachmentLogic: PersistenceAttachmentLogic,
         private val fileTransferService: FileTransferService,
-        private val application: Application
+        private val application: Application,
 ) : BaseViewModel() {
     private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
     private val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
@@ -128,11 +128,13 @@ class ChannelAttachmentsViewModel(
         var prevItem: AttachmentWithUserData? = null
 
         data.sortedByDescending { it.attachment.createdAt }.forEach { item ->
-            val type = if (prevItem == null || !DateTimeUtil.isSameDay(prevItem?.attachment?.createdAt
+            if (prevItem == null || !DateTimeUtil.isSameDay(prevItem?.attachment?.createdAt
                             ?: 0, item.attachment.createdAt)) {
 
-                ChannelFileItemType.MediaDate
-            } else when (item.attachment.type) {
+                fileItems.add(ChannelFileItem.DateSeparator(data = item))
+            }
+
+            val type = when (item.attachment.type) {
                 AttachmentTypeEnum.Video.value -> ChannelFileItemType.Video
                 AttachmentTypeEnum.Image.value -> ChannelFileItemType.Image
                 AttachmentTypeEnum.File.value -> ChannelFileItemType.File

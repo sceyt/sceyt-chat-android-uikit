@@ -97,7 +97,6 @@ open class ChannelAttachmentViewHolderFactory(
 
     open fun getItemViewType(item: ChannelFileItem): Int {
         return when (item) {
-            is ChannelFileItem.LoadingMoreItem -> ItemType.Loading.ordinal
             is ChannelFileItem.Item -> {
                 when (item.type) {
                     ChannelFileItemType.Image -> ItemType.Image.ordinal
@@ -105,9 +104,11 @@ open class ChannelAttachmentViewHolderFactory(
                     ChannelFileItemType.File -> ItemType.File.ordinal
                     ChannelFileItemType.Voice -> ItemType.Voice.ordinal
                     ChannelFileItemType.Link -> ItemType.Link.ordinal
-                    ChannelFileItemType.MediaDate -> ItemType.MediaDate.ordinal
                 }
             }
+
+            is ChannelFileItem.LoadingMoreItem -> ItemType.Loading.ordinal
+            is ChannelFileItem.DateSeparator -> ItemType.MediaDate.ordinal
         }
     }
 

@@ -10,7 +10,6 @@ import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
-import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItemType
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import java.util.Date
 
@@ -76,12 +75,8 @@ class ChannelMediaAdapter(
     }
 
     private fun checkMaybeShouldRemoveDateItem(itemsToAdd: List<ChannelFileItem>): List<ChannelFileItem> {
-        return attachments.findLast {
-            it is ChannelFileItem.Item && it.type == ChannelFileItemType.MediaDate
-        }?.let { date1 ->
-            itemsToAdd.find {
-                it is ChannelFileItem.Item && it.type == ChannelFileItemType.MediaDate
-            }?.let { date2 ->
+        return attachments.findLast { it is ChannelFileItem.DateSeparator }?.let { date1 ->
+            itemsToAdd.find { item -> item is ChannelFileItem.DateSeparator }?.let { date2 ->
                 if (DateTimeUtil.isSameDay(date1.getCreatedAt(), date2.getCreatedAt())) {
                     val newItems = itemsToAdd.toArrayList()
                     newItems.remove(date2)
@@ -122,7 +117,6 @@ class ChannelMediaAdapter(
     }
 
     override fun isHeader(itemPosition: Int): Boolean {
-        val item = attachments.getOrNull(itemPosition)
-        return item is ChannelFileItem.Item && item.type == ChannelFileItemType.MediaDate
+        return attachments.getOrNull(itemPosition) is ChannelFileItem.DateSeparator
     }
 }

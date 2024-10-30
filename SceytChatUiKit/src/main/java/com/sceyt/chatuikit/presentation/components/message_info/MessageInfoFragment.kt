@@ -155,7 +155,7 @@ open class MessageInfoFragment : Fragment {
             return
         }
 
-        binding?.rvReadByUsers?.adapter = UserMarkerAdapter().apply {
+        binding?.rvReadByUsers?.adapter = UserMarkerAdapter(style.listItemStyle).apply {
             submitList(list)
         }.also { readMarkersAdapter = it }
     }
@@ -166,7 +166,7 @@ open class MessageInfoFragment : Fragment {
             deliveredMarkersAdapter?.submitList(list)
             return
         }
-        binding?.rvDeliveredToUsers?.adapter = UserMarkerAdapter().apply {
+        binding?.rvDeliveredToUsers?.adapter = UserMarkerAdapter(style.listItemStyle).apply {
             submitList(list)
         }.also { deliveredMarkersAdapter = it }
     }
@@ -177,7 +177,7 @@ open class MessageInfoFragment : Fragment {
             playedMarkersAdapter?.submitList(list)
             return
         }
-        binding?.rvPlayedByUsers?.adapter = UserMarkerAdapter().apply {
+        binding?.rvPlayedByUsers?.adapter = UserMarkerAdapter(style.listItemStyle).apply {
             submitList(list)
         }.also { playedMarkersAdapter = it }
     }
