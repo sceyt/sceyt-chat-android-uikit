@@ -16,13 +16,11 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityStartChatBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
-import com.sceyt.chatuikit.extensions.setTextColorRes
-import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
+import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_info.members.MemberTypeEnum
@@ -36,16 +34,18 @@ import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersV
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapter
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.holders.UserViewHolderFactory
 import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.styles.start_chat.StartChatStyle
 
 class StartChatActivity : AppCompatActivity() {
     private lateinit var binding: SceytActivityStartChatBinding
+    private lateinit var style: StartChatStyle
     private val viewModel: UsersViewModel by viewModels()
     private lateinit var usersAdapter: UsersAdapter
     private var creatingChannel = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        style = StartChatStyle.Builder(this, null).build()
         setContentView(SceytActivityStartChatBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
@@ -69,7 +69,6 @@ class StartChatActivity : AppCompatActivity() {
     private fun initViewModel() {
         viewModel.pageStateLiveData.observe(this) {
             if (it is PageState.StateError) {
-                //@param creatingChannel need change when error is connected with create channel
                 creatingChannel = false
                 customToastSnackBar(it.errorMessage)
             }
@@ -158,15 +157,22 @@ class StartChatActivity : AppCompatActivity() {
     }
 
     private fun SceytActivityStartChatBinding.applyStyle() {
-        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
-        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
-        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
-     ///   toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-        tvNewGroup.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-        tvNewChannel.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-        setTextViewsDrawableColor(listOf(tvNewChannel, tvNewGroup), getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-        tvUsers.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
-        tvUsers.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
+        root.setBackgroundColor(style.backgroundColor)
+        style.separatorTextStyle.apply(tvUsers)
+        with(toolbar){
+            style.toolbarStyle.apply(this)
+            setTitle(style.toolbarTitle)
+        }
+        with(tvNewGroup) {
+            style.createGroupTextStyle.apply(this)
+            text = style.createGroupText
+            setDrawableStart(style.createGroupIcon)
+        }
+        with(tvNewChannel) {
+            style.createChannelTextStyle.apply(this)
+            text = style.createChannelText
+            setDrawableStart(style.createChannelIcon)
+        }
     }
 
     override fun finish() {
