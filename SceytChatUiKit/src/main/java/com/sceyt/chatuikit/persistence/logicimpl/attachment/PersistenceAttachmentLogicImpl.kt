@@ -62,7 +62,8 @@ internal class PersistenceAttachmentLogicImpl(
         private val linkDao: LinkDao,
         private val messagesCache: MessagesCache,
         private val attachmentsCache: AttachmentsCache,
-        private val attachmentsRepository: AttachmentsRepository) : PersistenceAttachmentLogic, SceytKoinComponent {
+        private val attachmentsRepository: AttachmentsRepository,
+) : PersistenceAttachmentLogic, SceytKoinComponent {
 
     private val messagesLogic: PersistenceMessagesLogic by inject()
     private val attachmentsLoadSize get() = SceytChatUIKit.config.queryLimits.attachmentListQueryLimit
@@ -77,18 +78,24 @@ internal class PersistenceAttachmentLogicImpl(
         return attachmentDao.getAllAttachmentPayLoadsByMsgTid(tid)
     }
 
-    override suspend fun getPrevAttachments(conversationId: Long, lastAttachmentId: Long, types: List<String>,
-                                            offset: Int, ignoreDb: Boolean, loadKeyData: LoadKeyData): Flow<PaginationResponse<AttachmentWithUserData>> {
+    override suspend fun getPrevAttachments(
+            conversationId: Long, lastAttachmentId: Long, types: List<String>,
+            offset: Int, ignoreDb: Boolean, loadKeyData: LoadKeyData,
+    ): Flow<PaginationResponse<AttachmentWithUserData>> {
         return loadAttachments(loadType = LoadPrev, conversationId, lastAttachmentId, types, loadKeyData, offset, ignoreDb)
     }
 
-    override suspend fun getNextAttachments(conversationId: Long, lastAttachmentId: Long, types: List<String>,
-                                            offset: Int, ignoreDb: Boolean, loadKeyData: LoadKeyData): Flow<PaginationResponse<AttachmentWithUserData>> {
+    override suspend fun getNextAttachments(
+            conversationId: Long, lastAttachmentId: Long, types: List<String>,
+            offset: Int, ignoreDb: Boolean, loadKeyData: LoadKeyData,
+    ): Flow<PaginationResponse<AttachmentWithUserData>> {
         return loadAttachments(loadType = LoadNext, conversationId, lastAttachmentId, types, loadKeyData, offset, ignoreDb)
     }
 
-    override suspend fun getNearAttachments(conversationId: Long, attachmentId: Long, types: List<String>,
-                                            offset: Int, ignoreDb: Boolean, loadKeyData: LoadKeyData): Flow<PaginationResponse<AttachmentWithUserData>> {
+    override suspend fun getNearAttachments(
+            conversationId: Long, attachmentId: Long, types: List<String>,
+            offset: Int, ignoreDb: Boolean, loadKeyData: LoadKeyData,
+    ): Flow<PaginationResponse<AttachmentWithUserData>> {
         return loadAttachments(loadType = LoadNear, conversationId, attachmentId, types, loadKeyData, offset, ignoreDb)
     }
 
@@ -138,7 +145,7 @@ internal class PersistenceAttachmentLogicImpl(
                     val details = response.data.toLinkPreviewDetails(link)
                     messagesCache.updateAttachmentLinkDetails(details)
                     attachmentsCache.updateAttachmentLinkDetails(details)
-                    linkDao.insert(response.data.toLinkDetailsEntity(link, null))
+                    linkDao.insert(details.toLinkDetailsEntity(link, null))
                     SceytResponse.Success(details)
                 } else
                     SceytResponse.Error(SceytException(0, "Link is null or blank: link -> $link"))
@@ -170,9 +177,11 @@ internal class PersistenceAttachmentLogicImpl(
         messagesCache.updateAttachmentTransferData(transferData)
     }
 
-    private fun loadAttachments(loadType: PaginationResponse.LoadType, conversationId: Long, attachmentId: Long,
-                                types: List<String>, loadKey: LoadKeyData = LoadKeyData(value = attachmentId),
-                                offset: Int, ignoreDb: Boolean): Flow<PaginationResponse<AttachmentWithUserData>> {
+    private fun loadAttachments(
+            loadType: PaginationResponse.LoadType, conversationId: Long, attachmentId: Long,
+            types: List<String>, loadKey: LoadKeyData = LoadKeyData(value = attachmentId),
+            offset: Int, ignoreDb: Boolean,
+    ): Flow<PaginationResponse<AttachmentWithUserData>> {
         return callbackFlow {
             if (offset == 0) attachmentsCache.clear(types)
 
@@ -188,8 +197,10 @@ internal class PersistenceAttachmentLogicImpl(
         }
     }
 
-    private suspend fun getAttachmentsDbByLoadType(loadType: PaginationResponse.LoadType, conversationId: Long,
-                                                   attachmentId: Long, types: List<String>, loadKey: LoadKeyData, offset: Int): PaginationResponse<AttachmentWithUserData> {
+    private suspend fun getAttachmentsDbByLoadType(
+            loadType: PaginationResponse.LoadType, conversationId: Long,
+            attachmentId: Long, types: List<String>, loadKey: LoadKeyData, offset: Int,
+    ): PaginationResponse<AttachmentWithUserData> {
 
         var hasNext = false
         var hasPrev = false
@@ -249,7 +260,7 @@ internal class PersistenceAttachmentLogicImpl(
     private suspend fun getAttachmentsServerByLoadType(
             loadType: PaginationResponse.LoadType, conversationId: Long,
             attachmentId: Long, types: List<String>,
-            loadKey: LoadKeyData, offset: Int, ignoreDb: Boolean
+            loadKey: LoadKeyData, offset: Int, ignoreDb: Boolean,
     ): PaginationResponse<AttachmentWithUserData> {
         var hasNext = false
         var hasPrev = false
@@ -309,7 +320,7 @@ internal class PersistenceAttachmentLogicImpl(
 
     private suspend fun handelServerResponse(
             conversationId: Long,
-            response: SceytResponse<Pair<List<Attachment>, Map<String, SceytUser>>>
+            response: SceytResponse<Pair<List<Attachment>, Map<String, SceytUser>>>,
     ): SceytResponse<List<AttachmentWithUserData>> {
         when (response) {
             is SceytResponse.Success -> {
