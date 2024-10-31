@@ -311,7 +311,7 @@ data class MessageItemStyle(
                     messageBodyFormatter = SceytChatUIKit.formatters.messageBodyFormatter,
                     messageViewCountFormatter = SceytChatUIKit.formatters.messageViewCountFormatter,
                     messageDateFormatter = SceytChatUIKit.formatters.messageDateFormatter,
-                    voiceDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
+                    voiceDurationFormatter = SceytChatUIKit.formatters.voiceDurationFormatter,
                     videoDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
                     attachmentFileSizeFormatter = SceytChatUIKit.formatters.attachmentSizeFormatter,
                     attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider,
