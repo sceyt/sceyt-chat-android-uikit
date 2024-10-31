@@ -11,7 +11,6 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
-import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.AttachmentDataProvider
 
 class AttachmentViewHolderHelper(itemView: View) {
@@ -24,9 +23,6 @@ class AttachmentViewHolderHelper(itemView: View) {
         private set
     var resizedImageSize: Size? = null
         private set
-    var transferData: TransferData? = null
-        private set
-
 
     fun bind(item: AttachmentDataProvider, resizedImageSize: Size? = null) {
         if (isFileItemInitialized && item.thumbPath == null && !fileItem.thumbPath.isNullOrBlank()
@@ -37,7 +33,6 @@ class AttachmentViewHolderHelper(itemView: View) {
         fileItem = item
         blurredThumb = item.blurredThumb?.toDrawable(context.resources)
         size = item.size
-        transferData = item.attachment.toTransferData()
     }
 
     fun drawImageWithBlurredThumb(path: String?, imageView: ImageView) {

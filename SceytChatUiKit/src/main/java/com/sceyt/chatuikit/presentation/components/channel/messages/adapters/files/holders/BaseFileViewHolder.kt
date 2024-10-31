@@ -18,23 +18,21 @@ import com.sceyt.chatuikit.styles.common.MediaLoaderStyle
 
 abstract class BaseFileViewHolder<Item : AttachmentDataProvider>(
         itemView: View,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseViewHolder<Item>(itemView) {
     protected lateinit var fileItem: Item
     protected val viewHolderHelper by lazy { AttachmentViewHolderHelper(itemView) }
     private var addedLister = false
-    protected var isAttachedToWindow = true
 
     override fun bind(item: Item) {
         fileItem = item
         viewHolderHelper.bind(item)
         initAttachment()
+        setListener()
     }
 
     protected fun initAttachment() {
-        setListener()
-
-        viewHolderHelper.transferData?.let {
+        fileItem.transferData?.let {
             loadingProgressViewWithStyle?.first?.release(it.progressPercent)
             updateState(it)
             if (it.filePath.isNullOrBlank() && it.state != TransferState.PendingDownload && it.state != TransferState.PauseDownload)
@@ -65,10 +63,8 @@ abstract class BaseFileViewHolder<Item : AttachmentDataProvider>(
     }
 
     open fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        val isTransferring = data.isTransferring()
-        if (!isOnBind && !isAttachedToWindow && isTransferring) return
         loadingProgressViewWithStyle?.let { (loader, style) ->
-            loader.getProgressWithState(data.state, style, data.progressPercent)
+            loader.getProgressWithState(data.state, style, true, data.progressPercent)
         }
     }
 
@@ -77,19 +73,4 @@ abstract class BaseFileViewHolder<Item : AttachmentDataProvider>(
     open fun getThumbSize() = Size(itemView.width, itemView.height)
 
     protected open val loadingProgressViewWithStyle: Pair<CircularProgressView, MediaLoaderStyle>? = null
-
-    override fun onViewAttachedToWindow() {
-        super.onViewAttachedToWindow()
-        isAttachedToWindow = true
-        viewHolderHelper.transferData?.let {
-            loadingProgressViewWithStyle?.let { (loader, style) ->
-                loader.getProgressWithState(it.state, style, it.progressPercent)
-            }
-        }
-    }
-
-    override fun onViewDetachedFromWindow() {
-        super.onViewDetachedFromWindow()
-        isAttachedToWindow = false
-    }
 }

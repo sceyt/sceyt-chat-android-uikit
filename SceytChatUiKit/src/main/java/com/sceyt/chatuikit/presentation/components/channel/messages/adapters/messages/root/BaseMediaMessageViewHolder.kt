@@ -9,6 +9,7 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.core.view.marginLeft
 import com.google.android.material.imageview.ShapeableImageView
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.calculateScaleWidthHeight
@@ -56,6 +57,7 @@ abstract class BaseMediaMessageViewHolder(
             setImageSize(it)
         }
         viewHolderHelper.bind(fileItem, resizedImageSize)
+        setListener()
     }
 
     @CallSuper
@@ -65,8 +67,6 @@ abstract class BaseMediaMessageViewHolder(
     }
 
     protected open fun initAttachment() {
-        setListener()
-
         fileItem.transferData?.let {
             loadingProgressView.release(it.progressPercent)
             updateState(it, true)
@@ -147,7 +147,12 @@ abstract class BaseMediaMessageViewHolder(
     abstract val loadingProgressView: CircularProgressView
 
     open fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        loadingProgressView.getProgressWithState(data.state, style.mediaLoaderStyle, data.progressPercent)
+        loadingProgressView.getProgressWithState(
+            state = data.state,
+            style = style.mediaLoaderStyle,
+            hideOnThumbLoaded = requireMessage.deliveryStatus != DeliveryStatus.Pending,
+            progressPercent = data.progressPercent
+        )
     }
 
     private fun setListener() {

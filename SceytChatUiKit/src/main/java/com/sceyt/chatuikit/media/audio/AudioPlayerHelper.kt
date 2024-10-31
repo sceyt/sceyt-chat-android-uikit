@@ -113,8 +113,9 @@ object AudioPlayerHelper {
         return currentPlayer?.getFilePath().equals(path)
     }
 
-    fun isPlaying(path: String): Boolean {
+    fun isPlaying(path: String?): Boolean {
         currentPlayer ?: return false
+        path ?: return false
         return currentPlayer?.getFilePath().equals(path) && currentPlayer?.isPlaying() == true
     }
 

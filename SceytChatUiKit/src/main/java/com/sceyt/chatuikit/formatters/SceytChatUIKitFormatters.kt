@@ -29,6 +29,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserPresenceDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserShortNameFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultVoiceDurationFormatter
 import com.sceyt.chatuikit.persistence.lazyVar
 import java.util.Date
 
@@ -148,6 +149,10 @@ class SceytChatUIKitFormatters {
 
     var mediaDurationFormatter: Formatter<Long> by lazyVar {
         DefaultMediaDurationFormatter()
+    }
+
+    var voiceDurationFormatter: Formatter<Long> by lazyVar {
+        DefaultVoiceDurationFormatter()
     }
 
     var unreadCountFormatter: Formatter<Long> by lazyVar {

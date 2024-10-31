@@ -39,11 +39,8 @@ sealed interface ChannelFileItem : AttachmentDataProvider, AttachmentDataUpdater
         override val audioMetadata: AudioMetadata?
             get() = _metadataPayload.audioMetadata
 
-        override var transferData: TransferData?
+        override val transferData: TransferData?
             get() = _transferData
-            set(value) {
-                _transferData = value
-            }
 
         override fun updateAttachment(file: SceytAttachment): SceytAttachment {
             val updated = AttachmentUpdater.updateAttachment(data.attachment, file)
@@ -83,6 +80,14 @@ sealed interface ChannelFileItem : AttachmentDataProvider, AttachmentDataUpdater
         }
 
         override fun updateThumbPath(thumbPath: String?) {
+        }
+
+        override fun equals(other: Any?): Boolean {
+            return other is DateSeparator && other.data.attachment.createdAt == data.attachment.createdAt
+        }
+
+        override fun hashCode(): Int {
+            return data.attachment.createdAt.hashCode()
         }
     }
 

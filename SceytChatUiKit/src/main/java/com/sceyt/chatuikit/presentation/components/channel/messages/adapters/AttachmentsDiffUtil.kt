@@ -29,7 +29,7 @@ class AttachmentsDiffUtil(
         val oldItem = oldList[oldItemPosition]
         val newItem = newList[newItemPosition]
         return if (oldItem is ChannelFileItem.Item && newItem is ChannelFileItem.Item) {
-            oldItem.attachment.diff(newItem.attachment).hasDifference().not()
+            oldItem.attachment.id == newItem.attachment.id
         } else oldItem == newItem
     }
 
