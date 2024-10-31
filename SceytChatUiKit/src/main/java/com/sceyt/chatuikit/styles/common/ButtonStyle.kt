@@ -7,6 +7,7 @@ import androidx.annotation.ColorInt
 import androidx.annotation.Px
 import androidx.annotation.StyleableRes
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.sceyt.chatuikit.presentation.custom_views.CustomFloatingActonButton
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_CORNER_RADIUS
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
@@ -15,7 +16,7 @@ import com.sceyt.chatuikit.styles.common.Shape.RoundedCornerShape
 data class ButtonStyle(
         val textStyle: TextStyle = TextStyle(),
         val icon: Drawable? = null,
-        val backgroundStyle: BackgroundStyle = BackgroundStyle()
+        val backgroundStyle: BackgroundStyle = BackgroundStyle(),
 ) {
 
     fun apply(button: Button) {
@@ -26,6 +27,11 @@ data class ButtonStyle(
     fun apply(button: FloatingActionButton) {
         backgroundStyle.apply(button)
         button.setImageDrawable(icon)
+    }
+
+    fun applyToCustomButton(button: CustomFloatingActonButton) {
+        apply(button)
+        button.setButtonColor(backgroundStyle.backgroundColor)
     }
 
     internal class Builder(private val typedArray: TypedArray) {

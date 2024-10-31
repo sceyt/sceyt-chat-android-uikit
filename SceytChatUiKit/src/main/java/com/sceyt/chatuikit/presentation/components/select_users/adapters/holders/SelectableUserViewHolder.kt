@@ -1,19 +1,16 @@
 package com.sceyt.chatuikit.presentation.components.select_users.adapters.holders
 
 import androidx.core.view.isVisible
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytItemSelectUserBinding
-import com.sceyt.chatuikit.extensions.getPresentableName
-import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.SelectableUsersAdapter
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
-import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
-import com.sceyt.chatuikit.styles.common.CheckboxStyle
+import com.sceyt.chatuikit.styles.start_chat.UsersListItemsStyle
 
 class SelectableUserViewHolder(
         private val binding: SceytItemSelectUserBinding,
-        private val itemClickListener: SelectableUsersAdapter.ClickListener
+        private val style: UsersListItemsStyle,
+        private val itemClickListener: SelectableUsersAdapter.ClickListener,
 ) : BaseViewHolder<UserItem>(binding.root) {
     private lateinit var bindItem: UserItem.User
 
@@ -30,10 +27,9 @@ class SelectableUserViewHolder(
 
             with(layoutDetails) {
                 root.background = null
-                val userPresentableName = user.getPresentableName()
-                avatar.setUserAvatar(user)
-                userName.text = userPresentableName
-                val presence = SceytChatUIKit.formatters.userPresenceDateFormatter.format(context, user)
+                style.avatarRenderer.render(context, user, style.avatarStyle, avatar)
+                userName.text = style.titleFormatter.format(context, user)
+                val presence = style.subtitleFormatter.format(context, user)
                 tvStatus.isVisible = presence.isNotEmpty()
                 tvStatus.text = presence
             }
@@ -48,9 +44,10 @@ class SelectableUserViewHolder(
 
     private fun SceytItemSelectUserBinding.applyStyle() {
         with(layoutDetails) {
-            userName.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-            tvStatus.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
-            CheckboxStyle.default(context).apply(checkbox)
+            style.avatarStyle.apply(avatar)
+            style.titleTextStyle.apply(userName)
+            style.subtitleTextStyle.apply(tvStatus)
+            style.checkboxStyle.apply(checkbox)
         }
     }
 }

@@ -48,7 +48,7 @@ data class EditChannelStyle(
         val uriValidationStyle: URIValidationStyle,
 ) {
     companion object {
-        internal var styleCustomizer = StyleCustomizer<EditChannelStyle> { _, style -> style }
+        var styleCustomizer = StyleCustomizer<EditChannelStyle> { _, style -> style }
     }
 
     internal class Builder(
