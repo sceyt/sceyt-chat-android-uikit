@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.extensions.setProgressColor
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.SelectableUsersAdapter
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
-import com.sceyt.chatuikit.styles.start_chat.UsersListItemsStyle
+import com.sceyt.chatuikit.styles.UsersListItemsStyle
 
 class SelectableUserViewHolderFactory(
         context: Context,

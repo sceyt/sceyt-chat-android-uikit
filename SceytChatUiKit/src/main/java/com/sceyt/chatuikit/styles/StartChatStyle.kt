@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.styles.start_chat
+package com.sceyt.chatuikit.styles
 
 import android.content.Context
 import android.graphics.drawable.Drawable
@@ -12,8 +12,8 @@ import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.presentation.components.startchat.StartChatActivity
 import com.sceyt.chatuikit.renderers.AvatarRenderer
-import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ListItemStyle
 import com.sceyt.chatuikit.styles.common.SearchToolbarStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -22,14 +22,30 @@ import com.sceyt.chatuikit.styles.extensions.start_chat.buildCreateGroupTextStyl
 import com.sceyt.chatuikit.styles.extensions.start_chat.buildItemStyle
 import com.sceyt.chatuikit.styles.extensions.start_chat.buildSearchToolbarStyle
 import com.sceyt.chatuikit.styles.extensions.start_chat.buildSeparatorTextStyle
+import com.sceyt.chatuikit.theme.Colors
 
+/**
+ * Style for the [StartChatActivity].
+ * @param backgroundColor Background color of the screen. Default is [Colors.backgroundColor].
+ * @param createChannelIcon Icon for creating a channel. Default is [R.drawable.sceyt_ic_create_channel].
+ * @param createGroupIcon Icon for creating a group. Default is [R.drawable.sceyt_ic_create_group].
+ * @param toolbarTitle Title for the toolbar. Default is [R.string.sceyt_start_chat].
+ * @param createGroupText Text for creating a group. Default is [R.string.sceyt_new_group].
+ * @param createChannelText Text for creating a channel. Default is [R.string.sceyt_new_channel].
+ * @param separatorText Text for the separator. Default is [R.string.sceyt_users].
+ * @param createGroupTextStyle Style for the create group text. Default is [buildCreateGroupTextStyle].
+ * @param createChannelTextStyle Style for the create channel text. Default is [buildCreateChannelTextStyle].
+ * @param separatorTextStyle Style for the separator text. Default is [buildSeparatorTextStyle].
+ * @param toolbarStyle Style for the toolbar. Default is [buildSearchToolbarStyle].
+ * @param itemStyle Style for the items in the list. Default is [buildItemStyle].
+ * */
 data class StartChatStyle(
         @ColorInt val backgroundColor: Int,
         val createChannelIcon: Drawable?,
         val createGroupIcon: Drawable?,
         val toolbarTitle: String,
-        val createGroupText:String,
-        val createChannelText:String,
+        val createGroupText: String,
+        val createChannelText: String,
         val separatorText: String,
         val createGroupTextStyle: TextStyle,
         val createChannelTextStyle: TextStyle,

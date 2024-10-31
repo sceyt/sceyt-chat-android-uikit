@@ -5,7 +5,7 @@ import com.sceyt.chatuikit.databinding.SceytItemSelectUserBinding
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.SelectableUsersAdapter
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
-import com.sceyt.chatuikit.styles.start_chat.UsersListItemsStyle
+import com.sceyt.chatuikit.styles.UsersListItemsStyle
 
 class SelectableUserViewHolder(
         private val binding: SceytItemSelectUserBinding,
