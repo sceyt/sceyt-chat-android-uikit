@@ -11,9 +11,10 @@ import com.sceyt.chatuikit.presentation.components.select_users.adapters.holders
 import com.sceyt.chatuikit.shared.utils.MyDiffUtil
 
 class SelectableUsersAdapter(
-        private var usersList: ArrayList<UserItem>,
+        data: List<UserItem>,
         private val factory: SelectableUserViewHolderFactory,
 ) : RecyclerView.Adapter<BaseViewHolder<UserItem>>() {
+    private var usersList: ArrayList<UserItem> = data.toArrayList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<UserItem> {
         return factory.createViewHolder(parent, viewType)

@@ -280,10 +280,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             .build()
             .applyToAvatar()
 
-        with(icSave) {
-            style.saveButtonStyle.apply(this)
-            setButtonColor(style.saveButtonStyle.backgroundStyle.backgroundColor)
-        }
+        style.saveButtonStyle.applyToCustomButton(icSave)
     }
 
     companion object {

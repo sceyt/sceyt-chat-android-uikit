@@ -29,7 +29,6 @@ class AttachmentImageViewHolder(
     }
 
     private fun SceytItemInputImageAttachmentBinding.setStyle() {
-        btnRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.iconSecondaryColor)
         layoutRemove.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.backgroundColor)
         btnRemove.setImageDrawable(style.removeAttachmentIcon)
     }
