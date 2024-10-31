@@ -34,7 +34,7 @@ import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersV
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapter
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.holders.UserViewHolderFactory
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.start_chat.StartChatStyle
+import com.sceyt.chatuikit.styles.StartChatStyle
 
 class StartChatActivity : AppCompatActivity() {
     private lateinit var binding: SceytActivityStartChatBinding

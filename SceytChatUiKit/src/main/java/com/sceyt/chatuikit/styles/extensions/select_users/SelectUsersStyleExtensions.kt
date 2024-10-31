@@ -18,9 +18,9 @@ import com.sceyt.chatuikit.styles.common.SearchToolbarStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
-import com.sceyt.chatuikit.styles.start_chat.SelectUsersStyle
-import com.sceyt.chatuikit.styles.start_chat.SelectedUsersListItemStyle
-import com.sceyt.chatuikit.styles.start_chat.UsersListItemsStyle
+import com.sceyt.chatuikit.styles.SelectUsersStyle
+import com.sceyt.chatuikit.styles.SelectedUsersListItemStyle
+import com.sceyt.chatuikit.styles.UsersListItemsStyle
 
 internal fun SelectUsersStyle.Builder.buildSeparatorTextStyle(
         array: TypedArray,

@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.styles.start_chat
+package com.sceyt.chatuikit.styles
 
 import android.content.Context
 import android.util.AttributeSet
@@ -9,8 +9,8 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActivity
 import com.sceyt.chatuikit.renderers.AvatarRenderer
-import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.SearchToolbarStyle
 import com.sceyt.chatuikit.styles.common.SelectableListItemStyle
@@ -21,11 +21,21 @@ import com.sceyt.chatuikit.styles.extensions.select_users.buildItemStyle
 import com.sceyt.chatuikit.styles.extensions.select_users.buildSearchToolbarStyle
 import com.sceyt.chatuikit.styles.extensions.select_users.buildSelectedItemStyle
 import com.sceyt.chatuikit.styles.extensions.select_users.buildSeparatorTextStyle
+import com.sceyt.chatuikit.theme.Colors
 
 typealias UsersListItemsStyle = SelectableListItemStyle<Formatter<SceytUser>, Formatter<SceytUser>, AvatarRenderer<SceytUser>>
 typealias SelectedUsersListItemStyle = SelectedListItemStyle<Formatter<SceytUser>, AvatarRenderer<SceytUser>>
 
-
+/**
+ * Style for the [SelectUsersActivity].
+ * @param backgroundColor Background color of the screen. Default is [Colors.backgroundColor].
+ * @param separatorText Text for the separator. Default is [R.string.sceyt_users].
+ * @param separatorTextStyle Style for the separator text. Default is [buildSeparatorTextStyle].
+ * @param toolbarStyle Style for the toolbar. Default is [buildSearchToolbarStyle].
+ * @param actionButton Style for the action button. Default is [buildActionButtonStyle].
+ * @param itemStyle Style for the items in the list. Default is [buildItemStyle].
+ * @param selectedItemStyle Style for the selected items. Default is [buildSelectedItemStyle].
+ * */
 data class SelectUsersStyle(
         @ColorInt val backgroundColor: Int,
         val separatorText: String,

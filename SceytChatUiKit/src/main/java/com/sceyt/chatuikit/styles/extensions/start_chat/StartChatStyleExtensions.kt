@@ -18,7 +18,7 @@ import com.sceyt.chatuikit.styles.common.SearchToolbarStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
-import com.sceyt.chatuikit.styles.start_chat.StartChatStyle
+import com.sceyt.chatuikit.styles.StartChatStyle
 
 internal fun StartChatStyle.Builder.buildCreateGroupTextStyle(
         array: TypedArray,
