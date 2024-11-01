@@ -94,7 +94,7 @@ internal fun MessagesListHeaderStyle.Builder.buildAvatarStyle(
 internal fun MessagesListHeaderStyle.Builder.buildSearchInputHintStyle(
         typedArray: TypedArray,
 ) = HintStyle.Builder(typedArray)
-    .textColor(
+    .color(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputHintTextColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor))
     .hint(

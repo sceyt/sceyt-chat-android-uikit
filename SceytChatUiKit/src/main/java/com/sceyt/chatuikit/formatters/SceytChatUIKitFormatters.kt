@@ -26,6 +26,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultMessageInfoDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageMarkerDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageViewCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultUserAndNotesNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserPresenceDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserShortNameFormatter
@@ -45,6 +46,10 @@ class SceytChatUIKitFormatters {
 
     var userShortNameFormatter: Formatter<SceytUser> by lazyVar {
         DefaultUserShortNameFormatter()
+    }
+
+    var userAndNotesNameFormatter: Formatter<SceytUser> by lazyVar {
+        DefaultUserAndNotesNameFormatter()
     }
 
     var mentionUserNameFormatter: Formatter<SceytUser> by lazyVar {

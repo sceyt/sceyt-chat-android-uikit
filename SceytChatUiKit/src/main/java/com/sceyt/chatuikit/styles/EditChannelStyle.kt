@@ -83,7 +83,7 @@ data class EditChannelStyle(
                         color = context.getCompatColor(SceytChatUIKitTheme.colors.textPrimaryColor)
                     ),
                     hintStyle = HintStyle(
-                        textColor = context.getCompatColor(SceytChatUIKitTheme.colors.textFootnoteColor),
+                        color = context.getCompatColor(SceytChatUIKitTheme.colors.textFootnoteColor),
                         hint = context.getString(R.string.sceyt_hint_channel_subject)
                     )
                 )
@@ -93,7 +93,7 @@ data class EditChannelStyle(
                         color = context.getCompatColor(SceytChatUIKitTheme.colors.textPrimaryColor)
                     ),
                     hintStyle = HintStyle(
-                        textColor = context.getCompatColor(SceytChatUIKitTheme.colors.textFootnoteColor),
+                        color = context.getCompatColor(SceytChatUIKitTheme.colors.textFootnoteColor),
                         hint = context.getString(R.string.sceyt_about)
                     )
                 )
@@ -103,7 +103,7 @@ data class EditChannelStyle(
                         color = context.getCompatColor(SceytChatUIKitTheme.colors.textPrimaryColor)
                     ),
                     hintStyle = HintStyle(
-                        textColor = context.getCompatColor(SceytChatUIKitTheme.colors.textFootnoteColor),
+                        color = context.getCompatColor(SceytChatUIKitTheme.colors.textFootnoteColor),
                         hint = "sceytchn1"
                     )
                 )

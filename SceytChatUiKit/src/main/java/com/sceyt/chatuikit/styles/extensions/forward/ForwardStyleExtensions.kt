@@ -33,7 +33,7 @@ internal fun ForwardStyle.Builder.buildSearchInputStyle(
     ),
     textInputStyle = TextInputStyle(
         hintStyle = HintStyle(
-            textColor = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor),
+            color = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor),
             hint = context.getString(R.string.sceyt_search)
         ),
         textStyle = TextStyle(

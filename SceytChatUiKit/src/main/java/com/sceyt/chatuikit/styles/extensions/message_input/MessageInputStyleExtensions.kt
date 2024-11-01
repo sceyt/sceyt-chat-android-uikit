@@ -46,7 +46,7 @@ internal fun MessageInputStyle.Builder.buildInputTextStyle(
 internal fun MessageInputStyle.Builder.buildInputHintStyle(
         array: TypedArray
 ) = HintStyle.Builder(array)
-    .textColor(
+    .color(
         index = R.styleable.MessageInputView_sceytUiMessageInputHintTextColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor)
     )

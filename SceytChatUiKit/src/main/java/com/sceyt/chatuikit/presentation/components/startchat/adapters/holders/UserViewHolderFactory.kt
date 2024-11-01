@@ -3,13 +3,22 @@ package com.sceyt.chatuikit.presentation.components.startchat.adapters.holders
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytItemLoadingMoreBinding
 import com.sceyt.chatuikit.databinding.SceytItemUserBinding
-import com.sceyt.chatuikit.presentation.root.BaseViewHolder
+import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.LoadingMoreViewHolder
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapter
+import com.sceyt.chatuikit.presentation.root.BaseViewHolder
+import com.sceyt.chatuikit.renderers.AvatarRenderer
+import com.sceyt.chatuikit.styles.common.ListItemStyle
 
-class UserViewHolderFactory (context: Context, private val listeners: UsersAdapter.ClickListener) {
+class UserViewHolderFactory(
+        context: Context,
+        private val style: ListItemStyle<Formatter<SceytUser>, Formatter<SceytUser>, AvatarRenderer<SceytUser>>,
+        private val listeners: UsersAdapter.ClickListener,
+) {
 
     private val layoutInflater = LayoutInflater.from(context)
 
@@ -17,13 +26,14 @@ class UserViewHolderFactory (context: Context, private val listeners: UsersAdapt
         return when (viewType) {
             ItemViewType.User.ordinal -> {
                 UserViewHolder(SceytItemUserBinding.inflate(layoutInflater, parent, false),
-                    listeners)
+                    style, listeners)
             }
+
             ItemViewType.Loading.ordinal -> {
-                return object : BaseViewHolder<UserItem>(SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false).root) {
-                    override fun bind(item: UserItem) {}
-                }
+                val binding = SceytItemLoadingMoreBinding.inflate(layoutInflater, parent, false)
+                return LoadingMoreViewHolder(binding)
             }
+
             else -> throw RuntimeException("Not supported view type")
         }
     }

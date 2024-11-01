@@ -41,7 +41,7 @@ internal fun SelectUsersStyle.Builder.buildSearchInputStyle(
     ),
     textInputStyle = TextInputStyle(
         hintStyle = HintStyle(
-            textColor = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor),
+            color = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor),
             hint = context.getString(R.string.sceyt_search)
         ),
         textStyle = TextStyle(
@@ -71,7 +71,7 @@ internal fun SelectUsersStyle.Builder.buildActionButtonStyle(
         array: TypedArray,
 ) = ButtonStyle(
     backgroundStyle = BackgroundStyle(
-        backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.warningColor),
+        backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor),
     ),
     icon = context.getCompatDrawable(R.drawable.sceyt_ic_arrow_next).applyTint(
         context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
