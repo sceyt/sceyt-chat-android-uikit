@@ -65,13 +65,23 @@ class AvatarView @JvmOverloads constructor(
                 .build()
             avatarBackgroundColor = array.getColor(R.styleable.AvatarView_sceytUiAvatarColor, avatarBackgroundColor)
             val defaultAvatarResId = array.getResourceId(R.styleable.AvatarView_sceytUiAvatarDefaultIcon, 0)
-            if (defaultAvatarResId != 0) {
-                defaultAvatar = defaultAvatarResId.toDefaultAvatar()
-            }
             enableRipple = array.getBoolean(R.styleable.AvatarView_sceytUiAvatarEnableRipple, true)
-        }
 
-        scaleType = ScaleType.CENTER_CROP
+            defaultAvatar = when {
+                defaultAvatarResId != 0 -> defaultAvatarResId.toDefaultAvatar()
+                !name.isNullOrBlank() -> DefaultAvatar.Initial(getInitials(name.toString()))
+                else -> null
+            }
+            val shapeValue = array.getInt(R.styleable.AvatarView_sceytUiAvatarShape, 0)
+            val cornerRadius = array.getDimension(R.styleable.AvatarView_sceytUiAvatarCornerRadius, 0f)
+            shape = if (shapeValue == 1) {
+                Shape.RoundedCornerShape(cornerRadius)
+            } else Shape.Circle
+
+            scaleType = array.getInt(R.styleable.AvatarView_android_scaleType, -1).takeIf {
+                it != -1
+            }?.let { ScaleType.entries.getOrNull(it) } ?: ScaleType.CENTER_CROP
+        }
 
         if (enableRipple) {
             val ripple = context.getCompatDrawable(R.drawable.sceyt_bg_ripple_circle)
