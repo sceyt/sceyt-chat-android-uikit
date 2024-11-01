@@ -4,26 +4,24 @@ import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import android.view.Gravity
-import android.view.LayoutInflater
 import android.view.WindowManager
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytDialogMediaActionsBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.chatuikit.presentation.components.media.dialogs.ActionDialog.Action.Forward
 import com.sceyt.chatuikit.presentation.components.media.dialogs.ActionDialog.Action.Save
 import com.sceyt.chatuikit.presentation.components.media.dialogs.ActionDialog.Action.Share
+import com.sceyt.chatuikit.styles.DialogStyle
 
 class ActionDialog(
         context: Context,
-        var listener: ((Action) -> Unit)? = null
+        var listener: ((Action) -> Unit)? = null,
 ) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogMediaActionsBinding
+    private val style = DialogStyle.default(context)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = SceytDialogMediaActionsBinding.inflate(LayoutInflater.from(context))
+        binding = SceytDialogMediaActionsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.applyStyle()
         initView()
@@ -57,7 +55,12 @@ class ActionDialog(
     }
 
     private fun SceytDialogMediaActionsBinding.applyStyle() {
-        setTextViewsDrawableColor(listOf(save, share, forward), context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+        style.backgroundStyle.apply(root)
+        with(style.subtitleStyle) {
+            apply(save)
+            apply(share)
+            apply(forward)
+        }
     }
 
     enum class Action {

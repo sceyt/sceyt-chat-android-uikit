@@ -75,18 +75,18 @@
         <item name="android:layoutAnimation">@anim/sceyt_layout_animation_fall_down</item>
     </style>
 
-    <style name="SceytDialogNoTitle" parent="Theme.AppCompat.Light.Dialog.Alert">
+    <style name="SceytDialogStyle" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowMinWidthMajor">90%</item>
         <item name="android:windowMinWidthMinor">90%</item>
-        <item name="android:windowBackground">@drawable/sceyt_bg_dialog</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 
     <style name="SceytDialogNoTitle95" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowMinWidthMajor">95%</item>
         <item name="android:windowMinWidthMinor">95%</item>
-        <item name="android:windowBackground">@drawable/sceyt_bg_dialog</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 
     <style name="SceytDialogWindowAnimation">

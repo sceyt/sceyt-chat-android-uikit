@@ -18,6 +18,7 @@ import androidx.annotation.FontRes
 import androidx.annotation.Px
 import androidx.annotation.StyleableRes
 import androidx.core.content.res.ResourcesCompat
+import com.sceyt.chatuikit.extensions.setTextViewDrawableColor
 import com.sceyt.chatuikit.styles.Style
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_RESOURCE
@@ -28,9 +29,10 @@ import com.sceyt.chatuikit.styles.StyleConstants.styleOrDefault
 data class TextStyle(
         @ColorInt val backgroundColor: Int = UNSET_COLOR,
         @ColorInt val color: Int = UNSET_COLOR,
+        @ColorInt val drawableColor: Int = UNSET_COLOR,
         @Px val size: Int = UNSET_SIZE,
         @FontRes val font: Int = UNSET_RESOURCE,
-        @Style val style: Int = UNSET_STYLE
+        @Style val style: Int = UNSET_STYLE,
 ) {
 
     fun apply(textView: TextView) {
@@ -46,6 +48,11 @@ data class TextStyle(
         if (color != UNSET_COLOR) {
             textView.setTextColor(color)
         }
+
+        if (drawableColor != UNSET_COLOR) {
+            textView.setTextViewDrawableColor(drawableColor)
+        }
+
         val typeface = if (font != UNSET_RESOURCE)
             ResourcesCompat.getFont(textView.context, font) else Typeface.DEFAULT
 
@@ -56,7 +63,7 @@ data class TextStyle(
             context: Context,
             spannable: Spannable,
             start: Int = 0,
-            end: Int = spannable.length
+            end: Int = spannable.length,
     ) {
         if (end - start <= 0) return
         if (color != UNSET_COLOR) {

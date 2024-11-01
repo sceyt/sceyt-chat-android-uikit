@@ -8,16 +8,14 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogChannelActionsBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
-import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
+import com.sceyt.chatuikit.styles.DialogStyle
 
 open class ChannelActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogChannelActionsBinding
+    private val style = DialogStyle.default(context)
     private var listener: ((ActionsEnum) -> Unit)? = null
     private lateinit var channel: SceytChannel
 
@@ -106,11 +104,19 @@ open class ChannelActionsDialog(context: Context) : Dialog(context, R.style.Scey
     }
 
     protected open fun SceytDialogChannelActionsBinding.applyStyle() {
-        val texts = listOf(pin, unPin, markAsRead, markAsUnRead, mute, unMute)
-        setTextViewsDrawableColor(texts, context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-        setTextViewsTextColor(texts, context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
-        setTextViewsDrawableColor(listOf(delete, leave), context.getCompatColor(SceytChatUIKit.theme.colors.warningColor))
-        setTextViewsTextColor(listOf(delete, leave), context.getCompatColor(SceytChatUIKit.theme.colors.warningColor))
+        style.backgroundStyle.apply(root)
+        with(style.optionButtonStyle) {
+            apply(pin)
+            apply(unPin)
+            apply(markAsRead)
+            apply(markAsUnRead)
+            apply(mute)
+            apply(unMute)
+        }
+        with(style.warningOptionButtonStyle) {
+            apply(delete)
+            apply(leave)
+        }
     }
 
     companion object {

@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.styles.common
 import android.content.res.TypedArray
 import android.graphics.drawable.Drawable
 import android.widget.Button
+import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.Px
 import androidx.annotation.StyleableRes
@@ -14,9 +15,9 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
 import com.sceyt.chatuikit.styles.common.Shape.RoundedCornerShape
 
 data class ButtonStyle(
+        val backgroundStyle: BackgroundStyle = BackgroundStyle(),
         val textStyle: TextStyle = TextStyle(),
         val icon: Drawable? = null,
-        val backgroundStyle: BackgroundStyle = BackgroundStyle(),
 ) {
 
     fun apply(button: Button) {
@@ -27,6 +28,11 @@ data class ButtonStyle(
     fun apply(button: FloatingActionButton) {
         backgroundStyle.apply(button)
         button.setImageDrawable(icon)
+    }
+
+    fun apply(button: TextView) {
+        backgroundStyle.apply(button)
+        textStyle.apply(button)
     }
 
     fun applyToCustomButton(button: CustomFloatingActonButton) {

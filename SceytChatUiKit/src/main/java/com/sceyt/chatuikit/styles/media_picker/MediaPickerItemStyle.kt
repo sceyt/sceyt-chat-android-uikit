@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
+import androidx.core.content.res.use
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
@@ -32,7 +33,7 @@ data class MediaPickerItemStyle(
         val brokenMediaPlaceHolder: Drawable?,
         val videoDurationTextStyle: TextStyle,
         val checkboxStyle: CheckboxStyle,
-        val mediaDurationFormatter: Formatter<Long>
+        val mediaDurationFormatter: Formatter<Long>,
 ) {
     companion object {
         @JvmField
@@ -41,34 +42,36 @@ data class MediaPickerItemStyle(
 
     internal class Builder(
             private val context: Context,
-            private val attributeSet: AttributeSet?
+            private val attributeSet: AttributeSet?,
     ) {
         fun build(): MediaPickerItemStyle {
-            val backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.backgroundColorSecondary)
+            context.obtainStyledAttributes(attributeSet, R.styleable.MediaPicker).use {
+                val backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.backgroundColorSecondary)
 
-            val checkboxStyle = CheckboxStyle(
-                checkedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_checked_state_with_layers).applyTintBackgroundLayer(
-                    context.getCompatColor(SceytChatUIKitTheme.colors.accentColor), R.id.backgroundLayer
-                ),
-                uncheckedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_unchecked_state_picker)
-            )
+                val checkboxStyle = CheckboxStyle(
+                    checkedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_checked_state_with_layers).applyTintBackgroundLayer(
+                        context.getCompatColor(SceytChatUIKitTheme.colors.accentColor), R.id.backgroundLayer
+                    ),
+                    uncheckedIcon = context.getCompatDrawable(R.drawable.sceyt_ic_unchecked_state_picker)
+                )
 
-            val videoDurationIcon = context.getCompatDrawable(R.drawable.sceyt_ic_video)
+                val videoDurationIcon = context.getCompatDrawable(R.drawable.sceyt_ic_video)
 
-            val brokenMediaPlaceHolder = context.getCompatDrawable(R.drawable.sceyt_ic_broken_image)
+                val brokenMediaPlaceHolder = context.getCompatDrawable(R.drawable.sceyt_ic_broken_image)
 
-            val videoDurationTextStyle = TextStyle(
-                color = context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor),
-            )
+                val videoDurationTextStyle = TextStyle(
+                    color = context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor),
+                )
 
-            return MediaPickerItemStyle(
-                backgroundColor = backgroundColor,
-                videoDurationIcon = videoDurationIcon,
-                brokenMediaPlaceHolder = brokenMediaPlaceHolder,
-                videoDurationTextStyle = videoDurationTextStyle,
-                checkboxStyle = checkboxStyle,
-                mediaDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter
-            ).let { styleCustomizer.apply(context, it) }
+                return MediaPickerItemStyle(
+                    backgroundColor = backgroundColor,
+                    videoDurationIcon = videoDurationIcon,
+                    brokenMediaPlaceHolder = brokenMediaPlaceHolder,
+                    videoDurationTextStyle = videoDurationTextStyle,
+                    checkboxStyle = checkboxStyle,
+                    mediaDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter
+                ).let { styleCustomizer.apply(context, it) }
+            }
         }
     }
 }

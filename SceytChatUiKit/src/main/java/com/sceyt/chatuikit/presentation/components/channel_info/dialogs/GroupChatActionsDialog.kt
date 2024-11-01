@@ -8,18 +8,16 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogGroupChannelActionsBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
-import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.styles.DialogStyle
 
 class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogGroupChannelActionsBinding
+    private val style = DialogStyle.default(context)
     private var listener: ((ActionsEnum) -> Unit)? = null
     private lateinit var channel: SceytChannel
 
@@ -106,14 +104,17 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
     }
 
     private fun SceytDialogGroupChannelActionsBinding.applyStyle() {
-        setTextViewsDrawableColor(listOf(pin, unPin, clearHistory, report),
-            context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-        setTextViewsDrawableColor(listOf(leaveChat, delete),
-            context.getCompatColor(SceytChatUIKit.theme.colors.warningColor))
-        setTextViewsTextColor(listOf(pin, unPin, clearHistory, report),
-            context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
-        setTextViewsTextColor(listOf(leaveChat, delete),
-            context.getCompatColor(SceytChatUIKit.theme.colors.warningColor))
+        style.backgroundStyle.apply(root)
+        with(style.optionButtonStyle) {
+            apply(pin)
+            apply(unPin)
+            apply(clearHistory)
+            apply(report)
+        }
+        with(style.warningOptionButtonStyle) {
+            apply(leaveChat)
+            apply(delete)
+        }
     }
 
     companion object {
