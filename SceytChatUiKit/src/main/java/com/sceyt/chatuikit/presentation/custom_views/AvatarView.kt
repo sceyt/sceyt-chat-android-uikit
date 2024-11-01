@@ -261,6 +261,7 @@ class AvatarView @JvmOverloads constructor(
         loadAvatarImage(oldImageUrl)
     }
 
+    @Suppress("Unused")
     fun setDefaultAvatar(avatar: DefaultAvatar) {
         defaultAvatar = avatar
         setDefaultImageIfNeeded(defaultAvatar)
@@ -316,6 +317,7 @@ class AvatarView @JvmOverloads constructor(
         }
     }
 
+    @Suppress("Unused")
     inner class AppearanceBuilder {
         private var name = this@AvatarView.name
         private var imageUrl = this@AvatarView.imageUrl
@@ -363,7 +365,6 @@ class AvatarView @JvmOverloads constructor(
         )
     }
 }
-
 
 fun @receiver:DrawableRes Int.toDefaultAvatar(): DefaultAvatar {
     return DefaultAvatar.FromDrawableRes(this)
