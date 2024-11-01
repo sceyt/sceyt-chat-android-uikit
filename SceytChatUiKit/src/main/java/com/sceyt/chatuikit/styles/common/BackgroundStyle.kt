@@ -4,6 +4,7 @@ import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.view.View
+import android.view.Window
 import androidx.annotation.ColorInt
 import androidx.annotation.Px
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -15,7 +16,7 @@ data class BackgroundStyle(
         @ColorInt val backgroundColor: Int = UNSET_COLOR,
         @ColorInt val borderColor: Int = UNSET_COLOR,
         @Px val borderWidth: Int = UNSET_SIZE,
-        val shape: Shape = Shape.UnsetShape
+        val shape: Shape = Shape.UnsetShape,
 ) {
 
     fun apply(view: View) {
@@ -38,6 +39,28 @@ data class BackgroundStyle(
             }
         }
         view.background = background.mutate()
+    }
+
+    fun apply(view: Window?) {
+        view ?: return
+        if (!shouldApplyStyle) return
+
+        if (background != null) {
+            view.setBackgroundDrawable(background)
+            return
+        }
+
+        val background = GradientDrawable().apply {
+            this@BackgroundStyle.shape.applyTo(this)
+
+            if (borderWidth != UNSET_SIZE)
+                setStroke(borderWidth, borderColor)
+
+            if (backgroundColor != UNSET_COLOR) {
+                setColor(backgroundColor)
+            }
+        }
+        view.setBackgroundDrawable(background.mutate())
     }
 
     fun apply(button: FloatingActionButton) {

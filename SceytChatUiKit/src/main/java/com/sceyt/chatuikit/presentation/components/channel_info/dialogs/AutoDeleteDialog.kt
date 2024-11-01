@@ -8,13 +8,14 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.IntervalOption
 import com.sceyt.chatuikit.databinding.SceytDialogAutoDeleteBinding
-import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.common.IntervalOptionsAdapter
+import com.sceyt.chatuikit.styles.DialogStyle
 
 class AutoDeleteDialog(
         context: Context,
-) : Dialog(context, R.style.SceytDialogNoTitle) {
+) : Dialog(context, R.style.SceytDialogStyle) {
     private lateinit var binding: SceytDialogAutoDeleteBinding
+    private val style = DialogStyle.default(context)
     private var chooseListener: ((IntervalOption) -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,7 +29,7 @@ class AutoDeleteDialog(
 
     private fun setOptions() {
         val options = SceytChatUIKit.config.messageAutoDeleteOptions.getOptions(context)
-        binding.rvOptions.adapter = IntervalOptionsAdapter(options) {
+        binding.rvOptions.adapter = IntervalOptionsAdapter(options, style.optionButtonStyle) {
             chooseListener?.invoke(it)
             dismiss()
         }
@@ -44,6 +45,7 @@ class AutoDeleteDialog(
     }
 
     private fun SceytDialogAutoDeleteBinding.applyStyle() {
-        tvTitle.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        style.backgroundStyle.apply(root)
+        style.titleStyle.apply(tvTitle)
     }
 }

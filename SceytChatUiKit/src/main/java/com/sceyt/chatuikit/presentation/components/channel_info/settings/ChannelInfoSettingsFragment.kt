@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoSettingsBinding
 import com.sceyt.chatuikit.extensions.parcelable
+import com.sceyt.chatuikit.extensions.setColors
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.extensions.setOnlyClickable
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
@@ -103,10 +104,12 @@ open class ChannelInfoSettingsFragment : Fragment(), ChannelUpdateListener, Chan
         notification.apply {
             setDrawableStart(style.notificationsIcon)
             text = style.notificationsTitleText
+            setColors()
         }
         autoDeleteMessages.apply {
             setDrawableStart(style.autoDeleteMessagesIcon)
             text = style.autoDeleteMessagesTitleText
+            setColors()
         }
 
         border.dividerColor = infoStyle.borderColor

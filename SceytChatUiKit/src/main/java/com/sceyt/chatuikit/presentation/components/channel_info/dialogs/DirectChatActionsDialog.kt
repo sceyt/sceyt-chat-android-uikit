@@ -8,18 +8,15 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogDirectChannelActionsBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setTextViewDrawableColor
-import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
-import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
+import com.sceyt.chatuikit.styles.DialogStyle
 
 class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogDirectChannelActionsBinding
+    private val style = DialogStyle.default(context)
     private var listener: ((ActionsEnum) -> Unit)? = null
     private lateinit var channel: SceytChannel
 
@@ -109,14 +106,15 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     }
 
     private fun SceytDialogDirectChannelActionsBinding.applyStyle() {
-        setTextViewsDrawableColor(listOf(pin, unPin, blockUser, unBlockUser, clearHistory),
-            context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-
-        setTextViewsTextColor(listOf(pin, unPin, blockUser, unBlockUser, clearHistory),
-            context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
-
-        delete.setTextViewDrawableColor(context.getCompatColor(SceytChatUIKit.theme.colors.warningColor))
-        delete.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.warningColor))
+        style.backgroundStyle.apply(root)
+        with(style.optionButtonStyle) {
+            apply(pin)
+            apply(unPin)
+            apply(blockUser)
+            apply(unBlockUser)
+            apply(clearHistory)
+        }
+        style.warningOptionButtonStyle.apply(delete)
     }
 
     companion object {
