@@ -9,12 +9,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.models.role.Role
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityCreateChannelBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
@@ -28,15 +26,18 @@ import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActiv
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageArgs
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResult
 import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.styles.CreateChannelStyle
 import kotlinx.coroutines.launch
 
 class CreateChannelActivity : AppCompatActivity() {
     private lateinit var binding: SceytActivityCreateChannelBinding
+    private lateinit var style: CreateChannelStyle
     private val viewModel: CreateChatViewModel by viewModels()
     private lateinit var createdChannel: SceytChannel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        style = CreateChannelStyle.Builder(this, null).build()
         setContentView(SceytActivityCreateChannelBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
@@ -117,9 +118,7 @@ class CreateChannelActivity : AppCompatActivity() {
     }
 
     private fun SceytActivityCreateChannelBinding.applyStyle() {
-        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
-        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
-        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
-        toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        root.setBackgroundColor(style.backgroundColor)
+        style.toolbarStyle.apply(toolbar)
     }
 }

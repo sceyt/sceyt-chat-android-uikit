@@ -39,6 +39,7 @@ import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapt
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.holders.UserViewHolderFactory
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
+import com.sceyt.chatuikit.styles.common.ListItemStyle
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch
 import java.io.File
@@ -143,7 +144,14 @@ class CreateGroupActivity : AppCompatActivity() {
 
     private fun setMembersAdapter() {
         val data = members.map { UserItem.User(it.user) }
-        binding.rvMembers.adapter = UsersAdapter(data, UserViewHolderFactory(this) {})
+        binding.rvMembers.adapter = UsersAdapter(data, UserViewHolderFactory(this,
+            ListItemStyle(
+                titleFormatter = SceytChatUIKit.formatters.userNameFormatter,
+                subtitleFormatter = SceytChatUIKit.formatters.userPresenceDateFormatter,
+                avatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer,
+            ),
+            listeners = {})
+        )
     }
 
     private fun cropImage(filePath: String?) {

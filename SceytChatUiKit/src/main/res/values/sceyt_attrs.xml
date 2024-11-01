@@ -2,7 +2,6 @@
 <resources>
 
     <declare-styleable name="AvatarView">
-        <attr name="sceytUiAvatarImageUrl" format="string" />
         <attr name="sceytUiAvatarFullName" format="string" />
 
         <!--Text style -->

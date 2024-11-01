@@ -24,6 +24,8 @@ import com.sceyt.chatuikit.styles.extensions.start_chat.buildSearchToolbarStyle
 import com.sceyt.chatuikit.styles.extensions.start_chat.buildSeparatorTextStyle
 import com.sceyt.chatuikit.theme.Colors
 
+typealias StartChatUsersItemStyle = ListItemStyle<Formatter<SceytUser>, Formatter<SceytUser>, AvatarRenderer<SceytUser>>
+
 /**
  * Style for the [StartChatActivity].
  * @param backgroundColor Background color of the screen. Default is [Colors.backgroundColor].
@@ -51,7 +53,7 @@ data class StartChatStyle(
         val createChannelTextStyle: TextStyle,
         val separatorTextStyle: TextStyle,
         val toolbarStyle: SearchToolbarStyle,
-        val itemStyle: ListItemStyle<Formatter<SceytUser>, Formatter<SceytUser>, AvatarRenderer<SceytUser>>,
+        val itemStyle: StartChatUsersItemStyle,
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<StartChatStyle> { _, style -> style }

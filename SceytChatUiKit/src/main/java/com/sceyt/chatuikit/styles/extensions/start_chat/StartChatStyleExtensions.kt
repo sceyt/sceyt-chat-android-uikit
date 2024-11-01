@@ -5,20 +5,17 @@ package com.sceyt.chatuikit.styles.extensions.start_chat
 import android.content.res.TypedArray
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.renderers.AvatarRenderer
+import com.sceyt.chatuikit.styles.StartChatStyle
+import com.sceyt.chatuikit.styles.StartChatUsersItemStyle
 import com.sceyt.chatuikit.styles.common.HintStyle
-import com.sceyt.chatuikit.styles.common.ListItemStyle
 import com.sceyt.chatuikit.styles.common.SearchInputStyle
 import com.sceyt.chatuikit.styles.common.SearchToolbarStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
-import com.sceyt.chatuikit.styles.StartChatStyle
 
 internal fun StartChatStyle.Builder.buildCreateGroupTextStyle(
         array: TypedArray,
@@ -51,7 +48,7 @@ internal fun StartChatStyle.Builder.buildSearchInputStyle(
     ),
     textInputStyle = TextInputStyle(
         hintStyle = HintStyle(
-            textColor = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor),
+            color = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor),
             hint = context.getString(R.string.sceyt_search)
         ),
         textStyle = TextStyle(
@@ -79,7 +76,7 @@ internal fun StartChatStyle.Builder.buildSearchToolbarStyle(
 
 internal fun StartChatStyle.Builder.buildItemStyle(
         array: TypedArray,
-): ListItemStyle<Formatter<SceytUser>, Formatter<SceytUser>, AvatarRenderer<SceytUser>> {
+): StartChatUsersItemStyle {
 
     val titleTextStyle = TextStyle(
         color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
@@ -89,11 +86,11 @@ internal fun StartChatStyle.Builder.buildItemStyle(
         color = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
 
-    return ListItemStyle(
+    return StartChatUsersItemStyle(
         titleTextStyle = titleTextStyle,
         subtitleTextStyle = subtitleTextStyle,
-        titleFormatter = SceytChatUIKit.formatters.userNameFormatter,
+        titleFormatter = SceytChatUIKit.formatters.userAndNotesNameFormatter,
         subtitleFormatter = SceytChatUIKit.formatters.userPresenceDateFormatter,
-        avatarRenderer = SceytChatUIKit.renderers.userAvatarRenderer
+        avatarRenderer = SceytChatUIKit.renderers.userAndNotesAvatarRenderer
     )
 }

@@ -119,7 +119,7 @@ class StartChatActivity : AppCompatActivity() {
             listWithSelf.add(0, UserItem.User(it))
         }
         if (::usersAdapter.isInitialized.not()) {
-            binding.rvUsers.adapter = UsersAdapter(listWithSelf, UserViewHolderFactory(this) {
+            binding.rvUsers.adapter = UsersAdapter(listWithSelf, UserViewHolderFactory(this, style.itemStyle) {
                 if (creatingChannel) return@UserViewHolderFactory
                 creatingChannel = true
                 viewModel.findOrCreateDirectChannel(it.user)
@@ -159,7 +159,7 @@ class StartChatActivity : AppCompatActivity() {
     private fun SceytActivityStartChatBinding.applyStyle() {
         root.setBackgroundColor(style.backgroundColor)
         style.separatorTextStyle.apply(tvUsers)
-        with(toolbar){
+        with(toolbar) {
             style.toolbarStyle.apply(this)
             setTitle(style.toolbarTitle)
         }
