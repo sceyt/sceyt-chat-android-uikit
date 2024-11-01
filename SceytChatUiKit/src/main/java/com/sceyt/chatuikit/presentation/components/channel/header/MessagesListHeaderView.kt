@@ -43,7 +43,6 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
-import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderTypingUsersHelper
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.HeaderClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.HeaderClickListenersImpl
@@ -64,7 +63,7 @@ import kotlinx.coroutines.launch
 class MessagesListHeaderView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+        defStyleAttr: Int = 0,
 ) : AppBarLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners,
         HeaderEventsListener.EventListeners, HeaderUIElementsListener.ElementsListeners {
 
@@ -180,7 +179,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     private fun setChannelSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
-        if (enablePresence.not() || channel.isPeerDeleted() || channel.isSelf()) {
+        if (enablePresence.not() || channel.isPeerDeleted() || channel.isSelf) {
             subjectTextView.isVisible = false
             return
         }
@@ -217,7 +216,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private fun showMessageActionsInToolbar(
             vararg messages: SceytMessage,
             menuStyle: MenuStyle,
-            listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?
+            listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?,
     ) {
         with(binding) {
             toolbarMessageActions.setToolbarIconsVisibilityInitializer { messages, menu ->
@@ -336,10 +335,13 @@ class MessagesListHeaderView @JvmOverloads constructor(
         toolbarSearchModeChangeListener = listener
     }
 
+    @Suppress("unused")
     fun isTyping() = typingUsersHelper.isTyping
 
+    @Suppress("unused")
     fun getChannel() = if (::channel.isInitialized) channel else null
 
+    @Suppress("unused")
     fun getReplyMessage() = replyMessage
 
     fun setCustomClickListener(listeners: HeaderClickListenersImpl) {
@@ -350,18 +352,22 @@ class MessagesListHeaderView @JvmOverloads constructor(
         clickListeners.setListener(listeners)
     }
 
+    @Suppress("unused")
     fun setEventListener(listener: HeaderEventsListener) {
         eventListeners.setListener(listener)
     }
 
+    @Suppress("unused")
     fun setCustomEventListener(listener: HeaderEventsListenerImpl) {
         eventListeners = listener
     }
 
+    @Suppress("unused")
     fun setUiElementsListener(listener: HeaderUIElementsListener) {
         uiElementsListeners.setListener(listener)
     }
 
+    @Suppress("unused")
     fun setCustomUiElementsListener(listener: HeaderUIElementsListenerImpl) {
         uiElementsListeners = listener
     }
@@ -370,10 +376,12 @@ class MessagesListHeaderView @JvmOverloads constructor(
         onSearchQueryChangeListener = listener
     }
 
+    @Suppress("unused")
     fun setTypingTextBuilder(builder: (SceytMember) -> String) {
         typingUsersHelper.setTypingTextBuilder(builder)
     }
 
+    @Suppress("unused")
     fun invalidateUi() {
         with(binding) {
             uiElementsListeners.onTitle(title, channel, replyMessage, isReplyInThread)
@@ -382,6 +390,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
+    @Suppress("unused")
     fun setToolbarMenu(@MenuRes resId: Int, listener: Toolbar.OnMenuItemClickListener) {
         with(binding.headerToolbar) {
             inflateMenu(resId)
@@ -390,8 +399,10 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
+    @Suppress("unused")
     fun getToolbarMenu(): Menu = binding.headerToolbar.menu
 
+    @Suppress("unused")
     fun enableDisableToShowPresence(enable: Boolean) {
         enablePresence = enable
     }

@@ -272,6 +272,7 @@ class CircularProgressView @JvmOverloads constructor(
         invalidate()
     }
 
+    @Suppress("unused")
     fun setThickness(width: Float) {
         progressPaint.strokeWidth = width
         trackPaint.strokeWidth = width
@@ -279,6 +280,7 @@ class CircularProgressView @JvmOverloads constructor(
         invalidate()
     }
 
+    @Suppress("unused")
     fun setRotateAnimEnabled(enabled: Boolean) {
         rotateAnimEnabled = enabled
         if (!enabled)
@@ -286,6 +288,7 @@ class CircularProgressView @JvmOverloads constructor(
         invalidate()
     }
 
+    @Suppress("unused")
     fun setRounded(rounded: Boolean) {
         progressPaint.strokeCap = if (rounded) Paint.Cap.ROUND else Paint.Cap.BUTT
         invalidate()
@@ -296,11 +299,22 @@ class CircularProgressView @JvmOverloads constructor(
         invalidate()
     }
 
+    @Suppress("unused")
     fun setIconTintColor(@ColorInt color: Int) {
         iconTintColor = color
         invalidate()
     }
 
+    @Suppress("unused")
+    fun setTransferring(transferring: Boolean) {
+        this.transferring = transferring
+        if (!transferring)
+            rotateAnim?.cancel()
+        else rotate()
+        invalidate()
+    }
+
+    @Suppress("unused")
     fun hideAwaitToAnimFinish(hideCb: ((Boolean) -> Unit)? = null) {
         if (updateProgressAnim?.isRunning == true) {
             drawingProgressAnimEndCb = {
@@ -313,11 +327,13 @@ class CircularProgressView @JvmOverloads constructor(
         }
     }
 
+    @Suppress("unused")
     fun setMinProgress(@FloatRange(from = 0.0, to = 100.0) minProgress: Float) {
         this.minProgress = minProgress
         invalidate()
     }
 
+    @Suppress("unused")
     fun getProgressAnim() = updateProgressAnim
 
     private fun setVisibleWithAnim() {

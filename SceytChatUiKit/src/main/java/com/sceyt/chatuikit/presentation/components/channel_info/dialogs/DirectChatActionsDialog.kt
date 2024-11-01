@@ -17,7 +17,6 @@ import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
-import com.sceyt.chatuikit.persistence.extensions.isSelf
 
 class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogDirectChannelActionsBinding
@@ -51,7 +50,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     }
 
     private fun SceytDialogDirectChannelActionsBinding.initView() {
-        if (channel.isSelf()) {
+        if (channel.isSelf) {
             blockUser.isVisible = false
             unBlockUser.isVisible = false
         } else
@@ -92,7 +91,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
     }
 
     private fun SceytDialogDirectChannelActionsBinding.determinateState() {
-        if (channel.isSelf()) {
+        if (channel.isSelf) {
             blockUser.isVisible = false
             unBlockUser.isVisible = false
         } else
