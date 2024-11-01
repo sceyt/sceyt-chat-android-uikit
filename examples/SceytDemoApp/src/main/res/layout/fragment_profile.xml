@@ -90,8 +90,8 @@
                     android:layout_height="72dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar"
                     app:sceytUiAvatarTextSize="@dimen/extraLargeTextSize"
+                    tools:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar"
                     tools:sceytUiAvatarFullName="User name" />
 
                 <androidx.appcompat.widget.AppCompatImageView

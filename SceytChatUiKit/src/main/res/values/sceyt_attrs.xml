@@ -3,6 +3,16 @@
 
     <declare-styleable name="AvatarView">
         <attr name="sceytUiAvatarFullName" format="string" />
+        <attr name="android:scaleType">
+            <enum name="matrix" value="0" />
+            <enum name="fitXY" value="1" />
+            <enum name="fitStart" value="2" />
+            <enum name="fitCenter" value="3" />
+            <enum name="fitEnd" value="4" />
+            <enum name="center" value="5" />
+            <enum name="centerCrop" value="6" />
+            <enum name="centerInside" value="7" />
+        </attr>
 
         <!--Text style -->
         <attr name="sceytUiAvatarTextSize" format="dimension|integer" />
@@ -17,6 +27,11 @@
         <attr name="sceytUiAvatarColor" format="color|reference" />
         <attr name="sceytUiAvatarDefaultIcon" format="reference" />
         <attr name="sceytUiAvatarEnableRipple" format="boolean" />
+        <attr name="sceytUiAvatarShape">
+            <flag name="circle" value="0" />
+            <flag name="rounded" value="1" />
+        </attr>
+        <attr name="sceytUiAvatarCornerRadius" format="dimension" />
     </declare-styleable>
 
     <declare-styleable name="ToReplyLineView">
