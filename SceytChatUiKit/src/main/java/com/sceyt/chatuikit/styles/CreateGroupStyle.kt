@@ -10,77 +10,81 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.presentation.components.create_chat.create_channel.CreateChannelActivity
+import com.sceyt.chatuikit.formatters.UserFormatter
+import com.sceyt.chatuikit.presentation.components.create_chat.create_group.CreateGroupActivity
+import com.sceyt.chatuikit.renderers.UserAvatarRenderer
 import com.sceyt.chatuikit.styles.common.ButtonStyle
+import com.sceyt.chatuikit.styles.common.ListItemStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
-import com.sceyt.chatuikit.styles.common.URIValidationStyle
-import com.sceyt.chatuikit.styles.extensions.create_channel.buildAboutTextFieldStyle
-import com.sceyt.chatuikit.styles.extensions.create_channel.buildActionButtonStyle
-import com.sceyt.chatuikit.styles.extensions.create_channel.buildCaptionTextStyle
-import com.sceyt.chatuikit.styles.extensions.create_channel.buildNameTextFieldStyle
-import com.sceyt.chatuikit.styles.extensions.create_channel.buildToolbarStyle
-import com.sceyt.chatuikit.styles.extensions.create_channel.buildUriTextFieldStyle
-import com.sceyt.chatuikit.styles.extensions.create_channel.buildUriValidationStyle
+import com.sceyt.chatuikit.styles.extensions.create_group.buildAboutTextFieldStyle
+import com.sceyt.chatuikit.styles.extensions.create_group.buildActionButtonStyle
+import com.sceyt.chatuikit.styles.extensions.create_group.buildNameTextFieldStyle
+import com.sceyt.chatuikit.styles.extensions.create_group.buildSeparatorTextStyle
+import com.sceyt.chatuikit.styles.extensions.create_group.buildToolbarStyle
+import com.sceyt.chatuikit.styles.extensions.create_group.buildUserItemStyle
 import com.sceyt.chatuikit.theme.Colors
 
+typealias CreateGroupStyleUserItemStyle = ListItemStyle<UserFormatter, UserFormatter, UserAvatarRenderer>
+
 /**
- * Style for the [CreateChannelActivity] page.
+ * Style for the [CreateGroupActivity] page.
  * @param backgroundColor Background color of the page. Default is [Colors.backgroundColor].
  * @param avatarBackgroundColor Background color of the avatar. Default is [Colors.overlayBackground2Color].
  * @param dividerColor Color of the dividers. Default is [Colors.borderColor].
  * @param avatarDefaultIcon Default icon for the avatar. Default is [R.drawable.sceyt_ic_camera_72].
- * @param captionTextStyle Style for the caption text. Default is [buildCaptionTextStyle].
+ * @param separatorText Text for the separator. Default is [R.string.sceyt_members].
+ * @param separatorTextStyle Style for the separator text. Default is [buildSeparatorTextStyle].
  * @param toolbarStyle Style for the toolbar. Default is [buildToolbarStyle].
  * @param nameTextFieldStyle Style for the name text field. Default is [buildNameTextFieldStyle].
  * @param aboutTextFieldStyle Style for the about text field. Default is [buildAboutTextFieldStyle].
- * @param uriTextFieldStyle Style for the URI text field. Default is [buildUriTextFieldStyle].
- * @param uriValidationStyle Style for the URI validation. Default is [buildUriValidationStyle].
  * @param actionButtonStyle Style for the action button. Default is [buildActionButtonStyle].
+ * @param userItemStyle Style for the user item. Default is [buildUserItemStyle].
  * */
-data class CreateChannelStyle(
+data class CreateGroupStyle(
         @ColorInt val backgroundColor: Int,
         @ColorInt val avatarBackgroundColor: Int,
         @ColorInt val dividerColor: Int,
         val avatarDefaultIcon: Drawable?,
-        val captionTextStyle: TextStyle,
+        val separatorText: String,
+        val separatorTextStyle: TextStyle,
         val toolbarStyle: ToolbarStyle,
         val nameTextFieldStyle: TextInputStyle,
         val aboutTextFieldStyle: TextInputStyle,
-        val uriTextFieldStyle: TextInputStyle,
-        val uriValidationStyle: URIValidationStyle,
         val actionButtonStyle: ButtonStyle,
+        val userItemStyle: CreateGroupStyleUserItemStyle,
 ) {
     companion object {
-        var styleCustomizer = StyleCustomizer<CreateChannelStyle> { _, style -> style }
+        var styleCustomizer = StyleCustomizer<CreateGroupStyle> { _, style -> style }
     }
 
     internal class Builder(
             internal val context: Context,
             private val attrs: AttributeSet?,
     ) {
-        fun build(): CreateChannelStyle {
-            context.obtainStyledAttributes(attrs, R.styleable.CreateChannel).use { array ->
+        fun build(): CreateGroupStyle {
+            context.obtainStyledAttributes(attrs, R.styleable.CreateGroup).use { array ->
                 val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)
                 val avatarBackgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.overlayBackground2Color)
                 val dividerColor = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor)
                 val avatarDefaultIcon = context.getCompatDrawable(R.drawable.sceyt_ic_camera_72).applyTint(
                     context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
                 )
+                val separatorText = context.getString(R.string.sceyt_members)
 
-                return CreateChannelStyle(
+                return CreateGroupStyle(
                     backgroundColor = backgroundColor,
                     avatarBackgroundColor = avatarBackgroundColor,
                     dividerColor = dividerColor,
                     avatarDefaultIcon = avatarDefaultIcon,
-                    captionTextStyle = buildCaptionTextStyle(array),
+                    separatorText = separatorText,
+                    separatorTextStyle = buildSeparatorTextStyle(array),
                     toolbarStyle = buildToolbarStyle(array),
                     nameTextFieldStyle = buildNameTextFieldStyle(array),
                     aboutTextFieldStyle = buildAboutTextFieldStyle(array),
-                    uriTextFieldStyle = buildUriTextFieldStyle(array),
-                    uriValidationStyle = buildUriValidationStyle(array),
                     actionButtonStyle = buildActionButtonStyle(array),
+                    userItemStyle = buildUserItemStyle(array),
                 )
             }
         }

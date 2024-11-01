@@ -2,18 +2,17 @@ package com.sceyt.chatuikit.presentation.components.startchat.adapters.holders
 
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytItemUserBinding
-import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.formatters.UserFormatter
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapter
 import com.sceyt.chatuikit.presentation.root.BaseViewHolder
-import com.sceyt.chatuikit.renderers.AvatarRenderer
+import com.sceyt.chatuikit.renderers.UserAvatarRenderer
 import com.sceyt.chatuikit.styles.common.ListItemStyle
 
 class UserViewHolder(
         private val binding: SceytItemUserBinding,
-        private val style: ListItemStyle<Formatter<SceytUser>, Formatter<SceytUser>, AvatarRenderer<SceytUser>>,
+        private val style: ListItemStyle<UserFormatter, UserFormatter, UserAvatarRenderer>,
         private val itemClickListener: UsersAdapter.ClickListener,
 ) : BaseViewHolder<UserItem>(binding.root) {
     private lateinit var bindItem: UserItem.User

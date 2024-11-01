@@ -37,7 +37,7 @@
         android:gravity="center"
         android:paddingVertical="4dp"
         android:textColor="@color/sceyt_color_text_secondary"
-        android:textSize="@dimen/_12sdp"
+        android:textSize="@dimen/mediumTextSize"
         app:layout_constraintStart_toStartOf="@+id/rvSelectedUsers"
         app:layout_constraintTop_toBottomOf="@+id/rvSelectedUsers"
         tools:text="@string/sceyt_users" />

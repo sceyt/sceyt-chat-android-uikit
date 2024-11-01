@@ -8,14 +8,14 @@ import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.BaseChannelViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
-import com.sceyt.chatuikit.renderers.AvatarRenderer
+import com.sceyt.chatuikit.renderers.ChannelAvatarRenderer
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.SelectableListItemStyle
 
 open class ShareableChannelViewHolder(
         protected val binding: SceytItemShareChannelBinding,
         protected val itemStyle: SelectableListItemStyle<Formatter<SceytChannel>,
-                Formatter<SceytChannel>, AvatarRenderer<SceytChannel>>,
+                Formatter<SceytChannel>, ChannelAvatarRenderer>,
         protected val clickListener: ChannelClickListeners.ChannelClickListener
 ) : BaseChannelViewHolder(binding.root) {
 
