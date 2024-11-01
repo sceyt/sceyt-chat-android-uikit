@@ -45,7 +45,7 @@
                     app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_camera_72" />
 
                 <androidx.appcompat.widget.AppCompatEditText
-                    android:id="@+id/tvSubject"
+                    android:id="@+id/inputSubject"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
@@ -61,7 +61,7 @@
                     app:layout_constraintTop_toBottomOf="@+id/avatar" />
 
                 <androidx.appcompat.widget.AppCompatEditText
-                    android:id="@+id/tvDescription"
+                    android:id="@+id/inputDescription"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:background="@drawable/sceyt_bg_underline"
@@ -71,13 +71,13 @@
                     android:textColorHint="@color/sceyt_color_text_footnote"
                     android:textSize="16sp"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="@+id/tvSubject"
-                    app:layout_constraintTop_toBottomOf="@+id/tvSubject" />
+                    app:layout_constraintStart_toStartOf="@+id/inputSubject"
+                    app:layout_constraintTop_toBottomOf="@+id/inputSubject" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tvContacts"
+                android:id="@+id/tvSeparator"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="30dp"
@@ -100,8 +100,8 @@
                 android:paddingVertical="4dp"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="@id/tvContacts"
-                app:layout_constraintTop_toBottomOf="@+id/tvContacts"
+                app:layout_constraintStart_toStartOf="@id/tvSeparator"
+                app:layout_constraintTop_toBottomOf="@+id/tvSeparator"
                 tools:itemCount="20"
                 tools:listitem="@layout/sceyt_item_user" />
 
@@ -115,10 +115,10 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:clickable="false"
-        android:src="@drawable/sceyt_ic_save"
-        android:tint="@color/sceyt_color_on_primary"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:src="@drawable/sceyt_ic_save"
+        tools:tint="@color/sceyt_color_on_primary" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

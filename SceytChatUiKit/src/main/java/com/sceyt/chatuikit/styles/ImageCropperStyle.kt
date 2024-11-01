@@ -21,6 +21,9 @@ data class ImageCropperStyle(
         val toolbarTitle: String,
 ) {
     companion object {
+
+        var styleCustomizer = StyleCustomizer<ImageCropperStyle> { _, style -> style }
+
         fun default(context: Context) = ImageCropperStyle(
             backgroundColor = Color.BLACK,
             maskColor = Color.BLACK.withAlpha(0.4f),
@@ -30,7 +33,7 @@ data class ImageCropperStyle(
             statusBarColor = Color.BLACK,
             toolbarColor = Color.BLACK,
             toolbarIconsColor = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor),
-        )
+        ).let { styleCustomizer.apply(context, it) }
     }
 
     fun createOptions() = UCrop.Options().apply {

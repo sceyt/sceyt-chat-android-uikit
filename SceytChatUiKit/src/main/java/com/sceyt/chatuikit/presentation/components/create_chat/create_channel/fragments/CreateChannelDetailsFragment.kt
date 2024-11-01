@@ -33,6 +33,7 @@ import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.URIVali
 import com.sceyt.chatuikit.providers.defaults.URIValidationType
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.sceyt.chatuikit.styles.CreateChannelStyle
+import com.sceyt.chatuikit.styles.ImageCropperStyle
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.yalantis.ucrop.UCrop
 import java.io.File
@@ -203,7 +204,7 @@ open class CreateChannelDetailsFragment : Fragment() {
             val file = File(requireContext().cacheDir.path, System.currentTimeMillis().toString())
 
             val intent = UCrop.of(uri, Uri.fromFile(file))
-                .withOptions(style.imageCropperStyle.createOptions())
+                .withOptions(ImageCropperStyle.default(requireContext()).createOptions())
                 .withAspectRatio(1f, 1f)
                 .getIntent(requireContext())
 

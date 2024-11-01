@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.renderers.AvatarRenderer
+import com.sceyt.chatuikit.renderers.ChannelAvatarRenderer
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -29,7 +29,7 @@ data class ChannelInfoToolBarStyle(
         val avatarStyle: AvatarStyle,
         val channelNameFormatter: Formatter<SceytChannel>,
         val channelSubtitleFormatter: Formatter<SceytChannel>,
-        val channelAvatarRenderer: AvatarRenderer<SceytChannel>
+        val channelAvatarRenderer: ChannelAvatarRenderer
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<ChannelInfoToolBarStyle> { _, style -> style }
