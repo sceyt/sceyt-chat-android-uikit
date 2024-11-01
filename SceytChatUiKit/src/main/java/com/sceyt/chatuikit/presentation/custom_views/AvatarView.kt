@@ -247,12 +247,13 @@ class AvatarView @JvmOverloads constructor(
         val oldImageUrl = imageUrl
         imageUrl = url
         invalidate()
+        setDefaultImageIfNeeded(defaultAvatar)
         loadAvatarImage(oldImageUrl)
     }
 
     fun setDefaultAvatar(avatar: DefaultAvatar) {
         defaultAvatar = avatar
-        invalidate()
+        setDefaultImageIfNeeded(defaultAvatar)
     }
 
     fun setAvatarImageLoadListener(cb: (Boolean) -> Unit) {

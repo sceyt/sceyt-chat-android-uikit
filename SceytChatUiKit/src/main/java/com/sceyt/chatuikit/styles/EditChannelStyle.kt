@@ -27,6 +27,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property backgroundColor Background color of the fragment, default is [Colors.backgroundColor]
  * @property dividerColor Color of the divider, default is [Colors.borderColor]
  * @property avatarPlaceholder Placeholder for the avatar, default is [R.drawable.sceyt_ic_camera_72]
+ * @property toolbarTitle Title for the toolbar, default is [R.string.sceyt_edit]
  * @property toolbarStyle Style for the toolbar
  * @property avatarStyle Style for the avatar
  * @property subjectTextInputStyle Style for the subject text input
@@ -39,6 +40,7 @@ data class EditChannelStyle(
         @ColorInt val backgroundColor: Int,
         @ColorInt val dividerColor: Int,
         val avatarPlaceholder: Drawable?,
+        val toolbarTitle: String,
         val toolbarStyle: ToolbarStyle,
         val avatarStyle: AvatarStyle,
         val subjectTextInputStyle: TextInputStyle,
@@ -62,6 +64,7 @@ data class EditChannelStyle(
                 val avatarPlaceholder = context.getCompatDrawable(R.drawable.sceyt_ic_camera_72).applyTint(
                     context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
                 )
+                val toolbarTitle = context.getString(R.string.sceyt_edit)
                 val toolbarStyle = ToolbarStyle(
                     backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.primaryColor),
                     underlineColor = context.getCompatColor(SceytChatUIKitTheme.colors.borderColor),
@@ -131,6 +134,7 @@ data class EditChannelStyle(
                     backgroundColor = backgroundColor,
                     dividerColor = dividerColor,
                     avatarPlaceholder = avatarPlaceholder,
+                    toolbarTitle = toolbarTitle,
                     toolbarStyle = toolbarStyle,
                     avatarStyle = avatarStyle,
                     subjectTextInputStyle = subjectTextInputStyle,

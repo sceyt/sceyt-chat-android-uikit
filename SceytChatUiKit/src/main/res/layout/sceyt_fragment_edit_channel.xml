@@ -13,8 +13,8 @@
         android:layout_height="?android:attr/actionBarSize"
         android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytUiToolbarTitle="@string/sceyt_edit_channel"
-        app:sceytUiToolbarTitleTextColor="@color/sceyt_color_text_primary" />
+        tools:sceytUiToolbarTitle="@string/sceyt_edit"
+        tools:sceytUiToolbarTitleTextColor="@color/sceyt_color_text_primary" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
