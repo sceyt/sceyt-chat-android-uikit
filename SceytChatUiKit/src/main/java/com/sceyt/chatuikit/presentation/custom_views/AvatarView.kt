@@ -38,7 +38,7 @@ import kotlin.math.abs
 class AvatarView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+        defStyleAttr: Int = 0,
 ) : ShapeableImageView(context, attrs, defStyleAttr) {
     private var name: CharSequence? = null
     private var imageUrl: String? = null
@@ -57,7 +57,6 @@ class AvatarView @JvmOverloads constructor(
         var enableRipple = true
         context.obtainStyledAttributes(attrs, R.styleable.AvatarView).use { array ->
             name = array.getString(R.styleable.AvatarView_sceytUiAvatarFullName) ?: name
-            imageUrl = array.getString(R.styleable.AvatarView_sceytUiAvatarImageUrl)
             textStyle = TextStyle.Builder(array)
                 .setSize(R.styleable.AvatarView_sceytUiAvatarTextSize, UNSET_SIZE)
                 .setColor(R.styleable.AvatarView_sceytUiAvatarTextColor, Color.WHITE)
@@ -83,6 +82,7 @@ class AvatarView @JvmOverloads constructor(
 
         initPaints()
         initShape(shape)
+        setDefaultImageIfNeeded(defaultAvatar)
     }
 
     private fun initPaints() {
@@ -99,20 +99,17 @@ class AvatarView @JvmOverloads constructor(
     override fun draw(canvas: Canvas) {
         if (visibility != VISIBLE) return
         if (imageUrl.isNullOrBlank()) {
-            setImageResource(0)
             val default = defaultAvatar
             if (default == null) {
                 val initials = getInitials(name ?: "")
                 drawBackgroundColor(canvas, avatarBackgroundColor)
                 drawInitials(canvas, initials)
             } else {
-                // If default avatar is DefaultAvatar.Initial then drawDefaultImage
-                // will draw the initials and background,
-                // otherwise we should try to draw the avatarBackgroundColor
-                if (default !is DefaultAvatar.Initial)
+                if (default is DefaultAvatar.Initial) {
+                    drawInitialsAndBackground(canvas, default)
+                } else {
                     drawBackgroundColor(canvas, avatarBackgroundColor)
-
-                drawDefaultImage(canvas, default)
+                }
             }
         }
         super.draw(canvas)
@@ -217,7 +214,8 @@ class AvatarView @JvmOverloads constructor(
         }
     }
 
-    private fun drawDefaultImage(canvas: Canvas, avatar: DefaultAvatar) {
+    private fun setDefaultImageIfNeeded(avatar: DefaultAvatar?) {
+        if (!imageUrl.isNullOrBlank()) return
         when (avatar) {
             is DefaultAvatar.FromBitmap -> {
                 setImageBitmap(avatar.bitmap)
@@ -231,14 +229,18 @@ class AvatarView @JvmOverloads constructor(
                 setImageResource(avatar.id)
             }
 
-            is DefaultAvatar.Initial -> {
-                val color = if (avatarBackgroundColor == 0)
-                    getAvatarRandomColor(avatar.initial) else avatarBackgroundColor
-
-                drawBackgroundColor(canvas, color)
-                drawInitials(canvas, avatar.initial)
+            else -> {
+                setImageResource(0)
             }
         }
+    }
+
+    private fun drawInitialsAndBackground(canvas: Canvas, avatar: DefaultAvatar.Initial) {
+        val color = if (avatarBackgroundColor == 0)
+            getAvatarRandomColor(avatar.initial) else avatarBackgroundColor
+
+        drawBackgroundColor(canvas, color)
+        drawInitials(canvas, avatar.initial)
     }
 
     fun setImageUrl(url: String?) {
@@ -278,7 +280,7 @@ class AvatarView @JvmOverloads constructor(
         data class FromDrawable(val drawable: Drawable?) : DefaultAvatar()
         data class FromDrawableRes(@DrawableRes val id: Int) : DefaultAvatar()
         data class Initial(
-                val initial: CharSequence
+                val initial: CharSequence,
         ) : DefaultAvatar()
     }
 
@@ -298,6 +300,7 @@ class AvatarView @JvmOverloads constructor(
             this@AvatarView.defaultAvatar = defaultAvatar
 
             style.apply(this@AvatarView)
+            setDefaultImageIfNeeded(defaultAvatar)
             loadAvatarImage(oldImageUrl)
         }
     }
