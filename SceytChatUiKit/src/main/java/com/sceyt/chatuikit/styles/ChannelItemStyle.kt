@@ -18,6 +18,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
+import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
@@ -51,9 +52,10 @@ import java.util.Date
  * @property linkTextColor - Color of the link text, default is [R.color.sceyt_auto_link_color].
  * @property mutedIcon - Icon for muted channel, default is [R.drawable.sceyt_ic_muted].
  * @property pinIcon - Icon for pinned channel, default is [R.drawable.sceyt_ic_pin_filled].
- * @property messageDeliveryStatusIcons - Icons for message delivery status, default is [MessageDeliveryStatusIcons].
  * @property autoDeletedChannelIcon - Icon for auto deleted channel, default is [R.drawable.sceyt_ic_auto_deleted_channel].
+ * @property messageDeliveryStatusIcons - Icons for message delivery status, default is [MessageDeliveryStatusIcons].
  * @property deliveryStatusIndicatorSize - Size of the status icon, default is 16dp.
+ * @property messageDeletedStateText - Text for deleted message, default is [R.string.sceyt_message_was_deleted].
  * @property subjectTextStyle - Style for channel subject, default is [buildSubjectTextStyle].
  * @property lastMessageTextStyle - Style for last message, default is [buildLastMessageTextStyle].
  * @property dateTextStyle - Style for date, default is [buildDateTextStyle].
@@ -67,7 +69,7 @@ import java.util.Date
  * @property unreadMentionTextStyle - Style for unread mention message, default is [buildUnreadMentionTextStyle].
  * @property unreadMentionMutedStateTextStyle - Style for mention message in muted channel, default is [buildUnreadMentionMutedTextStyle].
  * @property avatarStyle - Style for avatar, default is [buildAvatarStyle].
- * @property channelNameFormatter - Formatter for channel name, default is [SceytChatUIKitFormatters.channelNameFormatter].
+ * @property channelTitleFormatter - Formatter for channel name, default is [SceytChatUIKitFormatters.channelNameFormatter].
  * @property channelDateFormatter - Date format for channel, default is [SceytChatUIKitFormatters.channelDateFormatter].
  * @property lastMessageSenderNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.channelLastMessageSenderNameFormatter].
  * @property mentionUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.mentionUserNameFormatter].
@@ -76,6 +78,7 @@ import java.util.Date
  * @property unreadCountFormatter - Formatter for unread count, default is [SceytChatUIKitFormatters.unreadCountFormatter].
  * @property lastMessageBodyFormatter - Formatter for last message body, default is [SceytChatUIKitFormatters.channelLastMessageBodyFormatter].
  * @property draftMessageBodyFormatter - Formatter for draft message body, default is [SceytChatUIKitFormatters.draftMessageBodyFormatter].
+ * @property channelSubtitleFormatter - Formatter for channel subtitle, default is [SceytChatUIKitFormatters.channelListItemSubtitleFormatter].
  * @property attachmentIconProvider - Provider for attachment icon, default is [SceytChatUIKitProviders.attachmentIconProvider].
  * @property presenceStateColorProvider - Provider for presence state color, default is [SceytChatUIKitProviders.presenceStateColorProvider].
  * @property channelAvatarRenderer - Renderer for channel avatar, default is [SceytChatUIKitRenderers.channelAvatarRenderer].
@@ -87,9 +90,10 @@ data class ChannelItemStyle(
         @ColorInt val linkTextColor: Int,
         val mutedIcon: Drawable?,
         val pinIcon: Drawable?,
-        val messageDeliveryStatusIcons: MessageDeliveryStatusIcons,
         val autoDeletedChannelIcon: Drawable?,
+        val messageDeliveryStatusIcons: MessageDeliveryStatusIcons,
         val deliveryStatusIndicatorSize: Int,
+        val messageDeletedStateText: String,
         val subjectTextStyle: TextStyle,
         val lastMessageTextStyle: TextStyle,
         val dateTextStyle: TextStyle,
@@ -103,7 +107,8 @@ data class ChannelItemStyle(
         val unreadMentionTextStyle: TextStyle,
         val unreadMentionMutedStateTextStyle: TextStyle,
         val avatarStyle: AvatarStyle,
-        val channelNameFormatter: Formatter<SceytChannel>,
+        val channelTitleFormatter: Formatter<SceytChannel>,
+        val channelSubtitleFormatter: Formatter<ChannelItemSubtitleFormatterAttributes>,
         val channelDateFormatter: Formatter<Date>,
         val lastMessageSenderNameFormatter: Formatter<SceytChannel>,
         val mentionUserNameFormatter: Formatter<SceytUser>,
@@ -163,6 +168,9 @@ data class ChannelItemStyle(
                 val statusIconSize = array.getDimensionPixelSize(R.styleable.ChannelListView_sceytUiChannelListStatusIndicatorSize,
                     dpToPx(16f))
 
+                val deletedStateText = array.getString(R.styleable.ChannelListView_sceytUiChannelListMessageDeletedStateText)
+                    ?: context.getString(R.string.sceyt_message_was_deleted)
+
                 return ChannelItemStyle(
                     backgroundColor = backgroundColor,
                     pinnedChannelBackgroundColor = pinnedChannelBackgroundColor,
@@ -173,6 +181,7 @@ data class ChannelItemStyle(
                     messageDeliveryStatusIcons = messageDeliveryStatusIcons,
                     autoDeletedChannelIcon = autoDeletedChannelIcon,
                     deliveryStatusIndicatorSize = statusIconSize,
+                    messageDeletedStateText = deletedStateText,
                     subjectTextStyle = buildSubjectTextStyle(array),
                     lastMessageTextStyle = buildLastMessageTextStyle(array),
                     dateTextStyle = buildDateTextStyle(array),
@@ -186,7 +195,7 @@ data class ChannelItemStyle(
                     unreadMentionTextStyle = buildUnreadMentionTextStyle(array),
                     unreadMentionMutedStateTextStyle = buildUnreadMentionMutedTextStyle(array),
                     avatarStyle = buildAvatarStyle(array),
-                    channelNameFormatter = SceytChatUIKit.formatters.channelNameFormatter,
+                    channelTitleFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                     channelDateFormatter = SceytChatUIKit.formatters.channelDateFormatter,
                     lastMessageSenderNameFormatter = SceytChatUIKit.formatters.channelLastMessageSenderNameFormatter,
                     mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
@@ -195,9 +204,10 @@ data class ChannelItemStyle(
                     unreadCountFormatter = SceytChatUIKit.formatters.unreadCountFormatter,
                     lastMessageBodyFormatter = SceytChatUIKit.formatters.channelLastMessageBodyFormatter,
                     draftMessageBodyFormatter = SceytChatUIKit.formatters.draftMessageBodyFormatter,
+                    channelSubtitleFormatter = SceytChatUIKit.formatters.channelListItemSubtitleFormatter,
                     attachmentIconProvider = SceytChatUIKit.providers.channelListAttachmentIconProvider,
                     presenceStateColorProvider = SceytChatUIKit.providers.presenceStateColorProvider,
-                    channelAvatarRenderer = SceytChatUIKit.renderers.channelAvatarRenderer
+                    channelAvatarRenderer = SceytChatUIKit.renderers.channelAvatarRenderer,
                 ).let { styleCustomizer.apply(context, it) }
             }
         }

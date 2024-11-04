@@ -3,16 +3,18 @@ package com.sceyt.chatuikit.formatters
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
+import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentSizeFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelDateFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoDateSeparatorFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoFileSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoVoiceSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageSenderNameFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelListSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultDraftMessageBodyFormatter
@@ -70,6 +72,10 @@ class SceytChatUIKitFormatters {
 
     var channelSubtitleFormatter: Formatter<SceytChannel> by lazyVar {
         DefaultChannelSubtitleFormatter()
+    }
+
+    var channelListItemSubtitleFormatter: Formatter<ChannelItemSubtitleFormatterAttributes> by lazyVar {
+        DefaultChannelListSubtitleFormatter()
     }
 
     var channelDateFormatter: Formatter<Date> by lazyVar {
