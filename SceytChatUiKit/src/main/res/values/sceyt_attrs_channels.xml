@@ -28,6 +28,8 @@
         <!-- Last Message delivery status icon size-->
         <attr name="sceytUiChannelListStatusIndicatorSize" format="dimension" />
 
+        <attr name="sceytUiChannelListMessageDeletedStateText" format="string"/>
+
         <!-- Drawable of the message pending indicator -->
         <attr name="sceytUiChannelListStatusPendingIndicator" format="reference" />
         <!-- Drawable of the message sent state indicator -->
