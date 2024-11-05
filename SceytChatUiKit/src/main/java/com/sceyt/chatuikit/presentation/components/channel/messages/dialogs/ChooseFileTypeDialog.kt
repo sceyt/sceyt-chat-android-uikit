@@ -13,9 +13,11 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
 import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.shared.helpers.picker.PickType
+import com.sceyt.chatuikit.styles.DialogStyle
 
 class ChooseFileTypeDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogChooseFileTypeBinding
+    private val style = DialogStyle.default(context)
     private var chooseListener: ((PickType) -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,8 +65,16 @@ class ChooseFileTypeDialog(context: Context) : Dialog(context, R.style.SceytDial
     }
 
     private fun SceytDialogChooseFileTypeBinding.applyStyle() {
+        style.backgroundStyle.apply(root)
         val texts = listOf(takePhoto, takeVideo, gallery, file)
         setTextViewsDrawableColor(texts, context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
         setTextViewsTextColor(texts, context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
+
+    /* with(style.optionButtonStyle) {
+            apply(takePhoto)
+            apply(takeVideo)
+            apply(gallery)
+            apply(file)
+        }*/
     }
 }

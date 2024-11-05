@@ -183,8 +183,10 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         }
     }
 
-    private fun <T : Fragment?> initOrUpdateFragment(container: FragmentContainerView,
-                                                     fragmentProvider: () -> T): T? {
+    private fun <T : Fragment?> initOrUpdateFragment(
+            container: FragmentContainerView,
+            fragmentProvider: () -> T,
+    ): T? {
         val (wasAdded, fragment) = getOrAddFragment(container, fragmentProvider)
         if (wasAdded && fragment?.isAdded == true)
             (fragment as? ChannelUpdateListener)?.onChannelUpdated(channel)
@@ -197,7 +199,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
      * The function returns a Pair<Boolean, T?> indicating whether the fragment was already present and the fragment instance.*/
     private fun <T : Fragment?> getOrAddFragment(
             container: FragmentContainerView,
-            fragmentProvider: () -> T
+            fragmentProvider: () -> T,
     ): Pair<Boolean, T?> {
         val containerFragment = container.getFragment<T>()
         if (containerFragment != null) {
@@ -367,11 +369,8 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     }
 
     protected open fun onAvatarClick(channel: SceytChannel) {
-        val icon = channel.iconUrl
-        if (!icon.isNullOrBlank()) {
-            val title = style.detailsStyle.channelNameFormatter.format(this, channel)
-            ImagePreviewActivity.launchActivity(this, icon, title)
-        }
+        if (!channel.iconUrl.isNullOrBlank())
+            ImagePreviewActivity.launchActivity(this, channel)
     }
 
     protected open fun onClearHistoryClick(channel: SceytChannel) {

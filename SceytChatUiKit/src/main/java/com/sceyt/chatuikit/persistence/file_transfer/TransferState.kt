@@ -40,19 +40,18 @@ enum class TransferState {
 fun CircularProgressView.getProgressWithState(
         state: TransferState,
         style: MediaLoaderStyle,
-        progressPercent: Float = 0f
+        hideOnThumbLoaded: Boolean,
+        progressPercent: Float = 0f,
 ) {
     when (state) {
         PendingUpload, ErrorUpload, PauseUpload -> {
-            release()
-            setTransferring(false)
+            release(progressPercent, false)
             setIcon(style.uploadIcon)
             isVisible = true
         }
 
         PendingDownload, ErrorDownload, PauseDownload -> {
-            release()
-            setTransferring(false)
+            release(progressPercent, false)
             setIcon(style.downloadIcon)
             isVisible = true
         }
@@ -72,7 +71,7 @@ fun CircularProgressView.getProgressWithState(
         Uploaded, Downloaded -> isVisible = false
 
         ThumbLoaded -> {
-            if (progressPercent == 100f)
+            if (hideOnThumbLoaded)
                 isVisible = false
         }
     }

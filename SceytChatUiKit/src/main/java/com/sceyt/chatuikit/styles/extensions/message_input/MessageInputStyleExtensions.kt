@@ -46,7 +46,7 @@ internal fun MessageInputStyle.Builder.buildInputTextStyle(
 internal fun MessageInputStyle.Builder.buildInputHintStyle(
         array: TypedArray
 ) = HintStyle.Builder(array)
-    .textColor(
+    .color(
         index = R.styleable.MessageInputView_sceytUiMessageInputHintTextColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor)
     )
@@ -843,22 +843,22 @@ internal fun MessageInputStyle.Builder.buildMentionUsersListStyle(
     .build()
 
 
-/*Mention user text style */
-internal fun MessageInputStyle.Builder.buildMentionUserTextStyle(
+/*Mention text style */
+internal fun MessageInputStyle.Builder.buildMentionTextStyle(
         array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
-        index = R.styleable.MessageInputView_sceytUiMessageInputMentionUserTextColor,
+        index = R.styleable.MessageInputView_sceytUiMessageInputMentionTextColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     )
     .setSize(
-        index = R.styleable.MessageInputView_sceytUiMessageInputMentionUserTextSize
+        index = R.styleable.MessageInputView_sceytUiMessageInputMentionTextSize
     )
     .setStyle(
-        index = R.styleable.MessageInputView_sceytUiMessageInputMentionUserTextStyle
+        index = R.styleable.MessageInputView_sceytUiMessageInputMentionTextStyle
     )
     .setFont(
-        index = R.styleable.MessageInputView_sceytUiMessageInputMentionUserTextFont,
+        index = R.styleable.MessageInputView_sceytUiMessageInputMentionTextFont,
         defValue = R.font.roboto_regular
     )
     .build()

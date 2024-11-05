@@ -9,11 +9,11 @@
         android:id="@+id/rvReactions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="13dp"
         android:clipToPadding="false"
         android:nestedScrollingEnabled="false"
         android:orientation="horizontal"
         android:paddingHorizontal="14dp"
+        android:paddingVertical="13dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintTop_toTopOf="parent"
         tools:itemCount="5"
@@ -23,7 +23,6 @@
         android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginTop="13dp"
         app:dividerColor="@color/sceyt_color_border"
         app:layout_constraintTop_toBottomOf="@+id/rvReactions" />
 

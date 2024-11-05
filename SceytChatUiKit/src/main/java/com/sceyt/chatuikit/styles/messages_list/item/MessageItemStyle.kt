@@ -18,8 +18,8 @@ import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
+import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
-import com.sceyt.chatuikit.renderers.UserAvatarRenderer
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.CheckboxStyle
@@ -159,7 +159,7 @@ data class MessageItemStyle(
         val attachmentFileSizeFormatter: Formatter<SceytAttachment>,
         val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
         val senderNameColorProvider: VisualProvider<SceytUser, Int>,
-        val userAvatarRenderer: UserAvatarRenderer
+        val userAvatarRenderer: AvatarRenderer<SceytUser>
 ) {
 
     companion object {
@@ -311,7 +311,7 @@ data class MessageItemStyle(
                     messageBodyFormatter = SceytChatUIKit.formatters.messageBodyFormatter,
                     messageViewCountFormatter = SceytChatUIKit.formatters.messageViewCountFormatter,
                     messageDateFormatter = SceytChatUIKit.formatters.messageDateFormatter,
-                    voiceDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
+                    voiceDurationFormatter = SceytChatUIKit.formatters.voiceDurationFormatter,
                     videoDurationFormatter = SceytChatUIKit.formatters.mediaDurationFormatter,
                     attachmentFileSizeFormatter = SceytChatUIKit.formatters.attachmentSizeFormatter,
                     attachmentIconProvider = SceytChatUIKit.providers.attachmentIconProvider,

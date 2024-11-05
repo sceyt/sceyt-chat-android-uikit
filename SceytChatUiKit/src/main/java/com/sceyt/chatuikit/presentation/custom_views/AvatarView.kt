@@ -5,6 +5,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.Layout
@@ -18,9 +20,6 @@ import androidx.core.text.toSpannable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.google.android.material.imageview.ShapeableImageView
-import com.google.android.material.shape.AbsoluteCornerSize
-import com.google.android.material.shape.RelativeCornerSize
-import com.google.android.material.shape.ShapeAppearanceModel
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatDrawable
@@ -33,12 +32,13 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.common.applyTo
 import kotlin.math.abs
 
 class AvatarView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+        defStyleAttr: Int = 0,
 ) : ShapeableImageView(context, attrs, defStyleAttr) {
     private var name: CharSequence? = null
     private var imageUrl: String? = null
@@ -57,7 +57,6 @@ class AvatarView @JvmOverloads constructor(
         var enableRipple = true
         context.obtainStyledAttributes(attrs, R.styleable.AvatarView).use { array ->
             name = array.getString(R.styleable.AvatarView_sceytUiAvatarFullName) ?: name
-            imageUrl = array.getString(R.styleable.AvatarView_sceytUiAvatarImageUrl)
             textStyle = TextStyle.Builder(array)
                 .setSize(R.styleable.AvatarView_sceytUiAvatarTextSize, UNSET_SIZE)
                 .setColor(R.styleable.AvatarView_sceytUiAvatarTextColor, Color.WHITE)
@@ -66,13 +65,23 @@ class AvatarView @JvmOverloads constructor(
                 .build()
             avatarBackgroundColor = array.getColor(R.styleable.AvatarView_sceytUiAvatarColor, avatarBackgroundColor)
             val defaultAvatarResId = array.getResourceId(R.styleable.AvatarView_sceytUiAvatarDefaultIcon, 0)
-            if (defaultAvatarResId != 0) {
-                defaultAvatar = defaultAvatarResId.toDefaultAvatar()
-            }
             enableRipple = array.getBoolean(R.styleable.AvatarView_sceytUiAvatarEnableRipple, true)
-        }
 
-        scaleType = ScaleType.CENTER_CROP
+            defaultAvatar = when {
+                defaultAvatarResId != 0 -> defaultAvatarResId.toDefaultAvatar()
+                !name.isNullOrBlank() -> DefaultAvatar.Initial(getInitials(name.toString()))
+                else -> null
+            }
+            val shapeValue = array.getInt(R.styleable.AvatarView_sceytUiAvatarShape, 0)
+            val cornerRadius = array.getDimension(R.styleable.AvatarView_sceytUiAvatarCornerRadius, 0f)
+            shape = if (shapeValue == 1) {
+                Shape.RoundedCornerShape(cornerRadius)
+            } else Shape.Circle
+
+            scaleType = array.getInt(R.styleable.AvatarView_android_scaleType, -1).takeIf {
+                it != -1
+            }?.let { ScaleType.entries.getOrNull(it) } ?: ScaleType.CENTER_CROP
+        }
 
         if (enableRipple) {
             val ripple = context.getCompatDrawable(R.drawable.sceyt_bg_ripple_circle)
@@ -83,6 +92,7 @@ class AvatarView @JvmOverloads constructor(
 
         initPaints()
         initShape(shape)
+        setDefaultImageIfNeeded(defaultAvatar)
     }
 
     private fun initPaints() {
@@ -93,40 +103,23 @@ class AvatarView @JvmOverloads constructor(
     }
 
     private fun initShape(shape: Shape) {
-        shapeAppearanceModel = when (shape) {
-            Shape.Circle -> {
-                ShapeAppearanceModel()
-                    .toBuilder()
-                    .setAllCornerSizes(RelativeCornerSize(0.5f))
-                    .build()
-            }
-
-            is Shape.RoundedRectangle -> {
-                ShapeAppearanceModel()
-                    .toBuilder()
-                    .setAllCornerSizes(AbsoluteCornerSize(shape.radius))
-                    .build()
-            }
-        }
+        shape.applyTo(this)
     }
 
     override fun draw(canvas: Canvas) {
         if (visibility != VISIBLE) return
         if (imageUrl.isNullOrBlank()) {
-            setImageResource(0)
             val default = defaultAvatar
             if (default == null) {
                 val initials = getInitials(name ?: "")
                 drawBackgroundColor(canvas, avatarBackgroundColor)
                 drawInitials(canvas, initials)
             } else {
-                // If default avatar is DefaultAvatar.Initial then drawDefaultImage
-                // will draw the initials and background,
-                // otherwise we should tyr to draw the avatarBackgroundColor
-                if (default !is DefaultAvatar.Initial)
+                if (default is DefaultAvatar.Initial) {
+                    drawInitialsAndBackground(canvas, default)
+                } else {
                     drawBackgroundColor(canvas, avatarBackgroundColor)
-
-                drawDefaultImage(canvas, default)
+                }
             }
         }
         super.draw(canvas)
@@ -152,14 +145,25 @@ class AvatarView @JvmOverloads constructor(
         val paint = backgroundPaint.apply { this.color = color }
         when (val avatarShape = shape) {
             Shape.Circle -> {
-                if (shape == Shape.Circle) {
-                    canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), paint)
-                }
+                canvas.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), (width / 2).toFloat(), paint)
             }
 
-            is Shape.RoundedRectangle -> {
-                val radius = avatarShape.radius
-                canvas.drawRoundRect(0f, 0f, width.toFloat(), height.toFloat(), radius, radius, paint)
+            is Shape.RoundedCornerShape -> {
+                val rect = RectF(0f, 0f, width.toFloat(), height.toFloat())
+                val radii = floatArrayOf(
+                    avatarShape.topLeft, avatarShape.topLeft,
+                    avatarShape.topRight, avatarShape.topRight,
+                    avatarShape.bottomRight, avatarShape.bottomRight,
+                    avatarShape.bottomLeft, avatarShape.bottomLeft
+                )
+                val path = Path().apply {
+                    addRoundRect(rect, radii, Path.Direction.CW)
+                }
+                canvas.drawPath(path, paint)
+            }
+
+            Shape.UnsetShape -> {
+                canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
             }
         }
     }
@@ -220,7 +224,8 @@ class AvatarView @JvmOverloads constructor(
         }
     }
 
-    private fun drawDefaultImage(canvas: Canvas, avatar: DefaultAvatar) {
+    private fun setDefaultImageIfNeeded(avatar: DefaultAvatar?) {
+        if (!imageUrl.isNullOrBlank()) return
         when (avatar) {
             is DefaultAvatar.FromBitmap -> {
                 setImageBitmap(avatar.bitmap)
@@ -234,26 +239,32 @@ class AvatarView @JvmOverloads constructor(
                 setImageResource(avatar.id)
             }
 
-            is DefaultAvatar.Initial -> {
-                val color = if (avatarBackgroundColor == 0)
-                    getAvatarRandomColor(avatar.initial) else avatarBackgroundColor
-
-                drawBackgroundColor(canvas, color)
-                drawInitials(canvas, avatar.initial)
+            else -> {
+                setImageResource(0)
             }
         }
+    }
+
+    private fun drawInitialsAndBackground(canvas: Canvas, avatar: DefaultAvatar.Initial) {
+        val color = if (avatarBackgroundColor == 0)
+            getAvatarRandomColor(avatar.initial) else avatarBackgroundColor
+
+        drawBackgroundColor(canvas, color)
+        drawInitials(canvas, avatar.initial)
     }
 
     fun setImageUrl(url: String?) {
         val oldImageUrl = imageUrl
         imageUrl = url
         invalidate()
+        setDefaultImageIfNeeded(defaultAvatar)
         loadAvatarImage(oldImageUrl)
     }
 
+    @Suppress("Unused")
     fun setDefaultAvatar(avatar: DefaultAvatar) {
         defaultAvatar = avatar
-        invalidate()
+        setDefaultImageIfNeeded(defaultAvatar)
     }
 
     fun setAvatarImageLoadListener(cb: (Boolean) -> Unit) {
@@ -281,7 +292,7 @@ class AvatarView @JvmOverloads constructor(
         data class FromDrawable(val drawable: Drawable?) : DefaultAvatar()
         data class FromDrawableRes(@DrawableRes val id: Int) : DefaultAvatar()
         data class Initial(
-                val initial: CharSequence
+                val initial: CharSequence,
         ) : DefaultAvatar()
     }
 
@@ -301,10 +312,12 @@ class AvatarView @JvmOverloads constructor(
             this@AvatarView.defaultAvatar = defaultAvatar
 
             style.apply(this@AvatarView)
+            setDefaultImageIfNeeded(defaultAvatar)
             loadAvatarImage(oldImageUrl)
         }
     }
 
+    @Suppress("Unused")
     inner class AppearanceBuilder {
         private var name = this@AvatarView.name
         private var imageUrl = this@AvatarView.imageUrl
@@ -352,7 +365,6 @@ class AvatarView @JvmOverloads constructor(
         )
     }
 }
-
 
 fun @receiver:DrawableRes Int.toDefaultAvatar(): DefaultAvatar {
     return DefaultAvatar.FromDrawableRes(this)

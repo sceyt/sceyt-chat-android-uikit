@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 data class InputSelectedMediaStyle(
         @ColorInt val backgroundColor: Int,
         @ColorInt val fileAttachmentBackgroundColor: Int,
-        val removeAttachmentIcon: Drawable,
+        val removeAttachmentIcon: Drawable?,
         val attachmentDurationTextStyle: TextStyle,
         val fileAttachmentNameTextStyle: TextStyle,
         val fileAttachmentSizeTextStyle: TextStyle,
@@ -72,7 +72,7 @@ data class InputSelectedMediaStyle(
         fun build() = InputSelectedMediaStyle(
             backgroundColor = backgroundColor,
             fileAttachmentBackgroundColor = fileAttachmentBackgroundColor,
-            removeAttachmentIcon = removeAttachmentIcon!!,
+            removeAttachmentIcon = removeAttachmentIcon,
             attachmentDurationTextStyle = attachmentDurationTextStyle,
             fileAttachmentNameTextStyle = fileAttachmentNameTextStyle,
             fileAttachmentSizeTextStyle = fileAttachmentSizeTextStyle,

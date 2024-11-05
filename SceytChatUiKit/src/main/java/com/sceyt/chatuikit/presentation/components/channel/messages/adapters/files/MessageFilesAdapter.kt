@@ -17,7 +17,7 @@ class MessageFilesAdapter(
         private val message: SceytMessage,
         private var files: List<FileListItem>,
         private var viewHolderFactory: FilesViewHolderFactory
-) : RecyclerView.Adapter<BaseMessageFileViewHolder<FileListItem>>() {
+) : RecyclerView.Adapter<BaseMessageFileViewHolder>() {
 
     val videoControllersList = arrayListOf<VideoControllerView>()
 
@@ -25,11 +25,11 @@ class MessageFilesAdapter(
         observeToAppLifeCycle()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMessageFileViewHolder<FileListItem> {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseMessageFileViewHolder {
         return viewHolderFactory.createViewHolder(parent, viewType)
     }
 
-    override fun onBindViewHolder(holder: BaseMessageFileViewHolder<FileListItem>, position: Int) {
+    override fun onBindViewHolder(holder: BaseMessageFileViewHolder, position: Int) {
         holder.bind(files[position], message)
     }
 
@@ -41,12 +41,12 @@ class MessageFilesAdapter(
         return files.size
     }
 
-    override fun onViewAttachedToWindow(holder: BaseMessageFileViewHolder<FileListItem>) {
+    override fun onViewAttachedToWindow(holder: BaseMessageFileViewHolder) {
         super.onViewAttachedToWindow(holder)
         holder.onViewAttachedToWindow()
     }
 
-    override fun onViewDetachedFromWindow(holder: BaseMessageFileViewHolder<FileListItem>) {
+    override fun onViewDetachedFromWindow(holder: BaseMessageFileViewHolder) {
         super.onViewDetachedFromWindow(holder)
         holder.onViewDetachedFromWindow()
     }
@@ -62,12 +62,10 @@ class MessageFilesAdapter(
         val myDiffUtil = MyDiffUtil(files, list)
         val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
         productDiffResult.dispatchUpdatesTo(this)
-        val thumbs = files.map { Pair(it.thumbPath, it.file.messageTid) }
+        val thumbs = files.map { Pair(it.thumbPath, it.attachment.messageTid) }
         files = list.map {
-            if (it !is FileListItem.LoadingMoreItem) {
-                thumbs.find { longPair -> longPair.second == it.file.messageTid }?.let { pair ->
-                    it.thumbPath = pair.first
-                }
+            thumbs.find { longPair -> longPair.second == it.attachment.messageTid }?.let { pair ->
+                it.updateThumbPath(pair.first)
             }
             it
         }.toArrayList()

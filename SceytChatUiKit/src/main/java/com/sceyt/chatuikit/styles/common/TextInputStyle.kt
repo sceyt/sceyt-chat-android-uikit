@@ -9,6 +9,7 @@ import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_CORNER_RADIUS
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
+import com.sceyt.chatuikit.styles.common.Shape.RoundedCornerShape
 
 data class TextInputStyle(
         val backgroundStyle: BackgroundStyle = BackgroundStyle(),
@@ -72,7 +73,7 @@ data class TextInputStyle(
             backgroundColor = backgroundColor,
             borderColor = borderColor,
             borderWidth = borderWidth,
-            cornerRadius = cornerRadius
+            shape = RoundedCornerShape(cornerRadius)
         )
     }
 }

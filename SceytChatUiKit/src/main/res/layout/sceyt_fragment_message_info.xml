@@ -36,7 +36,7 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/toolbar"
                 android:layout_marginTop="15dp"
-                android:layout="@layout/sceyt_item_out_text_message"
+                tools:layout="@layout/sceyt_item_out_text_message"
                 tools:visibility="visible" />
 
             <androidx.constraintlayout.widget.ConstraintLayout

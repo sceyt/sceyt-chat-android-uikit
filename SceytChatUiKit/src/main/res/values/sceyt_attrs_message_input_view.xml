@@ -305,15 +305,15 @@
         <attr name="sceytUiMessageInputSearchControlResultTextSize" format="dimension" />
         <attr name="sceytUiMessageInputSearchControlResultTextFont" format="reference" />
 
-        <!--Mention user text style -->
-        <attr name="sceytUiMessageInputMentionUserTextColor" format="reference|color" />
-        <attr name="sceytUiMessageInputMentionUserTextSize" format="dimension" />
-        <attr name="sceytUiMessageInputMentionUserTextStyle">
+        <!--Mention text style -->
+        <attr name="sceytUiMessageInputMentionTextColor" format="reference|color" />
+        <attr name="sceytUiMessageInputMentionTextSize" format="dimension" />
+        <attr name="sceytUiMessageInputMentionTextStyle">
             <flag name="normal" value="0" />
             <flag name="bold" value="1" />
             <flag name="italic" value="2" />
         </attr>
-        <attr name="sceytUiMessageInputMentionUserTextFont" format="reference" />
+        <attr name="sceytUiMessageInputMentionTextFont" format="reference" />
 
         <!-- Not implemented yet-->
         <attr name="sceytUiMessageInputEnableLinkPreview" format="boolean" />

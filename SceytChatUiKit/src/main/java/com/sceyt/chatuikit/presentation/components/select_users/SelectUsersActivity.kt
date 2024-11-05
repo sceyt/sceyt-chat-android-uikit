@@ -12,24 +12,23 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.databinding.SceytActivityAddMembersBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.databinding.SceytActivitySelectUsersBinding
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
-import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.SelectableUsersAdapter
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.SelectedUsersAdapter
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.holders.SelectableUserViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersViewModel
+import com.sceyt.chatuikit.styles.SelectUsersStyle
 import kotlinx.parcelize.Parcelize
 
 open class SelectUsersActivity : AppCompatActivity() {
-    private lateinit var binding: SceytActivityAddMembersBinding
+    private lateinit var binding: SceytActivitySelectUsersBinding
+    private lateinit var style: SelectUsersStyle
     private val viewModel: UsersViewModel by viewModels()
     private lateinit var usersAdapter: SelectableUsersAdapter
     private lateinit var selectedUsersAdapter: SelectedUsersAdapter
@@ -38,8 +37,9 @@ open class SelectUsersActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        style = SelectUsersStyle.Builder(this, null).build()
 
-        setContentView(SceytActivityAddMembersBinding.inflate(layoutInflater)
+        setContentView(SceytActivitySelectUsersBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)
 
@@ -102,17 +102,18 @@ open class SelectUsersActivity : AppCompatActivity() {
     protected open fun setupUsersList(list: List<UserItem>) {
         initSelectedItems(list)
         if (::usersAdapter.isInitialized.not()) {
-            binding.rvUsers.adapter = SelectableUsersAdapter(list as ArrayList, SelectableUserViewHolderFactory(this) {
-                if (it.chosen) {
-                    addOrRemoveFromSelectedUsers(it, true)
-                    setSelectedUsersAdapter(it)
-                } else {
-                    if (::selectedUsersAdapter.isInitialized)
-                        selectedUsersAdapter.removeItem(it)
-                    addOrRemoveFromSelectedUsers(it, false)
-                }
+            binding.rvUsers.adapter = SelectableUsersAdapter(list,
+                SelectableUserViewHolderFactory(this, style.itemStyle) {
+                    if (it.chosen) {
+                        addOrRemoveFromSelectedUsers(it, true)
+                        setSelectedUsersAdapter(it)
+                    } else {
+                        if (::selectedUsersAdapter.isInitialized)
+                            selectedUsersAdapter.removeItem(it)
+                        addOrRemoveFromSelectedUsers(it, false)
+                    }
 
-            }).also { usersAdapter = it }
+                }).also { usersAdapter = it }
 
             binding.rvUsers.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -126,7 +127,9 @@ open class SelectUsersActivity : AppCompatActivity() {
 
     protected open fun setSelectedUsersAdapter(item: UserItem.User) {
         if (::selectedUsersAdapter.isInitialized.not()) {
-            binding.rvSelectedUsers.adapter = SelectedUsersAdapter(arrayListOf(item)) {
+            binding.rvSelectedUsers.adapter = SelectedUsersAdapter(
+                listOf(item), style.selectedItemStyle
+            ) {
                 addOrRemoveFromSelectedUsers(it, false)
                 usersAdapter.uncheckItem(it.user.id)
             }.also { selectedUsersAdapter = it }
@@ -168,13 +171,14 @@ open class SelectUsersActivity : AppCompatActivity() {
         overrideTransitions(R.anim.sceyt_anim_slide_hold, R.anim.sceyt_anim_slide_out_right, false)
     }
 
-    protected open fun SceytActivityAddMembersBinding.applyStyle() {
-        root.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
-        toolbar.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.primaryColor))
-        toolbar.setIconsTint(SceytChatUIKit.theme.colors.accentColor)
-    //    toolbar.setTitleColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
-        divider.setTextColorRes(SceytChatUIKit.theme.colors.textSecondaryColor)
-        divider.setBackgroundColor(getCompatColor(SceytChatUIKit.theme.colors.surface1Color))
+    protected open fun SceytActivitySelectUsersBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
+        style.toolbarStyle.apply(toolbar)
+        with(divider) {
+            style.separatorTextStyle.apply(this)
+            text = style.separatorText
+        }
+        style.actionButton.applyToCustomButton(fabNext)
     }
 
     companion object {
@@ -183,7 +187,7 @@ open class SelectUsersActivity : AppCompatActivity() {
 
         fun newIntent(
                 context: Context,
-                args: SelectUsersPageArgs
+                args: SelectUsersPageArgs,
         ) = Intent(context, SelectUsersActivity::class.java).apply {
             putExtra(PAGE_ARGS, args)
         }
@@ -194,11 +198,11 @@ open class SelectUsersActivity : AppCompatActivity() {
 data class SelectUsersPageArgs(
         val toolbarTitle: String? = null,
         val actionButtonAlwaysEnable: Boolean = false,
-        @DrawableRes val actionButtonIcon: Int = R.drawable.sceyt_ic_arrow_next
+        @DrawableRes val actionButtonIcon: Int = R.drawable.sceyt_ic_arrow_next,
 ) : Parcelable
 
 
 @Parcelize
 data class SelectUsersResult(
-        val selectedUsers: List<SceytUser>
+        val selectedUsers: List<SceytUser>,
 ) : Parcelable

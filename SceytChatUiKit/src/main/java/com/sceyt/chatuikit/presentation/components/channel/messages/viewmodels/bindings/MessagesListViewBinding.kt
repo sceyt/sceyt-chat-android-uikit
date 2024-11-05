@@ -45,11 +45,10 @@ import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isPublic
-import com.sceyt.chatuikit.persistence.extensions.isSelf
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem.MessageItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
@@ -66,10 +65,11 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.collections.set
 
+@JvmName("bind")
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
-    if (channel.isSelf())
+    if (channel.isSelf)
         messagesListView.getPageStateView().setEmptyStateView(messagesListView.style.emptyStateForSelfChannel)
 
     clearPreparingThumbs()
@@ -104,6 +104,21 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         else ChannelsCache.currentChannelId = null
     }
 
+    if (channel.unread)
+        markChannelAsRead(channel.id)
+
+    // If userRole is null or empty, get channel again to update channel
+    if (channel.userRole.isNullOrEmpty())
+        getChannel(channel.id)
+
+    if (channel.lastDisplayedMessageId == 0L || channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending
+            || channel.lastDisplayedMessageId == channel.lastMessage?.id)
+        loadPrevMessages(channel.lastMessage?.id ?: 0, 0)
+    else {
+        pinnedLastReadMessageId = channel.lastDisplayedMessageId
+        loadNearMessages(pinnedLastReadMessageId, LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue), false)
+    }
+
     messagesListView.setUnreadCount(channel.newMessageCount)
 
     messagesListView.setNeedDownloadListener {
@@ -117,6 +132,23 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     checkEnableDisableActions(channel)
+
+    suspend fun getCompareMessage(
+            loadType: PaginationResponse.LoadType,
+            proportion: List<SceytMessage>,
+    ): SceytMessage? = withContext(Dispatchers.Default) {
+        if (proportion.isEmpty()) return@withContext null
+        val proportionFirstId = proportion.first().id
+        return@withContext when (loadType) {
+            LoadNext, LoadNewest, LoadNear -> {
+                (messagesListView.getData().lastOrNull {
+                    it is MessageItem && it.message.id < proportionFirstId
+                } as? MessageItem)?.message
+            }
+
+            LoadPrev -> null
+        }
+    }
 
     fun checkToHildeLoadingMoreItemByLoadType(loadType: PaginationResponse.LoadType) {
         when {
@@ -155,52 +187,74 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytMessage>, data: List<MessageListItem>) {
+    suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytMessage>) {
+        val enableDateSeparator = messagesListView.style.enableDateSeparator
         if (response.offset == 0) {
-            messagesListView.setMessagesList(data, true)
+            messagesListView.setMessagesList(mapToMessageListItem(data = response.data,
+                hasNext = response.hasNext, hasPrev = response.hasPrev,
+                enableDateSeparator = enableDateSeparator), true)
         } else {
             when (response.loadType) {
                 LoadPrev -> {
-                    messagesListView.addPrevPageMessages(data)
+                    messagesListView.addPrevPageMessages(mapToMessageListItem(data = response.data,
+                        hasNext = response.hasNext, hasPrev = response.hasPrev,
+                        enableDateSeparator = enableDateSeparator))
                 }
 
                 LoadNext -> {
-                    messagesListView.addNextPageMessages(data)
+                    val hasNext = checkMaybeHesNext(response)
+                    val compareMessage = getCompareMessage(response.loadType, response.data)
+                    messagesListView.addNextPageMessages(mapToMessageListItem(data = response.data,
+                        hasNext = hasNext, hasPrev = response.hasPrev, compareMessage,
+                        enableDateSeparator = enableDateSeparator))
                 }
 
                 LoadNear -> {
-                    messagesListView.setMessagesList(data, true)
+                    val hasNext = checkMaybeHesNext(response)
+                    messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = hasNext,
+                        hasPrev = response.hasPrev, enableDateSeparator = enableDateSeparator), true)
                 }
 
                 LoadNewest -> {
-                    messagesListView.setMessagesList(data, true)
+                    messagesListView.setMessagesList(mapToMessageListItem(data = response.data, hasNext = response.hasNext,
+                        hasPrev = response.hasPrev, enableDateSeparator = enableDateSeparator), true)
                 }
             }
         }
         checkToScrollAfterResponse(response)
     }
 
-    fun initPaginationServerResponse(
-            response: PaginationResponse.ServerResponse<SceytMessage>,
-            data: List<MessageListItem>
-    ) {
+    suspend fun initPaginationServerResponse(response: PaginationResponse.ServerResponse<SceytMessage>) {
         when (response.data) {
             is SceytResponse.Success -> {
-                if (response.hasDiff || messagesListView.getData().isEmpty()) {
+                if (response.hasDiff) {
+                    val dataToMap = if (response.dbResultWasEmpty) {
+                        response.data.data ?: return
+                    } else response.cacheData
+
+                    val newMessages = mapToMessageListItem(data = dataToMap,
+                        hasNext = response.hasNext,
+                        hasPrev = response.hasPrev,
+                        compareMessage = getCompareMessage(response.loadType, dataToMap),
+                        enableDateSeparator = messagesListView.style.enableDateSeparator)
+
                     if (response.dbResultWasEmpty) {
                         if (response.loadType == LoadNear)
-                            messagesListView.setMessagesList(data, true)
+                            messagesListView.setMessagesList(newMessages, true)
                         else {
                             if (response.loadType == LoadNext || response.loadType == LoadNewest)
-                                messagesListView.addNextPageMessages(data)
-                            else messagesListView.addPrevPageMessages(data)
+                                messagesListView.addNextPageMessages(newMessages)
+                            else messagesListView.addPrevPageMessages(newMessages)
                         }
                     } else
-                        messagesListView.setMessagesList(data, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
+                        messagesListView.setMessagesList(newMessages, response.loadKey?.key == LoadKeyType.ScrollToLastMessage.longValue)
                 } else
                     checkToHildeLoadingMoreItemByLoadType(response.loadType)
 
                 checkToScrollAfterResponse(response)
+
+                loadPrevOffsetId = response.data.data?.firstOrNull()?.id ?: 0
+                loadNextOffsetId = response.data.data?.lastOrNull()?.id ?: 0
             }
 
             is SceytResponse.Error -> {
@@ -213,11 +267,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    fun initMessagesResponse(pagingResponse: Pair<PaginationResponse<SceytMessage>, List<MessageListItem>>) {
-        val (response, data) = pagingResponse
+    suspend fun initMessagesResponse(response: PaginationResponse<SceytMessage>) {
         when (response) {
-            is PaginationResponse.DBResponse -> initPaginationDbResponse(response, data)
-            is PaginationResponse.ServerResponse -> initPaginationServerResponse(response, data)
+            is PaginationResponse.DBResponse -> initPaginationDbResponse(response)
+            is PaginationResponse.ServerResponse -> initPaginationServerResponse(response)
             else -> return
         }
     }
@@ -520,7 +573,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         viewModelScope.launch(Dispatchers.Default) {
             if (lifecycleOwner.isResumed()) {
                 messagesListView.updateProgress(it, false)
-            } else
+            } else if (it.state != TransferState.Downloading && it.state != TransferState.Uploading)
                 needToUpdateTransferAfterOnResume[it.messageTid] = it
         }
     }.launchIn(viewModelScope)
@@ -641,7 +694,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
             is MessageCommandEvent.AttachmentLoaderClick -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    prepareToPauseOrResumeUpload(event.item, event.message)
+                    prepareToPauseOrResumeUpload(event.item)
                 }
             }
 
@@ -701,9 +754,4 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         if (playing)
             onVocePlaying(message)
     }
-}
-
-@Suppress("unused")
-fun bindViewFromJava(viewModel: MessageListViewModel, messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
-    viewModel.bind(messagesListView, lifecycleOwner)
 }

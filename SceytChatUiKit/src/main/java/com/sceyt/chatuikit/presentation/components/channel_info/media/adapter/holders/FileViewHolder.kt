@@ -33,7 +33,7 @@ class FileViewHolder(
 
     override fun bind(item: ChannelFileItem) {
         super.bind(item)
-        val file = (item as? ChannelFileItem.File)?.file ?: return
+        val file = item.attachment
 
         with(binding) {
             tvFileName.text = style.fileNameFormatter.format(context, file)
@@ -47,11 +47,11 @@ class FileViewHolder(
         when (data.state) {
             TransferState.PendingDownload -> {
                 binding.icFile.setImageResource(0)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
             }
 
             TransferState.Downloaded, TransferState.Uploaded -> {
-                val icon = style.iconProvider.provide(context, fileItem.file)
+                val icon = style.iconProvider.provide(context, fileItem.attachment)
                 binding.icFile.setImageDrawable(icon)
             }
 

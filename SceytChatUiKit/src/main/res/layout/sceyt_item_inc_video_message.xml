@@ -27,6 +27,7 @@
         app:layout_constraintTop_toTopOf="@+id/layoutDetails"
         app:layout_goneMarginStart="12dp"
         app:sceytUiAvatarTextSize="15sp"
+        tools:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar"
         tools:sceytUiAvatarFullName="Ar"
         tools:visibility="visible" />
 
@@ -224,8 +225,8 @@
             app:layout_constraintBottom_toBottomOf="@id/layoutDetails"
             app:layout_constraintEnd_toEndOf="@id/imageThumb"
             app:sceytUiDecoratedTextColor="@color/sceyt_color_text_secondary"
-            app:sceytUiDecoratedTextSize="@dimen/tinyTextSize"
             app:sceytUiDecoratedTextHighlighted="true"
+            app:sceytUiDecoratedTextSize="@dimen/tinyTextSize"
             app:sceytUiDecoratedTextTrailingIconSize="15.5dp"
             tools:sceytUiDecoratedTextTitle="00:37" />
 

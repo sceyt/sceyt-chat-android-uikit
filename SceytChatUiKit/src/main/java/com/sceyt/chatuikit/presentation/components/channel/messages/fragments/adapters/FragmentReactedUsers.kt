@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,22 +12,45 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.databinding.SceytFragmentReactedUsersBinding
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.setBundleArguments
-import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.viewmodel.ReactionsInfoViewModel
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.viewmodel.ReactionsInfoViewModel
+import com.sceyt.chatuikit.styles.reactions_info.ReactedUserListStyle
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
 
-class FragmentReactedUsers : Fragment(), SceytKoinComponent {
+class FragmentReactedUsers : Fragment, SceytKoinComponent {
+    constructor() : super()
+
+    constructor(style: ReactedUserListStyle) : super() {
+        this.style = style
+    }
+
     private lateinit var binding: SceytFragmentReactedUsersBinding
-    private val viewModel: ReactionsInfoViewModel by inject()
+    private val viewModel: ReactionsInfoViewModel by viewModel(parameters = {
+        parametersOf(
+            arguments?.getString(REACTIONS_KEY) ?: "",
+            arguments?.getLong(MESSAGE_ID_KEY) ?: 0,
+        )
+    })
+
     private var usersAdapter: ReactedUsersAdapter? = null
     private var clickListener: ((SceytReaction) -> Unit)? = null
-    private lateinit var key: String
-    private var messageId: Long = 0
+    private lateinit var style: ReactedUserListStyle
     private val loafMoreDebounce by lazy { DebounceHelper(100, this) }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        // Keep the style in the view model.
+        // If the style is not initialized it will be taken from the view model.
+        if (::style.isInitialized)
+            viewModel.style = style
+        else
+            style = viewModel.style
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentReactedUsersBinding.inflate(inflater, container, false).also {
@@ -37,14 +61,9 @@ class FragmentReactedUsers : Fragment(), SceytKoinComponent {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        getBundleArguments()
+        binding.applyStyle()
         initViewModel()
-        viewModel.getReactions(messageId, 0, key)
-    }
-
-    private fun getBundleArguments() {
-        key = arguments?.getString(REACTIONS_KEY) ?: ""
-        messageId = arguments?.getLong(MESSAGE_ID_KEY) ?: 0
+        viewModel.getReactions(0)
     }
 
     private fun initViewModel() {
@@ -73,9 +92,10 @@ class FragmentReactedUsers : Fragment(), SceytKoinComponent {
 
     private fun setOrUpdateUsersAdapter(reactions: List<ReactedUserItem>) {
         if (usersAdapter == null) {
-            usersAdapter = ReactedUsersAdapter {
-                clickListener?.invoke(it.reaction)
-            }.also { it.submitList(reactions) }
+            val factory = ReactedUserViewHolderFactory(style.itemStyle).also {
+                it.setClickListener { reaction -> clickListener?.invoke(reaction.reaction) }
+            }
+            usersAdapter = ReactedUsersAdapter(factory).also { it.submitList(reactions) }
 
             binding.tvUsers.apply {
                 adapter = usersAdapter
@@ -93,7 +113,7 @@ class FragmentReactedUsers : Fragment(), SceytKoinComponent {
                                 if (!viewModel.canLoadNext()) return@submit
 
                                 val offset = usersAdapter?.getSkip() ?: 0
-                                viewModel.getReactions(messageId, offset, key)
+                                viewModel.getReactions(offset)
                             }
                         }
                     }
@@ -107,14 +127,12 @@ class FragmentReactedUsers : Fragment(), SceytKoinComponent {
         clickListener = listener
     }
 
-    fun getKey(): String? {
-        return if (::key.isInitialized)
-            key
-        else null
+    fun getKey(): String {
+        return arguments?.getString(REACTIONS_KEY) ?: ""
     }
 
     fun update() {
-        viewModel.getReactions(messageId, 0, key)
+        viewModel.getReactions(0)
     }
 
     override fun onDestroyView() {
@@ -122,16 +140,22 @@ class FragmentReactedUsers : Fragment(), SceytKoinComponent {
         usersAdapter = null
     }
 
+    private fun SceytFragmentReactedUsersBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
+    }
+
     companion object {
         private const val REACTIONS_KEY = "REACTIONS_KEY"
         private const val MESSAGE_ID_KEY = "MESSAGE_ID_KEY"
 
-        fun newInstance(messageId: Long, key: String): FragmentReactedUsers {
-            return FragmentReactedUsers().apply {
-                setBundleArguments {
-                    putString(REACTIONS_KEY, key)
-                    putLong(MESSAGE_ID_KEY, messageId)
-                }
+        fun newInstance(
+                messageId: Long,
+                key: String,
+                style: ReactedUserListStyle
+        ) = FragmentReactedUsers(style).apply {
+            setBundleArguments {
+                putString(REACTIONS_KEY, key)
+                putLong(MESSAGE_ID_KEY, messageId)
             }
         }
     }

@@ -7,18 +7,19 @@ import android.text.Spannable
 import android.text.Spanned
 import android.text.TextUtils
 import android.text.TextWatcher
-import android.text.style.ForegroundColorSpan
 import androidx.core.text.getSpans
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isVisuallyEmpty
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyler
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyler.isSupportedStyle
+import com.sceyt.chatuikit.styles.common.TextStyle
 
 
 class ComposeTextStyleWatcher(private val context: Context) : TextWatcher {
     private val markerAnnotation = Annotation("text-formatting", "marker")
     private var textSnapshotPriorToChange: CharSequence? = null
+    private var mentionTextStyle = TextStyle(color = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
 
     override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
         if (s is Spannable)
@@ -40,9 +41,9 @@ class ComposeTextStyleWatcher(private val context: Context) : TextWatcher {
     override fun afterTextChanged(s: Editable) {
         // Set mention spans
         s.getSpans<Annotation>(0, s.length).forEach {
-            if (it.key == MentionUserHelper.MENTION)
-                s.setSpan(ForegroundColorSpan(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)),
-                    s.getSpanStart(it), s.getSpanEnd(it), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            if (it.key == MentionUserHelper.MENTION) {
+                mentionTextStyle.apply(context, s, s.getSpanStart(it), s.getSpanEnd(it))
+            }
         }
 
         // Set text formatting spans
@@ -99,5 +100,9 @@ class ComposeTextStyleWatcher(private val context: Context) : TextWatcher {
                     }
                 }
         }
+    }
+
+    fun setMentionTextStyle(style: TextStyle) {
+        mentionTextStyle = style
     }
 }

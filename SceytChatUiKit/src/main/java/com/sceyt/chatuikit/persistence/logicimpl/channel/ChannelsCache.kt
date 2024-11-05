@@ -146,7 +146,6 @@ class ChannelsCache {
             cachedData[channelId]?.let { channel ->
                 val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
                 val updatedChannel = channel.copy(lastMessage = message)
-                cachedData[channelId] = updatedChannel
                 channelUpdated(updatedChannel, needSort, ChannelUpdatedType.LastMessage)
             }
         }
@@ -159,7 +158,6 @@ class ChannelsCache {
                 val updatedChannel = channel.copy(
                     lastMessage = message,
                     lastDisplayedMessageId = message.id)
-                cachedData[channelId] = updatedChannel
                 channelUpdated(updatedChannel, needSort, ChannelUpdatedType.LastMessage)
             }
         }
@@ -176,7 +174,6 @@ class ChannelsCache {
                     newReactions = null,
                     pendingReactions = null
                 )
-                cachedData[channelId] = updatedChannel
                 channelUpdated(updatedChannel, true, ChannelUpdatedType.ClearedHistory)
             }
         }
@@ -189,7 +186,6 @@ class ChannelsCache {
                     muted = muted,
                     mutedTill = if (muted) muteUntil else 0
                 )
-                cachedData[channelId] = updatedChannel
                 channelUpdated(updatedChannel, false, ChannelUpdatedType.MuteState)
             }
         }
@@ -201,7 +197,6 @@ class ChannelsCache {
                 val updatedChannel = channel.copy(
                     messageRetentionPeriod = period
                 )
-                cachedData[channelId] = updatedChannel
                 channelUpdated(updatedChannel, false, ChannelUpdatedType.AutoDeleteState)
             }
         }
@@ -211,7 +206,6 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
                 val updatedChannel = channel.copy(pinnedAt = pinnedAt)
-                cachedData[channelId] = updatedChannel
                 channelUpdated(updatedChannel, true, ChannelUpdatedType.PinnedAt)
             }
         }
@@ -221,7 +215,6 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData[channelId]?.let { channel ->
                 val updatedChannel = channel.copy(newMessageCount = count.toLong(), unread = false)
-                cachedData[channelId] = updatedChannel
                 channelUpdated(updatedChannel, false, ChannelUpdatedType.UnreadCount)
             }
         }
@@ -254,6 +247,7 @@ class ChannelsCache {
     }
 
     private fun channelUpdated(channel: SceytChannel, needSort: Boolean, type: ChannelUpdatedType) {
+        cachedData[channel.id] = channel
         channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel, needSort, type))
     }
 
@@ -266,7 +260,6 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData[channel.id]?.let {
                 val updatedChannel = it.copy(memberCount = channel.memberCount)
-                cachedData[channel.id] = updatedChannel
                 channelUpdated(updatedChannel, false, ChannelUpdatedType.Members)
                 found = true
             }
@@ -325,7 +318,6 @@ class ChannelsCache {
                     unread = channel.unread,
                     newMessageCount = channel.newMessageCount
                 )
-                cachedData[channel.id] = updatedChannel
                 channelUpdated(updatedChannel, false, ChannelUpdatedType.Updated)
             }
         }

@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_PARAMETER")
+
 package com.sceyt.chatuikit.styles.extensions.forward
 
 import android.content.res.TypedArray
@@ -15,12 +17,13 @@ import com.sceyt.chatuikit.styles.common.CheckboxStyle
 import com.sceyt.chatuikit.styles.common.HintStyle
 import com.sceyt.chatuikit.styles.common.SearchInputStyle
 import com.sceyt.chatuikit.styles.common.SearchToolbarStyle
+import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
 
 internal fun ForwardStyle.Builder.buildSearchInputStyle(
-        array: TypedArray
+        array: TypedArray,
 ) = SearchInputStyle(
     searchIcon = context.getCompatDrawable(R.drawable.sceyt_ic_search).applyTint(
         context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
@@ -30,7 +33,7 @@ internal fun ForwardStyle.Builder.buildSearchInputStyle(
     ),
     textInputStyle = TextInputStyle(
         hintStyle = HintStyle(
-            textColor = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor),
+            color = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor),
             hint = context.getString(R.string.sceyt_search)
         ),
         textStyle = TextStyle(
@@ -40,7 +43,7 @@ internal fun ForwardStyle.Builder.buildSearchInputStyle(
 )
 
 internal fun ForwardStyle.Builder.buildSearchToolbarStyle(
-        array: TypedArray
+        array: TypedArray,
 ) = SearchToolbarStyle(
     toolbarStyle = ToolbarStyle(
         backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.primaryColor),
@@ -49,7 +52,7 @@ internal fun ForwardStyle.Builder.buildSearchToolbarStyle(
             context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
         ),
         titleTextStyle = TextStyle(
-            color = context.getCompatColor(R.color.sceyt_color_text_primary),
+            color = context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor),
             font = R.font.roboto_medium
         )
     ),
@@ -57,7 +60,7 @@ internal fun ForwardStyle.Builder.buildSearchToolbarStyle(
 )
 
 internal fun ForwardStyle.Builder.buildActionButtonStyle(
-        array: TypedArray
+        array: TypedArray,
 ) = ButtonStyle(
     textStyle = TextStyle(
         color = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor),
@@ -65,12 +68,12 @@ internal fun ForwardStyle.Builder.buildActionButtonStyle(
     ),
     backgroundStyle = BackgroundStyle(
         backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor),
-        cornerRadius = 6.dpToPx().toFloat()
+        shape = Shape.RoundedCornerShape(6.dpToPx().toFloat())
     )
 )
 
 internal fun ForwardStyle.Builder.buildChannelItemStyle(
-        array: TypedArray
+        array: TypedArray,
 ) = ForwardChannelItemStyle(
     dividerColor = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor),
     checkboxStyle = CheckboxStyle.default(context),

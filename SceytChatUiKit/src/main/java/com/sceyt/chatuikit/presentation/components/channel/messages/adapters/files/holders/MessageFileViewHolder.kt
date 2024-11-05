@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders
 
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytMessageFileItemBinding
@@ -34,7 +35,7 @@ class MessageFileViewHolder(
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
-) : BaseMessageFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
+) : BaseMessageFileViewHolder(binding.root, needMediaDataCallback) {
 
     init {
         binding.applyStyle()
@@ -55,33 +56,34 @@ class MessageFileViewHolder(
 
     override fun bind(item: FileListItem, message: SceytMessage) {
         super.bind(item, message)
-        val file = (item as? FileListItem.File)?.file ?: return
+        val attachment = item.attachment
         setListener()
 
         with(binding) {
-            tvFileName.text = file.name
-            loadProgress.release(file.progressPercent)
-            tvFileSize.text = file.fileSize.toPrettySize()
+            tvFileName.text = attachment.name
+            loadProgress.release(attachment.progressPercent)
+            tvFileSize.text = attachment.fileSize.toPrettySize()
         }
 
-        viewHolderHelper.transferData?.let {
+        fileItem.transferData?.let {
             updateState(it)
             if (it.filePath.isNullOrBlank() && it.state != PendingDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(attachment))
         }
     }
 
     private fun updateState(data: TransferData) {
         if (!viewHolderHelper.updateTransferData(data, fileItem, ::isValidThumb)) return
 
-        binding.loadProgress.getProgressWithState(data.state, style.mediaLoaderStyle, data.progressPercent)
+        binding.loadProgress.getProgressWithState(data.state, style.mediaLoaderStyle,
+            message.deliveryStatus != DeliveryStatus.Pending, data.progressPercent)
         when (data.state) {
             PendingUpload -> {
                 binding.icFile.setImageResource(0)
             }
 
             PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
             }
 
             Downloading, Uploading, Preparing, WaitingToUpload -> {
@@ -89,7 +91,7 @@ class MessageFileViewHolder(
             }
 
             Uploaded, Downloaded -> {
-                val icon = style.attachmentIconProvider.provide(context, fileItem.file)
+                val icon = style.attachmentIconProvider.provide(context, fileItem.attachment)
                 binding.icFile.setImageDrawable(icon)
             }
 

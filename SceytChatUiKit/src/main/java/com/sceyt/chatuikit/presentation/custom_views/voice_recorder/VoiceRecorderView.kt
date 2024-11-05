@@ -436,7 +436,7 @@ class VoiceRecorderView @JvmOverloads constructor(
             setPadding(paddingRecording)
             backgroundTintList = ColorStateList.valueOf(getCompatColor(SceytChatUIKit.theme.colors.accentColor))
             setImageDrawable(style.deleteRecordIcon)
-            animateColor(this, getCompatColor(SceytChatUIKit.theme.colors.accentColor), getCompatColor(R.color.sceyt_color_error))
+            animateColor(this, getCompatColor(SceytChatUIKit.theme.colors.accentColor), getCompatColor(R.color.sceyt_color_warning))
         }
     }
 
@@ -447,7 +447,7 @@ class VoiceRecorderView @JvmOverloads constructor(
             setPadding(paddingRecording)
             setImageDrawable(style.recordingIcon)
             setColorFilter(context.getCompatColor(R.color.sceyt_color_on_primary))
-            animateColor(this, context.getCompatColor(R.color.sceyt_color_error), context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
+            animateColor(this, context.getCompatColor(R.color.sceyt_color_warning), context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
         }
     }
 

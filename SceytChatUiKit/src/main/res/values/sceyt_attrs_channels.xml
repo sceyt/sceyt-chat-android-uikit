@@ -6,6 +6,8 @@
 
         <!--Background color channel list view-->
         <attr name="sceytUiChannelListBackgroundColor" format="reference|color" />
+
+        <attr name="sceytUiChannelListItemBackgroundColor" format="reference|color" />
         <!--Background color of the pinned state-->
         <attr name="sceytUiChannelListPinnedBackgroundColor" format="reference|color" />
         <!-- A color of the channels divider-->
@@ -25,6 +27,8 @@
 
         <!-- Last Message delivery status icon size-->
         <attr name="sceytUiChannelListStatusIndicatorSize" format="dimension" />
+
+        <attr name="sceytUiChannelListMessageDeletedStateText" format="string"/>
 
         <!-- Drawable of the message pending indicator -->
         <attr name="sceytUiChannelListStatusPendingIndicator" format="reference" />

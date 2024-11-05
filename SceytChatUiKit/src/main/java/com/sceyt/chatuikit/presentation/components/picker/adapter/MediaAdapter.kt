@@ -7,11 +7,9 @@ import com.sceyt.chatuikit.persistence.differs.GalleryMediaItemDiff
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.components.picker.adapter.holders.BasePickerViewHolder
 import com.sceyt.chatuikit.presentation.components.picker.adapter.holders.MediaPickerItemViewHolderFactory
-import com.sceyt.chatuikit.styles.media_picker.MediaPickerStyle
 
 class MediaAdapter(
-        private val viewHolderFactory: MediaPickerItemViewHolderFactory,
-        private val style: MediaPickerStyle
+        private val viewHolderFactory: MediaPickerItemViewHolderFactory
 ) : RecyclerView.Adapter<BasePickerViewHolder>() {
     private var currentList = arrayListOf<MediaItem>()
 

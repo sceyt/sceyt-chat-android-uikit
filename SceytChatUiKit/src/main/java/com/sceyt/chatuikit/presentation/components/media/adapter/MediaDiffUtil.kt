@@ -17,19 +17,19 @@ class MediaDiffUtil(private var oldList: List<MediaItem>,
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
         val oldItem = oldList[oldItemPosition]
         val newItem = newList[newItemPosition]
-        return oldItem.file.id == newItem.file.id
+        return oldItem.attachment.id == newItem.attachment.id
     }
 
     override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
         val oldItem = oldList[oldItemPosition]
         val newItem = newList[newItemPosition]
-        return oldItem.file.diff(newItem.file).hasDifference().not()
+        return oldItem.attachment.diff(newItem.attachment).hasDifference().not()
 
     }
 
     override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any {
         val oldItem = oldList[oldItemPosition]
         val newItem = newList[newItemPosition]
-        return oldItem.file.diff(newItem.file)
+        return oldItem.attachment.diff(newItem.attachment)
     }
 }

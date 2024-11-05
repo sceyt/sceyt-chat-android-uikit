@@ -1,22 +1,20 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.holders
 
+import android.graphics.drawable.Drawable
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.masoudss.lib.SeekBarOnProgressChanged
 import com.masoudss.lib.WaveformSeekBar
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytItemOutVoiceMessageBinding
 import com.sceyt.chatuikit.extensions.TAG_REF
-import com.sceyt.chatuikit.extensions.durationToMinSecShort
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.mediaPlayerPositionToSeekBarProgress
 import com.sceyt.chatuikit.extensions.progressToMediaPlayerPosition
 import com.sceyt.chatuikit.extensions.runOnMainThread
 import com.sceyt.chatuikit.extensions.setBackgroundTint
-import com.sceyt.chatuikit.extensions.setPlayButtonIcon
 import com.sceyt.chatuikit.media.audio.AudioPlayer
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper.OnAudioPlayer
@@ -88,14 +86,14 @@ class OutVoiceMessageViewHolder(
             }
 
             playPauseButton.setOnClickListener {
-                onPlayPauseClick(fileItem.file)
+                onPlayPauseClick(fileItem.attachment)
             }
         }
     }
 
     override fun bind(item: MessageListItem, diff: MessageDiff) {
         super.bind(item, diff)
-        lastFilePath = fileItem.file.filePath
+        lastFilePath = fileItem.attachment.filePath
 
         with(binding) {
             val message = (item as MessageItem).message
@@ -137,7 +135,7 @@ class OutVoiceMessageViewHolder(
             override fun onProgressChanged(waveformSeekBar: WaveformSeekBar, progress: Float, fromUser: Boolean) {
                 if (fromUser) {
                     val seekPosition = progressToMediaPlayerPosition(progress, metaDuration)
-                    AudioPlayerHelper.seek(fileItem.file.filePath, seekPosition)
+                    AudioPlayerHelper.seek(fileItem.attachment.filePath, seekPosition)
                 }
             }
         }
@@ -146,21 +144,21 @@ class OutVoiceMessageViewHolder(
         seekBar.isEnabled = isPlaying
         playBackSpeed.isEnabled = isPlaying
 
-        if (AudioPlayerHelper.alreadyInitialized(fileItem.file.filePath ?: ""))
+        if (AudioPlayerHelper.alreadyInitialized(fileItem.attachment.filePath ?: ""))
             initAudioPlayer()
     }
 
     private fun checkIsPlayingAndSetState(): Boolean {
-        return if (AudioPlayerHelper.getCurrentPlayingAudioPath() == fileItem.file.filePath) {
+        return if (AudioPlayerHelper.getCurrentPlayingAudioPath() == fileItem.attachment.filePath) {
             val playBackPos = AudioPlayerHelper.getCurrentPlayer()?.getPlaybackPosition() ?: 0
-            binding.voiceDuration.text = playBackPos.durationToMinSecShort()
+            binding.voiceDuration.text = style.voiceDurationFormatter.format(context, playBackPos)
             binding.seekBar.progress = mediaPlayerPositionToSeekBarProgress(playBackPos, fileItem.duration?.times(1000L)
                     ?: 0)
             currentPlaybackSpeed = fromValue(AudioPlayerHelper.getCurrentPlayer()?.getPlaybackSpeed())
             true
         } else {
-            binding.voiceDuration.text = fileItem.duration?.times(1000L) // convert to milliseconds
-                ?.durationToMinSecShort()
+            binding.voiceDuration.text = style.voiceDurationFormatter.format(context,
+                fileItem.duration?.times(1000L) ?: 0)
             binding.seekBar.progress = 0f
             currentPlaybackSpeed = PlaybackSpeed.X1
             false
@@ -204,14 +202,14 @@ class OutVoiceMessageViewHolder(
                     binding.seekBar.progress = seekBarProgress
                     binding.seekBar.isEnabled = true
                     binding.playBackSpeed.isEnabled = true
-                    binding.voiceDuration.text = position.durationToMinSecShort()
+                    binding.voiceDuration.text = style.voiceDurationFormatter.format(context, position)
                 }
             }
 
             override fun onToggle(playing: Boolean, filePath: String) {
                 if (!checkIsValid(filePath)) return
                 runOnMainThread {
-                    setPlayButtonIcon(playing, binding.playPauseButton)
+                    setPlayButtonIcon(playing)
                     voicePlayPauseListener?.invoke(fileItem, requireMessage, playing)
                 }
             }
@@ -219,10 +217,11 @@ class OutVoiceMessageViewHolder(
             override fun onStop(filePath: String) {
                 if (!checkIsValid(filePath)) return
                 runOnMainThread {
-                    setPlayButtonIcon(false, binding.playPauseButton)
+                    setPlayButtonIcon(false)
                     binding.seekBar.progress = 0f
-                    binding.voiceDuration.text = fileItem.duration?.times(1000L) // convert to milliseconds
-                        ?.durationToMinSecShort()
+                    binding.voiceDuration.text = style.voiceDurationFormatter.format(context,
+                        fileItem.duration?.times(1000L) ?: 0 // convert to milliseconds
+                    )
                     binding.seekBar.isEnabled = false
                     binding.playBackSpeed.isEnabled = false
                 }
@@ -230,7 +229,7 @@ class OutVoiceMessageViewHolder(
 
             override fun onPaused(filePath: String) {
                 if (!checkIsValid(filePath)) return
-                runOnMainThread { setPlayButtonIcon(false, binding.playPauseButton) }
+                runOnMainThread { setPlayButtonIcon(false) }
             }
 
             override fun onSpeedChanged(speed: Float, filePath: String) {
@@ -247,7 +246,7 @@ class OutVoiceMessageViewHolder(
         when (data.state) {
             Uploaded, Downloaded -> {
                 lastFilePath = data.filePath
-                binding.playPauseButton.setImageResource(getPlayPauseItemResId())
+                binding.playPauseButton.setImageDrawable(getPlayPauseItem())
             }
 
             PendingUpload, PauseUpload -> {
@@ -256,7 +255,7 @@ class OutVoiceMessageViewHolder(
 
             PendingDownload -> {
                 binding.playPauseButton.setImageResource(0)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
             }
 
             Downloading, Uploading, Preparing, WaitingToUpload -> {
@@ -271,15 +270,20 @@ class OutVoiceMessageViewHolder(
         }
     }
 
-    private fun getPlayPauseItemResId(): Int {
-        val isPlaying = AudioPlayerHelper.isPlaying(fileItem.file.filePath ?: "")
-        return if (isPlaying) R.drawable.sceyt_ic_pause else R.drawable.sceyt_ic_play
+    private fun getPlayPauseItem(
+            isPlaying: Boolean = AudioPlayerHelper.isPlaying(fileItem.attachment.filePath),
+    ): Drawable? {
+        return if (isPlaying) style.voicePauseIcon else style.voicePlayIcon
+    }
+
+    private fun setPlayButtonIcon(playing: Boolean) {
+        binding.playPauseButton.setImageDrawable(getPlayPauseItem(playing))
     }
 
     private fun checkIsValid(filePath: String?): Boolean {
         filePath ?: return false
         if (!viewHolderHelper.isFileItemInitialized) return false
-        return fileItem.file.filePath == filePath
+        return fileItem.attachment.filePath == filePath
     }
 
     override val loadingProgressView: CircularProgressView
@@ -291,7 +295,7 @@ class OutVoiceMessageViewHolder(
         binding.layoutDetails.layoutParams.width = bubbleMaxWidth
     }
 
-     override val incoming: Boolean
+    override val incoming: Boolean
         get() = false
 
     private fun SceytItemOutVoiceMessageBinding.setMessageItemStyle() {

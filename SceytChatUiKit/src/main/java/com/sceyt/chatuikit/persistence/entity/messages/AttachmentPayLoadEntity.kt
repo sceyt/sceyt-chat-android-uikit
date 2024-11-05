@@ -21,7 +21,7 @@ data class AttachmentPayLoadEntity(
         @PrimaryKey(autoGenerate = true)
         val id: Int = 0,
         val messageTid: Long,
-        val transferState: TransferState?,
+        val transferState: TransferState,
         val progressPercent: Float?,
         val url: String?,
         val filePath: String?

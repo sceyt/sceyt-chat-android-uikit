@@ -33,9 +33,11 @@ import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQuery
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQueryChangedListener
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQueryReplacement
+import com.sceyt.chatuikit.styles.common.TextStyle
 
 
 class MentionSupportEditText : AppCompatEditText {
+    private val composeTextStyleWatcher = ComposeTextStyleWatcher(context)
 
     constructor(context: Context) : super(context) {
         initialize()
@@ -58,7 +60,7 @@ class MentionSupportEditText : AppCompatEditText {
     private fun initialize() {
         addTextChangedListener(mentionValidatorWatcher)
         addTextChangedListener(MentionDeleter())
-        addTextChangedListener(ComposeTextStyleWatcher(context))
+        addTextChangedListener(composeTextStyleWatcher)
 
         doAfterTextChanged {
             onInputTextChanged(it ?: return@doAfterTextChanged)
@@ -213,7 +215,15 @@ class MentionSupportEditText : AppCompatEditText {
     val styling: List<BodyStyleRange>?
         get() = BodyStyler.getStyling(text?.trim())
 
-    private fun changeSelectionForPartialMentions(spanned: Spanned, selectionStart: Int, selectionEnd: Int): Boolean {
+    fun setMentionStyle(style: TextStyle) {
+        composeTextStyleWatcher.setMentionTextStyle(style)
+    }
+
+    private fun changeSelectionForPartialMentions(
+            spanned: Spanned,
+            selectionStart: Int,
+            selectionEnd: Int
+    ): Boolean {
         val annotations = spanned.getSpans(0, spanned.length, Annotation::class.java)
         for (annotation in annotations) {
             if (MentionAnnotation.isMentionAnnotation(annotation)) {
@@ -300,7 +310,8 @@ class MentionSupportEditText : AppCompatEditText {
             TextUtils.copySpansFrom(text, 0, text.length, Any::class.java, spannableString, 0)
             builder.append(spannableString)
         } else builder.append(text).append(" ")
-        builder.setSpan(MentionAnnotation.mentionAnnotationForRecipientId(recipientId, text.trim().toString()), 0, builder.length - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        builder.setSpan(MentionAnnotation.mentionAnnotationForRecipientId(recipientId, text.trim().toString()),
+            0, builder.length - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         return builder
     }
 
@@ -328,7 +339,8 @@ class MentionSupportEditText : AppCompatEditText {
             return -1
         }
         var delimiterSearchIndex = inputCursorPosition - 1
-        while (delimiterSearchIndex >= 0 && text[delimiterSearchIndex] != starter && !Character.isWhitespace(text[delimiterSearchIndex])) {
+        while (delimiterSearchIndex >= 0 && text[delimiterSearchIndex] != starter
+                && !Character.isWhitespace(text[delimiterSearchIndex])) {
             delimiterSearchIndex--
         }
         val index = if (delimiterSearchIndex >= 0 && text[delimiterSearchIndex] == starter) {

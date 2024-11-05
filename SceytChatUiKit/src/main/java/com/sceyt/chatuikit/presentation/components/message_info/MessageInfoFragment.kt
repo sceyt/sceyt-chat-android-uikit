@@ -10,6 +10,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -32,7 +33,13 @@ import kotlinx.coroutines.flow.onEach
 import java.util.Date
 
 @Suppress("MemberVisibilityCanBePrivate")
-open class MessageInfoFragment : Fragment() {
+open class MessageInfoFragment : Fragment {
+    constructor() : super()
+
+    constructor(messageItemStyle: MessageItemStyle) : super() {
+        this.messageItemStyle = messageItemStyle
+    }
+
     protected var binding: SceytFragmentMessageInfoBinding? = null
     protected var messageId: Long = 0
     protected var channelId: Long = 0
@@ -47,8 +54,8 @@ open class MessageInfoFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        // Keep the style in the view model. If the style is not initialized,
-        // it will be taken from the view model.
+        // Keep the style in the view model.
+        // If the style is not initialized it will be taken from the view model.
         if (::messageItemStyle.isInitialized)
             viewModel.messageItemStyle = messageItemStyle
         else
@@ -148,7 +155,7 @@ open class MessageInfoFragment : Fragment() {
             return
         }
 
-        binding?.rvReadByUsers?.adapter = UserMarkerAdapter().apply {
+        binding?.rvReadByUsers?.adapter = UserMarkerAdapter(style.listItemStyle).apply {
             submitList(list)
         }.also { readMarkersAdapter = it }
     }
@@ -159,7 +166,7 @@ open class MessageInfoFragment : Fragment() {
             deliveredMarkersAdapter?.submitList(list)
             return
         }
-        binding?.rvDeliveredToUsers?.adapter = UserMarkerAdapter().apply {
+        binding?.rvDeliveredToUsers?.adapter = UserMarkerAdapter(style.listItemStyle).apply {
             submitList(list)
         }.also { deliveredMarkersAdapter = it }
     }
@@ -170,7 +177,7 @@ open class MessageInfoFragment : Fragment() {
             playedMarkersAdapter?.submitList(list)
             return
         }
-        binding?.rvPlayedByUsers?.adapter = UserMarkerAdapter().apply {
+        binding?.rvPlayedByUsers?.adapter = UserMarkerAdapter(style.listItemStyle).apply {
             submitList(list)
         }.also { playedMarkersAdapter = it }
     }
@@ -186,16 +193,16 @@ open class MessageInfoFragment : Fragment() {
     }
 
     protected open fun onAttachmentClick(item: FileListItem, message: SceytMessage) {
-        when (item) {
-            is FileListItem.Image -> {
-                MediaPreviewActivity.launch(requireContext(), item.file, message.user, message.channelId)
+        when (item.type) {
+            AttachmentTypeEnum.Image -> {
+                MediaPreviewActivity.launch(requireContext(), item.attachment, message.user, message.channelId)
             }
 
-            is FileListItem.Video -> {
-                MediaPreviewActivity.launch(requireContext(), item.file, message.user, message.channelId)
+            AttachmentTypeEnum.Video -> {
+                MediaPreviewActivity.launch(requireContext(), item.attachment, message.user, message.channelId)
             }
 
-            else -> item.file.openFile(requireContext())
+            else -> item.attachment.openFile(requireContext())
         }
     }
 
@@ -250,26 +257,18 @@ open class MessageInfoFragment : Fragment() {
         fun newInstance(
                 message: SceytMessage,
                 messageItemStyle: MessageItemStyle
-        ): MessageInfoFragment {
-            return MessageInfoFragment().setBundleArgumentsAs<MessageInfoFragment> {
-                putLong(KEY_MESSAGE_ID, message.id)
-                putLong(KEY_CHANNEL_ID, message.channelId)
-            }.apply {
-                this.messageItemStyle = messageItemStyle
-            }
+        ) = MessageInfoFragment(messageItemStyle).setBundleArgumentsAs<MessageInfoFragment> {
+            putLong(KEY_MESSAGE_ID, message.id)
+            putLong(KEY_CHANNEL_ID, message.channelId)
         }
 
         fun newInstance(
                 messageId: Long,
                 channelId: Long,
                 messageItemStyle: MessageItemStyle
-        ): MessageInfoFragment {
-            return MessageInfoFragment().setBundleArgumentsAs<MessageInfoFragment> {
-                putLong(KEY_MESSAGE_ID, messageId)
-                putLong(KEY_CHANNEL_ID, channelId)
-            }.apply {
-                this.messageItemStyle = messageItemStyle
-            }
+        ) = MessageInfoFragment(messageItemStyle).setBundleArgumentsAs<MessageInfoFragment> {
+            putLong(KEY_MESSAGE_ID, messageId)
+            putLong(KEY_CHANNEL_ID, channelId)
         }
     }
 }

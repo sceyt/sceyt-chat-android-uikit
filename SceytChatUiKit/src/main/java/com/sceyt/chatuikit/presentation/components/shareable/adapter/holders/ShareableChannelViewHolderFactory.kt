@@ -18,7 +18,7 @@ open class ShareableChannelViewHolderFactory(
         protected val style: ShareablePageStyle
 ) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
-    protected val channelClickListenersImpl = ChannelClickListenersImpl()
+    protected val channelClickListeners = ChannelClickListenersImpl()
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return when (viewType) {
@@ -30,7 +30,7 @@ open class ShareableChannelViewHolderFactory(
 
     open fun createChannelViewHolder(parent: ViewGroup): BaseChannelViewHolder {
         val binding = SceytItemShareChannelBinding.inflate(layoutInflater, parent, false)
-        return ShareableChannelViewHolder(binding, style.channelItemStyle, channelClickListenersImpl)
+        return ShareableChannelViewHolder(binding, style.channelItemStyle, channelClickListeners)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelViewHolder {
@@ -39,10 +39,10 @@ open class ShareableChannelViewHolderFactory(
     }
 
     fun setChannelClickListener(listener: ChannelClickListeners.ChannelClickListener) {
-        channelClickListenersImpl.setListener(listener)
+        channelClickListeners.setListener(listener)
     }
 
-    protected val clickListeners get() = channelClickListenersImpl as ChannelClickListeners.ClickListeners
+    protected val clickListeners get() = channelClickListeners as ChannelClickListeners.ClickListeners
 
     open fun getItemViewType(item: ChannelListItem, position: Int): Int {
         return when (item) {

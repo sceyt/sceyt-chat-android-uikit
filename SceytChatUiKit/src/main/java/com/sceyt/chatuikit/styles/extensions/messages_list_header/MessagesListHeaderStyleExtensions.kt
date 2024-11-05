@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.extensions.setIconsTintColorRes
 import com.sceyt.chatuikit.styles.MessagesListHeaderStyle
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.HintStyle
@@ -15,10 +16,9 @@ import com.sceyt.chatuikit.styles.common.SearchInputStyle
 import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextInputStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
-import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 internal fun MessagesListHeaderStyle.Builder.buildTitleTextStyle(
-        typedArray: TypedArray
+        typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderTitleTextColor,
@@ -36,7 +36,7 @@ internal fun MessagesListHeaderStyle.Builder.buildTitleTextStyle(
     .build()
 
 internal fun MessagesListHeaderStyle.Builder.buildSubTitleTextStyle(
-        typedArray: TypedArray
+        typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSubTitleTextColor,
@@ -54,7 +54,7 @@ internal fun MessagesListHeaderStyle.Builder.buildSubTitleTextStyle(
 
 /*Avatar style */
 internal fun MessagesListHeaderStyle.Builder.buildAvatarTextStyle(
-        typedArray: TypedArray
+        typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderAvatarTextColor,
@@ -70,18 +70,19 @@ internal fun MessagesListHeaderStyle.Builder.buildAvatarTextStyle(
     )
     .build()
 
+@Suppress("UnusedReceiverParameter")
 internal fun MessagesListHeaderStyle.Builder.buildAvatarShape(
-        array: TypedArray
+        array: TypedArray,
 ): Shape {
     val value = array.getInt(R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderAvatarShape, 0)
     val cornerRadius = array.getDimension(R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderAvatarCornerRadius, 0f)
     return if (value == 1) {
-        Shape.RoundedRectangle(cornerRadius)
+        Shape.RoundedCornerShape(cornerRadius)
     } else Shape.Circle
 }
 
 internal fun MessagesListHeaderStyle.Builder.buildAvatarStyle(
-        typedArray: TypedArray
+        typedArray: TypedArray,
 ) = AvatarStyle.Builder(typedArray)
     .avatarBackgroundColor(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderAvatarBackgroundColor
@@ -91,9 +92,9 @@ internal fun MessagesListHeaderStyle.Builder.buildAvatarStyle(
     .build()
 
 internal fun MessagesListHeaderStyle.Builder.buildSearchInputHintStyle(
-        typedArray: TypedArray
+        typedArray: TypedArray,
 ) = HintStyle.Builder(typedArray)
-    .textColor(
+    .color(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputHintTextColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor))
     .hint(
@@ -103,7 +104,7 @@ internal fun MessagesListHeaderStyle.Builder.buildSearchInputHintStyle(
     .build()
 
 internal fun MessagesListHeaderStyle.Builder.buildSearchInputSearchTextStyle(
-        typedArray: TypedArray
+        typedArray: TypedArray,
 ) = TextStyle.Builder(typedArray)
     .setColor(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputTextColor,
@@ -120,7 +121,7 @@ internal fun MessagesListHeaderStyle.Builder.buildSearchInputSearchTextStyle(
     .build()
 
 internal fun MessagesListHeaderStyle.Builder.buildSearchInputTextInputStyle(
-        typedArray: TypedArray
+        typedArray: TypedArray,
 ) = TextInputStyle.Builder(typedArray)
     .setBackgroundColor(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputBackgroundColor,
@@ -143,7 +144,7 @@ internal fun MessagesListHeaderStyle.Builder.buildSearchInputTextInputStyle(
 
 
 internal fun MessagesListHeaderStyle.Builder.buildSearchInputTextStyle(
-        typedArray: TypedArray
+        typedArray: TypedArray,
 ) = SearchInputStyle.Builder(typedArray)
     .searchIcon(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderSearchInputSearchIcon,
@@ -161,9 +162,8 @@ internal fun MessagesListHeaderStyle.Builder.buildSearchInputTextStyle(
     .build()
 
 
-@Suppress("UnusedReceiverParameter")
 internal fun MessagesListHeaderStyle.Builder.buildMessageActionsMenuStyle(
-        typedArray: TypedArray
+        typedArray: TypedArray,
 ) = MenuStyle.Builder(typedArray)
     .popupTheme(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderMessageActionsMenuPopupTheme,
@@ -173,4 +173,17 @@ internal fun MessagesListHeaderStyle.Builder.buildMessageActionsMenuStyle(
         index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderMessageActionsMenuTitleAppearance,
         defValue = R.style.SceytMenuTitleAppearance
     )
+    .menuRes(
+        index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderMessageActionsMenu,
+        defValue = R.menu.sceyt_menu_message_actions
+    )
+    .overFlowIcon(
+        index = R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderMessageActionsMenuOverflowIcon,
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_more_24).applyTint(
+            context, SceytChatUIKit.theme.colors.accentColor
+        )
+    )
+    .menuCustomizer {
+        setIconsTintColorRes(context, SceytChatUIKit.theme.colors.accentColor)
+    }
     .build()

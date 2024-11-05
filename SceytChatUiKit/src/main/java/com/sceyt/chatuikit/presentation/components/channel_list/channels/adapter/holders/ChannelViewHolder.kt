@@ -6,28 +6,18 @@ import android.text.util.Linkify
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CallSuper
-import androidx.core.text.buildSpannedString
-import androidx.core.text.toSpannable
 import androidx.core.view.isVisible
-import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.chatuikit.extensions.extractLinksWithPositions
-import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.setOnClickListenerAvailable
 import com.sceyt.chatuikit.extensions.setOnLongClickListenerAvailable
-import com.sceyt.chatuikit.extensions.toSpannableString
-import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
-import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
-import com.sceyt.chatuikit.persistence.logicimpl.channel.ChatReactionMessagesCache
-import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
@@ -44,9 +34,6 @@ open class ChannelViewHolder(
         private var listeners: ChannelClickListeners.ClickListeners,
         private val attachDetachListener: ((ChannelListItem?, attached: Boolean) -> Unit)? = null,
 ) : BaseChannelViewHolder(binding.root) {
-
-    protected var isSelf = false
-    private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
 
     init {
         with(binding) {
@@ -74,7 +61,6 @@ open class ChannelViewHolder(
                 val channel = item.channel
                 val name: String = channel.channelSubject
                 val url = channel.iconUrl
-                isSelf = channel.isSelf
 
                 // this ui states is changed more often, and to avoid wrong ui states we need to set them every time
                 setUnreadCount(channel, binding.unreadMessagesCount)
@@ -124,121 +110,29 @@ open class ChannelViewHolder(
         attachDetachListener?.invoke(getChannelListItem(), false)
     }
 
-    open fun setLastMessagedText(channel: SceytChannel, textView: TextView) {
-        if (checkHasLastReaction(channel, textView))
-            return
-
-        if (checkHasDraftMessage(channel, textView))
-            return
-
-        val message = channel.lastMessage
-        if (message == null) {
-            textView.text = null
-            return
-        }
-        if (message.state == MessageState.Deleted) {
-            val text = SpannableStringBuilder(context.getString(R.string.sceyt_message_was_deleted))
-            itemStyle.deletedTextStyle.apply(context, text)
-            textView.text = text
-            binding.dateStatus.setIcons(null)
-            return
-        }
-        val body = itemStyle.lastMessageBodyFormatter.format(context, MessageBodyFormatterAttributes(
-            message = message,
-            mentionTextStyle = itemStyle.mentionTextStyle)
+    protected open fun setLastMessagedText(channel: SceytChannel, textView: TextView) {
+        val text = itemStyle.channelSubtitleFormatter.format(
+            context = context,
+            from = ChannelItemSubtitleFormatterAttributes(
+                channel = channel,
+                channelItemStyle = itemStyle
+            )
         )
-        val senderName = itemStyle.lastMessageSenderNameFormatter.format(context, channel)
-        val attachmentIcon = message.attachments?.getOrNull(0)?.let {
-            itemStyle.attachmentIconProvider.provide(context, it)
-        }
-
-        setTextAutoLinkMasks(textView, message.body)
-
-        textView.setText(buildSpannedString {
-            if (senderName.isNotEmpty()) {
-                append(senderName)
-                itemStyle.lastMessageSenderNameTextStyle.apply(context, this, 0, senderName.length)
-            }
-            append(attachmentIcon.toSpannableString())
-            append(body)
-        }, TextView.BufferType.SPANNABLE)
+        setTextAutoLinkMasks(textView, text)
+        textView.setText(text, TextView.BufferType.SPANNABLE)
     }
 
-    protected open fun setTextAutoLinkMasks(messageText: TextView, body: String) {
+    protected open fun setTextAutoLinkMasks(messageText: TextView, body: CharSequence) {
         val hasLinks = body.extractLinksWithPositions().isNotEmpty()
         messageText.autoLinkMask = if (hasLinks)
             Linkify.WEB_URLS else 0
     }
 
-    open fun checkHasLastReaction(channel: SceytChannel, textView: TextView): Boolean {
-        if (channel.lastMessage?.deliveryStatus == DeliveryStatus.Pending) return false
-        val pendingAddOrRemoveReaction = channel.pendingReactions?.filter { !it.incomingMsg }?.groupBy { it.isAdd }
-        val addReactions = pendingAddOrRemoveReaction?.get(true)
-        val removeReactions = pendingAddOrRemoveReaction?.get(false) ?: emptyList()
-        val lastReaction = addReactions?.maxByOrNull { it.createdAt }?.toSceytReaction()
-                ?: channel.newReactions?.filter {
-                    it.user?.id != myId && removeReactions.none { rm ->
-                        rm.key == it.key && rm.messageId == it.messageId && it.user?.id == myId
-                    }
-                }?.maxByOrNull { it.id } ?: return false
-
-        val message = ChatReactionMessagesCache.getMessageById(lastReaction.messageId)
-                ?: return false
-
-        if (lastReaction.id > (channel.lastMessage?.id ?: 0) || lastReaction.pending) {
-            val toMessage = SpannableStringBuilder(itemStyle.lastMessageBodyFormatter.format(context, MessageBodyFormatterAttributes(
-                message = message,
-                mentionTextStyle = itemStyle.mentionTextStyle)
-            ))
-            val reactedWord = itemView.getString(R.string.sceyt_reacted)
-
-            val reactUserName = when {
-                channel.isGroup -> {
-                    val name = lastReaction.user?.let { itemStyle.reactedUserNameFormatter.format(context, it) }
-                            ?: ""
-                    "$name ${reactedWord.lowercase()}"
-                }
-
-                lastReaction.user?.id == myId -> "${itemView.getString(R.string.sceyt_you)} ${itemView.getString(R.string.sceyt_reacted).lowercase()}"
-                else -> itemView.getString(R.string.sceyt_reacted)
-            }
-
-            val text = "$reactUserName ${lastReaction.key} ${itemView.getString(R.string.sceyt_to)}"
-            val title = SpannableStringBuilder("$text ")
-            title.append("\"")
-            title.append(toMessage)
-            title.append("\"")
-
-            textView.setText(title, TextView.BufferType.SPANNABLE)
-            return true
-        }
-        return false
+    protected open fun setSubject(channel: SceytChannel, textView: TextView) {
+        textView.text = itemStyle.channelTitleFormatter.format(context, channel)
     }
 
-    open fun checkHasDraftMessage(channel: SceytChannel, textView: TextView): Boolean {
-        val draftMessage = channel.draftMessage
-        return if (draftMessage != null) {
-            val draft = "${context.getString(R.string.sceyt_draft)}:".toSpannable()
-            itemStyle.draftPrefixTextStyle.apply(context, draft)
-
-            val body = buildSpannedString {
-                append(draft)
-                append(" ")
-                append(itemStyle.draftMessageBodyFormatter.format(context, DraftMessageBodyFormatterAttributes(
-                    message = draftMessage,
-                    mentionTextStyle = itemStyle.mentionTextStyle)
-                ))
-            }
-            textView.text = body
-            true
-        } else false
-    }
-
-    open fun setSubject(channel: SceytChannel, textView: TextView) {
-        textView.text = itemStyle.channelNameFormatter.format(context, channel)
-    }
-
-    open fun setMuteState(channel: SceytChannel, textView: TextView) {
+    protected open fun setMuteState(channel: SceytChannel, textView: TextView) {
         if (channel.muted) {
             textView.setCompoundDrawablesWithIntrinsicBounds(null, null, itemStyle.mutedIcon, null)
         } else {
@@ -246,27 +140,27 @@ open class ChannelViewHolder(
         }
     }
 
-    open fun setAutoDeleteState(channel: SceytChannel, imageView: ImageView) {
+    protected open fun setAutoDeleteState(channel: SceytChannel, imageView: ImageView) {
         imageView.isVisible = channel.autoDeleteEnabled
     }
 
-    open fun setPinState(channel: SceytChannel, pinImage: ImageView) {
+    protected open fun setPinState(channel: SceytChannel, pinImage: ImageView) {
         val isPinned = channel.pinned
         pinImage.setImageDrawable(itemStyle.pinIcon)
         pinImage.isVisible = isPinned
         binding.viewPinned.isVisible = isPinned
     }
 
-    open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatarView: AvatarView) {
+    protected open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatarView: AvatarView) {
         itemStyle.channelAvatarRenderer.render(
             context = context,
-            channel = channel,
+            from = channel,
             style = itemStyle.avatarStyle,
             avatarView = avatarView
         )
     }
 
-    open fun setLastMessageStatusAndDate(channel: SceytChannel, decoratedTextView: DecoratedTextView) {
+    protected open fun setLastMessageStatusAndDate(channel: SceytChannel, decoratedTextView: DecoratedTextView) {
         val data = getDateData(channel)
         val shouldShowStatus = data.second
         channel.lastMessage.setChannelMessageDateAndStatusIcon(
@@ -277,14 +171,14 @@ open class ChannelViewHolder(
             shouldShowStatus = shouldShowStatus)
     }
 
-    open fun setPresenceState(channel: SceytChannel?, indicatorView: PresenceStateIndicatorView) {
-        val state = channel?.getPeer()?.user?.presence?.state ?: PresenceState.Offline
-        val showState = !isSelf && channel?.isDirect() == true && state == PresenceState.Online
+    protected open fun setPresenceState(channel: SceytChannel, indicatorView: PresenceStateIndicatorView) {
+        val state = channel.getPeer()?.user?.presence?.state ?: PresenceState.Offline
+        val showState = !channel.isSelf && channel.isDirect() && state == PresenceState.Online
         indicatorView.setIndicatorColor(itemStyle.presenceStateColorProvider.provide(context, state))
         indicatorView.isVisible = showState
     }
 
-    open fun setUnreadCount(channel: SceytChannel, textView: TextView) {
+    protected open fun setUnreadCount(channel: SceytChannel, textView: TextView) {
         val unreadCount = channel.newMessageCount
         if (unreadCount == 0L) {
             textView.isVisible = channel.unread
@@ -301,7 +195,7 @@ open class ChannelViewHolder(
     }
 
     @SuppressLint("SetTextI18n")
-    open fun setChannelMarkedUsUnread(channel: SceytChannel, textView: TextView) {
+    protected open fun setChannelMarkedUsUnread(channel: SceytChannel, textView: TextView) {
         if (channel.newMessageCount > 0) return
         if (channel.unread)
             textView.text = "  "
@@ -309,7 +203,7 @@ open class ChannelViewHolder(
         textView.isVisible = channel.unread
     }
 
-    open fun setMentionUserSymbol(channel: SceytChannel, icMention: TextView) {
+    protected open fun setMentionUserSymbol(channel: SceytChannel, icMention: TextView) {
         val showMention = channel.newMentionCount > 0 && channel.newMessageCount > 0
         if (showMention) {
             icMention.isVisible = true
@@ -320,7 +214,7 @@ open class ChannelViewHolder(
     }
 
     @SuppressLint("SetTextI18n")
-    open fun setTypingState(channel: SceytChannel, textView: TextView) {
+    protected open fun setTypingState(channel: SceytChannel, textView: TextView) {
         val data = channel.typingData ?: return
         if (data.typing) {
             val title: SpannableStringBuilder = if (channel.isGroup) {
@@ -358,7 +252,8 @@ open class ChannelViewHolder(
         return date to shouldShowStatus
     }
 
-    private fun SceytItemChannelBinding.setChannelItemStyle() {
+    protected open fun SceytItemChannelBinding.setChannelItemStyle() {
+        root.setBackgroundColor(itemStyle.backgroundColor)
         viewPinned.setBackgroundColor(itemStyle.pinnedChannelBackgroundColor)
         divider.setBackgroundColor(itemStyle.dividerColor)
         icAutoDeleted.setImageDrawable(itemStyle.autoDeletedChannelIcon)

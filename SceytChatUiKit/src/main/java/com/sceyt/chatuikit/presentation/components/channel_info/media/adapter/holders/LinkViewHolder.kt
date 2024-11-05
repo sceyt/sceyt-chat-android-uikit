@@ -33,7 +33,7 @@ class LinkViewHolder(
 
     override fun bind(item: ChannelFileItem) {
         super.bind(item)
-        val attachment = item.file
+        val attachment = item.attachment
 
         with(binding) {
             root.layoutTransition?.setAnimateParentHierarchy(false)
@@ -58,7 +58,7 @@ class LinkViewHolder(
             tvLinkDescription.isVisible = false
             setDefaultStateLinkImage()
         } else {
-            fileItem.file = attachment.copy(linkPreviewDetails = data)
+            fileItem.updateAttachment(attachment.copy(linkPreviewDetails = data))
             tvLinkName.apply {
                 text = data.title?.trim()
                 isVisible = data.title.isNullOrBlank().not()

@@ -6,12 +6,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytDialogDeleteMessageBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.styles.DialogStyle
 
-open class DeleteMessageDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle) {
+open class DeleteMessageDialog(context: Context) : Dialog(context, R.style.SceytDialogStyle) {
     private lateinit var binding: SceytDialogDeleteMessageBinding
+    private val style = DialogStyle.default(context)
     private var positiveClickListener: ((Boolean) -> Unit)? = null
     private var deleteMessageCount: Int = 1
     private var requireForMe: Boolean = false
@@ -64,9 +64,11 @@ open class DeleteMessageDialog(context: Context) : Dialog(context, R.style.Sceyt
     }
 
     protected open fun SceytDialogDeleteMessageBinding.applyStyle() {
-        buttonDelete.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-        buttonCancel.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-        textTitle.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
-        textDescription.setTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor))
+        style.backgroundStyle.apply(root)
+        style.titleStyle.apply(textTitle)
+        style.subtitleStyle.apply(textDescription)
+        style.checkboxStyle.apply(checkbox)
+        style.positiveButtonStyle.apply(buttonDelete)
+        style.negativeButtonStyle.apply(buttonCancel)
     }
 }

@@ -27,7 +27,7 @@ import kotlin.math.min
 class CircularProgressView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+        defStyleAttr: Int = 0,
 ) : View(context, attrs, defStyleAttr) {
     private lateinit var progressPaint: Paint
     private lateinit var trackPaint: Paint
@@ -193,7 +193,7 @@ class CircularProgressView @JvmOverloads constructor(
     }
 
     private fun checkIdProgressDownAndDraw(newAngel: Float): Boolean {
-        if (!enableProgressDownAnimation && newAngel < angle) {
+        if (!isAttachedToWindow || (!enableProgressDownAnimation && newAngel < angle)) {
             updateProgressAnim?.cancel()
             angle = newAngel
             invalidate()
@@ -245,13 +245,13 @@ class CircularProgressView @JvmOverloads constructor(
             iconSize = (width * iconSizeInPercent / 100 - paddingStart - paddingEnd).toInt()
     }
 
-    fun release(withProgress: Float? = null) {
+    fun release(withProgress: Float? = null, transferring: Boolean = false) {
         progress = max(withProgress?.inNotNanOrZero() ?: 0f, minProgress)
-        if (progress.isNaN()) progress = 0f
-        angle = calculateAngle(progress)
-        transferring = true
-        if (rotateAnimEnabled) rotate()
-        invalidate()
+        this.transferring = transferring
+        if (!transferring)
+            cancelProgressAnimations()
+
+        drawProgress(calculateAngle(progress))
     }
 
     fun setProgress(@FloatRange(from = 0.0, to = 100.0) newProgress: Float) {
@@ -272,6 +272,7 @@ class CircularProgressView @JvmOverloads constructor(
         invalidate()
     }
 
+    @Suppress("unused")
     fun setThickness(width: Float) {
         progressPaint.strokeWidth = width
         trackPaint.strokeWidth = width
@@ -279,6 +280,7 @@ class CircularProgressView @JvmOverloads constructor(
         invalidate()
     }
 
+    @Suppress("unused")
     fun setRotateAnimEnabled(enabled: Boolean) {
         rotateAnimEnabled = enabled
         if (!enabled)
@@ -286,6 +288,7 @@ class CircularProgressView @JvmOverloads constructor(
         invalidate()
     }
 
+    @Suppress("unused")
     fun setRounded(rounded: Boolean) {
         progressPaint.strokeCap = if (rounded) Paint.Cap.ROUND else Paint.Cap.BUTT
         invalidate()
@@ -296,18 +299,22 @@ class CircularProgressView @JvmOverloads constructor(
         invalidate()
     }
 
+    @Suppress("unused")
     fun setIconTintColor(@ColorInt color: Int) {
         iconTintColor = color
         invalidate()
     }
 
+    @Suppress("unused")
     fun setTransferring(transferring: Boolean) {
         this.transferring = transferring
         if (!transferring)
             rotateAnim?.cancel()
+        else rotate()
         invalidate()
     }
 
+    @Suppress("unused")
     fun hideAwaitToAnimFinish(hideCb: ((Boolean) -> Unit)? = null) {
         if (updateProgressAnim?.isRunning == true) {
             drawingProgressAnimEndCb = {
@@ -320,11 +327,13 @@ class CircularProgressView @JvmOverloads constructor(
         }
     }
 
+    @Suppress("unused")
     fun setMinProgress(@FloatRange(from = 0.0, to = 100.0) minProgress: Float) {
         this.minProgress = minProgress
         invalidate()
     }
 
+    @Suppress("unused")
     fun getProgressAnim() = updateProgressAnim
 
     private fun setVisibleWithAnim() {
@@ -343,10 +352,15 @@ class CircularProgressView @JvmOverloads constructor(
             if (isVisible) {
                 goneAnim = scaleAndAlphaAnim(1f, 0.5f, duration = 100) {
                     super.setVisibility(GONE)
-                    rotateAnim?.cancel()
+                    cancelProgressAnimations()
                 }
             }
         }
+    }
+
+    private fun cancelProgressAnimations() {
+        rotateAnim?.cancel()
+        updateProgressAnim?.cancel()
     }
 
     override fun setVisibility(visibility: Int) {
@@ -356,8 +370,9 @@ class CircularProgressView @JvmOverloads constructor(
             else setGoneWithAnim()
         } else {
             super.setVisibility(visibility)
-            if (visibility == GONE)
-                rotateAnim?.cancel()
+            if (visibility == GONE) {
+                cancelProgressAnimations()
+            }
             drawingProgressAnimEndCb = null
         }
     }

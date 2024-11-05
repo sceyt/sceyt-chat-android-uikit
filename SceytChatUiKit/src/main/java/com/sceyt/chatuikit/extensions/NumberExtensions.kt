@@ -87,6 +87,10 @@ fun Float.spToPx(): Float {
     return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, this, displayMetrics())
 }
 
+fun Int.spToPx(): Int {
+    return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, toFloat(), displayMetrics()).toInt()
+}
+
 /**
  * Fetches the current system display metrics based on [Resources].
  */

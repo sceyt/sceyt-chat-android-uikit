@@ -53,7 +53,7 @@
         android:paddingHorizontal="23dp"
         android:paddingVertical="10dp"
         android:text="@string/sceyt_delete"
-        android:textColor="@color/sceyt_color_error"
+        android:textColor="@color/sceyt_color_warning"
         android:textSize="@dimen/_12ssp"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"

@@ -43,7 +43,6 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
-import com.sceyt.chatuikit.persistence.extensions.isSelf
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderTypingUsersHelper
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.HeaderClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.HeaderClickListenersImpl
@@ -55,6 +54,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.Messa
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.styles.MessagesListHeaderStyle
+import com.sceyt.chatuikit.styles.common.MenuStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -63,12 +63,11 @@ import kotlinx.coroutines.launch
 class MessagesListHeaderView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+        defStyleAttr: Int = 0,
 ) : AppBarLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners,
         HeaderEventsListener.EventListeners, HeaderUIElementsListener.ElementsListeners {
 
     private val binding: SceytMessagesListHeaderViewBinding
-    private val style: MessagesListHeaderStyle
     private var clickListeners = HeaderClickListenersImpl(this)
     private var eventListeners = HeaderEventsListenerImpl(this)
     internal var uiElementsListeners = HeaderUIElementsListenerImpl(this)
@@ -82,6 +81,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private var toolbarSearchModeChangeListener: ((Boolean) -> Unit)? = null
     private var addedMenu: Menu? = null
     private var onSearchQueryChangeListener: ((String) -> Unit)? = null
+    val style: MessagesListHeaderStyle
     var isShowingMessageActions = false
         private set
     var isShowingSearchBar = false
@@ -179,7 +179,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     private fun setChannelSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
-        if (enablePresence.not() || channel.isPeerDeleted() || channel.isSelf()) {
+        if (enablePresence.not() || channel.isPeerDeleted() || channel.isSelf) {
             subjectTextView.isVisible = false
             return
         }
@@ -213,14 +213,16 @@ class MessagesListHeaderView @JvmOverloads constructor(
             style.channelAvatarRenderer.render(context, channel, style.avatarStyle, avatar)
     }
 
-    private fun showMessageActionsInToolbar(vararg messages: SceytMessage, @MenuRes resId: Int,
-                                            listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?): Menu? {
-        val menu: Menu?
+    private fun showMessageActionsInToolbar(
+            vararg messages: SceytMessage,
+            menuStyle: MenuStyle,
+            listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?,
+    ) {
         with(binding) {
             toolbarMessageActions.setToolbarIconsVisibilityInitializer { messages, menu ->
                 uiElementsListeners.onInitToolbarActionsMenu(*messages, menu = menu)
             }
-            menu = toolbarMessageActions.setupMenuWithMessages(resId, *messages)
+            toolbarMessageActions.setupMenuWithMessages(menuStyle, *messages)
             toolbarMessageActions.isVisible = true
             layoutToolbarDetails.isVisible = false
             isShowingMessageActions = true
@@ -233,7 +235,6 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 }
             }
         }
-        return menu
     }
 
     internal fun setChannel(channel: SceytChannel) {
@@ -334,10 +335,13 @@ class MessagesListHeaderView @JvmOverloads constructor(
         toolbarSearchModeChangeListener = listener
     }
 
+    @Suppress("unused")
     fun isTyping() = typingUsersHelper.isTyping
 
+    @Suppress("unused")
     fun getChannel() = if (::channel.isInitialized) channel else null
 
+    @Suppress("unused")
     fun getReplyMessage() = replyMessage
 
     fun setCustomClickListener(listeners: HeaderClickListenersImpl) {
@@ -348,18 +352,22 @@ class MessagesListHeaderView @JvmOverloads constructor(
         clickListeners.setListener(listeners)
     }
 
+    @Suppress("unused")
     fun setEventListener(listener: HeaderEventsListener) {
         eventListeners.setListener(listener)
     }
 
+    @Suppress("unused")
     fun setCustomEventListener(listener: HeaderEventsListenerImpl) {
         eventListeners = listener
     }
 
+    @Suppress("unused")
     fun setUiElementsListener(listener: HeaderUIElementsListener) {
         uiElementsListeners.setListener(listener)
     }
 
+    @Suppress("unused")
     fun setCustomUiElementsListener(listener: HeaderUIElementsListenerImpl) {
         uiElementsListeners = listener
     }
@@ -368,10 +376,12 @@ class MessagesListHeaderView @JvmOverloads constructor(
         onSearchQueryChangeListener = listener
     }
 
+    @Suppress("unused")
     fun setTypingTextBuilder(builder: (SceytMember) -> String) {
         typingUsersHelper.setTypingTextBuilder(builder)
     }
 
+    @Suppress("unused")
     fun invalidateUi() {
         with(binding) {
             uiElementsListeners.onTitle(title, channel, replyMessage, isReplyInThread)
@@ -380,6 +390,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
+    @Suppress("unused")
     fun setToolbarMenu(@MenuRes resId: Int, listener: Toolbar.OnMenuItemClickListener) {
         with(binding.headerToolbar) {
             inflateMenu(resId)
@@ -388,8 +399,10 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
+    @Suppress("unused")
     fun getToolbarMenu(): Menu = binding.headerToolbar.menu
 
+    @Suppress("unused")
     fun enableDisableToShowPresence(enable: Boolean) {
         enablePresence = enable
     }
@@ -429,9 +442,12 @@ class MessagesListHeaderView @JvmOverloads constructor(
         setAvatar(avatar, channel, replyInThread)
     }
 
-    override fun onShowMessageActionsMenu(vararg messages: SceytMessage, @MenuRes menuResId: Int,
-                                          listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?): Menu? {
-        return showMessageActionsInToolbar(*messages, resId = menuResId, listener = listener)
+    override fun onShowMessageActionsMenu(
+            vararg messages: SceytMessage,
+            menuStyle: MenuStyle,
+            listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?,
+    ) {
+        showMessageActionsInToolbar(*messages, menuStyle = menuStyle, listener = listener)
     }
 
     override fun onHideMessageActionsMenu() {
@@ -444,15 +460,15 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
         newSelectedMessage?.let { message ->
             val isPending = message.deliveryStatus == DeliveryStatus.Pending
-            menu.findItem(R.id.sceyt_reply).isVisible = isSingleMessage && !isPending
+            menu.findItem(R.id.sceyt_reply)?.isVisible = isSingleMessage && !isPending
             //menu.findItem(R.id.sceyt_reply_in_thread).isVisible = isSingleMessage && !isPending
-            menu.findItem(R.id.sceyt_forward).isVisible = !isPending
+            menu.findItem(R.id.sceyt_forward)?.isVisible = !isPending
             val expiredEditMessage = (System.currentTimeMillis() - message.createdAt) >
                     SceytChatUIKit.config.messageEditTimeout
-            menu.findItem(R.id.sceyt_edit_message).isVisible = isSingleMessage &&
+            menu.findItem(R.id.sceyt_edit_message)?.isVisible = isSingleMessage &&
                     !message.incoming && message.body.isNotNullOrBlank() && !expiredEditMessage
-            menu.findItem(R.id.sceyt_message_info).isVisible = isSingleMessage && !message.incoming && !isPending
-            menu.findItem(R.id.sceyt_copy_message).isVisible = messages.any { it.body.isNotNullOrBlank() }
+            menu.findItem(R.id.sceyt_message_info)?.isVisible = isSingleMessage && !message.incoming && !isPending
+            menu.findItem(R.id.sceyt_copy_message)?.isVisible = messages.any { it.body.isNotNullOrBlank() }
         }
     }
 

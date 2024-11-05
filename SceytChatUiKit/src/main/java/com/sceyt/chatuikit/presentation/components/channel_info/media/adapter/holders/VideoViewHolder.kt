@@ -55,7 +55,7 @@ class VideoViewHolder(
             }
 
             PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
                 viewHolderHelper.loadBlurThumb(imageView = binding.image)
             }
 
@@ -106,7 +106,7 @@ class VideoViewHolder(
 
     override fun getThumbSize() = Size(binding.root.width, binding.root.height)
 
-    override fun needThumbFor() = ThumbFor.ConversationInfo
+    override fun needThumbFor() = ThumbFor.ChannelInfo
 
     private fun SceytItemChannelVideoBinding.applyStyle() {
         with(tvDuration) {

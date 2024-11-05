@@ -99,7 +99,7 @@ class ChannelsRV @JvmOverloads constructor(
         if (mAdapter == null)
             setData(channels)
         else
-            mAdapter?.addList(channels as MutableList<ChannelListItem>)
+            mAdapter?.addList(channels)
     }
 
     fun deleteChannel(id: Long) {

@@ -63,7 +63,7 @@ class SearchableToolbar @JvmOverloads constructor(
                 textStyle = titleTextStyle,
                 hintStyle = HintStyle(
                     hint = context.getString(R.string.sceyt_search),
-                    textColor = context.getCompatColor(R.color.sceyt_color_text_footnote)
+                    color = context.getCompatColor(R.color.sceyt_color_text_footnote)
                 )
             )
             searchInputStyle = SearchInputStyle.Builder(array)
