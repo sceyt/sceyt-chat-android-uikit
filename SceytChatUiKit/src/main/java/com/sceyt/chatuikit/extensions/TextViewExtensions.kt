@@ -1,12 +1,16 @@
+@file:Suppress("unused")
+
 package com.sceyt.chatuikit.extensions
 
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.annotation.RequiresApi
 import androidx.core.view.isVisible
 
 fun TextView.setDrawableEnd(@DrawableRes id: Int, @ColorRes tint: Int = 0) {
@@ -95,24 +99,50 @@ fun setTextViewsDrawableColor(texts: List<TextView>, @ColorInt color: Int) {
     }
 }
 
-fun setTextViewsTextColor(texts: List<TextView>, @ColorInt color: Int) {
-    texts.forEach {
+fun List<TextView>.setTextViewsTextColor(@ColorInt color: Int) {
+    forEach {
         it.setTextColor(color)
     }
 }
 
-fun setTextViewsTextColorRes(texts: List<TextView>, @ColorRes colorId: Int) {
-    if (texts.isEmpty()) return
-    val color = texts.first().context.getCompatColor(colorId)
-    texts.forEach {
+fun List<TextView>.setTextViewsTextColorRes(@ColorRes colorId: Int) {
+    if (isEmpty()) return
+    val color = first().context.getCompatColor(colorId)
+    forEach {
         it.setTextColor(color)
     }
 }
 
-fun setTextViewsHintTextColorRes(texts: List<TextView>, @ColorRes colorId: Int) {
-    if (texts.isEmpty()) return
-    val color = texts.first().context.getCompatColor(colorId)
-    texts.forEach {
+fun List<TextView>.setTextViewsHintTextColorRes(@ColorRes colorId: Int) {
+    if (isEmpty()) return
+    val color = first().context.getCompatColor(colorId)
+    forEach {
         it.setHintTextColor(color)
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.Q)
+fun TextView.setCursorAndHandleColor(@ColorInt color: Int = 0) {
+    fun Drawable.applyTint(color: Int) = mutate().apply {
+        setTint(color)
+    }
+    textSelectHandleRight?.let {
+        setTextSelectHandleRight(it.applyTint(color))
+    }
+    textSelectHandleLeft?.let {
+        setTextSelectHandleLeft(it.applyTint(color))
+    }
+    textSelectHandle?.let {
+        setTextSelectHandle(it.applyTint(color))
+    }
+    textCursorDrawable?.let {
+        setTextCursorDrawable(it.applyTint(color))
+    }
+    highlightColor = color.withAlpha(0.5f)
+}
+
+@RequiresApi(Build.VERSION_CODES.Q)
+fun TextView.setCursorAndHandleColorRes(@ColorRes color: Int = 0) {
+    val colorInt = context.getCompatColor(color)
+    setCursorAndHandleColor(colorInt)
 }

@@ -7,11 +7,7 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.WindowManager
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytDialogChooseFileTypeBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
-import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.shared.helpers.picker.PickType
 import com.sceyt.chatuikit.styles.DialogStyle
 
@@ -66,15 +62,11 @@ class ChooseFileTypeDialog(context: Context) : Dialog(context, R.style.SceytDial
 
     private fun SceytDialogChooseFileTypeBinding.applyStyle() {
         style.backgroundStyle.apply(root)
-        val texts = listOf(takePhoto, takeVideo, gallery, file)
-        setTextViewsDrawableColor(texts, context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-        setTextViewsTextColor(texts, context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
-
-    /* with(style.optionButtonStyle) {
+        with(style.optionButtonStyle) {
             apply(takePhoto)
             apply(takeVideo)
             apply(gallery)
             apply(file)
-        }*/
+        }
     }
 }
