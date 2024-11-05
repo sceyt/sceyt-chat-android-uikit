@@ -30,7 +30,7 @@ fun SceytChannel.getChannelType(): ChannelTypeEnum {
 
 fun SceytChannel.getPeer(): SceytMember? {
     return members?.firstOrNull { it.id != SceytChatUIKit.chatUIFacade.myId } ?: run {
-        if (isSelf()) members?.firstOrNull() else null
+        if (isSelf) members?.firstOrNull() else null
     }
 }
 

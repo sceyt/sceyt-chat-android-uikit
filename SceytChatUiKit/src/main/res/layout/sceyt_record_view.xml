@@ -83,7 +83,7 @@
             android:layout_gravity="center_vertical"
             android:layout_marginStart="12dp"
             android:background="@drawable/sceyt_bg_circle"
-            android:backgroundTint="@color/sceyt_color_error"
+            android:backgroundTint="@color/sceyt_color_warning"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -173,7 +173,7 @@
         android:orientation="vertical"
         android:translationZ="4dp"
         android:visibility="gone"
-        app:cardCornerRadius="22dp"
+        app:cardCornerRadius="21dp"
         app:layout_constraintBottom_toTopOf="@+id/recording"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -198,7 +198,7 @@
         android:focusable="true"
         android:translationZ="2dp"
         app:cardBackgroundColor="@android:color/transparent"
-        app:cardCornerRadius="22dp"
+        app:cardCornerRadius="17.5dp"
         app:cardElevation="2dp"
         app:cardPreventCornerOverlap="false"
         app:cardUseCompatPadding="false"

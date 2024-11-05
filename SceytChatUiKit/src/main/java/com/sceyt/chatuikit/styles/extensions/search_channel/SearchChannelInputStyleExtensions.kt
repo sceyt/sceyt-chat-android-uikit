@@ -34,7 +34,7 @@ internal fun SearchChannelInputStyle.Builder.buildTextStyle(
 internal fun SearchChannelInputStyle.Builder.buildHintStyle(
         array: TypedArray
 ) = HintStyle.Builder(array)
-    .textColor(
+    .color(
         index = R.styleable.SearchChannelInputView_sceytUiSearchChannelInputHintTextColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textFootnoteColor)
     )

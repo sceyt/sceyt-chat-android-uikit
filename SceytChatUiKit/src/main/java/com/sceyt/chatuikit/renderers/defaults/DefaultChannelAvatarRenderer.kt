@@ -15,26 +15,26 @@ import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
-import com.sceyt.chatuikit.renderers.ChannelAvatarRenderer
+import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 
-open class DefaultChannelAvatarRenderer : ChannelAvatarRenderer {
+open class DefaultChannelAvatarRenderer : AvatarRenderer<SceytChannel> {
 
-    override fun render(context: Context, channel: SceytChannel, style: AvatarStyle, avatarView: AvatarView) {
+    override fun render(context: Context, from: SceytChannel, style: AvatarStyle, avatarView: AvatarView) {
         val appearanceBuilder = avatarView
             .appearanceBuilder()
             .setStyle(style)
 
         when {
-            channel.isGroup -> {
-                if (channel.isSelf || channel.isPeerDeleted()) {
+            from.isGroup -> {
+                if (from.isSelf || from.isPeerDeleted()) {
                     appearanceBuilder.setImageUrl(null)
-                } else appearanceBuilder.setImageUrl(channel.iconUrl)
+                } else appearanceBuilder.setImageUrl(from.iconUrl)
 
-                appearanceBuilder.setDefaultAvatar(DefaultAvatar.Initial(getInitialText(channel.channelSubject)))
+                appearanceBuilder.setDefaultAvatar(DefaultAvatar.Initial(getInitialText(from.channelSubject)))
             }
 
-            channel.isSelf -> {
+            from.isSelf -> {
                 val notsDrawable = context.getCompatDrawable(R.drawable.sceyt_ic_notes_with_bachgriund_layers).applyTintBackgroundLayer(
                     context.getCompatColor(SceytChatUIKit.theme.colors.accentColor), R.id.backgroundLayer
                 )
@@ -42,8 +42,8 @@ open class DefaultChannelAvatarRenderer : ChannelAvatarRenderer {
                 appearanceBuilder.setImageUrl(null)
             }
 
-            channel.isDirect() -> {
-                val peer = channel.getPeer()?.user ?: SceytUser("")
+            from.isDirect() -> {
+                val peer = from.getPeer()?.user ?: SceytUser("")
                 val defaultAvatar = SceytChatUIKit.providers.userDefaultAvatarProvider.provide(context, peer)
 
                 appearanceBuilder
@@ -52,7 +52,7 @@ open class DefaultChannelAvatarRenderer : ChannelAvatarRenderer {
             }
 
             else -> {
-                appearanceBuilder.setDefaultAvatar(DefaultAvatar.Initial(getInitialText(channel.channelSubject)))
+                appearanceBuilder.setDefaultAvatar(DefaultAvatar.Initial(getInitialText(from.channelSubject)))
             }
         }
         appearanceBuilder

@@ -5,16 +5,16 @@ import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.IntervalOption
 import com.sceyt.chatuikit.databinding.SceytDialogMuteNotificationsBinding
-import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.common.IntervalOptionsAdapter
+import com.sceyt.chatuikit.styles.DialogStyle
 
 class MuteNotificationDialog(
         context: Context,
-) : Dialog(context, R.style.SceytDialogNoTitle) {
+) : Dialog(context, R.style.SceytDialogStyle) {
     private lateinit var binding: SceytDialogMuteNotificationsBinding
+    private val style = DialogStyle.default(context)
     private var chooseListener: ((IntervalOption) -> Unit)? = null
     private var title: String = ""
     private var options: List<IntervalOption> = emptyList()
@@ -34,7 +34,7 @@ class MuteNotificationDialog(
     }
 
     private fun setOptionsAdapter() {
-        binding.rvOptions.adapter = IntervalOptionsAdapter(options) {
+        binding.rvOptions.adapter = IntervalOptionsAdapter(options, style.optionButtonStyle) {
             chooseListener?.invoke(it)
             dismiss()
         }
@@ -54,7 +54,8 @@ class MuteNotificationDialog(
     }
 
     private fun SceytDialogMuteNotificationsBinding.applyStyle() {
-        tvTitle.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
+        style.backgroundStyle.apply(root)
+        style.titleStyle.apply(tvTitle)
     }
 
     companion object {
@@ -62,7 +63,7 @@ class MuteNotificationDialog(
                 context: Context,
                 title: String,
                 options: List<IntervalOption>,
-                listener: (IntervalOption) -> Unit
+                listener: (IntervalOption) -> Unit,
         ) {
             MuteNotificationDialog(context).apply {
                 setTitles(title)

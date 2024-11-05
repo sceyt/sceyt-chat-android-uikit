@@ -316,6 +316,8 @@
         <attr name="sceytUiMessagesListSelectionCheckboxCheckedIcon" format="reference" />
         <attr name="sceytUiMessagesListSelectionCheckboxUncheckedIcon" format="reference" />
         <attr name="sceytUiMessagesListSelectionCheckboxPressedIcon" format="reference" />
+        <attr name="sceytUiMessagesListSelectionCheckboxButtonTint" format="color" />
+
 
         <!--Overlay Media loader style-->
         <attr name="sceytUiMessagesListOverlayMediaLoaderTrackColor" format="reference|color" />

@@ -75,8 +75,8 @@ class ChannelMediaAdapter(
     }
 
     private fun checkMaybeShouldRemoveDateItem(itemsToAdd: List<ChannelFileItem>): List<ChannelFileItem> {
-        return attachments.findLast { it is ChannelFileItem.MediaDate }?.let { date1 ->
-            itemsToAdd.find { item -> item is ChannelFileItem.MediaDate }?.let { date2 ->
+        return attachments.findLast { it is ChannelFileItem.DateSeparator }?.let { date1 ->
+            itemsToAdd.find { item -> item is ChannelFileItem.DateSeparator }?.let { date2 ->
                 if (DateTimeUtil.isSameDay(date1.getCreatedAt(), date2.getCreatedAt())) {
                     val newItems = itemsToAdd.toArrayList()
                     newItems.remove(date2)
@@ -117,6 +117,6 @@ class ChannelMediaAdapter(
     }
 
     override fun isHeader(itemPosition: Int): Boolean {
-        return attachments.getOrNull(itemPosition) is ChannelFileItem.MediaDate
+        return attachments.getOrNull(itemPosition) is ChannelFileItem.DateSeparator
     }
 }

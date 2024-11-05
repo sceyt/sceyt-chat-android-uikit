@@ -34,7 +34,7 @@ class MessageVideoViewHolder(
         private val style: MessageItemStyle,
         private val messageListeners: MessageClickListeners.ClickListeners?,
         private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
-) : BaseMessageFileViewHolder<FileListItem>(binding.root, needMediaDataCallback) {
+) : BaseMessageFileViewHolder(binding.root, needMediaDataCallback) {
 
     init {
         binding.applyStyle()
@@ -76,7 +76,7 @@ class MessageVideoViewHolder(
             }
 
             PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
                 binding.playPauseItem.isVisible = false
                 viewHolderHelper.loadBlurThumb(imageView = imageView)
             }

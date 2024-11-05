@@ -3,15 +3,15 @@ package com.sceyt.chatuikit.presentation.common
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
 import androidx.annotation.StringRes
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytDialogViewBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.dismissSafety
+import com.sceyt.chatuikit.styles.DialogStyle
 
-class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle) {
-    private val binding: SceytDialogViewBinding by lazy { SceytDialogViewBinding.inflate(LayoutInflater.from(context)) }
+class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogStyle) {
+    private val binding by lazy { SceytDialogViewBinding.inflate(layoutInflater) }
+    private var style = DialogStyle.default(context)
     private var positiveClickListener: (() -> Unit)? = null
     private var negativeClickListener: (() -> Unit)? = null
 
@@ -20,6 +20,7 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle
         setContentView(binding.root)
         initView()
         window?.setWindowAnimations(R.style.SceytDialogWindowAnimation)
+        binding.applyStyle()
     }
 
     private fun initView() {
@@ -55,12 +56,20 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle
     }
 
     fun setPositiveButtonTextColor(color: Int): SceytDialog {
-        binding.buttonAccept.setTextColor(color)
+        val positiveButtonStyle = style.positiveButtonStyle
+        val newStyle = positiveButtonStyle.copy(
+            textStyle = positiveButtonStyle.textStyle.copy(color = color)
+        )
+        style = style.copy(positiveButtonStyle = newStyle)
         return this
     }
 
     fun setNegativeButtonTextColor(color: Int): SceytDialog {
-        binding.buttonCancel.setTextColor(color)
+        val negativeButtonStyle = style.negativeButtonStyle
+        val newStyle = negativeButtonStyle.copy(
+            textStyle = negativeButtonStyle.textStyle.copy(color = color)
+        )
+        style = style.copy(negativeButtonStyle = newStyle)
         return this
     }
 
@@ -74,27 +83,38 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle
         return this
     }
 
+    private fun SceytDialogViewBinding.applyStyle() {
+        style.backgroundStyle.apply(root)
+        style.titleStyle.apply(textTitle)
+        style.subtitleStyle.apply(textDescription)
+        style.positiveButtonStyle.apply(buttonAccept)
+        style.negativeButtonStyle.apply(buttonCancel)
+    }
+
     companion object {
         private var lastDialog: SceytDialog? = null
 
-        fun showDialog(context: Context, title: String, description: String,
-                            positiveBtnTitle: String,
-                            negativeBtnTitle: String = context.getString(R.string.sceyt_cancel),
-                            replaceLastDialog: Boolean = true,
-                            negativeCb: (() -> Unit)? = null,
-                            positiveCb: (() -> Unit)? = null): SceytDialog {
+        fun showDialog(
+                context: Context, title: String, description: String,
+                positiveBtnTitle: String,
+                negativeBtnTitle: String = context.getString(R.string.sceyt_cancel),
+                replaceLastDialog: Boolean = true,
+                negativeCb: (() -> Unit)? = null,
+                positiveCb: (() -> Unit)? = null,
+        ): SceytDialog {
             return showDialogImpl(context, title, description, positiveBtnTitle, negativeBtnTitle,
                 replaceLastDialog, negativeCb, positiveCb)
         }
 
-        fun showDialog(context: Context,
-                       @StringRes titleId: Int = R.string.sceyt_empty_string,
-                       @StringRes descId: Int = R.string.sceyt_empty_string,
-                       @StringRes positiveBtnTitleId: Int,
-                       @StringRes negativeBtnTitleId: Int = R.string.sceyt_cancel,
-                       replaceLastDialog: Boolean = true,
-                       negativeCb: (() -> Unit)? = null,
-                       positiveCb: (() -> Unit)? = null
+        fun showDialog(
+                context: Context,
+                @StringRes titleId: Int = R.string.sceyt_empty_string,
+                @StringRes descId: Int = R.string.sceyt_empty_string,
+                @StringRes positiveBtnTitleId: Int,
+                @StringRes negativeBtnTitleId: Int = R.string.sceyt_cancel,
+                replaceLastDialog: Boolean = true,
+                negativeCb: (() -> Unit)? = null,
+                positiveCb: (() -> Unit)? = null,
         ): SceytDialog {
             return showDialogImpl(context, context.getString(titleId), context.getString(descId),
                 context.getString(positiveBtnTitleId), context.getString(negativeBtnTitleId),
@@ -102,7 +122,9 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle
         }
 
         private fun showDialogImpl(
-                context: Context, title: String, description: String,
+                context: Context,
+                title: String,
+                description: String,
                 positiveBtnTitle: String,
                 negativeBtnTitle: String,
                 replaceLastDialog: Boolean,
@@ -111,7 +133,7 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle
         ): SceytDialog {
 
             if (replaceLastDialog)
-                lastDialog?.dismiss()
+                lastDialog?.dismissSafety()
             else lastDialog?.let {
                 if (it.isShowing)
                     return it
@@ -125,8 +147,6 @@ class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle
                 setNegativeButtonTitle(negativeBtnTitle)
                 setPositiveButtonClickListener(positiveCb)
                 setNegativeButtonClickListener(negativeCb)
-                setPositiveButtonTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-                setNegativeButtonTextColor(context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
                 show()
                 setOnDismissListener { lastDialog = null }
                 lastDialog = this

@@ -9,6 +9,7 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.core.view.marginLeft
 import com.google.android.material.imageview.ShapeableImageView
+import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.calculateScaleWidthHeight
@@ -46,7 +47,6 @@ abstract class BaseMediaMessageViewHolder(
         bubbleMaxWidth - dpToPx(4f) //4f is margins
     }
     protected open val minSize get() = maxSize / 3
-    protected var isAttachedToWindow = true
     protected var addedLister = false
 
     @CallSuper
@@ -57,22 +57,21 @@ abstract class BaseMediaMessageViewHolder(
             setImageSize(it)
         }
         viewHolderHelper.bind(fileItem, resizedImageSize)
+        setListener()
     }
 
     @CallSuper
     override fun itemUpdated(item: MessageListItem) {
         super.itemUpdated(item)
-        fileItem = getFileItem(item as MessageListItem.MessageItem) ?: return
+        fileItem = getFileItem(messageListItem as MessageListItem.MessageItem) ?: return
     }
 
     protected open fun initAttachment() {
-        setListener()
-
-        viewHolderHelper.transferData?.let {
+        fileItem.transferData?.let {
             loadingProgressView.release(it.progressPercent)
             updateState(it, true)
             if (it.filePath.isNullOrBlank() && it.state != PendingDownload && it.state != PauseDownload)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
         }
     }
 
@@ -98,15 +97,16 @@ abstract class BaseMediaMessageViewHolder(
     }
 
     protected open fun requestThumb() {
+        val attachment = fileItem.attachment
         itemView.post {
-            if (fileItem.file.filePath.isNullOrBlank()) return@post
-            val thumbData = ThumbData(ThumbFor.MessagesLisView.value, getThumbSize())
-            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(fileItem.file, thumbData))
+            if (attachment.filePath.isNullOrBlank()) return@post
+            val thumbData = ThumbData(ThumbFor.MessagesLisView.value, attachment.filePath, getThumbSize())
+            needMediaDataCallback.invoke(NeedMediaInfoData.NeedThumb(attachment, thumbData))
         }
     }
 
     protected open fun getFileItem(item: MessageListItem.MessageItem): FileListItem? {
-        return item.message.files?.find { it.file.type != AttachmentTypeEnum.Link.value }
+        return item.message.files?.find { it.attachment.type != AttachmentTypeEnum.Link.value }
     }
 
     protected open fun setVideoDuration(tvDuration: TextView) {
@@ -147,22 +147,12 @@ abstract class BaseMediaMessageViewHolder(
     abstract val loadingProgressView: CircularProgressView
 
     open fun updateState(data: TransferData, isOnBind: Boolean = false) {
-        val isTransferring = data.isTransferring()
-        if (!isOnBind && !isAttachedToWindow && isTransferring) return
-        loadingProgressView.getProgressWithState(data.state, style.mediaLoaderStyle, data.progressPercent)
-    }
-
-    override fun onViewAttachedToWindow() {
-        super.onViewAttachedToWindow()
-        isAttachedToWindow = true
-        viewHolderHelper.transferData?.let {
-            loadingProgressView.getProgressWithState(it.state, style.mediaLoaderStyle, it.progressPercent)
-        }
-    }
-
-    override fun onViewDetachedFromWindow() {
-        super.onViewDetachedFromWindow()
-        isAttachedToWindow = false
+        loadingProgressView.getProgressWithState(
+            state = data.state,
+            style = style.mediaLoaderStyle,
+            hideOnThumbLoaded = requireMessage.deliveryStatus != DeliveryStatus.Pending,
+            progressPercent = data.progressPercent
+        )
     }
 
     private fun setListener() {

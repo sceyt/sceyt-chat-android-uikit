@@ -11,10 +11,10 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/sceyt_color_primary"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytUiSearchableToolbarIconsTint="@color/colorAccent"
-        app:sceytUiSearchableToolbarTitle="@string/sceyt_start_chat" />
+        tools:background="@color/sceyt_color_primary"
+        tools:sceytUiSearchableToolbarIconsTint="@color/colorAccent"
+        tools:sceytUiSearchableToolbarTitle="@string/sceyt_start_chat" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvNewGroup"

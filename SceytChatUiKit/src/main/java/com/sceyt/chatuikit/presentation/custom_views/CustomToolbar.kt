@@ -1,48 +1,71 @@
 package com.sceyt.chatuikit.presentation.custom_views
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.View
+import android.widget.FrameLayout
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.annotation.MenuRes
+import androidx.appcompat.widget.Toolbar
 import androidx.core.content.res.use
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytCustomToolbarBinding
+import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
+import com.sceyt.chatuikit.extensions.setIconsTint
+import com.sceyt.chatuikit.extensions.setTint
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
+import com.sceyt.chatuikit.styles.StyleConstants.UNSET_RESOURCE
 import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 class CustomToolbar @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
-) : ConstraintLayout(context, attrs, defStyleAttr) {
+        defStyleAttr: Int = 0,
+) : FrameLayout(context, attrs, defStyleAttr) {
 
     private lateinit var binding: SceytCustomToolbarBinding
-    private var navigationIcon: Drawable? = context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back)
-    private var menuIconId: Int = 0
+    private var navigationIcon: Drawable? = null
     private var title = ""
+    private var subTitle = ""
     private var titleTextStyle: TextStyle
-    private var iconsTint = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+    private var subtitleTextStyle: TextStyle
+    private var iconsTint = UNSET_COLOR
     private var enableDivider = true
+    private var dividerColor = context.getCompatColor(SceytChatUIKit.theme.colors.borderColor)
+    private val divider: View
+        get() = binding.divider
+
+    @MenuRes
+    private var menuRes: Int = UNSET_RESOURCE
 
     init {
         @ColorInt
-        var titleColor: Int = context.getCompatColor(R.color.sceyt_color_text_primary)
+        var titleColor: Int = context.getCompatColor(SceytChatUIKitTheme.colors.textPrimaryColor)
+        var subtitleColor: Int = context.getCompatColor(SceytChatUIKitTheme.colors.textSecondaryColor)
         if (attrs != null) {
             context.obtainStyledAttributes(attrs, R.styleable.CustomToolbar).use { typedArray ->
                 navigationIcon = typedArray.getDrawable(R.styleable.CustomToolbar_sceytUiToolbarNavigationIcon)
-                        ?: navigationIcon
-                menuIconId = typedArray.getResourceId(R.styleable.CustomToolbar_sceytUiToolbarMenuIcon, menuIconId)
+                        ?: context.getCompatDrawable(R.drawable.sceyt_ic_arrow_back).applyTint(
+                            context.getCompatColor(SceytChatUIKitTheme.colors.accentColor)
+                        )
                 title = typedArray.getString(R.styleable.CustomToolbar_sceytUiToolbarTitle) ?: title
+                subTitle = typedArray.getString(R.styleable.CustomToolbar_sceytUiToolbarSubtitle)
+                        ?: subTitle
                 iconsTint = typedArray.getColor(R.styleable.CustomToolbar_sceytUiToolbarIconsTint, iconsTint)
                 titleColor = typedArray.getColor(R.styleable.CustomToolbar_sceytUiToolbarTitleTextColor, titleColor)
+                subtitleColor = typedArray.getColor(R.styleable.CustomToolbar_sceytUiToolbarSubtitleTextColor, subtitleColor)
                 enableDivider = typedArray.getBoolean(R.styleable.CustomToolbar_sceytUiToolbarEnableDivider, enableDivider)
+                dividerColor = typedArray.getColor(R.styleable.CustomToolbar_sceytUiToolbarDividerColor, dividerColor)
+                menuRes = typedArray.getResourceId(R.styleable.CustomToolbar_sceytUiToolbarMenu, UNSET_RESOURCE)
             }
         }
 
@@ -51,6 +74,7 @@ class CustomToolbar @JvmOverloads constructor(
             font = R.font.roboto_medium
         )
 
+        subtitleTextStyle = TextStyle(color = subtitleColor)
         setupViews()
     }
 
@@ -61,32 +85,33 @@ class CustomToolbar @JvmOverloads constructor(
                 titleTextStyle.apply(this)
                 text = title
             }
+            tvSubtitle.apply {
+                subtitleTextStyle.apply(this)
+                text = subTitle
+                isVisible = subTitle.isNotEmpty()
+            }
             icBack.setImageDrawable(navigationIcon)
-            underline.isVisible = enableDivider
+            divider.setBackgroundColor(dividerColor)
+
+            if (iconsTint != UNSET_COLOR) {
+                setIconsTintByColor(iconsTint)
+            }
+
+            if (menuRes != UNSET_RESOURCE) {
+                rootToolbar.inflateMenu(menuRes)
+            }
         }
-        setIconsTintByColor(iconsTint)
-        if (menuIconId != 0)
-            setMenuIcon(menuIconId)
     }
 
-    private fun setMenuIcon(resId: Int) {
-        binding.icMenuIcon.setImageResource(resId)
-        binding.icMenuIcon.isVisible = true
-    }
-
-    fun initMenuIconWithClickListener(resId: Int, listener: () -> Unit) {
-        setMenuIcon(resId)
-        setMenuIconClickListener(listener)
-    }
-
-    fun initNavigationIconWithClickListener(resId: Int, listener: () -> Unit) {
-        binding.icBack.setImageResource(resId)
-        setNavigationClickListener(listener)
-    }
-
-    fun setTitle(title: String?) {
+    fun setTitle(title: CharSequence?) {
         title ?: return
         binding.tvTitle.text = title
+    }
+
+    fun setSubtitle(title: CharSequence?) {
+        title ?: return
+        binding.tvSubtitle.text = title
+        binding.tvSubtitle.isVisible = title.isNotEmpty()
     }
 
     fun setTitleColorRes(@ColorRes colorId: Int) {
@@ -100,23 +125,29 @@ class CustomToolbar @JvmOverloads constructor(
         binding.tvTitle.setTextColor(color)
     }
 
+    fun setSubtitleColor(@ColorInt color: Int) {
+        subtitleTextStyle = subtitleTextStyle.copy(color = color)
+        binding.tvSubtitle.setTextColor(color)
+    }
+
     fun setIconsTint(@ColorRes colorId: Int) {
-        binding.icBack.imageTintList = ColorStateList.valueOf(context.getCompatColor(colorId))
-        binding.icMenuIcon.imageTintList = ColorStateList.valueOf(context.getCompatColor(colorId))
+        setIconsTintByColor(context.getCompatColor(colorId))
     }
 
     fun setIconsTintByColor(@ColorInt color: Int) {
-        binding.icBack.imageTintList = ColorStateList.valueOf(color)
-        binding.icMenuIcon.imageTintList = ColorStateList.valueOf(color)
+        binding.icBack.setTint(color)
+        binding.rootToolbar.menu.setIconsTint(color)
     }
 
     fun setBorderColor(@ColorInt color: Int) {
-        binding.underline.setBackgroundColor(color)
+        dividerColor = color
+        divider.setBackgroundColor(color)
     }
 
     fun setNavigationIcon(drawable: Drawable?) {
         navigationIcon = drawable
         binding.icBack.setImageDrawable(drawable)
+        binding.icBack.isVisible = drawable != null
     }
 
     fun setTitleTextStyle(style: TextStyle) {
@@ -124,11 +155,36 @@ class CustomToolbar @JvmOverloads constructor(
         titleTextStyle.apply(binding.tvTitle)
     }
 
+    fun setSubtitleTextStyle(style: TextStyle) {
+        subtitleTextStyle = style
+        subtitleTextStyle.apply(binding.tvSubtitle)
+    }
+
     fun setNavigationClickListener(listener: () -> Unit) {
         binding.icBack.setOnClickListener { listener.invoke() }
     }
 
-    fun setMenuIconClickListener(listener: () -> Unit) {
-        binding.icMenuIcon.setOnClickListener { listener.invoke() }
+    fun inflateMenu(@MenuRes menuRes: Int) {
+        this.menuRes = menuRes
+        binding.rootToolbar.inflateMenu(menuRes)
+    }
+
+    fun getMenu(): Menu {
+        return binding.rootToolbar.menu
+    }
+
+    fun getToolbar(): Toolbar {
+        return binding.rootToolbar
+    }
+
+    fun setMenuClickListener(listener: (item: Int) -> Unit) {
+        binding.rootToolbar.setOnMenuItemClickListener {
+            listener.invoke(it.itemId)
+            true
+        }
+    }
+
+    fun setOverflowIcon(overflowIcon: Drawable) {
+        binding.rootToolbar.overflowIcon = overflowIcon
     }
 }

@@ -12,7 +12,6 @@ import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.chat.models.message.ReactionTotal
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -22,17 +21,17 @@ import com.sceyt.chatuikit.extensions.dismissSafety
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.screenHeightPx
 import com.sceyt.chatuikit.extensions.setBundleArguments
-import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.FragmentReactedUsers
+import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.HeaderViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.ReactionHeaderItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.ReactionsHeaderAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.ViewPagerAdapterReactedUsers
+import com.sceyt.chatuikit.styles.reactions_info.ReactionsInfoStyle
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.lang.Integer.max
-
 
 class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
     private lateinit var binding: SceytBottomShetReactionsInfoBinding
@@ -42,10 +41,11 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
     private lateinit var message: SceytMessage
     private var reactionClick: ((SceytReaction) -> Unit)? = null
     private var pagerCallback: ViewPager2.OnPageChangeCallback? = null
+    private lateinit var style: ReactionsInfoStyle
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setStyle(STYLE_NORMAL, R.style.SceytAppBottomSheetDialogTheme)
+        style = ReactionsInfoStyle.Builder(requireContext(), null).build()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -57,6 +57,8 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         getBundleArguments()
+        binding.applyStyle()
+
         initAdapters()
         observeToReactionsUpdate()
         (binding.viewPager.layoutParams as ConstraintLayout.LayoutParams).matchConstraintMaxHeight = screenHeightPx() * 4 / 5
@@ -104,6 +106,7 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
             super.onCreateDialog(savedInstanceState).apply {
                 setOnShowListener {
                     val bottomSheet = findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
+                    style.backgroundStyle.apply(bottomSheet)
                     bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
                     bottomSheetBehavior.peekHeight = (screenHeightPx() / 2.5).toInt()
                     bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
@@ -116,21 +119,27 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
     }
 
     private fun initHeaderAdapter(data: List<ReactionItem.Reaction>) {
-        val reactions: ArrayList<ReactionHeaderItem> = data.map { ReactionHeaderItem.Reaction(it.reaction) }.toArrayList()
-        reactions.add(0, ReactionHeaderItem.All(message.messageReactions?.sumOf { it.reaction.score }?.toLong() ?: 0))
-        headerAdapter = ReactionsHeaderAdapter(reactions) { _, position ->
-            binding.viewPager.currentItem = position
+        val allItem = ReactionHeaderItem.All(message.messageReactions?.sumOf {
+            it.reaction.score
+        }?.toLong() ?: 0)
+        val reactions = listOf(allItem)
+            .plus(data.map { ReactionHeaderItem.Reaction(it.reaction) })
+
+        val factory = HeaderViewHolderFactory(style.headerItemStyle).also {
+            it.setClickListener { _, position ->
+                binding.viewPager.currentItem = position
+            }
         }
+        headerAdapter = ReactionsHeaderAdapter(reactions, factory)
         binding.rvReactions.adapter = headerAdapter
     }
 
     private fun initPager(data: List<ReactionItem.Reaction>) {
         val messageId = message.id
-        val fragments: ArrayList<FragmentReactedUsers> = data.map {
-            createReactedUsersFragment(it.reaction.key, messageId)
-        }.toArrayList().apply {
-            add(0, createReactedUsersFragment("", messageId))
-        }
+        val fragments = listOf(createReactedUsersFragment("", messageId))
+            .plus(data.map {
+                createReactedUsersFragment(it.reaction.key, messageId)
+            })
 
         with(binding.viewPager) {
             adapter = ViewPagerAdapterReactedUsers(this@ReactionsInfoBottomSheetFragment, fragments).also {
@@ -168,7 +177,7 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
     }
 
     private fun createReactedUsersFragment(key: String, messageId: Long): FragmentReactedUsers {
-        return FragmentReactedUsers.newInstance(messageId, key).apply {
+        return FragmentReactedUsers.newInstance(messageId, key, style.reactedUserListStyle).apply {
             setClickListener {
                 reactionClick?.invoke(it)
                 dismissSafety()
@@ -178,6 +187,11 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
 
     fun setClickListener(listener: (SceytReaction) -> Unit) {
         reactionClick = listener
+    }
+
+    private fun SceytBottomShetReactionsInfoBinding.applyStyle() {
+        style.backgroundStyle.apply(root)
+        divider.dividerColor = style.dividerColor
     }
 
     companion object {

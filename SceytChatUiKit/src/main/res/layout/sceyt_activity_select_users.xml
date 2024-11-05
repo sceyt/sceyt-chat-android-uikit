@@ -36,11 +36,11 @@
         android:fontFamily="@font/roboto_medium"
         android:gravity="center"
         android:paddingVertical="4dp"
-        android:text="@string/sceyt_users"
         android:textColor="@color/sceyt_color_text_secondary"
-        android:textSize="@dimen/_12sdp"
+        android:textSize="@dimen/mediumTextSize"
         app:layout_constraintStart_toStartOf="@+id/rvSelectedUsers"
-        app:layout_constraintTop_toBottomOf="@+id/rvSelectedUsers" />
+        app:layout_constraintTop_toBottomOf="@+id/rvSelectedUsers"
+        tools:text="@string/sceyt_users" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvUsers"
@@ -62,9 +62,9 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:clickable="false"
-        android:src="@drawable/sceyt_ic_arrow_next"
-        android:tint="@color/sceyt_color_on_primary"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:src="@drawable/sceyt_ic_arrow_next"
+        tools:tint="@color/sceyt_color_on_primary" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -49,9 +49,9 @@ data class Colors(
         @ColorRes
         val textFootnoteColor: Int = R.color.sceyt_color_text_footnote,
         @ColorRes
-        val errorColor: Int = R.color.sceyt_color_error,
+        val warningColor: Int = R.color.sceyt_color_warning,
         @ColorRes
         val successColor: Int = R.color.sceyt_color_green,
         @ColorRes
-        val warningColor: Int = R.color.sceyt_color_warning
+        val attentionColor: Int = R.color.sceyt_color_attention
 )

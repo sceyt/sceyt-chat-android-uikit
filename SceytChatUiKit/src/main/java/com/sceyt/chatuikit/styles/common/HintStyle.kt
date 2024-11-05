@@ -6,12 +6,12 @@ import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.styles.StyleConstants
 
 data class HintStyle(
-        val textColor: Int = StyleConstants.UNSET_COLOR,
+        val color: Int = StyleConstants.UNSET_COLOR,
         val hint: String = StyleConstants.UNSET_TEXT
 ) {
     fun apply(textInput: TextView) {
-        if (textColor != StyleConstants.UNSET_COLOR) {
-            textInput.setHintTextColor(textColor)
+        if (color != StyleConstants.UNSET_COLOR) {
+            textInput.setHintTextColor(color)
         }
         if (hint != StyleConstants.UNSET_TEXT) {
             textInput.setHint(hint)
@@ -19,11 +19,11 @@ data class HintStyle(
     }
 
     internal class Builder(private val typedArray: TypedArray) {
-        private var textColor: Int = StyleConstants.UNSET_COLOR
+        private var color: Int = StyleConstants.UNSET_COLOR
         private var hint: String = StyleConstants.UNSET_TEXT
 
-        fun textColor(@StyleableRes index: Int, defValue: Int = textColor) = apply {
-            textColor = typedArray.getColor(index, defValue)
+        fun color(@StyleableRes index: Int, defValue: Int = color) = apply {
+            color = typedArray.getColor(index, defValue)
         }
 
         fun hint(@StyleableRes index: Int, defValue: String = hint) = apply {
@@ -31,7 +31,7 @@ data class HintStyle(
         }
 
         fun build() = HintStyle(
-            textColor = textColor,
+            color = color,
             hint = hint
         )
     }

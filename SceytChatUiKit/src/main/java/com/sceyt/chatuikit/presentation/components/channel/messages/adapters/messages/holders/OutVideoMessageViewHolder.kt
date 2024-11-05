@@ -147,7 +147,7 @@ class OutVideoMessageViewHolder(
             }
 
             PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
                 binding.playPauseItem.isVisible = false
                 binding.tvLoadSize.isVisible = false
                 viewHolderHelper.loadBlurThumb(imageView = imageView)

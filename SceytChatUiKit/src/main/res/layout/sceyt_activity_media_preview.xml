@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
+    android:background="@color/sceyt_color_black"
+    tools:context=".presentation.components.media.MediaPreviewActivity">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvMedia"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="parent" />
+
+    <com.sceyt.chatuikit.presentation.custom_views.CustomToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/sceyt_media_primary_color"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:sceytUiToolbarIconsTint="@color/sceyt_color_on_primary"
+        tools:sceytUiToolbarMenu="@menu/sceyt_menu_media_preview"
+        tools:sceytUiToolbarSubtitle="subtitle"
+        tools:sceytUiToolbarTitle="Title"
+        tools:sceytUiToolbarTitleTextColor="@color/sceyt_color_on_primary" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

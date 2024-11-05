@@ -177,8 +177,13 @@ object FileTransferHelper : SceytKoinComponent {
             transferData.copy(fileLoadedSize = size.first, fileTotalSize = size.second)
         } ?: transferData
 
-        scope.launch(Dispatchers.Main) {
-            onTransferUpdatedLiveData_.value = data
+        if (transferData.state == TransferState.Downloading
+                || transferData.state == TransferState.Uploading)
+            onTransferUpdatedLiveData_.postValue(data)
+        else {
+            scope.launch(Dispatchers.Main.immediate) {
+                onTransferUpdatedLiveData_.value = data
+            }
         }
     }
 

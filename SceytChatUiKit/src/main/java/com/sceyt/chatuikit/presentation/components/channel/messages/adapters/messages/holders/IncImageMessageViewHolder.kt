@@ -136,7 +136,7 @@ class IncImageMessageViewHolder(
 
             PendingDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = fileContainer)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
             }
 
             Downloading -> {

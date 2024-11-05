@@ -1,16 +1,20 @@
 package com.sceyt.chatuikit.presentation.components.edit_channel
 
+import android.app.Activity
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
+import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelDescriptionData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
@@ -34,8 +38,11 @@ import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.providers.defaults.URIValidationType
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.sceyt.chatuikit.styles.EditChannelStyle
+import com.sceyt.chatuikit.styles.ImageCropperStyle
+import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.File
 
 open class EditChannelFragment : Fragment(), SceytKoinComponent {
     protected var binding: SceytFragmentEditChannelBinding? = null
@@ -70,11 +77,11 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         setDetails()
     }
 
-    private fun getBundleArguments() {
+    protected open fun getBundleArguments() {
         channel = requireNotNull(arguments?.parcelable(ChannelMembersFragment.CHANNEL))
     }
 
-    private fun initViewModel() {
+    protected open fun initViewModel() {
         viewModel.editChannelLiveData.observe(viewLifecycleOwner) {
             SceytLoader.hideLoading()
             lifecycleScope.launch {
@@ -102,7 +109,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    private fun SceytFragmentEditChannelBinding.initViews() {
+    protected open fun SceytFragmentEditChannelBinding.initViews() {
         tvSubject.doAfterTextChanged { checkSaveEnabled(false) }
 
         inputUri.doAfterTextChanged {
@@ -125,7 +132,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    open fun setDetails() {
+    protected open fun setDetails() {
         avatarUrl = channel.avatarUrl
         with(binding ?: return) {
             groupUrl.isVisible = channel.isPublic()
@@ -138,7 +145,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         checkSaveEnabled(true)
     }
 
-    open fun checkSaveEnabled(checkUriFormat: Boolean) {
+    protected open fun checkSaveEnabled(checkUriFormat: Boolean) {
         with(binding ?: return) {
             val isValidSubject = tvSubject.text?.trim().isNotNullOrBlank()
             when {
@@ -182,7 +189,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    open fun disableWithError(type: URIValidationType) {
+    protected open fun disableWithError(type: URIValidationType) {
         with(binding ?: return) {
             uriWarning.isVisible = true
             icSave.setEnabledOrNot(false)
@@ -190,13 +197,14 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    open fun setUriStatusText(type: URIValidationType) {
+    protected open fun setUriStatusText(type: URIValidationType) {
         val provider = SceytChatUIKit.providers.channelURIValidationMessageProvider
         val style = when (type) {
             URIValidationType.AlreadyTaken,
             URIValidationType.TooLong,
             URIValidationType.TooShort,
-            URIValidationType.InvalidCharacters -> style.uriValidationStyle.errorTextStyle
+            URIValidationType.InvalidCharacters,
+            -> style.uriValidationStyle.errorTextStyle
 
             URIValidationType.FreeToUse -> style.uriValidationStyle.successTextStyle
         }
@@ -207,13 +215,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         }
     }
 
-    open fun onAvatarImageSelected(filePath: String?) {
-        if (filePath != null) {
-            setProfileImage(filePath)
-        } else customToastSnackBar("Wrong image")
-    }
-
-    open fun setProfileImage(filePath: String?) {
+    protected open fun setProfileImage(filePath: String?) {
         val reqSize = SceytChatUIKit.config.avatarResizeConfig.dimensionThreshold
         val quality = SceytChatUIKit.config.avatarResizeConfig.compressionQuality
         avatarUrl = resizeImage(requireContext(), filePath, reqSize, quality).getOrNull()
@@ -221,19 +223,19 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         checkSaveEnabled(false)
     }
 
-    open fun onChangePhotoClick() {
+    protected open fun onChangePhotoClick() {
         EditAvatarTypeDialog(requireContext(), avatarUrl.isNullOrBlank().not()) {
             when (it) {
                 EditAvatarTypeDialog.EditAvatarType.ChooseFromGallery -> {
                     filePickerHelper.chooseFromGallery(allowMultiple = false, onlyImages = true) { uris ->
                         if (uris.isNotEmpty())
-                            onAvatarImageSelected(uris[0])
+                            cropImage(uris[0])
                     }
                 }
 
                 EditAvatarTypeDialog.EditAvatarType.TakePhoto -> {
                     filePickerHelper.takePicture { uri ->
-                        onAvatarImageSelected(uri)
+                        cropImage(uri)
                     }
                 }
 
@@ -244,7 +246,31 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         }.show()
     }
 
-    open fun onSaveClick() {
+    protected open fun cropImage(filePath: String?) {
+        filePath?.let { path ->
+            val uri = Uri.fromFile(File(path))
+            val file = File(requireContext().cacheDir.path, System.currentTimeMillis().toString())
+
+            val intent = UCrop.of(uri, Uri.fromFile(file))
+                .withOptions(ImageCropperStyle.default(requireContext()).createOptions())
+                .withAspectRatio(1f, 1f)
+                .getIntent(requireContext())
+
+            cropperActivityResultLauncher.launch(intent)
+        }
+    }
+
+    protected open val cropperActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data ?: return@registerForActivityResult
+            val path = UCrop.getOutput(data)?.path
+            if (path != null) {
+                setProfileImage(path)
+            } else customToastSnackBar(getString(R.string.sceyt_wrong_image))
+        }
+    }
+
+    protected open fun onSaveClick() {
         val newSubject = binding?.tvSubject?.text?.trim().toString()
         val newDescription = binding?.tvDescription?.text?.trim().toString()
         val newUrl = binding?.inputUri?.text?.trim().toString()
@@ -264,9 +290,10 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         } else requireActivity().onBackPressedDispatcher.onBackPressed()
     }
 
-    private fun SceytFragmentEditChannelBinding.applyStyle() {
+    protected open fun SceytFragmentEditChannelBinding.applyStyle() {
         root.setBackgroundColor(style.backgroundColor)
         style.toolbarStyle.apply(toolbar)
+        toolbar.setTitle(style.toolbarTitle)
         style.subjectTextInputStyle.apply(tvSubject, null)
         style.aboutTextInputStyle.apply(tvDescription, null)
         style.uriTextInputStyle.apply(inputUri, null)
@@ -280,10 +307,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             .build()
             .applyToAvatar()
 
-        with(icSave) {
-            style.saveButtonStyle.apply(this)
-            setButtonColor(style.saveButtonStyle.backgroundStyle.backgroundColor)
-        }
+        style.saveButtonStyle.applyToCustomButton(icSave)
     }
 
     companion object {

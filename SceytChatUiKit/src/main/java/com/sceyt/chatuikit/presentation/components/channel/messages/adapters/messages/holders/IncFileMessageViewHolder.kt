@@ -77,7 +77,7 @@ class IncFileMessageViewHolder(
 
     override fun bind(item: MessageListItem, diff: MessageDiff) {
         super.bind(item, diff)
-        setFileDetails(fileItem.file)
+        setFileDetails(fileItem.attachment)
 
         with(binding) {
             val message = (item as MessageListItem.MessageItem).message
@@ -137,10 +137,10 @@ class IncFileMessageViewHolder(
         super.updateState(data, isOnBind)
         when (data.state) {
             Uploaded, Downloaded -> {
-                val icon = style.attachmentIconProvider.provide(context, fileItem.file)
+                val icon = style.attachmentIconProvider.provide(context, fileItem.attachment)
                 binding.icFile.setImageDrawable(icon)
                 binding.tvFileSize.text = data.fileTotalSize
-                        ?: fileItem.file.fileSize.toPrettySize()
+                        ?: fileItem.attachment.fileSize.toPrettySize()
             }
 
             PendingUpload -> {
@@ -148,7 +148,7 @@ class IncFileMessageViewHolder(
             }
 
             PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
             }
 
             Downloading, Uploading, Preparing, WaitingToUpload -> {

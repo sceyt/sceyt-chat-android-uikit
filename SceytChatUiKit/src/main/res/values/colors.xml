@@ -19,6 +19,7 @@
     <color name="sceyt_color_background_sections">#FFFFFF</color>
     <color name="sceyt_color_border">#E4E6EE</color>
     <color name="sceyt_color_icon_secondary">#A0A1B0</color>
+    <color name="sceyt_color_icon_secondary2">#EDECEC</color>
     <color name="sceyt_color_icon_inactive">#C6C7D0</color>
     <color name="sceyt_color_overlay_background">#4D000000</color>
     <color name="sceyt_color_overlay_background_2">#4D000000</color>
@@ -29,9 +30,9 @@
     <color name="sceyt_color_text_footnote">#A0A1B0</color>
 
     <!--State-->
-    <color name="sceyt_color_error">#FA4C56</color>
+    <color name="sceyt_color_warning">#FA4C56</color>
     <color name="sceyt_color_success">#24C383</color>
-    <color name="sceyt_color_warning">#FBB019</color>
+    <color name="sceyt_color_attention">#FBB019</color>
 
 
     <color name="sceyt_color_bg_out_message">#E3E7FF</color>
@@ -53,5 +54,7 @@
     <color name="sceyt_color_red">#FA4C56</color>
     <color name="sceyt_auto_link_color">#438CED</color>
     <color name="sceyt_media_primary_color">#CC000000</color>
+    <color name="sceyt_switch_thumb_unchecked_color">#ECECEC</color>
+    <color name="sceyt_switch_track_unchecked_color">#D4D5DC</color>
 
 </resources>

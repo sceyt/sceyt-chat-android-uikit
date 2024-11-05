@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.styles.media_picker
 
 import android.content.Context
-import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.R
@@ -12,6 +11,7 @@ import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.ButtonStyle
+import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.Colors
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
@@ -60,7 +60,7 @@ data class MediaPickerStyle(
                 ),
                 backgroundStyle = BackgroundStyle(
                     backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.accentColor),
-                    shape = GradientDrawable.OVAL,
+                    shape = Shape.Circle,
                 )
             )
 
@@ -70,8 +70,7 @@ data class MediaPickerStyle(
 
             val countBackgroundStyle = BackgroundStyle(
                 backgroundColor = context.getCompatColor(SceytChatUIKitTheme.colors.accentColor),
-                shape = GradientDrawable.RECTANGLE,
-                cornerRadius = 30f,
+                shape = Shape.RoundedCornerShape(30f),
                 borderWidth = 5,
                 borderColor = context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
             )

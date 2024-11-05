@@ -24,7 +24,7 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
-import com.sceyt.chatuikit.presentation.components.channel_info.ViewPagerAdapter
+import com.sceyt.chatuikit.presentation.components.channel_info.ViewPagerAdapter.HistoryClearedListener
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ChannelAttachmentViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ChannelMediaAdapter
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.MediaStickHeaderItemDecoration
@@ -37,7 +37,13 @@ import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-open class ChannelInfoLinksFragment : Fragment(), SceytKoinComponent, ViewPagerAdapter.HistoryClearedListener {
+open class ChannelInfoLinksFragment : Fragment, SceytKoinComponent, HistoryClearedListener {
+    constructor() : super()
+
+    constructor(infoStyle: ChannelInfoStyle) : super() {
+        this.infoStyle = infoStyle
+    }
+
     protected lateinit var channel: SceytChannel
     protected var binding: SceytFragmentChannelInfoLinksBinding? = null
     protected open var mediaAdapter: ChannelMediaAdapter? = null
@@ -48,8 +54,8 @@ open class ChannelInfoLinksFragment : Fragment(), SceytKoinComponent, ViewPagerA
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        // Keep the style in the view model. If the style is not initialized,
-        // it will be taken from the view model.
+        // Keep the style in the view model.
+        // If the style is not initialized it will be taken from the view model.
         if (::infoStyle.isInitialized)
             viewModel.infoStyle = infoStyle
         else
@@ -119,7 +125,7 @@ open class ChannelInfoLinksFragment : Fragment(), SceytKoinComponent, ViewPagerA
                 it.setNeedMediaDataCallback { data -> viewModel.needMediaInfo(data) }
 
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
-                    onLinkClick(item.file.url)
+                    onLinkClick(item.attachment.url)
                 })
             }).also { mediaAdapter = it }
 
@@ -131,7 +137,7 @@ open class ChannelInfoLinksFragment : Fragment(), SceytKoinComponent, ViewPagerA
                     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                         super.onScrolled(recyclerView, dx, dy)
                         if (isLastItemDisplaying() && viewModel.canLoadPrev()) {
-                            loadMoreLinksList(adapter.getLastMediaItem()?.file?.id ?: 0,
+                            loadMoreLinksList(adapter.getLastMediaItem()?.attachment?.id ?: 0,
                                 adapter.getFileItems().size)
                         }
                     }
@@ -146,8 +152,8 @@ open class ChannelInfoLinksFragment : Fragment(), SceytKoinComponent, ViewPagerA
 
     open fun onLinkPreview(previewDetails: LinkPreviewDetails) {
         val data = mediaAdapter?.getData() ?: return
-        data.findIndexed { it.isMediaItem() && it.file.url == previewDetails.link }?.let { (index, item) ->
-            item.file = item.file.copy(linkPreviewDetails = previewDetails)
+        data.findIndexed { it.isMediaItem() && it.attachment.url == previewDetails.link }?.let { (index, item) ->
+            item.updateAttachment(item.attachment.copy(linkPreviewDetails = previewDetails))
             mediaAdapter?.updateItemAt(index, item)
         }
     }
@@ -187,9 +193,8 @@ open class ChannelInfoLinksFragment : Fragment(), SceytKoinComponent, ViewPagerA
 
         fun newInstance(
                 channel: SceytChannel,
-                style: ChannelInfoStyle
-        ) = ChannelInfoLinksFragment().apply {
-            infoStyle = style
+                infoStyle: ChannelInfoStyle
+        ) = ChannelInfoLinksFragment(infoStyle).apply {
             setBundleArguments {
                 putParcelable(CHANNEL, channel)
             }

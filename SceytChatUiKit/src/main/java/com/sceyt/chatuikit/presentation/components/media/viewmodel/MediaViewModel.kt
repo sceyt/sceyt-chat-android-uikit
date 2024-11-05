@@ -10,8 +10,11 @@ import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
-import com.sceyt.chatuikit.presentation.root.BaseViewModel
+import com.sceyt.chatuikit.persistence.mappers.getInfoFromMetadata
+import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
+import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItemType
+import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.awaitClose
@@ -97,18 +100,22 @@ class MediaViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun mapToMediaItem(data: List<AttachmentWithUserData>?): List<MediaItem> {
         if (data.isNullOrEmpty()) return arrayListOf()
-        val fileItems = arrayListOf<MediaItem>()
+        return data.mapNotNull { toMediaItem(it) }
+    }
 
-        data.map {
-            val item: MediaItem? = when (it.attachment.type) {
-                AttachmentTypeEnum.Video.value -> MediaItem.Video(it)
-                AttachmentTypeEnum.Image.value -> MediaItem.Image(it)
-                else -> null
-            }
-            item?.let { fileItem -> fileItems.add(fileItem) }
+    fun toMediaItem(data: AttachmentWithUserData): MediaItem? {
+        val type = when (data.attachment.type) {
+            AttachmentTypeEnum.Image.value -> MediaItemType.Image
+            AttachmentTypeEnum.Video.value -> MediaItemType.Video
+            else -> return null
         }
-
-        return fileItems
+        return MediaItem(
+            data = AttachmentWithUserData(attachment = data.attachment, user = data.user),
+            _dataFromJson = data.attachment.getInfoFromMetadata(),
+            _thumbPath = null,
+            _transferData = data.attachment.toTransferData(),
+            type = type
+        )
     }
 
     fun needMediaInfo(data: NeedMediaInfoData) {

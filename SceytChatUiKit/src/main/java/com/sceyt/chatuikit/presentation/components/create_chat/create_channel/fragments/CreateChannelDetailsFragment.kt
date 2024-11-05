@@ -2,13 +2,13 @@ package com.sceyt.chatuikit.presentation.components.create_chat.create_channel.f
 
 import android.animation.LayoutTransition
 import android.app.Activity
-import android.content.Intent
-import android.graphics.Color
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
@@ -22,11 +22,8 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.databinding.SceytFragmentCreateChannelDetailsBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
-import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
-import com.sceyt.chatuikit.extensions.setTextViewsHintTextColorRes
-import com.sceyt.chatuikit.extensions.setTextViewsTextColor
 import com.sceyt.chatuikit.persistence.extensions.resizeImage
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.EditAvatarTypeDialog
@@ -35,17 +32,26 @@ import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.CreateC
 import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.URIValidation
 import com.sceyt.chatuikit.providers.defaults.URIValidationType
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
+import com.sceyt.chatuikit.styles.CreateChannelStyle
+import com.sceyt.chatuikit.styles.ImageCropperStyle
+import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.yalantis.ucrop.UCrop
 import java.io.File
 
 open class CreateChannelDetailsFragment : Fragment() {
     private lateinit var binding: SceytFragmentCreateChannelDetailsBinding
+    private lateinit var style: CreateChannelStyle
     private val filePickerHelper = FilePickerHelper(this)
     private val createChannelData by lazy { CreateChannelData(ChannelTypeEnum.Public.value) }
     private val viewModel: CreateChatViewModel by viewModels()
     private val debounceHelper by lazy { DebounceHelper(200, lifecycleScope) }
     private var urlIsValidByServer = false
     private var checkingUrl: String? = null
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        style = CreateChannelStyle.Builder(context, null).build()
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentCreateChannelDetailsBinding.inflate(inflater, container, false)
@@ -167,18 +173,18 @@ open class CreateChannelDetailsFragment : Fragment() {
     }
 
     open fun setUriStatusText(type: URIValidationType) {
-        val provider = SceytChatUIKit.providers.channelURIValidationMessageProvider
-        val colorRes = when (type) {
+        val textStyle = when (type) {
             URIValidationType.AlreadyTaken,
             URIValidationType.TooLong,
             URIValidationType.TooShort,
-            URIValidationType.InvalidCharacters -> R.color.sceyt_color_error
+            URIValidationType.InvalidCharacters,
+            -> style.uriValidationStyle.errorTextStyle
 
-            URIValidationType.FreeToUse -> R.color.sceyt_color_success
+            URIValidationType.FreeToUse -> style.uriValidationStyle.successTextStyle
         }
         binding.uriWarning.apply {
-            text = provider.provide(requireContext(), type)
-            setTextColor(requireContext().getCompatColor(colorRes))
+            text = style.uriValidationStyle.messageProvider.provide(requireContext(), type)
+            textStyle.apply(this)
             isVisible = true
         }
     }
@@ -195,45 +201,40 @@ open class CreateChannelDetailsFragment : Fragment() {
     private fun cropImage(filePath: String?) {
         filePath?.let { path ->
             val uri = Uri.fromFile(File(path))
-
             val file = File(requireContext().cacheDir.path, System.currentTimeMillis().toString())
-            val options = UCrop.Options()
-            options.setToolbarColor(Color.BLACK)
-            options.setStatusBarColor(Color.BLACK)
-            options.setCircleDimmedLayer(true)
-            options.setShowCropGrid(false)
-            options.setShowCropFrame(false)
-            options.setToolbarWidgetColor(requireContext().getCompatColor(R.color.sceyt_color_on_primary))
-            options.setToolbarTitle(getString(R.string.sceyt_move_and_scale))
-            options.setHideBottomControls(true)
 
-            UCrop.of(uri, Uri.fromFile(file))
-                .withOptions(options)
+            val intent = UCrop.of(uri, Uri.fromFile(file))
+                .withOptions(ImageCropperStyle.default(requireContext()).createOptions())
                 .withAspectRatio(1f, 1f)
-                .start(requireContext(), this)
+                .getIntent(requireContext())
+
+            cropperActivityResultLauncher.launch(intent)
         }
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == UCrop.REQUEST_CROP) {
-                if (data != null) {
-                    val path = UCrop.getOutput(data)?.path
-                    if (path != null) {
-                        setAvatarImage(path)
-                    } else customToastSnackBar(getString(R.string.sceyt_wrong_image))
-                } else customToastSnackBar(getString(R.string.sceyt_wrong_image))
-            }
+    private val cropperActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data ?: return@registerForActivityResult
+            val path = UCrop.getOutput(data)?.path
+            if (path != null) {
+                setAvatarImage(path)
+            } else customToastSnackBar(getString(R.string.sceyt_wrong_image))
         }
     }
 
     private fun SceytFragmentCreateChannelDetailsBinding.applyStyle() {
-        root.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.backgroundColor))
-        setTextViewsTextColor(listOf(inputSubject, inputUri, inputDescription, uriPrefix),
-            requireContext().getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
-        setTextViewsHintTextColorRes(listOf(inputSubject, inputUri, inputDescription),
-            SceytChatUIKit.theme.colors.textFootnoteColor)
-        uriWarning.setTextColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.errorColor))
+        root.setBackgroundColor(style.backgroundColor)
+        avatar.appearanceBuilder()
+            .setDefaultAvatar(style.avatarDefaultIcon)
+            .setStyle(AvatarStyle(avatarBackgroundColor = style.avatarBackgroundColor))
+            .build()
+            .applyToAvatar()
+        style.nameTextFieldStyle.apply(inputSubject, null)
+        style.aboutTextFieldStyle.apply(inputDescription, null)
+        style.uriTextFieldStyle.apply(inputUri, null)
+        style.captionTextStyle.apply(uriPrefix)
+        style.captionTextStyle.apply(uriWarning)
+        style.actionButtonStyle.applyToCustomButton(fabNext)
+        uriUnderline.setBackgroundColor(style.dividerColor)
     }
 }

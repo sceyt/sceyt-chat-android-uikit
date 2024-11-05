@@ -38,6 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
+@JvmName("bind")
 fun MessageListViewModel.bind(
         messageInputView: MessageInputView,
         replyInThreadMessage: SceytMessage?,
@@ -191,7 +192,13 @@ fun MessageListViewModel.bind(
             sendTypingEvent(typing)
         }
 
-        override fun updateDraftMessage(text: Editable?, mentionUserIds: List<Mention>, styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+        override fun updateDraftMessage(
+                text: Editable?,
+                mentionUserIds: List<Mention>,
+                styling: List<BodyStyleRange>?,
+                replyOrEditMessage: SceytMessage?,
+                isReply: Boolean
+        ) {
             this@bind.updateDraftMessage(text, mentionUserIds, styling, replyOrEditMessage, isReply)
         }
 
@@ -237,9 +244,4 @@ fun MessageListViewModel.bind(
             scrollToSearchMessage(true)
         }
     })
-}
-
-@Suppress("unused")
-fun bindViewFromJava(viewModel: MessageListViewModel, replyInThreadMessage: SceytMessage?, messagesInputView: MessageInputView, lifecycleOwner: LifecycleOwner) {
-    viewModel.bind(messagesInputView, replyInThreadMessage, lifecycleOwner)
 }

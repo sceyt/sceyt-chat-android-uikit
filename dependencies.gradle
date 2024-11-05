@@ -1,5 +1,5 @@
 ext {
-    compile_sdk_version = 34
+    compile_sdk_version = 35
     target_sdk_version = 34
     min_sdk_version = 21
 

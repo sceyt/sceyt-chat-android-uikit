@@ -31,8 +31,11 @@ import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionUserHelper
 import java.io.File
 
-class MessageToSendHelper(private val context: Context,
-                          private val listeners: InputActionsListener.InputActionListeners?) {
+class MessageToSendHelper(
+        private val context: Context,
+        private val listeners: InputActionsListener.InputActionListeners?
+) {
+    val mentionedUsersCache = mutableMapOf<String, SceytUser>()
 
     fun sendMessage(allAttachments: List<Attachment>, body: CharSequence?, editMessage: SceytMessage?,
                     replyMessage: SceytMessage?, replyThreadMessageId: Long?, linkDetails: LinkPreviewDetails?) {
@@ -150,7 +153,9 @@ class MessageToSendHelper(private val context: Context,
         val attributes = initBodyAttributes(styling, mentions)
         if (attributes.isNotEmpty()) {
             bodyAttributes.addAll(attributes)
-            mentionUsers = mentions.map { createEmptyUser(it.recipientId, it.name) }
+            mentionUsers = mentions.map {
+                mentionedUsersCache[it.recipientId] ?: createEmptyUser(it.recipientId, it.name)
+            }
         }
         return Pair(bodyAttributes, mentionUsers)
     }

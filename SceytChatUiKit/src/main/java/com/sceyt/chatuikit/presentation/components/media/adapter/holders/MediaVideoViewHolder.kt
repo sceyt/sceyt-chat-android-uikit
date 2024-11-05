@@ -30,23 +30,29 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ThumbLoaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploaded
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
-import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
-import com.sceyt.chatuikit.presentation.components.media.OnMediaClickCallback
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
+import com.sceyt.chatuikit.presentation.components.media.OnMediaClickCallback
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.components.media.applySystemWindowInsetsMargin
+import com.sceyt.chatuikit.presentation.custom_views.PlayPauseImage
+import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
+import com.sceyt.chatuikit.styles.MediaPreviewStyle
 
-class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
-                           private val clickListeners: (MediaItem) -> Unit,
-                           private val needMediaDataCallback: (NeedMediaInfoData) -> Unit)
-    : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback) {
+class MediaVideoViewHolder(
+        private val binding: SceytMediaItemVideoBinding,
+        private val style: MediaPreviewStyle,
+        private val clickListeners: (MediaItem) -> Unit,
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback) {
     private var playerHelper: ExoPlayerHelper? = null
     private var videoController: ConstraintLayout? = null
     private val mediaAdapter by lazy { bindingAdapter as? MediaAdapter }
 
     init {
+        binding.applyStyle()
+
         binding.root.setOnClickListener {
             clickListeners.invoke(fileItem)
         }
@@ -85,7 +91,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
                     }
                     false
                 }
-                isVisible = ((context as? MediaPreviewActivity)?.isShowMediaDetail() ?: true)
+                isVisible = ((context as? MediaPreviewActivity)?.isVisibleToolbar() ?: true)
                 videoController = this
             }
         }
@@ -100,7 +106,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
 
     private fun setPlayingState() {
         videoController?.applySystemWindowInsetsMargin(applyBottom = true, userDefaultMargins = false)
-        videoController?.isVisible = ((context as? MediaPreviewActivity)?.isShowMediaDetail()
+        videoController?.isVisible = ((context as? MediaPreviewActivity)?.isVisibleToolbar()
                 ?: true)
         initPlayerHelper()
     }
@@ -149,7 +155,7 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
             }
 
             PendingDownload -> {
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
                 viewHolderHelper.loadBlurThumb(imageView = binding.icThumb)
             }
 
@@ -188,16 +194,37 @@ class MediaVideoViewHolder(private val binding: SceytMediaItemVideoBinding,
     }
 
     private fun initPlayerHelper(playVideo: Boolean = shouldPlayVideo()) {
-        if (!fileItem.file.filePath.isNullOrBlank()) {
+        if (!fileItem.attachment.filePath.isNullOrBlank()) {
             playerHelper = initPlayer()
-            playerHelper?.setMediaPath(fileItem.file.filePath, playVideo)
+            playerHelper?.setMediaPath(fileItem.attachment.filePath, playVideo)
             if (playVideo) initWakeLock()
         }
     }
 
     private fun shouldPlayVideo(): Boolean {
-        return mediaAdapter?.shouldPlayVideoPath == fileItem.file.filePath
+        return mediaAdapter?.shouldPlayVideoPath == fileItem.attachment.filePath
     }
 
     override fun needThumbFor() = ThumbFor.MediaPreview
+
+    @OptIn(UnstableApi::class)
+    private fun SceytMediaItemVideoBinding.applyStyle() {
+        style.mediaLoaderStyle.apply(progress)
+        with(videoView) {
+            findViewById<View>(R.id.videoTimeContainer).setBackgroundColor(style.videoControllerBackgroundColor)
+            findViewById<PlayPauseImage>(R.id.exo_play_pause)?.apply {
+                setPlayIcon(style.playIcon)
+                setPauseIcon(style.pauseIcon)
+            }
+            findViewById<DefaultTimeBar>(R.id.exo_progress).apply {
+                setPlayedColor(style.progressColor)
+                setScrubberColor(style.thumbColor)
+                setUnplayedColor(style.trackColor)
+                setBufferedColor(style.trackColor)
+            }
+            style.timelineTextStyle.apply(findViewById(R.id.exo_position))
+            style.timelineTextStyle.apply(findViewById(R.id.tvMiddle))
+            style.timelineTextStyle.apply(findViewById(R.id.exo_duration))
+        }
+    }
 }

@@ -12,9 +12,11 @@ import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytDialogMembrerActionsBinding
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.styles.DialogStyle
 
 class MemberActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95), SceytKoinComponent {
     private lateinit var binding: SceytDialogMembrerActionsBinding
+    private val style = DialogStyle.default(context)
     private var listener: ((ActionsEnum) -> Unit)? = null
     private lateinit var member: SceytMember
     private var currentIsOwner: Boolean = false
@@ -26,6 +28,7 @@ class MemberActionsDialog(context: Context) : Dialog(context, R.style.SceytDialo
         }.root)
 
         binding.initView()
+        binding.applyStyle()
         window?.let {
             it.setWindowAnimations(R.style.SceytDialogFromBottomAnimation)
             val wlp: WindowManager.LayoutParams = it.attributes
@@ -64,6 +67,10 @@ class MemberActionsDialog(context: Context) : Dialog(context, R.style.SceytDialo
 
     enum class ActionsEnum {
         RevokeAdmin, Delete
+    }
+
+    private fun SceytDialogMembrerActionsBinding.applyStyle() {
+        style.backgroundStyle.apply(root)
     }
 
     companion object {

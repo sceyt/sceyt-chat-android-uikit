@@ -2,8 +2,17 @@
 <resources>
 
     <declare-styleable name="AvatarView">
-        <attr name="sceytUiAvatarImageUrl" format="string" />
         <attr name="sceytUiAvatarFullName" format="string" />
+        <attr name="android:scaleType">
+            <enum name="matrix" value="0" />
+            <enum name="fitXY" value="1" />
+            <enum name="fitStart" value="2" />
+            <enum name="fitCenter" value="3" />
+            <enum name="fitEnd" value="4" />
+            <enum name="center" value="5" />
+            <enum name="centerCrop" value="6" />
+            <enum name="centerInside" value="7" />
+        </attr>
 
         <!--Text style -->
         <attr name="sceytUiAvatarTextSize" format="dimension|integer" />
@@ -18,6 +27,11 @@
         <attr name="sceytUiAvatarColor" format="color|reference" />
         <attr name="sceytUiAvatarDefaultIcon" format="reference" />
         <attr name="sceytUiAvatarEnableRipple" format="boolean" />
+        <attr name="sceytUiAvatarShape">
+            <flag name="circle" value="0" />
+            <flag name="rounded" value="1" />
+        </attr>
+        <attr name="sceytUiAvatarCornerRadius" format="dimension" />
     </declare-styleable>
 
     <declare-styleable name="ToReplyLineView">
@@ -67,9 +81,15 @@
         <attr name="sceytUiReactionInnerPadding" format="integer|dimension" />
         <attr name="sceytUiReactionInnerPaddingHorizontal" format="integer|dimension" />
         <attr name="sceytUiReactionInnerPaddingVertical" format="integer|dimension" />
-        <attr name="sceytUiReactionCountTextSize" format="integer|dimension" />
         <attr name="sceytUiReactionSmileTextSize" format="integer|dimension" />
+        <attr name="sceytUiReactionCountTextSize" format="integer|dimension" />
         <attr name="sceytUiReactionCountTextColor" format="color|reference" />
+        <attr name="sceytUiReactionCountTextFont" format="reference" />
+        <attr name="sceytUiReactionCountTextStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="bold" value="1" />
+            <enum name="italic" value="2" />
+        </attr>
         <attr name="sceytUiReactionCountTextMargin" format="integer|dimension" />
         <attr name="sceytUiReactionEnableStroke" format="boolean" />
         <attr name="sceytUiReactionStrokeColor" format="color|reference" />
@@ -110,11 +130,14 @@
 
     <declare-styleable name="CustomToolbar">
         <attr name="sceytUiToolbarTitle" format="string" localization="suggested" />
+        <attr name="sceytUiToolbarSubtitle" format="string" localization="suggested" />
         <attr name="sceytUiToolbarTitleTextColor" format="color|reference" />
+        <attr name="sceytUiToolbarSubtitleTextColor" format="color|reference" />
         <attr name="sceytUiToolbarNavigationIcon" format="reference" />
-        <attr name="sceytUiToolbarMenuIcon" format="reference" />
+        <attr name="sceytUiToolbarMenu" format="reference" />
         <attr name="sceytUiToolbarIconsTint" format="color|reference" />
         <attr name="sceytUiToolbarEnableDivider" format="boolean" />
+        <attr name="sceytUiToolbarDividerColor" format="color|reference" />
     </declare-styleable>
 
 </resources>

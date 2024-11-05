@@ -8,18 +8,16 @@ import android.view.LayoutInflater
 import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.databinding.SceytDialogEditAvatarTypeBinding
-import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.extensions.setTextViewsDrawableColor
-import com.sceyt.chatuikit.extensions.setTextViewsTextColor
+import com.sceyt.chatuikit.styles.DialogStyle
 
 class EditAvatarTypeDialog(
         context: Context,
         private val enableDelete: Boolean,
         private val chooseListener: ((EditAvatarType) -> Unit)? = null,
-) : Dialog(context, R.style.SceytDialogNoTitle) {
+) : Dialog(context, R.style.SceytDialogStyle) {
     private lateinit var binding: SceytDialogEditAvatarTypeBinding
+    private val style = DialogStyle.default(context)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,13 +59,11 @@ class EditAvatarTypeDialog(
     }
 
     private fun SceytDialogEditAvatarTypeBinding.applyStyle() {
-        setTextViewsDrawableColor(listOf(tvTakePhoto, tvGallery),
-            context.getCompatColor(SceytChatUIKit.theme.colors.accentColor))
-
-        setTextViewsTextColor(listOf(tvTakePhoto, tvGallery),
-            context.getCompatColor(SceytChatUIKit.theme.colors.textPrimaryColor))
-
-        setTextViewsTextColor(listOf(tvDelete),
-            context.getCompatColor(SceytChatUIKit.theme.colors.errorColor))
+        style.backgroundStyle.apply(root)
+        with(style.optionButtonStyle) {
+            apply(tvTakePhoto)
+            apply(tvGallery)
+        }
+        style.warningOptionButtonStyle.apply(tvDelete)
     }
 }

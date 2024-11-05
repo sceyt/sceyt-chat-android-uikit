@@ -21,12 +21,17 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState.Uploading
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.WaitingToUpload
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
+import com.sceyt.chatuikit.styles.MediaPreviewStyle
 
-class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
-                           private val clickListeners: (MediaItem) -> Unit,
-                           private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback) {
+class MediaImageViewHolder(
+        private val binding: SceytMediaItemImageBinding,
+        private val style: MediaPreviewStyle,
+        private val clickListeners: (MediaItem) -> Unit,
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback) {
 
     init {
+        binding.applyStyle()
+
         binding.imageView.setOnClickListener {
             clickListeners.invoke(fileItem)
         }
@@ -51,7 +56,7 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
 
             PendingDownload -> {
                 viewHolderHelper.loadBlurThumb(imageView = binding.imageView)
-                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.file))
+                needMediaDataCallback.invoke(NeedMediaInfoData.NeedDownload(fileItem.attachment))
             }
 
             Downloading -> {
@@ -82,4 +87,8 @@ class MediaImageViewHolder(private val binding: SceytMediaItemImageBinding,
     }
 
     override fun needThumbFor() = ThumbFor.MediaPreview
+
+    private fun SceytMediaItemImageBinding.applyStyle() {
+        style.mediaLoaderStyle.apply(progress)
+    }
 }

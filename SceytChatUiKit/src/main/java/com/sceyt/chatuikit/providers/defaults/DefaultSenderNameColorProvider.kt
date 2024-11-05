@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.providers.VisualProvider
 open class DefaultSenderNameColorProvider : VisualProvider<SceytUser, Int> {
     override fun provide(context: Context, from: SceytUser): Int {
         val colorId = if (from.isDeleted())
-            SceytChatUIKit.theme.colors.errorColor else SceytChatUIKit.theme.colors.accentColor
+            SceytChatUIKit.theme.colors.warningColor else SceytChatUIKit.theme.colors.accentColor
 
         return context.getCompatColor(colorId)
     }
