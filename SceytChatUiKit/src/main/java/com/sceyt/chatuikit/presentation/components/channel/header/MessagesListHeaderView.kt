@@ -148,22 +148,6 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun SceytMessagesListHeaderViewBinding.applyStyle() {
-        root.setBackgroundColor(style.backgroundColor)
-        toolbarUnderline.background = ColorDrawable(style.underlineColor)
-        toolbarUnderline.isVisible = style.showUnderline
-        icBack.setImageDrawable(style.navigationIcon)
-        style.titleTextStyle.apply(title)
-        style.subTitleStyle.apply(subTitle)
-        style.searchInputStyle.apply(
-            editText = inputSearch,
-            inputRoot = layoutSearch,
-            searchIconImage = icSearch,
-            clearIconImage = icClear)
-        style.messageActionsMenuStyle.apply(toolbarMessageActions)
-        style.avatarStyle.apply(avatar)
-    }
-
     @Suppress("UNUSED_PARAMETER")
     private fun setChannelTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
         if (replyInThread) {
@@ -503,5 +487,21 @@ class MessagesListHeaderView @JvmOverloads constructor(
             else -> context.maybeComponentActivity()?.onBackPressedDispatcher?.onBackPressed()
                     ?: context.asActivity().finish()
         }
+    }
+
+    private fun SceytMessagesListHeaderViewBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
+        toolbarUnderline.background = ColorDrawable(style.underlineColor)
+        toolbarUnderline.isVisible = style.showUnderline
+        icBack.setImageDrawable(style.navigationIcon)
+        style.titleTextStyle.apply(title)
+        style.subTitleStyle.apply(subTitle)
+        style.searchInputStyle.apply(
+            editText = inputSearch,
+            inputRoot = layoutSearch,
+            searchIconImage = icSearch,
+            clearIconImage = icClear)
+        style.messageActionsMenuStyle.apply(toolbarMessageActions)
+        style.avatarStyle.apply(avatar)
     }
 }

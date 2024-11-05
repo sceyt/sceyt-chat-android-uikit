@@ -10,7 +10,6 @@ import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
-import androidx.annotation.RequiresApi
 import androidx.core.view.isVisible
 
 fun TextView.setDrawableEnd(@DrawableRes id: Int, @ColorRes tint: Int = 0) {
@@ -121,8 +120,10 @@ fun List<TextView>.setTextViewsHintTextColorRes(@ColorRes colorId: Int) {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.Q)
 fun TextView.setCursorAndHandleColor(@ColorInt color: Int = 0) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
+        return
+
     fun Drawable.applyTint(color: Int) = mutate().apply {
         setTint(color)
     }
@@ -141,7 +142,6 @@ fun TextView.setCursorAndHandleColor(@ColorInt color: Int = 0) {
     highlightColor = color.withAlpha(0.5f)
 }
 
-@RequiresApi(Build.VERSION_CODES.Q)
 fun TextView.setCursorAndHandleColorRes(@ColorRes color: Int = 0) {
     val colorInt = context.getCompatColor(color)
     setCursorAndHandleColor(colorInt)
