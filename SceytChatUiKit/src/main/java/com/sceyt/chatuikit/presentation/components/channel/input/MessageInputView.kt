@@ -98,7 +98,7 @@ import java.io.File
 
 @Suppress("MemberVisibilityCanBePrivate")
 class MessageInputView @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners,
         SelectFileTypePopupClickListeners.ClickListeners, InputEventsListener.InputEventListeners,
         InputActionsListener.InputActionListeners {
@@ -402,45 +402,6 @@ class MessageInputView @JvmOverloads constructor(
         }.show()
     }
 
-    private fun SceytMessageInputViewBinding.applyStyle() {
-        layoutInput.setBackgroundColor(style.backgroundColor)
-        viewAttachments.setBackgroundColor(style.dividerColor)
-        divider.setBackgroundColor(style.dividerColor)
-        icSendMessage.setBackgroundTint(style.sendIconBackgroundColor)
-        icAddAttachments.setImageDrawable(style.attachmentIcon)
-        enableVoiceRecord = style.enableVoiceRecord
-        enableSendAttachment = style.enableSendAttachment
-        enableMention = style.enableMention
-        style.inputStyle.apply(messageInput, null)
-        style.joinButtonStyle.apply(btnJoin)
-        style.clearChatTextStyle.apply(btnClearChat)
-        applySelectedMediaStyle(style.selectedMediaStyle)
-        applySearchResultStyle(style.messageSearchControlsStyle)
-        layoutInputCover.applyInputCoverStyle(style.inputCoverStyle)
-        icAddAttachments.isVisible = enableSendAttachment
-        if (isInEditMode) {
-            icSendMessage.setImageDrawable(if (enableVoiceRecord)
-                style.voiceRecordIcon else style.sendMessageIcon)
-        }
-    }
-
-    private fun SceytMessageInputViewBinding.applySelectedMediaStyle(style: InputSelectedMediaStyle) {
-        rvAttachments.setBackgroundColor(style.backgroundColor)
-    }
-
-    private fun SceytMessageInputViewBinding.applySearchResultStyle(style: MessageSearchControlsStyle) {
-        layoutSearchControl.root.setBackgroundColor(style.backgroundColor)
-        layoutSearchControl.icDown.setImageDrawable(style.previousIcon)
-        layoutSearchControl.icUp.setImageDrawable(style.nextIcon)
-        style.resultTextStyle.apply(layoutSearchControl.tvResult)
-    }
-
-    private fun SceytDisableMessageInputBinding.applyInputCoverStyle(style: InputCoverStyle) {
-        root.setBackgroundColor(style.backgroundColor)
-        divider.setBackgroundColor(style.dividerColor)
-        style.textStyle.apply(tvMessage)
-    }
-
     private fun determineInputState() {
         if (!isEnabledInput() || isInMultiSelectMode || isInSearchMode || isInEditMode)
             return
@@ -702,9 +663,11 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     @SuppressWarnings("WeakerAccess")
-    fun createAttachmentWithPaths(vararg filePath: String,
-                                  metadata: String = "",
-                                  attachmentType: String? = null): MutableList<Attachment> {
+    fun createAttachmentWithPaths(
+            vararg filePath: String,
+            metadata: String = "",
+            attachmentType: String? = null,
+    ): MutableList<Attachment> {
         val attachments = mutableListOf<Attachment>()
         for (path in filePath) {
             if (checkIsExistAttachment(path))
@@ -774,22 +737,27 @@ class MessageInputView @JvmOverloads constructor(
 
     fun getComposedMessage() = binding.messageInput.text
 
+    @Suppress("unused")
     fun getInputCover() = binding.layoutInputCover
 
+    @Suppress("unused")
     val inputEditText: EditText get() = binding.messageInput
 
     fun setClickListener(listener: MessageInputClickListeners) {
         clickListeners.setListener(listener)
     }
 
+    @Suppress("unused")
     fun setCustomClickListener(listener: MessageInputClickListenersImpl) {
         clickListeners = listener
     }
 
+    @Suppress("unused")
     fun setActionListener(listener: InputActionsListener) {
         actionListeners.setListener(listener)
     }
 
+    @Suppress("unused")
     fun setCustomActionListener(listener: InputActionsListenerImpl) {
         actionListeners = listener
     }
@@ -799,6 +767,7 @@ class MessageInputView @JvmOverloads constructor(
         eventListeners.setListener(listener)
     }
 
+    @Suppress("unused")
     fun setCustomEventListener(listener: InputEventsListenerImpl) {
         eventListeners = listener
     }
@@ -808,6 +777,7 @@ class MessageInputView @JvmOverloads constructor(
         selectFileTypePopupClickListeners = listener
     }
 
+    @Suppress("unused")
     fun setCustomAttachmentViewHolderFactory(factory: AttachmentsViewHolderFactory) {
         attachmentsViewHolderFactory = factory
     }
@@ -948,7 +918,7 @@ class MessageInputView @JvmOverloads constructor(
             mentionUserIds: List<Mention>,
             styling: List<BodyStyleRange>?,
             replyOrEditMessage: SceytMessage?,
-            isReply: Boolean
+            isReply: Boolean,
     ) {
         messageInputActionCallback?.updateDraftMessage(text, mentionUserIds, styling, replyOrEditMessage, isReply)
     }
@@ -1015,5 +985,44 @@ class MessageInputView @JvmOverloads constructor(
                 determineInputState()
             }
         }
+    }
+
+    private fun SceytMessageInputViewBinding.applyStyle() {
+        layoutInput.setBackgroundColor(style.backgroundColor)
+        viewAttachments.setBackgroundColor(style.dividerColor)
+        divider.setBackgroundColor(style.dividerColor)
+        icSendMessage.setBackgroundTint(style.sendIconBackgroundColor)
+        icAddAttachments.setImageDrawable(style.attachmentIcon)
+        enableVoiceRecord = style.enableVoiceRecord
+        enableSendAttachment = style.enableSendAttachment
+        enableMention = style.enableMention
+        style.inputStyle.apply(messageInput, null)
+        style.joinButtonStyle.apply(btnJoin)
+        style.clearChatTextStyle.apply(btnClearChat)
+        applySelectedMediaStyle(style.selectedMediaStyle)
+        applySearchResultStyle(style.messageSearchControlsStyle)
+        layoutInputCover.applyInputCoverStyle(style.inputCoverStyle)
+        icAddAttachments.isVisible = enableSendAttachment
+        if (isInEditMode) {
+            icSendMessage.setImageDrawable(if (enableVoiceRecord)
+                style.voiceRecordIcon else style.sendMessageIcon)
+        }
+    }
+
+    private fun SceytMessageInputViewBinding.applySelectedMediaStyle(style: InputSelectedMediaStyle) {
+        rvAttachments.setBackgroundColor(style.backgroundColor)
+    }
+
+    private fun SceytMessageInputViewBinding.applySearchResultStyle(style: MessageSearchControlsStyle) {
+        layoutSearchControl.root.setBackgroundColor(style.backgroundColor)
+        layoutSearchControl.icDown.setImageDrawable(style.previousIcon)
+        layoutSearchControl.icUp.setImageDrawable(style.nextIcon)
+        style.resultTextStyle.apply(layoutSearchControl.tvResult)
+    }
+
+    private fun SceytDisableMessageInputBinding.applyInputCoverStyle(style: InputCoverStyle) {
+        root.setBackgroundColor(style.backgroundColor)
+        divider.setBackgroundColor(style.dividerColor)
+        style.textStyle.apply(tvMessage)
     }
 }
