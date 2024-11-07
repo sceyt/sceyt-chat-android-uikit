@@ -19,10 +19,11 @@ interface ChannelsRepository {
     suspend fun leaveChannel(channelId: Long): SceytResponse<Long>
     suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long>
     suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun unHideChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun blockChannel(channelId: Long): SceytResponse<Long>
-    suspend fun unBlockChannel(channelId: Long): SceytResponse<Long>
+    suspend fun unBlockChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun uploadAvatar(avatarUri: String): SceytResponse<String>
     suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel>
     suspend fun deleteChannel(channelId: Long): SceytResponse<Long>

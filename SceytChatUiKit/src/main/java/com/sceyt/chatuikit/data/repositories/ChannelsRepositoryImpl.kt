@@ -289,6 +289,21 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
+    override suspend fun unHideChannel(channelId: Long): SceytResponse<SceytChannel> {
+        return suspendCancellableCoroutine { continuation ->
+            ChannelOperator.build(channelId).unHide(object : ChannelCallback {
+                override fun onResult(data: Channel) {
+                    continuation.safeResume(SceytResponse.Success(data.toSceytUiChannel()))
+                }
+
+                override fun onError(e: SceytException?) {
+                    continuation.safeResume(SceytResponse.Error(e))
+                    SceytLog.e(TAG, "unHideChannel error: ${e?.message}, code: ${e?.code}")
+                }
+            })
+        }
+    }
+
     override suspend fun blockChannel(channelId: Long): SceytResponse<Long> {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).block(object : ChannelsCallback {
@@ -304,11 +319,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
-    override suspend fun unBlockChannel(channelId: Long): SceytResponse<Long> {
+    override suspend fun unBlockChannel(channelId: Long): SceytResponse<SceytChannel> {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).unBlock(object : ChannelsCallback {
-                override fun onResult(channels: MutableList<Channel>?) {
-                    continuation.safeResume(SceytResponse.Success(channelId))
+                override fun onResult(channels: MutableList<Channel>) {
+                    continuation.safeResume(SceytResponse.Success(channels[0].toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {

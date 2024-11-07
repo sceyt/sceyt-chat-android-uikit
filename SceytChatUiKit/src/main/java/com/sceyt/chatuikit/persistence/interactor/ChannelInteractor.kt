@@ -26,6 +26,7 @@ interface ChannelInteractor {
     suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long>
     suspend fun blockAndLeaveChannel(channelId: Long): SceytResponse<Long>
+    suspend fun unblockChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun deleteChannel(channelId: Long): SceytResponse<Long>
     suspend fun leaveChannel(channelId: Long): SceytResponse<Long>
     suspend fun findOrCreateDirectChannel(user: SceytUser): SceytResponse<SceytChannel>
@@ -44,6 +45,7 @@ interface ChannelInteractor {
     suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel>
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
     suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun unHideChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>,
                                    styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean)
 
