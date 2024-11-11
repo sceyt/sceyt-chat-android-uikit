@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmo
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -25,7 +26,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
-class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
+class ChannelsViewModel(
+        internal val config: ChannelListConfig = ChannelListConfig.default,
+) : BaseViewModel(), SceytKoinComponent {
     private val channelInteractor: ChannelInteractor by inject()
     private val userInteractor: UserInteractor by inject()
     private var getChannelsJog: Job? = null
@@ -40,15 +43,20 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     private val _blockUserLiveData = MutableLiveData<SceytResponse<List<SceytUser>>>()
     val blockUserLiveData = _blockUserLiveData.asLiveData()
 
-    fun getChannels(offset: Int, query: String = searchQuery, loadKey: LoadKeyData? = null, ignoreDb: Boolean = false) {
+    fun getChannels(
+            offset: Int,
+            query: String = searchQuery,
+            loadKey: LoadKeyData? = null,
+            ignoreDatabase: Boolean = false,
+    ) {
         searchQuery = query
-        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDb = ignoreDb)
+        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDatabase = ignoreDatabase)
 
         notifyPageLoadingState(false)
 
         getChannelsJog?.cancel()
         getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.loadChannels(offset, query, loadKey, ignoreDb).collect {
+            channelInteractor.loadChannels(offset, query, loadKey, ignoreDatabase, config).collect {
                 initPaginationResponse(it)
             }
         }
@@ -76,8 +84,10 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         pagingResponseReceived(response)
     }
 
-    internal fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean,
-                                  includeDirectChannelsWithDeletedPeers: Boolean = true): List<ChannelListItem> {
+    internal fun mapToChannelItem(
+            data: List<SceytChannel>?, hasNext: Boolean,
+            includeDirectChannelsWithDeletedPeers: Boolean = true,
+    ): List<ChannelListItem> {
 
         val filteredChannels = if (includeDirectChannelsWithDeletedPeers) data ?: emptyList()
         else data?.filter { channel -> !channel.isPeerDeleted() }

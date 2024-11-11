@@ -1,5 +1,7 @@
 package com.sceyt.chatuikit.persistence.interactor
 
+import androidx.sqlite.db.SimpleSQLiteQuery
+import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -14,13 +16,26 @@ import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyl
 import kotlinx.coroutines.flow.Flow
 
 interface ChannelInteractor {
-    suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: LoadKeyData?,
-                             ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
+    suspend fun loadChannels(
+            offset: Int,
+            searchQuery: String,
+            loadKey: LoadKeyData?,
+            ignoreDb: Boolean,
+            config: ChannelListConfig,
+    ): Flow<PaginationResponse<SceytChannel>>
 
-    suspend fun searchChannelsWithUserIds(offset: Int, limit: Int, searchQuery: String, userIds: List<String>,
-                                          includeUserNames: Boolean, loadKey: LoadKeyData?,
-                                          onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>>
+    suspend fun searchChannelsWithUserIds(
+            offset: Int,
+            searchQuery: String,
+            userIds: List<String>,
+            includeSearchByUserDisplayName: Boolean,
+            loadKey: LoadKeyData?,
+            onlyMine: Boolean,
+            ignoreDb: Boolean,
+            config: ChannelListConfig,
+    ): Flow<PaginationResponse<SceytChannel>>
 
+    suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel>
     suspend fun syncChannels(limit: Int): Flow<GetAllChannelsResponse>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>
@@ -46,8 +61,10 @@ interface ChannelInteractor {
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
     suspend fun hideChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun unHideChannel(channelId: Long): SceytResponse<SceytChannel>
-    suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>,
-                                   styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean)
+    suspend fun updateDraftMessage(
+            channelId: Long, message: String?, mentionUsers: List<Mention>,
+            styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean,
+    )
 
     fun getTotalUnreadCount(): Flow<Int>
 }

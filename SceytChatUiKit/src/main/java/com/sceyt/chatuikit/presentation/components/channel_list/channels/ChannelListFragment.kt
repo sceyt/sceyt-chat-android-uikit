@@ -18,6 +18,7 @@ import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setMargins
 import com.sceyt.chatuikit.extensions.setTextColorRes
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModel
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModelFactory
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.bind
 import com.sceyt.chatuikit.presentation.components.startchat.StartChatActivity
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -25,7 +26,9 @@ import kotlinx.coroutines.launch
 
 class ChannelListFragment : Fragment() {
     private lateinit var binding: SceytFragmentChannelsBinding
-    private val viewModel: ChannelsViewModel by viewModels()
+    private val viewModel: ChannelsViewModel by viewModels(factoryProducer = {
+        ChannelsViewModelFactory()
+    })
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return SceytFragmentChannelsBinding.inflate(inflater, container, false)
@@ -68,7 +71,8 @@ class ChannelListFragment : Fragment() {
             ConnectionState.Failed -> getString(R.string.sceyt_connecting_title)
             ConnectionState.Disconnected -> getString(R.string.sceyt_connecting_title)
             ConnectionState.Reconnecting,
-            ConnectionState.Connecting -> getString(R.string.sceyt_connecting_title)
+            ConnectionState.Connecting,
+            -> getString(R.string.sceyt_connecting_title)
 
             ConnectionState.Connected -> getString(R.string.sceyt_chats)
         }

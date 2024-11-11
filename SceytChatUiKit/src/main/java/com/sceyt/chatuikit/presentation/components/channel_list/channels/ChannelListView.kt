@@ -9,7 +9,6 @@ import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -90,11 +89,11 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
         channelsRV.addNewChannels(channels)
     }
 
-    internal fun addNewChannelAndSort(channelItem: ChannelListItem.ChannelItem) {
+    internal fun addNewChannelAndSort(order: ChannelListOrder, channelItem: ChannelListItem.ChannelItem) {
         channelsRV.getData()?.let {
             if (it.contains(channelItem)) return
-            val newData = ArrayList(it).also { items -> items.add(channelItem) }
-            channelsRV.sortByAndSetNewData(SceytChatUIKit.config.channelListOrder, newData)
+            val newData = it.plus(channelItem)
+            channelsRV.sortByAndSetNewData(order, newData)
         } ?: channelsRV.setData(arrayListOf(channelItem))
 
         binding.pageStateView.updateState(PageState.Nothing)

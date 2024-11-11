@@ -1,12 +1,10 @@
 package com.sceyt.chatuikit.persistence.mappers
 
-import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
-import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.entity.channel.ChanelMemberDb
@@ -93,14 +91,6 @@ fun User.toSceytUser() = SceytUser(
 fun SceytUser.toUser() = User(
     id, username, firstName, lastName, avatarURL, metadataMap, presence, state, blocked
 )
-
-fun Member.MemberType.toRoleType(): RoleTypeEnum {
-    return when (this) {
-        Member.MemberType.MemberTypeNone -> RoleTypeEnum.None
-        Member.MemberType.MemberTypeOwner -> RoleTypeEnum.Owner
-        Member.MemberType.MemberTypeMember -> RoleTypeEnum.Member
-    }
-}
 
 fun SceytUser.isDeleted() = state == UserState.Deleted
 

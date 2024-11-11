@@ -1,10 +1,12 @@
 package com.sceyt.chatuikit.persistence
 
+import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
+import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
@@ -160,16 +162,35 @@ internal class PersistenceMiddleWareImpl(
     override suspend fun loadChannels(
             offset: Int, searchQuery: String, loadKey: LoadKeyData?,
             ignoreDb: Boolean,
+            config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>> {
-        return channelLogic.loadChannels(offset, searchQuery, loadKey, ignoreDb)
+        return channelLogic.loadChannels(offset, searchQuery, loadKey, ignoreDb, config)
     }
 
     override suspend fun searchChannelsWithUserIds(
-            offset: Int, limit: Int, searchQuery: String, userIds: List<String>,
-            includeUserNames: Boolean, loadKey: LoadKeyData?,
-            onlyMine: Boolean, ignoreDb: Boolean,
+            offset: Int,
+            searchQuery: String,
+            userIds: List<String>,
+            includeSearchByUserDisplayName: Boolean,
+            loadKey: LoadKeyData?,
+            onlyMine: Boolean,
+            ignoreDb: Boolean,
+            config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>> {
-        return channelLogic.searchChannelsWithUserIds(offset, limit, searchQuery, userIds, includeUserNames, loadKey, onlyMine, ignoreDb)
+        return channelLogic.searchChannelsWithUserIds(
+            offset,
+            searchQuery,
+            userIds,
+            includeSearchByUserDisplayName,
+            loadKey,
+            onlyMine,
+            ignoreDb,
+            config
+        )
+    }
+
+    override suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel> {
+        return channelLogic.getChannelsBySQLiteQuery(query)
     }
 
     override suspend fun syncChannels(limit: Int): Flow<GetAllChannelsResponse> {

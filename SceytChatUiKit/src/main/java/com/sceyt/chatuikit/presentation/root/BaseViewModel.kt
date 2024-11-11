@@ -47,16 +47,18 @@ open class BaseViewModel : ViewModel() {
 
     val isLoadingFromServer get() = loadingNextItems.get() || loadingPrevItems.get()
 
-    protected fun setPagingLoadingStarted(loadType: PaginationResponse.LoadType,
-                                          ignoreDb: Boolean = false,
-                                          ignoreServer: Boolean = false) {
+    protected fun setPagingLoadingStarted(
+            loadType: PaginationResponse.LoadType,
+            ignoreDatabase: Boolean = false,
+            ignoreServer: Boolean = false,
+    ) {
         fun initPrev() {
-            loadingPrevItemsDb.set(ignoreDb.not())
+            loadingPrevItemsDb.set(ignoreDatabase.not())
             loadingPrevItems.set(ignoreServer.not())
         }
 
         fun initNext() {
-            loadingNextItemsDb.set(ignoreDb.not())
+            loadingNextItemsDb.set(ignoreDatabase.not())
             loadingNextItems.set(ignoreServer.not())
         }
 
@@ -149,11 +151,13 @@ open class BaseViewModel : ViewModel() {
             pageStateLiveDataInternal.postValue(PageState.StateLoading())
     }
 
-    fun <T> notifyPageStateWithResponse(response: SceytResponse<T>,
-                                        wasLoadingMore: Boolean = false,
-                                        isEmpty: Boolean = false,
-                                        searchQuery: String? = null,
-                                        showError: Boolean = true) {
+    fun <T> notifyPageStateWithResponse(
+            response: SceytResponse<T>,
+            wasLoadingMore: Boolean = false,
+            isEmpty: Boolean = false,
+            searchQuery: String? = null,
+            showError: Boolean = true,
+    ) {
         val state = when {
             response is SceytResponse.Error -> PageState.StateError(response.code, response.message,
                 wasLoadingMore, searchQuery, showError)
@@ -165,12 +169,14 @@ open class BaseViewModel : ViewModel() {
         pageStateLiveDataInternal.postValue(state)
     }
 
-    fun <T> notifyResponseAndPageState(liveData: MutableLiveData<T>?,
-                                       response: SceytResponse<T>,
-                                       wasLoadingMore: Boolean = false,
-                                       isEmpty: Boolean = false,
-                                       searchQuery: String? = null,
-                                       showError: Boolean = true) {
+    fun <T> notifyResponseAndPageState(
+            liveData: MutableLiveData<T>?,
+            response: SceytResponse<T>,
+            wasLoadingMore: Boolean = false,
+            isEmpty: Boolean = false,
+            searchQuery: String? = null,
+            showError: Boolean = true,
+    ) {
         if (response is SceytResponse.Success) {
             liveData?.postValue(response.data)
         }

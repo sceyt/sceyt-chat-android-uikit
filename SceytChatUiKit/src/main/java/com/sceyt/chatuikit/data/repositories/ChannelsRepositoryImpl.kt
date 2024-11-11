@@ -17,6 +17,7 @@ import com.sceyt.chat.sceyt_callbacks.MembersCallback
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
@@ -93,9 +94,12 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
-    override suspend fun getChannels(query: String): SceytResponse<List<SceytChannel>> {
+    override suspend fun getChannels(
+            query: String,
+            config: ChannelListConfig,
+    ): SceytResponse<List<SceytChannel>> {
         return suspendCancellableCoroutine { continuation ->
-            val channelListQuery = createChannelListQuery(query).also { channelsQuery = it }
+            val channelListQuery = createChannelListQuery(config, query).also { channelsQuery = it }
 
             channelListQuery.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
@@ -118,7 +122,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         return suspendCancellableCoroutine { continuation ->
             val query = if (::channelsQuery.isInitialized)
                 channelsQuery
-            else createChannelListQuery().also { channelsQuery = it }
+            else throw IllegalStateException("Channels query is not initialized")
 
             query.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
@@ -186,9 +190,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
 
         return suspendCancellableCoroutine { continuation ->
-            val createChannelRequest = initCreateChannelRequest(channelData)
-
-            createChannelRequest?.execute(object : ChannelCallback {
+            initCreateChannelRequest(channelData).execute(object : ChannelCallback {
                 override fun onResult(channel: Channel) {
                     continuation.safeResume(SceytResponse.Success(channel.toSceytUiChannel()))
                 }
@@ -197,14 +199,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                     continuation.safeResume(SceytResponse.Error(e))
                     SceytLog.e(TAG, "createChannel error: ${e?.message}, code: ${e?.code}")
                 }
-            }) ?: run {
-                continuation.safeResume(SceytResponse.Error(SceytException(0, "Invalid channel type")))
-                SceytLog.e(TAG, "createChannel error: Invalid channel type")
-            }
+            })
         }
     }
 
-    private fun initCreateChannelRequest(channelData: CreateChannelData): CreateChannelRequest? {
+    private fun initCreateChannelRequest(channelData: CreateChannelData): CreateChannelRequest {
         return CreateChannelRequest.Builder(channelData.channelType)
             .withMembers(channelData.members.map { it.toMember() })
             .withUri(channelData.uri)
@@ -588,12 +587,16 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
-    private fun createChannelListQuery(query: String? = null): ChannelListQuery {
+    private fun createChannelListQuery(
+            config: ChannelListConfig,
+            query: String? = null,
+    ): ChannelListQuery {
         return ChannelListQuery.Builder()
-            .order(SceytChatUIKit.config.channelListOrder)
+            .order(config.order)
+            .withTypes(config.types)
             .query(query?.ifBlank { null })
-            .withQueryParam(channelQueryParam)
-            .limit(SceytChatUIKit.config.queryLimits.channelListQueryLimit)
+            .withQueryParam(config.queryParam)
+            .limit(config.queryLimit)
             .build()
     }
 

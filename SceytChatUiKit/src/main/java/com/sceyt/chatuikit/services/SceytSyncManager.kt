@@ -57,7 +57,7 @@ class SceytSyncManager(private val channelInteractor: ChannelInteractor,
         withContext(coroutineContext) {
             syncIsInProcess = true
             syncResultData = SyncResultData()
-            val result = getChannels()
+            val result = syncChannels()
             withContext(Dispatchers.Main) {
                 syncResultCallbacks.forEach {
                     it(Result.success(result))
@@ -79,7 +79,7 @@ class SceytSyncManager(private val channelInteractor: ChannelInteractor,
         syncResultCallbacks.clear()
     }
 
-    private suspend fun getChannels(): SyncResultData {
+    private suspend fun syncChannels(): SyncResultData {
         return coroutineScope {
             suspendCancellableCoroutine { cont ->
                 launch(Dispatchers.IO) {

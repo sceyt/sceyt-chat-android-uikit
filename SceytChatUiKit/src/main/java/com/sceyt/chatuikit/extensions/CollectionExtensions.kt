@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.sceyt.chatuikit.extensions
 
 import androidx.core.util.Predicate
@@ -58,4 +60,10 @@ fun <K, V> HashMap<K, V>.removeAllIf(predicate: Predicate<V>): Boolean {
         }
     }
     return removed
+}
+
+fun <K, V> HashMap<K, V>.forEachKeyValue(action: (K, V) -> Unit) {
+    forEach { entries ->
+        action(entries.key, entries.value)
+    }
 }

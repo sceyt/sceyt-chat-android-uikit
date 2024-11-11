@@ -30,7 +30,7 @@ import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoFragm
 
 open class ChannelActivity : AppCompatActivity() {
     private lateinit var binding: SceytActivityChannelBinding
-    private val viewModel: MessageListViewModel by viewModels { factory }
+    private val viewModel: MessageListViewModel by viewModels(factoryProducer = { factory })
     private lateinit var channel: SceytChannel
     private var replyMessage: SceytMessage? = null
 

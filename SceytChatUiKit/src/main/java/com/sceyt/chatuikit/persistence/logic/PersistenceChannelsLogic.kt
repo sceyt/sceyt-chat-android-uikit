@@ -1,5 +1,7 @@
 package com.sceyt.chatuikit.persistence.logic
 
+import androidx.sqlite.db.SimpleSQLiteQuery
+import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
@@ -26,16 +28,25 @@ interface PersistenceChannelsLogic {
     suspend fun onFcmMessage(data: RemoteMessageData)
     suspend fun onMessageEditedOrDeleted(message: SceytMessage)
     fun loadChannels(
-            offset: Int, searchQuery: String,
-            loadKey: LoadKeyData?, ignoreDb: Boolean,
+            offset: Int,
+            searchQuery: String,
+            loadKey: LoadKeyData?,
+            ignoreDb: Boolean,
+            config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun searchChannelsWithUserIds(
-            offset: Int, limit: Int, searchQuery: String,
-            userIds: List<String>, includeUserNames: Boolean,
-            loadKey: LoadKeyData?, onlyMine: Boolean, ignoreDb: Boolean,
+            offset: Int,
+            searchQuery: String,
+            userIds: List<String>,
+            includeSearchByUserDisplayName: Boolean,
+            loadKey: LoadKeyData?,
+            onlyMine: Boolean,
+            ignoreDb: Boolean,
+            config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>>
 
+    suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel>
     suspend fun syncChannels(limit: Int): Flow<GetAllChannelsResponse>
     suspend fun findOrCreateDirectChannel(user: SceytUser): SceytResponse<SceytChannel>
     suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel>

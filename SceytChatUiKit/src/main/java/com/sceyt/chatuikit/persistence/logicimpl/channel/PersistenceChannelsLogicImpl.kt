@@ -1,14 +1,17 @@
 package com.sceyt.chatuikit.persistence.logicimpl.channel
 
 import android.content.Context
+import androidx.sqlite.db.SimpleSQLiteQuery
 import com.google.gson.Gson
 import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.UserState
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.ClearedHistory
@@ -198,7 +201,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) {
-        channelsCache.get(data.channel.id)?.let { channel ->
+        channelsCache.getOneOf(data.channel.id)?.let { channel ->
             channel.lastMessage?.let { lastMessage ->
                 if (data.marker.messageIds.contains(lastMessage.id)) {
                     data.channel.lastMessage?.let {
@@ -284,34 +287,37 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override fun loadChannels(
-            offset: Int, searchQuery: String, loadKey: LoadKeyData?,
+            offset: Int,
+            searchQuery: String,
+            loadKey: LoadKeyData?,
             ignoreDb: Boolean,
+            config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
-            if (offset == 0) channelsCache.clear()
+            if (offset == 0) channelsCache.clear(config)
 
-            val dbChannels = getChannelsDb(offset, searchQuery)
+            val dbChannels = getChannelsDb(offset, searchQuery, config)
             var hasNext = dbChannels.size == channelsLoadSize
 
             trySend(PaginationResponse.DBResponse(data = dbChannels, loadKey = loadKey, offset = offset,
                 hasNext = hasNext, hasPrev = false, query = searchQuery))
 
-            channelsCache.addAll(dbChannels, false)
+            channelsCache.addAll(config, dbChannels, false)
             ChatReactionMessagesCache.getNeededMessages(dbChannels)
 
             awaitToConnectSceyt()
 
-            val response = if (offset == 0) channelsRepository.getChannels(searchQuery)
+            val response = if (offset == 0) channelsRepository.getChannels(searchQuery, config)
             else channelsRepository.loadMoreChannels()
 
             if (response is SceytResponse.Success) {
                 val channels = response.data ?: arrayListOf()
 
                 val savedChannels = saveChannelsToDb(channels)
-                val hasDiff = channelsCache.addAll(savedChannels, offset != 0) || offset == 0
+                val hasDiff = channelsCache.addAll(config, savedChannels, offset != 0) || offset == 0
                 hasNext = response.data?.size == channelsLoadSize
 
-                trySend(PaginationResponse.ServerResponse(data = response, cacheData = channelsCache.getSorted(),
+                trySend(PaginationResponse.ServerResponse(data = response, cacheData = channelsCache.getSorted(config),
                     loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext, hasPrev = false,
                     loadType = LoadNext, ignoredDb = ignoreDb, query = searchQuery))
 
@@ -326,47 +332,75 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun searchChannelsWithUserIds(
-            offset: Int, limit: Int, searchQuery: String, userIds: List<String>,
-            includeUserNames: Boolean, loadKey: LoadKeyData?,
-            onlyMine: Boolean, ignoreDb: Boolean,
+            offset: Int,
+            searchQuery: String,
+            userIds: List<String>,
+            includeSearchByUserDisplayName: Boolean,
+            loadKey: LoadKeyData?,
+            onlyMine: Boolean,
+            ignoreDb: Boolean,
+            config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
-            if (offset == 0) channelsCache.clear()
+            if (offset == 0) channelsCache.clear(config)
 
             val searchUserIds = HashSet<String>(userIds)
-            if (includeUserNames) {
+            if (includeSearchByUserDisplayName) {
                 val ids = usersDao.getUserIdsByDisplayName(searchQuery)
                 searchUserIds.addAll(ids)
             }
-            val dbChannels = channelDao.getChannelsByQueryAndUserIds(searchQuery, searchUserIds.toList(), limit, offset, onlyMine).map {
-                it.toChannel()
+            val orderByLastMessage = when (config.order) {
+                ChannelListOrder.ListQueryChannelOrderLastMessage -> true
+                ChannelListOrder.ListQueryChannelOrderCreatedAt -> false
             }
-            var hasNext = dbChannels.size == limit
+            val dbChannels = channelDao.searchChannelsByUserIds(
+                query = searchQuery,
+                userIds = searchUserIds.toList(),
+                offset = offset,
+                onlyMine = onlyMine,
+                limit = config.queryLimit,
+                types = config.types,
+                orderByLastMessage = orderByLastMessage
+            ).map { it.toChannel() }
 
-            channelsCache.addAll(dbChannels, false)
+            var hasNext = dbChannels.size == config.queryLimit
+            channelsCache.addAll(config, dbChannels, false)
             trySend(PaginationResponse.DBResponse(data = dbChannels, loadKey = loadKey, offset = offset,
                 hasNext = hasNext, hasPrev = false, query = searchQuery))
 
             awaitToConnectSceyt()
 
-            val response = if (offset == 0) channelsRepository.getChannels(searchQuery)
+            val response = if (offset == 0)
+                channelsRepository.getChannels(searchQuery, config)
             else channelsRepository.loadMoreChannels()
 
             if (response is SceytResponse.Success) {
                 val channels = response.data ?: arrayListOf()
 
                 val savedChannels = saveChannelsToDb(channels)
-                val hasDiff = channelsCache.addAll(savedChannels, offset != 0) || offset == 0
+                val hasDiff = channelsCache.addAll(config, savedChannels, offset != 0) || offset == 0
                 hasNext = response.data?.size == channelsLoadSize
 
-                trySend(PaginationResponse.ServerResponse(data = response, cacheData = channelsCache.getSorted(),
-                    loadKey = loadKey, offset = offset, hasDiff = hasDiff, hasNext = hasNext, hasPrev = false,
-                    loadType = LoadNext, ignoredDb = ignoreDb, query = searchQuery))
+                trySend(PaginationResponse.ServerResponse(
+                    data = response,
+                    cacheData = channelsCache.getSorted(config),
+                    loadKey = loadKey,
+                    offset = offset,
+                    hasDiff = hasDiff,
+                    hasNext = hasNext,
+                    hasPrev = false,
+                    loadType = LoadNext,
+                    ignoredDb = ignoreDb,
+                    query = searchQuery))
             }
 
             channel.close()
             awaitClose()
         }
+    }
+
+    override suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel> {
+        return channelDao.getChannelsBySQLiteQuery(query).map { it.toChannel() }
     }
 
     override suspend fun syncChannels(limit: Int) = callbackFlow {
@@ -412,17 +446,33 @@ internal class PersistenceChannelsLogicImpl(
         awaitClose()
     }
 
-    private suspend fun getChannelsDb(offset: Int, searchQuery: String): List<SceytChannel> {
+    private suspend fun getChannelsDb(
+            offset: Int,
+            searchQuery: String,
+            config: ChannelListConfig,
+    ): List<SceytChannel> {
+        val orderByLastMessage = when (config.order) {
+            ChannelListOrder.ListQueryChannelOrderLastMessage -> true
+            ChannelListOrder.ListQueryChannelOrderCreatedAt -> false
+        }
         return if (searchQuery.isBlank()) {
-            channelDao.getChannels(limit = channelsLoadSize, offset = offset).map { channel ->
-                channel.toChannel()
-            }
+            channelDao.getChannelsOrderByLastMessage(
+                limit = config.queryLimit,
+                offset = offset,
+                types = config.types,
+                orderByLastMessage = orderByLastMessage
+            ).map { it.toChannel() }
         } else {
             val ids = usersDao.getUserIdsByDisplayName(searchQuery)
-            channelDao.getChannelsByQueryAndUserIds(query = searchQuery, userIds = ids, limit = channelsLoadSize,
-                offset = offset, false).map { channel ->
-                channel.toChannel()
-            }
+            channelDao.searchChannelsByUserIds(
+                query = searchQuery,
+                userIds = ids,
+                offset = offset,
+                onlyMine = false,
+                limit = config.queryLimit,
+                types = config.types,
+                orderByLastMessage = orderByLastMessage
+            ).map { channel -> channel.toChannel() }
         }
     }
 
@@ -574,7 +624,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long> {
-        if (channelsCache.get(channelId)?.pending == true) {
+        if (channelsCache.isPending(channelId)) {
             deleteChannelDb(channelId)
             return SceytResponse.Success(channelId)
         }
@@ -619,7 +669,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun deleteChannel(channelId: Long): SceytResponse<Long> {
-        if (channelsCache.get(channelId)?.pending == true) {
+        if (channelsCache.isPending(channelId)) {
             deleteChannelDb(channelId)
             return SceytResponse.Success(channelId)
         }
@@ -808,7 +858,7 @@ internal class PersistenceChannelsLogicImpl(
             channelsCache.updateLastMessage(channelId, message)
         } else {
             // Check if sent message is last message of channel
-            channelsCache.get(channelId)?.let {
+            channelsCache.getOneOf(channelId)?.let {
                 if (it.lastMessage?.tid != message.tid) return
             } ?: run {
                 channelDao.getChannelById(channelId)?.let {
@@ -874,10 +924,12 @@ internal class PersistenceChannelsLogicImpl(
 
     override suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>) {
         users.forEach { presenceUser ->
-            ArrayList(channelsCache.getData()).forEach { channel ->
-                val user = presenceUser.user
-                if (channel.isDirect() && channel.getPeer()?.id == user.id)
-                    channelsCache.updateChannelPeer(channel.id, user)
+            channelsCache.getCachedData().values.forEach {
+                it.values.toMutableList().forEach { channel ->
+                    val user = presenceUser.user
+                    if (channel.isDirect() && channel.getPeer()?.id == user.id)
+                        channelsCache.updateChannelPeer(channel.id, user)
+                }
             }
         }
     }
@@ -926,7 +978,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun deleteMessage(channelId: Long, message: SceytMessage) {
-        channelsCache.get(channelId)?.let {
+        channelsCache.getOneOf(channelId)?.let {
             if (it.lastMessage?.id == message.id) {
                 val lastMessage = messageDao.getLastMessage(channelId)
                 with(lastMessage?.messageEntity) {
