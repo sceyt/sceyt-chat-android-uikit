@@ -1,11 +1,10 @@
 package com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 
 class ChannelsComparatorDescBy(
-        private val sortBy: ChannelListOrder = SceytChatUIKit.config.channelListOrder
+        private val sortBy: ChannelListOrder,
 ) : Comparator<SceytChannel> {
 
     override fun compare(first: SceytChannel, second: SceytChannel): Int {

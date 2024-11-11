@@ -95,7 +95,7 @@ class SceytChatUIFacade(
     fun clearData() {
         database.clearAllTables()
         preferences.clear()
-        channelsCache.clear()
+        channelsCache.clearAll()
     }
 
     fun logOut(unregisterPushCallback: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {

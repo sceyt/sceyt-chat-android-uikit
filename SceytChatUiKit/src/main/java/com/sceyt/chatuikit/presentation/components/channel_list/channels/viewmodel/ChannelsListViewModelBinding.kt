@@ -54,7 +54,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
                     }
                     needToUpdateChannelsAfterResume.clear()
                     if (needSort)
-                        channelListView.sortChannelsBy(SceytChatUIKit.config.channelListOrder)
+                        channelListView.sortChannelsBy(config.order)
                 }
             }
         }
@@ -138,7 +138,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
                 val updatedChannel = needToUpdateChannelsAfterResume[sceytChannel.id]?.channel
                         ?: sceytChannel
                 channelListView.cancelLastSort()
-                channelListView.addNewChannelAndSort(ChannelListItem.ChannelItem(updatedChannel))
+                channelListView.addNewChannelAndSort(config.order, ChannelListItem.ChannelItem(updatedChannel))
                 newAddedChannelJobs.remove(sceytChannel.id)
             }
         }
@@ -146,19 +146,22 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
     }
 
     ChannelsCache.channelAddedFlow
+        .filter { config.isValidForConfig(it) }
         .onEach(::createJobToAddNewChannelWithOnResumed)
         .launchIn(viewModelScope)
 
-    ChannelsCache.pendingChannelCreatedFlow.onEach { (pendingChannelId, newChannel) ->
-        channelListView.replaceChannel(pendingChannelId, newChannel)
-        if (!lifecycleOwner.isResumed()) {
-            newAddedChannelJobs[pendingChannelId]?.let {
-                it.cancel()
-                newAddedChannelJobs.remove(pendingChannelId)
+    ChannelsCache.pendingChannelCreatedFlow
+        .filter { config.isValidForConfig(it.second) }
+        .onEach { (pendingChannelId, newChannel) ->
+            channelListView.replaceChannel(pendingChannelId, newChannel)
+            if (!lifecycleOwner.isResumed()) {
+                newAddedChannelJobs[pendingChannelId]?.let {
+                    it.cancel()
+                    newAddedChannelJobs.remove(pendingChannelId)
+                }
+                createJobToAddNewChannelWithOnResumed(newChannel)
             }
-            createJobToAddNewChannelWithOnResumed(newChannel)
-        }
-    }.launchIn(viewModelScope)
+        }.launchIn(viewModelScope)
 
     ChannelsCache.channelDraftMessageChangesFlow.onEach { channel ->
         channelListView.channelUpdatedWithDiff(channel, ChannelDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))

@@ -60,7 +60,7 @@ internal class PersistenceMembersLogicImpl(
                     data.channel.lastMessage?.toMessageDb(false)?.let {
                         messageDao.upsertMessage(it)
                     }
-                    channelsCache.add(data.channel)
+                    channelsCache.upsertChannel(data.channel)
                 }
             }
 
