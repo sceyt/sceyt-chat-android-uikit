@@ -45,6 +45,7 @@ import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isPublic
+import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
@@ -61,6 +62,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlin.collections.set
@@ -487,15 +489,34 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             compareMessage = messagesListView.getLastMessage()?.message,
             enableDateSeparator = messagesListView.style.enableDateSeparator)
 
+        messagesListView.addNewMessages(*initMessage.toTypedArray())
+        messagesListView.updateViewState(PageState.Nothing)
+    }
+
+    suspend fun onOutgoingMessage(message: SceytMessage) {
+        if (hasNext || hasNextDb) return
+        val initMessage = mapToMessageListItem(
+            data = arrayListOf(message),
+            hasNext = false,
+            hasPrev = false,
+            compareMessage = messagesListView.getLastMessage()?.message,
+            enableDateSeparator = messagesListView.style.enableDateSeparator)
+
+        SceytLog.i(this@bind.TAG, "onOutgoingMessage : ${message.tid} body: ${message.body}, size: ${notFoundMessagesToUpdate.size}")
         if (notFoundMessagesToUpdate.containsKey(message.tid)) {
+            SceytLog.i(this@bind.TAG, "found in map: ${message.tid} body: ${message.body}, size: ${notFoundMessagesToUpdate.size}")
             notFoundMessagesToUpdate.remove(message.tid)?.let {
-                onMessage(it)
+                onOutgoingMessage(it)
                 return
             }
         }
 
-        messagesListView.addNewMessages(*initMessage.toTypedArray())
-        messagesListView.updateViewState(PageState.Nothing)
+        suspendCancellableCoroutine { continuation ->
+            messagesListView.addNewMessages(*initMessage.toTypedArray()) {
+                continuation.safeResume(Unit)
+            }
+            messagesListView.updateViewState(PageState.Nothing)
+        }
     }
 
     suspend fun onMessageUpdated(data: Pair<Long, List<SceytMessage>>) {
@@ -524,7 +545,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     onNewOutGoingMessageFlow.onEach {
-        outgoingMessageMutex.withLock { onMessage(it) }
+        outgoingMessageMutex.withLock { onOutgoingMessage(it) }
     }.launchIn(viewModelScope)
 
     onNewMessageFlow.onEach(::onMessage).launchIn(viewModelScope)

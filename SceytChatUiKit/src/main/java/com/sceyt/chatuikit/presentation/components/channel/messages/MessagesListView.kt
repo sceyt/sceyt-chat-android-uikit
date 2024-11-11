@@ -396,10 +396,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.addPrevPageMessages(data)
     }
 
-    internal fun addNewMessages(vararg data: MessageListItem) {
+    internal fun addNewMessages(vararg data: MessageListItem, addedCallback: () -> Unit = {}) {
         if (data.isEmpty()) return
         messagesRV.awaitAnimationEnd {
             messagesRV.addNewMessages(*data)
+            addedCallback.invoke()
         }
     }
 
