@@ -35,7 +35,7 @@ import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker.Companion.MAX_SELECT_MEDIA_COUNT
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.shared.utils.FileUtil
+import com.sceyt.chatuikit.shared.utils.FilePathUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -162,10 +162,12 @@ class FilePickerHelper {
         pickFile()
     }
 
-    fun openMediaPicker(pickerListener: BottomSheetMediaPicker.PickerListener,
-                        filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
-                        maxSelectCount: Int = sceytGalleryMaxSelectCount,
-                        vararg selections: String) {
+    fun openMediaPicker(
+            pickerListener: BottomSheetMediaPicker.PickerListener,
+            filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
+            maxSelectCount: Int = sceytGalleryMaxSelectCount,
+            vararg selections: String,
+    ) {
         val permissions = getPermissionsForMangeStorage()
         sceytGalleryFilter = filter
         sceytGalleryMaxSelectCount = maxSelectCount
@@ -241,7 +243,7 @@ class FilePickerHelper {
 
                 var realFile: File? = null
                 try {
-                    val path = FileUtil(context).getPath(uri)
+                    val path = FilePathUtil.getFilePathFromUri(context, uri) ?: return@forEach
                     FileInputStream(File(path))
                     realFile = File(path)
                 } catch (ex: Exception) {
@@ -296,10 +298,12 @@ class FilePickerHelper {
         addAttachmentLauncher?.launch(intent)
     }
 
-    private fun openSceytGalleryPicker(pickerListener: BottomSheetMediaPicker.PickerListener? = BottomSheetMediaPicker.pickerListener,
-                                       filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
-                                       maxSelectCount: Int = sceytGalleryMaxSelectCount,
-                                       vararg selections: String) {
+    private fun openSceytGalleryPicker(
+            pickerListener: BottomSheetMediaPicker.PickerListener? = BottomSheetMediaPicker.pickerListener,
+            filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
+            maxSelectCount: Int = sceytGalleryMaxSelectCount,
+            vararg selections: String,
+    ) {
         BottomSheetMediaPicker.instance(
             selections = selections,
             fileFilter = filter,
