@@ -123,7 +123,7 @@ object MessageEventManager : MessageEventHandler.AllEventManagers {
     }
 
     suspend fun emitOutgoingMessage(sceytMessage: SceytMessage) {
-        withContext(Dispatchers.Main) {
+        withContext(Dispatchers.Main.immediate) {
             onOutGoingMessageFlow_.emit(sceytMessage)
         }
     }
