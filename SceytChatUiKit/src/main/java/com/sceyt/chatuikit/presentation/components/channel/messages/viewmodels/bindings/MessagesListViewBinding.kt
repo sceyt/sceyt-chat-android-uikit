@@ -292,7 +292,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         .filter { it == channel.id }
         .onEach {
             messagesListView.context.asActivity().finish()
-        }.launchIn(viewModelScope)
+        }.launchIn(lifecycleOwner.lifecycleScope)
 
     ChannelsCache.pendingChannelCreatedFlow
         .filter { it.first == channel.id }
@@ -345,10 +345,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             lastSyncCenterOffsetId = 0L
             needSyncMessagesWhenScrollStateIdle = true
         }
-    }.launchIn(viewModelScope)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     syncCenteredMessageLiveData.observe(lifecycleOwner) { data ->
-        viewModelScope.launch(Dispatchers.Default) {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             if (data.missingMessages.isNotEmpty()) {
                 val items = messagesListView.getData().toMutableList()
                 items.findIndexed { it is MessageItem && it.message.id == data.centerMessageId }?.let {
@@ -385,17 +385,17 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messagesListView.deleteAllMessagesBefore {
                 it.getMessageCreatedAt() <= date && (it !is MessageItem || it.message.deliveryStatus != DeliveryStatus.Pending)
             }
-        }.launchIn(viewModelScope)
+        }.launchIn(lifecycleOwner.lifecycleScope)
 
     MessagesCache.messagesHardDeletedFlow
         .filter { (channelId, _) -> channelId == channel.id }
         .onEach { (_, tid) ->
             messagesListView.forceDeleteMessageByTid(tid)
-        }.launchIn(viewModelScope)
+        }.launchIn(lifecycleOwner.lifecycleScope)
 
     loadMessagesFlow
         .onEach(::initMessagesResponse)
-        .launchIn(viewModelScope)
+        .launchIn(lifecycleOwner.lifecycleScope)
 
     onChannelUpdatedEventFlow.onEach {
         channel = it
@@ -403,7 +403,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         checkEnableDisableActions(channel)
         if (it.lastMessage == null)
             messagesListView.clearData()
-    }.launchIn(viewModelScope)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     onScrollToLastMessageLiveData.observe(lifecycleOwner) {
         viewModelScope.launch(Dispatchers.Default) {
@@ -535,7 +535,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
         }
 
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+        viewModelScope.launch(Dispatchers.Default) {
             data.second.forEach {
                 if (it.incoming) {
                     update(it)
@@ -546,13 +546,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     onNewOutGoingMessageFlow.onEach {
         outgoingMessageMutex.withLock { onOutgoingMessage(it) }
-    }.launchIn(viewModelScope)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
-    onNewMessageFlow.onEach(::onMessage).launchIn(viewModelScope)
+    onNewMessageFlow.onEach(::onMessage).launchIn(lifecycleOwner.lifecycleScope)
 
     MessagesCache.messageUpdatedFlow.onEach { data ->
         onMessageUpdated(data)
-    }.launchIn(viewModelScope)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
         checkEnableDisableActions(it)
@@ -584,11 +584,11 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     /*
     onNewThreadMessageFlow.onEach {
           messagesListView.updateReplyCount(it)
-      }.launchIn(viewModelScope)
+      }.launchIn(lifecycleOwner.lifecycleScope)
 
       onOutGoingThreadMessageFlow.onEach {
           messagesListView.newReplyMessage(it.parentMessage?.id)
-      }.launchIn(viewModelScope)
+      }.launchIn(lifecycleOwner.lifecycleScope)
   */
     onTransferUpdatedLiveData.asFlow().onEach {
         viewModelScope.launch(Dispatchers.Default) {
@@ -600,10 +600,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }.launchIn(viewModelScope)
 
     linkPreviewLiveData.asFlow().onEach {
-        viewModelScope.launch(Dispatchers.Default) {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             messagesListView.updateLinkPreview(it)
         }
-    }.launchIn(viewModelScope)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     onChannelEventFlow.onEach {
         when (val event = it.eventType) {
@@ -618,7 +618,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             is Deleted -> messagesListView.context.asActivity().finish()
             else -> return@onEach
         }
-    }.launchIn(viewModelScope)
+    }.launchIn(lifecycleOwner.lifecycleScope)
 
     joinLiveData.observe(lifecycleOwner) {
         if (it is SceytResponse.Success) {

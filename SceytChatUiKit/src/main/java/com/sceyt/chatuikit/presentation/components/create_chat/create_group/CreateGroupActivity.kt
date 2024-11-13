@@ -74,7 +74,7 @@ class CreateGroupActivity : AppCompatActivity() {
     private fun initViewModel() {
         viewModel.createChatLiveData.observe(this) {
             lifecycleScope.launch {
-                ChannelActivity.newInstance(this@CreateGroupActivity, it)
+                ChannelActivity.launch(this@CreateGroupActivity, it)
                 val intent = Intent()
                 setResult(RESULT_OK, intent)
                 finish()

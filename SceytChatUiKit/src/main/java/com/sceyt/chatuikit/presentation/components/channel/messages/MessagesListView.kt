@@ -118,7 +118,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV = binding.rvMessages.also { it.setStyle(style) }
         messagesRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
         messagesRV.clipToPadding = clipToPadding
-        setPadding(0, 0, 0, 0)
+        super.setPadding(0, 0, 0, 0)
 
         messagesRV.setScrollDownControllerListener { show ->
             binding.scrollDownView.isVisible = show && style.enableScrollDownButton
@@ -821,6 +821,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         onWindowFocusChangeListener?.invoke(hasWindowFocus)
         if (!hasWindowFocus && context.asActivity().isFinishing)
             AudioPlayerHelper.stopAll()
+    }
+
+    override fun setPadding(left: Int, top: Int, right: Int, bottom: Int) {
+        messagesRV.setPadding(left, top, right, bottom)
     }
 
     // Click events
