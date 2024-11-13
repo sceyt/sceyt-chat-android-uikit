@@ -105,7 +105,7 @@ open class ChannelActivity : AppCompatActivity() {
     companion object {
         const val CHANNEL = "CHANNEL"
 
-        fun newInstance(context: Context, channel: SceytChannel) {
+        fun launch(context: Context, channel: SceytChannel) {
             context.launchActivity<ChannelActivity>(R.anim.sceyt_anim_slide_in_right, R.anim.sceyt_anim_slide_hold) {
                 putExtra(CHANNEL, channel)
             }

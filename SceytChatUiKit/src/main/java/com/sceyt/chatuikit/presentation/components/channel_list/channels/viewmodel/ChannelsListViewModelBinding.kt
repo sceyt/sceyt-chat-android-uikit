@@ -39,7 +39,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
 
     getChannels(0, query = searchQuery)
 
-    viewModelScope.launch {
+    lifecycleOwner.lifecycleScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             channelListView.post {
                 if (needToUpdateChannelsAfterResume.isNotEmpty()) {
@@ -90,7 +90,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
         }
     }
 
-    loadChannelsFlow.onEach(::initChannelsResponse).launchIn(viewModelScope)
+    loadChannelsFlow.onEach(::initChannelsResponse).launchIn(lifecycleOwner.lifecycleScope)
 
     ChannelsCache.channelDeletedFlow.onEach { channelId ->
         lifecycleOwner.lifecycleScope.launch {
@@ -181,7 +181,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
                 channelListView.onTyping(data)
             }
             channelListView.onTyping(it)
-        }.launchIn(viewModelScope)
+        }.launchIn(lifecycleOwner.lifecycleScope)
 
     blockUserLiveData.observe(lifecycleOwner) {
         when (it) {

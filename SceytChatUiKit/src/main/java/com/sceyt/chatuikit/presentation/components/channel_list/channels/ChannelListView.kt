@@ -57,7 +57,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
         channelsRV = binding.channelsRV.also { it.setStyle(style) }
         channelsRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
         channelsRV.clipToPadding = clipToPadding
-        setPadding(0, 0, 0, 0)
+        super.setPadding(0, 0, 0, 0)
 
         binding.pageStateView.apply {
             setLoadingStateView(style.loadingState)
@@ -274,13 +274,17 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
      */
     fun getPageStateView() = binding.pageStateView
 
+    override fun setPadding(left: Int, top: Int, right: Int, bottom: Int) {
+        channelsRV.setPadding(left, top, right, bottom)
+    }
+
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-        ChannelActivity.newInstance(context, item.channel)
+        ChannelActivity.launch(context, item.channel)
     }
 
     override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
-        ChannelActivity.newInstance(context, item.channel)
+        clickListeners.onChannelClick(item)
     }
 
     override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {
