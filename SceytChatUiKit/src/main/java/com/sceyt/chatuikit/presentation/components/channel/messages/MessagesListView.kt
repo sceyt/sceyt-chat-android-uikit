@@ -827,6 +827,14 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.setPadding(left, top, right, bottom)
     }
 
+    override fun setClipToPadding(clipToPadding: Boolean) {
+        super.setClipToPadding(clipToPadding)
+        try {
+            messagesRV.clipToPadding = clipToPadding
+        } catch (_: Exception) {
+        }
+    }
+
     // Click events
     override fun onMessageClick(view: View, item: MessageItem) {
         if (enabledActions) {

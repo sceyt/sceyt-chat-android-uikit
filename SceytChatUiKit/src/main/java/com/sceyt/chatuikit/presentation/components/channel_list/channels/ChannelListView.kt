@@ -278,6 +278,14 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
         channelsRV.setPadding(left, top, right, bottom)
     }
 
+    override fun setClipToPadding(clipToPadding: Boolean) {
+        super.setClipToPadding(clipToPadding)
+        try {
+            channelsRV.clipToPadding = clipToPadding
+        } catch (_: Exception) {
+        }
+    }
+
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
         ChannelActivity.launch(context, item.channel)
