@@ -463,8 +463,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     //Click listeners
     override fun onAvatarClick(view: View) {
-        if (::channel.isInitialized)
-            channelInfoLauncher?.let { ChannelInfoActivity.startHandleSearchClick(context, channel, it) }
+        clickListeners.onToolbarClick(view)
     }
 
     override fun onToolbarClick(view: View) {
