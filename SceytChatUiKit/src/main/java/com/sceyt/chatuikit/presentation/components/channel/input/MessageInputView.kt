@@ -337,7 +337,8 @@ class MessageInputView @JvmOverloads constructor(
         binding.messageInput.requestFocus()
     }
 
-    private fun canShowRecorderView() = !disabledInputByGesture && !isInputHidden && inputState == Voice
+    private fun canShowRecorderView() = !disabledInputByGesture &&
+            !isInputHidden && inputState == Voice && isVisible
 
     private fun VoiceRecorderView.setRecordingListener() {
         setListener(object : RecordingListener {
@@ -860,6 +861,12 @@ class MessageInputView @JvmOverloads constructor(
             binding.messageInput.clearFocus()
             hideSoftInput()
         }
+    }
+
+    override fun setVisibility(visibility: Int) {
+        super.setVisibility(visibility)
+        voiceRecorderView?.visibility = visibility
+        mentionUsersListView?.visibility = visibility
     }
 
     // Choose file type popup listeners
