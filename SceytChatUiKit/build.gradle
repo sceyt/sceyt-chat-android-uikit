@@ -96,5 +96,11 @@ dependencies {
     androidTestImplementation libs.truth
     testImplementation libs.junit
     testImplementation libs.truth
+    // Koin testing tools
+    testImplementation libs.koin.test
+    androidTestImplementation libs.koin.test
+    // Needed JUnit version
+    testImplementation libs.koin.test.junit4
+    androidTestImplementation libs.koin.test.junit4
 }
 apply from: "${rootProject.projectDir}/maven-publish/publish-module.gradle"

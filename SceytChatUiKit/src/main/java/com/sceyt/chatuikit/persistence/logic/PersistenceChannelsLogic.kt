@@ -13,7 +13,6 @@ import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.push.RemoteMessageData
@@ -48,7 +47,8 @@ interface PersistenceChannelsLogic {
 
     suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel>
     suspend fun syncChannels(limit: Int): Flow<GetAllChannelsResponse>
-    suspend fun findOrCreateDirectChannel(user: SceytUser): SceytResponse<SceytChannel>
+    suspend fun findOrCreatePendingChannelByMembers(data: CreateChannelData): SceytResponse<SceytChannel>
+    suspend fun findOrCreatePendingChannelByUri(data: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun createNewChannelInsteadOfPendingChannel(channel: SceytChannel): SceytResponse<SceytChannel>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
@@ -70,7 +70,7 @@ interface PersistenceChannelsLogic {
     suspend fun getRetentionPeriodByChannelId(channelId: Long): Long
     suspend fun getDirectChannelFromDb(peerId: String): SceytChannel?
     suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel>
-    suspend fun getChannelFromServerByUrl(url: String): SceytResponse<List<SceytChannel>>
+    suspend fun getChannelFromServerByUri(uri: String): SceytResponse<SceytChannel?>
     suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel>
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
     suspend fun setUnreadCount(channelId: Long, count: Int)

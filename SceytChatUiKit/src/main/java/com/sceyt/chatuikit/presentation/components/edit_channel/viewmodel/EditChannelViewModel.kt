@@ -24,8 +24,8 @@ class EditChannelViewModel : BaseViewModel(), SceytKoinComponent {
     private val _editChannelLiveData = MutableLiveData<SceytChannel>()
     val editChannelLiveData: LiveData<SceytChannel> = _editChannelLiveData
 
-    private val _isValidUrlLiveData = MutableLiveData<Pair<Boolean, String>>()
-    val isValidUrlLiveData = _isValidUrlLiveData.asLiveData()
+    private val _isValidUriLiveData = MutableLiveData<Pair<Boolean, String>>()
+    val isValidUrlLiveData = _isValidUriLiveData.asLiveData()
 
 
     fun editChannelChanges(channelId: Long, data: EditChannelData) {
@@ -35,12 +35,12 @@ class EditChannelViewModel : BaseViewModel(), SceytKoinComponent {
         }
     }
 
-    fun checkIsValidUrl(url: String) {
+    fun checkIsValidUri(uri: String) {
         debounceHelper.submit {
             viewModelScope.launch(Dispatchers.IO) {
-                val response = channelInteractor.getChannelFromServerByUrl(url)
+                val response = channelInteractor.getChannelFromServerByUri(uri)
                 if (response is SceytResponse.Success) {
-                    _isValidUrlLiveData.postValue(response.data.isNullOrEmpty() to url)
+                    _isValidUriLiveData.postValue((response.data == null) to uri)
                 }
             }
         }

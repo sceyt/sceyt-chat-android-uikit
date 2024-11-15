@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface ChannelsRepository {
     suspend fun getChannel(id: Long): SceytResponse<SceytChannel>
-    suspend fun getChannelFromServerByUrl(url: String): SceytResponse<List<SceytChannel>>
+    suspend fun getChannelByUri(uri: String): SceytResponse<SceytChannel?>
     suspend fun getChannels(query: String, config: ChannelListConfig): SceytResponse<List<SceytChannel>>
     suspend fun getAllChannels(limit: Int): Flow<GetAllChannelsResponse>
     suspend fun loadMoreChannels(): SceytResponse<List<SceytChannel>>

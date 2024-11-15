@@ -94,7 +94,7 @@ fun SceytUser.toUser() = User(
 
 fun SceytUser.isDeleted() = state == UserState.Deleted
 
-fun createEmptyUser(id: String, displayName: String): SceytUser {
+fun createEmptyUser(id: String, displayName: String = ""): SceytUser {
     return SceytUser(id, "", displayName, "", "", null,
         Presence(PresenceState.Offline, "", 0), UserState.Active, false)
 }

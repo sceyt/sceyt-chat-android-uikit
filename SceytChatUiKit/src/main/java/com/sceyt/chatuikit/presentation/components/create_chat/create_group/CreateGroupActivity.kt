@@ -132,7 +132,7 @@ class CreateGroupActivity : AppCompatActivity() {
         btnCreate.setOnClickListener {
             with(createChannelData) {
                 subject = inputSubject.text.toString().trim()
-                channelType = ChannelTypeEnum.Group.value
+                type = ChannelTypeEnum.Group.value
                 metadata = Gson().toJson(ChannelDescriptionData(inputDescription.text.toString().trim()))
                 members = this@CreateGroupActivity.members
             }

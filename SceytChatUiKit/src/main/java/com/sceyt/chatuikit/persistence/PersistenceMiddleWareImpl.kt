@@ -225,8 +225,16 @@ internal class PersistenceMiddleWareImpl(
         return channelLogic.leaveChannel(channelId)
     }
 
-    override suspend fun findOrCreateDirectChannel(user: SceytUser): SceytResponse<SceytChannel> {
-        return channelLogic.findOrCreateDirectChannel(user)
+    override suspend fun findOrCreatePendingChannelByMembers(
+            data: CreateChannelData
+    ): SceytResponse<SceytChannel> {
+        return channelLogic.findOrCreatePendingChannelByMembers(data)
+    }
+
+    override suspend fun findOrCreatePendingChannelByUri(
+            data: CreateChannelData,
+    ): SceytResponse<SceytChannel> {
+        return channelLogic.findOrCreatePendingChannelByUri(data)
     }
 
     override suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel> {
@@ -269,8 +277,8 @@ internal class PersistenceMiddleWareImpl(
         return channelLogic.getChannelFromServer(channelId)
     }
 
-    override suspend fun getChannelFromServerByUrl(uri: String): SceytResponse<List<SceytChannel>> {
-        return channelLogic.getChannelFromServerByUrl(uri)
+    override suspend fun getChannelFromServerByUri(uri: String): SceytResponse<SceytChannel?> {
+        return channelLogic.getChannelFromServerByUri(uri)
     }
 
     override suspend fun getChannelsCountFromDb(): Int {

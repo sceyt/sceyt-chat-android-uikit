@@ -51,7 +51,7 @@ interface ChannelDao {
             createdAt desc 
             limit :limit offset :offset
     """)
-    suspend fun getChannelsOrderByLastMessage(
+    suspend fun getChannels(
             limit: Int,
             offset: Int,
             types: List<String>,
@@ -112,11 +112,33 @@ interface ChannelDao {
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from channels join UserChatLink as link on link.chat_id = channels.chat_id " +
-            "where link.user_id =:peerId and type =:directType")
-    suspend fun getDirectChannel(
+            "where link.user_id =:peerId and type =:channelType")
+    suspend fun getChannelByUserAndType(
             peerId: String,
-            directType: String = ChannelTypeEnum.Direct.value,
+            channelType: String,
     ): ChannelDb?
+
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @Transaction
+    @Query("""
+    select * from channels 
+    where chat_id in (
+        select link.chat_id from UserChatLink as link 
+        where link.user_id in (:users)
+        group by link.chat_id
+        having COUNT(link.user_id) = :userCount
+    ) 
+    and type = :channelType
+""")
+    suspend fun getChannelByUsersAndType(
+            users: List<String>,
+            channelType: String,
+            userCount: Int = users.size,
+    ): ChannelDb?
+
+    @Transaction
+    @Query("select * from channels where uri =:uri")
+    suspend fun getChannelByUri(uri: String): ChannelDb?
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction

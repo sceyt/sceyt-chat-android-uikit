@@ -28,6 +28,7 @@ import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
@@ -60,7 +61,7 @@ import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.mappers.createEmptyUser
-import com.sceyt.chatuikit.persistence.mappers.createPendingDirectChannelData
+import com.sceyt.chatuikit.persistence.mappers.createPendingChannel
 import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
@@ -456,7 +457,7 @@ internal class PersistenceChannelsLogicImpl(
             ChannelListOrder.ListQueryChannelOrderCreatedAt -> false
         }
         return if (searchQuery.isBlank()) {
-            channelDao.getChannelsOrderByLastMessage(
+            channelDao.getChannels(
                 limit = config.queryLimit,
                 offset = offset,
                 types = config.types,
@@ -529,29 +530,74 @@ internal class PersistenceChannelsLogicImpl(
         return updatedList
     }
 
-    override suspend fun findOrCreateDirectChannel(user: SceytUser): SceytResponse<SceytChannel> {
-        var metadata = ""
-        val channelDb = if (user.id == myId) {
+    override suspend fun findOrCreatePendingChannelByMembers(
+            data: CreateChannelData,
+    ): SceytResponse<SceytChannel> {
+        var metadata = data.metadata
+        val members = data.members.toSet().toList()
+        val membersCount = members.size
+        val isSelf = membersCount == 1 && members[0].id == myId && data.type == ChannelTypeEnum.Direct.value
+        val channelDb = if (isSelf) {
             metadata = Gson().toJson(SelfChannelMetadata(1))
             channelDao.getSelfChannel()
-        } else channelDao.getDirectChannel(user.id)
+        } else {
+            if (membersCount == 1) {
+                channelDao.getChannelByUserAndType(members[0].id, data.type)
+            } else {
+                val ids = members.map { it.id }.toSet().toList()
+                channelDao.getChannelByUsersAndType(ids, data.type)
+            }
+        }
         if (channelDb != null) {
             if (channelDb.channelEntity.pending)
                 channelsCache.addPendingChannel(channelDb.toChannel())
             return SceytResponse.Success(channelDb.toChannel())
         }
+        val channelId = members.map { it.id }.toSet().sorted().joinToString(separator = "$").toSha256()
+        return createPendingChannelAndSave(data.copy(metadata = metadata), channelId)
+    }
 
+    override suspend fun findOrCreatePendingChannelByUri(
+            data: CreateChannelData,
+    ): SceytResponse<SceytChannel> {
+        if (data.uri.isBlank()) return SceytResponse.Error(SceytException(0, "Uri is empty"))
+        val channelDb = channelDao.getChannelByUri(data.uri)
+        if (channelDb != null) {
+            if (channelDb.channelEntity.pending)
+                channelsCache.addPendingChannel(channelDb.toChannel())
+            return SceytResponse.Success(channelDb.toChannel())
+        }
+        // Try to fetch channel from server
+        val response = channelsRepository.getChannelByUri(data.uri)
+        if (response is SceytResponse.Success && response.data != null) {
+            return SceytResponse.Success(response.data)
+        }
+        val channelId = data.uri.toSha256()
+        return createPendingChannelAndSave(data, channelId)
+    }
+
+    private suspend fun createPendingChannelAndSave(
+            data: CreateChannelData,
+            channelId: Long,
+    ): SceytResponse<SceytChannel> {
         val fail = SceytResponse.Error<SceytChannel>(SceytException(0, "Failed to create direct channel myId is null"))
         val myId = myId ?: return fail
-        val createdBy = ClientWrapper.currentUser?.toSceytUser()
+        val currentUser = SceytChatUIKit.currentUser
                 ?: usersDao.getUserById(myId)?.toSceytUser()
                 ?: SceytUser(myId)
 
-        val role = Role(RoleTypeEnum.Owner.value)
-        val members = setOf(SceytMember(role, user), SceytMember(role, createdBy)).toList()
-        val channelId = members.map { it.id }.toSet().sorted().joinToString(separator = "$").toSha256()
-        val channel = createPendingDirectChannelData(channelId = channelId,
-            createdBy = createdBy, members = members, role = role.name, metadata = metadata)
+        var members = data.members.toSet().toList()
+        if (members.none { it.id == myId }) {
+            members = members.plus(SceytMember(
+                role = Role(RoleTypeEnum.Owner.value),
+                user = currentUser
+            ))
+        }
+        val channel = createPendingChannel(
+            channelId = channelId,
+            createdBy = currentUser,
+            data = data.copy(members = members)
+        )
 
         insertChannelWithMembers(channel, *members.toTypedArray())
         channelsCache.addPendingChannel(channel)
@@ -575,7 +621,7 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun createNewChannelInsteadOfPendingChannel(channel: SceytChannel): SceytResponse<SceytChannel> {
         val pendingChannelId = channel.id
         val response = channelsRepository.createChannel(CreateChannelData(
-            channelType = channel.type,
+            type = channel.type,
             uri = channel.uri ?: "",
             subject = channel.subject ?: "",
             avatarUrl = channel.avatarUrl ?: "",
@@ -781,7 +827,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun getDirectChannelFromDb(peerId: String): SceytChannel? {
-        return channelDao.getDirectChannel(peerId)?.toChannel()
+        return channelDao.getChannelByUserAndType(peerId, ChannelTypeEnum.Direct.value)?.toChannel()
     }
 
     override suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel> {
@@ -807,9 +853,8 @@ internal class PersistenceChannelsLogicImpl(
         return response
     }
 
-    override suspend fun getChannelFromServerByUrl(url: String): SceytResponse<List<SceytChannel>> {
-        //Don't use yet
-        return channelsRepository.getChannelFromServerByUrl(url)
+    override suspend fun getChannelFromServerByUri(uri: String): SceytResponse<SceytChannel?> {
+        return channelsRepository.getChannelByUri(uri)
     }
 
     override suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel> {
@@ -944,7 +989,8 @@ internal class PersistenceChannelsLogicImpl(
 
         pendingLastMessages.forEach { messageDb ->
             mutableList.findIndexed { it.id == messageDb.messageEntity.channelId }?.let { (index, item) ->
-                mutableList[index] = item.copy(lastMessage = messageDb.toSceytMessage())
+                if (messageDb.messageEntity.createdAt > (item.lastMessage?.createdAt ?: 0))
+                    mutableList[index] = item.copy(lastMessage = messageDb.toSceytMessage())
             }
         }
         return mutableList
@@ -953,7 +999,10 @@ internal class PersistenceChannelsLogicImpl(
     private suspend fun initPendingLastMessageBeforeInsert(channel: SceytChannel): SceytChannel {
         val messageTIds = channelDao.getChannelLastMessageTid(channel.id) ?: return channel
         messageDao.getPendingMessageByTid(messageTIds)?.let { pendingLastMessage ->
-            return channel.copy(lastMessage = pendingLastMessage.toSceytMessage())
+            return if (pendingLastMessage.messageEntity.createdAt > (channel.lastMessage?.createdAt
+                            ?: 0)) {
+                channel.copy(lastMessage = pendingLastMessage.toSceytMessage())
+            } else channel
         }
         return channel
     }

@@ -5,7 +5,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
@@ -50,9 +54,14 @@ class UsersViewModel : BaseViewModel() {
         return memberItems
     }
 
-    fun findOrCreateDirectChannel(user: SceytUser) {
+    fun findOrCreatePendingDirectChannel(user: SceytUser) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = SceytChatUIKit.chatUIFacade.channelInteractor.findOrCreateDirectChannel(user)
+            val response = SceytChatUIKit.chatUIFacade.channelInteractor.findOrCreatePendingChannelByMembers(
+                CreateChannelData(
+                    type = ChannelTypeEnum.Direct.value,
+                    members = listOf(SceytMember(user, RoleTypeEnum.Owner.value))
+                )
+            )
             notifyResponseAndPageState(_createChannelLiveData, response)
         }
     }

@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel_info.members.viewmod
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
@@ -12,6 +13,9 @@ import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventD
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -24,8 +28,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ChannelMembersViewModel(private val channelsLogic: PersistenceChannelsLogic,
-                              private val membersLogic: PersistenceMembersLogic) : BaseViewModel() {
+class ChannelMembersViewModel(
+        private val channelsLogic: PersistenceChannelsLogic,
+        private val membersLogic: PersistenceMembersLogic,
+) : BaseViewModel() {
 
     private val _membersLiveData = MutableLiveData<PaginationResponse<MemberItem>>()
     val membersLiveData: LiveData<PaginationResponse<MemberItem>> = _membersLiveData
@@ -190,9 +196,12 @@ class ChannelMembersViewModel(private val channelsLogic: PersistenceChannelsLogi
         }
     }
 
-    fun findOrCreateChat(user: SceytUser) {
+    fun findOrCreatePendingDirectChat(user: SceytUser) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelsLogic.findOrCreateDirectChannel(user)
+            val response = channelsLogic.findOrCreatePendingChannelByMembers(CreateChannelData(
+                type = ChannelTypeEnum.Direct.value,
+                members = listOf(SceytMember(role = Role(RoleTypeEnum.Owner.value), user = user)),
+            ))
             if (response is SceytResponse.Success)
                 _findOrCreateChatLiveData.postValue(response.data ?: return@launch)
 

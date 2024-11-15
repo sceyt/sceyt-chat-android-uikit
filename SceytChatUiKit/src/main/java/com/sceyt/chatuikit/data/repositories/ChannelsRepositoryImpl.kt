@@ -68,22 +68,18 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
-    override suspend fun getChannelFromServerByUrl(url: String): SceytResponse<List<SceytChannel>> {
+    override suspend fun getChannelByUri(uri: String): SceytResponse<SceytChannel?> {
         return suspendCancellableCoroutine { continuation ->
             val query = ChannelListQuery.Builder()
                 .limit(1)
                 .filterKey(ChannelListQuery.ChannelListFilterKey.ListQueryChannelFilterKeyURI)
                 .queryType(SearchQueryOperator.SearchQueryOperatorEQ)
-                .query(url)
+                .query(uri)
                 .build()
 
             query.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
-                    if (channels.isNullOrEmpty())
-                        continuation.safeResume(SceytResponse.Success(emptyList()))
-                    else {
-                        continuation.safeResume(SceytResponse.Success(channels.map { it.toSceytUiChannel() }))
-                    }
+                    continuation.safeResume(SceytResponse.Success(channels?.firstOrNull()?.toSceytUiChannel()))
                 }
 
                 override fun onError(e: SceytException?) {
@@ -204,7 +200,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     }
 
     private fun initCreateChannelRequest(channelData: CreateChannelData): CreateChannelRequest {
-        return CreateChannelRequest.Builder(channelData.channelType)
+        return CreateChannelRequest.Builder(channelData.type)
             .withMembers(channelData.members.map { it.toMember() })
             .withUri(channelData.uri)
             .withAvatarUrl(channelData.avatarUrl)
