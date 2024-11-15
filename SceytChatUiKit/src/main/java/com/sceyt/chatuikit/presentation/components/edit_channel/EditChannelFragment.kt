@@ -50,7 +50,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     protected val filePickerHelper = FilePickerHelper(this)
     protected var avatarUrl: String? = null
     private var urlIsValidByServer = false
-    private var checkingUrl: String? = null
+    private var checkingUri: String? = null
     protected lateinit var channel: SceytChannel
         private set
     protected lateinit var style: EditChannelStyle
@@ -115,7 +115,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         inputUri.doAfterTextChanged {
             urlIsValidByServer = false
             binding?.uriWarning?.isVisible = false
-            checkingUrl = null
+            checkingUri = null
             checkSaveEnabled(true)
         }
 
@@ -172,9 +172,9 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
                     val isValid = viewModel.checkIsValidUrlFormat(inputUrl)
                     when (isValid) {
                         URIValidation.Valid -> {
-                            if (checkingUrl != inputUri.text.toString()) {
-                                checkingUrl = inputUri.text.toString()
-                                viewModel.checkIsValidUrl(inputUri.text.toString().lowercase())
+                            if (checkingUri != inputUri.text.toString()) {
+                                checkingUri = inputUri.text.toString()
+                                viewModel.checkIsValidUri(inputUri.text.toString().lowercase())
                             }
                         }
 

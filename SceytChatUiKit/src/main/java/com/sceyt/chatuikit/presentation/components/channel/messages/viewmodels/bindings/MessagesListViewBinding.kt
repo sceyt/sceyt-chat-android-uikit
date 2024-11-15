@@ -25,7 +25,11 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNewest
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.getLoadKey
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
@@ -723,7 +727,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 if (event.userId == SceytChatUIKit.chatUIFacade.myId) return@setMessageCommandEventListener
                 viewModelScope.launch(Dispatchers.IO) {
                     val user = userInteractor.getUserDbById(event.userId) ?: SceytUser(event.userId)
-                    val response = channelInteractor.findOrCreateDirectChannel(user)
+                    val response = channelInteractor.findOrCreatePendingChannelByMembers(CreateChannelData(
+                        type = ChannelTypeEnum.Direct.value,
+                        members = listOf(SceytMember(roleName = RoleTypeEnum.Owner.value, user = user)),
+                    ))
                     if (response is SceytResponse.Success)
                         response.data?.let {
                             ChannelInfoActivity.launch(event.view.context, response.data)

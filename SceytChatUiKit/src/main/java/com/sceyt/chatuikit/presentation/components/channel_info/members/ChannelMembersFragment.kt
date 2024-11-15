@@ -240,7 +240,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
 
     protected open fun onMemberClick(item: MemberItem.Member) {
         if (item.member.id == myId) return
-        viewModel.findOrCreateChat(item.member.user)
+        viewModel.findOrCreatePendingDirectChat(item.member.user)
     }
 
     protected open fun onMemberLongClick(item: MemberItem.Member) {

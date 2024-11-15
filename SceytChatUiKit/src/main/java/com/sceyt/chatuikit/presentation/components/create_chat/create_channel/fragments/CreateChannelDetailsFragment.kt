@@ -120,7 +120,7 @@ open class CreateChannelDetailsFragment : Fragment() {
         fabNext.setOnClickListener {
             with(createChannelData) {
                 subject = inputSubject.text.toString().trim()
-                channelType = ChannelTypeEnum.Public.value
+                type = ChannelTypeEnum.Public.value
                 uri = inputUri.text?.toString()?.trim()?.lowercase().toString()
                 metadata = Gson().toJson(ChannelDescriptionData(inputDescription.text.toString().trim()))
                 members = arrayListOf()
@@ -153,7 +153,7 @@ open class CreateChannelDetailsFragment : Fragment() {
                 URIValidation.Valid -> {
                     if (checkingUrl != inputUri.text.toString()) {
                         checkingUrl = inputUri.text.toString()
-                        viewModel.checkIsValidUrl(inputUri.text.toString().lowercase())
+                        viewModel.checkIsValidUri(inputUri.text.toString().lowercase())
                     }
                 }
 

@@ -50,4 +50,3 @@ internal fun SceytChannel.isSelf(): Boolean {
     }
     return type == ChannelTypeEnum.Direct.value && isSelf
 }
-

@@ -44,13 +44,13 @@ class SceytChatUIFacade(
         val userInteractor: UserInteractor,
         val attachmentInteractor: AttachmentInteractor,
         val messageReactionInteractor: MessageReactionInteractor,
-        val messageMarkerInteractor: MessageMarkerInteractor
+        val messageMarkerInteractor: MessageMarkerInteractor,
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var clientUserId: String? = null
 
     val myId
-        get() = clientUserId ?: preferences.getUserId().also {
+        get() = clientUserId ?: ClientWrapper.currentUser?.id ?: preferences.getUserId().also {
             clientUserId = it
         }
 
