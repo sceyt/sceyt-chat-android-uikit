@@ -355,6 +355,10 @@ class AvatarView @JvmOverloads constructor(
             defaultAvatar = DefaultAvatar.FromBitmap(bitmap)
         }
 
+        fun setDefaultAvatar(name: CharSequence) = apply {
+            defaultAvatar = DefaultAvatar.Initials(name)
+        }
+
         fun build() = AvatarAppearance(
             style = avatarStyle,
             imageUrl = imageUrl,
