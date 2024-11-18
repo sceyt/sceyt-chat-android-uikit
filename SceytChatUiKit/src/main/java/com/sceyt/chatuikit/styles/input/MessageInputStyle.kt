@@ -51,6 +51,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property enableVoiceRecord Enable voice recording, default is true
  * @property enableSendAttachment Enable send attachment, default is true
  * @property enableMention Enable mention, default is true
+ * @property enableBodyFormatting Enable mention, default is true
  * @property inputStyle Style for the input text, default is [buildInputTextInputStyle]
  * @property joinButtonStyle Style for the join button, default is [buildJoinButtonStyle]
  * @property clearChatTextStyle Style for the clear chat text, default is [buildClearChatTextStyle]
@@ -79,6 +80,7 @@ data class MessageInputStyle(
         val enableVoiceRecord: Boolean,
         val enableSendAttachment: Boolean,
         val enableMention: Boolean,
+        val enableBodyFormatting: Boolean,
         val inputStyle: TextInputStyle,
         val joinButtonStyle: ButtonStyle,
         val clearChatTextStyle: TextStyle,
@@ -119,7 +121,7 @@ data class MessageInputStyle(
 
     internal class Builder(
             internal val context: Context,
-            private val attrs: AttributeSet?
+            private val attrs: AttributeSet?,
     ) {
         fun build(): MessageInputStyle {
             context.obtainStyledAttributes(attrs, R.styleable.MessageInputView).use { array ->
@@ -168,6 +170,9 @@ data class MessageInputStyle(
                 val enableMention = array.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableMention,
                     true)
 
+                val enableBodyFormatting = array.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableBodyFormatting,
+                    true)
+
                 return MessageInputStyle(
                     backgroundColor = inputBackgroundColor,
                     dividerColor = dividerColor,
@@ -180,6 +185,7 @@ data class MessageInputStyle(
                     enableVoiceRecord = enableVoiceRecord,
                     enableSendAttachment = enableSendAttachment,
                     enableMention = enableMention,
+                    enableBodyFormatting = enableBodyFormatting,
                     inputStyle = buildInputTextInputStyle(array),
                     joinButtonStyle = buildJoinButtonStyle(array),
                     clearChatTextStyle = buildClearChatTextStyle(array),

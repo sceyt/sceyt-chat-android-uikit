@@ -18,7 +18,7 @@ class MentionValidatorWatcher : TextWatcher {
 
     override fun onTextChanged(sequence: CharSequence, start: Int, before: Int, count: Int) {
         if (count > 1 && mentionValidator != null && sequence is Spanned) {
-            val mentionAnnotations: List<Annotation> = getMentionAnnotations(sequence, start, start + count)
+            val mentionAnnotations = getMentionAnnotations(sequence, start, start + count)
             if (mentionAnnotations.isNotEmpty())
                 invalidMentionAnnotations = mentionValidator?.getInvalidMentionAnnotations(mentionAnnotations)
         }

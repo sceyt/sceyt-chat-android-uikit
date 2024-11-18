@@ -56,6 +56,7 @@ class MentionSupportEditText : AppCompatEditText {
     private var inlineQueryChangedListener: InlineQueryChangedListener? = null
     private var stylingChangedListener: StylingChangedListener? = null
     private val mentionPrefix get() = SceytChatUIKit.config.mentionTriggerPrefix
+    private var enableFormatting: Boolean = true
 
     private fun initialize() {
         addTextChangedListener(mentionValidatorWatcher)
@@ -68,6 +69,7 @@ class MentionSupportEditText : AppCompatEditText {
 
         customSelectionActionModeCallback = object : ActionMode.Callback {
             override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+                if (!enableFormatting) return true
                 val copy = menu.findItem(android.R.id.copy)
                 val cut = menu.findItem(android.R.id.cut)
                 val paste = menu.findItem(android.R.id.paste)
@@ -219,10 +221,14 @@ class MentionSupportEditText : AppCompatEditText {
         composeTextStyleWatcher.setMentionTextStyle(style)
     }
 
+    fun setEnableFormatting(enable: Boolean) {
+        enableFormatting = enable
+    }
+
     private fun changeSelectionForPartialMentions(
             spanned: Spanned,
             selectionStart: Int,
-            selectionEnd: Int
+            selectionEnd: Int,
     ): Boolean {
         val annotations = spanned.getSpans(0, spanned.length, Annotation::class.java)
         for (annotation in annotations) {
