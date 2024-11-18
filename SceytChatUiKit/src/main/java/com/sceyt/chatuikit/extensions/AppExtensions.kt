@@ -236,7 +236,7 @@ fun Context.keepScreenOn(): PowerManager.WakeLock {
 
 fun LifecycleOwner.isResumed() = lifecycle.currentState == Lifecycle.State.RESUMED
 
-fun doSafe(action: () -> Unit) {
+inline fun doSafe(action: () -> Unit) {
     try {
         action()
     } catch (e: Exception) {
