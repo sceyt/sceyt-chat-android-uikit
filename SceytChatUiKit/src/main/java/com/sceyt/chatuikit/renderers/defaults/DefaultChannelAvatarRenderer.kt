@@ -31,7 +31,7 @@ open class DefaultChannelAvatarRenderer : AvatarRenderer<SceytChannel> {
                     appearanceBuilder.setImageUrl(null)
                 } else appearanceBuilder.setImageUrl(from.iconUrl)
 
-                appearanceBuilder.setDefaultAvatar(DefaultAvatar.Initial(getInitialText(from.channelSubject)))
+                appearanceBuilder.setDefaultAvatar(DefaultAvatar.Initials(from.channelSubject))
             }
 
             from.isSelf -> {
@@ -52,7 +52,7 @@ open class DefaultChannelAvatarRenderer : AvatarRenderer<SceytChannel> {
             }
 
             else -> {
-                appearanceBuilder.setDefaultAvatar(DefaultAvatar.Initial(getInitialText(from.channelSubject)))
+                appearanceBuilder.setDefaultAvatar(DefaultAvatar.Initials(from.channelSubject))
             }
         }
         appearanceBuilder
