@@ -36,6 +36,7 @@
         <attr name="sceytUiMessageInputEnableVoiceRecord" format="boolean" />
         <attr name="sceytUiMessageInputEnableSendAttachment" format="boolean" />
         <attr name="sceytUiMessageInputEnableMention" format="boolean" />
+        <attr name="sceytUiMessageInputEnableBodyFormatting" format="boolean" />
 
         <attr name="sceytUiMessageInputSendIconBackgroundColor" format="reference|color" />
 
