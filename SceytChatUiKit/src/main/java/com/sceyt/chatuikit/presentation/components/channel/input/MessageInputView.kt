@@ -163,7 +163,7 @@ class MessageInputView @JvmOverloads constructor(
             messageActionsView.setStyle(style)
             linkPreviewView.setStyle(style)
             messageInput.setMentionStyle(style.mentionTextStyle)
-            messageInput.setEnableFormatting(style.enableBodyFormatting)
+            messageInput.setEnableTextStyling(style.enableTextStyling)
             addInoutListeners()
             determineInputState()
             addInputTextWatcher()

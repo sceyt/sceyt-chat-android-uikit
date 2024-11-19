@@ -51,7 +51,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property enableVoiceRecord Enable voice recording, default is true
  * @property enableSendAttachment Enable send attachment, default is true
  * @property enableMention Enable mention, default is true
- * @property enableBodyFormatting Enable mention, default is true
+ * @property enableTextStyling Enable text styling, default is true
  * @property inputStyle Style for the input text, default is [buildInputTextInputStyle]
  * @property joinButtonStyle Style for the join button, default is [buildJoinButtonStyle]
  * @property clearChatTextStyle Style for the clear chat text, default is [buildClearChatTextStyle]
@@ -80,7 +80,7 @@ data class MessageInputStyle(
         val enableVoiceRecord: Boolean,
         val enableSendAttachment: Boolean,
         val enableMention: Boolean,
-        val enableBodyFormatting: Boolean,
+        val enableTextStyling: Boolean,
         val inputStyle: TextInputStyle,
         val joinButtonStyle: ButtonStyle,
         val clearChatTextStyle: TextStyle,
@@ -170,7 +170,7 @@ data class MessageInputStyle(
                 val enableMention = array.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableMention,
                     true)
 
-                val enableBodyFormatting = array.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableBodyFormatting,
+                val enableTextStyling = array.getBoolean(R.styleable.MessageInputView_sceytUiMessageInputEnableTextStyling,
                     true)
 
                 return MessageInputStyle(
@@ -185,7 +185,7 @@ data class MessageInputStyle(
                     enableVoiceRecord = enableVoiceRecord,
                     enableSendAttachment = enableSendAttachment,
                     enableMention = enableMention,
-                    enableBodyFormatting = enableBodyFormatting,
+                    enableTextStyling = enableTextStyling,
                     inputStyle = buildInputTextInputStyle(array),
                     joinButtonStyle = buildJoinButtonStyle(array),
                     clearChatTextStyle = buildClearChatTextStyle(array),
