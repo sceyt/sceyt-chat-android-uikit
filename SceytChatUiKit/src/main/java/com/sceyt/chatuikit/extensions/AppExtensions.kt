@@ -215,10 +215,6 @@ fun Activity.statusBarIconsColorWithBackground(
     }
 }
 
-fun Activity.statusBarBackgroundColor(color: Int) {
-    window.statusBarColor = color
-}
-
 inline fun <reified T> Any.castSafety(): T? {
     return if (this is T)
         this else null

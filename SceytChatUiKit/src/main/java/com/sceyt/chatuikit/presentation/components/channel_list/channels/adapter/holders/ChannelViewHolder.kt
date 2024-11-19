@@ -188,10 +188,14 @@ open class ChannelViewHolder(
         textView.apply {
             text = itemStyle.unreadCountFormatter.format(context, channel.newMessageCount)
             isVisible = true
-            if (channel.muted)
-                itemStyle.unreadCountMutedStateTextStyle.apply(this)
-            else itemStyle.unreadCountTextStyle.apply(this)
+            applyUnreadStyle(channel, this)
         }
+    }
+
+    protected open fun applyUnreadStyle(channel: SceytChannel, textView: TextView) {
+        if (channel.muted)
+            itemStyle.unreadCountMutedStateTextStyle.apply(textView)
+        else itemStyle.unreadCountTextStyle.apply(textView)
     }
 
     @SuppressLint("SetTextI18n")
@@ -200,6 +204,7 @@ open class ChannelViewHolder(
         if (channel.unread)
             textView.text = "  "
 
+        applyUnreadStyle(channel, textView)
         textView.isVisible = channel.unread
     }
 
