@@ -130,7 +130,7 @@ class MessageSwipeController(context: Context,
         imageDrawable?.draw(canvas)
     }
 
-    fun enableDisableSwipe(enable: Boolean) {
+    fun setSwipeEnabled(enable: Boolean) {
         enableSwipe = enable
     }
 }

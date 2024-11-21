@@ -132,7 +132,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     fun checkEnableDisableActions(channel: SceytChannel) {
-        messagesListView.enableDisableActions(
+        messagesListView.setActionsEnabled(
             enabled = !replyInThread && channel.checkIsMemberInChannel() && !channel.isPeerDeleted()
                     && (channel.isGroup || channel.getPeer()?.user?.blocked != true), false)
     }

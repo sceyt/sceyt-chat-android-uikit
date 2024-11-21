@@ -111,6 +111,7 @@ object MessageEventManager : MessageEventHandler.AllEventManagers {
         onMessageReactionUpdatedFlow_.tryEmit(ReactionUpdateEventData(message, reaction, ReactionUpdateEventEnum.Remove))
     }
 
+    @Suppress("unused")
     fun setCustomListener(listener: MessageEventHandlerImpl) {
         eventManager = listener
         eventManager.setDefaultListeners(this)
