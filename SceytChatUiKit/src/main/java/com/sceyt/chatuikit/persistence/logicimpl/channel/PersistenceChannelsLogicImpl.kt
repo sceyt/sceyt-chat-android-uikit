@@ -567,7 +567,7 @@ internal class PersistenceChannelsLogicImpl(
             return SceytResponse.Success(channelDb.toChannel())
         }
         // Try to fetch channel from server
-        val response = channelsRepository.getChannelByUri(data.uri)
+        val response = getChannelFromServerByUri(data.uri)
         if (response is SceytResponse.Success && response.data != null) {
             return SceytResponse.Success(response.data)
         }
@@ -853,7 +853,16 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun getChannelFromServerByUri(uri: String): SceytResponse<SceytChannel?> {
-        return channelsRepository.getChannelByUri(uri)
+        val response = channelsRepository.getChannelByUri(uri)
+        if (response is SceytResponse.Success) {
+            response.data?.let {
+                if (!it.userRole.isNullOrBlank()) {
+                    insertChannelWithMembers(it, *(it.members ?: emptyList()).toTypedArray())
+                    channelsCache.upsertChannel(it)
+                }
+            }
+        }
+        return response
     }
 
     override suspend fun editChannel(channelId: Long, data: EditChannelData): SceytResponse<SceytChannel> {
