@@ -83,12 +83,6 @@ object MessageEventManager : MessageEventHandler.AllEventManagers {
                 if (message == null || reaction == null) return
                 eventManager.onReactionDeleted(message.toSceytUiMessage(), reaction.toSceytReaction())
             }
-
-            override fun onMessageComposing(p0: String?, p1: String?) {
-            }
-
-            override fun onMessagePaused(p0: String?, p1: String?) {
-            }
         })
     }
 
