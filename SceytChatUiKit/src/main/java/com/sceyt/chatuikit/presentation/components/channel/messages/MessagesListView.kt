@@ -103,6 +103,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     val style: MessagesListViewStyle
     var enabledActions = true
         private set
+    var enableSwipeToReply = true
+        private set
 
     init {
         binding = SceytMessagesListViewBinding.inflate(LayoutInflater.from(context), this)
@@ -242,7 +244,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setMultiSelectableMode() {
         (messagesRV.getMessagesAdapter())?.setMultiSelectableMode(true)
-        messagesRV.enableDisableSwipeToReply(false)
+        messagesRV.setSwipeToReplyEnabled(false)
         for (i in 0 until messagesRV.childCount) {
             messagesRV.getChildAt(i)?.let {
                 val holder = messagesRV.getChildViewHolder(it)
@@ -744,7 +746,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun cancelMultiSelectMode() {
         (messagesRV.getMessagesAdapter())?.setMultiSelectableMode(false)
-        messagesRV.enableDisableSwipeToReply(enabledActions)
+        messagesRV.setSwipeToReplyEnabled(enabledActions && enableSwipeToReply)
         for (i in 0 until messagesRV.childCount) {
             messagesRV.getChildAt(i)?.let {
                 val holder = messagesRV.getChildViewHolder(it)
@@ -802,14 +804,19 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageActionsViewClickListeners = listener
     }
 
-    fun enableDisableActions(enabled: Boolean, force: Boolean) {
+    fun setActionsEnabled(enabled: Boolean, force: Boolean) {
         if (force) {
             forceDisabledActions = !enabled
             enabledActions = enabled
         } else if (!forceDisabledActions)
             enabledActions = enabled
 
-        messagesRV.enableDisableSwipeToReply(enabledActions)
+        messagesRV.setSwipeToReplyEnabled(enabledActions && enableSwipeToReply)
+    }
+
+    fun setSwipeToReplyEnabled(enabled: Boolean){
+        enableSwipeToReply = enabled
+        messagesRV.setSwipeToReplyEnabled(enabled && enabledActions)
     }
 
     fun startSearchMessages() {
