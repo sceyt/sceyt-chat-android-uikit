@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.persistence.entity.channel.ChannelEntity
 fun SceytChannel.toChannelEntity() = ChannelEntity(
     id = id,
     parentChannelId = parentChannelId,
-    uri = uri,
+    uri = uri.takeIf { !it.isNullOrBlank() },
     type = type,
     subject = subject,
     avatarUrl = avatarUrl,
