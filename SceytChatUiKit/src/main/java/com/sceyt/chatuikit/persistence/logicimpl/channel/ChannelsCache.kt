@@ -159,6 +159,7 @@ class ChannelsCache {
                     channelAdded(channel)
                 }
             } else {
+                checkMaybePendingChannelCreated(cachedChannel, channel)
                 val oldMsg = cachedChannel.lastMessage
                 val diff = putAndCheckHasDiff(config, channel)
                 if (diff.hasDifference()) {
@@ -167,6 +168,11 @@ class ChannelsCache {
                 }
             }
         }
+    }
+
+    private fun checkMaybePendingChannelCreated(cachedChannel: SceytChannel, newChannel: SceytChannel) {
+        if (!cachedChannel.pending || newChannel.pending) return
+        pendingChannelCreated(cachedChannel.id, newChannel)
     }
 
     fun updateLastMessage(channelId: Long, message: SceytMessage?) {
