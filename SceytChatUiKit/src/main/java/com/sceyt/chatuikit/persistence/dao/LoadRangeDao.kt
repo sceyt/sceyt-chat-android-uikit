@@ -26,6 +26,9 @@ interface LoadRangeDao {
     @Query("delete from LoadRange where channelId =:channelId")
     suspend fun deleteChannelLoadRanges(channelId: Long)
 
+    @Query("delete from LoadRange where channelId in (:channelIds)")
+    suspend fun deleteChannelsLoadRanges(channelIds: List<Long>)
+
     @Query("delete from LoadRange where rowId in (:rowIds)")
     suspend fun deleteLoadRanges(vararg rowIds: Long)
 

@@ -292,8 +292,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    ChannelsCache.channelDeletedFlow
-        .filter { it == channel.id }
+    ChannelsCache.channelsDeletedFlow
+        .filter { it.contains(channel.id) }
         .onEach {
             messagesListView.context.asActivity().finish()
         }.launchIn(lifecycleOwner.lifecycleScope)
@@ -523,7 +523,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    suspend fun onMessageUpdated(data: Pair<Long, List<SceytMessage>>) {
+    fun onMessageUpdated(data: Pair<Long, List<SceytMessage>>) {
         suspend fun update(sceytMessage: SceytMessage) {
             val message = initMessageInfoData(sceytMessage)
             withContext(Dispatchers.Main) {

@@ -6,6 +6,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -15,7 +16,6 @@ import com.sceyt.chatuikit.persistence.dao.UserDao
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
-import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.repositories.UsersRepository
@@ -25,7 +25,6 @@ import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
@@ -33,7 +32,6 @@ internal class PersistenceConnectionLogicImpl(
         private var preference: SceytSharedPreference,
         private val usersDao: UserDao,
         private val usersRepository: UsersRepository,
-        private val channelsCache: ChannelsCache,
 ) : PersistenceConnectionLogic, SceytKoinComponent {
 
     private val messageLogic: PersistenceMessagesLogic by inject()
@@ -72,11 +70,7 @@ internal class PersistenceConnectionLogicImpl(
                 messageLogic.sendAllPendingMessageStateUpdates()
                 reactionsLogic.sendAllPendingReactions()
                 if (SceytChatUIKit.config.syncChannelsAfterConnect) {
-                    if (!channelsCache.initialized)
-                    // Await 1 second before sync maybe channel cache will be initialized,
-                    // otherwise no need to sync
-                        delay(1000)
-                    sceytSyncManager.startSync(false)
+                    sceytSyncManager.startSync(ChannelListConfig.default)
                 }
             }
         } else SceytPresenceChecker.stopPresenceCheck()

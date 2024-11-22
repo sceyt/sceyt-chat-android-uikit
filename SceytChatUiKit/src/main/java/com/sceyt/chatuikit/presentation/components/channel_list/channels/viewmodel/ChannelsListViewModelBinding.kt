@@ -22,13 +22,17 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.TypingCancelHelper
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem.ChannelItem
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsComparatorDescBy
 import com.sceyt.chatuikit.presentation.components.channel_list.search.SearchChannelInputView
 import com.sceyt.chatuikit.services.SceytPresenceChecker
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 
 fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: LifecycleOwner) {
@@ -92,15 +96,17 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
 
     loadChannelsFlow.onEach(::initChannelsResponse).launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelsCache.channelDeletedFlow.onEach { channelId ->
+    ChannelsCache.channelsDeletedFlow.onEach { channelIds ->
         lifecycleOwner.lifecycleScope.launch {
-            newAddedChannelJobs[channelId]?.apply {
-                cancel()
-                newAddedChannelJobs.remove(channelId)
-            }
-            needToUpdateChannelsAfterResume.remove(channelId)
-            lifecycleOwner.withResumed {
-                channelListView.deleteChannel(channelId, searchQuery)
+            channelIds.forEach { channelId ->
+                newAddedChannelJobs[channelId]?.apply {
+                    cancel()
+                    newAddedChannelJobs.remove(channelId)
+                }
+                needToUpdateChannelsAfterResume.remove(channelId)
+                lifecycleOwner.withResumed {
+                    channelListView.deleteChannel(channelId, searchQuery)
+                }
             }
         }
     }.launchIn(viewModelScope)
@@ -138,7 +144,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
                 val updatedChannel = needToUpdateChannelsAfterResume[sceytChannel.id]?.channel
                         ?: sceytChannel
                 channelListView.cancelLastSort()
-                channelListView.addNewChannelAndSort(config.order, ChannelListItem.ChannelItem(updatedChannel))
+                channelListView.addNewChannelAndSort(config.order, ChannelItem(updatedChannel))
                 newAddedChannelJobs.remove(sceytChannel.id)
             }
         }
@@ -174,6 +180,58 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
         }
     }.launchIn(viewModelScope)
 
+    ChannelsCache.newChannelsOnSync
+        .onEach { (config, channels) ->
+            lifecycleOwner.withResumed {
+                lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                    // Filter channels by config
+                    val filtered = channels.filter { config.isValidForConfig(it) }
+                    if (filtered.isNotEmpty()) {
+                        val loadedChannels = channelListView.getData()?.mapNotNull {
+                            (it as? ChannelItem)?.channel
+                        }?.toMutableSet() ?: mutableSetOf()
+
+                        // If loadedChannels are empty and not loading data from server, it means we can setData,
+                        // otherwise we filter only channels which are between loaded channels and
+                        // insert them to the list.
+                        if (loadedChannels.isEmpty()) {
+                            if (isLoadingFromServer) return@launch
+                            val sorted = filtered.sortedWith(ChannelsComparatorDescBy(config.order))
+                            withContext(Dispatchers.Main) {
+                                channelListView.setChannelsList(mapToChannelItem(data = sorted, hasNext = false))
+                            }
+                        } else {
+                            // Get last channel to understand where to insert new channels
+                            val lastChannel = loadedChannels.last()
+                            val sorted = filtered.toMutableSet().plus(lastChannel).sortedWith(ChannelsComparatorDescBy(config.order))
+                            val index = sorted.indexOf(lastChannel)
+
+                            // If index is last and we have more channels, we don't need to insert them,
+                            // because they will be inserted by next page loading
+                            if (index == loadedChannels.size - 1 && (hasNext || hasNextDb)) {
+                                return@launch
+                            }
+                            // Get channels which need to be inserted
+                            sorted.subList(0, index).forEach {
+                                loadedChannels.add(it)
+                            }
+                            var newData: List<ChannelListItem> = loadedChannels.sortedWith(ChannelsComparatorDescBy(config.order)).map {
+                                ChannelItem(it)
+                            }
+
+                            if (hasNext || hasNextDb)
+                                newData = newData.plus(ChannelListItem.LoadingMoreItem)
+
+                            withContext(Dispatchers.Main) {
+                                channelListView.setChannelsList(newData)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .launchIn(viewModelScope)
+
     ChannelEventManager.onChannelTypingEventFlow
         .filter { it.member.id != SceytChatUIKit.chatUIFacade.myId }
         .onEach {
@@ -207,7 +265,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
     }
 
     channelListView.setChannelAttachDetachListener { item, attached ->
-        if (item is ChannelListItem.ChannelItem && !item.channel.isGroup) {
+        if (item is ChannelItem && !item.channel.isGroup) {
             val peer = item.channel.getPeer()
             peer?.let {
                 if (attached)

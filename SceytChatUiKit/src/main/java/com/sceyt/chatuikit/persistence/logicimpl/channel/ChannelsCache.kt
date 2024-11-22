@@ -38,11 +38,11 @@ class ChannelsCache {
         )
         val channelReactionMsgLoadedFlow = channelReactionMsgLoadedFlow_.asSharedFlow()
 
-        private val channelDeletedFlow_ = MutableSharedFlow<Long>(
+        private val channelsDeletedFlow_ = MutableSharedFlow<List<Long>>(
             extraBufferCapacity = 5,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
-        val channelDeletedFlow = channelDeletedFlow_.asSharedFlow()
+        val channelsDeletedFlow = channelsDeletedFlow_.asSharedFlow()
 
         private val channelAddedFlow_ = MutableSharedFlow<SceytChannel>(
             extraBufferCapacity = 5,
@@ -61,6 +61,12 @@ class ChannelsCache {
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         val channelDraftMessageChangesFlow = channelDraftMessageChangesFlow_.asSharedFlow()
+
+        private val newChannelsOnSync_ = MutableSharedFlow<Pair<ChannelListConfig, List<SceytChannel>>>(
+            extraBufferCapacity = 5,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
+        val newChannelsOnSync = newChannelsOnSync_.asSharedFlow()
 
         var currentChannelId: Long? = null
     }
@@ -143,9 +149,13 @@ class ChannelsCache {
         }
     }
 
-    fun upsertChannel(config: ChannelListConfig, vararg channels: SceytChannel) {
+    fun newChannelsOnSync(config: ChannelListConfig,  channels: List<SceytChannel>) {
+        newChannelsOnSync_.tryEmit(Pair(config, channels))
+    }
+
+    fun updateChannel(config: ChannelListConfig, vararg channels: SceytChannel) {
         synchronized(lock) {
-            upsertChannelImpl(config, *channels)
+            updateChannelsImpl(config, *channels)
         }
     }
 
@@ -166,6 +176,21 @@ class ChannelsCache {
                     val needSort = checkNeedSortByLastMessage(oldMsg, channel.lastMessage) || diff.pinStateChanged
                     channelUpdated(config, channel, needSort, ChannelUpdatedType.Updated)
                 }
+            }
+        }
+    }
+
+    private fun updateChannelsImpl(config: ChannelListConfig, vararg channels: SceytChannel) {
+        channels.forEach { channel ->
+            val cachedChannel = getOrCreateMap(config)[channel.id]
+                    ?: pendingChannelsData[channel.id] ?: return@forEach
+
+            checkMaybePendingChannelCreated(cachedChannel, channel)
+            val oldMsg = cachedChannel.lastMessage
+            val diff = putAndCheckHasDiff(config, channel)
+            if (diff.hasDifference()) {
+                val needSort = checkNeedSortByLastMessage(oldMsg, channel.lastMessage) || diff.pinStateChanged
+                channelUpdated(config, channel, needSort, ChannelUpdatedType.Updated)
             }
         }
     }
@@ -269,12 +294,14 @@ class ChannelsCache {
         }
     }
 
-    fun deleteChannel(id: Long) {
+    fun deleteChannel(vararg ids: Long) {
         synchronized(lock) {
-            cachedData.values.forEach { value ->
-                value.remove(id)
+            ids.forEach { id ->
+                cachedData.forEach { (_, map) ->
+                    map.remove(id)
+                }
             }
-            channelDeletedFlow_.tryEmit(id)
+            channelsDeletedFlow_.tryEmit(ids.toList())
         }
     }
 

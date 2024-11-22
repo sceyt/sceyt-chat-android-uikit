@@ -46,7 +46,7 @@ interface PersistenceChannelsLogic {
     ): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel>
-    suspend fun syncChannels(limit: Int): Flow<GetAllChannelsResponse>
+    suspend fun syncChannels(config: ChannelListConfig): Flow<GetAllChannelsResponse>
     suspend fun findOrCreatePendingChannelByMembers(data: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun findOrCreatePendingChannelByUri(data: CreateChannelData): SceytResponse<SceytChannel>
     suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel>

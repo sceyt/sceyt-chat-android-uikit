@@ -94,7 +94,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
             if (it.contains(channelItem)) return
             val newData = it.plus(channelItem)
             channelsRV.sortByAndSetNewData(order, newData)
-        } ?: channelsRV.setData(arrayListOf(channelItem))
+        } ?: channelsRV.setData(listOf(channelItem))
 
         binding.pageStateView.updateState(PageState.Nothing)
     }
