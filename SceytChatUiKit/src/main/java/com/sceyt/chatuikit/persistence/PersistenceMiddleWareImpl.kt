@@ -193,8 +193,8 @@ internal class PersistenceMiddleWareImpl(
         return channelLogic.getChannelsBySQLiteQuery(query)
     }
 
-    override suspend fun syncChannels(limit: Int): Flow<GetAllChannelsResponse> {
-        return channelLogic.syncChannels(limit)
+    override suspend fun syncChannels(config: ChannelListConfig): Flow<GetAllChannelsResponse> {
+        return channelLogic.syncChannels(config)
     }
 
     override suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel> {

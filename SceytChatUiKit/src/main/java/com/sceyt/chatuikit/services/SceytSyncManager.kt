@@ -1,17 +1,14 @@
 package com.sceyt.chatuikit.services
 
-import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
-import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.shared.LiveEvent
 import com.sceyt.chatuikit.presentation.common.ConcurrentHashSet
 import kotlinx.coroutines.Dispatchers
@@ -24,9 +21,10 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 
-class SceytSyncManager(private val channelInteractor: ChannelInteractor,
-                       private val messageInteractor: MessageInteractor,
-                       private val channelsCache: ChannelsCache) : SceytKoinComponent {
+class SceytSyncManager(
+        private val channelInteractor: ChannelInteractor,
+        private val messageInteractor: MessageInteractor,
+) : SceytKoinComponent {
 
     private var syncResultData: SyncResultData = SyncResultData()
 
@@ -42,22 +40,19 @@ class SceytSyncManager(private val channelInteractor: ChannelInteractor,
         val syncChannelMessagesFinished = syncChannelMessagesFinished_.asLiveData()
     }
 
-    suspend fun startSync(force: Boolean, resultCallback: ((Result<SyncResultData>) -> Unit)? = null) {
+    suspend fun startSync(
+            config: ChannelListConfig,
+            resultCallback: ((Result<SyncResultData>) -> Unit)? = null
+    ) {
         resultCallback?.let { syncResultCallbacks.add(it) }
         if (syncIsInProcess)
             return
 
-        if (!channelsCache.initialized && !force) {
-            val errorMessage = "Ui kit still not have loaded channels to sync, no need to sync"
-            finishSyncWithError(Exception(errorMessage))
-            SceytLog.e(TAG, errorMessage)
-            return
-        }
         val coroutineContext = getCoroutineContext().also { syncContext = it }
         withContext(coroutineContext) {
             syncIsInProcess = true
             syncResultData = SyncResultData()
-            val result = syncChannels()
+            val result = syncChannels(config)
             withContext(Dispatchers.Main) {
                 syncResultCallbacks.forEach {
                     it(Result.success(result))
@@ -79,13 +74,12 @@ class SceytSyncManager(private val channelInteractor: ChannelInteractor,
         syncResultCallbacks.clear()
     }
 
-    private suspend fun syncChannels(): SyncResultData {
+    private suspend fun syncChannels(config: ChannelListConfig): SyncResultData {
         return coroutineScope {
             suspendCancellableCoroutine { cont ->
                 launch(Dispatchers.IO) {
                     val syncChannelData = SyncChannelData(mutableSetOf(), false)
-                    val limit = SceytChatUIKit.config.queryLimits.channelListQueryLimit
-                    channelInteractor.syncChannels(limit).collect {
+                    channelInteractor.syncChannels(config).collect {
                         when (it) {
                             is GetAllChannelsResponse.Error -> {
                                 syncChannelData.withError = true
@@ -98,7 +92,7 @@ class SceytSyncManager(private val channelInteractor: ChannelInteractor,
                                 syncChannelData.channels.addAll(channels)
                             }
 
-                            GetAllChannelsResponse.SuccessfullyFinished -> {
+                            is GetAllChannelsResponse.SuccessfullyFinished -> {
                                 syncChannelsFinished_.postValue(syncChannelData)
                                 cont.resume(syncResultData)
                             }

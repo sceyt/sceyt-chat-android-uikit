@@ -35,7 +35,7 @@ interface ChannelInteractor {
     ): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel>
-    suspend fun syncChannels(limit: Int): Flow<GetAllChannelsResponse>
+    suspend fun syncChannels(config: ChannelListConfig): Flow<GetAllChannelsResponse>
     suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun markChannelAsUnRead(channelId: Long): SceytResponse<SceytChannel>
     suspend fun clearHistory(channelId: Long, forEveryone: Boolean): SceytResponse<Long>

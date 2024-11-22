@@ -155,8 +155,20 @@ interface ChannelDao {
     @Query("select * from channels where isSelf = 1")
     suspend fun getSelfChannel(): ChannelDb?
 
-    @Query("select chat_id from channels where chat_id not in (:ids) and pending != 1")
-    suspend fun getNotExistingChannelIdsByIds(ids: List<Long>): List<Long>
+    @Query("select chat_id from channels where chat_id not in (:ids) " +
+            "and (:isEmptyTypes = 1 or type in (:types))" +
+            "and pending != 1")
+    suspend fun getNotExistingChannelIdsByIdsAndTypes(
+            ids: List<Long>,
+            types: List<String>,
+            isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
+    ): List<Long>
+
+    @Query("select chat_id from channels where pending != 1 and (:isEmptyTypes = 1 or type in (:types))")
+    suspend fun getAllChannelIdsByTypes(
+            types: List<String>,
+            isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
+    ): List<Long>
 
     @Query("select chat_id from channels")
     suspend fun getAllChannelsIds(): List<Long>
@@ -217,6 +229,12 @@ interface ChannelDao {
     @Query("delete from UserChatLink where chat_id =:channelId")
     suspend fun deleteChatLinks(channelId: Long)
 
+    @Query("delete from UserChatLink")
+    suspend fun deleteAllLinks()
+
+    @Query("delete from UserChatLink where chat_id in (:channelIds)")
+    suspend fun deleteChannelsLinks(channelIds: List<Long>)
+
     @Query("delete from UserChatLink where chat_id =:channelId and user_id != :exceptUserId")
     suspend fun deleteChatLinksExceptUser(channelId: Long, exceptUserId: String)
 
@@ -224,5 +242,31 @@ interface ChannelDao {
     suspend fun deleteChannelAndLinks(channelId: Long) {
         deleteChannel(channelId)
         deleteChatLinks(channelId)
+    }
+
+    @Query("delete from channels where chat_id in (:ids)")
+    suspend fun deleteAllChannelByIds(ids: List<Long>): Int
+
+    @Query("delete from channels where pending != 1")
+    suspend fun deleteAllChannels(): Int
+
+    @Transaction
+    suspend fun deleteAllChannelsAndLinksByTypes(types: List<String>): List<Long> {
+        val ids = getAllChannelIdsByTypes(types)
+        if (ids.isNotEmpty()) {
+            val deletedCount = deleteAllChannelByIds(ids)
+            if (deletedCount > 0)
+                deleteChannelsLinks(ids)
+        }
+        return ids
+    }
+
+    @Transaction
+    suspend fun deleteAllChannelsAndLinksById(ids: List<Long>) {
+        if (ids.isNotEmpty()) {
+            val deletedCount = deleteAllChannelByIds(ids)
+            if (deletedCount > 0)
+                deleteChannelsLinks(ids)
+        }
     }
 }

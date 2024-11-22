@@ -53,7 +53,7 @@ import kotlin.coroutines.CoroutineContext
 const val SCEYT_CHAT_UI_KIT_DATABASE_NAME = "sceyt_ui_kit_database"
 
 internal val appModules = module {
-    single { SceytSyncManager(get(), get(), get()) }
+    single { SceytSyncManager(get(), get()) }
     single<FileTransferService> { FileTransferServiceImpl(get(), get()) }
     single<MessageLoadRangeUpdater> { MessageLoadRangeUpdater(get()) }
 }
@@ -111,7 +111,7 @@ internal val logicModule = module {
     single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     single<PersistenceMessageMarkerLogic> { PersistenceMessageMarkerLogicImpl(get(), get(), get()) }
-    single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get()) }
+    single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get()) }
     single<FileTransferLogic> { FileTransferLogicImpl(get(), get()) }
 }
 
