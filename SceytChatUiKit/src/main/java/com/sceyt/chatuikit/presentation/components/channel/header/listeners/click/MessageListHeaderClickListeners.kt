@@ -2,17 +2,17 @@ package com.sceyt.chatuikit.presentation.components.channel.header.listeners.cli
 
 import android.view.View
 
-sealed interface HeaderClickListeners {
+sealed interface MessageListHeaderClickListeners {
 
-    fun interface AvatarClickListener : HeaderClickListeners {
+    fun interface AvatarClickListener : MessageListHeaderClickListeners {
         fun onAvatarClick(view: View)
     }
 
-    fun interface ToolbarClickListener : HeaderClickListeners {
+    fun interface ToolbarClickListener : MessageListHeaderClickListeners {
         fun onToolbarClick(view: View)
     }
 
-    fun interface BackClickListener : HeaderClickListeners {
+    fun interface BackClickListener : MessageListHeaderClickListeners {
         fun onBackClick(view: View)
     }
 

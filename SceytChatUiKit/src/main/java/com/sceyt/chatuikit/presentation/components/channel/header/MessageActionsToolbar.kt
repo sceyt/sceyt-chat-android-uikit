@@ -11,7 +11,7 @@ import androidx.core.view.isVisible
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.changeAlphaWithAnim
 import com.sceyt.chatuikit.extensions.dpToPx
-import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.HeaderUIElementsListener.ToolbarActionsVisibilityListener
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.MessageListHeaderUIElementsListener.ToolbarActionsVisibilityListener
 import com.sceyt.chatuikit.styles.common.MenuStyle
 
 class MessageActionsToolbar @JvmOverloads constructor(
