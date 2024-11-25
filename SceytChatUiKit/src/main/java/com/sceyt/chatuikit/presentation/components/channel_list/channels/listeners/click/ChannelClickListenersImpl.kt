@@ -10,10 +10,10 @@ open class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
     private var channelLongClickListener: ChannelClickListeners.ChannelLongClickListener? = null
     private var avatarClickListener: ChannelClickListeners.AvatarClickListener? = null
 
-    internal constructor()
+    constructor()
 
-    constructor(view: ChannelListView) {
-        defaultListeners = view
+    internal constructor(channelListView: ChannelListView) {
+        defaultListeners = channelListView
     }
 
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
@@ -51,5 +51,12 @@ open class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
                 avatarClickListener = listener
             }
         }
+    }
+
+    internal fun withDefaultListeners(
+            listeners: ChannelClickListeners.ClickListeners
+    ): ChannelClickListenersImpl {
+        defaultListeners = listeners
+        return this
     }
 }
