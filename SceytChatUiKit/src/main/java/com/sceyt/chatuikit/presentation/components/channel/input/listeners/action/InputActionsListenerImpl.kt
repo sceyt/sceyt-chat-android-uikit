@@ -4,12 +4,18 @@ import android.text.Editable
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 
-open class InputActionsListenerImpl(
-        private var defaultListeners: InputActionsListener.InputActionListeners?
-) : InputActionsListener.InputActionListeners {
+open class InputActionsListenerImpl : InputActionsListener.InputActionListeners {
+    @Suppress("unused")
+    constructor()
+
+    internal constructor(listener: InputActionsListener.InputActionListeners) {
+        defaultListeners = listener
+    }
+
+    private var defaultListeners: InputActionsListener.InputActionListeners? = null
     private var sendMessageListener: InputActionsListener.SendMessageListener? = null
     private var sendMessagesListener: InputActionsListener.SendMessagesListener? = null
     private var sendEditMessageListener: InputActionsListener.SendEditMessageListener? = null
@@ -58,5 +64,12 @@ open class InputActionsListenerImpl(
             is InputActionsListener.TypingListener -> typingListener = listener
             is InputActionsListener.UpdateDraftMessageListener -> updateDraftMessageListener = listener
         }
+    }
+
+    internal fun withDefaultListeners(
+            listener: InputActionsListener.InputActionListeners
+    ): InputActionsListenerImpl {
+        defaultListeners = listener
+        return this
     }
 }
