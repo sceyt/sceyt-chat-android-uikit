@@ -18,8 +18,15 @@ import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.VoiceClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.VoiceLongClickListener
 
-open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListeners {
-    private var defaultListeners: ClickListeners = view
+open class MessageInputClickListenersImpl : ClickListeners {
+    @Suppress("unused")
+    constructor()
+    
+    internal constructor(view: MessageInputView) {
+        defaultListeners = view
+    }
+    
+    private var defaultListeners: ClickListeners? = null
     private var sendMsgClickListener: SendMsgClickListener? = null
     private var addAttachmentClickListener: SendAttachmentClickListener? = null
     private var voiceClickListener: VoiceClickListener? = null
@@ -34,62 +41,62 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
     private var onSelectUserToMentionClickListener: SelectedUserToMentionClickListener? = null
 
     override fun onSendMsgClick(view: View) {
-        defaultListeners.onSendMsgClick(view)
+        defaultListeners?.onSendMsgClick(view)
         sendMsgClickListener?.onSendMsgClick(view)
     }
 
     override fun onAddAttachmentClick(view: View) {
-        defaultListeners.onAddAttachmentClick(view)
+        defaultListeners?.onAddAttachmentClick(view)
         addAttachmentClickListener?.onAddAttachmentClick(view)
     }
 
     override fun onVoiceClick(view: View) {
-        defaultListeners.onVoiceClick(view)
+        defaultListeners?.onVoiceClick(view)
         voiceClickListener?.onVoiceClick(view)
     }
 
     override fun onVoiceLongClick(view: View) {
-        defaultListeners.onVoiceLongClick(view)
+        defaultListeners?.onVoiceLongClick(view)
         voiceLongClickListener?.onVoiceLongClick(view)
     }
 
     override fun onCancelReplyMessageViewClick(view: View) {
-        defaultListeners.onCancelReplyMessageViewClick(view)
+        defaultListeners?.onCancelReplyMessageViewClick(view)
         cancelReplyMessageViewClickListener?.onCancelReplyMessageViewClick(view)
     }
 
     override fun onCancelLinkPreviewClick(view: View) {
-        defaultListeners.onCancelLinkPreviewClick(view)
+        defaultListeners?.onCancelLinkPreviewClick(view)
         cancelLinkPreviewClickListener?.onCancelLinkPreviewClick(view)
     }
 
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
-        defaultListeners.onRemoveAttachmentClick(item)
+        defaultListeners?.onRemoveAttachmentClick(item)
         removeAttachmentClickListener?.onRemoveAttachmentClick(item)
     }
 
     override fun onJoinClick() {
-        defaultListeners.onJoinClick()
+        defaultListeners?.onJoinClick()
         joinClickListener?.onJoinClick()
     }
 
     override fun onClearChatClick() {
-        defaultListeners.onClearChatClick()
+        defaultListeners?.onClearChatClick()
         clearChatClickListener?.onClearChatClick()
     }
 
     override fun onScrollToNextMessageClick() {
-        defaultListeners.onScrollToNextMessageClick()
+        defaultListeners?.onScrollToNextMessageClick()
         scrollToNextMessageClickListener?.onScrollToNextMessageClick()
     }
 
     override fun onScrollToPreviousMessageClick() {
-        defaultListeners.onScrollToPreviousMessageClick()
+        defaultListeners?.onScrollToPreviousMessageClick()
         scrollToPreviousMessageClickListener?.onScrollToPreviousMessageClick()
     }
 
     override fun onSelectedUserToMentionClick(member: SceytMember) {
-        defaultListeners.onSelectedUserToMentionClick(member)
+        defaultListeners?.onSelectedUserToMentionClick(member)
         onSelectUserToMentionClickListener?.onSelectedUserToMentionClick(member)
     }
 
@@ -157,5 +164,10 @@ open class MessageInputClickListenersImpl(view: MessageInputView) : ClickListene
                 onSelectUserToMentionClickListener = listener
             }
         }
+    }
+
+    internal fun withDefaultListeners(listener: ClickListeners): MessageInputClickListenersImpl {
+        defaultListeners = listener
+        return this
     }
 }

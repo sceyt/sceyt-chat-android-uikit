@@ -751,7 +751,7 @@ class MessageInputView @JvmOverloads constructor(
 
     @Suppress("unused")
     fun setCustomClickListener(listener: MessageInputClickListenersImpl) {
-        clickListeners = listener
+        clickListeners = listener.withDefaultListeners(this)
     }
 
     @Suppress("unused")
@@ -761,7 +761,7 @@ class MessageInputView @JvmOverloads constructor(
 
     @Suppress("unused")
     fun setCustomActionListener(listener: InputActionsListenerImpl) {
-        actionListeners = listener
+        actionListeners = listener.withDefaultListeners(this)
     }
 
     @Suppress("unused")
@@ -771,12 +771,12 @@ class MessageInputView @JvmOverloads constructor(
 
     @Suppress("unused")
     fun setCustomEventListener(listener: InputEventsListenerImpl) {
-        eventListeners = listener
+        eventListeners = listener.withDefaultListeners(this)
     }
 
     @Suppress("unused")
     fun setCustomSelectFileTypePopupClickListener(listener: SelectFileTypePopupClickListenersImpl) {
-        selectFileTypePopupClickListeners = listener
+        selectFileTypePopupClickListeners = listener.withDefaultListeners(this)
     }
 
     @Suppress("unused")
