@@ -3,8 +3,15 @@ package com.sceyt.chatuikit.presentation.components.channel_list.channels.listen
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
 
-open class ChannelPopupClickListenersImpl(view: ChannelListView) : ChannelPopupClickListeners.PopupClickListeners {
-    private var defaultListeners: ChannelPopupClickListeners.PopupClickListeners = view
+open class ChannelPopupClickListenersImpl : ChannelPopupClickListeners.PopupClickListeners {
+
+    constructor()
+
+    internal constructor(channelListView: ChannelListView) {
+        defaultListeners = channelListView
+    }
+
+    private var defaultListeners: ChannelPopupClickListeners.PopupClickListeners? = null
     private var markAsReadListener: ChannelPopupClickListeners.MarkAsRead? = null
     private var pinListener: ChannelPopupClickListeners.Pin? = null
     private var unPinListener: ChannelPopupClickListeners.UnPin? = null
@@ -19,62 +26,62 @@ open class ChannelPopupClickListenersImpl(view: ChannelListView) : ChannelPopupC
     private var unBlockUserListener: ChannelPopupClickListeners.UnBlockUser? = null
 
     override fun onMarkAsReadClick(channel: SceytChannel) {
-        defaultListeners.onMarkAsReadClick(channel)
+        defaultListeners?.onMarkAsReadClick(channel)
         markAsReadListener?.onMarkAsReadClick(channel)
     }
 
     override fun onMarkAsUnReadClick(channel: SceytChannel) {
-        defaultListeners.onMarkAsUnReadClick(channel)
+        defaultListeners?.onMarkAsUnReadClick(channel)
         markAsUnReadListener?.onMarkAsUnReadClick(channel)
     }
 
     override fun onPinClick(channel: SceytChannel) {
-        defaultListeners.onPinClick(channel)
+        defaultListeners?.onPinClick(channel)
         pinListener?.onPinClick(channel)
     }
 
     override fun onUnPinClick(channel: SceytChannel) {
-        defaultListeners.onUnPinClick(channel)
+        defaultListeners?.onUnPinClick(channel)
         unPinListener?.onUnPinClick(channel)
     }
 
     override fun onMuteClick(channel: SceytChannel) {
-        defaultListeners.onMuteClick(channel)
+        defaultListeners?.onMuteClick(channel)
         muteListener?.onMuteClick(channel)
     }
 
     override fun onUnMuteClick(channel: SceytChannel) {
-        defaultListeners.onUnMuteClick(channel)
+        defaultListeners?.onUnMuteClick(channel)
         unMuteListener?.onUnMuteClick(channel)
     }
 
     override fun onLeaveChannelClick(channel: SceytChannel) {
-        defaultListeners.onLeaveChannelClick(channel)
+        defaultListeners?.onLeaveChannelClick(channel)
         leaveChannelListener?.onLeaveChannelClick(channel)
     }
 
     override fun onDeleteChannelClick(channel: SceytChannel) {
-        defaultListeners.onDeleteChannelClick(channel)
+        defaultListeners?.onDeleteChannelClick(channel)
         deleteChannelListener?.onDeleteChannelClick(channel)
     }
 
     override fun onClearHistoryClick(channel: SceytChannel) {
-        defaultListeners.onClearHistoryClick(channel)
+        defaultListeners?.onClearHistoryClick(channel)
         clearHistoryListener?.onClearHistoryClick(channel)
     }
 
     override fun onBlockChannelClick(channel: SceytChannel) {
-        defaultListeners.onBlockChannelClick(channel)
+        defaultListeners?.onBlockChannelClick(channel)
         blockChannelListener?.onBlockChannelClick(channel)
     }
 
     override fun onBlockUserClick(channel: SceytChannel) {
-        defaultListeners.onBlockUserClick(channel)
+        defaultListeners?.onBlockUserClick(channel)
         blockUserListener?.onBlockUserClick(channel)
     }
 
     override fun onUnBlockUserClick(channel: SceytChannel) {
-        defaultListeners.onUnBlockUserClick(channel)
+        defaultListeners?.onUnBlockUserClick(channel)
         unBlockUserListener?.onUnBlockUserClick(channel)
     }
 
@@ -143,5 +150,12 @@ open class ChannelPopupClickListenersImpl(view: ChannelListView) : ChannelPopupC
                 unBlockUserListener = listener
             }
         }
+    }
+
+    internal fun withDefaultListeners(
+            listener: ChannelPopupClickListeners.PopupClickListeners
+    ): ChannelPopupClickListenersImpl {
+        defaultListeners = listener
+        return this
     }
 }

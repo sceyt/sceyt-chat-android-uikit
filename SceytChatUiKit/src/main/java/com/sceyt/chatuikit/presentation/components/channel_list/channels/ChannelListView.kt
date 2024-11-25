@@ -240,7 +240,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
      * @param listener The custom channel click listeners.
      */
     fun setCustomChannelClickListeners(listener: ChannelClickListenersImpl) {
-        clickListeners = listener
+        clickListeners = listener.withDefaultListeners(this)
     }
 
     /**
@@ -248,7 +248,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
      * @param listener is the custom listener.
      */
     fun setCustomChannelPopupClickListener(listener: ChannelPopupClickListenersImpl) {
-        popupClickListeners = listener
+        popupClickListeners = listener.withDefaultListeners(this)
     }
 
     /**
