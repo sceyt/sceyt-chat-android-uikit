@@ -797,11 +797,19 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun setCustomMessageClickListener(listener: MessageClickListenersImpl) {
-        clickListeners = listener
+        clickListeners = listener.withDefaultListeners(this)
     }
 
     fun setCustomMessageActionsViewClickListener(listener: MessageActionsViewClickListenersImpl) {
-        messageActionsViewClickListeners = listener
+        messageActionsViewClickListeners = listener.withDefaultListeners(this)
+    }
+
+    fun setReactionPopupClickListener(listener: ReactionPopupClickListeners) {
+        reactionClickListeners.setListener(listener)
+    }
+
+    fun setCustomReactionPopupClickListener(listener: ReactionPopupClickListenersImpl) {
+        reactionClickListeners = listener.withDefaultListeners(this)
     }
 
     fun setActionsEnabled(enabled: Boolean, force: Boolean) {
@@ -814,7 +822,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.setSwipeToReplyEnabled(enabledActions && enableSwipeToReply)
     }
 
-    fun setSwipeToReplyEnabled(enabled: Boolean){
+    fun setSwipeToReplyEnabled(enabled: Boolean) {
         enableSwipeToReply = enabled
         messagesRV.setSwipeToReplyEnabled(enabled && enabledActions)
     }
