@@ -19,7 +19,7 @@ import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
-import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.HeaderClickListenersImpl
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModelFactory
@@ -60,7 +60,7 @@ open class ChannelActivity : AppCompatActivity() {
     }
 
     private fun MessagesListHeaderView.initHeaderView() {
-        setCustomClickListener(object : HeaderClickListenersImpl(this) {
+        setCustomClickListener(object : MessageListHeaderClickListenersImpl(this) {
             override fun onAvatarClick(view: View) {
                 ChannelInfoActivity.startHandleSearchClick(this@ChannelActivity, channel, conversationInfoLauncher)
             }
