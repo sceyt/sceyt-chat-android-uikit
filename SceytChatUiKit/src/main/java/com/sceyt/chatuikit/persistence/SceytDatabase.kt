@@ -86,8 +86,7 @@ import com.sceyt.chatuikit.persistence.entity.user.UserMetadataEntity
     AutoMigration(from = 11, to = 12),
     AutoMigration(from = 12, to = 13),
     AutoMigration(from = 13, to = 14, spec = SceytDatabase.AutoMigrationSpec13To14::class),
-    AutoMigration(from = 14, to = 15),
-    AutoMigration(from = 15, to = 16)
+    AutoMigration(from = 14, to = 15)
 ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)

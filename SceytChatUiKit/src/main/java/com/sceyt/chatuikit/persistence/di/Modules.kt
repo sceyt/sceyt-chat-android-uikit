@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.sceyt.chatuikit.BuildConfig
 import com.sceyt.chatuikit.SceytChatUIFacade
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.persistence.DatabaseMigrations
 import com.sceyt.chatuikit.persistence.PersistenceMiddleWareImpl
 import com.sceyt.chatuikit.persistence.SceytDatabase
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
@@ -68,6 +69,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
 
         return builder
             .fallbackToDestructiveMigration()
+            .addMigrations(DatabaseMigrations.Migration_15_16)
             .allowMainThreadQueries()
             .build()
     }
