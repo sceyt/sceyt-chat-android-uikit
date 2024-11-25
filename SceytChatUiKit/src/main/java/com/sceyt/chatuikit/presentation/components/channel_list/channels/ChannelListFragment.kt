@@ -72,7 +72,7 @@ class ChannelListFragment : Fragment() {
             ConnectionState.Disconnected -> getString(R.string.sceyt_connecting_title)
             ConnectionState.Reconnecting,
             ConnectionState.Connecting,
-            -> getString(R.string.sceyt_connecting_title)
+                -> getString(R.string.sceyt_connecting_title)
 
             ConnectionState.Connected -> getString(R.string.sceyt_chats)
         }

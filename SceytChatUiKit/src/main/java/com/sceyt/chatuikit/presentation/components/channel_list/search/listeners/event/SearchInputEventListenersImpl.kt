@@ -2,18 +2,25 @@ package com.sceyt.chatuikit.presentation.components.channel_list.search.listener
 
 import com.sceyt.chatuikit.presentation.components.channel_list.search.SearchChannelInputView
 
-open class SearchInputEventListenersImpl(view: SearchChannelInputView) : SearchInputEventListeners.EventListeners {
-    private var defaultListeners: SearchInputEventListeners.EventListeners = view
+open class SearchInputEventListenersImpl : SearchInputEventListeners.EventListeners {
+    @Suppress("unused")
+    constructor()
+
+    internal constructor(view: SearchChannelInputView) {
+        defaultListeners = view
+    }
+
+    private var defaultListeners: SearchInputEventListeners.EventListeners? = null
     private var searchSubmittedListener: SearchInputEventListeners.SearchSubmittedListener? = null
     private var searchSubmittedByDebounceListener: SearchInputEventListeners.SearchSubmittedByDebounceListener? = null
 
     override fun onSearchSubmitted(query: String) {
-        defaultListeners.onSearchSubmitted(query)
+        defaultListeners?.onSearchSubmitted(query)
         searchSubmittedListener?.onSearchSubmitted(query)
     }
 
     override fun onSearchSubmittedByDebounce(query: String) {
-        defaultListeners.onSearchSubmittedByDebounce(query)
+        defaultListeners?.onSearchSubmittedByDebounce(query)
         searchSubmittedByDebounceListener?.onSearchSubmittedByDebounce(query)
     }
 
@@ -23,12 +30,21 @@ open class SearchInputEventListenersImpl(view: SearchChannelInputView) : SearchI
                 searchSubmittedListener = listener
                 searchSubmittedByDebounceListener = listener
             }
+
             is SearchInputEventListeners.SearchSubmittedListener -> {
                 searchSubmittedListener = listener
             }
+
             is SearchInputEventListeners.SearchSubmittedByDebounceListener -> {
                 searchSubmittedByDebounceListener = listener
             }
         }
+    }
+
+    internal fun withDefaultListeners(
+            listeners: SearchInputEventListeners.EventListeners
+    ): SearchInputEventListenersImpl {
+        defaultListeners = listeners
+        return this
     }
 }

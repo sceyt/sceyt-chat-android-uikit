@@ -38,7 +38,7 @@ class SearchChannelInputView @JvmOverloads constructor(
     private val debounceInitDelegate = lazy { DebounceHelper(TYPING_DEBOUNCE_MS, this) }
     private val debounceHelper by debounceInitDelegate
 
-    private val clickListeners = SearchInputClickListenersImpl(this)
+    private var clickListeners = SearchInputClickListenersImpl(this)
     private var eventListeners = SearchInputEventListenersImpl(this)
     private var debouncedInputChangedListener: InputChangedListener? = null
     private var inputChangedListener: InputChangedListener? = null
@@ -109,21 +109,23 @@ class SearchChannelInputView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
-
     fun setTextChangedListener(listener: InputChangedListener) {
         inputChangedListener = listener
     }
 
     @Suppress("unused")
-
     fun setEventListener(listener: SearchInputEventListeners) {
         eventListeners.setListener(listener)
     }
 
     @Suppress("unused")
+    fun setCustomClickListener(listener: SearchInputClickListenersImpl) {
+        clickListeners = listener.withDefaultListeners(this)
+    }
 
+    @Suppress("unused")
     fun setCustomEventListener(listener: SearchInputEventListenersImpl) {
-        eventListeners = listener
+        eventListeners = listener.withDefaultListeners(this)
     }
 
     @Suppress("unused")
