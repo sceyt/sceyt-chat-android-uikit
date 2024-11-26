@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class ShareViewModel : BaseViewModel(), SceytKoinComponent {
     private val messageInteractor by inject<MessageInteractor>()
     private val application by inject<Application>()
+    val sharedUris = mutableListOf<Uri>()
 
     fun sendTextMessage(vararg channelIds: Long, body: String) = callbackFlow {
         trySend(State.Loading)
