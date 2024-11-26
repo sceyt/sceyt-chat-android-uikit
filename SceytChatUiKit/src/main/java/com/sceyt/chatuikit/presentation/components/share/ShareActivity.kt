@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.onEach
 open class ShareActivity : ShareableActivity<ShareStyle>() {
     protected lateinit var binding: SceytActivityShareBinding
     protected val viewModel: ShareViewModel by viewModels()
-    protected val sharedUris = ArrayList<Uri>()
     protected var body: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,7 +56,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
                     val uri = intent.parcelable<Uri>(Intent.EXTRA_STREAM)
                     uri?.let {
                         grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        sharedUris.add(uri)
+                        viewModel.sharedUris.add(uri)
                     }
                 } else if (intent.getCharSequenceExtra(Intent.EXTRA_TEXT) != null) {
                     hideInputOnSharingText()
@@ -72,7 +71,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
                         customToastSnackBar(getString(R.string.sceyt_shara_max_item_count))
                     for (uri in uris.take(20)) {
                         grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        sharedUris.add(uri)
+                        viewModel.sharedUris.add(uri)
                     }
                 } else finishSharingAction()
             }
@@ -114,16 +113,19 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
 
     protected open fun sendFilesMessage() {
         val messageBody = (binding.messageInput.text ?: "").trim().toString()
-        viewModel.sendFilesMessage(channelIds = selectedChannels.toLongArray(), uris = sharedUris, messageBody)
-            .onEach {
-                when (it) {
-                    Loading -> SceytLoader.showLoading(this@ShareActivity)
-                    Finish -> {
-                        SceytLoader.hideLoading()
-                        finishSharingAction()
-                    }
+        viewModel.sendFilesMessage(
+            channelIds = selectedChannels.toLongArray(),
+            uris = viewModel.sharedUris,
+            messageBody
+        ).onEach {
+            when (it) {
+                Loading -> SceytLoader.showLoading(this@ShareActivity)
+                Finish -> {
+                    SceytLoader.hideLoading()
+                    finishSharingAction()
                 }
-            }.launchIn(lifecycleScope)
+            }
+        }.launchIn(lifecycleScope)
     }
 
     protected open fun determinateShareBtnState() {
@@ -156,7 +158,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
                 sendTextMessage()
             }
 
-            sharedUris.isNotEmpty() -> {
+            viewModel.sharedUris.isNotEmpty() -> {
                 sendFilesMessage()
             }
 
