@@ -251,8 +251,8 @@ open class MessageInfoFragment : Fragment {
     }
 
     companion object {
-        const val KEY_MESSAGE_ID = "key_message_id"
-        const val KEY_CHANNEL_ID = "key_channel_id"
+        private const val KEY_MESSAGE_ID = "key_message_id"
+        private const val KEY_CHANNEL_ID = "key_channel_id"
 
         fun newInstance(
                 message: SceytMessage,

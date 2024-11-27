@@ -59,7 +59,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessagesListHeaderView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
@@ -328,6 +328,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     @Suppress("unused")
     fun getReplyMessage() = replyMessage
 
+    @Suppress("unused")
     fun setCustomClickListener(listeners: MessageListHeaderClickListenersImpl) {
         clickListeners = listeners.withDefaultListeners(this)
     }
@@ -468,7 +469,9 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     override fun onToolbarClick(view: View) {
         if (::channel.isInitialized)
-            channelInfoLauncher?.let { ChannelInfoActivity.startHandleSearchClick(context, channel, it) }
+            channelInfoLauncher?.let {
+                ChannelInfoActivity.startHandleSearchClick(context, channel, it)
+            }
     }
 
     override fun onBackClick(view: View) {
