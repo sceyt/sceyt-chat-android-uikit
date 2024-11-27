@@ -30,6 +30,7 @@ import com.sceyt.chatuikit.extensions.awaitAnimationEnd
 import com.sceyt.chatuikit.extensions.awaitToScrollFinish
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.getFragmentManager
+import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.isLastCompletelyItemDisplaying
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.openLink
@@ -77,6 +78,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.popups.Popup
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
 import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
+import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoActivity
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
@@ -970,7 +972,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onMessageInfoClick(message: SceytMessage) {
-
+        hideSoftInput()
+        MessageInfoActivity.launch(context, message, style.messageItemStyle)
     }
 
     override fun onForwardMessageClick(vararg messages: SceytMessage) {
