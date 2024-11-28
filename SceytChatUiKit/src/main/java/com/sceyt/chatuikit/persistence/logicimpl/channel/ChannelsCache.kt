@@ -149,7 +149,7 @@ class ChannelsCache {
         }
     }
 
-    fun newChannelsOnSync(config: ChannelListConfig,  channels: List<SceytChannel>) {
+    fun newChannelsOnSync(config: ChannelListConfig, channels: List<SceytChannel>) {
         newChannelsOnSync_.tryEmit(Pair(config, channels))
     }
 
@@ -449,8 +449,13 @@ class ChannelsCache {
         }
     }
 
-    private fun channelsByConfig(config: ChannelListConfig) = cachedData[config]?.values?.toList()
-            ?: emptyList()
+    private fun channelsByConfig(config: ChannelListConfig): List<SceytChannel> {
+        return (cachedData[config]?.values ?: emptyList()).plus(
+            pendingChannelsData.values.filter {
+                config.isValidForConfig(it) && it.lastMessage != null
+            }
+        )
+    }
 
     private fun getOrCreateMap(config: ChannelListConfig) = cachedData[config] ?: run {
         val map = hashMapOf<Long, SceytChannel>()
