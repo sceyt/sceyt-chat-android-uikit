@@ -13,6 +13,10 @@ interface PersistenceUsersLogic {
     suspend fun getSceytUsers(ids: List<String>): SceytResponse<List<SceytUser>>
     suspend fun getUserDbById(id: String): SceytUser?
     suspend fun getUsersDbByIds(id: List<String>): List<SceytUser>
+    suspend fun searchLocaleUserByMetadata(
+            metadataKeys: List<String>, metadataValue: String
+    ): List<SceytUser>
+
     suspend fun getCurrentUser(): SceytUser?
     fun getCurrentUserId(): String?
     fun getCurrentUserAsFlow(): Flow<SceytUser>

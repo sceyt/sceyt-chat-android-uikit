@@ -176,6 +176,7 @@ internal class PersistenceMiddleWareImpl(
             onlyMine: Boolean,
             ignoreDb: Boolean,
             config: ChannelListConfig,
+            directChatType: String,
     ): Flow<PaginationResponse<SceytChannel>> {
         return channelLogic.searchChannelsWithUserIds(
             offset,
@@ -185,7 +186,8 @@ internal class PersistenceMiddleWareImpl(
             loadKey,
             onlyMine,
             ignoreDb,
-            config
+            config,
+            directChatType,
         )
     }
 
@@ -567,6 +569,13 @@ internal class PersistenceMiddleWareImpl(
 
     override suspend fun getUsersDbByIds(id: List<String>): List<SceytUser> {
         return usersLogic.getUsersDbByIds(id)
+    }
+
+    override suspend fun searchLocaleUserByMetadata(
+            metadataKeys: List<String>,
+            metadataValue: String
+    ): List<SceytUser> {
+        return usersLogic.searchLocaleUserByMetadata(metadataKeys, metadataValue)
     }
 
     override suspend fun getCurrentUser(): SceytUser? {
