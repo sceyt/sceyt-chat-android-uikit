@@ -340,6 +340,7 @@ internal class PersistenceChannelsLogicImpl(
             onlyMine: Boolean,
             ignoreDb: Boolean,
             config: ChannelListConfig,
+            directChatType: String,
     ): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
             if (offset == 0) channelsCache.clear(config)
@@ -360,7 +361,8 @@ internal class PersistenceChannelsLogicImpl(
                 onlyMine = onlyMine,
                 limit = config.queryLimit,
                 types = config.types,
-                orderByLastMessage = orderByLastMessage
+                orderByLastMessage = orderByLastMessage,
+                directType = directChatType
             ).map { it.toChannel() }
 
             var hasNext = dbChannels.size == config.queryLimit

@@ -43,6 +43,7 @@ interface PersistenceChannelsLogic {
             onlyMine: Boolean,
             ignoreDb: Boolean,
             config: ChannelListConfig,
+            directChatType: String
     ): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel>

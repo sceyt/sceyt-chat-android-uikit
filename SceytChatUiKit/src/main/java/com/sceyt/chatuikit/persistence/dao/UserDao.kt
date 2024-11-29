@@ -50,6 +50,15 @@ interface UserDao {
             "or lastName like  '%' || :searchQuery || '%' or (firstName || ' ' || lastName) like :searchQuery || '%'")
     suspend fun getUserIdsByDisplayName(searchQuery: String): List<String>
 
+    @Transaction
+    @Query("""
+            select * from users where user_id in (
+            select user_id from UserMetadata
+            where `key` in (:key) and value like '%' || :value || '%')
+           """
+    )
+    suspend fun searchUsersByMetadata(key: List<String>, value: String): List<UserDb>
+
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateUser(user: UserEntity)
 

@@ -78,6 +78,13 @@ internal class PersistenceUsersLogicImpl(
         return userDao.getUsersById(id).map { it.toSceytUser() }
     }
 
+    override suspend fun searchLocaleUserByMetadata(
+            metadataKeys: List<String>,
+            metadataValue: String
+    ): List<SceytUser> {
+        return userDao.searchUsersByMetadata(metadataKeys, metadataValue).map { it.toSceytUser() }
+    }
+
     override suspend fun getCurrentUser(): SceytUser? {
         val clientUser = ClientWrapper.currentUser
         if (!clientUser?.id.isNullOrBlank())
