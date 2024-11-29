@@ -360,14 +360,19 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData.forEachKeyValue { key, value ->
                 value[channelId]?.let { channel ->
+                    var needToUpdate = false
                     val updatedChannel = channel.copy(
                         members = channel.members?.map { member ->
-                            if (member.user.id == user.id)
-                                member.copy(user = user.copy())
-                            else member
+                            if (member.user.id == user.id) {
+                                if (user.diff(member.user).hasDifference()) {
+                                    needToUpdate = true
+                                    member.copy(user = user.copy())
+                                } else member
+                            } else member
                         }
                     )
-                    channelUpdated(key, updatedChannel, false, ChannelUpdatedType.Presence)
+                    if (needToUpdate)
+                        channelUpdated(key, updatedChannel, false, ChannelUpdatedType.Presence)
                 }
             }
         }
