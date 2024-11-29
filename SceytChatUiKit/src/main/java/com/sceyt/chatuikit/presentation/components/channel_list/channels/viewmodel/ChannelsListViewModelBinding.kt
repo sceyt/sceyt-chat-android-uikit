@@ -181,7 +181,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
     }.launchIn(viewModelScope)
 
     ChannelsCache.newChannelsOnSync
-        .onEach { (config, channels) ->
+        .onEach { (_, channels) ->
             lifecycleOwner.withResumed {
                 lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
                     // Filter channels by config
