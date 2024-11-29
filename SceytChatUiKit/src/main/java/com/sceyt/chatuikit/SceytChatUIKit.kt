@@ -74,6 +74,7 @@ object SceytChatUIKit : SceytKoinComponent {
         this.appContext = appContext
         initKoin(enableDatabase)
         initEmojiSupport()
+        SceytLog.i(TAG, "SceytChatUIKit initialized. Version: ${BuildConfig.MAVEN_VERSION}")
     }
 
     fun connect(token: String) {
