@@ -126,7 +126,6 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
                 } else {
                     SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body}  unreadCount ${data.channel.newMessageCount}" +
                             " isResumed ${lifecycleOwner.isResumed()} but started getChannels ")
-                    getChannels(0, query = searchQuery)
                 }
             }
         }
