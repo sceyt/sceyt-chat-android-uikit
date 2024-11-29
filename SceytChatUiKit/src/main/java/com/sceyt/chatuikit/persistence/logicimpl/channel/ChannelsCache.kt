@@ -316,8 +316,10 @@ class ChannelsCache {
             // Removing pending channel
             pendingChannelsData.remove(pendingChannelId)
             // Adding already created channel to cache
-            cachedData.values.forEach {
-                it[newChannel.id] = newChannel
+            cachedData.forEachKeyValue { key, value ->
+                if (key.isValidForConfig(newChannel)) {
+                    value[newChannel.id] = newChannel
+                }
             }
             // Adding pending channel id with real channel id for future getting real channel id by pending channel id
             fromPendingToRealChannelsData[pendingChannelId] = newChannel.id
