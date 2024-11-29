@@ -24,7 +24,9 @@ data class ChannelListConfig(
     }
 
     override fun equals(other: Any?): Boolean {
-        return super.equals(other)
+        if (this === other) return true
+        if (other !is ChannelListConfig) return false
+        return hashCode() == other.hashCode()
     }
 
     fun isValidForConfig(channel: SceytChannel): Boolean {
