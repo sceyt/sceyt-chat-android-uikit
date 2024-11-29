@@ -165,7 +165,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:background="@color/sceyt_color_primary"
-                android:drawableStart="@drawable/sceyt_ic_notification"
+                android:drawableStart="@drawable/sceyt_ic_notification_with_layers"
                 android:drawablePadding="12dp"
                 android:includeFontPadding="false"
                 android:paddingHorizontal="16dp"
