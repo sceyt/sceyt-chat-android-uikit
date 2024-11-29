@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.persistence.differs
 
+import com.sceyt.chatuikit.data.hasDiff
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.extensions.equalsIgnoreNull
 
@@ -33,7 +34,7 @@ fun SceytUser.diff(other: SceytUser): UserDiff {
         firstNameChanged = firstName.equalsIgnoreNull(other.firstName).not(),
         lastNameChanged = lastName.equalsIgnoreNull(other.lastName).not(),
         avatarURLChanged = avatarURL.equalsIgnoreNull(other.avatarURL).not(),
-        presenceChanged = presence?.state != other.presence?.state,
+        presenceChanged = presence?.hasDiff(other.presence) == true,
         activityStatusChanged = state != other.state,
         blockedChanged = blocked != other.blocked
     )

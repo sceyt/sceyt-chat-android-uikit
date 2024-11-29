@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.persistence.differs
 
+import com.sceyt.chatuikit.data.hasDiff
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.persistence.extensions.equalsIgnoreNull
 import com.sceyt.chatuikit.persistence.extensions.getPeer
@@ -89,7 +90,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
         lastMessageStatusChanged = lastMessage?.deliveryStatus != other.lastMessage?.deliveryStatus,
         unreadCountChanged = newMessageCount != other.newMessageCount,
         muteStateChanged = muted != other.muted,
-        presenceStateChanged = isDirect() && firstMember?.user?.presence != otherFirstMember?.user?.presence,
+        presenceStateChanged = isDirect() && firstMember?.user?.presence?.hasDiff(otherFirstMember?.user?.presence) == true,
         markedUsUnreadChanged = unread != other.unread,
         lastReadMsdChanged = lastDisplayedMessageId != other.lastDisplayedMessageId,
         peerBlockedChanged = peerBlockedChanged,
