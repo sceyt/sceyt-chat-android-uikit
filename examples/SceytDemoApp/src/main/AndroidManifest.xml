@@ -26,6 +26,17 @@
         android:theme="@style/SceytAppTheme">
 
         <activity
+            android:name=".presentation.SplashActivity"
+            android:exported="true"
+            android:theme="@style/SceytAppTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name="com.sceyt.chatuikit.presentation.components.share.ShareActivity"
             android:exported="true">
             <intent-filter>
@@ -50,13 +61,7 @@
             android:name=".presentation.main.MainActivity"
             android:exported="true"
             android:theme="@style/DefaultFontTheme"
-            android:windowSoftInputMode="adjustNothing">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:windowSoftInputMode="adjustNothing"/>
 
         <service
             android:name="com.sceyt.chatuikit.services.SceytFirebaseMessageReceiver"
