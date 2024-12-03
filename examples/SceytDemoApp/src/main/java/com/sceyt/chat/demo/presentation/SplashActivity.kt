@@ -27,10 +27,7 @@ class SplashActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             delay(1000)
-            launchActivity<MainActivity>(
-                enterAnimResId = R.anim.fade_in,
-                exitAnimResId = R.anim.fade_out
-            )
+            launchActivity<MainActivity>()
             finishAfterTransition()
         }
     }
