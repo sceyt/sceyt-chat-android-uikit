@@ -35,8 +35,11 @@ import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.ChannelListViewStyle
 
-class ChannelListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners,
+class ChannelListView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners,
         ChannelPopupClickListeners.PopupClickListeners {
 
     private val binding: SceytChannelListViewBinding
