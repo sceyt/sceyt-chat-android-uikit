@@ -2,7 +2,16 @@ package com.sceyt.chatuikit.presentation.common
 
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -15,13 +24,22 @@ class AsyncListDifferTest {
 
     private lateinit var diffUtil: DiffUtil.ItemCallback<String>
     private lateinit var updateCallback: ListUpdateCallback
+    private lateinit var listUpdateListener: AsyncListDiffer.ListListener<String>
     private lateinit var asyncListDiffer: AsyncListDiffer<String>
+    private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setup() {
         diffUtil = mock()
         updateCallback = mock()
+        listUpdateListener = mock()
         asyncListDiffer = AsyncListDiffer(updateCallback, diffUtil)
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test
@@ -103,12 +121,11 @@ class AsyncListDifferTest {
             asyncListDiffer.addItem(
                 position = 1,
                 item = "NEW_ITEM",
-                commitCallback = null
-            )
-
-            // Assert
-            assertEquals(listOf("A", "NEW_ITEM", "B", "C"), asyncListDiffer.currentList)
-            verify(updateCallback).onInserted(1, 1)
+            ){
+                // Assert
+                assertEquals(listOf("A", "NEW_ITEM", "B", "C"), asyncListDiffer.currentList)
+                verify(updateCallback).onInserted(1, 1)
+            }
         }
     }
 
@@ -146,5 +163,107 @@ class AsyncListDifferTest {
                 verify(updateCallback).onInserted(3, 2)
             }
         }
+    }
+
+    @Test
+    fun `submitList cancels previous submission if a new list is submitted`() = runTest {
+        // Arrange
+        val firstList = listOf("A", "B", "C")
+        val secondList = listOf("X", "Y", "Z")
+        val submissionDelay = 500L // Simulate a delay in processing
+
+        whenever(diffUtil.areItemsTheSame(any(), any())).thenReturn(true)
+        whenever(diffUtil.areContentsTheSame(any(), any())).thenReturn(true)
+
+        // Act
+        launch(Dispatchers.IO) {
+            asyncListDiffer.submitListInternal(firstList, delay = submissionDelay)
+        }
+
+        launch(Dispatchers.Default) {
+            asyncListDiffer.submitList(secondList)
+        }
+
+        // Wait for completion
+        delay(submissionDelay * 2)
+        // Assert
+        assertEquals(secondList, asyncListDiffer.currentList)
+       // verify(listUpdateListener).onCurrentListChanged(emptyList(), secondList)
+    }
+
+    @Test
+    fun `addItems waits until the current submission finishes`() = runBlocking {
+        // Arrange
+        val initialList = listOf("A", "B", "C")
+        val newItems = listOf("X", "Y", "Z")
+        val submissionDelay = 200L // Simulate a delay in processing
+
+        whenever(diffUtil.areItemsTheSame(any(), any())).thenReturn(true)
+        whenever(diffUtil.areContentsTheSame(any(), any())).thenReturn(true)
+
+        // Simulate delay during submission
+        asyncListDiffer.submitListInternal(initialList, delay = submissionDelay)
+
+        // Act
+        launch {
+            asyncListDiffer.addItems(newItems)
+        }
+
+        // Wait for completion
+        delay(submissionDelay * 2)
+
+        // Assert
+        assertEquals(listOf("A", "B", "C", "X", "Y", "Z"), asyncListDiffer.currentList)
+        verify(updateCallback).onInserted(3, newItems.size)
+    }
+
+
+    @Test
+    fun `concurrent submitList calls do not corrupt state`() = runBlocking {
+        // Arrange
+        val listA = listOf("A", "B", "C")
+        val listB = listOf("X", "Y", "Z")
+        val listC = listOf("1", "2", "3")
+        val submissionDelay = 200L // Simulate a delay in processing
+
+        whenever(diffUtil.areItemsTheSame(any(), any())).thenReturn(true)
+        whenever(diffUtil.areContentsTheSame(any(), any())).thenReturn(true)
+
+        launch { asyncListDiffer.submitListInternal(listA, delay = submissionDelay) }
+        launch { asyncListDiffer.submitListInternal(listB, delay = submissionDelay) }
+        asyncListDiffer.submitList(listC) // Should overwrite others
+
+        // Wait for completion
+        delay(submissionDelay * 3)
+
+        // Assert
+        assertEquals(listC, asyncListDiffer.currentList)
+        verify(updateCallback).onInserted(0, listC.size)
+    }
+
+    @Test
+    fun `mutex ensures only one operation is active at a time`() = runBlocking {
+        // Arrange
+        val initialList = listOf("A", "B", "C")
+        val newList = listOf("X", "Y", "Z")
+
+
+        // Act
+        launch {
+            withContext(Dispatchers.Main) {
+                asyncListDiffer.submitList(initialList)
+            }
+        }
+        launch {
+            withContext(Dispatchers.Main) {
+                asyncListDiffer.submitList(newList)
+            }
+        }
+
+        // Wait for completion
+        delay(500)
+
+        // Assert
+        assertEquals(newList, asyncListDiffer.currentList)
     }
 }
