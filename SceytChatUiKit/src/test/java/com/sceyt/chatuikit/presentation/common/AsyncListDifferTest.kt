@@ -3,9 +3,9 @@ package com.sceyt.chatuikit.presentation.common
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -20,8 +20,8 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
+@ExperimentalCoroutinesApi
 class AsyncListDifferTest {
-
     private lateinit var diffUtil: DiffUtil.ItemCallback<String>
     private lateinit var updateCallback: ListUpdateCallback
     private lateinit var listUpdateListener: AsyncListDiffer.ListListener<String>
@@ -33,7 +33,7 @@ class AsyncListDifferTest {
         diffUtil = mock()
         updateCallback = mock()
         listUpdateListener = mock()
-        asyncListDiffer = AsyncListDiffer(updateCallback, diffUtil)
+        asyncListDiffer = AsyncListDiffer(updateCallback, diffUtil, testDispatcher, testDispatcher)
         Dispatchers.setMain(testDispatcher)
     }
 
@@ -121,7 +121,7 @@ class AsyncListDifferTest {
             asyncListDiffer.addItem(
                 position = 1,
                 item = "NEW_ITEM",
-            ){
+            ) {
                 // Assert
                 assertEquals(listOf("A", "NEW_ITEM", "B", "C"), asyncListDiffer.currentList)
                 verify(updateCallback).onInserted(1, 1)
@@ -188,11 +188,11 @@ class AsyncListDifferTest {
         delay(submissionDelay * 2)
         // Assert
         assertEquals(secondList, asyncListDiffer.currentList)
-       // verify(listUpdateListener).onCurrentListChanged(emptyList(), secondList)
+        // verify(listUpdateListener).onCurrentListChanged(emptyList(), secondList)
     }
 
     @Test
-    fun `addItems waits until the current submission finishes`() = runBlocking {
+    fun `addItems waits until the current submission finishes`() = runTest {
         // Arrange
         val initialList = listOf("A", "B", "C")
         val newItems = listOf("X", "Y", "Z")
@@ -219,7 +219,7 @@ class AsyncListDifferTest {
 
 
     @Test
-    fun `concurrent submitList calls do not corrupt state`() = runBlocking {
+    fun `concurrent submitList calls do not corrupt state`() = runTest {
         // Arrange
         val listA = listOf("A", "B", "C")
         val listB = listOf("X", "Y", "Z")
@@ -229,8 +229,14 @@ class AsyncListDifferTest {
         whenever(diffUtil.areItemsTheSame(any(), any())).thenReturn(true)
         whenever(diffUtil.areContentsTheSame(any(), any())).thenReturn(true)
 
-        launch { asyncListDiffer.submitListInternal(listA, delay = submissionDelay) }
-        launch { asyncListDiffer.submitListInternal(listB, delay = submissionDelay) }
+        async(testDispatcher) {
+            asyncListDiffer.submitListInternal(listA, delay = submissionDelay)
+        }.await()
+
+        async {
+            asyncListDiffer.submitListInternal(listB, delay = submissionDelay)
+        }.await()
+
         asyncListDiffer.submitList(listC) // Should overwrite others
 
         // Wait for completion
@@ -242,28 +248,24 @@ class AsyncListDifferTest {
     }
 
     @Test
-    fun `mutex ensures only one operation is active at a time`() = runBlocking {
+    fun `mutex ensures only one operation is active at a time`() = runTest {
         // Arrange
         val initialList = listOf("A", "B", "C")
         val newList = listOf("X", "Y", "Z")
 
 
         // Act
-        launch {
-            withContext(Dispatchers.Main) {
-                asyncListDiffer.submitList(initialList)
-            }
-        }
-        launch {
-            withContext(Dispatchers.Main) {
-                asyncListDiffer.submitList(newList)
-            }
-        }
+        asyncListDiffer.submitList(initialList)
+        asyncListDiffer.submitList(newList)
 
         // Wait for completion
-        delay(500)
+        delay(1000)
 
         // Assert
         assertEquals(newList, asyncListDiffer.currentList)
+    }
+
+    private suspend fun delay(time: Long) = withContext(testDispatcher) {
+        kotlinx.coroutines.delay(time)
     }
 }
