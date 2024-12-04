@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.common
 
-import android.util.Log
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import kotlinx.coroutines.test.runTest
@@ -68,12 +67,11 @@ class AsyncListDifferTest {
                 predicate = { it == "B" },
                 newItem = "B_UPDATED",
                 payloads = null,
-                commitCallback = null
-            )
-
-            // Assert
-            assertEquals(listOf("A", "B_UPDATED", "C"), asyncListDiffer.currentList)
-            verify(updateCallback).onChanged(1, 1, null)
+            ) {
+                // Assert
+                assertEquals(listOf("A", "B_UPDATED", "C"), asyncListDiffer.currentList)
+                verify(updateCallback).onChanged(1, 1, null)
+            }
         }
     }
 
@@ -86,12 +84,12 @@ class AsyncListDifferTest {
             // Act
             asyncListDiffer.removeItem(
                 predicate = { it == "B" },
-                commitCallback = null
+                commitCallback = {
+                    // Assert
+                    assertEquals(listOf("A", "C"), asyncListDiffer.currentList)
+                    verify(updateCallback).onRemoved(1, 1)
+                }
             )
-
-            // Assert
-            assertEquals(listOf("A", "C"), asyncListDiffer.currentList)
-            verify(updateCallback).onRemoved(1, 1)
         }
     }
 
@@ -149,21 +147,4 @@ class AsyncListDifferTest {
             }
         }
     }
-
-/*    @Test
-    fun `addListListener should notify listener on list change`() = runTest {
-        // Arrange
-        val listener = mock<AsyncListDiffer.ListListener<String>>()
-        asyncListDiffer.submitList(emptyList()){
-            asyncListDiffer.addListListener(listener)
-            val newList = listOf("A", "B", "C")
-
-            // Act
-            asyncListDiffer.submitList(newList) {
-
-                // Assert
-                verify(listener).onCurrentListChanged(emptyList(), newList)
-            }
-        }
-    }*/
 }
