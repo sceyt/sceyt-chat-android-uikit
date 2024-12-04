@@ -1,14 +1,13 @@
 package com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click
 
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
 
 open class ChannelPopupClickListenersImpl : ChannelPopupClickListeners.PopupClickListeners {
     @Suppress("unused")
     constructor()
 
-    internal constructor(channelListView: ChannelListView) {
-        defaultListeners = channelListView
+    internal constructor(listener: ChannelPopupClickListeners.PopupClickListeners) {
+        defaultListeners = listener
     }
 
     private var defaultListeners: ChannelPopupClickListeners.PopupClickListeners? = null

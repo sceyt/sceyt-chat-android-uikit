@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click
 
 import android.view.View
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 
 open class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
@@ -12,8 +11,8 @@ open class ChannelClickListenersImpl : ChannelClickListeners.ClickListeners {
 
     constructor()
 
-    internal constructor(channelListView: ChannelListView) {
-        defaultListeners = channelListView
+    internal constructor(listeners: ChannelClickListeners.ClickListeners) {
+        defaultListeners = listeners
     }
 
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
