@@ -9,7 +9,6 @@ import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.persistence.entity.channel.ChannelDb
@@ -142,16 +141,6 @@ interface ChannelDao {
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
-    @Query("select * from channels join (select chat_id from UserChatLink where user_id =:myId " +
-            "group by chat_id having count(*) = 1) as links on links.chat_id = channels.chat_id " +
-            "where channels.type = :directType ")
-    suspend fun getDirectChannelsWhereMemberOnlyMe(
-            myId: String? = SceytChatUIKit.chatUIFacade.myId,
-            directType: String = ChannelTypeEnum.Direct.value,
-    ): List<ChannelDb>
-
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
-    @Transaction
     @Query("select * from channels where isSelf = 1")
     suspend fun getSelfChannel(): ChannelDb?
 
@@ -180,8 +169,14 @@ interface ChannelDao {
     suspend fun getChannelLastMessageTid(id: Long): Long?
 
     @Transaction
-    @Query("select sum(newMessageCount) from channels")
-    fun getTotalUnreadCountAsFlow(): Flow<Int?>
+    @Query("""
+        select sum(newMessageCount) from channels
+        where :isEmptyTypes = 1 or type in (:channelTypes)
+           """)
+    fun getTotalUnreadCountAsFlow(
+            channelTypes: List<String>,
+            isEmptyTypes: Int = if (channelTypes.isEmpty()) 1 else 0,
+    ): Flow<Int?>
 
     @Query("select count(chat_id) from channels")
     suspend fun getAllChannelsCount(): Int
