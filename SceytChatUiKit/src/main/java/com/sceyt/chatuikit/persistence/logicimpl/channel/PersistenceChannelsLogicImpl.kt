@@ -992,8 +992,8 @@ internal class PersistenceChannelsLogicImpl(
         return channelDao.getAllChannelsCount()
     }
 
-    override fun getTotalUnreadCount(): Flow<Int> {
-        return channelDao.getTotalUnreadCountAsFlow().filterNotNull()
+    override fun getTotalUnreadCount(channelTypes: List<String>): Flow<Int> {
+        return channelDao.getTotalUnreadCountAsFlow(channelTypes).filterNotNull()
     }
 
     override suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>) {
