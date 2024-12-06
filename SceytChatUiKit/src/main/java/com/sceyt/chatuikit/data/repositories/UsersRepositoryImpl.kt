@@ -7,7 +7,6 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserListQuery
 import com.sceyt.chat.models.user.UserListQueryByIds
 import com.sceyt.chat.sceyt_callbacks.UsersCallback
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.TAG
@@ -20,16 +19,10 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 class UsersRepositoryImpl : UsersRepository {
     private lateinit var usersQuery: UserListQuery
 
-    override suspend fun loadUsers(query: String): SceytResponse<List<SceytUser>> {
+    override suspend fun loadUsers(query: UserListQuery): SceytResponse<List<SceytUser>> {
         return suspendCancellableCoroutine { continuation ->
-            val userListQuery = UserListQuery.Builder()
-                .order(UserListQuery.UserListQueryOrderKeyType.UserListQueryOrderKeyFirstName)
-                .filter(UserListQuery.UserListFilterType.UserListFilterTypeAll)
-                .limit(SceytChatUIKit.config.queryLimits.userListQueryLimit)
-                .query(query)
-                .build().also { usersQuery = it }
-
-            userListQuery.loadNext(object : UsersCallback {
+            usersQuery = query
+            query.loadNext(object : UsersCallback {
                 override fun onResult(users: MutableList<User>?) {
                     if (users.isNullOrEmpty())
                         continuation.safeResume(SceytResponse.Success(arrayListOf()))

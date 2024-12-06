@@ -56,7 +56,7 @@ class ActionDialog(
 
     private fun SceytDialogMediaActionsBinding.applyStyle() {
         style.backgroundStyle.apply(root)
-        with(style.subtitleStyle) {
+        with(style.optionButtonStyle) {
             apply(save)
             apply(share)
             apply(forward)

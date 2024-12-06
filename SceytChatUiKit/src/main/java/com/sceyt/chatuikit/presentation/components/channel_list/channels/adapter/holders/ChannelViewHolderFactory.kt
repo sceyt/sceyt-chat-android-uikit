@@ -22,7 +22,7 @@ open class ChannelViewHolderFactory(context: Context) {
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return when (viewType) {
-            ChannelType.Default.ordinal -> createChannelViewHolder(parent)
+            ChannelType.Channel.ordinal -> createChannelViewHolder(parent)
             ChannelType.Loading.ordinal -> createLoadingMoreViewHolder(parent)
             else -> throw RuntimeException("Not supported view type")
         }
@@ -51,12 +51,12 @@ open class ChannelViewHolderFactory(context: Context) {
 
     open fun getItemViewType(item: ChannelListItem, position: Int): Int {
         return when (item) {
-            is ChannelListItem.ChannelItem -> ChannelType.Default.ordinal
+            is ChannelListItem.ChannelItem -> ChannelType.Channel.ordinal
             is ChannelListItem.LoadingMoreItem -> ChannelType.Loading.ordinal
         }
     }
 
     enum class ChannelType {
-        Loading, Default
+        Loading, Channel
     }
 }
