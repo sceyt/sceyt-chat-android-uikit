@@ -1,11 +1,10 @@
-package com.sceyt.chat.demo.presentation.login.create
+package com.sceyt.chat.demo.presentation.welcome.create
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.data.AppSharedPreference
-import com.sceyt.chat.demo.data.Constants
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit

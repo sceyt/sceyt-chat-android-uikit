@@ -14,7 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.databinding.FragmentProfileBinding
-import com.sceyt.chat.demo.presentation.login.WelcomeActivity
+import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
 import com.sceyt.chat.demo.presentation.main.profile.edit.EditProfileFragment
 import com.sceyt.chatuikit.config.defaults.DefaultMuteNotificationOptions
 import com.sceyt.chatuikit.data.models.messages.SceytUser

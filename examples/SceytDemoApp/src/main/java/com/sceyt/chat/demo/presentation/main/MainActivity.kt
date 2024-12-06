@@ -7,7 +7,7 @@ import androidx.core.graphics.toColorInt
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.ActivityMainBinding
-import com.sceyt.chat.demo.presentation.login.create.CreateProfileViewModel
+import com.sceyt.chat.demo.presentation.welcome.create.CreateProfileViewModel
 import com.sceyt.chat.demo.presentation.main.adapters.MainViewPagerAdapter
 import com.sceyt.chat.demo.presentation.main.profile.ProfileFragment
 import com.sceyt.chatuikit.SceytChatUIKit

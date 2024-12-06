@@ -1,4 +1,4 @@
-package com.sceyt.chat.demo.presentation.login.create
+package com.sceyt.chat.demo.presentation.welcome.create
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import com.sceyt.chat.demo.databinding.FragmentCreateAccountBinding
-import com.sceyt.chat.demo.presentation.login.WelcomeActivity
+import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
 import com.sceyt.chat.demo.presentation.main.MainActivity
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.hideSoftInput

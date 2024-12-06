@@ -1,4 +1,4 @@
-package com.sceyt.chat.demo.presentation.login.adapters
+package com.sceyt.chat.demo.presentation.welcome.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

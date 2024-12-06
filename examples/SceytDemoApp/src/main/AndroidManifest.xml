@@ -59,7 +59,7 @@
             android:windowSoftInputMode="adjustNothing"/>
 
         <activity
-            android:name=".presentation.login.WelcomeActivity"
+            android:name=".presentation.welcome.WelcomeActivity"
             android:exported="true"
             android:theme="@style/SceytAppTheme.Default"
             android:windowSoftInputMode="adjustNothing"/>
