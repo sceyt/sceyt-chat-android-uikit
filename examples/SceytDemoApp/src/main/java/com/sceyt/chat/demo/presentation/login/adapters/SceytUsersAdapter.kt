@@ -5,7 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.demo.databinding.ItemSelectedAccountBinding
-import com.sceyt.chat.demo.presentation.SceytUserDiffCallback
+import com.sceyt.chat.demo.presentation.main.adapters.SceytUserDiffCallback
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 
 class SceytUsersAdapter(

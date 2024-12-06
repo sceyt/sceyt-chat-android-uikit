@@ -1,4 +1,4 @@
-package com.sceyt.chat.demo.presentation
+package com.sceyt.chat.demo.presentation.main.adapters
 
 import androidx.recyclerview.widget.DiffUtil
 import com.sceyt.chatuikit.data.models.messages.SceytUser

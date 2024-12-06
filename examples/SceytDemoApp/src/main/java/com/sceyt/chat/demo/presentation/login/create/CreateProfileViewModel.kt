@@ -56,26 +56,6 @@ class CreateProfileViewModel(
         }
     }
 
-    fun loginWithRandomUser() {
-        notifyPageLoadingState(false)
-        viewModelScope.launch {
-            val randomUserId = Constants.users.random()
-            val result = connectUser(randomUserId)
-            if (result.isSuccess) {
-                preference.setString(AppSharedPreference.PREF_USER_ID, randomUserId)
-            } else
-                pageStateLiveDataInternal.value = PageState.StateError(
-                    null, result.exceptionOrNull()?.message
-                        ?: "Connection failed"
-                )
-
-            pageStateLiveDataInternal.value = PageState.StateLoading(false)
-            _logInLiveData.value = result.isSuccess
-        }
-    }
-
-    fun isLoggedIn() = preference.getString(AppSharedPreference.PREF_USER_ID).isNullOrBlank().not()
-
     private suspend fun updateProfile(firstName: String?, lastName: String?, username: String) =
         withContext(Dispatchers.IO) {
             val currentUser = SceytChatUIKit.currentUser ?: userInteractor.getCurrentUser()

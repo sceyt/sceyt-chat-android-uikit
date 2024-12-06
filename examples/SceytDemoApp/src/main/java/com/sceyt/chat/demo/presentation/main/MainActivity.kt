@@ -33,7 +33,6 @@ class MainActivity : AppCompatActivity() {
 
         setPagerAdapter()
         setBottomNavClickListeners()
-        loginIfNeeded()
         initViewModel()
 
         SceytChatUIKit.chatUIFacade.channelInteractor.getTotalUnreadCount().onEach {
@@ -86,10 +85,5 @@ class MainActivity : AppCompatActivity() {
         binding.viewPager.adapter = adapter
         binding.viewPager.isUserInputEnabled = false
         binding.viewPager.offscreenPageLimit = 2
-    }
-
-    private fun loginIfNeeded() {
-        if (!createProfileViewModel.isLoggedIn())
-            createProfileViewModel.loginWithRandomUser()
     }
 }
