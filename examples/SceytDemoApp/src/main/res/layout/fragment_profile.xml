@@ -27,15 +27,13 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tvEdit"
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/ivEdit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="?selectableItemBackgroundBorderless"
                 android:padding="5dp"
-                android:text="@string/sceyt_edit"
-                android:textColor="@color/colorAccent"
-                android:textSize="@dimen/mediumTextSize"
+                android:src="@drawable/ic_edit"
+                android:tint="@color/sceyt_color_accent"
                 app:layout_constraintBottom_toBottomOf="@+id/title"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/title" />
@@ -53,7 +51,7 @@
             android:id="@+id/constraintLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:background="@color/sceyt_color_background"
+            android:background="@color/sceyt_color_background_secondary"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/underline">
 
@@ -71,8 +69,8 @@
                     android:layout_height="72dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:sceytUiAvatarTextSize="@dimen/extraLargeTextSize"
                     app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar"
+                    app:sceytUiAvatarTextSize="@dimen/extraLargeTextSize"
                     tools:sceytUiAvatarFullName="User name" />
 
                 <ProgressBar
