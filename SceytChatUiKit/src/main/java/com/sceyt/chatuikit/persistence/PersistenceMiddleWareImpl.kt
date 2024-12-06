@@ -6,6 +6,7 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
+import com.sceyt.chat.models.user.UserListQuery
 import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
@@ -551,7 +552,7 @@ internal class PersistenceMiddleWareImpl(
         attachmentsLogic.upsertLinkPreviewData(linkDetails)
     }
 
-    override suspend fun loadUsers(query: String): SceytResponse<List<SceytUser>> {
+    override suspend fun loadUsers(query: UserListQuery): SceytResponse<List<SceytUser>> {
         return usersLogic.loadUsers(query)
     }
 
