@@ -7,14 +7,14 @@ import androidx.core.graphics.toColorInt
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.ActivityMainBinding
-import com.sceyt.chat.demo.presentation.login.LoginViewModel
+import com.sceyt.chat.demo.presentation.login.create.CreateProfileViewModel
 import com.sceyt.chat.demo.presentation.main.adapters.MainViewPagerAdapter
 import com.sceyt.chat.demo.presentation.main.profile.ProfileFragment
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListFragment
+import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject
@@ -22,7 +22,7 @@ import org.koin.android.ext.android.inject
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private val loginViewModel by inject<LoginViewModel>()
+    private val createProfileViewModel by inject<CreateProfileViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,9 +57,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initViewModel() {
-        loginViewModel.pageStateLiveData.observe(this) { pageState ->
-            if (pageState is PageState.StateError) customToastSnackBar(pageState.errorMessage
-                    ?: return@observe)
+        createProfileViewModel.pageStateLiveData.observe(this) { pageState ->
+            if (pageState is PageState.StateError) customToastSnackBar(
+                pageState.errorMessage
+                    ?: return@observe
+            )
         }
     }
 
@@ -86,7 +88,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loginIfNeeded() {
-        if (!loginViewModel.isLoggedIn())
-            loginViewModel.loginWithRandomUser()
+        if (!createProfileViewModel.isLoggedIn())
+            createProfileViewModel.loginWithRandomUser()
     }
 }

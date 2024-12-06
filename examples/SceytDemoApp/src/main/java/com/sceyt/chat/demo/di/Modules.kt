@@ -1,16 +1,17 @@
 package com.sceyt.chat.demo.di
 
 import com.sceyt.chat.demo.BuildConfig
-import com.sceyt.chat.demo.data.interceptors.RetryInterceptor
 import com.sceyt.chat.demo.connection.ChatClientConnectionInterceptor
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.data.AppSharedPreferenceImpl
 import com.sceyt.chat.demo.data.api.AuthApiService
+import com.sceyt.chat.demo.data.interceptors.RetryInterceptor
 import com.sceyt.chat.demo.data.repositories.ConnectionRepo
-import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersViewModel
+import com.sceyt.chat.demo.presentation.login.create.CreateProfileViewModel
+import com.sceyt.chat.demo.presentation.main.profile.edit.EditProfileViewModel
 import com.sceyt.chatuikit.presentation.components.role.viewmodel.RoleViewModel
-import com.sceyt.chat.demo.presentation.login.LoginViewModel
+import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersViewModel
 import okhttp3.OkHttpClient
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -27,7 +28,8 @@ val appModules = module {
 val viewModelModules = module {
     viewModel { UsersViewModel() }
     viewModel { RoleViewModel() }
-    viewModel { LoginViewModel(get(), get()) }
+    viewModel { CreateProfileViewModel(get(), get()) }
+    viewModel { EditProfileViewModel() }
 }
 
 val apiModule = module {
