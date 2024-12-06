@@ -5,14 +5,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import com.sceyt.chat.demo.databinding.FragmentWelcomeBinding
-import com.sceyt.chat.demo.presentation.login.LoginActivity
 import com.sceyt.chat.demo.presentation.login.SelectAccountBottomSheetFragment
-import com.sceyt.chat.demo.presentation.login.create.CreateProfileFragment
+import com.sceyt.chat.demo.presentation.login.WelcomeActivity
+import com.sceyt.chat.demo.presentation.login.create.KEY_USER_ID
+import com.sceyt.chat.demo.presentation.login.create.KEY_USER_ID_REQUEST
+import com.sceyt.chat.demo.presentation.main.MainActivity
+import com.sceyt.chatuikit.extensions.launchActivity
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class WelcomeFragment : Fragment() {
     private var _binding: FragmentWelcomeBinding? = null
     private val binding get() = _binding!!
+    private val viewModel: WelcomeViewModel by viewModel()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -26,7 +32,12 @@ class WelcomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setFragmentResultListener(KEY_USER_ID_REQUEST) { _, bundle ->
+            val userId = bundle.getString(KEY_USER_ID)
+            viewModel.loginUser(userId = userId ?: "")
+        }
         initClickListeners()
+        initViewModel()
     }
 
     override fun onDestroyView() {
@@ -34,13 +45,27 @@ class WelcomeFragment : Fragment() {
         _binding = null
     }
 
+    private fun initViewModel() {
+        viewModel.logInLiveData.observe(viewLifecycleOwner) {
+            if (it) {
+                with(requireActivity()) {
+                    launchActivity<MainActivity>()
+                    finish()
+                }
+            }
+        }
+    }
+
     private fun initClickListeners() {
         with(binding) {
             btnCreateAccount.setOnClickListener {
-                (activity as? LoginActivity)?.openFragment(CreateProfileFragment())
+                (activity as? WelcomeActivity)?.openCreateAccountFragment()
             }
             btnChooseAccount.setOnClickListener {
-                SelectAccountBottomSheetFragment().show(parentFragmentManager, "SelectAccountBottomSheetFragment")
+                SelectAccountBottomSheetFragment().show(
+                    parentFragmentManager,
+                    SelectAccountBottomSheetFragment::class.java.simpleName
+                )
             }
         }
     }

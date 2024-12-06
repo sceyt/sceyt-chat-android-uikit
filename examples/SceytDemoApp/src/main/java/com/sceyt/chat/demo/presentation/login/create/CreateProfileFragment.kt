@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import com.sceyt.chat.demo.databinding.FragmentCreateAccountBinding
-import com.sceyt.chat.demo.presentation.login.LoginActivity
+import com.sceyt.chat.demo.presentation.login.WelcomeActivity
 import com.sceyt.chat.demo.presentation.main.MainActivity
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.hideSoftInput
@@ -15,6 +15,9 @@ import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.root.PageState
 import org.koin.androidx.viewmodel.ext.android.viewModel
+
+const val KEY_USER_ID = "USER_ID"
+const val KEY_USER_ID_REQUEST = "USER_ID_REQUEST"
 
 class CreateProfileFragment : Fragment() {
     private val viewModel: CreateProfileViewModel by viewModel()
@@ -34,9 +37,7 @@ class CreateProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.btnNext.setEnabledOrNot(false)
-        if (viewModel.isLoggedIn()) {
-            launchMainActivity()
-        }
+
         initViewModel()
         binding.initViews()
         initClickListeners()
@@ -71,7 +72,10 @@ class CreateProfileFragment : Fragment() {
 
         viewModel.logInLiveData.observe(viewLifecycleOwner) {
             if (it) {
-                launchMainActivity()
+                with(requireActivity()) {
+                    launchActivity<MainActivity>()
+                    finish()
+                }
             }
         }
     }
@@ -87,7 +91,6 @@ class CreateProfileFragment : Fragment() {
                 etUserName.text?.trim().toString()
             )
         }
-
     }
 
     private fun checkIfNextButtonShouldBeEnabled() {
@@ -97,17 +100,10 @@ class CreateProfileFragment : Fragment() {
         }
     }
 
-    private fun launchMainActivity() {
-        context?.let { context ->
-            context.launchActivity<MainActivity>()
-            requireActivity().finish()
-        }
-    }
-
     private fun initClickListeners() {
         with(binding) {
             toolbar.setNavigationClickListener {
-                (activity as? LoginActivity)?.onBackPressedDispatcher?.onBackPressed()
+                (activity as? WelcomeActivity)?.onBackPressedDispatcher?.onBackPressed()
             }
         }
     }

@@ -5,16 +5,26 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
+import androidx.fragment.app.setFragmentResult
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.chat.demo.databinding.FragmentBottomSheetSelectAccountBinding
-import com.sceyt.chat.models.user.UserState
+import com.sceyt.chat.demo.presentation.login.adapters.SceytUsersAdapter
+import com.sceyt.chat.demo.presentation.login.create.KEY_USER_ID
+import com.sceyt.chat.demo.presentation.login.create.KEY_USER_ID_REQUEST
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.data.models.messages.SceytUser
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class SelectAccountBottomSheetFragment : BottomSheetDialogFragment() {
     private lateinit var binding: FragmentBottomSheetSelectAccountBinding
-    private val usersAdapter = SceytUsersAdapter {}
+    private val viewModel: SelectAccountsBottomSheetViewModel by viewModel()
+
+    private val usersAdapter = SceytUsersAdapter { user ->
+        val id = user.id
+        setFragmentResult(KEY_USER_ID_REQUEST, bundleOf(KEY_USER_ID to id))
+        dismiss()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +42,7 @@ class SelectAccountBottomSheetFragment : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        usersAdapter.submitList(dummyUsers)
+        initViewModel()
         initRecyclerView()
     }
 
@@ -46,98 +56,13 @@ class SelectAccountBottomSheetFragment : BottomSheetDialogFragment() {
         }
     }
 
+    private fun initViewModel() {
+        viewModel.accountsLiveData.observe(viewLifecycleOwner) {
+            usersAdapter.submitList(it)
+        }
+    }
+
     private fun initRecyclerView() {
         binding.rvAccounts.adapter = usersAdapter
     }
-
-    val dummyUsers = listOf(
-        SceytUser(
-            id = "1",
-            username = "john.doe",
-            firstName = "John",
-            lastName = "Doe",
-            avatarURL = "https://fastly.picsum.photos/id/758/200/300.jpg?hmac=lQtDVVjQGklGEIBCA-5yXBI3L8zkkeGObzmCi-rUFKo",
-            metadataMap = mapOf("key1" to "value1"),
-            presence = null,
-            state = UserState.Active,
-            blocked = false
-        ),
-        SceytUser(
-            id = "2",
-            username = "jane.smith",
-            firstName = "Jane",
-            lastName = "Smith",
-            avatarURL = "https://fastly.picsum.photos/id/758/200/300.jpg?hmac=lQtDVVjQGklGEIBCA-5yXBI3L8zkkeGObzmCi-rUFKo",
-            metadataMap = mapOf("key2" to "value2"),
-            presence = null,
-            state = UserState.Active,
-            blocked = true
-        ),
-        SceytUser(
-            id = "3",
-            username = "mark.brown",
-            firstName = "Mark",
-            lastName = "Brown",
-            avatarURL = "https://fastly.picsum.photos/id/758/200/300.jpg?hmac=lQtDVVjQGklGEIBCA-5yXBI3L8zkkeGObzmCi-rUFKo",
-            metadataMap = null,
-            presence = null,
-            state = UserState.Active,
-            blocked = false
-        ),
-        SceytUser(
-            id = "4",
-            username = "anna.white",
-            firstName = "Anna",
-            lastName = "White",
-            avatarURL = "https://fastly.picsum.photos/id/758/200/300.jpg?hmac=lQtDVVjQGklGEIBCA-5yXBI3L8zkkeGObzmCi-rUFKo",
-            metadataMap = null,
-            presence = null,
-            state = UserState.Active,
-            blocked = false
-        ),
-        SceytUser(
-            id = "5",
-            username = "mike.jones",
-            firstName = "Mike",
-            lastName = "Jones",
-            avatarURL = "https://fastly.picsum.photos/id/758/200/300.jpg?hmac=lQtDVVjQGklGEIBCA-5yXBI3L8zkkeGObzmCi-rUFKo",
-            metadataMap = mapOf("key5" to "value5"),
-            presence = null,
-            state = UserState.Active,
-            blocked = true
-        ),
-        SceytUser(
-            id = "6",
-            username = "emma.davis",
-            firstName = "Emma",
-            lastName = "Davis",
-            avatarURL = "https://fastly.picsum.photos/id/758/200/300.jpg?hmac=lQtDVVjQGklGEIBCA-5yXBI3L8zkkeGObzmCi-rUFKo",
-            metadataMap = null,
-            presence = null,
-            state = UserState.Active,
-            blocked = false
-        ),
-        SceytUser(
-            id = "7",
-            username = "daniel.martin",
-            firstName = "Daniel",
-            lastName = "Martin",
-            avatarURL = "https://fastly.picsum.photos/id/758/200/300.jpg?hmac=lQtDVVjQGklGEIBCA-5yXBI3L8zkkeGObzmCi-rUFKo",
-            metadataMap = null,
-            presence = null,
-            state = UserState.Active,
-            blocked = false
-        ),
-        SceytUser(
-            id = "8",
-            username = "sophia.lewis",
-            firstName = "Sophia",
-            lastName = "Lewis",
-            avatarURL = "https://fastly.picsum.photos/id/758/200/300.jpg?hmac=lQtDVVjQGklGEIBCA-5yXBI3L8zkkeGObzmCi-rUFKo",
-            metadataMap = mapOf("key8" to "value8"),
-            presence = null,
-            state = UserState.Active,
-            blocked = false
-        )
-    )
 }
