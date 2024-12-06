@@ -8,7 +8,9 @@ import com.sceyt.chat.demo.data.AppSharedPreferenceImpl
 import com.sceyt.chat.demo.data.api.AuthApiService
 import com.sceyt.chat.demo.data.interceptors.RetryInterceptor
 import com.sceyt.chat.demo.data.repositories.ConnectionRepo
+import com.sceyt.chat.demo.presentation.login.SelectAccountsBottomSheetViewModel
 import com.sceyt.chat.demo.presentation.login.create.CreateProfileViewModel
+import com.sceyt.chat.demo.presentation.login.welcome.WelcomeViewModel
 import com.sceyt.chat.demo.presentation.main.profile.edit.EditProfileViewModel
 import com.sceyt.chatuikit.presentation.components.role.viewmodel.RoleViewModel
 import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersViewModel
@@ -30,6 +32,8 @@ val viewModelModules = module {
     viewModel { RoleViewModel() }
     viewModel { CreateProfileViewModel(get(), get()) }
     viewModel { EditProfileViewModel() }
+    viewModel { SelectAccountsBottomSheetViewModel() }
+    viewModel { WelcomeViewModel(get(), get()) }
 }
 
 val apiModule = module {

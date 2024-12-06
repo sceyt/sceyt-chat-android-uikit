@@ -14,7 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.databinding.FragmentProfileBinding
-import com.sceyt.chat.demo.presentation.login.LoginActivity
+import com.sceyt.chat.demo.presentation.login.WelcomeActivity
 import com.sceyt.chat.demo.presentation.main.profile.edit.EditProfileFragment
 import com.sceyt.chatuikit.config.defaults.DefaultMuteNotificationOptions
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -84,7 +84,7 @@ class ProfileFragment : Fragment() {
         viewModel.logOutLiveData.observe(viewLifecycleOwner) {
             preference.setString(AppSharedPreference.PREF_USER_ID, null)
             preference.setString(AppSharedPreference.PREF_USER_TOKEN, null)
-            LoginActivity.launch(requireContext())
+            WelcomeActivity.launch(requireContext())
             requireActivity().finish()
         }
 
@@ -117,7 +117,7 @@ class ProfileFragment : Fragment() {
             }
         }
 
-        tvEdit.setOnClickListener {
+        ivEdit.setOnClickListener {
             openEditProfileFragment()
         }
 

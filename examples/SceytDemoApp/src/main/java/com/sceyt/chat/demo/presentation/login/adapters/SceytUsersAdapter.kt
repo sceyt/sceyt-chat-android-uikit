@@ -1,4 +1,4 @@
-package com.sceyt.chat.demo.presentation.login
+package com.sceyt.chat.demo.presentation.login.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -31,11 +31,9 @@ class SceytUsersAdapter(
 
         fun bind(user: SceytUser, isSelected: Boolean, onItemClick: (SceytUser) -> Unit) {
             binding.apply {
-                tvUsername.text = user.fullName.ifBlank { user.username }
+                tvUsername.text = user.id
                 ivAvatar.setImageUrl(user.avatarURL)
-
                 checkbox.isChecked = isSelected
-
                 root.setOnClickListener {
                     selectItem(bindingAdapterPosition)
                     onItemClick(user)

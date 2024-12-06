@@ -3,33 +3,46 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:paddingVertical="8dp"
     android:layout_height="wrap_content">
 
     <com.sceyt.chatuikit.presentation.custom_views.AvatarView
         android:id="@+id/iv_avatar"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:layout_marginVertical="8dp"
         android:layout_marginStart="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar" />
 
     <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/uriPrefix"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layoutDirection="ltr"
+        android:text="\@"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/iv_avatar"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="HardcodedText" />
+
+    <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv_username"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/tinyTextSize"
         android:layout_marginEnd="2dp"
         android:ellipsize="end"
-        android:fontFamily="@font/roboto_medium"
         android:singleLine="true"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/mediumTextSize"
-        app:layout_constraintBottom_toBottomOf="@id/iv_avatar"
+        app:layout_constraintBottom_toBottomOf="@id/uriPrefix"
         app:layout_constraintEnd_toStartOf="@id/checkbox"
-        app:layout_constraintStart_toEndOf="@id/iv_avatar"
-        app:layout_constraintTop_toTopOf="@id/iv_avatar"
+        app:layout_constraintStart_toEndOf="@id/uriPrefix"
+        app:layout_constraintTop_toTopOf="@id/uriPrefix"
         tools:text="john.doe" />
 
     <androidx.appcompat.widget.AppCompatCheckBox
