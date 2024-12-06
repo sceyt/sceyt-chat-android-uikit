@@ -51,12 +51,6 @@
             </intent-filter>
 
         </activity>
-        <activity
-
-            android:name=".presentation.login.LoginActivity"
-            android:exported="false"
-            android:theme="@style/SceytAppTheme.Default"
-            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".presentation.main.MainActivity"
@@ -65,7 +59,7 @@
             android:windowSoftInputMode="adjustNothing"/>
 
         <activity
-            android:name=".presentation.login.LoginActivityNew"
+            android:name=".presentation.login.LoginActivity"
             android:exported="true"
             android:theme="@style/SceytAppTheme.Default"
             android:windowSoftInputMode="adjustNothing"/>

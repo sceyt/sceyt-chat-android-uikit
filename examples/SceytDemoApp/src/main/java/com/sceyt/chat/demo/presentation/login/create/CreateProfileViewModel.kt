@@ -1,4 +1,4 @@
-package com.sceyt.chat.demo.presentation.login
+package com.sceyt.chat.demo.presentation.login.create
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -24,23 +24,32 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
-class LoginViewModel(private val preference: AppSharedPreference,
-                     private val connectionProvider: SceytConnectionProvider) : BaseViewModel() {
+class CreateProfileViewModel(
+    private val preference: AppSharedPreference,
+    private val connectionProvider: SceytConnectionProvider
+) : BaseViewModel() {
 
     private val userInteractor: UserInteractor by lazy { SceytChatUIKit.chatUIFacade.userInteractor }
     private val _logInLiveData = MutableLiveData<Boolean>()
     val logInLiveData: LiveData<Boolean> = _logInLiveData
 
-    fun loginUser(userId: String, displayName: String) {
+    fun loginUser(
+        userId: String,
+        firstName: String? = null,
+        lastName: String? = null,
+        username: String
+    ) {
         notifyPageLoadingState(false)
         viewModelScope.launch {
             val result = connectUser(userId)
             if (result.isSuccess) {
                 preference.setString(AppSharedPreference.PREF_USER_ID, userId)
-                updateProfile(displayName)
+                updateProfile(firstName = firstName, lastName = lastName, username = username)
             } else
-                pageStateLiveDataInternal.value = PageState.StateError(null, result.exceptionOrNull()?.message
-                        ?: "Connection failed")
+                pageStateLiveDataInternal.value = PageState.StateError(
+                    null, result.exceptionOrNull()?.message
+                        ?: "Connection failed"
+                )
 
             pageStateLiveDataInternal.value = PageState.StateLoading(false)
             _logInLiveData.value = result.isSuccess
@@ -55,8 +64,10 @@ class LoginViewModel(private val preference: AppSharedPreference,
             if (result.isSuccess) {
                 preference.setString(AppSharedPreference.PREF_USER_ID, randomUserId)
             } else
-                pageStateLiveDataInternal.value = PageState.StateError(null, result.exceptionOrNull()?.message
-                        ?: "Connection failed")
+                pageStateLiveDataInternal.value = PageState.StateError(
+                    null, result.exceptionOrNull()?.message
+                        ?: "Connection failed"
+                )
 
             pageStateLiveDataInternal.value = PageState.StateLoading(false)
             _logInLiveData.value = result.isSuccess
@@ -65,14 +76,23 @@ class LoginViewModel(private val preference: AppSharedPreference,
 
     fun isLoggedIn() = preference.getString(AppSharedPreference.PREF_USER_ID).isNullOrBlank().not()
 
-    private suspend fun updateProfile(displayName: String) = withContext(Dispatchers.IO) {
-        val currentUser = SceytChatUIKit.currentUser ?: userInteractor.getCurrentUser()
-        ?: return@withContext SceytResponse.Error<SceytUser>(SceytException(0, "User not found"))
-        userInteractor.updateProfile(currentUser.username, displayName, currentUser.lastName,
-            currentUser.avatarURL,
-            currentUser.metadataMap
-        )
-    }
+    private suspend fun updateProfile(firstName: String?, lastName: String?, username: String) =
+        withContext(Dispatchers.IO) {
+            val currentUser = SceytChatUIKit.currentUser ?: userInteractor.getCurrentUser()
+            ?: return@withContext SceytResponse.Error<SceytUser>(
+                SceytException(
+                    0,
+                    "User not found"
+                )
+            )
+            userInteractor.updateProfile(
+                username = username,
+                firstName = firstName,
+                lastName = lastName,
+                currentUser.avatarURL,
+                currentUser.metadataMap
+            )
+        }
 
     private suspend fun connectUser(userId: String): Result<Boolean> {
         return withContext(Dispatchers.IO) {
@@ -86,17 +106,23 @@ class LoginViewModel(private val preference: AppSharedPreference,
                         }
 
                         ConnectionState.Disconnected, ConnectionState.Failed -> {
-                            continuation.resume(Result.failure(Exception(it.exception?.message
-                                    ?: "Connection failed")))
+                            continuation.resume(
+                                Result.failure(
+                                    Exception(
+                                        it.exception?.message
+                                            ?: "Connection failed"
+                                    )
+                                )
+                            )
                             job?.cancel()
                         }
 
                         else -> {}
                     }
                 }.launchIn(this)
-
                 connectionProvider.connectChatClient(userId)
             }
         }
     }
+
 }

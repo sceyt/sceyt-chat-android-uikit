@@ -1,13 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_primary"
-    android:gravity="center_horizontal"
-    android:orientation="vertical"
-    tools:parentTag="com.google.android.material.appbar.AppBarLayout">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/iv_logo"
@@ -48,16 +44,18 @@
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_create_account"
+        tools:layout_editor_absoluteX="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="12dp"
         android:background="@drawable/sceyt_bg_corners_8"
+        android:fontFamily="@font/roboto_medium"
         android:text="@string/create_account"
+        android:textAllCaps="false"
         android:textColor="@color/sceyt_color_on_primary"
         android:textSize="@dimen/smallTextSize"
-        app:layout_constraintBottom_toTopOf="@+id/btn_choose_account"
-        tools:layout_editor_absoluteX="16dp" />
+        app:layout_constraintBottom_toTopOf="@+id/btn_choose_account" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_choose_account"
@@ -66,10 +64,11 @@
         android:layout_marginHorizontal="16dp"
         android:layout_marginBottom="16dp"
         android:background="@drawable/sceyt_bg_gray_corners_8"
+        android:fontFamily="@font/roboto_medium"
         android:text="@string/choose_account"
-        android:textColor="@color/sceyt_color_on_primary"
+        android:textAllCaps="false"
+        android:textColor="@color/sceyt_color_accent"
         android:textSize="@dimen/smallTextSize"
         app:layout_constraintBottom_toBottomOf="parent" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
