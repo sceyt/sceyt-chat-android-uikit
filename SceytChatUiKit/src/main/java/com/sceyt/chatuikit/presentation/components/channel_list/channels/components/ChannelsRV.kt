@@ -34,7 +34,7 @@ class ChannelsRV @JvmOverloads constructor(
         defStyleAttr: Int = 0
 ) : RecyclerView(context, attrs, defStyleAttr) {
 
-    private var mAdapter: ChannelsAdapter? = null
+    private var channelsAdapter: ChannelsAdapter? = null
     private var reachToEndListener: ((offset: Int, lastChannel: SceytChannel?) -> Unit)? = null
     private var viewHolderFactory = ChannelViewHolderFactory(context)
 
@@ -60,17 +60,17 @@ class ChannelsRV @JvmOverloads constructor(
     }
 
     private fun checkReachToEnd() {
-        val adapter = mAdapter ?: return
+        val adapter = channelsAdapter ?: return
         if (isLastItemDisplaying() && adapter.itemCount != 0)
             reachToEndListener?.invoke(adapter.getSkip(), adapter.getChannels().lastOrNull()?.channel)
     }
 
     fun setData(channels: List<ChannelListItem>) {
-        if (mAdapter == null) {
+        if (channelsAdapter == null) {
             adapter = ChannelsAdapter(SyncArrayList(channels), viewHolderFactory)
-                .also { mAdapter = it }
+                .also { channelsAdapter = it }
         } else {
-            mAdapter?.notifyUpdate(channels, this)
+            channelsAdapter?.notifyUpdate(channels, this)
             awaitAnimationEnd {
                 if (isFirstItemDisplaying())
                     scrollToPosition(0)
@@ -88,40 +88,40 @@ class ChannelsRV @JvmOverloads constructor(
     }
 
     fun isEmpty(): Boolean {
-        return (mAdapter?.getSkip() ?: return true) == 0
+        return (channelsAdapter?.getSkip() ?: return true) == 0
     }
 
     override fun getAdapter(): ChannelsAdapter? {
-        return mAdapter
+        return channelsAdapter
     }
 
     fun addNewChannels(channels: List<ChannelListItem>) {
-        if (mAdapter == null)
+        if (channelsAdapter == null)
             setData(channels)
         else
-            mAdapter?.addList(channels)
+            channelsAdapter?.addList(channels)
     }
 
     fun deleteChannel(id: Long) {
-        mAdapter?.deleteChannel(id)
+        channelsAdapter?.deleteChannel(id)
     }
 
     fun getChannels(): List<ChannelListItem.ChannelItem>? {
-        return mAdapter?.getChannels()
+        return channelsAdapter?.getChannels()
     }
 
     fun getData(): List<ChannelListItem>? {
-        return mAdapter?.getData()
+        return channelsAdapter?.getData()
     }
 
     fun getChannelIndexed(channelId: Long): Pair<Int, ChannelListItem.ChannelItem>? {
-        return mAdapter?.getData()?.findIndexed { it is ChannelListItem.ChannelItem && it.channel.id == channelId }?.let {
+        return channelsAdapter?.getData()?.findIndexed { it is ChannelListItem.ChannelItem && it.channel.id == channelId }?.let {
             return@let Pair(it.first, it.second as ChannelListItem.ChannelItem)
         }
     }
 
     fun getDirectChannelByUserIdIndexed(userId: String): Pair<Int, ChannelListItem.ChannelItem>? {
-        return mAdapter?.getData()?.findIndexed {
+        return channelsAdapter?.getData()?.findIndexed {
             it is ChannelListItem.ChannelItem && it.channel.isDirect()
                     && it.channel.getPeer()?.id == userId
         }?.let {
@@ -132,7 +132,7 @@ class ChannelsRV @JvmOverloads constructor(
     /** Call this function to customise ChannelViewHolderFactory and set your own.
      * Note: Call this function before initialising channels adapter.*/
     fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
-        check(mAdapter == null) { "Adapter was already initialized, please set ChannelViewHolderFactory first" }
+        check(channelsAdapter == null) { "Adapter was already initialized, please set ChannelViewHolderFactory first" }
         viewHolderFactory = factory
     }
 
@@ -149,7 +149,7 @@ class ChannelsRV @JvmOverloads constructor(
     }
 
     fun sortBy(sortChannelsBy: ChannelListOrder = SceytChatUIKit.config.channelListOrder) {
-        sortAndUpdate(sortChannelsBy, mAdapter?.getData() ?: return)
+        sortAndUpdate(sortChannelsBy, channelsAdapter?.getData() ?: return)
     }
 
     fun sortByAndSetNewData(sortChannelsBy: ChannelListOrder, data: List<ChannelListItem>) {
@@ -157,7 +157,7 @@ class ChannelsRV @JvmOverloads constructor(
     }
 
     fun hideLoadingMore() {
-        mAdapter?.removeLoading()
+        channelsAdapter?.removeLoading()
     }
 
     fun getViewHolderFactory() = viewHolderFactory
