@@ -81,7 +81,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setPagerAdapter() {
-        val adapter = MainViewPagerAdapter(this, arrayListOf(ChannelListFragment(), ProfileFragment()))
+        val adapter =
+            MainViewPagerAdapter(this, arrayListOf(ChannelListFragment(), ProfileFragment()))
         binding.viewPager.adapter = adapter
         binding.viewPager.isUserInputEnabled = false
         binding.viewPager.offscreenPageLimit = 2
