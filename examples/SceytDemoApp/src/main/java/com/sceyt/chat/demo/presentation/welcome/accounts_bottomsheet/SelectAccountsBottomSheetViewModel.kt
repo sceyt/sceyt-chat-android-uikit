@@ -1,4 +1,4 @@
-package com.sceyt.chat.demo.presentation.login
+package com.sceyt.chat.demo.presentation.welcome.accounts_bottomsheet
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

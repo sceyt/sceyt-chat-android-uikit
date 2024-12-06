@@ -1,11 +1,11 @@
-package com.sceyt.chat.demo.presentation.login
+package com.sceyt.chat.demo.presentation.welcome
 
 import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import com.sceyt.chat.demo.databinding.ActivityWelcomeBinding
-import com.sceyt.chat.demo.presentation.login.create.CreateProfileFragment
+import com.sceyt.chat.demo.presentation.welcome.create.CreateProfileFragment
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground

@@ -8,9 +8,9 @@ import com.sceyt.chat.demo.data.AppSharedPreferenceImpl
 import com.sceyt.chat.demo.data.api.AuthApiService
 import com.sceyt.chat.demo.data.interceptors.RetryInterceptor
 import com.sceyt.chat.demo.data.repositories.ConnectionRepo
-import com.sceyt.chat.demo.presentation.login.SelectAccountsBottomSheetViewModel
-import com.sceyt.chat.demo.presentation.login.create.CreateProfileViewModel
-import com.sceyt.chat.demo.presentation.login.welcome.WelcomeViewModel
+import com.sceyt.chat.demo.presentation.welcome.accounts_bottomsheet.SelectAccountsBottomSheetViewModel
+import com.sceyt.chat.demo.presentation.welcome.create.CreateProfileViewModel
+import com.sceyt.chat.demo.presentation.welcome.welcome.WelcomeViewModel
 import com.sceyt.chat.demo.presentation.main.profile.edit.EditProfileViewModel
 import com.sceyt.chat.demo.presentation.splash.SplashViewModel
 import com.sceyt.chatuikit.presentation.components.role.viewmodel.RoleViewModel

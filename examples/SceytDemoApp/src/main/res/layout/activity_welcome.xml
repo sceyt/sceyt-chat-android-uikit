@@ -9,7 +9,7 @@
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragmentContainer"
-        android:name="com.sceyt.chat.demo.presentation.login.welcome.WelcomeFragment"
+        android:name="com.sceyt.chat.demo.presentation.welcome.welcome.WelcomeFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
