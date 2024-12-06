@@ -3,13 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <data>
-
-        <variable
-            name="isSaveLoading"
-            type="Boolean" />
-    </data>
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -35,8 +28,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tvEditOrSave"
-                visibleIf="@{!isSaveLoading}"
+                android:id="@+id/tvEdit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="?selectableItemBackgroundBorderless"
@@ -44,16 +36,6 @@
                 android:text="@string/sceyt_edit"
                 android:textColor="@color/colorAccent"
                 android:textSize="@dimen/mediumTextSize"
-                app:layout_constraintBottom_toBottomOf="@+id/title"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/title" />
-
-            <ProgressBar
-                visibleIf="@{isSaveLoading}"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="4dp"
-                android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="@+id/title"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/title" />
@@ -90,24 +72,8 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:sceytUiAvatarTextSize="@dimen/extraLargeTextSize"
-                    tools:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar"
+                    app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar"
                     tools:sceytUiAvatarFullName="User name" />
-
-                <androidx.appcompat.widget.AppCompatImageView
-                    android:id="@+id/icEditPhoto"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/sceyt_bg_circle"
-                    android:backgroundTint="#60E3E7FF"
-                    android:padding="20dp"
-                    android:scaleType="centerCrop"
-                    android:tint="@color/colorAccent"
-                    app:layout_constraintBottom_toBottomOf="@+id/avatar"
-                    app:layout_constraintEnd_toEndOf="@+id/avatar"
-                    app:layout_constraintStart_toStartOf="@id/avatar"
-                    app:layout_constraintTop_toTopOf="@id/avatar"
-                    app:srcCompat="@drawable/sceyt_ic_camera" />
 
                 <ProgressBar
                     android:id="@+id/loadingProfileImage"
@@ -119,19 +85,15 @@
                     app:layout_constraintStart_toStartOf="@+id/avatar"
                     app:layout_constraintTop_toTopOf="@+id/avatar" />
 
-                <androidx.appcompat.widget.AppCompatEditText
+                <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/displayName"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
-                    android:background="@drawable/bg_edit_text_small_bottom_padding"
-                    android:backgroundTint="@color/colorAccent"
                     android:ellipsize="end"
                     android:fontFamily="@font/roboto_medium"
-                    android:hint="@string/display_name"
                     android:includeFontPadding="false"
-                    android:inputType="textPersonName"
-                    android:maxLines="2"
+                    android:maxLines="1"
                     android:paddingVertical="5dp"
                     android:textColor="@color/sceyt_color_text_primary"
                     android:textColorHint="@color/sceyt_color_text_footnote"
