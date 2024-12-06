@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.common
 
 import androidx.annotation.MainThread
-import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import androidx.recyclerview.widget.AdapterListUpdateCallback
 import androidx.recyclerview.widget.DiffUtil
@@ -13,7 +12,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -46,7 +44,6 @@ class AsyncListDiffer<T : Any>(
 
     @Volatile
     private var lastOperationsJob: Job? = null
-    private var lock = Any()
 
     /**
      * Listener interface for when the current list is updated.
@@ -65,69 +62,20 @@ class AsyncListDiffer<T : Any>(
      * Submit a new list for the adapter. Diff calculations will be computed on a background thread.
      * @param newList The new list to be submitted.
      */
+    @MainThread
     fun submitList(newList: List<T>?, commitCallback: (() -> Unit)? = null) {
         submitListImpl(newList, commitCallback = commitCallback)
     }
 
-    @VisibleForTesting
-    internal fun submitListInternal(
-            newList: List<T>?,
-            delay: Long = 0,
-            commitCallback: (() -> Unit)? = null
-    ) {
-        submitListImpl(newList, delay, commitCallback)
-    }
-
-    private fun submitListImpl(newList: List<T>?, delay: Long = 0, commitCallback: (() -> Unit)? = null) {
-        lastSubmitJob?.cancel()
-        lastOperationsJob?.cancel()
-        lastSubmitJob = coroutineScope.launch {
-            delay(delay)
-            val previousList = readOnlyList
-            if (newList == list) {
-                // Same list, nothing to do
-                commitCallback?.invoke()
-                return@launch
-            }
-
-            if (newList == null) {
-                // Fast remove-all scenario
-                val countRemoved = list?.size ?: 0
-                list = null
-                readOnlyList = emptyList()
-                updateCallback.onRemoved(0, countRemoved)
-                onCurrentListChanged(previousList, commitCallback)
-                return@launch
-            }
-
-            if (list == null) {
-                // Fast insert-all scenario
-                list = newList
-                readOnlyList = newList.toList()
-                updateCallback.onInserted(0, newList.size)
-                onCurrentListChanged(previousList, commitCallback)
-                return@launch
-            }
-
-            // Full diffing process
-            val oldList = list ?: return@launch
-            withContext(backgroundDispatcher) {
-                val result = calculateDiff(oldList, newList)
-                if (isActive) {
-                    latchList(newList, result, commitCallback)
-                }
-            }
-        }
-    }
-
+    @MainThread
     fun updateItem(
             predicate: (T) -> Boolean,
             newItem: T,
-            payloads: List<Any>?,
-            commitCallback: (() -> Unit)?,
+            payloads: Any? = null,
+            commitCallback: (() -> Unit)? = null,
     ) = coroutineScope.launch {
         mutex.withLock {
-            waitForSubmitingJob()
+            waitForSubmitJob()
             val previousList = readOnlyList
             val newList = list?.toMutableList() ?: return@withLock
             val position = newList.indexOfFirst(predicate).takeIf { it != -1 } ?: return@withLock
@@ -139,12 +87,13 @@ class AsyncListDiffer<T : Any>(
         }
     }.also { lastOperationsJob = it }
 
+    @MainThread
     fun removeItem(
             commitCallback: (() -> Unit)? = null,
             predicate: (T) -> Boolean,
     ) = coroutineScope.launch {
         mutex.withLock {
-            waitForSubmitingJob()
+            waitForSubmitJob()
             val previousList = readOnlyList
             val newList = list?.toMutableList() ?: mutableListOf()
             val position = newList.removeFirstIf(predicate).takeIf { it != -1 } ?: return@withLock
@@ -156,72 +105,46 @@ class AsyncListDiffer<T : Any>(
         }
     }.also { lastOperationsJob = it }
 
-    fun addItem(
-            position: Int,
-            item: T,
-            commitCallback: (() -> Unit)?,
-    ) = coroutineScope.launch {
-        mutex.withLock {
-            waitForSubmitingJob()
-            if (position !in readOnlyList.indices) {
-                return@withLock
-            }
-            val previousList = readOnlyList
-            val newList = list?.toMutableList() ?: mutableListOf()
-            newList.add(position, item)
-            list = newList
-            readOnlyList = newList.toList()
-            updateCallback.onInserted(position, 1)
-            onCurrentListChanged(previousList, commitCallback)
-        }
-    }
-
-    fun addItems(
-            position: Int,
-            items: List<T>,
-            commitCallback: (() -> Unit)?,
-    ) = coroutineScope.launch {
-        mutex.withLock {
-            waitForSubmitingJob()
-            val previousList = readOnlyList
-            val newList = list?.toMutableList() ?: mutableListOf()
-            newList.addAll(position, items)
-            list = newList
-            readOnlyList = newList.toList()
-            updateCallback.onInserted(position, items.size)
-            onCurrentListChanged(previousList, commitCallback)
-        }
-    }
-
+    @MainThread
     fun addItems(
             items: List<T>,
             commitCallback: (() -> Unit)? = null,
-    ) = coroutineScope.launch {
-        mutex.withLock {
-            waitForSubmitingJob()
-            val previousList = readOnlyList
-            val newList = list?.toMutableList() ?: mutableListOf()
-            newList.addAll(items)
-            list = newList
-            readOnlyList = newList.toList()
-            updateCallback.onInserted(previousList.size, items.size)
-            onCurrentListChanged(previousList, commitCallback)
-        }
+    ) = addItemsImpl(items, commitCallback = commitCallback)
+
+    @MainThread
+    fun addItems(
+            position: Int,
+            items: List<T>,
+            commitCallback: (() -> Unit)? = null,
+    ) = addItemsImpl(items, position = position, commitCallback = commitCallback)
+
+    @MainThread
+    fun addItem(
+            item: T,
+            commitCallback: (() -> Unit)? = null,
+    ) = addItemsImpl(listOf(item), commitCallback = commitCallback)
+
+    @MainThread
+    fun addItem(
+            position: Int,
+            item: T,
+            commitCallback: (() -> Unit)? = null,
+    ) = addItemsImpl(listOf(item), position = position, commitCallback = commitCallback)
+
+    /**
+     * Add a listener to be notified when the current list changes.
+     */
+    @MainThread
+    fun addListListener(listener: ListListener<T>) {
+        listeners.add(listener)
     }
 
-    private suspend fun waitForSubmitingJob() {
-        lastSubmitJob?.let { job ->
-            // Suspend until the lastJob completes, whether it was canceled or succeeded
-            if (!job.isCompleted) {
-                suspendCancellableCoroutine { continuation ->
-                    job.invokeOnCompletion { throwable ->
-                        if (throwable == null || throwable is CancellationException) {
-                            continuation.resume(Unit)
-                        }
-                    }
-                }
-            }
-        }
+    /**
+     * Remove a previously registered listener.
+     */
+    @MainThread
+    fun removeListListener(listener: ListListener<T>) {
+        listeners.remove(listener)
     }
 
     @WorkerThread
@@ -269,19 +192,85 @@ class AsyncListDiffer<T : Any>(
         commitCallback?.invoke()
     }
 
-    /**
-     * Add a listener to be notified when the current list changes.
-     */
-    @MainThread
-    fun addListListener(listener: ListListener<T>) {
-        listeners.add(listener)
+    private fun submitListImpl(
+            newList: List<T>?,
+            commitCallback: (() -> Unit)? = null
+    ) {
+        lastSubmitJob?.cancel()
+        lastOperationsJob?.cancel()
+        lastSubmitJob = coroutineScope.launch {
+            val previousList = readOnlyList
+            if (newList == list) {
+                // Same list, nothing to do
+                commitCallback?.invoke()
+                return@launch
+            }
+
+            if (newList == null) {
+                // Fast remove-all scenario
+                val countRemoved = list?.size ?: 0
+                list = null
+                readOnlyList = emptyList()
+                updateCallback.onRemoved(0, countRemoved)
+                onCurrentListChanged(previousList, commitCallback)
+                return@launch
+            }
+
+            if (list == null) {
+                // Fast insert-all scenario
+                list = newList
+                readOnlyList = newList.toList()
+                updateCallback.onInserted(0, newList.size)
+                onCurrentListChanged(previousList, commitCallback)
+                return@launch
+            }
+
+            // Full diffing process
+            val oldList = list ?: return@launch
+            withContext(backgroundDispatcher) {
+                val result = calculateDiff(oldList, newList)
+                if (isActive) {
+                    latchList(newList, result, commitCallback)
+                }
+            }
+        }
     }
 
-    /**
-     * Remove a previously registered listener.
-     */
-    @MainThread
-    fun removeListListener(listener: ListListener<T>) {
-        listeners.remove(listener)
+    private fun addItemsImpl(
+            items: List<T>,
+            position: Int = -1,
+            commitCallback: (() -> Unit)? = null,
+    ) = coroutineScope.launch {
+        mutex.withLock {
+            if (items.isEmpty()) return@withLock
+            waitForSubmitJob()
+            val previousList = readOnlyList
+            val newList = list?.toMutableList() ?: mutableListOf()
+            if (position == -1) {
+                newList.addAll(items.toList())
+            } else if (position in newList.indices) {
+                newList.addAll(position, items.toList())
+            }
+            list = newList
+            readOnlyList = newList.toList()
+            val positionToInsert = position.takeIf { it != -1 } ?: previousList.size
+            updateCallback.onInserted(positionToInsert, items.size)
+            onCurrentListChanged(previousList, commitCallback)
+        }
+    }.also { lastOperationsJob = it }
+
+    private suspend fun waitForSubmitJob() {
+        lastSubmitJob?.let { job ->
+            // Suspend until the lastJob completes, whether it was canceled or succeeded
+            if (!job.isCompleted) {
+                suspendCancellableCoroutine { continuation ->
+                    job.invokeOnCompletion { throwable ->
+                        if (throwable == null || throwable is CancellationException) {
+                            continuation.resume(Unit)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
