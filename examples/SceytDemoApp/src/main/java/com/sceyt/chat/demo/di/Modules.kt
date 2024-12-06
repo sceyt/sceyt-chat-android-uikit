@@ -12,6 +12,7 @@ import com.sceyt.chat.demo.presentation.login.SelectAccountsBottomSheetViewModel
 import com.sceyt.chat.demo.presentation.login.create.CreateProfileViewModel
 import com.sceyt.chat.demo.presentation.login.welcome.WelcomeViewModel
 import com.sceyt.chat.demo.presentation.main.profile.edit.EditProfileViewModel
+import com.sceyt.chat.demo.presentation.splash.SplashViewModel
 import com.sceyt.chatuikit.presentation.components.role.viewmodel.RoleViewModel
 import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersViewModel
 import okhttp3.OkHttpClient
@@ -34,6 +35,7 @@ val viewModelModules = module {
     viewModel { EditProfileViewModel() }
     viewModel { SelectAccountsBottomSheetViewModel() }
     viewModel { WelcomeViewModel(get(), get()) }
+    viewModel { SplashViewModel(get()) }
 }
 
 val apiModule = module {
