@@ -1,26 +1,33 @@
 package com.sceyt.chat.demo.presentation.welcome.create
 
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
+import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.sceyt.chat.demo.databinding.FragmentCreateAccountBinding
-import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
+import com.sceyt.chat.demo.presentation.common.ui.handleUsernameValidation
 import com.sceyt.chat.demo.presentation.main.MainActivity
+import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.hideSoftInput
+import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.root.PageState
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-const val KEY_USER_ID = "USER_ID"
-const val KEY_USER_ID_REQUEST = "USER_ID_REQUEST"
-
-class CreateProfileFragment : Fragment() {
-    private val viewModel: CreateProfileViewModel by viewModel()
+class CreateAccountFragment : Fragment() {
+    private val viewModel: CreateAccountViewModel by viewModel()
     private var _binding: FragmentCreateAccountBinding? = null
     private val binding get() = _binding!!
 
@@ -34,6 +41,7 @@ class CreateProfileFragment : Fragment() {
         return view
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.btnNext.setEnabledOrNot(false)
@@ -41,6 +49,7 @@ class CreateProfileFragment : Fragment() {
         initViewModel()
         binding.initViews()
         initClickListeners()
+        binding.btnNext.setEnabledOrNot(false)
     }
 
     override fun onDestroyView() {
@@ -48,6 +57,7 @@ class CreateProfileFragment : Fragment() {
         _binding = null
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun initViewModel() {
         viewModel.pageStateLiveData.observe(viewLifecycleOwner) { pageState ->
             when (pageState) {
@@ -78,10 +88,43 @@ class CreateProfileFragment : Fragment() {
                 }
             }
         }
+
+        viewModel.correctUsernameValidatorLiveData.observe(viewLifecycleOwner) {
+            handleUsernameValidation(
+                context = requireContext(),
+                validationState = it,
+                setAlert = { color, message ->
+                    setUsernameAlert(color, message)
+                },
+                isUsernameCorrect = { isUsernameCorrect ->
+                    viewModel.setUserNameValidState(isUsernameCorrect)
+                }
+            )
+        }
+
+        lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.usernameInput.collect { username ->
+                    viewModel.updateUsernameInput(username)
+                }
+            }
+        }
+
+        viewModel.nextButtonEnabledLiveData.observe(viewLifecycleOwner) {
+            binding.btnNext.setEnabledOrNot(it)
+        }
     }
 
     private fun FragmentCreateAccountBinding.initViews() {
-        etUserName.doAfterTextChanged { checkIfNextButtonShouldBeEnabled() }
+        etUserName.doAfterTextChanged {
+            tvUsernameAlert.isVisible = it.isNotNullOrBlank()
+            viewModel.updateUsernameInput(it.toString())
+        }
+        etFirstName.doAfterTextChanged {
+            Log.e("@err", it.toString())
+            viewModel.setFirstNameValidState(it.isNotNullOrBlank())
+        }
+
         btnNext.setOnClickListener {
             requireActivity().hideSoftInput()
             viewModel.loginUser(
@@ -93,18 +136,18 @@ class CreateProfileFragment : Fragment() {
         }
     }
 
-    private fun checkIfNextButtonShouldBeEnabled() {
-        binding.apply {
-            val shouldEnable = etUserName.text?.isNotEmpty() == true
-            btnNext.setEnabledOrNot(shouldEnable)
-        }
-    }
-
     private fun initClickListeners() {
         with(binding) {
             toolbar.setNavigationClickListener {
                 (activity as? WelcomeActivity)?.onBackPressedDispatcher?.onBackPressed()
             }
+        }
+    }
+
+    private fun setUsernameAlert(color: Int, message: String) {
+        binding.apply {
+            tvUsernameAlert.text = message
+            tvUsernameAlert.setTextColor(color)
         }
     }
 }

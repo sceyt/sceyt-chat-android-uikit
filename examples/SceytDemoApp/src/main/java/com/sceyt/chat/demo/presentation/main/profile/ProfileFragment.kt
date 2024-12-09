@@ -14,8 +14,8 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.databinding.FragmentProfileBinding
-import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
 import com.sceyt.chat.demo.presentation.main.profile.edit.EditProfileFragment
+import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
 import com.sceyt.chatuikit.config.defaults.DefaultMuteNotificationOptions
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -162,7 +162,12 @@ class ProfileFragment : Fragment() {
 
     private fun openEditProfileFragment() {
         requireActivity().supportFragmentManager.commit {
-            setCustomAnimations(com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right, 0, 0, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right)
+            setCustomAnimations(
+                com.sceyt.chatuikit.R.anim.sceyt_anim_slide_in_right,
+                0,
+                0,
+                com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right
+            )
             replace(R.id.mainContainer, EditProfileFragment())
             addToBackStack(null)
         }

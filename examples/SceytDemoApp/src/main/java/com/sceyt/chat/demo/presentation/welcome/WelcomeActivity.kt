@@ -5,7 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import com.sceyt.chat.demo.databinding.ActivityWelcomeBinding
-import com.sceyt.chat.demo.presentation.welcome.create.CreateProfileFragment
+import com.sceyt.chat.demo.presentation.welcome.create.CreateAccountFragment
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
@@ -37,8 +37,8 @@ class WelcomeActivity : AppCompatActivity() {
                 R.anim.sceyt_anim_slide_hold,
                 R.anim.sceyt_anim_slide_out_right
             )
-            val tag = CreateProfileFragment::class.java.simpleName
-            replace(binding.fragmentContainer.id, CreateProfileFragment(), tag)
+            val tag = CreateAccountFragment::class.java.simpleName
+            replace(binding.fragmentContainer.id, CreateAccountFragment(), tag)
             addToBackStack(tag)
         }
     }

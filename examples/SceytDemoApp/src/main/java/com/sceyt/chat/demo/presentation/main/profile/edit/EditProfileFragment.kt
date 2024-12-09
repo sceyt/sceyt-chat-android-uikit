@@ -9,22 +9,30 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.FragmentEditProfileBinding
+import com.sceyt.chat.demo.presentation.common.ui.handleUsernameValidation
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
+import com.vanniktech.ui.hideKeyboard
+import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class EditProfileFragment : Fragment() {
     private var _binding: FragmentEditProfileBinding? = null
     private val binding get() = _binding!!
-    private val viewModel by viewModels<EditProfileViewModel>()
+    private val viewModel: EditProfileViewModel by viewModel()
     private val filePickerHelper = FilePickerHelper(this)
     private var currentUser: SceytUser? = null
     private var avatarUrl: String? = null
+    private var currentUsername: String? = null
     private var onBackPressCallback: OnBackPressedCallback? = null
 
     override fun onCreateView(
@@ -39,7 +47,6 @@ class EditProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.btnNext.setEnabledOrNot(false)
         handleBackPress()
         initViewModel()
         binding.initListeners()
@@ -65,9 +72,38 @@ class EditProfileFragment : Fragment() {
             SceytLoader.hideLoading()
             customToastSnackBar(it.toString())
         }
+
+        viewModel.correctUsernameValidatorLiveData.observe(viewLifecycleOwner) {
+            handleUsernameValidation(
+                context = requireContext(),
+                validationState = it,
+                setAlert = { color, message ->
+                    setUsernameAlert(color, message)
+                },
+                isUsernameCorrect = { isUsernameCorrect ->
+                    viewModel.setUsernameValidState(
+                        isUsernameCorrect && binding.etFirstName.text.isNotNullOrBlank()
+                    )
+                }
+            )
+        }
+
+        lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.usernameInput.collect { username ->
+                    viewModel.updateUsernameInput(username)
+                }
+            }
+        }
+
+        viewModel.nextButtonEnabledLiveData.observe(viewLifecycleOwner) {
+            binding.btnNext.setEnabledOrNot(it)
+        }
     }
 
     private fun setUserDetails(user: SceytUser?) {
+        viewModel.isFirstTime = true
+        currentUsername = user?.username
         currentUser = user
         avatarUrl = user?.avatarURL
         user?.apply {
@@ -78,6 +114,7 @@ class EditProfileFragment : Fragment() {
                 etUserName.setText(username)
             }
         }
+        viewModel.isFirstTime = false
     }
 
     private fun FragmentEditProfileBinding.initListeners() {
@@ -95,9 +132,11 @@ class EditProfileFragment : Fragment() {
             }.show()
         }
 
-        etFirstName.doAfterTextChanged { checkIfNextButtonShouldBeEnabled() }
-        etLastName.doAfterTextChanged { checkIfNextButtonShouldBeEnabled() }
-        etUserName.doAfterTextChanged { checkIfNextButtonShouldBeEnabled() }
+        etFirstName.doAfterTextChanged { viewModel.setFirstNameValidState(it.isNotNullOrBlank()) }
+        etUserName.doAfterTextChanged {
+            viewModel.updateUsernameInput(it.toString())
+            tvUsernameAlert.isVisible = currentUsername != it.toString()
+        }
 
         btnNext.setOnClickListener {
             val newUsername = binding.etUserName.text?.trim().toString()
@@ -119,24 +158,11 @@ class EditProfileFragment : Fragment() {
                 avatarUrl = avatarUrl,
                 shouldUploadAvatar = isEditedAvatar
             )
+            requireActivity().hideKeyboard()
         }
     }
 
     private fun isAvatarChanged() = avatarUrl != currentUser?.avatarURL
-
-    private fun checkIfNextButtonShouldBeEnabled() {
-        binding.apply {
-            val firstNameChanged = etFirstName.text?.isNotEmpty() == true
-                    && etFirstName.text.toString() != currentUser?.firstName
-            val lastNameChanged = etLastName.text?.isNotEmpty() == true
-                    && etLastName.text.toString() != currentUser?.lastName
-            val usernameChanged = etUserName.text?.isNotEmpty() == true
-            etUserName.text.toString().trimStart('@') != currentUser?.username
-            val shouldEnable =
-                firstNameChanged || lastNameChanged || usernameChanged || isAvatarChanged()
-            btnNext.setEnabledOrNot(shouldEnable)
-        }
-    }
 
     private fun handleBackPress() {
         with(requireActivity()) {
@@ -153,8 +179,9 @@ class EditProfileFragment : Fragment() {
 
     private fun setProfileImage(filePath: String?) {
         avatarUrl = filePath
-        checkIfNextButtonShouldBeEnabled()
+        binding.btnNext.setEnabledOrNot(isAvatarChanged())
         binding.avatar.setImageUrl(filePath)
+        viewModel.setAvatarChangedState(filePath)
     }
 
     private fun handleAvatarEdit(type: EditAvatarTypeDialog.EditAvatarType) {
@@ -177,6 +204,13 @@ class EditProfileFragment : Fragment() {
             EditAvatarTypeDialog.EditAvatarType.Delete -> {
                 setProfileImage(null)
             }
+        }
+    }
+
+    private fun setUsernameAlert(color: Int, message: String) {
+        binding.apply {
+            tvUsernameAlert.text = message
+            tvUsernameAlert.setTextColor(color)
         }
     }
 }
