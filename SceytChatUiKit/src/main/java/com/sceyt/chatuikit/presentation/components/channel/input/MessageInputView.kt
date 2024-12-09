@@ -20,6 +20,7 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -31,6 +32,7 @@ import com.sceyt.chatuikit.databinding.SceytDisableMessageInputBinding
 import com.sceyt.chatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.doSafe
 import com.sceyt.chatuikit.extensions.empty
 import com.sceyt.chatuikit.extensions.getScope
 import com.sceyt.chatuikit.extensions.getString
@@ -675,7 +677,9 @@ class MessageInputView @JvmOverloads constructor(
             if (checkIsExistAttachment(path))
                 continue
 
-            val attachment = messageToSendHelper.buildAttachment(path, metadata = metadata,
+            val attachment = messageToSendHelper.buildAttachment(
+                path = path,
+                metadata = metadata,
                 attachmentType = attachmentType)
             if (attachment != null) {
                 attachments.add(attachment)
@@ -829,6 +833,11 @@ class MessageInputView @JvmOverloads constructor(
         attachmentsAdapter.removeItem(item)
         allAttachments.remove(item.attachment)
         binding.viewAttachments.isVisible = allAttachments.isNotEmpty()
+        // Delete file if it was copied to the app's internal storage
+        val file = File(item.attachment.filePath)
+        val copedFileDir = File(context.filesDir, SceytConstants.CopyFileDirName)
+        if (file.parent?.startsWith(copedFileDir.path) == true)
+            doSafe { file.delete() }
         determineInputState()
     }
 
@@ -893,7 +902,8 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     override fun onFileClick() {
-        filePickerHelper?.chooseMultipleFiles(allowMultiple = true) {
+        filePickerHelper?.chooseMultipleFiles(allowMultiple = true,
+            parentDirToCopyProvider = { context.filesDir }) {
             addAttachment(*it.toTypedArray())
         }
     }

@@ -10,4 +10,9 @@ object SceytConstants {
     const val ImageUrl = "iur"
     const val ThumbnailUrl = "tur"
     const val HideLinkDetails = "hld"
+
+    const val CopyFileDirName = "copied_files"
+    const val ImageFilesDirName = "sceyt_mages"
+    const val VideoFilesDirName = "sceyt_videos"
+    const val FileFilesDirName = "sceyt_files"
 }

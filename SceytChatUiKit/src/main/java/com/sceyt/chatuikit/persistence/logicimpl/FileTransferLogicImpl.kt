@@ -9,6 +9,7 @@ import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
@@ -102,7 +103,8 @@ internal class FileTransferLogicImpl(
     }
 
     override fun downloadFile(attachment: SceytAttachment, task: TransferTask) {
-        val loadedFile = File(getSaveFileLocation(attachment), "${attachment.messageTid}_${attachment.name}")
+        val loadedFile = File(context.getSaveFileLocation(attachment.type),
+            "${attachment.messageTid}_${attachment.name}")
         val file = attachment.checkLoadedFileIsCorrect(loadedFile)
 
         if (file != null) {
@@ -375,17 +377,25 @@ internal class FileTransferLogicImpl(
                 resizingAttachmentsMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
                 val reqSize = SceytChatUIKit.config.imageAttachmentResizeConfig.dimensionThreshold
                 val quality = SceytChatUIKit.config.imageAttachmentResizeConfig.compressionQuality
-                val result = resizeImage(context, attachment.filePath, reqSize, quality)
+                val result = resizeImage(
+                    path = attachment.filePath,
+                    parentDir = context.filesDir,
+                    reqSize = reqSize,
+                    quality = quality
+                )
                 resizingAttachmentsMap.remove(attachment.messageTid.toString())
                 callback(result)
             }
 
             AttachmentTypeEnum.Video.value -> {
                 resizingAttachmentsMap[attachment.messageTid.toString()] = attachment.messageTid.toString()
-                transcodeVideo(context, attachment.filePath, progressCallback = {
-                    if (pausedTasksMap[attachment.messageTid] == null)
-                        task.preparingCallback?.onPreparing(attachment.toTransferData(Preparing, it.progressPercent))
-                }) {
+                transcodeVideo(
+                    path = attachment.filePath,
+                    parentDir = context.filesDir,
+                    progressCallback = {
+                        if (pausedTasksMap[attachment.messageTid] == null)
+                            task.preparingCallback?.onPreparing(attachment.toTransferData(Preparing, it.progressPercent))
+                    }) {
                     resizingAttachmentsMap.remove(attachment.messageTid.toString())
                     callback(it)
                 }
@@ -441,11 +451,11 @@ internal class FileTransferLogicImpl(
         return Result.success(resizePath)
     }
 
-    private fun getSaveFileLocation(attachment: SceytAttachment): File {
-        return when (attachment.type) {
-            AttachmentTypeEnum.Image.value -> File(context.filesDir, "Sceyt Images")
-            AttachmentTypeEnum.Video.value -> File(context.filesDir, "Sceyt Videos")
-            else -> File(context.filesDir, "Sceyt Files")
+    private fun Context.getSaveFileLocation(type: String): File {
+        return when (type) {
+            AttachmentTypeEnum.Image.value -> File(filesDir, SceytConstants.ImageFilesDirName)
+            AttachmentTypeEnum.Video.value -> File(filesDir, SceytConstants.VideoFilesDirName)
+            else -> File(filesDir, SceytConstants.FileFilesDirName)
         }.apply {
             if (!exists()) mkdirs()
         }
