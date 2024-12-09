@@ -458,7 +458,6 @@ internal class PersistenceMessagesLogicImpl(
                 ?: SceytResponse.Error(SceytException(0, "sendMessageWithUploadedAttachments: response is null"))
     }
 
-
     private fun sendMessageImpl(
             channelId: Long, message: Message, isSharing: Boolean,
             isPendingMessage: Boolean, isUploadedAttachments: Boolean,

@@ -8,6 +8,4 @@ object Constants {
         "zoe",
         "lily"
     )
-    val AUTH_SERVICE = "AuthService"
-    val VALIDATOR_SERVICE = "ValidatorService"
 }
