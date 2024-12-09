@@ -30,11 +30,11 @@ import com.sceyt.chatuikit.extensions.initVideoCameraLauncher
 import com.sceyt.chatuikit.extensions.oneOfPermissionsIgnored
 import com.sceyt.chatuikit.extensions.permissionIgnored
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker.Companion.MAX_SELECT_MEDIA_COUNT
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.shared.utils.FilePathUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -57,6 +57,7 @@ class FilePickerHelper {
     private var sceytGalleryFilter = BottomSheetMediaPicker.PickerFilterType.All
     private var sceytGalleryMaxSelectCount: Int = MAX_SELECT_MEDIA_COUNT
     private var chooseFilesCb: ((List<String>) -> Unit)? = null
+    private var parentDirToCopyProvider: () -> File = { context.cacheDir }
     private var takePictureCb: ((String) -> Unit)? = null
     private var takeVideoCb: ((String) -> Unit)? = null
     private var scope: CoroutineScope
@@ -149,15 +150,26 @@ class FilePickerHelper {
         }
     }
 
-    fun chooseFromGallery(allowMultiple: Boolean, onlyImages: Boolean, result: (uris: List<String>) -> Unit) {
+    fun chooseFromGallery(
+            allowMultiple: Boolean,
+            onlyImages: Boolean,
+            parentDirToCopyProvider: () -> File = { context.cacheDir },
+            result: (uri: List<String>) -> Unit
+    ) {
         chooseFilesCb = result
+        this.parentDirToCopyProvider = parentDirToCopyProvider
         this.onlyImages = onlyImages
         this.allowMultiple = allowMultiple
         openGallery()
     }
 
-    fun chooseMultipleFiles(allowMultiple: Boolean, result: (uris: List<String>) -> Unit) {
+    fun chooseMultipleFiles(
+            allowMultiple: Boolean,
+            parentDirToCopyProvider: () -> File = { context.cacheDir },
+            result: (uri: List<String>) -> Unit
+    ) {
         chooseFilesCb = result
+        this.parentDirToCopyProvider = parentDirToCopyProvider
         this.allowMultiple = allowMultiple
         pickFile()
     }
@@ -194,6 +206,7 @@ class FilePickerHelper {
 
     private fun onChooseFileResult(result: ActivityResult) {
         if (result.resultCode == AppCompatActivity.RESULT_OK) {
+            val parentDir = parentDirToCopyProvider()
             val data = result.data
             if (data?.clipData != null) {
                 val uris = mutableListOf<Uri>()
@@ -203,7 +216,7 @@ class FilePickerHelper {
                     }
                 }
                 scope.launch(Dispatchers.IO) {
-                    val paths = getPathFromFile(*uris.toTypedArray())
+                    val paths = getPathFromFile(parentDir, *uris.toTypedArray())
                     if (paths.isNotEmpty()) {
                         withContext(Dispatchers.Main) {
                             placeToSavePathsList.addAll(paths)
@@ -215,7 +228,7 @@ class FilePickerHelper {
                 }
             } else {
                 scope.launch(Dispatchers.IO) {
-                    val paths = getPathFromFile(data?.data)
+                    val paths = getPathFromFile(parentDir, data?.data)
                     if (paths.isNotEmpty()) {
                         withContext(Dispatchers.Main) {
                             placeToSavePathsList.addAll(paths)
@@ -229,7 +242,9 @@ class FilePickerHelper {
         }
     }
 
-    private suspend fun getPathFromFile(vararg uris: Uri?): List<String> {
+    private suspend fun getPathFromFile(
+            parentDir: File,
+            vararg uris: Uri?): List<String> {
         val paths = mutableListOf<String>()
         val filteredUris = uris.filterNotNull()
         if (filteredUris.isEmpty()) return emptyList()
@@ -243,7 +258,11 @@ class FilePickerHelper {
 
                 var realFile: File? = null
                 try {
-                    val path = FilePathUtil.getFilePathFromUri(context, uri) ?: return@forEach
+                    val path = FilePathUtil.getFilePathFromUri(
+                        context = context,
+                        parentDirToCopy = parentDir,
+                        uri = uri
+                    ) ?: return@forEach
                     FileInputStream(File(path))
                     realFile = File(path)
                 } catch (ex: Exception) {
