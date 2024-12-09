@@ -45,7 +45,11 @@ open class BaseViewModel : ViewModel() {
         }
     }
 
-    val isLoadingFromServer get() = loadingNextItems.get() || loadingPrevItems.get()
+    val loadingFromServer
+        get() = loadingNextItems.get() || loadingPrevItems.get()
+
+    val loadingFromDb
+        get() = loadingNextItemsDb.get() || loadingPrevItemsDb.get()
 
     protected open fun setPagingLoadingStarted(
             loadType: PaginationResponse.LoadType,
@@ -169,7 +173,7 @@ open class BaseViewModel : ViewModel() {
         pageStateLiveDataInternal.postValue(state)
     }
 
-   open fun <T> notifyResponseAndPageState(
+    open fun <T> notifyResponseAndPageState(
             liveData: MutableLiveData<T>?,
             response: SceytResponse<T>,
             wasLoadingMore: Boolean = false,
