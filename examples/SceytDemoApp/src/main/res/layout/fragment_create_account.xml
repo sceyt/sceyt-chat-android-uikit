@@ -125,19 +125,19 @@
         tools:text="John" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tv_error_username"
+        android:id="@+id/tv_username_alert"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="24dp"
-        android:paddingVertical="8dp"
-        android:text="@string/error_username_taken"
-        android:textColor="@color/sceyt_color_warning"
+        android:paddingTop="8dp"
         android:textSize="@dimen/extraSmallTextSize"
         android:visibility="gone"
-        tools:visibility="visible"
         app:layout_constraintBottom_toTopOf="@id/tv_correct_input_hint"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/et_user_name" />
+        app:layout_constraintTop_toBottomOf="@+id/et_user_name"
+        tools:text="@string/error_username_taken"
+        tools:textColor="@color/sceyt_color_warning"
+        tools:visibility="visible" />
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/error_username_barrier"
@@ -145,7 +145,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toTopOf="@id/tv_correct_input_hint"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_error_username" />
+        app:layout_constraintTop_toBottomOf="@id/tv_username_alert" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv_correct_input_hint"
@@ -154,6 +154,7 @@
         android:layout_marginHorizontal="24dp"
         android:fontFamily="@font/roboto_medium"
         android:lines="3"
+        android:paddingTop="8dp"
         android:text="@string/username_correct_input_hint"
         android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="@dimen/extraSmallTextSize"

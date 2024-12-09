@@ -5,22 +5,27 @@ import com.sceyt.chat.demo.connection.ChatClientConnectionInterceptor
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.data.AppSharedPreferenceImpl
+import com.sceyt.chat.demo.data.Constants
 import com.sceyt.chat.demo.data.api.AuthApiService
+import com.sceyt.chat.demo.data.api.UserApiService
 import com.sceyt.chat.demo.data.interceptors.RetryInterceptor
 import com.sceyt.chat.demo.data.repositories.ConnectionRepo
-import com.sceyt.chat.demo.presentation.welcome.accounts_bottomsheet.SelectAccountsBottomSheetViewModel
-import com.sceyt.chat.demo.presentation.welcome.create.CreateProfileViewModel
-import com.sceyt.chat.demo.presentation.welcome.welcome.WelcomeViewModel
+import com.sceyt.chat.demo.data.repositories.UserRepository
 import com.sceyt.chat.demo.presentation.main.profile.edit.EditProfileViewModel
 import com.sceyt.chat.demo.presentation.splash.SplashViewModel
+import com.sceyt.chat.demo.presentation.welcome.accounts_bottomsheet.SelectAccountsBottomSheetViewModel
+import com.sceyt.chat.demo.presentation.welcome.create.CreateAccountViewModel
+import com.sceyt.chat.demo.presentation.welcome.welcome.WelcomeViewModel
 import com.sceyt.chatuikit.presentation.components.role.viewmodel.RoleViewModel
 import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersViewModel
 import okhttp3.OkHttpClient
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+
 
 val appModules = module {
     single<AppSharedPreference> { AppSharedPreferenceImpl(get()) }
@@ -31,12 +36,11 @@ val appModules = module {
 val viewModelModules = module {
     viewModel { UsersViewModel() }
     viewModel { RoleViewModel() }
-    viewModel { CreateProfileViewModel(get(), get()) }
-    viewModel { EditProfileViewModel() }
+    viewModel { CreateAccountViewModel(get(), get(), get()) }
+    viewModel { EditProfileViewModel(get()) }
     viewModel { SelectAccountsBottomSheetViewModel() }
     viewModel { WelcomeViewModel(get(), get()) }
-    viewModel { SplashViewModel(get()) }
-}
+    viewModel { SplashViewModel(get()) } }
 
 val apiModule = module {
     single {
@@ -48,7 +52,7 @@ val apiModule = module {
             .build()
     }
 
-    single<Retrofit> {
+    single(named(Constants.AUTH_SERVICE)) {
         Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())
             .baseUrl(BuildConfig.GEN_TOKEN_BASE_URL)
@@ -56,9 +60,23 @@ val apiModule = module {
             .build()
     }
 
-    factory<AuthApiService> { get<Retrofit>().create(AuthApiService::class.java) }
+    single(named(Constants.VALIDATOR_SERVICE)) {
+        Retrofit.Builder()
+            .addConverterFactory(GsonConverterFactory.create())
+            .baseUrl(BuildConfig.VALIDATION_API_URL)
+            .client(OkHttpClient.Builder().build())
+            .build()
+    }
+
+    factory<AuthApiService> { get<Retrofit>(named(Constants.AUTH_SERVICE)).create(AuthApiService::class.java) }
+    single<UserApiService> {
+        get<Retrofit>(named(Constants.VALIDATOR_SERVICE)).create(
+            UserApiService::class.java
+        )
+    }
 }
 
 val repositoryModule = module {
     factory { ConnectionRepo(get()) }
+    single { UserRepository(get()) }
 }

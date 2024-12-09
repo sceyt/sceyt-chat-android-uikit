@@ -10,9 +10,9 @@ import androidx.fragment.app.setFragmentResult
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.chat.demo.databinding.FragmentBottomSheetSelectAccountBinding
+import com.sceyt.chat.demo.presentation.Constants.KEY_USER_ID
+import com.sceyt.chat.demo.presentation.Constants.KEY_USER_ID_REQUEST
 import com.sceyt.chat.demo.presentation.welcome.adapters.SceytUsersAdapter
-import com.sceyt.chat.demo.presentation.welcome.create.KEY_USER_ID
-import com.sceyt.chat.demo.presentation.welcome.create.KEY_USER_ID_REQUEST
 import com.sceyt.chatuikit.R
 import org.koin.androidx.viewmodel.ext.android.viewModel
 

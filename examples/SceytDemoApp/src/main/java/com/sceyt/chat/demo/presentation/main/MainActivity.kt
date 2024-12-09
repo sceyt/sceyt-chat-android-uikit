@@ -7,7 +7,7 @@ import androidx.core.graphics.toColorInt
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.ActivityMainBinding
-import com.sceyt.chat.demo.presentation.welcome.create.CreateProfileViewModel
+import com.sceyt.chat.demo.presentation.welcome.create.CreateAccountViewModel
 import com.sceyt.chat.demo.presentation.main.adapters.MainViewPagerAdapter
 import com.sceyt.chat.demo.presentation.main.profile.ProfileFragment
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -19,10 +19,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.koin.android.ext.android.inject
 
-
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private val createProfileViewModel by inject<CreateProfileViewModel>()
+    private val createProfileViewModel by inject<CreateAccountViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

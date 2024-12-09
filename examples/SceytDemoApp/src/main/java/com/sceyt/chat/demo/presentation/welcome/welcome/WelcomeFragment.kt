@@ -7,11 +7,11 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import com.sceyt.chat.demo.databinding.FragmentWelcomeBinding
-import com.sceyt.chat.demo.presentation.welcome.accounts_bottomsheet.SelectAccountBottomSheetFragment
-import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
-import com.sceyt.chat.demo.presentation.welcome.create.KEY_USER_ID
-import com.sceyt.chat.demo.presentation.welcome.create.KEY_USER_ID_REQUEST
+import com.sceyt.chat.demo.presentation.Constants.KEY_USER_ID
+import com.sceyt.chat.demo.presentation.Constants.KEY_USER_ID_REQUEST
 import com.sceyt.chat.demo.presentation.main.MainActivity
+import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
+import com.sceyt.chat.demo.presentation.welcome.accounts_bottomsheet.SelectAccountBottomSheetFragment
 import com.sceyt.chatuikit.extensions.launchActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
 

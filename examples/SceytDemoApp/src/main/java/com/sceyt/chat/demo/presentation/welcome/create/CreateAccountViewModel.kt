@@ -5,6 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.data.AppSharedPreference
+import com.sceyt.chat.demo.data.repositories.HttpStatusException
+import com.sceyt.chat.demo.data.repositories.UserRepository
+import com.sceyt.chat.demo.presentation.Constants.CORRECT_USERNAME_REGEX
+import com.sceyt.chat.demo.presentation.common.ui.UsernameValidationEnum
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -16,6 +20,10 @@ import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -23,14 +31,42 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
-class CreateProfileViewModel(
+
+class CreateAccountViewModel(
     private val preference: AppSharedPreference,
-    private val connectionProvider: SceytConnectionProvider
+    private val connectionProvider: SceytConnectionProvider,
+    private val userRepository: UserRepository
 ) : BaseViewModel() {
 
     private val userInteractor: UserInteractor by lazy { SceytChatUIKit.chatUIFacade.userInteractor }
+
     private val _logInLiveData = MutableLiveData<Boolean>()
     val logInLiveData: LiveData<Boolean> = _logInLiveData
+
+    private val _correctUsernameValidatorLiveData = MutableLiveData<UsernameValidationEnum>()
+    val correctUsernameValidatorLiveData: LiveData<UsernameValidationEnum> =
+        _correctUsernameValidatorLiveData
+
+    private val _usernameInput = MutableStateFlow("")
+    val usernameInput: StateFlow<String> get() = _usernameInput
+
+    private val _nextButtonEnabledLiveData = MutableLiveData<Boolean>()
+    val nextButtonEnabledLiveData: LiveData<Boolean> = _nextButtonEnabledLiveData
+
+    private var isUsernameValid: Boolean = false
+    private var isFirstNameValid: Boolean = false
+
+    init {
+        _usernameInput
+            .debounce(300)
+            .distinctUntilChanged()
+            .onEach { username ->
+                if (isValidUsername(username)) {
+                    validateUsername(username)
+                }
+            }
+            .launchIn(viewModelScope)
+    }
 
     fun loginUser(
         userId: String,
@@ -104,4 +140,52 @@ class CreateProfileViewModel(
         }
     }
 
+    fun updateUsernameInput(username: String) {
+        _usernameInput.value = username
+    }
+
+    private fun validateUsername(username: String) {
+        viewModelScope.launch {
+            val result = userRepository.checkUsername(username)
+            if (result.isSuccess) {
+                _correctUsernameValidatorLiveData.postValue(UsernameValidationEnum.Valid)
+            } else {
+                val exception = result.exceptionOrNull()
+                if (exception is HttpStatusException && exception.statusCode == 400) {
+                    _correctUsernameValidatorLiveData.postValue(UsernameValidationEnum.AlreadyExists)
+                }
+            }
+        }
+    }
+
+    private fun isValidUsername(username: String): Boolean {
+        return when {
+            username.length !in 3..20 -> {
+                _correctUsernameValidatorLiveData.postValue(UsernameValidationEnum.IncorrectSize)
+                false
+            }
+
+            !username.matches(CORRECT_USERNAME_REGEX.toRegex()) -> {
+                _correctUsernameValidatorLiveData.postValue(UsernameValidationEnum.InvalidCharacters)
+                false
+            }
+
+            else -> true
+        }
+    }
+
+    private fun setNextButtonEnabledState() {
+        val enabled = isUsernameValid && isFirstNameValid
+        _nextButtonEnabledLiveData.postValue(enabled)
+    }
+
+    fun setFirstNameValidState(isValid: Boolean) {
+        isFirstNameValid = isValid
+        setNextButtonEnabledState()
+    }
+
+    fun setUserNameValidState(isValid: Boolean) {
+        isUsernameValid = isValid
+        setNextButtonEnabledState()
+    }
 }
