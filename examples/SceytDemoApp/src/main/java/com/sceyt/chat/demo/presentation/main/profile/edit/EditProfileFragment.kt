@@ -1,17 +1,19 @@
 package com.sceyt.chat.demo.presentation.main.profile.edit
 
+import android.animation.LayoutTransition
+import android.app.Activity
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.FragmentEditProfileBinding
 import com.sceyt.chat.demo.presentation.common.ui.handleUsernameValidation
@@ -21,11 +23,15 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
+import com.sceyt.chatuikit.styles.ImageCropperStyle
 import com.vanniktech.ui.hideKeyboard
-import kotlinx.coroutines.launch
+import com.yalantis.ucrop.UCrop
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.io.File
 
-class EditProfileFragment : Fragment() {
+open class EditProfileFragment : Fragment() {
     private var _binding: FragmentEditProfileBinding? = null
     private val binding get() = _binding!!
     private val viewModel: EditProfileViewModel by viewModel()
@@ -36,9 +42,9 @@ class EditProfileFragment : Fragment() {
     private var onBackPressCallback: OnBackPressedCallback? = null
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
         _binding = FragmentEditProfileBinding.inflate(inflater, container, false)
         val view = binding.root
@@ -47,9 +53,13 @@ class EditProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         handleBackPress()
         initViewModel()
         binding.initListeners()
+        binding.root.layoutTransition = LayoutTransition().apply {
+            enableTransitionType(LayoutTransition.CHANGING)
+        }
     }
 
     override fun onDestroyView() {
@@ -73,7 +83,7 @@ class EditProfileFragment : Fragment() {
             customToastSnackBar(it.toString())
         }
 
-        viewModel.correctUsernameValidatorLiveData.observe(viewLifecycleOwner) {
+        viewModel.usernameValidationLiveData.observe(viewLifecycleOwner) {
             handleUsernameValidation(
                 context = requireContext(),
                 validationState = it,
@@ -88,13 +98,10 @@ class EditProfileFragment : Fragment() {
             )
         }
 
-        lifecycleScope.launch {
-            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.usernameInput.collect { username ->
-                    viewModel.updateUsernameInput(username)
-                }
-            }
-        }
+        viewModel.usernameInput
+            .onEach { username ->
+                viewModel.updateUsernameInput(username)
+            }.launchIn(lifecycleScope)
 
         viewModel.nextButtonEnabledLiveData.observe(viewLifecycleOwner) {
             binding.btnNext.setEnabledOrNot(it)
@@ -162,8 +169,6 @@ class EditProfileFragment : Fragment() {
         }
     }
 
-    private fun isAvatarChanged() = avatarUrl != currentUser?.avatarURL
-
     private fun handleBackPress() {
         with(requireActivity()) {
             val callback = object : OnBackPressedCallback(true) {
@@ -176,6 +181,8 @@ class EditProfileFragment : Fragment() {
             onBackPressedDispatcher.addCallback(this, callback)
         }
     }
+
+    private fun isAvatarChanged() = avatarUrl != currentUser?.avatarURL
 
     private fun setProfileImage(filePath: String?) {
         avatarUrl = filePath
@@ -191,19 +198,43 @@ class EditProfileFragment : Fragment() {
                     allowMultiple = false,
                     onlyImages = true
                 ) { uris ->
-                    if (uris.isNotEmpty()) setProfileImage(uris[0])
+                    if (uris.isNotEmpty()) cropImage(uris[0])
                 }
             }
 
             EditAvatarTypeDialog.EditAvatarType.TakePhoto -> {
                 filePickerHelper.takePicture { uri ->
-                    setProfileImage(uri)
+                    cropImage(uri)
                 }
             }
 
             EditAvatarTypeDialog.EditAvatarType.Delete -> {
                 setProfileImage(null)
             }
+        }
+    }
+
+    private fun cropImage(filePath: String?) {
+        filePath?.let { path ->
+            val uri = Uri.fromFile(File(path))
+            val file = File(requireContext().cacheDir.path, System.currentTimeMillis().toString())
+
+            val intent = UCrop.of(uri, Uri.fromFile(file))
+                .withOptions(ImageCropperStyle.default(requireContext()).createOptions())
+                .withAspectRatio(1f, 1f)
+                .getIntent(requireContext())
+
+            cropperActivityResultLauncher.launch(intent)
+        }
+    }
+
+    protected open val cropperActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data ?: return@registerForActivityResult
+            val path = UCrop.getOutput(data)?.path
+            if (path != null) {
+                setProfileImage(path)
+            } else customToastSnackBar(getString(com.sceyt.chatuikit.R.string.sceyt_wrong_image))
         }
     }
 

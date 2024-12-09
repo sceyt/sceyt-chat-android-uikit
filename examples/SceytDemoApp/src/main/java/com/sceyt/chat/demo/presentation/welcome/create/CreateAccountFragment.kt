@@ -1,8 +1,8 @@
 package com.sceyt.chat.demo.presentation.welcome.create
 
+import android.animation.LayoutTransition
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,9 +10,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.sceyt.chat.demo.databinding.FragmentCreateAccountBinding
 import com.sceyt.chat.demo.presentation.common.ui.handleUsernameValidation
 import com.sceyt.chat.demo.presentation.main.MainActivity
@@ -23,7 +21,8 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.root.PageState
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class CreateAccountFragment : Fragment() {
@@ -32,9 +31,9 @@ class CreateAccountFragment : Fragment() {
     private val binding get() = _binding!!
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
         _binding = FragmentCreateAccountBinding.inflate(inflater, container, false)
         val view = binding.root
@@ -73,7 +72,7 @@ class CreateAccountFragment : Fragment() {
 
                 is PageState.StateError -> customToastSnackBar(
                     pageState.errorMessage
-                        ?: return@observe
+                            ?: return@observe
                 )
 
                 else -> return@observe
@@ -102,13 +101,10 @@ class CreateAccountFragment : Fragment() {
             )
         }
 
-        lifecycleScope.launch {
-            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.usernameInput.collect { username ->
-                    viewModel.updateUsernameInput(username)
-                }
-            }
-        }
+        viewModel.usernameInput
+            .onEach { username ->
+                viewModel.updateUsernameInput(username)
+            }.launchIn(lifecycleScope)
 
         viewModel.nextButtonEnabledLiveData.observe(viewLifecycleOwner) {
             binding.btnNext.setEnabledOrNot(it)
@@ -116,12 +112,15 @@ class CreateAccountFragment : Fragment() {
     }
 
     private fun FragmentCreateAccountBinding.initViews() {
+        binding.root.layoutTransition = LayoutTransition().apply {
+            enableTransitionType(LayoutTransition.CHANGING)
+        }
+
         etUserName.doAfterTextChanged {
             tvUsernameAlert.isVisible = it.isNotNullOrBlank()
             viewModel.updateUsernameInput(it.toString())
         }
         etFirstName.doAfterTextChanged {
-            Log.e("@err", it.toString())
             viewModel.setFirstNameValidState(it.isNotNullOrBlank())
         }
 
