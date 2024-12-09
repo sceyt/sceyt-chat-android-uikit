@@ -7,11 +7,13 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 
-class ExoPlayerHelper(private val context: Context,
-                      private val playerView: PlayerView,
-                      private val errorListener: ((PlaybackException) -> Unit)? = null,
-                      private val listener: PlayerStateChangeCallback? = null,
-                      private val playingListener: ((Boolean) -> Unit)? = null) : Player.Listener {
+class ExoPlayerHelper(
+        private val context: Context,
+        private val playerView: PlayerView,
+        private val errorListener: ((PlaybackException) -> Unit)? = null,
+        private val listener: PlayerStateChangeCallback? = null,
+        private val playingListener: ((Boolean) -> Unit)? = null
+) : Player.Listener {
 
     private lateinit var exoPlayer: ExoPlayer
     private var isSetMediaPath = false

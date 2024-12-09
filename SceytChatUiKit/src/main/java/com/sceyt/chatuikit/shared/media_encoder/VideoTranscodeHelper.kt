@@ -24,7 +24,11 @@ object VideoTranscodeHelper : SceytKoinComponent {
     @Volatile
     private var currentTranscodePath: String? = null
 
-    suspend fun transcodeAsResult(destination: File, path: String, quality: VideoQuality = VideoQuality.MEDIUM): VideoTranscodeData {
+    suspend fun transcodeAsResult(
+            destination: File,
+            path: String,
+            quality: VideoQuality = VideoQuality.MEDIUM
+    ): VideoTranscodeData {
         return suspendCancellableCoroutine {
             checkAndTranscode(destination, path, quality) { data ->
                 when (data.resultType) {
@@ -41,13 +45,21 @@ object VideoTranscodeHelper : SceytKoinComponent {
         }
     }
 
-    fun transcodeAsResultWithCallback(destination: File, path: String, quality: VideoQuality = VideoQuality.MEDIUM,
-                                      callback: (VideoTranscodeData) -> Unit) {
+    fun transcodeAsResultWithCallback(
+            destination: File,
+            path: String,
+            quality: VideoQuality = VideoQuality.MEDIUM,
+            callback: (VideoTranscodeData) -> Unit
+    ) {
         checkAndTranscode(destination, path, quality, callback)
     }
 
-    private fun checkAndTranscode(destination: File, filePath: String, quality: VideoQuality = VideoQuality.MEDIUM,
-                                  callback: (VideoTranscodeData) -> Unit) {
+    private fun checkAndTranscode(
+            destination: File,
+            filePath: String,
+            quality: VideoQuality = VideoQuality.MEDIUM,
+            callback: (VideoTranscodeData) -> Unit
+    ) {
 
         if (currentTranscodePath == null) {
             currentTranscodePath = filePath

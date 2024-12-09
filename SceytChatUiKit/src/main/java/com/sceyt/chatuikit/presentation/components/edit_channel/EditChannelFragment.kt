@@ -204,7 +204,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             URIValidationType.TooLong,
             URIValidationType.TooShort,
             URIValidationType.InvalidCharacters,
-            -> style.uriValidationStyle.errorTextStyle
+                -> style.uriValidationStyle.errorTextStyle
 
             URIValidationType.FreeToUse -> style.uriValidationStyle.successTextStyle
         }
@@ -218,7 +218,12 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
     protected open fun setProfileImage(filePath: String?) {
         val reqSize = SceytChatUIKit.config.avatarResizeConfig.dimensionThreshold
         val quality = SceytChatUIKit.config.avatarResizeConfig.compressionQuality
-        avatarUrl = resizeImage(requireContext(), filePath, reqSize, quality).getOrNull()
+        avatarUrl = resizeImage(
+            path = filePath,
+            parentDir = requireContext().filesDir,
+            reqSize = reqSize,
+            quality = quality
+        ).getOrNull()
         binding?.avatar?.setImageUrl(avatarUrl)
         checkSaveEnabled(false)
     }
