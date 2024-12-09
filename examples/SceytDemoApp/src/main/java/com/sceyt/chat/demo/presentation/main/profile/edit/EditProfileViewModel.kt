@@ -49,7 +49,6 @@ class EditProfileViewModel(
     private var isUsernameValid: Boolean = true
     private var isFirstNameValid: Boolean = false
     private var isAvatarChanged: Boolean = false
-    var isFirstTime = true
 
     init {
         getCurrentUser()
@@ -145,12 +144,12 @@ class EditProfileViewModel(
     }
 
     private fun setNextButtonEnabledState() {
-        val enabled = (!isFirstTime && isUsernameValid) || (isUsernameValid && isFirstNameValid)
+        val enabled = isUsernameValid && isFirstNameValid
         _nextButtonEnabledLiveData.postValue(enabled)
     }
 
     fun setFirstNameValidState(isValid: Boolean) {
-        isFirstNameValid = isValid && !isFirstTime
+        isFirstNameValid = isValid
         setNextButtonEnabledState()
     }
 

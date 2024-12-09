@@ -7,14 +7,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.FragmentEditProfileBinding
 import com.sceyt.chat.demo.presentation.common.ui.handleUsernameValidation
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -109,7 +107,6 @@ open class EditProfileFragment : Fragment() {
     }
 
     private fun setUserDetails(user: SceytUser?) {
-        viewModel.isFirstTime = true
         currentUsername = user?.username
         currentUser = user
         avatarUrl = user?.avatarURL
@@ -121,7 +118,6 @@ open class EditProfileFragment : Fragment() {
                 etUserName.setText(username)
             }
         }
-        viewModel.isFirstTime = false
     }
 
     private fun FragmentEditProfileBinding.initListeners() {
@@ -146,27 +142,36 @@ open class EditProfileFragment : Fragment() {
         }
 
         btnNext.setOnClickListener {
-            val newUsername = binding.etUserName.text?.trim().toString()
-            if (newUsername.isBlank()) {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.username_is_empty),
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@setOnClickListener
-            }
+            clearFocus()
+            val newUsername = etUserName.text?.trim().toString()
+            val newFirstName = etFirstName.text?.trim().toString()
+            val newLastName = etLastName.text?.trim().toString()
             val isEditedAvatar = isAvatarChanged()
-            SceytLoader.showLoading(requireContext())
+            val isNeedToSave = newUsername != currentUser?.username
+                    || newFirstName != currentUser?.firstName
+                    || newLastName != currentUser?.lastName
+                    || isEditedAvatar
 
-            viewModel.saveProfile(
-                firstName = etFirstName.text.toString(),
-                lastName = etLastName.text.toString(),
-                username = etUserName.text.toString(),
-                avatarUrl = avatarUrl,
-                shouldUploadAvatar = isEditedAvatar
-            )
+            if (isNeedToSave) {
+                SceytLoader.showLoading(requireContext())
+                viewModel.saveProfile(
+                    firstName = etFirstName.text.toString(),
+                    lastName = etLastName.text.toString(),
+                    username = etUserName.text.toString(),
+                    avatarUrl = avatarUrl,
+                    shouldUploadAvatar = isEditedAvatar
+                )
+            } else {
+                requireActivity().onBackPressedDispatcher.onBackPressed()
+            }
             requireActivity().hideKeyboard()
         }
+    }
+
+    private fun FragmentEditProfileBinding.clearFocus() {
+        etUserName.clearFocus()
+        etFirstName.clearFocus()
+        etLastName.clearFocus()
     }
 
     private fun handleBackPress() {
