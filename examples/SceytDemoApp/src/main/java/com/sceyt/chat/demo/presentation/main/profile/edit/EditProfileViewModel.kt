@@ -1,6 +1,5 @@
 package com.sceyt.chat.demo.presentation.main.profile.edit
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.demo.data.repositories.HttpStatusException
@@ -23,8 +22,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
+@Suppress("OPT_IN_USAGE")
 class EditProfileViewModel(
-    private val userRepository: UserRepository
+        private val userRepository: UserRepository
 ) : BaseViewModel() {
     private val userInteractor: UserInteractor by lazy { SceytChatUIKit.chatUIFacade.userInteractor }
 
@@ -35,17 +35,16 @@ class EditProfileViewModel(
     val editProfileLiveData = _editProfileLiveData.asLiveData()
 
     private val _editProfileErrorLiveData = MutableLiveData<String?>()
-    val editProfileErrorLiveData: LiveData<String?> = _editProfileErrorLiveData
+    val editProfileErrorLiveData = _editProfileErrorLiveData.asLiveData()
 
-    private val _correctUsernameValidatorLiveData = MutableLiveData<UsernameValidationEnum>()
-    val correctUsernameValidatorLiveData: LiveData<UsernameValidationEnum> =
-        _correctUsernameValidatorLiveData
+    private val _usernameValidationLiveData = MutableLiveData<UsernameValidationEnum>()
+    val usernameValidationLiveData = _usernameValidationLiveData.asLiveData()
 
     private val _usernameInput = MutableStateFlow("")
     val usernameInput: StateFlow<String> get() = _usernameInput
 
     private val _nextButtonEnabledLiveData = MutableLiveData<Boolean>()
-    val nextButtonEnabledLiveData: LiveData<Boolean> = _nextButtonEnabledLiveData
+    val nextButtonEnabledLiveData = _nextButtonEnabledLiveData.asLiveData()
 
     private var isUsernameValid: Boolean = true
     private var isFirstNameValid: Boolean = false
@@ -55,7 +54,7 @@ class EditProfileViewModel(
     init {
         getCurrentUser()
         _usernameInput
-            .debounce(300)
+            .debounce(200)
             .distinctUntilChanged()
             .onEach { username ->
                 if (isValidUsername(username)) {
@@ -73,11 +72,11 @@ class EditProfileViewModel(
     }
 
     fun saveProfile(
-        firstName: String?,
-        lastName: String?,
-        username: String,
-        avatarUrl: String?,
-        shouldUploadAvatar: Boolean
+            firstName: String?,
+            lastName: String?,
+            username: String,
+            avatarUrl: String?,
+            shouldUploadAvatar: Boolean
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             var newUrl = avatarUrl
@@ -115,11 +114,11 @@ class EditProfileViewModel(
         viewModelScope.launch {
             val result = userRepository.checkUsername(username)
             if (result.isSuccess) {
-                _correctUsernameValidatorLiveData.postValue(UsernameValidationEnum.Valid)
+                _usernameValidationLiveData.postValue(UsernameValidationEnum.Valid)
             } else {
                 val exception = result.exceptionOrNull()
                 if (exception is HttpStatusException && exception.statusCode == 400) {
-                    _correctUsernameValidatorLiveData.postValue(UsernameValidationEnum.AlreadyExists)
+                    _usernameValidationLiveData.postValue(UsernameValidationEnum.AlreadyExists)
                 }
             }
         }
@@ -132,12 +131,12 @@ class EditProfileViewModel(
             }
 
             username.length !in 3..20 -> {
-                _correctUsernameValidatorLiveData.postValue(UsernameValidationEnum.IncorrectSize)
+                _usernameValidationLiveData.postValue(UsernameValidationEnum.IncorrectSize)
                 false
             }
 
             !username.matches(CORRECT_USERNAME_REGEX.toRegex()) -> {
-                _correctUsernameValidatorLiveData.postValue(UsernameValidationEnum.InvalidCharacters)
+                _usernameValidationLiveData.postValue(UsernameValidationEnum.InvalidCharacters)
                 false
             }
 

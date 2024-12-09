@@ -1,6 +1,5 @@
 package com.sceyt.chat.demo.presentation.welcome.create
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
@@ -15,13 +14,14 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.presentation.root.PageState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
@@ -32,33 +32,33 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 
+@Suppress("OPT_IN_USAGE")
 class CreateAccountViewModel(
-    private val preference: AppSharedPreference,
-    private val connectionProvider: SceytConnectionProvider,
-    private val userRepository: UserRepository
+        private val preference: AppSharedPreference,
+        private val connectionProvider: SceytConnectionProvider,
+        private val userRepository: UserRepository
 ) : BaseViewModel() {
 
     private val userInteractor: UserInteractor by lazy { SceytChatUIKit.chatUIFacade.userInteractor }
 
     private val _logInLiveData = MutableLiveData<Boolean>()
-    val logInLiveData: LiveData<Boolean> = _logInLiveData
+    val logInLiveData = _logInLiveData.asLiveData()
 
     private val _correctUsernameValidatorLiveData = MutableLiveData<UsernameValidationEnum>()
-    val correctUsernameValidatorLiveData: LiveData<UsernameValidationEnum> =
-        _correctUsernameValidatorLiveData
+    val correctUsernameValidatorLiveData = _correctUsernameValidatorLiveData.asLiveData()
 
     private val _usernameInput = MutableStateFlow("")
-    val usernameInput: StateFlow<String> get() = _usernameInput
+    val usernameInput = _usernameInput.asStateFlow()
 
     private val _nextButtonEnabledLiveData = MutableLiveData<Boolean>()
-    val nextButtonEnabledLiveData: LiveData<Boolean> = _nextButtonEnabledLiveData
+    val nextButtonEnabledLiveData = _nextButtonEnabledLiveData.asLiveData()
 
     private var isUsernameValid: Boolean = false
     private var isFirstNameValid: Boolean = false
 
     init {
         _usernameInput
-            .debounce(300)
+            .debounce(200)
             .distinctUntilChanged()
             .onEach { username ->
                 if (isValidUsername(username)) {
@@ -69,10 +69,10 @@ class CreateAccountViewModel(
     }
 
     fun loginUser(
-        userId: String,
-        firstName: String? = null,
-        lastName: String? = null,
-        username: String
+            userId: String,
+            firstName: String? = null,
+            lastName: String? = null,
+            username: String
     ) {
         notifyPageLoadingState(false)
         viewModelScope.launch {
@@ -83,7 +83,7 @@ class CreateAccountViewModel(
             } else
                 pageStateLiveDataInternal.value = PageState.StateError(
                     null, result.exceptionOrNull()?.message
-                        ?: "Connection failed"
+                            ?: "Connection failed"
                 )
 
             pageStateLiveDataInternal.value = PageState.StateLoading(false)
@@ -92,22 +92,22 @@ class CreateAccountViewModel(
     }
 
     private suspend fun updateProfile(firstName: String?, lastName: String?, username: String) =
-        withContext(Dispatchers.IO) {
-            val currentUser = SceytChatUIKit.currentUser ?: userInteractor.getCurrentUser()
-            ?: return@withContext SceytResponse.Error<SceytUser>(
-                SceytException(
-                    0,
-                    "User not found"
+            withContext(Dispatchers.IO) {
+                val currentUser = SceytChatUIKit.currentUser ?: userInteractor.getCurrentUser()
+                ?: return@withContext SceytResponse.Error<SceytUser>(
+                    SceytException(
+                        0,
+                        "User not found"
+                    )
                 )
-            )
-            userInteractor.updateProfile(
-                username = username,
-                firstName = firstName,
-                lastName = lastName,
-                currentUser.avatarURL,
-                currentUser.metadataMap
-            )
-        }
+                userInteractor.updateProfile(
+                    username = username,
+                    firstName = firstName,
+                    lastName = lastName,
+                    currentUser.avatarURL,
+                    currentUser.metadataMap
+                )
+            }
 
     private suspend fun connectUser(userId: String): Result<Boolean> {
         return withContext(Dispatchers.IO) {
@@ -125,7 +125,7 @@ class CreateAccountViewModel(
                                 Result.failure(
                                     Exception(
                                         it.exception?.message
-                                            ?: "Connection failed"
+                                                ?: "Connection failed"
                                     )
                                 )
                             )
