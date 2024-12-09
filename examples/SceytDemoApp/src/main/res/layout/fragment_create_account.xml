@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sceyt_color_primary"
+    android:background="@color/sceyt_color_background"
     tools:parentTag="com.google.android.material.appbar.AppBarLayout">
 
     <com.sceyt.chatuikit.presentation.custom_views.CustomToolbar
