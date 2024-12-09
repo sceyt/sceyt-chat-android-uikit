@@ -43,7 +43,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
 
     getChannels(0, query = searchQuery)
 
-    lifecycleOwner.lifecycleScope.launch {
+    viewModelScope.launch {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             channelListView.post {
                 if (needToUpdateChannelsAfterResume.isNotEmpty()) {
@@ -194,15 +194,17 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
                         // otherwise we filter only channels which are between loaded channels and
                         // insert them to the list.
                         if (loadedChannels.isEmpty()) {
-                            if (isLoadingFromServer) return@launch
+                            if (loadingFromServer || loadingFromDb) return@launch
                             val sorted = filtered.sortedWith(ChannelsComparatorDescBy(config.order))
+                            val date = mapToChannelItem(data = sorted, hasNext = false)
+                            SceytLog.i("syncResultUpdate", "loaded channels are empty, set data : ${sorted.map { it.channelSubject }}")
                             withContext(Dispatchers.Main) {
-                                channelListView.setChannelsList(mapToChannelItem(data = sorted, hasNext = false))
+                                channelListView.setChannelsList(date)
                             }
                         } else {
                             // Get last channel to understand where to insert new channels
                             val lastChannel = loadedChannels.last()
-                            val sorted = filtered.toMutableSet().plus(lastChannel).sortedWith(ChannelsComparatorDescBy(config.order))
+                            val sorted = filtered.toSet().plus(lastChannel).sortedWith(ChannelsComparatorDescBy(config.order))
                             val index = sorted.indexOf(lastChannel)
 
                             // If index is last and we have more channels, we don't need to insert them,
@@ -221,6 +223,11 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
                             if (hasNext || hasNextDb)
                                 newData = newData.plus(ChannelListItem.LoadingMoreItem)
 
+                            SceytLog.i("syncResultUpdate", "apply synced channels : ${
+                                newData.map {
+                                    (it as? ChannelItem)?.channel?.channelSubject ?: it.toString()
+                                }
+                            }")
                             withContext(Dispatchers.Main) {
                                 channelListView.setChannelsList(newData)
                             }

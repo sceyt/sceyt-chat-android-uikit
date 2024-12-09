@@ -282,7 +282,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     fun syncNearCenterVisibleMessageIfNeeded() {
-        if (!needSyncMessagesWhenScrollStateIdle || isLoadingFromServer) return
+        if (!needSyncMessagesWhenScrollStateIdle || loadingFromServer) return
         val centerPosition = messagesListView.getMessagesRecyclerView().centerVisibleItemPosition()
         if (centerPosition == RecyclerView.NO_POSITION) return
         val item = messagesListView.getData().getOrNull(centerPosition)
