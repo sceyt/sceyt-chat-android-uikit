@@ -20,15 +20,6 @@ class WelcomeActivity : AppCompatActivity() {
         statusBarIconsColorWithBackground()
     }
 
-    companion object {
-        fun launch(context: Context) {
-            context.launchActivity<WelcomeActivity>(
-                R.anim.sceyt_anim_slide_in_right,
-                R.anim.sceyt_anim_slide_hold
-            )
-        }
-    }
-
     fun openCreateAccountFragment() {
         supportFragmentManager.commit {
             setCustomAnimations(
@@ -40,6 +31,15 @@ class WelcomeActivity : AppCompatActivity() {
             val tag = CreateAccountFragment::class.java.simpleName
             replace(binding.fragmentContainer.id, CreateAccountFragment(), tag)
             addToBackStack(tag)
+        }
+    }
+
+    companion object {
+        fun launch(context: Context) {
+            context.launchActivity<WelcomeActivity>(
+                R.anim.sceyt_anim_slide_in_right,
+                R.anim.sceyt_anim_slide_hold
+            )
         }
     }
 }

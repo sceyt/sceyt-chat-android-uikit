@@ -12,7 +12,11 @@ import com.sceyt.chat.demo.presentation.Constants.KEY_USER_ID_REQUEST
 import com.sceyt.chat.demo.presentation.main.MainActivity
 import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
 import com.sceyt.chat.demo.presentation.welcome.accounts_bottomsheet.SelectAccountBottomSheetFragment
+import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.launchActivity
+import com.sceyt.chatuikit.presentation.common.SceytLoader.hideLoading
+import com.sceyt.chatuikit.presentation.common.SceytLoader.showLoading
+import com.sceyt.chatuikit.presentation.root.PageState
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class WelcomeFragment : Fragment() {
@@ -21,9 +25,9 @@ class WelcomeFragment : Fragment() {
     private val viewModel: WelcomeViewModel by viewModel()
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
         _binding = FragmentWelcomeBinding.inflate(inflater, container, false)
         val view = binding.root
@@ -32,12 +36,10 @@ class WelcomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setFragmentResultListener(KEY_USER_ID_REQUEST) { _, bundle ->
-            val userId = bundle.getString(KEY_USER_ID)
-            viewModel.loginUser(userId = userId ?: "")
-        }
+
         initClickListeners()
         initViewModel()
+        setResultListener()
     }
 
     override fun onDestroyView() {
@@ -54,6 +56,18 @@ class WelcomeFragment : Fragment() {
                 }
             }
         }
+
+        viewModel.pageStateLiveData.observe(viewLifecycleOwner) {
+            when (it) {
+                is PageState.StateLoading -> showLoading(requireContext())
+                is PageState.StateError -> {
+                    customToastSnackBar(it.errorMessage)
+                    hideLoading()
+                }
+
+                else -> hideLoading()
+            }
+        }
     }
 
     private fun initClickListeners() {
@@ -61,12 +75,20 @@ class WelcomeFragment : Fragment() {
             btnCreateAccount.setOnClickListener {
                 (activity as? WelcomeActivity)?.openCreateAccountFragment()
             }
+
             btnChooseAccount.setOnClickListener {
                 SelectAccountBottomSheetFragment().show(
                     parentFragmentManager,
                     SelectAccountBottomSheetFragment::class.java.simpleName
                 )
             }
+        }
+    }
+
+    private fun setResultListener() {
+        setFragmentResultListener(KEY_USER_ID_REQUEST) { _, bundle ->
+            val userId = bundle.getString(KEY_USER_ID)
+            viewModel.loginUser(userId = userId ?: return@setFragmentResultListener)
         }
     }
 }

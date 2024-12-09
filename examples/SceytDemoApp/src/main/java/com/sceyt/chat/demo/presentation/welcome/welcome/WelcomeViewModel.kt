@@ -19,58 +19,55 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 class WelcomeViewModel(
-    private val preference: AppSharedPreference,
-    private val connectionProvider: SceytConnectionProvider
+        private val preference: AppSharedPreference,
+        private val connectionProvider: SceytConnectionProvider
 ) : BaseViewModel() {
 
     private val _logInLiveData = MutableLiveData<Boolean>()
     val logInLiveData: LiveData<Boolean> = _logInLiveData
 
     fun loginUser(
-        userId: String,
+            userId: String,
     ) {
         viewModelScope.launch {
+            pageStateLiveDataInternal.value = PageState.StateLoading()
+
             val result = connectUser(userId)
             if (result.isSuccess) {
                 preference.setString(AppSharedPreference.PREF_USER_ID, userId)
             } else
                 pageStateLiveDataInternal.value = PageState.StateError(
                     null, result.exceptionOrNull()?.message
-                        ?: "Connection failed"
                 )
 
             _logInLiveData.value = result.isSuccess
         }
     }
 
-    private suspend fun connectUser(userId: String): Result<Boolean> {
-        return withContext(Dispatchers.IO) {
-            var job: Job? = null
-            suspendCancellableCoroutine { continuation ->
-                job = ConnectionEventManager.onChangedConnectStatusFlow.onEach {
-                    when (it.state) {
-                        ConnectionState.Connected -> {
-                            continuation.resume(Result.success(true))
-                            job?.cancel()
-                        }
-
-                        ConnectionState.Disconnected, ConnectionState.Failed -> {
-                            continuation.resume(
-                                Result.failure(
-                                    Exception(
-                                        it.exception?.message
-                                            ?: "Connection failed"
-                                    )
-                                )
-                            )
-                            job?.cancel()
-                        }
-
-                        else -> {}
+    private suspend fun connectUser(userId: String) = withContext(Dispatchers.IO) {
+        var job: Job? = null
+        val data = suspendCancellableCoroutine<Result<Boolean>> { continuation ->
+            job = ConnectionEventManager.onChangedConnectStatusFlow.onEach {
+                when (it.state) {
+                    ConnectionState.Connected -> {
+                        continuation.resume(Result.success(true))
+                        job?.cancel()
                     }
-                }.launchIn(this)
-                connectionProvider.connectChatClient(userId)
-            }
+
+                    ConnectionState.Disconnected, ConnectionState.Failed -> {
+                        continuation.resume(
+                            Result.failure(Exception(it.exception?.message))
+                        )
+                        job?.cancel()
+                    }
+
+                    else -> Unit
+                }
+            }.launchIn(this)
+
+            connectionProvider.connectChatClient(userId)
         }
+
+        return@withContext data
     }
 }

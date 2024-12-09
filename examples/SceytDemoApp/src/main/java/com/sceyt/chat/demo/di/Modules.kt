@@ -5,7 +5,6 @@ import com.sceyt.chat.demo.connection.ChatClientConnectionInterceptor
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.data.AppSharedPreferenceImpl
-import com.sceyt.chat.demo.data.Constants
 import com.sceyt.chat.demo.data.api.AuthApiService
 import com.sceyt.chat.demo.data.api.UserApiService
 import com.sceyt.chat.demo.data.interceptors.RetryInterceptor
@@ -27,6 +26,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 
+const val AUTH_SERVICE = "AuthService"
+const val VALIDATOR_SERVICE = "ValidatorService"
+
 val appModules = module {
     single<AppSharedPreference> { AppSharedPreferenceImpl(get()) }
     single { ChatClientConnectionInterceptor(get(), get()) }
@@ -40,7 +42,8 @@ val viewModelModules = module {
     viewModel { EditProfileViewModel(get()) }
     viewModel { SelectAccountsBottomSheetViewModel() }
     viewModel { WelcomeViewModel(get(), get()) }
-    viewModel { SplashViewModel(get()) } }
+    viewModel { SplashViewModel(get()) }
+}
 
 val apiModule = module {
     single {
@@ -52,7 +55,7 @@ val apiModule = module {
             .build()
     }
 
-    single(named(Constants.AUTH_SERVICE)) {
+    single(named(AUTH_SERVICE)) {
         Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())
             .baseUrl(BuildConfig.GEN_TOKEN_BASE_URL)
@@ -60,7 +63,7 @@ val apiModule = module {
             .build()
     }
 
-    single(named(Constants.VALIDATOR_SERVICE)) {
+    single(named(VALIDATOR_SERVICE)) {
         Retrofit.Builder()
             .addConverterFactory(GsonConverterFactory.create())
             .baseUrl(BuildConfig.VALIDATION_API_URL)
@@ -68,11 +71,12 @@ val apiModule = module {
             .build()
     }
 
-    factory<AuthApiService> { get<Retrofit>(named(Constants.AUTH_SERVICE)).create(AuthApiService::class.java) }
+    single<AuthApiService> {
+        get<Retrofit>(named(AUTH_SERVICE)).create(AuthApiService::class.java)
+    }
+
     single<UserApiService> {
-        get<Retrofit>(named(Constants.VALIDATOR_SERVICE)).create(
-            UserApiService::class.java
-        )
+        get<Retrofit>(named(VALIDATOR_SERVICE)).create(UserApiService::class.java)
     }
 }
 

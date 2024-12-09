@@ -2,10 +2,10 @@ package com.sceyt.chat.demo.presentation.main.profile.edit
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.demo.data.repositories.HttpStatusException
 import com.sceyt.chat.demo.data.repositories.UserRepository
 import com.sceyt.chat.demo.presentation.Constants.CORRECT_USERNAME_REGEX
 import com.sceyt.chat.demo.presentation.common.ui.UsernameValidationEnum
+import com.sceyt.chat.models.SceytException
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -116,7 +116,7 @@ class EditProfileViewModel(
                 _usernameValidationLiveData.postValue(UsernameValidationEnum.Valid)
             } else {
                 val exception = result.exceptionOrNull()
-                if (exception is HttpStatusException && exception.statusCode == 400) {
+                if (exception is SceytException && exception.code == 400) {
                     _usernameValidationLiveData.postValue(UsernameValidationEnum.AlreadyExists)
                 }
             }

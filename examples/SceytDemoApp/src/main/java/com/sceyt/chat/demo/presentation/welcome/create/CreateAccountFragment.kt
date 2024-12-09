@@ -1,12 +1,10 @@
 package com.sceyt.chat.demo.presentation.welcome.create
 
 import android.animation.LayoutTransition
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.RequiresApi
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
@@ -40,10 +38,8 @@ class CreateAccountFragment : Fragment() {
         return view
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.btnNext.setEnabledOrNot(false)
 
         initViewModel()
         binding.initViews()
@@ -56,7 +52,6 @@ class CreateAccountFragment : Fragment() {
         _binding = null
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun initViewModel() {
         viewModel.pageStateLiveData.observe(viewLifecycleOwner) { pageState ->
             when (pageState) {
@@ -71,8 +66,7 @@ class CreateAccountFragment : Fragment() {
                 }
 
                 is PageState.StateError -> customToastSnackBar(
-                    pageState.errorMessage
-                            ?: return@observe
+                    pageState.errorMessage ?: return@observe
                 )
 
                 else -> return@observe

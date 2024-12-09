@@ -4,7 +4,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.data.AppSharedPreference
-import com.sceyt.chat.demo.data.repositories.HttpStatusException
 import com.sceyt.chat.demo.data.repositories.UserRepository
 import com.sceyt.chat.demo.presentation.Constants.CORRECT_USERNAME_REGEX
 import com.sceyt.chat.demo.presentation.common.ui.UsernameValidationEnum
@@ -83,7 +82,6 @@ class CreateAccountViewModel(
             } else
                 pageStateLiveDataInternal.value = PageState.StateError(
                     null, result.exceptionOrNull()?.message
-                            ?: "Connection failed"
                 )
 
             pageStateLiveDataInternal.value = PageState.StateLoading(false)
@@ -91,14 +89,25 @@ class CreateAccountViewModel(
         }
     }
 
+    fun setFirstNameValidState(isValid: Boolean) {
+        isFirstNameValid = isValid
+        setNextButtonEnabledState()
+    }
+
+    fun setUserNameValidState(isValid: Boolean) {
+        isUsernameValid = isValid
+        setNextButtonEnabledState()
+    }
+
+    fun updateUsernameInput(username: String) {
+        _usernameInput.value = username
+    }
+
     private suspend fun updateProfile(firstName: String?, lastName: String?, username: String) =
             withContext(Dispatchers.IO) {
                 val currentUser = SceytChatUIKit.currentUser ?: userInteractor.getCurrentUser()
                 ?: return@withContext SceytResponse.Error<SceytUser>(
-                    SceytException(
-                        0,
-                        "User not found"
-                    )
+                    SceytException(0, "User not found")
                 )
                 userInteractor.updateProfile(
                     username = username,
@@ -122,12 +131,7 @@ class CreateAccountViewModel(
 
                         ConnectionState.Disconnected, ConnectionState.Failed -> {
                             continuation.resume(
-                                Result.failure(
-                                    Exception(
-                                        it.exception?.message
-                                                ?: "Connection failed"
-                                    )
-                                )
+                                Result.failure(Exception(it.exception?.message))
                             )
                             job?.cancel()
                         }
@@ -135,13 +139,10 @@ class CreateAccountViewModel(
                         else -> {}
                     }
                 }.launchIn(this)
+
                 connectionProvider.connectChatClient(userId)
             }
         }
-    }
-
-    fun updateUsernameInput(username: String) {
-        _usernameInput.value = username
     }
 
     private fun validateUsername(username: String) {
@@ -151,7 +152,7 @@ class CreateAccountViewModel(
                 _correctUsernameValidatorLiveData.postValue(UsernameValidationEnum.Valid)
             } else {
                 val exception = result.exceptionOrNull()
-                if (exception is HttpStatusException && exception.statusCode == 400) {
+                if (exception is SceytException && exception.code == 400) {
                     _correctUsernameValidatorLiveData.postValue(UsernameValidationEnum.AlreadyExists)
                 }
             }
@@ -177,15 +178,5 @@ class CreateAccountViewModel(
     private fun setNextButtonEnabledState() {
         val enabled = isUsernameValid && isFirstNameValid
         _nextButtonEnabledLiveData.postValue(enabled)
-    }
-
-    fun setFirstNameValidState(isValid: Boolean) {
-        isFirstNameValid = isValid
-        setNextButtonEnabledState()
-    }
-
-    fun setUserNameValidState(isValid: Boolean) {
-        isUsernameValid = isValid
-        setNextButtonEnabledState()
     }
 }
