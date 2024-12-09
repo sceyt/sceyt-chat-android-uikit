@@ -65,7 +65,15 @@ class WelcomeViewModel(
                 }
             }.launchIn(this)
 
-            connectionProvider.connectChatClient(userId)
+            connectionProvider.connectChatClient(userId) { isStarted, exception ->
+                if (!isStarted) {
+                    continuation.resume(Result.failure(Throwable(exception?.message)))
+                    pageStateLiveDataInternal.postValue(PageState.StateError(
+                        null, exception?.message
+                    ))
+                    job?.cancel()
+                }
+            }
         }
 
         return@withContext data
