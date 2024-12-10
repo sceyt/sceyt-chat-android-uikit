@@ -3,13 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <data>
-
-        <variable
-            name="isSaveLoading"
-            type="Boolean" />
-    </data>
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -34,26 +27,13 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tvEditOrSave"
-                visibleIf="@{!isSaveLoading}"
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/ivEdit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="?selectableItemBackgroundBorderless"
                 android:padding="5dp"
-                android:text="@string/sceyt_edit"
-                android:textColor="@color/colorAccent"
-                android:textSize="@dimen/mediumTextSize"
-                app:layout_constraintBottom_toBottomOf="@+id/title"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/title" />
-
-            <ProgressBar
-                visibleIf="@{isSaveLoading}"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="4dp"
-                android:visibility="gone"
+                android:src="@drawable/ic_edit"
+                android:tint="@color/sceyt_color_accent"
                 app:layout_constraintBottom_toBottomOf="@+id/title"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/title" />
@@ -71,7 +51,7 @@
             android:id="@+id/constraintLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:background="@color/sceyt_color_background"
+            android:background="@color/sceyt_color_background_secondary"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/underline">
 
@@ -89,25 +69,9 @@
                     android:layout_height="72dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
+                    app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar"
                     app:sceytUiAvatarTextSize="@dimen/extraLargeTextSize"
-                    tools:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar"
                     tools:sceytUiAvatarFullName="User name" />
-
-                <androidx.appcompat.widget.AppCompatImageView
-                    android:id="@+id/icEditPhoto"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/sceyt_bg_circle"
-                    android:backgroundTint="#60E3E7FF"
-                    android:padding="20dp"
-                    android:scaleType="centerCrop"
-                    android:tint="@color/colorAccent"
-                    app:layout_constraintBottom_toBottomOf="@+id/avatar"
-                    app:layout_constraintEnd_toEndOf="@+id/avatar"
-                    app:layout_constraintStart_toStartOf="@id/avatar"
-                    app:layout_constraintTop_toTopOf="@id/avatar"
-                    app:srcCompat="@drawable/sceyt_ic_camera" />
 
                 <ProgressBar
                     android:id="@+id/loadingProfileImage"
@@ -119,19 +83,15 @@
                     app:layout_constraintStart_toStartOf="@+id/avatar"
                     app:layout_constraintTop_toTopOf="@+id/avatar" />
 
-                <androidx.appcompat.widget.AppCompatEditText
+                <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/displayName"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
-                    android:background="@drawable/bg_edit_text_small_bottom_padding"
-                    android:backgroundTint="@color/colorAccent"
                     android:ellipsize="end"
                     android:fontFamily="@font/roboto_medium"
-                    android:hint="@string/display_name"
                     android:includeFontPadding="false"
-                    android:inputType="textPersonName"
-                    android:maxLines="2"
+                    android:maxLines="1"
                     android:paddingVertical="5dp"
                     android:textColor="@color/sceyt_color_text_primary"
                     android:textColorHint="@color/sceyt_color_text_footnote"
