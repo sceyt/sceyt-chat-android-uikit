@@ -15,6 +15,7 @@ import com.sceyt.chat.sceyt_callbacks.MessageCallback
 import com.sceyt.chat.sceyt_callbacks.MessageMarkCallback
 import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SendMessageResult
@@ -333,9 +334,11 @@ class MessagesRepositoryImpl : MessagesRepository {
     }
 
     override suspend fun sendTyping(channelId: Long, typing: Boolean) {
-        if (typing)
-            ChannelOperator.build(channelId).startTyping()
-        else ChannelOperator.build(channelId).stopTyping()
+        val event = when (typing) {
+            true -> SceytConstants.START_TYPING_EVENT
+            false -> SceytConstants.STOP_TYPING_EVENT
+        }
+        ChannelOperator.build(channelId).sendEvent(event)
     }
 
     private val messagesLoadSize get() = SceytChatUIKit.config.queryLimits.messageListQueryLimit

@@ -15,4 +15,7 @@ object SceytConstants {
     const val ImageFilesDirName = "sceyt_mages"
     const val VideoFilesDirName = "sceyt_videos"
     const val FileFilesDirName = "sceyt_files"
+
+    const val START_TYPING_EVENT = "start_typing"
+    const val STOP_TYPING_EVENT = "stop_typing"
 }

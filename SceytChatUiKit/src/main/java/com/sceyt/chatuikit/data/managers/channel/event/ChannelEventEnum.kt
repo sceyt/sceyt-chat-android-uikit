@@ -15,4 +15,5 @@ sealed class ChannelEventEnum {
     data class Hide(val hidden: Boolean) : ChannelEventEnum()
     data class MarkedUs(val read: Boolean) : ChannelEventEnum()
     data class Block(val blocked: Boolean) : ChannelEventEnum()
+    data object Event : ChannelEventEnum()
 }
