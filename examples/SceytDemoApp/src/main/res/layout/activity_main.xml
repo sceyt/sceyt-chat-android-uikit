@@ -9,25 +9,40 @@
     android:fitsSystemWindows="true"
     tools:context=".presentation.main.MainActivity">
 
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/viewPager"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/mainContent"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/bottomNavigationView"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigationView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/color_bottom_nav"
-        app:elevation="10dp"
-        app:itemIconSize="28dp"
-        app:itemIconTint="@color/bottom_nav_item_color"
-        app:itemTextAppearanceActive="@style/SceytBottomNavigationTextStyle"
-        app:itemTextAppearanceInactive="@style/SceytBottomNavigationTextStyle"
-        app:itemTextColor="@color/bottom_nav_item_color"
+        android:layout_height="match_parent"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:menu="@menu/menu_bottom_navigation" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPager"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@id/bottomNavigationView"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNavigationView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/color_bottom_nav"
+            app:elevation="10dp"
+            app:itemIconSize="28dp"
+            app:itemIconTint="@color/bottom_nav_item_color"
+            app:itemTextAppearanceActive="@style/SceytBottomNavigationTextStyle"
+            app:itemTextAppearanceInactive="@style/SceytBottomNavigationTextStyle"
+            app:itemTextColor="@color/bottom_nav_item_color"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:menu="@menu/menu_bottom_navigation" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <FrameLayout
+        android:id="@+id/mainContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

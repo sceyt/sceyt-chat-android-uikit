@@ -23,5 +23,19 @@
     <string name="channel_name">Channel name</string>
     <string name="display_name_is_empty">Display name is empty!</string>
     <string name="mute_notifications">Mute notifications:</string>
-
+    <string name="username_correct_input_hint">Use <b>a-z</b>, <b>0-9</b> and underscores. Username\nlength must be <b>3</b> to <b>20</b> characters.</string>
+    <string name="create_account">Create Account</string>
+    <string name="create_account_hint">You haven’t created channels yet, \n create one for sending messages.</string>
+    <string name="login_screen_title">Fast and Seamless \nChat API</string>
+    <string name="no_created_channels_description">You haven’t created channels yet, \n create one for sending messages.</string>
+    <string name="choose_account">Choose Account</string>
+    <string name="first_name">First name</string>
+    <string name="last_name">Last name</string>
+    <string name="user_name">username</string>
+    <string name="select_account">Select Account</string>
+    <string name="username_is_empty">username is empty!</string>
+    <string name="error_username_taken">Username is already taken</string>
+    <string name="username_is_available">Username is available</string>
+    <string name="username_length_error">Username length must be 3 to 20 characters</string>
+    <string name="username_invalid_characters">Use a-z, 0-9 and underscores</string>
 </resources>
