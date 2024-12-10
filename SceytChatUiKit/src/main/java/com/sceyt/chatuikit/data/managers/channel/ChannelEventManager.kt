@@ -232,8 +232,8 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
                 channel ?: return
                 event ?: return
                 val typing = when (event.name) {
-                    SceytConstants.START_TYPING_EVENT -> true
-                    SceytConstants.STOP_TYPING_EVENT -> false
+                    SceytConstants.startTypingEvent -> true
+                    SceytConstants.stopTypingEvent -> false
                     else -> {
                         eventManager.onChannelEvent(ChannelEventData(channel.toSceytUiChannel(), ChannelEventEnum.Event))
                         return
