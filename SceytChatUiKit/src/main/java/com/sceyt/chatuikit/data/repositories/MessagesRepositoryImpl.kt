@@ -335,8 +335,8 @@ class MessagesRepositoryImpl : MessagesRepository {
 
     override suspend fun sendTyping(channelId: Long, typing: Boolean) {
         val event = when (typing) {
-            true -> SceytConstants.START_TYPING_EVENT
-            false -> SceytConstants.STOP_TYPING_EVENT
+            true -> SceytConstants.startTypingEvent
+            false -> SceytConstants.stopTypingEvent
         }
         ChannelOperator.build(channelId).sendEvent(event)
     }
