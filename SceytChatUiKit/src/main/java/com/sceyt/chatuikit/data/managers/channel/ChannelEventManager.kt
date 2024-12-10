@@ -8,6 +8,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_listeners.ChannelListener
+import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
@@ -174,12 +175,12 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
 
             override fun onMemberStartedTyping(channel: Channel, member: Member) {
                 eventManager.onChannelTypingEvent(ChannelTypingEventData(channel.toSceytUiChannel(),
-                    member.toSceytMember(), true))
+                    member.toSceytUser(), true))
             }
 
             override fun onMemberStoppedTyping(channel: Channel, member: Member) {
                 eventManager.onChannelTypingEvent(ChannelTypingEventData(channel.toSceytUiChannel(),
-                    member.toSceytMember(), false))
+                    member.toSceytUser(), false))
             }
 
             override fun onChangedMembersRole(channel: Channel?, members: MutableList<Member>?) {
@@ -228,6 +229,18 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
             }
 
             override fun onChannelEvent(channel: Channel?, event: ChannelEvent?) {
+                channel ?: return
+                event ?: return
+                val typing = when (event.name) {
+                    SceytConstants.START_TYPING_EVENT -> true
+                    SceytConstants.STOP_TYPING_EVENT -> false
+                    else -> {
+                        eventManager.onChannelEvent(ChannelEventData(channel.toSceytUiChannel(), ChannelEventEnum.Event))
+                        return
+                    }
+                }
+                eventManager.onChannelTypingEvent(ChannelTypingEventData(channel.toSceytUiChannel(),
+                    event.user.toSceytUser(), typing))
             }
         })
     }

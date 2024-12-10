@@ -167,6 +167,7 @@ internal class PersistenceChannelsLogicImpl(
             }
 
             is Invited -> onChanelJoined(data.channel)
+            is ChannelEventEnum.Event -> Unit
         }
     }
 

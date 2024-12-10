@@ -362,7 +362,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
-    fun setTypingTextBuilder(builder: (SceytMember) -> String) {
+    fun setTypingTextBuilder(builder: (SceytUser) -> String) {
         typingUsersHelper.setTypingTextBuilder(builder)
     }
 
