@@ -22,7 +22,7 @@ interface UserInteractor {
     fun getCurrentUserId(): String?
     fun getCurrentUserAsFlow(): Flow<SceytUser>
     suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String>
-    suspend fun updateProfile(username: String, firsName: String?, lastName: String?,
+    suspend fun updateProfile(username: String, firstName: String?, lastName: String?,
                               avatarUrl: String?, metadataMap: Map<String, String>?
     ): SceytResponse<SceytUser>
 
