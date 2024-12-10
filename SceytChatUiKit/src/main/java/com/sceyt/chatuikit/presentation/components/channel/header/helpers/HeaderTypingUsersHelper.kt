@@ -58,10 +58,10 @@ class HeaderTypingUsersHelper(
         }
     }
 
-    private fun initTypingTitle(member: SceytUser): CharSequence {
-        return typingTextBuilder?.invoke(member) ?: if (isGroup)
+    private fun initTypingTitle(user: SceytUser): CharSequence {
+        return typingTextBuilder?.invoke(user) ?: if (isGroup)
             buildString {
-                append(typingUserNameFormatter.format(context, member).take(10))
+                append(typingUserNameFormatter.format(context, user).take(10))
                 append(" ${context.getString(R.string.sceyt_typing)}")
             }
         else context.getString(R.string.sceyt_typing)
