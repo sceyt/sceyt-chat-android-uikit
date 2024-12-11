@@ -311,9 +311,8 @@ class MessageListViewModel(
             val resp = messageInteractor.searchMessages(conversationId, replyInThread, query)
             (resp as? SceytPagingResponse.Success)?.let {
                 it.data?.let { messages ->
-                    val reversed = messages.reversed()
-                    _searchResult.postValue(SearchResult(0, reversed, resp.hasNext))
-                    _onScrollToSearchMessageLiveData.postValue(reversed.firstOrNull()
+                    _searchResult.postValue(SearchResult(0, messages, resp.hasNext))
+                    _onScrollToSearchMessageLiveData.postValue(messages.firstOrNull()
                             ?: return@launch)
                 }
             }
