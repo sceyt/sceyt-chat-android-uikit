@@ -1,19 +1,18 @@
 package com.sceyt.chatuikit.persistence.mappers
 
 import com.sceyt.chat.models.channel.Channel
-import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
+import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.toSceytMember
 import com.sceyt.chatuikit.persistence.entity.channel.ChannelDb
 import com.sceyt.chatuikit.persistence.entity.channel.ChannelEntity
-import com.sceyt.chatuikit.persistence.extensions.isSelf
 
 fun SceytChannel.toChannelEntity() = ChannelEntity(
     id = id,
     parentChannelId = parentChannelId,
-    uri = uri,
+    uri = uri.takeIf { !it.isNullOrBlank() },
     type = type,
     subject = subject,
     avatarUrl = avatarUrl,
@@ -124,26 +123,24 @@ fun Channel.toSceytUiChannel(): SceytChannel {
     )
 }
 
-fun createPendingDirectChannelData(
+fun createPendingChannel(
         channelId: Long,
         createdBy: SceytUser,
-        members: List<SceytMember>,
-        role: String,
-        metadata: String
+        data: CreateChannelData,
 ) = SceytChannel(
     id = channelId,
     parentChannelId = null,
-    uri = null,
-    type = ChannelTypeEnum.Direct.value,
-    subject = null,
-    avatarUrl = null,
-    metadata = metadata,
+    uri = data.uri,
+    type = data.type,
+    subject = data.subject,
+    avatarUrl = data.avatarUrl,
+    metadata = data.metadata,
     createdAt = System.currentTimeMillis(),
     updatedAt = 0,
     messagesClearedAt = 0,
-    memberCount = members.size.toLong(),
+    memberCount = data.members.size.toLong(),
     createdBy = createdBy,
-    userRole = role,
+    userRole = RoleTypeEnum.Owner.value,
     unread = false,
     newMessageCount = 0,
     newMentionCount = 0,
@@ -158,7 +155,7 @@ fun createPendingDirectChannelData(
     messageRetentionPeriod = 0,
     lastMessage = null,
     messages = null,
-    members = members,
+    members = data.members,
     newReactions = null,
     pendingReactions = null,
     pending = true,

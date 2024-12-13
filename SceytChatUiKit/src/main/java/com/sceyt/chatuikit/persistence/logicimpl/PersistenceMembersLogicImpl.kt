@@ -60,7 +60,7 @@ internal class PersistenceMembersLogicImpl(
                     data.channel.lastMessage?.toMessageDb(false)?.let {
                         messageDao.upsertMessage(it)
                     }
-                    channelsCache.add(data.channel)
+                    channelsCache.upsertChannel(data.channel)
                 }
             }
 
@@ -166,7 +166,7 @@ internal class PersistenceMembersLogicImpl(
 
     private suspend fun deleteChannelDb(channelId: Long) {
         channelDao.deleteChannelAndLinks(channelId)
-        messageDao.deleteAllMessages(channelId)
+        messageDao.deleteAllMessagesByChannel(channelId)
         rangeDao.deleteChannelLoadRanges(channelId)
         channelsCache.deleteChannel(channelId)
     }

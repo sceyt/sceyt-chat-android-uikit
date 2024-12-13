@@ -24,12 +24,13 @@ fun Drawable?.toSpannableString(): SpannableStringBuilder {
 }
 
 fun Drawable?.applyTint(@ColorInt tintColor: Int): Drawable? {
+    this ?: return null
     if (tintColor == 0) return this
-    return this?.mutate()?.apply { setTint(tintColor) }
+    return mutate().apply { setTint(tintColor) }
 }
 
 fun Drawable?.applyTint(context: Context, @ColorRes tintColorRes: Int): Drawable? {
-    return this?.mutate()?.apply { setTint(ContextCompat.getColor(context, tintColorRes)) }
+    return applyTint(ContextCompat.getColor(context, tintColorRes))
 }
 
 fun Drawable?.applyTintBackgroundLayer(@ColorInt tintColor: Int, @IdRes bgLayerId: Int): Drawable? {

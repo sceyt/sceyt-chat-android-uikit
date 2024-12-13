@@ -28,6 +28,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
@@ -116,7 +117,7 @@ class MessageListViewModel(
     internal var pinnedLastReadMessageId: Long = 0
     internal val sendDisplayedHelper by lazy { DebounceHelper(200L, viewModelScope) }
     internal val messageActionBridge by lazy { MessageActionBridge() }
-    internal val placeToSavePathsList = mutableSetOf<String>()
+    internal val placeToSavePathsList = mutableSetOf<Pair<AttachmentTypeEnum, String>>()
     internal val selectedMessagesMap by lazy { mutableMapOf<Long, SceytMessage>() }
     internal val notFoundMessagesToUpdate by lazy { mutableMapOf<Long, SceytMessage>() }
     internal var scrollToSearchMessageJob: Job? = null
@@ -311,9 +312,8 @@ class MessageListViewModel(
             val resp = messageInteractor.searchMessages(conversationId, replyInThread, query)
             (resp as? SceytPagingResponse.Success)?.let {
                 it.data?.let { messages ->
-                    val reversed = messages.reversed()
-                    _searchResult.postValue(SearchResult(0, reversed, resp.hasNext))
-                    _onScrollToSearchMessageLiveData.postValue(reversed.firstOrNull()
+                    _searchResult.postValue(SearchResult(0, messages, resp.hasNext))
+                    _onScrollToSearchMessageLiveData.postValue(messages.firstOrNull()
                             ?: return@launch)
                 }
             }

@@ -9,7 +9,6 @@ import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.persistence.entity.channel.ChannelDb
@@ -40,36 +39,57 @@ interface ChannelDao {
     suspend fun insertUserChatLink(userChatLink: UserChatLink): Long
 
     @Transaction
-    @Query("select * from channels where userRole !=:ignoreRole and (not pending or lastMessageTid != 0) " +
-            "order by " +
-            "case when pinnedAt > 0 then pinnedAt end desc," +
-            "case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
-    suspend fun getChannels(limit: Int, offset: Int, ignoreRole: String = RoleTypeEnum.None.value): List<ChannelDb>
-
-    @Transaction
-    @Query("select * from channels where subject LIKE '%' || :query || '%' and (not pending or lastMessageTid != 0) " +
-            "order by " +
-            "case when pinnedAt > 0 then pinnedAt end desc," +
-            "case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
-    suspend fun getChannelsBySubject(limit: Int, offset: Int, query: String): List<ChannelDb>
+    @Query("""
+        select * from channels 
+            where userRole !=:ignoreRole 
+            and (not pending or lastMessageTid != 0) 
+            and (:isEmptyTypes = 1 or type in (:types)) 
+            order by 
+            case when pinnedAt > 0 then pinnedAt end desc,
+            case when :orderByLastMessage = 1 and lastMessageAt is not null then lastMessageAt end desc,
+            createdAt desc 
+            limit :limit offset :offset
+    """)
+    suspend fun getChannels(
+            limit: Int,
+            offset: Int,
+            types: List<String>,
+            orderByLastMessage: Boolean,
+            ignoreRole: String = RoleTypeEnum.None.value,
+            isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
+    ): List<ChannelDb>
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
-    @Query("select * from channels " +
-            "left join UserChatLink as link on link.chat_id = channels.chat_id " +
-            "where ((subject like '%' || :query || '%' and (not pending or lastMessageTid != 0) and type <> :directType " +
-            "and (case when :onlyMine then channels.userRole <> '' else 1 end)) " +
-            "or (type =:directType and (link.user_id in (:userIds) or isSelf and link.user_id like '%' || :query || '%'))) " +
-            "group by channels.chat_id " +
-            "order by " +
-            "case when pinnedAt > 0 then pinnedAt end desc," +
-            "case when lastMessageAt is not null then lastMessageAt end desc, createdAt desc limit :limit offset :offset")
-    suspend fun getChannelsByQueryAndUserIds(query: String, userIds: List<String>, limit: Int, offset: Int, onlyMine: Boolean,
-                                             directType: String = ChannelTypeEnum.Direct.value): List<ChannelDb>
+    @Query("""
+      select * from channels 
+            left join UserChatLink as link on link.chat_id = channels.chat_id 
+            where (((subject like '%' || :query || '%' and (not pending or lastMessageTid != 0) and type <> :directType 
+            and (case when :onlyMine then channels.userRole <> '' else 1 end)) 
+            or (type =:directType and (link.user_id in (:userIds) or isSelf and link.user_id like '%' || :query || '%')))
+            and (:isEmptyTypes = 1 or type in (:types))) 
+            group by channels.chat_id 
+            order by 
+            case when pinnedAt > 0 then pinnedAt end desc,
+            case when :orderByLastMessage = 1 and lastMessageAt is not null then lastMessageAt end desc, 
+            createdAt desc 
+            limit :limit offset :offset
+    """)
+    suspend fun searchChannelsByUserIds(
+            query: String,
+            userIds: List<String>,
+            limit: Int,
+            offset: Int,
+            onlyMine: Boolean,
+            types: List<String>,
+            orderByLastMessage: Boolean,
+            isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
+            directType: String = ChannelTypeEnum.Direct.value,
+    ): List<ChannelDb>
 
     @Transaction
     @RawQuery
-    suspend fun searchChannelsRaw(query: SimpleSQLiteQuery): List<ChannelDb>
+    suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<ChannelDb>
 
     @Transaction
     @Query("select * from channels where chat_id =:id")
@@ -91,26 +111,53 @@ interface ChannelDao {
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from channels join UserChatLink as link on link.chat_id = channels.chat_id " +
-            "where link.user_id =:peerId and type =:directType")
-    suspend fun getDirectChannel(peerId: String,
-                                 directType: String = ChannelTypeEnum.Direct.value): ChannelDb?
+            "where link.user_id =:peerId and type =:channelType")
+    suspend fun getChannelByUserAndType(
+            peerId: String,
+            channelType: String,
+    ): ChannelDb?
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
-    @Query("select * from channels join (select chat_id from UserChatLink where user_id =:myId " +
-            "group by chat_id having count(*) = 1) as links on links.chat_id = channels.chat_id " +
-            "where channels.type = :directType ")
-    suspend fun getDirectChannelsWhereMemberOnlyMe(
-            myId: String? = SceytChatUIKit.chatUIFacade.myId,
-            directType: String = ChannelTypeEnum.Direct.value): List<ChannelDb>
+    @Query("""
+    select * from channels 
+    where chat_id in (
+        select link.chat_id from UserChatLink as link 
+        where link.user_id in (:users)
+        group by link.chat_id
+        having COUNT(link.user_id) = :userCount
+    ) 
+    and type = :channelType
+""")
+    suspend fun getChannelByUsersAndType(
+            users: List<String>,
+            channelType: String,
+            userCount: Int = users.size,
+    ): ChannelDb?
+
+    @Transaction
+    @Query("select * from channels where uri =:uri")
+    suspend fun getChannelByUri(uri: String): ChannelDb?
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
     @Query("select * from channels where isSelf = 1")
     suspend fun getSelfChannel(): ChannelDb?
 
-    @Query("select chat_id from channels where chat_id not in (:ids) and pending != 1")
-    suspend fun getNotExistingChannelIdsByIds(ids: List<Long>): List<Long>
+    @Query("select chat_id from channels where chat_id not in (:ids) " +
+            "and (:isEmptyTypes = 1 or type in (:types))" +
+            "and pending != 1")
+    suspend fun getNotExistingChannelIdsByIdsAndTypes(
+            ids: List<Long>,
+            types: List<String>,
+            isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
+    ): List<Long>
+
+    @Query("select chat_id from channels where pending != 1 and (:isEmptyTypes = 1 or type in (:types))")
+    suspend fun getAllChannelIdsByTypes(
+            types: List<String>,
+            isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
+    ): List<Long>
 
     @Query("select chat_id from channels")
     suspend fun getAllChannelsIds(): List<Long>
@@ -122,8 +169,14 @@ interface ChannelDao {
     suspend fun getChannelLastMessageTid(id: Long): Long?
 
     @Transaction
-    @Query("select sum(newMessageCount) from channels")
-    fun getTotalUnreadCountAsFlow(): Flow<Int?>
+    @Query("""
+        select sum(newMessageCount) from channels
+        where :isEmptyTypes = 1 or type in (:channelTypes)
+           """)
+    fun getTotalUnreadCountAsFlow(
+            channelTypes: List<String>,
+            isEmptyTypes: Int = if (channelTypes.isEmpty()) 1 else 0,
+    ): Flow<Int?>
 
     @Query("select count(chat_id) from channels")
     suspend fun getAllChannelsCount(): Int
@@ -171,6 +224,12 @@ interface ChannelDao {
     @Query("delete from UserChatLink where chat_id =:channelId")
     suspend fun deleteChatLinks(channelId: Long)
 
+    @Query("delete from UserChatLink")
+    suspend fun deleteAllLinks()
+
+    @Query("delete from UserChatLink where chat_id in (:channelIds)")
+    suspend fun deleteChannelsLinks(channelIds: List<Long>)
+
     @Query("delete from UserChatLink where chat_id =:channelId and user_id != :exceptUserId")
     suspend fun deleteChatLinksExceptUser(channelId: Long, exceptUserId: String)
 
@@ -178,5 +237,31 @@ interface ChannelDao {
     suspend fun deleteChannelAndLinks(channelId: Long) {
         deleteChannel(channelId)
         deleteChatLinks(channelId)
+    }
+
+    @Query("delete from channels where chat_id in (:ids)")
+    suspend fun deleteAllChannelByIds(ids: List<Long>): Int
+
+    @Query("delete from channels where pending != 1")
+    suspend fun deleteAllChannels(): Int
+
+    @Transaction
+    suspend fun deleteAllChannelsAndLinksByTypes(types: List<String>): List<Long> {
+        val ids = getAllChannelIdsByTypes(types)
+        if (ids.isNotEmpty()) {
+            val deletedCount = deleteAllChannelByIds(ids)
+            if (deletedCount > 0)
+                deleteChannelsLinks(ids)
+        }
+        return ids
+    }
+
+    @Transaction
+    suspend fun deleteAllChannelsAndLinksById(ids: List<Long>) {
+        if (ids.isNotEmpty()) {
+            val deletedCount = deleteAllChannelByIds(ids)
+            if (deletedCount > 0)
+                deleteChannelsLinks(ids)
+        }
     }
 }

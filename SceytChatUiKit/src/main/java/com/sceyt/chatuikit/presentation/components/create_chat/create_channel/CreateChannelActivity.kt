@@ -105,7 +105,7 @@ class CreateChannelActivity : AppCompatActivity() {
     }
 
     private fun startConversationPageAndFinish(channel: SceytChannel) {
-        ChannelActivity.newInstance(this@CreateChannelActivity, channel)
+        ChannelActivity.launch(this@CreateChannelActivity, channel)
 
         val intent = Intent()
         setResult(RESULT_OK, intent)

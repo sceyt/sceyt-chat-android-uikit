@@ -44,12 +44,12 @@ import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderTypingUsersHelper
-import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.HeaderClickListeners
-import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.HeaderClickListenersImpl
-import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.HeaderEventsListener
-import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.HeaderEventsListenerImpl
-import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.HeaderUIElementsListener
-import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.HeaderUIElementsListenerImpl
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListenersImpl
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListener
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListenerImpl
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.MessageListHeaderUIElementsListener
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.MessageListHeaderUIElementsListenerImpl
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
@@ -59,18 +59,18 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessagesListHeaderView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0,
-) : AppBarLayout(context, attrs, defStyleAttr), HeaderClickListeners.ClickListeners,
-        HeaderEventsListener.EventListeners, HeaderUIElementsListener.ElementsListeners {
+) : AppBarLayout(context, attrs, defStyleAttr), MessageListHeaderClickListeners.ClickListeners,
+        MessageListHeaderEventsListener.EventListeners, MessageListHeaderUIElementsListener.ElementsListeners {
 
     private val binding: SceytMessagesListHeaderViewBinding
-    private var clickListeners = HeaderClickListenersImpl(this)
-    private var eventListeners = HeaderEventsListenerImpl(this)
-    internal var uiElementsListeners = HeaderUIElementsListenerImpl(this)
+    private var clickListeners = MessageListHeaderClickListenersImpl(this)
+    private var eventListeners = MessageListHeaderEventsListenerImpl(this)
+    internal var uiElementsListeners = MessageListHeaderUIElementsListenerImpl(this)
     private lateinit var channel: SceytChannel
     private var replyMessage: SceytMessage? = null
     private var isReplyInThread: Boolean = false
@@ -146,22 +146,6 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 uiElementsListeners.onSubTitle(binding.subTitle, channel, replyMessage, isReplyInThread)
             }
         }
-    }
-
-    private fun SceytMessagesListHeaderViewBinding.applyStyle() {
-        root.setBackgroundColor(style.backgroundColor)
-        toolbarUnderline.background = ColorDrawable(style.underlineColor)
-        toolbarUnderline.isVisible = style.showUnderline
-        icBack.setImageDrawable(style.navigationIcon)
-        style.titleTextStyle.apply(title)
-        style.subTitleStyle.apply(subTitle)
-        style.searchInputStyle.apply(
-            editText = inputSearch,
-            inputRoot = layoutSearch,
-            searchIconImage = icSearch,
-            clearIconImage = icClear)
-        style.messageActionsMenuStyle.apply(toolbarMessageActions)
-        style.avatarStyle.apply(avatar)
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -344,32 +328,33 @@ class MessagesListHeaderView @JvmOverloads constructor(
     @Suppress("unused")
     fun getReplyMessage() = replyMessage
 
-    fun setCustomClickListener(listeners: HeaderClickListenersImpl) {
-        clickListeners = listeners
+    @Suppress("unused")
+    fun setCustomClickListener(listeners: MessageListHeaderClickListenersImpl) {
+        clickListeners = listeners.withDefaultListeners(this)
     }
 
-    fun setClickListener(listeners: HeaderClickListeners) {
+    fun setClickListener(listeners: MessageListHeaderClickListeners) {
         clickListeners.setListener(listeners)
     }
 
     @Suppress("unused")
-    fun setEventListener(listener: HeaderEventsListener) {
+    fun setEventListener(listener: MessageListHeaderEventsListener) {
         eventListeners.setListener(listener)
     }
 
     @Suppress("unused")
-    fun setCustomEventListener(listener: HeaderEventsListenerImpl) {
-        eventListeners = listener
+    fun setCustomEventListener(listener: MessageListHeaderEventsListenerImpl) {
+        eventListeners = listener.withDefaultListeners(this)
     }
 
     @Suppress("unused")
-    fun setUiElementsListener(listener: HeaderUIElementsListener) {
+    fun setUiElementsListener(listener: MessageListHeaderUIElementsListener) {
         uiElementsListeners.setListener(listener)
     }
 
     @Suppress("unused")
-    fun setCustomUiElementsListener(listener: HeaderUIElementsListenerImpl) {
-        uiElementsListeners = listener
+    fun setCustomUiElementsListener(listener: MessageListHeaderUIElementsListenerImpl) {
+        uiElementsListeners = listener.withDefaultListeners(this)
     }
 
     fun setSearchQueryChangeListener(listener: (String) -> Unit) {
@@ -377,7 +362,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
-    fun setTypingTextBuilder(builder: (SceytMember) -> String) {
+    fun setTypingTextBuilder(builder: (SceytUser) -> String) {
         typingUsersHelper.setTypingTextBuilder(builder)
     }
 
@@ -479,13 +464,14 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     //Click listeners
     override fun onAvatarClick(view: View) {
-        if (::channel.isInitialized)
-            channelInfoLauncher?.let { ChannelInfoActivity.startHandleSearchClick(context, channel, it) }
+        clickListeners.onToolbarClick(view)
     }
 
     override fun onToolbarClick(view: View) {
         if (::channel.isInitialized)
-            channelInfoLauncher?.let { ChannelInfoActivity.startHandleSearchClick(context, channel, it) }
+            channelInfoLauncher?.let {
+                ChannelInfoActivity.startHandleSearchClick(context, channel, it)
+            }
     }
 
     override fun onBackClick(view: View) {
@@ -503,5 +489,21 @@ class MessagesListHeaderView @JvmOverloads constructor(
             else -> context.maybeComponentActivity()?.onBackPressedDispatcher?.onBackPressed()
                     ?: context.asActivity().finish()
         }
+    }
+
+    private fun SceytMessagesListHeaderViewBinding.applyStyle() {
+        root.setBackgroundColor(style.backgroundColor)
+        toolbarUnderline.background = ColorDrawable(style.underlineColor)
+        toolbarUnderline.isVisible = style.showUnderline
+        icBack.setImageDrawable(style.navigationIcon)
+        style.titleTextStyle.apply(title)
+        style.subTitleStyle.apply(subTitle)
+        style.searchInputStyle.apply(
+            editText = inputSearch,
+            inputRoot = layoutSearch,
+            searchIconImage = icSearch,
+            clearIconImage = icClear)
+        style.messageActionsMenuStyle.apply(toolbarMessageActions)
+        style.avatarStyle.apply(avatar)
     }
 }

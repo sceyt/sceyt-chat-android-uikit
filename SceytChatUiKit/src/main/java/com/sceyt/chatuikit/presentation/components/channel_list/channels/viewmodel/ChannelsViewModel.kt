@@ -2,9 +2,12 @@ package com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmo
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.sqlite.db.SimpleSQLiteQuery
+import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -25,7 +28,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
-class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
+class ChannelsViewModel(
+        internal val config: ChannelListConfig = ChannelListConfig.default,
+) : BaseViewModel(), SceytKoinComponent {
     private val channelInteractor: ChannelInteractor by inject()
     private val userInteractor: UserInteractor by inject()
     private var getChannelsJog: Job? = null
@@ -40,17 +45,82 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
     private val _blockUserLiveData = MutableLiveData<SceytResponse<List<SceytUser>>>()
     val blockUserLiveData = _blockUserLiveData.asLiveData()
 
-    fun getChannels(offset: Int, query: String = searchQuery, loadKey: LoadKeyData? = null, ignoreDb: Boolean = false) {
+    fun getChannels(
+            offset: Int,
+            query: String = searchQuery,
+            loadKey: LoadKeyData? = null,
+            ignoreDatabase: Boolean = false,
+    ) {
         searchQuery = query
-        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDb = ignoreDb)
+        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDatabase = ignoreDatabase)
 
         notifyPageLoadingState(false)
 
         getChannelsJog?.cancel()
         getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.loadChannels(offset, query, loadKey, ignoreDb).collect {
+            channelInteractor.loadChannels(offset, query, loadKey, ignoreDatabase, config).collect {
                 initPaginationResponse(it)
             }
+        }
+    }
+
+    fun searchChannelsWithUserIds(
+            offset: Int,
+            query: String = searchQuery,
+            userIds: List<String> = emptyList(),
+            directChatType: String = ChannelTypeEnum.Direct.value,
+            onlyMine: Boolean = false,
+            includeSearchByUserDisplayName: Boolean = false,
+            ignoreDatabase: Boolean = false,
+            loadKey: LoadKeyData? = null,
+    ) {
+        searchQuery = query
+        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDatabase = ignoreDatabase)
+
+        notifyPageLoadingState(false)
+
+        getChannelsJog?.cancel()
+        getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
+            channelInteractor.searchChannelsWithUserIds(
+                offset = offset,
+                searchQuery = query,
+                loadKey = loadKey,
+                userIds = userIds,
+                ignoreDb = ignoreDatabase,
+                config = config,
+                directChatType = directChatType,
+                onlyMine = onlyMine,
+                includeSearchByUserDisplayName = includeSearchByUserDisplayName
+            ).collect {
+                initPaginationResponse(it)
+            }
+        }
+    }
+
+    @Suppress("unused")
+    fun searchLocalChannelsBySQLiteQuery(
+            searchQuery: String,
+            sqLiteQuery: SimpleSQLiteQuery
+    ) {
+        this.searchQuery = searchQuery
+        setPagingLoadingStarted(
+            loadType = PaginationResponse.LoadType.LoadNext,
+            ignoreDatabase = false,
+            ignoreServer = true
+        )
+
+        notifyPageLoadingState(false)
+
+        getChannelsJog?.cancel()
+        getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
+            val response = channelInteractor.getChannelsBySQLiteQuery(sqLiteQuery)
+            val paginationResponse = PaginationResponse.DBResponse(
+                data = response,
+                offset = 0,
+                query = searchQuery,
+                loadKey = null
+            )
+            initPaginationResponse(paginationResponse)
         }
     }
 
@@ -76,8 +146,10 @@ class ChannelsViewModel : BaseViewModel(), SceytKoinComponent {
         pagingResponseReceived(response)
     }
 
-    internal fun mapToChannelItem(data: List<SceytChannel>?, hasNext: Boolean,
-                                  includeDirectChannelsWithDeletedPeers: Boolean = true): List<ChannelListItem> {
+    internal fun mapToChannelItem(
+            data: List<SceytChannel>?, hasNext: Boolean,
+            includeDirectChannelsWithDeletedPeers: Boolean = true,
+    ): List<ChannelListItem> {
 
         val filteredChannels = if (includeDirectChannelsWithDeletedPeers) data ?: emptyList()
         else data?.filter { channel -> !channel.isPeerDeleted() }

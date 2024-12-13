@@ -30,6 +30,7 @@ import com.sceyt.chatuikit.extensions.awaitAnimationEnd
 import com.sceyt.chatuikit.extensions.awaitToScrollFinish
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.getFragmentManager
+import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.isLastCompletelyItemDisplaying
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.openLink
@@ -77,6 +78,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.popups.Popup
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
 import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
+import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoActivity
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
@@ -103,6 +105,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     val style: MessagesListViewStyle
     var enabledActions = true
         private set
+    var enableSwipeToReply = true
+        private set
 
     init {
         binding = SceytMessagesListViewBinding.inflate(LayoutInflater.from(context), this)
@@ -118,7 +122,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV = binding.rvMessages.also { it.setStyle(style) }
         messagesRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
         messagesRV.clipToPadding = clipToPadding
-        setPadding(0, 0, 0, 0)
+        super.setPadding(0, 0, 0, 0)
 
         messagesRV.setScrollDownControllerListener { show ->
             binding.scrollDownView.isVisible = show && style.enableScrollDownButton
@@ -242,7 +246,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun setMultiSelectableMode() {
         (messagesRV.getMessagesAdapter())?.setMultiSelectableMode(true)
-        messagesRV.enableDisableSwipeToReply(false)
+        messagesRV.setSwipeToReplyEnabled(false)
         for (i in 0 until messagesRV.childCount) {
             messagesRV.getChildAt(i)?.let {
                 val holder = messagesRV.getChildViewHolder(it)
@@ -396,10 +400,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.addPrevPageMessages(data)
     }
 
-    internal fun addNewMessages(vararg data: MessageListItem) {
+    internal fun addNewMessages(vararg data: MessageListItem, addedCallback: () -> Unit = {}) {
         if (data.isEmpty()) return
         messagesRV.awaitAnimationEnd {
             messagesRV.addNewMessages(*data)
+            addedCallback.invoke()
         }
     }
 
@@ -743,7 +748,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun cancelMultiSelectMode() {
         (messagesRV.getMessagesAdapter())?.setMultiSelectableMode(false)
-        messagesRV.enableDisableSwipeToReply(enabledActions)
+        messagesRV.setSwipeToReplyEnabled(enabledActions && enableSwipeToReply)
         for (i in 0 until messagesRV.childCount) {
             messagesRV.getChildAt(i)?.let {
                 val holder = messagesRV.getChildViewHolder(it)
@@ -794,21 +799,34 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun setCustomMessageClickListener(listener: MessageClickListenersImpl) {
-        clickListeners = listener
+        clickListeners = listener.withDefaultListeners(this)
     }
 
     fun setCustomMessageActionsViewClickListener(listener: MessageActionsViewClickListenersImpl) {
-        messageActionsViewClickListeners = listener
+        messageActionsViewClickListeners = listener.withDefaultListeners(this)
     }
 
-    fun enableDisableActions(enabled: Boolean, force: Boolean) {
+    fun setReactionPopupClickListener(listener: ReactionPopupClickListeners) {
+        reactionClickListeners.setListener(listener)
+    }
+
+    fun setCustomReactionPopupClickListener(listener: ReactionPopupClickListenersImpl) {
+        reactionClickListeners = listener.withDefaultListeners(this)
+    }
+
+    fun setActionsEnabled(enabled: Boolean, force: Boolean) {
         if (force) {
             forceDisabledActions = !enabled
             enabledActions = enabled
         } else if (!forceDisabledActions)
             enabledActions = enabled
 
-        messagesRV.enableDisableSwipeToReply(enabledActions)
+        messagesRV.setSwipeToReplyEnabled(enabledActions && enableSwipeToReply)
+    }
+
+    fun setSwipeToReplyEnabled(enabled: Boolean) {
+        enableSwipeToReply = enabled
+        messagesRV.setSwipeToReplyEnabled(enabled && enabledActions)
     }
 
     fun startSearchMessages() {
@@ -820,6 +838,18 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         onWindowFocusChangeListener?.invoke(hasWindowFocus)
         if (!hasWindowFocus && context.asActivity().isFinishing)
             AudioPlayerHelper.stopAll()
+    }
+
+    override fun setPadding(left: Int, top: Int, right: Int, bottom: Int) {
+        messagesRV.setPadding(left, top, right, bottom)
+    }
+
+    override fun setClipToPadding(clipToPadding: Boolean) {
+        super.setClipToPadding(clipToPadding)
+        try {
+            messagesRV.clipToPadding = clipToPadding
+        } catch (_: Exception) {
+        }
     }
 
     // Click events
@@ -942,7 +972,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onMessageInfoClick(message: SceytMessage) {
-
+        hideSoftInput()
+        MessageInfoActivity.launch(context, message, style.messageItemStyle)
     }
 
     override fun onForwardMessageClick(vararg messages: SceytMessage) {

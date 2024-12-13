@@ -13,6 +13,8 @@ android {
         minSdk min_sdk_version
         targetSdk target_sdk_version
 
+        buildConfigField("String", "MAVEN_VERSION", "\"$maven_central_version\"")
+
         javaCompileOptions {
             annotationProcessorOptions {
                 arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
@@ -96,5 +98,11 @@ dependencies {
     androidTestImplementation libs.truth
     testImplementation libs.junit
     testImplementation libs.truth
+    // Koin testing tools
+    testImplementation libs.koin.test
+    androidTestImplementation libs.koin.test
+    // Needed JUnit version
+    testImplementation libs.koin.test.junit4
+    androidTestImplementation libs.koin.test.junit4
 }
 apply from: "${rootProject.projectDir}/maven-publish/publish-module.gradle"

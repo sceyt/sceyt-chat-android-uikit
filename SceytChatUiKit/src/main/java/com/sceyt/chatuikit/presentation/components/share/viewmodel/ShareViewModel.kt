@@ -18,7 +18,7 @@ import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
-import com.sceyt.chatuikit.shared.utils.FileUtil
+import com.sceyt.chatuikit.shared.utils.FilePathUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class ShareViewModel : BaseViewModel(), SceytKoinComponent {
     private val messageInteractor by inject<MessageInteractor>()
     private val application by inject<Application>()
+    val sharedUris = mutableListOf<Uri>()
 
     fun sendTextMessage(vararg channelIds: Long, body: String) = callbackFlow {
         trySend(State.Loading)
@@ -119,7 +120,11 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
             try {
                 var realFile: File? = null
                 try {
-                    val path = FileUtil(application).getPath(uri)
+                    val path = FilePathUtil.getFilePathFromUri(
+                        context = application,
+                        parentDirToCopy = application.filesDir,
+                        uri = uri
+                    ) ?: return@forEach
                     FileInputStream(File(path))
                     realFile = File(path)
                 } catch (ex: Exception) {

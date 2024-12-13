@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/sceyt_color_background"
+    tools:parentTag="com.google.android.material.appbar.AppBarLayout">
+
+    <com.sceyt.chatuikit.presentation.custom_views.CustomToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/sceyt_color_primary"
+        app:layout_constraintTop_toTopOf="parent"
+        app:sceytUiToolbarTitleTextColor="@color/sceyt_color_text_primary" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_create_account"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="20dp"
+        android:fontFamily="@font/roboto_medium"
+        android:singleLine="true"
+        android:text="@string/create_account"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textSize="@dimen/largeTextSize"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        tools:text="@string/create_account" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_create_account_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:maxLines="2"
+        android:text="@string/create_account_hint"
+        android:textColor="@color/sceyt_color_text_secondary"
+        android:textSize="15sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_create_account"
+        tools:text="@string/create_account_hint" />
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/et_first_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/bg_underline"
+        android:hint="@string/first_name"
+        android:inputType="textPersonName"
+        android:layoutDirection="ltr"
+        android:paddingVertical="15dp"
+        android:singleLine="true"
+        android:textAlignment="viewStart"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textColorHint="@color/sceyt_color_text_footnote"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_create_account_hint" />
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/et_last_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:background="@drawable/bg_underline"
+        android:hint="@string/last_name"
+        android:inputType="textPersonName"
+        android:layoutDirection="ltr"
+        android:paddingVertical="15dp"
+        android:singleLine="true"
+        android:textAlignment="viewStart"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textColorHint="@color/sceyt_color_text_footnote"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/et_first_name"
+        tools:text="John" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/uriPrefix"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:background="@drawable/bg_underline"
+        android:layoutDirection="ltr"
+        android:paddingVertical="15dp"
+        android:text="\@"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="@+id/et_last_name"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/et_last_name"
+        tools:ignore="HardcodedText" />
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/et_user_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_underline"
+        android:hint="@string/user_name"
+        android:inputType="textUri"
+        android:layoutDirection="ltr"
+        android:layout_marginEnd="24dp"
+        android:paddingVertical="15dp"
+        android:singleLine="true"
+        android:textAlignment="viewStart"
+        android:textColor="@color/sceyt_color_text_primary"
+        android:textColorHint="@color/sceyt_color_text_footnote"
+        android:textSize="16sp"
+        app:layout_constrainedWidth="true"
+        app:layout_constraintBottom_toBottomOf="@+id/uriPrefix"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toEndOf="@+id/uriPrefix"
+        app:layout_constraintTop_toTopOf="@+id/uriPrefix"
+        tools:text="John" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_username_alert"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:paddingTop="8dp"
+        android:textSize="@dimen/extraSmallTextSize"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/tv_correct_input_hint"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/et_user_name"
+        tools:text="@string/error_username_taken"
+        tools:textColor="@color/sceyt_color_warning"
+        tools:visibility="visible" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/error_username_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@id/tv_correct_input_hint"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_username_alert" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_correct_input_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:fontFamily="@font/roboto_medium"
+        android:lines="3"
+        android:paddingTop="8dp"
+        android:text="@string/username_correct_input_hint"
+        android:textColor="@color/sceyt_color_text_secondary"
+        android:textSize="@dimen/extraSmallTextSize"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/error_username_barrier" />
+
+    <com.sceyt.chatuikit.presentation.custom_views.CustomFloatingActonButton
+        android:id="@+id/btnNext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:padding="16dp"
+        android:src="@drawable/sceyt_ic_save"
+        android:tint="@color/white"
+        app:elevation="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:backgroundTint="@color/sceyt_color_accent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

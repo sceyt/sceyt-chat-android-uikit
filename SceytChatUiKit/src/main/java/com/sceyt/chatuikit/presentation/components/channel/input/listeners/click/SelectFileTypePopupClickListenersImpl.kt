@@ -7,8 +7,15 @@ import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners.TakePhotoClickListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners.TakeVideoClickListener
 
-open class SelectFileTypePopupClickListenersImpl(view: MessageInputView) : ClickListeners {
-    private var defaultListeners: ClickListeners = view
+open class SelectFileTypePopupClickListenersImpl : ClickListeners {
+    @Suppress("unused")
+    constructor()
+
+    internal constructor(view: MessageInputView) {
+        defaultListeners = view
+    }
+
+    private var defaultListeners: ClickListeners? = null
     private var galleryClickListener: GalleryClickListener? = null
     private var takePhotoClickListener: TakePhotoClickListener? = null
     private var takeVideoClickListener: TakeVideoClickListener? = null
@@ -16,23 +23,23 @@ open class SelectFileTypePopupClickListenersImpl(view: MessageInputView) : Click
 
 
     override fun onGalleryClick() {
-        defaultListeners.onGalleryClick()
+        defaultListeners?.onGalleryClick()
         galleryClickListener?.onGalleryClick()
     }
 
     override fun onTakePhotoClick() {
-        defaultListeners.onTakePhotoClick()
+        defaultListeners?.onTakePhotoClick()
         takePhotoClickListener?.onTakePhotoClick()
     }
 
     override fun onTakeVideoClick() {
-        defaultListeners.onTakeVideoClick()
+        defaultListeners?.onTakeVideoClick()
         takeVideoClickListener?.onTakeVideoClick()
     }
 
-    override fun onFileClick() {
-        defaultListeners.onFileClick()
-        fileClickListener?.onFileClick()
+    override fun onFileClick(mimeTypes: Array<String>?) {
+        defaultListeners?.onFileClick(mimeTypes)
+        fileClickListener?.onFileClick(mimeTypes)
     }
 
     fun setListener(listener: SelectFileTypePopupClickListeners) {
@@ -42,18 +49,29 @@ open class SelectFileTypePopupClickListenersImpl(view: MessageInputView) : Click
                 takePhotoClickListener = listener
                 fileClickListener = listener
             }
+
             is GalleryClickListener -> {
                 galleryClickListener = listener
             }
+
             is TakePhotoClickListener -> {
                 takePhotoClickListener = listener
             }
+
             is TakeVideoClickListener -> {
                 takeVideoClickListener = listener
             }
+
             is FileClickListener -> {
                 fileClickListener = listener
             }
         }
+    }
+
+    internal fun withDefaultListeners(
+            listener: ClickListeners
+    ): SelectFileTypePopupClickListenersImpl {
+        defaultListeners = listener
+        return this
     }
 }

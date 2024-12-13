@@ -4,7 +4,7 @@ import com.sceyt.chat.models.message.Message
 
 open class MessageTransformer {
 
-    open fun transformToSend(message: Message): Message? {
+    open fun transformToSend(message: Message): Message {
         return message
     }
 

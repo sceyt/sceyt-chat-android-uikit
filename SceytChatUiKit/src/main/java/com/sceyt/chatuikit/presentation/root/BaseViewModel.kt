@@ -25,7 +25,7 @@ open class BaseViewModel : ViewModel() {
     var loadingNextItems = AtomicBoolean(false)
     var loadingNextItemsDb = AtomicBoolean(false)
 
-    fun canLoadPrev(): Boolean {
+    open fun canLoadPrev(): Boolean {
         return when {
             loadingPrevItemsDb.get() -> false
             loadingPrevItemsDb.get().not() && hasPrevDb -> true
@@ -35,7 +35,7 @@ open class BaseViewModel : ViewModel() {
         }
     }
 
-    fun canLoadNext(): Boolean {
+    open fun canLoadNext(): Boolean {
         return when {
             loadingNextItemsDb.get() -> false
             loadingNextItemsDb.get().not() && hasNextDb -> true
@@ -45,18 +45,24 @@ open class BaseViewModel : ViewModel() {
         }
     }
 
-    val isLoadingFromServer get() = loadingNextItems.get() || loadingPrevItems.get()
+    val loadingFromServer
+        get() = loadingNextItems.get() || loadingPrevItems.get()
 
-    protected fun setPagingLoadingStarted(loadType: PaginationResponse.LoadType,
-                                          ignoreDb: Boolean = false,
-                                          ignoreServer: Boolean = false) {
+    val loadingFromDb
+        get() = loadingNextItemsDb.get() || loadingPrevItemsDb.get()
+
+    protected open fun setPagingLoadingStarted(
+            loadType: PaginationResponse.LoadType,
+            ignoreDatabase: Boolean = false,
+            ignoreServer: Boolean = false,
+    ) {
         fun initPrev() {
-            loadingPrevItemsDb.set(ignoreDb.not())
+            loadingPrevItemsDb.set(ignoreDatabase.not())
             loadingPrevItems.set(ignoreServer.not())
         }
 
         fun initNext() {
-            loadingNextItemsDb.set(ignoreDb.not())
+            loadingNextItemsDb.set(ignoreDatabase.not())
             loadingNextItems.set(ignoreServer.not())
         }
 
@@ -72,7 +78,7 @@ open class BaseViewModel : ViewModel() {
         }
     }
 
-    protected fun pagingResponseReceived(response: PaginationResponse<*>) {
+    protected open fun pagingResponseReceived(response: PaginationResponse<*>) {
         when (response) {
             is PaginationResponse.DBResponse -> onPaginationDbResponse(response)
             is PaginationResponse.ServerResponse -> onPaginationSeverResponse(response)
@@ -80,7 +86,7 @@ open class BaseViewModel : ViewModel() {
         }
     }
 
-    private fun onPaginationDbResponse(response: PaginationResponse.DBResponse<*>) {
+    protected open fun onPaginationDbResponse(response: PaginationResponse.DBResponse<*>) {
 
         fun initPrev() {
             loadingPrevItemsDb.set(false)
@@ -102,7 +108,7 @@ open class BaseViewModel : ViewModel() {
         }
     }
 
-    private fun onPaginationSeverResponse(response: PaginationResponse.ServerResponse<*>) {
+    protected open fun onPaginationSeverResponse(response: PaginationResponse.ServerResponse<*>) {
         fun initPrev() {
             loadingPrevItems.set(false)
             if (response.data is SceytResponse.Success)
@@ -132,7 +138,7 @@ open class BaseViewModel : ViewModel() {
         }
     }
 
-    internal fun checkIgnoreDatabasePagingResponse(response: PaginationResponse.DBResponse<*>): Boolean {
+    internal open fun checkIgnoreDatabasePagingResponse(response: PaginationResponse.DBResponse<*>): Boolean {
         if (response.data.isNotEmpty()) return false
         // When db data is empty, check  maybe loading data from server
         return when (response.loadType) {
@@ -142,18 +148,20 @@ open class BaseViewModel : ViewModel() {
         }
     }
 
-    protected fun notifyPageLoadingState(isLoadingMore: Boolean) {
+    protected open fun notifyPageLoadingState(isLoadingMore: Boolean) {
         if (isLoadingMore) {
             pageStateLiveDataInternal.postValue(PageState.StateLoadingMore())
         } else
             pageStateLiveDataInternal.postValue(PageState.StateLoading())
     }
 
-    fun <T> notifyPageStateWithResponse(response: SceytResponse<T>,
-                                        wasLoadingMore: Boolean = false,
-                                        isEmpty: Boolean = false,
-                                        searchQuery: String? = null,
-                                        showError: Boolean = true) {
+    open fun <T> notifyPageStateWithResponse(
+            response: SceytResponse<T>,
+            wasLoadingMore: Boolean = false,
+            isEmpty: Boolean = false,
+            searchQuery: String? = null,
+            showError: Boolean = true,
+    ) {
         val state = when {
             response is SceytResponse.Error -> PageState.StateError(response.code, response.message,
                 wasLoadingMore, searchQuery, showError)
@@ -165,12 +173,14 @@ open class BaseViewModel : ViewModel() {
         pageStateLiveDataInternal.postValue(state)
     }
 
-    fun <T> notifyResponseAndPageState(liveData: MutableLiveData<T>?,
-                                       response: SceytResponse<T>,
-                                       wasLoadingMore: Boolean = false,
-                                       isEmpty: Boolean = false,
-                                       searchQuery: String? = null,
-                                       showError: Boolean = true) {
+    open fun <T> notifyResponseAndPageState(
+            liveData: MutableLiveData<T>?,
+            response: SceytResponse<T>,
+            wasLoadingMore: Boolean = false,
+            isEmpty: Boolean = false,
+            searchQuery: String? = null,
+            showError: Boolean = true,
+    ) {
         if (response is SceytResponse.Success) {
             liveData?.postValue(response.data)
         }

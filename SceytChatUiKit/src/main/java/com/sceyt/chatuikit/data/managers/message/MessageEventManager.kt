@@ -83,12 +83,6 @@ object MessageEventManager : MessageEventHandler.AllEventManagers {
                 if (message == null || reaction == null) return
                 eventManager.onReactionDeleted(message.toSceytUiMessage(), reaction.toSceytReaction())
             }
-
-            override fun onMessageComposing(p0: String?, p1: String?) {
-            }
-
-            override fun onMessagePaused(p0: String?, p1: String?) {
-            }
         })
     }
 
@@ -117,13 +111,14 @@ object MessageEventManager : MessageEventHandler.AllEventManagers {
         onMessageReactionUpdatedFlow_.tryEmit(ReactionUpdateEventData(message, reaction, ReactionUpdateEventEnum.Remove))
     }
 
+    @Suppress("unused")
     fun setCustomListener(listener: MessageEventHandlerImpl) {
         eventManager = listener
         eventManager.setDefaultListeners(this)
     }
 
     suspend fun emitOutgoingMessage(sceytMessage: SceytMessage) {
-        withContext(Dispatchers.Main) {
+        withContext(Dispatchers.Main.immediate) {
             onOutGoingMessageFlow_.emit(sceytMessage)
         }
     }

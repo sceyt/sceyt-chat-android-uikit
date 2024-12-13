@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.styles.ChannelListViewStyle
 
 open class ChannelViewHolderFactory(context: Context) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
-    protected open val channelClickListenersImpl = ChannelClickListenersImpl()
+    protected open val clickListeners = ChannelClickListenersImpl()
     protected lateinit var channelStyle: ChannelListViewStyle
     private var attachDetachListener: ((ChannelListItem?, Boolean) -> Unit)? = null
 
@@ -22,7 +22,7 @@ open class ChannelViewHolderFactory(context: Context) {
 
     open fun createViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return when (viewType) {
-            ChannelType.Default.ordinal -> createChannelViewHolder(parent)
+            ChannelType.Channel.ordinal -> createChannelViewHolder(parent)
             ChannelType.Loading.ordinal -> createLoadingMoreViewHolder(parent)
             else -> throw RuntimeException("Not supported view type")
         }
@@ -31,7 +31,7 @@ open class ChannelViewHolderFactory(context: Context) {
     open fun createChannelViewHolder(parent: ViewGroup): BaseChannelViewHolder {
         val binding = SceytItemChannelBinding.inflate(layoutInflater, parent, false)
         return ChannelViewHolder(binding, channelStyle.itemStyle,
-            channelClickListenersImpl, attachDetachListener)
+            clickListeners, attachDetachListener)
     }
 
     open fun createLoadingMoreViewHolder(parent: ViewGroup): BaseChannelViewHolder {
@@ -40,25 +40,23 @@ open class ChannelViewHolderFactory(context: Context) {
     }
 
     fun setChannelListener(listener: ChannelClickListeners) {
-        channelClickListenersImpl.setListener(listener)
+        clickListeners.setListener(listener)
     }
 
     fun setChannelAttachDetachListener(listener: (ChannelListItem?, attached: Boolean) -> Unit) {
         attachDetachListener = listener
     }
 
-    protected val clickListeners get() = channelClickListenersImpl as ChannelClickListeners.ClickListeners
-
     protected fun getAttachDetachListener() = attachDetachListener
 
     open fun getItemViewType(item: ChannelListItem, position: Int): Int {
         return when (item) {
-            is ChannelListItem.ChannelItem -> ChannelType.Default.ordinal
+            is ChannelListItem.ChannelItem -> ChannelType.Channel.ordinal
             is ChannelListItem.LoadingMoreItem -> ChannelType.Loading.ordinal
         }
     }
 
     enum class ChannelType {
-        Loading, Default
+        Loading, Channel
     }
 }

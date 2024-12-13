@@ -113,9 +113,9 @@ class MessagesCache {
         }
     }
 
-    fun clear() {
+    fun clear(channelId: Long) {
         synchronized(lock) {
-            cachedMessages.clear()
+            cachedMessages[channelId]?.clear()
         }
     }
 
@@ -322,6 +322,7 @@ class MessagesCache {
                         ?: includeNotExistToDiff
                 if (!detectedDiff)
                     detectedDiff = hasDiff
+
                 if (checkDiffAndNotifyUpdate && hasDiff)
                     emitMessageUpdated(channelId, updateMessage)
             }

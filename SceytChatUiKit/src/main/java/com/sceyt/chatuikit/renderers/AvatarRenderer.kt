@@ -9,6 +9,6 @@ import com.sceyt.chatuikit.styles.common.AvatarStyle
 typealias UserAvatarRenderer = AvatarRenderer<SceytUser>
 typealias ChannelAvatarRenderer = AvatarRenderer<SceytChannel>
 
-interface AvatarRenderer <T>: VisualRenderer {
+fun interface AvatarRenderer <T>: VisualRenderer {
     fun render(context: Context, from: T, style: AvatarStyle, avatarView: AvatarView)
 }

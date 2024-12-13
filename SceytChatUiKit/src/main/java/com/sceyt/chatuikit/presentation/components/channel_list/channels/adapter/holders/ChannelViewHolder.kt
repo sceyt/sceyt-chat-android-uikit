@@ -40,15 +40,15 @@ open class ChannelViewHolder(
             setChannelItemStyle()
 
             root.setOnClickListenerAvailable(ChannelsAdapter.clickAvailableData) {
-                listeners.onChannelClick(channelItem as ChannelListItem.ChannelItem)
+                listeners.onChannelClick(item as ChannelListItem.ChannelItem)
             }
 
             parentLayout.setOnLongClickListenerAvailable(ChannelsAdapter.longClickAvailableData) {
-                listeners.onChannelLongClick(it, channelItem as ChannelListItem.ChannelItem)
+                listeners.onChannelLongClick(it, item as ChannelListItem.ChannelItem)
             }
 
             avatar.setOnClickListenerAvailable(ChannelsAdapter.clickAvailableData) {
-                listeners.onAvatarClick(channelItem as ChannelListItem.ChannelItem)
+                listeners.onAvatarClick(item as ChannelListItem.ChannelItem)
             }
         }
     }
@@ -188,10 +188,14 @@ open class ChannelViewHolder(
         textView.apply {
             text = itemStyle.unreadCountFormatter.format(context, channel.newMessageCount)
             isVisible = true
-            if (channel.muted)
-                itemStyle.unreadCountMutedStateTextStyle.apply(this)
-            else itemStyle.unreadCountTextStyle.apply(this)
+            applyUnreadStyle(channel, this)
         }
+    }
+
+    protected open fun applyUnreadStyle(channel: SceytChannel, textView: TextView) {
+        if (channel.muted)
+            itemStyle.unreadCountMutedStateTextStyle.apply(textView)
+        else itemStyle.unreadCountTextStyle.apply(textView)
     }
 
     @SuppressLint("SetTextI18n")
@@ -200,6 +204,7 @@ open class ChannelViewHolder(
         if (channel.unread)
             textView.text = "  "
 
+        applyUnreadStyle(channel, textView)
         textView.isVisible = channel.unread
     }
 
@@ -218,7 +223,7 @@ open class ChannelViewHolder(
         val data = channel.typingData ?: return
         if (data.typing) {
             val title: SpannableStringBuilder = if (channel.isGroup) {
-                val name = itemStyle.typingUserNameFormatter.format(context, data.member.user)
+                val name = itemStyle.typingUserNameFormatter.format(context, data.member)
                 SpannableStringBuilder("$name ${context.getString(R.string.sceyt_typing_)}")
             } else
                 SpannableStringBuilder(context.getString(R.string.sceyt_typing_))

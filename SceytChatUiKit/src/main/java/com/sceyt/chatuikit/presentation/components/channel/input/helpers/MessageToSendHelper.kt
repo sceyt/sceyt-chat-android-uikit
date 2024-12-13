@@ -189,10 +189,12 @@ class MessageToSendHelper(
         return this
     }
 
-    fun buildAttachment(path: String,
-                        url: String = "",
-                        metadata: String = "",
-                        attachmentType: String? = null): Attachment? {
+    fun buildAttachment(
+            path: String,
+            url: String = "",
+            metadata: String = "",
+            attachmentType: String? = null
+    ): Attachment? {
         val file = File(path)
         if (file.exists()) {
             val type = attachmentType ?: getAttachmentType(path).value

@@ -31,8 +31,8 @@ class ChannelsDiffUtil(private var oldList: List<ChannelListItem>,
     override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any? {
         val oldItem = oldList[oldItemPosition]
         val newItem = newList[newItemPosition]
-        if (oldItem is ChannelListItem.ChannelItem && newItem is ChannelListItem.ChannelItem)
-            return oldItem.channel.diff(newItem.channel)
-        return null
+        return if (oldItem is ChannelListItem.ChannelItem && newItem is ChannelListItem.ChannelItem)
+            oldItem.channel.diff(newItem.channel)
+        else null
     }
 }

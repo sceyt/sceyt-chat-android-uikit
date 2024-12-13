@@ -3,8 +3,15 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.listeners.a
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
 
-open class MessageActionsViewClickListenersImpl(view: MessagesListView) : MessageActionsViewClickListeners.ActionsViewClickListeners {
-    private var defaultListeners: MessageActionsViewClickListeners.ActionsViewClickListeners = view
+open class MessageActionsViewClickListenersImpl : MessageActionsViewClickListeners.ActionsViewClickListeners {
+    @Suppress("unused")
+    constructor()
+
+    internal constructor(view: MessagesListView) {
+        defaultListeners = view
+    }
+
+    private var defaultListeners: MessageActionsViewClickListeners.ActionsViewClickListeners? = null
     private var copyMessageListener: MessageActionsViewClickListeners.CopyMessage? = null
     private var deleteMessageListener: MessageActionsViewClickListeners.DeleteMessage? = null
     private var editMessageListener: MessageActionsViewClickListeners.EditMessage? = null
@@ -15,42 +22,42 @@ open class MessageActionsViewClickListenersImpl(view: MessagesListView) : Messag
     private var replyInThreadMessageListener: MessageActionsViewClickListeners.ReplyInThreadMessage? = null
 
     override fun onCopyMessagesClick(vararg messages: SceytMessage) {
-        defaultListeners.onCopyMessagesClick(*messages)
+        defaultListeners?.onCopyMessagesClick(*messages)
         copyMessageListener?.onCopyMessagesClick(*messages)
     }
 
     override fun onDeleteMessageClick(vararg messages: SceytMessage, requireForMe: Boolean, actionFinish: () -> Unit) {
-        defaultListeners.onDeleteMessageClick(*messages, requireForMe = requireForMe, actionFinish = actionFinish)
+        defaultListeners?.onDeleteMessageClick(*messages, requireForMe = requireForMe, actionFinish = actionFinish)
         deleteMessageListener?.onDeleteMessageClick(*messages, requireForMe = requireForMe, actionFinish = actionFinish)
     }
 
     override fun onEditMessageClick(message: SceytMessage) {
-        defaultListeners.onEditMessageClick(message)
+        defaultListeners?.onEditMessageClick(message)
         editMessageListener?.onEditMessageClick(message)
     }
 
     override fun onMessageInfoClick(message: SceytMessage) {
-        defaultListeners.onMessageInfoClick(message)
+        defaultListeners?.onMessageInfoClick(message)
         messageInfoListener?.onMessageInfoClick(message)
     }
 
     override fun onReactMessageClick(message: SceytMessage) {
-        defaultListeners.onReactMessageClick(message)
+        defaultListeners?.onReactMessageClick(message)
         reactMessageListener?.onReactMessageClick(message)
     }
 
     override fun onForwardMessageClick(vararg messages: SceytMessage) {
-        defaultListeners.onForwardMessageClick(*messages)
+        defaultListeners?.onForwardMessageClick(*messages)
         forwardMessageListener?.onForwardMessageClick(*messages)
     }
 
     override fun onReplyMessageClick(message: SceytMessage) {
-        defaultListeners.onReplyMessageClick(message)
+        defaultListeners?.onReplyMessageClick(message)
         replyMessageListener?.onReplyMessageClick(message)
     }
 
     override fun onReplyMessageInThreadClick(message: SceytMessage) {
-        defaultListeners.onReplyMessageInThreadClick(message)
+        defaultListeners?.onReplyMessageInThreadClick(message)
         replyInThreadMessageListener?.onReplyMessageInThreadClick(message)
     }
 
@@ -99,5 +106,12 @@ open class MessageActionsViewClickListenersImpl(view: MessagesListView) : Messag
                 replyInThreadMessageListener = listener
             }
         }
+    }
+
+    internal fun withDefaultListeners(
+            listener: MessageActionsViewClickListeners.ActionsViewClickListeners
+    ): MessageActionsViewClickListenersImpl {
+        defaultListeners = listener
+        return this
     }
 }

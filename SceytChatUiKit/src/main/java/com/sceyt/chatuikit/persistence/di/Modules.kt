@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.sceyt.chatuikit.BuildConfig
 import com.sceyt.chatuikit.SceytChatUIFacade
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.persistence.DatabaseMigrations
 import com.sceyt.chatuikit.persistence.PersistenceMiddleWareImpl
 import com.sceyt.chatuikit.persistence.SceytDatabase
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
@@ -53,7 +54,7 @@ import kotlin.coroutines.CoroutineContext
 const val SCEYT_CHAT_UI_KIT_DATABASE_NAME = "sceyt_ui_kit_database"
 
 internal val appModules = module {
-    single { SceytSyncManager(get(), get(), get()) }
+    single { SceytSyncManager(get(), get()) }
     single<FileTransferService> { FileTransferServiceImpl(get(), get()) }
     single<MessageLoadRangeUpdater> { MessageLoadRangeUpdater(get()) }
 }
@@ -68,6 +69,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
 
         return builder
             .fallbackToDestructiveMigration()
+            .addMigrations(DatabaseMigrations.Migration_15_16)
             .allowMainThreadQueries()
             .build()
     }
@@ -111,7 +113,7 @@ internal val logicModule = module {
     single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     single<PersistenceMessageMarkerLogic> { PersistenceMessageMarkerLogicImpl(get(), get(), get()) }
-    single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get()) }
+    single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get()) }
     single<FileTransferLogic> { FileTransferLogicImpl(get(), get()) }
 }
 

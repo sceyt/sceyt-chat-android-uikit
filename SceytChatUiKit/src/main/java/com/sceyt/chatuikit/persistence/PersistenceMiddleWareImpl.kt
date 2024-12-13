@@ -1,12 +1,15 @@
 package com.sceyt.chatuikit.persistence
 
+import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
+import com.sceyt.chat.models.user.UserListQuery
+import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
@@ -53,8 +56,8 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -66,14 +69,16 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceChannelsLogic,
-                                         private val messagesLogic: PersistenceMessagesLogic,
-                                         private val attachmentsLogic: PersistenceAttachmentLogic,
-                                         private val reactionsLogic: PersistenceReactionsLogic,
-                                         private val messageMarkerLogic: PersistenceMessageMarkerLogic,
-                                         private val membersLogic: PersistenceMembersLogic,
-                                         private val usersLogic: PersistenceUsersLogic,
-                                         private val connectionLogic: PersistenceConnectionLogic) :
+internal class PersistenceMiddleWareImpl(
+        private val channelLogic: PersistenceChannelsLogic,
+        private val messagesLogic: PersistenceMessagesLogic,
+        private val attachmentsLogic: PersistenceAttachmentLogic,
+        private val reactionsLogic: PersistenceReactionsLogic,
+        private val messageMarkerLogic: PersistenceMessageMarkerLogic,
+        private val membersLogic: PersistenceMembersLogic,
+        private val usersLogic: PersistenceUsersLogic,
+        private val connectionLogic: PersistenceConnectionLogic,
+) :
         ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
         UserInteractor, AttachmentInteractor, MessageMarkerInteractor,
         MessageReactionInteractor, SceytKoinComponent {
@@ -155,19 +160,44 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         scope.launch(Dispatchers.IO) { channelLogic.onUserPresenceChanged(users) }
     }
 
-    override suspend fun loadChannels(offset: Int, searchQuery: String, loadKey: LoadKeyData?,
-                                      ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
-        return channelLogic.loadChannels(offset, searchQuery, loadKey, ignoreDb)
+    override suspend fun loadChannels(
+            offset: Int, searchQuery: String, loadKey: LoadKeyData?,
+            ignoreDb: Boolean,
+            config: ChannelListConfig,
+    ): Flow<PaginationResponse<SceytChannel>> {
+        return channelLogic.loadChannels(offset, searchQuery, loadKey, ignoreDb, config)
     }
 
-    override suspend fun searchChannelsWithUserIds(offset: Int, limit: Int, searchQuery: String, userIds: List<String>,
-                                                   includeUserNames: Boolean, loadKey: LoadKeyData?,
-                                                   onlyMine: Boolean, ignoreDb: Boolean): Flow<PaginationResponse<SceytChannel>> {
-        return channelLogic.searchChannelsWithUserIds(offset, limit, searchQuery, userIds, includeUserNames, loadKey, onlyMine, ignoreDb)
+    override suspend fun searchChannelsWithUserIds(
+            offset: Int,
+            searchQuery: String,
+            userIds: List<String>,
+            includeSearchByUserDisplayName: Boolean,
+            loadKey: LoadKeyData?,
+            onlyMine: Boolean,
+            ignoreDb: Boolean,
+            config: ChannelListConfig,
+            directChatType: String,
+    ): Flow<PaginationResponse<SceytChannel>> {
+        return channelLogic.searchChannelsWithUserIds(
+            offset,
+            searchQuery,
+            userIds,
+            includeSearchByUserDisplayName,
+            loadKey,
+            onlyMine,
+            ignoreDb,
+            config,
+            directChatType,
+        )
     }
 
-    override suspend fun syncChannels(limit: Int): Flow<GetAllChannelsResponse> {
-        return channelLogic.syncChannels(limit)
+    override suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel> {
+        return channelLogic.getChannelsBySQLiteQuery(query)
+    }
+
+    override suspend fun syncChannels(config: ChannelListConfig): Flow<GetAllChannelsResponse> {
+        return channelLogic.syncChannels(config)
     }
 
     override suspend fun markChannelAsRead(channelId: Long): SceytResponse<SceytChannel> {
@@ -186,6 +216,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.blockAndLeaveChannel(channelId)
     }
 
+    override suspend fun unblockChannel(channelId: Long): SceytResponse<SceytChannel> {
+        return channelLogic.unblockChannel(channelId)
+    }
+
     override suspend fun deleteChannel(channelId: Long): SceytResponse<Long> {
         return channelLogic.deleteChannel(channelId)
     }
@@ -194,8 +228,16 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.leaveChannel(channelId)
     }
 
-    override suspend fun findOrCreateDirectChannel(user: SceytUser): SceytResponse<SceytChannel> {
-        return channelLogic.findOrCreateDirectChannel(user)
+    override suspend fun findOrCreatePendingChannelByMembers(
+            data: CreateChannelData
+    ): SceytResponse<SceytChannel> {
+        return channelLogic.findOrCreatePendingChannelByMembers(data)
+    }
+
+    override suspend fun findOrCreatePendingChannelByUri(
+            data: CreateChannelData,
+    ): SceytResponse<SceytChannel> {
+        return channelLogic.findOrCreatePendingChannelByUri(data)
     }
 
     override suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel> {
@@ -238,8 +280,8 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.getChannelFromServer(channelId)
     }
 
-    override suspend fun getChannelFromServerByUrl(uri: String): SceytResponse<List<SceytChannel>> {
-        return channelLogic.getChannelFromServerByUrl(uri)
+    override suspend fun getChannelFromServerByUri(uri: String): SceytResponse<SceytChannel?> {
+        return channelLogic.getChannelFromServerByUri(uri)
     }
 
     override suspend fun getChannelsCountFromDb(): Int {
@@ -258,13 +300,19 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return channelLogic.hideChannel(channelId)
     }
 
-    override suspend fun updateDraftMessage(channelId: Long, message: String?, mentionUsers: List<Mention>,
-                                            styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean) {
+    override suspend fun unHideChannel(channelId: Long): SceytResponse<SceytChannel> {
+        return channelLogic.unHideChannel(channelId)
+    }
+
+    override suspend fun updateDraftMessage(
+            channelId: Long, message: String?, mentionUsers: List<Mention>,
+            styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean,
+    ) {
         channelLogic.updateDraftMessage(channelId, message, mentionUsers, styling, replyOrEditMessage, isReply)
     }
 
-    override fun getTotalUnreadCount(): Flow<Int> {
-        return channelLogic.getTotalUnreadCount()
+    override fun getTotalUnreadCount(channelTypes: List<String>): Flow<Int> {
+        return channelLogic.getTotalUnreadCount(channelTypes)
     }
 
     override fun loadChannelMembers(channelId: Long, offset: Int, role: String?): Flow<PaginationResponse<SceytMember>> {
@@ -307,28 +355,38 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return membersLogic.getMembersCountDb(channelId)
     }
 
-    override suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
-                                          limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+    override suspend fun loadPrevMessages(
+            conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,
+            limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean,
+    ): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadPrevMessages(conversationId, lastMessageId, replyInThread, offset, limit, loadKey, ignoreDb)
     }
 
-    override suspend fun loadNextMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
-                                          offset: Int, limit: Int, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+    override suspend fun loadNextMessages(
+            conversationId: Long, lastMessageId: Long, replyInThread: Boolean,
+            offset: Int, limit: Int, ignoreDb: Boolean,
+    ): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadNextMessages(conversationId, lastMessageId, replyInThread, offset, limit, ignoreDb)
     }
 
-    override suspend fun loadNearMessages(conversationId: Long, messageId: Long, replyInThread: Boolean,
-                                          limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean, ignoreServer: Boolean): Flow<PaginationResponse<SceytMessage>> {
+    override suspend fun loadNearMessages(
+            conversationId: Long, messageId: Long, replyInThread: Boolean,
+            limit: Int, loadKey: LoadKeyData, ignoreDb: Boolean, ignoreServer: Boolean,
+    ): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadNearMessages(conversationId, messageId, replyInThread, limit, loadKey, ignoreDb, ignoreServer)
     }
 
-    override suspend fun loadNewestMessages(conversationId: Long, replyInThread: Boolean, limit: Int,
-                                            loadKey: LoadKeyData, ignoreDb: Boolean): Flow<PaginationResponse<SceytMessage>> {
+    override suspend fun loadNewestMessages(
+            conversationId: Long, replyInThread: Boolean, limit: Int,
+            loadKey: LoadKeyData, ignoreDb: Boolean,
+    ): Flow<PaginationResponse<SceytMessage>> {
         return messagesLogic.loadNewestMessages(conversationId, replyInThread, limit, loadKey, ignoreDb)
     }
 
-    override suspend fun searchMessages(conversationId: Long, replyInThread: Boolean,
-                                        query: String): SceytPagingResponse<List<SceytMessage>> {
+    override suspend fun searchMessages(
+            conversationId: Long, replyInThread: Boolean,
+            query: String,
+    ): SceytPagingResponse<List<SceytMessage>> {
         return messagesLogic.searchMessages(conversationId, replyInThread, query)
     }
 
@@ -340,8 +398,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.loadMessagesById(conversationId, ids)
     }
 
-    override suspend fun syncMessagesAfterMessageId(conversationId: Long, replyInThread: Boolean,
-                                                    messageId: Long): Flow<SceytResponse<List<SceytMessage>>> {
+    override suspend fun syncMessagesAfterMessageId(
+            conversationId: Long, replyInThread: Boolean,
+            messageId: Long,
+    ): Flow<SceytResponse<List<SceytMessage>>> {
         return messagesLogic.syncMessagesAfterMessageId(conversationId, replyInThread, messageId)
     }
 
@@ -393,8 +453,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         reactionsLogic.sendAllPendingReactions()
     }
 
-    override suspend fun markMessagesAs(channelId: Long, marker: MarkerType,
-                                        vararg ids: Long): List<SceytResponse<MessageListMarker>> {
+    override suspend fun markMessagesAs(
+            channelId: Long, marker: MarkerType,
+            vararg ids: Long,
+    ): List<SceytResponse<MessageListMarker>> {
         return messagesLogic.markMessagesAs(channelId, marker, *ids)
     }
 
@@ -406,8 +468,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return messagesLogic.editMessage(channelId, message)
     }
 
-    override suspend fun deleteMessage(channelId: Long, message: SceytMessage,
-                                       deleteType: DeleteMessageType): SceytResponse<SceytMessage> {
+    override suspend fun deleteMessage(
+            channelId: Long, message: SceytMessage,
+            deleteType: DeleteMessageType,
+    ): SceytResponse<SceytMessage> {
         return messagesLogic.deleteMessage(channelId, message, deleteType)
     }
 
@@ -433,21 +497,27 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return attachmentsLogic.getAllPayLoadsByMsgTid(tid)
     }
 
-    override suspend fun getPrevAttachments(conversationId: Long, lastAttachmentId: Long,
-                                            types: List<String>, offset: Int, ignoreDb: Boolean,
-                                            loadKeyData: LoadKeyData): Flow<PaginationResponse<AttachmentWithUserData>> {
+    override suspend fun getPrevAttachments(
+            conversationId: Long, lastAttachmentId: Long,
+            types: List<String>, offset: Int, ignoreDb: Boolean,
+            loadKeyData: LoadKeyData,
+    ): Flow<PaginationResponse<AttachmentWithUserData>> {
         return attachmentsLogic.getPrevAttachments(conversationId, lastAttachmentId, types, offset, ignoreDb, loadKeyData)
     }
 
-    override suspend fun getNextAttachments(conversationId: Long, lastAttachmentId: Long,
-                                            types: List<String>, offset: Int, ignoreDb: Boolean,
-                                            loadKeyData: LoadKeyData): Flow<PaginationResponse<AttachmentWithUserData>> {
+    override suspend fun getNextAttachments(
+            conversationId: Long, lastAttachmentId: Long,
+            types: List<String>, offset: Int, ignoreDb: Boolean,
+            loadKeyData: LoadKeyData,
+    ): Flow<PaginationResponse<AttachmentWithUserData>> {
         return attachmentsLogic.getNextAttachments(conversationId, lastAttachmentId, types, offset, ignoreDb, loadKeyData)
     }
 
-    override suspend fun getNearAttachments(conversationId: Long, attachmentId: Long,
-                                            types: List<String>, offset: Int, ignoreDb: Boolean,
-                                            loadKeyData: LoadKeyData): Flow<PaginationResponse<AttachmentWithUserData>> {
+    override suspend fun getNearAttachments(
+            conversationId: Long, attachmentId: Long,
+            types: List<String>, offset: Int, ignoreDb: Boolean,
+            loadKeyData: LoadKeyData,
+    ): Flow<PaginationResponse<AttachmentWithUserData>> {
         return attachmentsLogic.getNearAttachments(conversationId, attachmentId, types, offset, ignoreDb, loadKeyData)
     }
 
@@ -463,8 +533,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         attachmentsLogic.updateAttachmentWithTransferData(data)
     }
 
-    override suspend fun updateAttachmentFilePathAndMetadata(messageTid: Long, newPath: String,
-                                                             fileSize: Long, metadata: String?) {
+    override suspend fun updateAttachmentFilePathAndMetadata(
+            messageTid: Long, newPath: String,
+            fileSize: Long, metadata: String?,
+    ) {
         attachmentsLogic.updateAttachmentFilePathAndMetadata(messageTid, newPath, fileSize, metadata)
     }
 
@@ -480,7 +552,7 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         attachmentsLogic.upsertLinkPreviewData(linkDetails)
     }
 
-    override suspend fun loadUsers(query: String): SceytResponse<List<SceytUser>> {
+    override suspend fun loadUsers(query: UserListQuery): SceytResponse<List<SceytUser>> {
         return usersLogic.loadUsers(query)
     }
 
@@ -500,6 +572,13 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return usersLogic.getUsersDbByIds(id)
     }
 
+    override suspend fun searchLocaleUserByMetadata(
+            metadataKeys: List<String>,
+            metadataValue: String
+    ): List<SceytUser> {
+        return usersLogic.searchLocaleUserByMetadata(metadataKeys, metadataValue)
+    }
+
     override suspend fun getCurrentUser(): SceytUser? {
         return usersLogic.getCurrentUser()
     }
@@ -516,8 +595,9 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return usersLogic.uploadAvatar(avatarUrl)
     }
 
-    override suspend fun updateProfile(username: String, firsName: String?, lastName: String?,
-                                       avatarUrl: String?, metadataMap: Map<String, String>?
+    override suspend fun updateProfile(
+            username: String, firsName: String?, lastName: String?,
+            avatarUrl: String?, metadataMap: Map<String, String>?,
     ): SceytResponse<SceytUser> {
         return usersLogic.updateProfile(username, firsName, lastName, avatarUrl, metadataMap)
     }
@@ -546,8 +626,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return usersLogic.blockUnBlockUser(userId, block)
     }
 
-    override suspend fun loadReactions(messageId: Long, offset: Int, key: String,
-                                       loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<SceytReaction>> {
+    override suspend fun loadReactions(
+            messageId: Long, offset: Int, key: String,
+            loadKey: LoadKeyData?, ignoreDb: Boolean,
+    ): Flow<PaginationResponse<SceytReaction>> {
         return reactionsLogic.loadReactions(messageId, offset, key, loadKey, ignoreDb)
     }
 
@@ -555,8 +637,10 @@ internal class PersistenceMiddleWareImpl(private val channelLogic: PersistenceCh
         return reactionsLogic.getMessageReactionsDbByKey(messageId, key)
     }
 
-    override suspend fun addReaction(channelId: Long, messageId: Long, key: String, score: Int,
-                                     reason: String, enforceUnique: Boolean): SceytResponse<SceytMessage> {
+    override suspend fun addReaction(
+            channelId: Long, messageId: Long, key: String, score: Int,
+            reason: String, enforceUnique: Boolean,
+    ): SceytResponse<SceytMessage> {
         return reactionsLogic.addReaction(channelId, messageId, key, score, reason, enforceUnique)
     }
 

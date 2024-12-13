@@ -74,7 +74,7 @@ class CreateGroupActivity : AppCompatActivity() {
     private fun initViewModel() {
         viewModel.createChatLiveData.observe(this) {
             lifecycleScope.launch {
-                ChannelActivity.newInstance(this@CreateGroupActivity, it)
+                ChannelActivity.launch(this@CreateGroupActivity, it)
                 val intent = Intent()
                 setResult(RESULT_OK, intent)
                 finish()
@@ -132,7 +132,7 @@ class CreateGroupActivity : AppCompatActivity() {
         btnCreate.setOnClickListener {
             with(createChannelData) {
                 subject = inputSubject.text.toString().trim()
-                channelType = ChannelTypeEnum.Group.value
+                type = ChannelTypeEnum.Group.value
                 metadata = Gson().toJson(ChannelDescriptionData(inputDescription.text.toString().trim()))
                 members = this@CreateGroupActivity.members
             }
@@ -153,7 +153,12 @@ class CreateGroupActivity : AppCompatActivity() {
         createChannelData.avatarUrl = filePath.let {
             val reqSize = SceytChatUIKit.config.avatarResizeConfig.dimensionThreshold
             val quality = SceytChatUIKit.config.avatarResizeConfig.compressionQuality
-            resizeImage(this@CreateGroupActivity, it, reqSize, quality).getOrNull() ?: ""
+            resizeImage(
+                path = it,
+                parentDir = filesDir,
+                reqSize = reqSize,
+                quality = quality
+            ).getOrNull() ?: ""
         }
         binding.avatar.setImageUrl(createChannelData.avatarUrl)
     }

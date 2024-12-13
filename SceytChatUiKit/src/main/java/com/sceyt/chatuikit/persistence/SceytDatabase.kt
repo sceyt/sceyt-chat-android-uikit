@@ -72,7 +72,7 @@ import com.sceyt.chatuikit.persistence.entity.user.UserMetadataEntity
     UserMarkerLink::class,
     AutoDeleteMessageEntity::class,
     UserMetadataEntity::class
-], version = 15, autoMigrations = [
+], version = 16, autoMigrations = [
     AutoMigration(from = 1, to = 2),
     AutoMigration(from = 2, to = 3),
     AutoMigration(from = 3, to = 4, spec = SceytDatabase.AutoMigrationSpec3to4::class),
