@@ -160,12 +160,12 @@ class ChannelsCache {
     }
 
     private fun upsertChannelImpl(config: ChannelListConfig, vararg channels: SceytChannel) {
+        val map = getOrCreateMap(config)
         channels.forEach { channel ->
-            val cachedChannel = getOrCreateMap(config)[channel.id]
-                    ?: pendingChannelsData[channel.id]
+            val cachedChannel = map[channel.id] ?: pendingChannelsData[channel.id]
             if (cachedChannel == null) {
                 if (!channel.pending) {
-                    getOrCreateMap(config)[channel.id] = channel
+                    map[channel.id] = channel
                     channelAdded(channel)
                 }
             } else {
@@ -181,8 +181,9 @@ class ChannelsCache {
     }
 
     private fun updateChannelsImpl(config: ChannelListConfig, vararg channels: SceytChannel) {
+        val map = getOrCreateMap(config)
         channels.forEach { channel ->
-            val cachedChannel = getOrCreateMap(config)[channel.id]
+            val cachedChannel = map[channel.id]
                     ?: pendingChannelsData[channel.id] ?: return@forEach
 
             checkMaybePendingChannelCreated(cachedChannel, channel)
@@ -420,7 +421,7 @@ class ChannelsCache {
             needSort: Boolean,
             type: ChannelUpdatedType,
     ) {
-        cachedData[config]?.set(channel.id, channel)
+        getOrCreateMap(config)[channel.id] = channel
         channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel, needSort, type))
     }
 
@@ -430,9 +431,10 @@ class ChannelsCache {
 
     private fun putAndCheckHasDiff(config: ChannelListConfig, list: List<SceytChannel>): Boolean {
         var detectedDiff = false
+        val map = getOrCreateMap(config)
         list.forEach {
             if (!detectedDiff) {
-                val old = cachedData[config]?.get(it.id)
+                val old = map[it.id]
                 detectedDiff = old?.diff(it)?.hasDifference() ?: true
             }
             putToCache(config, it)
@@ -465,9 +467,9 @@ class ChannelsCache {
     }
 
     private fun getOrCreateMap(config: ChannelListConfig) = cachedData[config] ?: run {
-        val map = hashMapOf<Long, SceytChannel>()
-        cachedData[config] = map
-        map
+        hashMapOf<Long, SceytChannel>().also {
+            cachedData[config] = it
+        }
     }
 
     private fun getChannelImpl(channelId: Long, config: ChannelListConfig? = null): SceytChannel? {
