@@ -324,8 +324,9 @@ class MessageInputView @JvmOverloads constructor(
             return
         }
         val metadata = Gson().toJson(AudioMetadata(amplitudes, duration))
-        createAttachmentWithPaths(file.path, metadata = metadata,
-            attachmentType = AttachmentTypeEnum.Voice.value).getOrNull(0)?.let {
+        createAttachmentWithPaths(
+            AttachmentTypeEnum.Voice to file.path, metadata = metadata,
+        ).getOrNull(0)?.let {
             allAttachments.add(it)
             sendMessage()
         } ?: finishRecording()
@@ -401,7 +402,7 @@ class MessageInputView @JvmOverloads constructor(
                 PickType.Gallery -> selectFileTypePopupClickListeners.onGalleryClick()
                 PickType.Photo -> selectFileTypePopupClickListeners.onTakePhotoClick()
                 PickType.Video -> selectFileTypePopupClickListeners.onTakeVideoClick()
-                PickType.File -> selectFileTypePopupClickListeners.onFileClick()
+                PickType.File -> selectFileTypePopupClickListeners.onFileClick(null)
             }
         }.show()
     }
@@ -668,19 +669,20 @@ class MessageInputView @JvmOverloads constructor(
 
     @SuppressWarnings("WeakerAccess")
     fun createAttachmentWithPaths(
-            vararg filePath: String,
+            vararg typeAndPath: Pair<AttachmentTypeEnum, String>,
             metadata: String = "",
-            attachmentType: String? = null,
     ): MutableList<Attachment> {
         val attachments = mutableListOf<Attachment>()
-        for (path in filePath) {
+        for (item in typeAndPath) {
+            val (attachmentType, path) = item
             if (checkIsExistAttachment(path))
                 continue
 
             val attachment = messageToSendHelper.buildAttachment(
                 path = path,
                 metadata = metadata,
-                attachmentType = attachmentType)
+                attachmentType = attachmentType.value
+            )
             if (attachment != null) {
                 attachments.add(attachment)
             } else
@@ -689,8 +691,8 @@ class MessageInputView @JvmOverloads constructor(
         return attachments
     }
 
-    fun addAttachment(vararg filePath: String) {
-        val attachments = createAttachmentWithPaths(*filePath)
+    fun addAttachment(vararg typeAndPath: Pair<AttachmentTypeEnum, String>) {
+        val attachments = createAttachmentWithPaths(*typeAndPath)
         addAttachments(attachments)
     }
 
@@ -788,7 +790,7 @@ class MessageInputView @JvmOverloads constructor(
         attachmentsViewHolderFactory = factory
     }
 
-    fun setSaveUrlsPlace(savePathsTo: MutableSet<String>) {
+    fun setSaveUrlsPlace(savePathsTo: MutableSet<Pair<AttachmentTypeEnum, String>>) {
         filePickerHelper?.setSaveUrlsPlace(savePathsTo)
     }
 
@@ -847,7 +849,9 @@ class MessageInputView @JvmOverloads constructor(
 
     private fun getPickerListener(): BottomSheetMediaPicker.PickerListener {
         return BottomSheetMediaPicker.PickerListener {
-            addAttachment(*it.map { mediaData -> mediaData.realPath }.toTypedArray())
+            addAttachment(*it.map { mediaData ->
+                mediaData.mediaType.value to mediaData.realPath
+            }.toTypedArray())
             // Remove attachments that are not in the picker result
             allAttachments.filter { item ->
                 item.type.isEqualsVideoOrImage() && it.none { mediaData -> mediaData.realPath == item.filePath }
@@ -891,21 +895,24 @@ class MessageInputView @JvmOverloads constructor(
 
     override fun onTakePhotoClick() {
         filePickerHelper?.takePicture {
-            addAttachment(it)
+            addAttachment(AttachmentTypeEnum.Image to it)
         }
     }
 
     override fun onTakeVideoClick() {
         filePickerHelper?.takeVideo {
-            addAttachment(it)
+            addAttachment(AttachmentTypeEnum.Video to it)
         }
     }
 
-    override fun onFileClick() {
-        filePickerHelper?.chooseMultipleFiles(allowMultiple = true,
-            parentDirToCopyProvider = { context.filesDir }) {
-            addAttachment(*it.toTypedArray())
-        }
+    override fun onFileClick(mimeTypes: Array<String>?) {
+        filePickerHelper?.chooseMultipleFiles(
+            allowMultiple = true,
+            mimetypes = mimeTypes,
+            parentDirToCopyProvider = { context.filesDir },
+            result = { pats ->
+                addAttachment(*pats.map { AttachmentTypeEnum.File to it }.toTypedArray())
+            })
     }
 
     override fun onInputStateChanged(sendImage: ImageView, state: InputState) {

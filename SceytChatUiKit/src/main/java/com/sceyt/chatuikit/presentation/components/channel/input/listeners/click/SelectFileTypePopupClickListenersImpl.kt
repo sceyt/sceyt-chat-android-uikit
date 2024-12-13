@@ -37,9 +37,9 @@ open class SelectFileTypePopupClickListenersImpl : ClickListeners {
         takeVideoClickListener?.onTakeVideoClick()
     }
 
-    override fun onFileClick() {
-        defaultListeners?.onFileClick()
-        fileClickListener?.onFileClick()
+    override fun onFileClick(mimeTypes: Array<String>?) {
+        defaultListeners?.onFileClick(mimeTypes)
+        fileClickListener?.onFileClick(mimeTypes)
     }
 
     fun setListener(listener: SelectFileTypePopupClickListeners) {
