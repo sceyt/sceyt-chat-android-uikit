@@ -97,13 +97,14 @@ class ChannelsAdapter(
 
     fun getChannels() = data.mapNotNull { it as? ChannelListItem.ChannelItem }
 
-    fun deleteChannel(id: Long) {
-        getData().forEachIndexed { index, item ->
+    fun deleteChannel(id: Long): Boolean {
+        data.forEachIndexed { index, item ->
             if (item is ChannelListItem.ChannelItem && item.channel.id == id) {
                 data.removeAt(index)
                 notifyItemRemoved(index)
-                return@forEachIndexed
+                return true
             }
         }
+        return false
     }
 }
