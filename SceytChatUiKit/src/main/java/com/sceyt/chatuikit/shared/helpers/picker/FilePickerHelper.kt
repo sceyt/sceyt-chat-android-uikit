@@ -17,6 +17,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withResumed
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asFragmentActivity
 import com.sceyt.chatuikit.extensions.checkAndAskPermissions
@@ -30,12 +31,12 @@ import com.sceyt.chatuikit.extensions.initVideoCameraLauncher
 import com.sceyt.chatuikit.extensions.oneOfPermissionsIgnored
 import com.sceyt.chatuikit.extensions.permissionIgnored
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker.Companion.MAX_SELECT_MEDIA_COUNT
-import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.shared.utils.FileUtil
+import com.sceyt.chatuikit.shared.utils.FilePathUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -57,10 +58,11 @@ class FilePickerHelper {
     private var sceytGalleryFilter = BottomSheetMediaPicker.PickerFilterType.All
     private var sceytGalleryMaxSelectCount: Int = MAX_SELECT_MEDIA_COUNT
     private var chooseFilesCb: ((List<String>) -> Unit)? = null
+    private var parentDirToCopyProvider: () -> File = { context.cacheDir }
     private var takePictureCb: ((String) -> Unit)? = null
     private var takeVideoCb: ((String) -> Unit)? = null
     private var scope: CoroutineScope
-    private var placeToSavePathsList: MutableSet<String> = mutableSetOf()
+    private var placeToSavePathsList: MutableSet<Pair<AttachmentTypeEnum, String>> = mutableSetOf()
 
     constructor(activity: ComponentActivity) {
         with(activity) {
@@ -149,23 +151,37 @@ class FilePickerHelper {
         }
     }
 
-    fun chooseFromGallery(allowMultiple: Boolean, onlyImages: Boolean, result: (uris: List<String>) -> Unit) {
+    fun chooseFromGallery(
+            allowMultiple: Boolean,
+            onlyImages: Boolean,
+            parentDirToCopyProvider: () -> File = { context.cacheDir },
+            result: (uri: List<String>) -> Unit
+    ) {
         chooseFilesCb = result
+        this.parentDirToCopyProvider = parentDirToCopyProvider
         this.onlyImages = onlyImages
         this.allowMultiple = allowMultiple
         openGallery()
     }
 
-    fun chooseMultipleFiles(allowMultiple: Boolean, result: (uris: List<String>) -> Unit) {
+    fun chooseMultipleFiles(
+            allowMultiple: Boolean,
+            mimetypes: Array<String>? = null,
+            parentDirToCopyProvider: () -> File = { context.cacheDir },
+            result: (uri: List<String>) -> Unit
+    ) {
         chooseFilesCb = result
+        this.parentDirToCopyProvider = parentDirToCopyProvider
         this.allowMultiple = allowMultiple
-        pickFile()
+        pickFile(mimetypes)
     }
 
-    fun openMediaPicker(pickerListener: BottomSheetMediaPicker.PickerListener,
-                        filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
-                        maxSelectCount: Int = sceytGalleryMaxSelectCount,
-                        vararg selections: String) {
+    fun openMediaPicker(
+            pickerListener: BottomSheetMediaPicker.PickerListener,
+            filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
+            maxSelectCount: Int = sceytGalleryMaxSelectCount,
+            vararg selections: String,
+    ) {
         val permissions = getPermissionsForMangeStorage()
         sceytGalleryFilter = filter
         sceytGalleryMaxSelectCount = maxSelectCount
@@ -176,7 +192,7 @@ class FilePickerHelper {
 
     private fun onTakePhotoResult(success: Boolean) {
         if (success) {
-            placeToSavePathsList.lastOrNull()?.let { path ->
+            placeToSavePathsList.lastOrNull()?.let { (_, path) ->
                 takePictureCb?.invoke(path)
             }
         }
@@ -184,7 +200,7 @@ class FilePickerHelper {
 
     private fun onTakeVideoResult(success: Boolean) {
         if (success) {
-            placeToSavePathsList.lastOrNull()?.let { path ->
+            placeToSavePathsList.lastOrNull()?.let { (_, path) ->
                 takeVideoCb?.invoke(path)
             }
         }
@@ -192,6 +208,7 @@ class FilePickerHelper {
 
     private fun onChooseFileResult(result: ActivityResult) {
         if (result.resultCode == AppCompatActivity.RESULT_OK) {
+            val parentDir = parentDirToCopyProvider()
             val data = result.data
             if (data?.clipData != null) {
                 val uris = mutableListOf<Uri>()
@@ -201,10 +218,10 @@ class FilePickerHelper {
                     }
                 }
                 scope.launch(Dispatchers.IO) {
-                    val paths = getPathFromFile(*uris.toTypedArray())
+                    val paths = getPathFromFile(parentDir, *uris.toTypedArray())
                     if (paths.isNotEmpty()) {
                         withContext(Dispatchers.Main) {
-                            placeToSavePathsList.addAll(paths)
+                            placeToSavePathsList.addAll(paths.map { AttachmentTypeEnum.File to it })
                             chooseFilesCb?.invoke(paths)
                         }
                     } else withContext(Dispatchers.Main) {
@@ -213,10 +230,10 @@ class FilePickerHelper {
                 }
             } else {
                 scope.launch(Dispatchers.IO) {
-                    val paths = getPathFromFile(data?.data)
+                    val paths = getPathFromFile(parentDir, data?.data)
                     if (paths.isNotEmpty()) {
                         withContext(Dispatchers.Main) {
-                            placeToSavePathsList.addAll(paths)
+                            placeToSavePathsList.addAll(paths.map { AttachmentTypeEnum.File to it })
                             chooseFilesCb?.invoke(paths)
                         }
                     } else withContext(Dispatchers.Main) {
@@ -227,7 +244,9 @@ class FilePickerHelper {
         }
     }
 
-    private suspend fun getPathFromFile(vararg uris: Uri?): List<String> {
+    private suspend fun getPathFromFile(
+            parentDir: File,
+            vararg uris: Uri?): List<String> {
         val paths = mutableListOf<String>()
         val filteredUris = uris.filterNotNull()
         if (filteredUris.isEmpty()) return emptyList()
@@ -241,7 +260,11 @@ class FilePickerHelper {
 
                 var realFile: File? = null
                 try {
-                    val path = FileUtil(context).getPath(uri)
+                    val path = FilePathUtil.getFilePathFromUri(
+                        context = context,
+                        parentDirToCopy = parentDir,
+                        uri = uri
+                    ) ?: return@forEach
                     FileInputStream(File(path))
                     realFile = File(path)
                 } catch (ex: Exception) {
@@ -296,10 +319,12 @@ class FilePickerHelper {
         addAttachmentLauncher?.launch(intent)
     }
 
-    private fun openSceytGalleryPicker(pickerListener: BottomSheetMediaPicker.PickerListener? = BottomSheetMediaPicker.pickerListener,
-                                       filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
-                                       maxSelectCount: Int = sceytGalleryMaxSelectCount,
-                                       vararg selections: String) {
+    private fun openSceytGalleryPicker(
+            pickerListener: BottomSheetMediaPicker.PickerListener? = BottomSheetMediaPicker.pickerListener,
+            filter: BottomSheetMediaPicker.PickerFilterType = sceytGalleryFilter,
+            maxSelectCount: Int = sceytGalleryMaxSelectCount,
+            vararg selections: String,
+    ) {
         BottomSheetMediaPicker.instance(
             selections = selections,
             fileFilter = filter,
@@ -308,26 +333,19 @@ class FilePickerHelper {
         }.show(context.asFragmentActivity().supportFragmentManager, BottomSheetMediaPicker.TAG)
     }
 
-    private fun pickFile() {
-        val mimetypes = arrayOf(
-            "application/*",
-            "audio/*",
-            "font/*",
-            "message/*",
-            "model/*",
-            "multipart/*",
-            "text/*")
+    private fun pickFile(mimetypes: Array<String>?) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
         intent.type = "*/*"
-        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes)
+        if (!mimetypes.isNullOrEmpty())
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes)
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, allowMultiple)
         intent.putExtra(Intent.EXTRA_LOCAL_ONLY, false)
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         addAttachmentLauncher?.launch(intent)
     }
 
-    fun setSaveUrlsPlace(savePathsTo: MutableSet<String>) {
+    fun setSaveUrlsPlace(savePathsTo: MutableSet<Pair<AttachmentTypeEnum, String>>) {
         placeToSavePathsList = savePathsTo
     }
 
@@ -349,13 +367,17 @@ class FilePickerHelper {
         val directory = File(context.filesDir, "Photos")
         if (!directory.exists()) directory.mkdir()
         val file = File.createTempFile("Photo_${UUID.randomUUID()}", ".jpg", directory)
-        return context.getFileUriWithProvider(file).also { placeToSavePathsList.add(file.path) }
+        return context.getFileUriWithProvider(file).also {
+            placeToSavePathsList.add(AttachmentTypeEnum.Image to file.path)
+        }
     }
 
     private fun getVideoFileUri(): Uri {
         val directory = File(context.filesDir, "Videos")
         if (!directory.exists()) directory.mkdir()
         val file = File.createTempFile("Video_${UUID.randomUUID()}", ".mp4", directory)
-        return context.getFileUriWithProvider(file).also { placeToSavePathsList.add(file.path) }
+        return context.getFileUriWithProvider(file).also {
+            placeToSavePathsList.add(AttachmentTypeEnum.Video to file.path)
+        }
     }
 }

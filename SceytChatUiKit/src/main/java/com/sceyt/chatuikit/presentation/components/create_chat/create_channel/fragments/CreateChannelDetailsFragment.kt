@@ -120,7 +120,7 @@ open class CreateChannelDetailsFragment : Fragment() {
         fabNext.setOnClickListener {
             with(createChannelData) {
                 subject = inputSubject.text.toString().trim()
-                channelType = ChannelTypeEnum.Public.value
+                type = ChannelTypeEnum.Public.value
                 uri = inputUri.text?.toString()?.trim()?.lowercase().toString()
                 metadata = Gson().toJson(ChannelDescriptionData(inputDescription.text.toString().trim()))
                 members = arrayListOf()
@@ -153,7 +153,7 @@ open class CreateChannelDetailsFragment : Fragment() {
                 URIValidation.Valid -> {
                     if (checkingUrl != inputUri.text.toString()) {
                         checkingUrl = inputUri.text.toString()
-                        viewModel.checkIsValidUrl(inputUri.text.toString().lowercase())
+                        viewModel.checkIsValidUri(inputUri.text.toString().lowercase())
                     }
                 }
 
@@ -178,7 +178,7 @@ open class CreateChannelDetailsFragment : Fragment() {
             URIValidationType.TooLong,
             URIValidationType.TooShort,
             URIValidationType.InvalidCharacters,
-            -> style.uriValidationStyle.errorTextStyle
+                -> style.uriValidationStyle.errorTextStyle
 
             URIValidationType.FreeToUse -> style.uriValidationStyle.successTextStyle
         }
@@ -193,7 +193,12 @@ open class CreateChannelDetailsFragment : Fragment() {
         createChannelData.avatarUrl = filePath.let {
             val reqSize = SceytChatUIKit.config.avatarResizeConfig.dimensionThreshold
             val quality = SceytChatUIKit.config.avatarResizeConfig.compressionQuality
-            resizeImage(requireContext(), it, reqSize, quality).getOrNull() ?: ""
+            resizeImage(
+                path = it,
+                parentDir = requireContext().cacheDir,
+                reqSize = reqSize,
+                quality = quality
+            ).getOrNull() ?: ""
         }
         binding.avatar.setImageUrl(createChannelData.avatarUrl)
     }

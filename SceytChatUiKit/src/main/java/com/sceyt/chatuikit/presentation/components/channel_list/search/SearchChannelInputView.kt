@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class SearchChannelInputView @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr), SearchInputClickListeners.ClickListeners,
         SearchInputEventListeners.EventListeners, SceytKoinComponent {
 
@@ -38,7 +38,7 @@ class SearchChannelInputView @JvmOverloads constructor(
     private val debounceInitDelegate = lazy { DebounceHelper(TYPING_DEBOUNCE_MS, this) }
     private val debounceHelper by debounceInitDelegate
 
-    private val clickListeners = SearchInputClickListenersImpl(this)
+    private var clickListeners = SearchInputClickListenersImpl(this)
     private var eventListeners = SearchInputEventListenersImpl(this)
     private var debouncedInputChangedListener: InputChangedListener? = null
     private var inputChangedListener: InputChangedListener? = null
@@ -88,15 +88,6 @@ class SearchChannelInputView @JvmOverloads constructor(
         }
     }
 
-    private fun SceytSearchViewBinding.applyStyle() {
-        style.searchInputStyle.apply(
-            editText = input,
-            inputRoot = root,
-            clearIconImage = icClear,
-            searchIconImage = icSearch
-        )
-    }
-
     private fun handleClearClick() {
         binding.input.text = null
         eventListeners.onSearchSubmitted("")
@@ -117,18 +108,27 @@ class SearchChannelInputView @JvmOverloads constructor(
         querySubmitListener = listener
     }
 
+    @Suppress("unused")
     fun setTextChangedListener(listener: InputChangedListener) {
         inputChangedListener = listener
     }
 
+    @Suppress("unused")
     fun setEventListener(listener: SearchInputEventListeners) {
         eventListeners.setListener(listener)
     }
 
-    fun setCustomEventListener(listener: SearchInputEventListenersImpl) {
-        eventListeners = listener
+    @Suppress("unused")
+    fun setCustomClickListener(listener: SearchInputClickListenersImpl) {
+        clickListeners = listener.withDefaultListeners(this)
     }
 
+    @Suppress("unused")
+    fun setCustomEventListener(listener: SearchInputEventListenersImpl) {
+        eventListeners = listener.withDefaultListeners(this)
+    }
+
+    @Suppress("unused")
     fun clearSearchAndFocus() {
         binding.input.text = null
         binding.input.clearFocus()
@@ -157,5 +157,14 @@ class SearchChannelInputView @JvmOverloads constructor(
 
     override fun onSearchSubmittedByDebounce(query: String) {
         debouncedInputChangedListener?.onInputChanged(query)
+    }
+
+    private fun SceytSearchViewBinding.applyStyle() {
+        style.searchInputStyle.apply(
+            editText = input,
+            inputRoot = root,
+            clearIconImage = icClear,
+            searchIconImage = icSearch
+        )
     }
 }

@@ -26,7 +26,7 @@ data class SceytUser(
         username = "",
         firstName = "",
         lastName = "",
-        avatarURL = null,
+        avatarURL = "",
         metadataMap = null,
         presence = null,
         state = UserState.Active,

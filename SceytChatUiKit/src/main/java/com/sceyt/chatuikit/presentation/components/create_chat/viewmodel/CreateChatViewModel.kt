@@ -22,8 +22,8 @@ class CreateChatViewModel : BaseViewModel() {
     private val _addMembersLiveData = MutableLiveData<SceytChannel>()
     val addMembersLiveData: LiveData<SceytChannel> = _addMembersLiveData
 
-    private val _isValidUrlLiveData = MutableLiveData<Boolean>()
-    val isValidUrlLiveData: LiveData<Boolean> = _isValidUrlLiveData
+    private val _isValidUriLiveData = MutableLiveData<Boolean>()
+    val isValidUrlLiveData: LiveData<Boolean> = _isValidUriLiveData
 
     fun createChat(createChannelData: CreateChannelData) {
         notifyPageLoadingState(false)
@@ -41,11 +41,11 @@ class CreateChatViewModel : BaseViewModel() {
         }
     }
 
-    fun checkIsValidUrl(url: String) {
+    fun checkIsValidUri(uri: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelInteractor.getChannelFromServerByUrl(url)
+            val response = channelInteractor.getChannelFromServerByUri(uri)
             if (response is SceytResponse.Success) {
-                _isValidUrlLiveData.postValue(response.data.isNullOrEmpty())
+                _isValidUriLiveData.postValue(response.data == null)
             }
         }
     }

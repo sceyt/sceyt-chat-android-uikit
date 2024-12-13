@@ -195,7 +195,7 @@ class MessagesRV @JvmOverloads constructor(
                     }
                 }, 100)
             }.also { messageSwipeController = it }
-            swipeController.enableDisableSwipe(enableSwipe)
+            swipeController.setSwipeEnabled(enableSwipe)
 
             val itemTouchHelper = ItemTouchHelper(swipeController)
             itemTouchHelper.attachToRecyclerView(this)
@@ -348,9 +348,9 @@ class MessagesRV @JvmOverloads constructor(
             mAdapter.deleteAllMessagesBefore(predicate)
     }
 
-    fun enableDisableSwipeToReply(enabled: Boolean) {
+    fun setSwipeToReplyEnabled(enabled: Boolean) {
         if (::mAdapter.isInitialized)
-            messageSwipeController?.enableDisableSwipe(enabled)
+            messageSwipeController?.setSwipeEnabled(enabled)
         enableSwipe = enabled
     }
 

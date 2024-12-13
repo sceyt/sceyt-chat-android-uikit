@@ -27,9 +27,9 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var scrollToDownClickListener: MessageClickListeners.ScrollToDownClickListener? = null
     private var multiSelectClickListener: MessageClickListeners.MultiSelectClickListener? = null
 
-    internal constructor()
+    constructor()
 
-    constructor(view: MessagesListView) {
+    internal constructor(view: MessagesListView) {
         defaultListeners = view
     }
 
@@ -198,5 +198,12 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 multiSelectClickListener = listener
             }
         }
+    }
+
+    internal fun withDefaultListeners(
+        listener: MessageClickListeners.ClickListeners
+    ): MessageClickListenersImpl {
+        defaultListeners = listener
+        return this
     }
 }

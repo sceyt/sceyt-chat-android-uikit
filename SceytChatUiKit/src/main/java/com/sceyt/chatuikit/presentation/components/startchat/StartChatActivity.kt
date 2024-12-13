@@ -83,7 +83,7 @@ class StartChatActivity : AppCompatActivity() {
         }
 
         viewModel.createChannelLiveData.observe(this) {
-            ChannelActivity.newInstance(this, it)
+            ChannelActivity.launch(this, it)
             finish()
             creatingChannel = false
         }
@@ -122,7 +122,7 @@ class StartChatActivity : AppCompatActivity() {
             binding.rvUsers.adapter = UsersAdapter(listWithSelf, UserViewHolderFactory(this, style.itemStyle) {
                 if (creatingChannel) return@UserViewHolderFactory
                 creatingChannel = true
-                viewModel.findOrCreateDirectChannel(it.user)
+                viewModel.findOrCreatePendingDirectChannel(it.user)
             }).also { usersAdapter = it }
 
             binding.rvUsers.addOnScrollListener(object : RecyclerView.OnScrollListener() {

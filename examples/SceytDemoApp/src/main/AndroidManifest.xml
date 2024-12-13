@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:dist="http://schemas.android.com/apk/distribution">
+    xmlns:dist="http://schemas.android.com/apk/distribution"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <dist:module dist:instant="true" />
 
@@ -11,6 +12,10 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission
+        android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove" />
+
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -24,6 +29,16 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/SceytAppTheme">
+
+        <activity
+            android:name=".presentation.splash.SplashActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name="com.sceyt.chatuikit.presentation.components.share.ShareActivity"
@@ -41,22 +56,18 @@
             </intent-filter>
 
         </activity>
-        <activity
-            android:name=".presentation.login.LoginActivity"
-            android:exported="false"
-            android:theme="@style/DefaultFontTheme"
-            android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".presentation.main.MainActivity"
             android:exported="true"
-            android:theme="@style/DefaultFontTheme"
-            android:windowSoftInputMode="adjustNothing">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+            android:theme="@style/SceytAppTheme.Default"
+            android:windowSoftInputMode="adjustResize"/>
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+        <activity
+            android:name=".presentation.welcome.WelcomeActivity"
+            android:exported="true"
+            android:theme="@style/SceytAppTheme.Default"
+            android:windowSoftInputMode="adjustResize"/>
 
         <service
             android:name="com.sceyt.chatuikit.services.SceytFirebaseMessageReceiver"

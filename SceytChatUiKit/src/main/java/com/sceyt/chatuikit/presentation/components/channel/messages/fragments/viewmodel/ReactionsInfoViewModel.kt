@@ -28,7 +28,7 @@ class ReactionsInfoViewModel(
     lateinit var style: ReactedUserListStyle
 
     fun getReactions(offset: Int, loadKey: LoadKeyData? = null, ignoreDb: Boolean = false) {
-        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDb = ignoreDb)
+        setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDatabase = ignoreDb)
 
         viewModelScope.launch(Dispatchers.IO) {
             messageReactionsMiddleWare.loadReactions(messageId, offset, key, loadKey, ignoreDb)

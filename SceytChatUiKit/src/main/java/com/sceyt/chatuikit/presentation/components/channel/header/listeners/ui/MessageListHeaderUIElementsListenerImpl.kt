@@ -10,27 +10,34 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.Messa
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.styles.common.MenuStyle
 
-open class HeaderUIElementsListenerImpl(view: MessagesListHeaderView) : HeaderUIElementsListener.ElementsListeners {
-    private var defaultListeners: HeaderUIElementsListener.ElementsListeners = view
-    private var titleListener: HeaderUIElementsListener.TitleListener? = null
-    private var subTitleListener: HeaderUIElementsListener.SubTitleListener? = null
-    private var avatarListener: HeaderUIElementsListener.AvatarListener? = null
-    private var actionMenuListener: HeaderUIElementsListener.ActionsMenuListener? = null
-    private var toolbarActionsVisibilityListener: HeaderUIElementsListener.ToolbarActionsVisibilityListener? = null
-    private var showSearchMessageListener: HeaderUIElementsListener.ShowSearchMessage? = null
+open class MessageListHeaderUIElementsListenerImpl : MessageListHeaderUIElementsListener.ElementsListeners {
+    @Suppress("unused")
+    constructor()
+
+    internal constructor(view: MessagesListHeaderView) {
+        defaultListeners = view
+    }
+
+    private var defaultListeners: MessageListHeaderUIElementsListener.ElementsListeners? = null
+    private var titleListener: MessageListHeaderUIElementsListener.TitleListener? = null
+    private var subTitleListener: MessageListHeaderUIElementsListener.SubTitleListener? = null
+    private var avatarListener: MessageListHeaderUIElementsListener.AvatarListener? = null
+    private var actionMenuListener: MessageListHeaderUIElementsListener.ActionsMenuListener? = null
+    private var toolbarActionsVisibilityListener: MessageListHeaderUIElementsListener.ToolbarActionsVisibilityListener? = null
+    private var showSearchMessageListener: MessageListHeaderUIElementsListener.ShowSearchMessage? = null
 
     override fun onTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
-        defaultListeners.onTitle(titleTextView, channel, replyMessage, replyInThread)
+        defaultListeners?.onTitle(titleTextView, channel, replyMessage, replyInThread)
         titleListener?.onTitle(titleTextView, channel, replyMessage, replyInThread)
     }
 
     override fun onSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
-        defaultListeners.onSubTitle(subjectTextView, channel, replyMessage, replyInThread)
+        defaultListeners?.onSubTitle(subjectTextView, channel, replyMessage, replyInThread)
         subTitleListener?.onSubTitle(subjectTextView, channel, replyMessage, replyInThread)
     }
 
     override fun onAvatar(avatar: AvatarView, channel: SceytChannel, replyInThread: Boolean) {
-        defaultListeners.onAvatar(avatar, channel, replyInThread)
+        defaultListeners?.onAvatar(avatar, channel, replyInThread)
         avatarListener?.onAvatar(avatar, channel, replyInThread)
     }
 
@@ -39,28 +46,28 @@ open class HeaderUIElementsListenerImpl(view: MessagesListHeaderView) : HeaderUI
             menuStyle: MenuStyle,
             listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?,
     ) {
-        defaultListeners.onShowMessageActionsMenu(*messages, menuStyle = menuStyle, listener = listener)
+        defaultListeners?.onShowMessageActionsMenu(*messages, menuStyle = menuStyle, listener = listener)
         actionMenuListener?.onShowMessageActionsMenu(*messages, menuStyle = menuStyle, listener = listener)
     }
 
     override fun onHideMessageActionsMenu() {
-        defaultListeners.onHideMessageActionsMenu()
+        defaultListeners?.onHideMessageActionsMenu()
         actionMenuListener?.onHideMessageActionsMenu()
     }
 
     override fun onInitToolbarActionsMenu(vararg messages: SceytMessage, menu: Menu) {
-        defaultListeners.onInitToolbarActionsMenu(*messages, menu = menu)
+        defaultListeners?.onInitToolbarActionsMenu(*messages, menu = menu)
         toolbarActionsVisibilityListener?.onInitToolbarActionsMenu(*messages, menu = menu)
     }
 
     override fun showSearchMessagesBar(event: MessageCommandEvent.SearchMessages) {
-        defaultListeners.showSearchMessagesBar(event)
+        defaultListeners?.showSearchMessagesBar(event)
         showSearchMessageListener?.showSearchMessagesBar(event)
     }
 
-    fun setListener(listener: HeaderUIElementsListener) {
+    fun setListener(listener: MessageListHeaderUIElementsListener) {
         when (listener) {
-            is HeaderUIElementsListener.ElementsListeners -> {
+            is MessageListHeaderUIElementsListener.ElementsListeners -> {
                 titleListener = listener
                 subTitleListener = listener
                 avatarListener = listener
@@ -69,29 +76,36 @@ open class HeaderUIElementsListenerImpl(view: MessagesListHeaderView) : HeaderUI
                 showSearchMessageListener = listener
             }
 
-            is HeaderUIElementsListener.TitleListener -> {
+            is MessageListHeaderUIElementsListener.TitleListener -> {
                 titleListener = listener
             }
 
-            is HeaderUIElementsListener.SubTitleListener -> {
+            is MessageListHeaderUIElementsListener.SubTitleListener -> {
                 subTitleListener = listener
             }
 
-            is HeaderUIElementsListener.AvatarListener -> {
+            is MessageListHeaderUIElementsListener.AvatarListener -> {
                 avatarListener = listener
             }
 
-            is HeaderUIElementsListener.ActionsMenuListener -> {
+            is MessageListHeaderUIElementsListener.ActionsMenuListener -> {
                 actionMenuListener = listener
             }
 
-            is HeaderUIElementsListener.ToolbarActionsVisibilityListener -> {
+            is MessageListHeaderUIElementsListener.ToolbarActionsVisibilityListener -> {
                 toolbarActionsVisibilityListener = listener
             }
 
-            is HeaderUIElementsListener.ShowSearchMessage -> {
+            is MessageListHeaderUIElementsListener.ShowSearchMessage -> {
                 showSearchMessageListener = listener
             }
         }
+    }
+
+    internal fun withDefaultListeners(
+            listener: MessageListHeaderUIElementsListener.ElementsListeners
+    ): MessageListHeaderUIElementsListenerImpl {
+        defaultListeners = listener
+        return this
     }
 }

@@ -2,9 +2,13 @@ package com.sceyt.chatuikit.persistence.entity.channel
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "channels")
+@Entity(
+    tableName = "channels",
+    indices = [Index(value = ["uri"], unique = true)]
+)
 data class ChannelEntity(
         @PrimaryKey
         @ColumnInfo(name = "chat_id")
@@ -43,5 +47,5 @@ data class ChannelEntity(
         @ColumnInfo(index = true)
         val pending: Boolean,
         @ColumnInfo(index = true, defaultValue = "false")
-        val isSelf: Boolean
+        val isSelf: Boolean,
 )

@@ -3,13 +3,13 @@ package com.sceyt.chatuikit.presentation.components.channel.header.listeners.eve
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 
-sealed interface HeaderEventsListener {
+sealed interface MessageListHeaderEventsListener {
 
-    fun interface TypingListener : HeaderEventsListener {
+    fun interface TypingListener : MessageListHeaderEventsListener {
         fun onTypingEvent(data: ChannelTypingEventData)
     }
 
-    fun interface PresenceUpdateListener : HeaderEventsListener {
+    fun interface PresenceUpdateListener : MessageListHeaderEventsListener {
         fun onPresenceUpdateEvent(user: SceytUser)
     }
 

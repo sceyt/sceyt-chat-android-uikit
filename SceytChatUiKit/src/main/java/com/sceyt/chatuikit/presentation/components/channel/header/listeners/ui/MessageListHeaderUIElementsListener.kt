@@ -9,27 +9,27 @@ import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.styles.common.MenuStyle
 
-sealed interface HeaderUIElementsListener {
+sealed interface MessageListHeaderUIElementsListener {
 
-    fun interface TitleListener : HeaderUIElementsListener {
+    fun interface TitleListener : MessageListHeaderUIElementsListener {
         fun onTitle(titleTextView: TextView,
                     channel: SceytChannel,
                     replyMessage: SceytMessage?,
                     replyInThread: Boolean)
     }
 
-    fun interface SubTitleListener : HeaderUIElementsListener {
+    fun interface SubTitleListener : MessageListHeaderUIElementsListener {
         fun onSubTitle(subjectTextView: TextView,
                        channel: SceytChannel,
                        replyMessage: SceytMessage?,
                        replyInThread: Boolean)
     }
 
-    fun interface AvatarListener : HeaderUIElementsListener {
+    fun interface AvatarListener : MessageListHeaderUIElementsListener {
         fun onAvatar(avatar: AvatarView, channel: SceytChannel, replyInThread: Boolean)
     }
 
-    interface ActionsMenuListener : HeaderUIElementsListener {
+    interface ActionsMenuListener : MessageListHeaderUIElementsListener {
         fun onShowMessageActionsMenu(vararg messages: SceytMessage,
                                      menuStyle: MenuStyle,
                                      listener: ((MenuItem, actionFinish: () -> Unit) -> Unit)?)
@@ -37,11 +37,11 @@ sealed interface HeaderUIElementsListener {
         fun onHideMessageActionsMenu()
     }
 
-    fun interface ToolbarActionsVisibilityListener : HeaderUIElementsListener {
+    fun interface ToolbarActionsVisibilityListener : MessageListHeaderUIElementsListener {
         fun onInitToolbarActionsMenu(vararg messages: SceytMessage, menu: Menu)
     }
 
-    fun interface ShowSearchMessage : HeaderUIElementsListener {
+    fun interface ShowSearchMessage : MessageListHeaderUIElementsListener {
         fun showSearchMessagesBar(event: MessageCommandEvent.SearchMessages)
     }
 

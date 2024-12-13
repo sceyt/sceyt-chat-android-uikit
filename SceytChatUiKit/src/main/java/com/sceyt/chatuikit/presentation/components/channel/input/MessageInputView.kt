@@ -20,6 +20,7 @@ import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
@@ -31,6 +32,7 @@ import com.sceyt.chatuikit.databinding.SceytDisableMessageInputBinding
 import com.sceyt.chatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.doSafe
 import com.sceyt.chatuikit.extensions.empty
 import com.sceyt.chatuikit.extensions.getScope
 import com.sceyt.chatuikit.extensions.getString
@@ -98,7 +100,7 @@ import java.io.File
 
 @Suppress("MemberVisibilityCanBePrivate")
 class MessageInputView @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners,
         SelectFileTypePopupClickListeners.ClickListeners, InputEventsListener.InputEventListeners,
         InputActionsListener.InputActionListeners {
@@ -163,6 +165,7 @@ class MessageInputView @JvmOverloads constructor(
             messageActionsView.setStyle(style)
             linkPreviewView.setStyle(style)
             messageInput.setMentionStyle(style.mentionTextStyle)
+            messageInput.setEnableTextStyling(style.enableTextStyling)
             addInoutListeners()
             determineInputState()
             addInputTextWatcher()
@@ -321,8 +324,9 @@ class MessageInputView @JvmOverloads constructor(
             return
         }
         val metadata = Gson().toJson(AudioMetadata(amplitudes, duration))
-        createAttachmentWithPaths(file.path, metadata = metadata,
-            attachmentType = AttachmentTypeEnum.Voice.value).getOrNull(0)?.let {
+        createAttachmentWithPaths(
+            AttachmentTypeEnum.Voice to file.path, metadata = metadata,
+        ).getOrNull(0)?.let {
             allAttachments.add(it)
             sendMessage()
         } ?: finishRecording()
@@ -337,7 +341,8 @@ class MessageInputView @JvmOverloads constructor(
         binding.messageInput.requestFocus()
     }
 
-    private fun canShowRecorderView() = !disabledInputByGesture && !isInputHidden && inputState == Voice
+    private fun canShowRecorderView() = !disabledInputByGesture &&
+            !isInputHidden && inputState == Voice && isVisible
 
     private fun VoiceRecorderView.setRecordingListener() {
         setListener(object : RecordingListener {
@@ -397,48 +402,9 @@ class MessageInputView @JvmOverloads constructor(
                 PickType.Gallery -> selectFileTypePopupClickListeners.onGalleryClick()
                 PickType.Photo -> selectFileTypePopupClickListeners.onTakePhotoClick()
                 PickType.Video -> selectFileTypePopupClickListeners.onTakeVideoClick()
-                PickType.File -> selectFileTypePopupClickListeners.onFileClick()
+                PickType.File -> selectFileTypePopupClickListeners.onFileClick(null)
             }
         }.show()
-    }
-
-    private fun SceytMessageInputViewBinding.applyStyle() {
-        layoutInput.setBackgroundColor(style.backgroundColor)
-        viewAttachments.setBackgroundColor(style.dividerColor)
-        divider.setBackgroundColor(style.dividerColor)
-        icSendMessage.setBackgroundTint(style.sendIconBackgroundColor)
-        icAddAttachments.setImageDrawable(style.attachmentIcon)
-        enableVoiceRecord = style.enableVoiceRecord
-        enableSendAttachment = style.enableSendAttachment
-        enableMention = style.enableMention
-        style.inputStyle.apply(messageInput, null)
-        style.joinButtonStyle.apply(btnJoin)
-        style.clearChatTextStyle.apply(btnClearChat)
-        applySelectedMediaStyle(style.selectedMediaStyle)
-        applySearchResultStyle(style.messageSearchControlsStyle)
-        layoutInputCover.applyInputCoverStyle(style.inputCoverStyle)
-        icAddAttachments.isVisible = enableSendAttachment
-        if (isInEditMode) {
-            icSendMessage.setImageDrawable(if (enableVoiceRecord)
-                style.voiceRecordIcon else style.sendMessageIcon)
-        }
-    }
-
-    private fun SceytMessageInputViewBinding.applySelectedMediaStyle(style: InputSelectedMediaStyle) {
-        rvAttachments.setBackgroundColor(style.backgroundColor)
-    }
-
-    private fun SceytMessageInputViewBinding.applySearchResultStyle(style: MessageSearchControlsStyle) {
-        layoutSearchControl.root.setBackgroundColor(style.backgroundColor)
-        layoutSearchControl.icDown.setImageDrawable(style.previousIcon)
-        layoutSearchControl.icUp.setImageDrawable(style.nextIcon)
-        style.resultTextStyle.apply(layoutSearchControl.tvResult)
-    }
-
-    private fun SceytDisableMessageInputBinding.applyInputCoverStyle(style: InputCoverStyle) {
-        root.setBackgroundColor(style.backgroundColor)
-        divider.setBackgroundColor(style.dividerColor)
-        style.textStyle.apply(tvMessage)
     }
 
     private fun determineInputState() {
@@ -702,16 +668,21 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     @SuppressWarnings("WeakerAccess")
-    fun createAttachmentWithPaths(vararg filePath: String,
-                                  metadata: String = "",
-                                  attachmentType: String? = null): MutableList<Attachment> {
+    fun createAttachmentWithPaths(
+            vararg typeAndPath: Pair<AttachmentTypeEnum, String>,
+            metadata: String = "",
+    ): MutableList<Attachment> {
         val attachments = mutableListOf<Attachment>()
-        for (path in filePath) {
+        for (item in typeAndPath) {
+            val (attachmentType, path) = item
             if (checkIsExistAttachment(path))
                 continue
 
-            val attachment = messageToSendHelper.buildAttachment(path, metadata = metadata,
-                attachmentType = attachmentType)
+            val attachment = messageToSendHelper.buildAttachment(
+                path = path,
+                metadata = metadata,
+                attachmentType = attachmentType.value
+            )
             if (attachment != null) {
                 attachments.add(attachment)
             } else
@@ -720,8 +691,8 @@ class MessageInputView @JvmOverloads constructor(
         return attachments
     }
 
-    fun addAttachment(vararg filePath: String) {
-        val attachments = createAttachmentWithPaths(*filePath)
+    fun addAttachment(vararg typeAndPath: Pair<AttachmentTypeEnum, String>) {
+        val attachments = createAttachmentWithPaths(*typeAndPath)
         addAttachments(attachments)
     }
 
@@ -774,24 +745,29 @@ class MessageInputView @JvmOverloads constructor(
 
     fun getComposedMessage() = binding.messageInput.text
 
+    @Suppress("unused")
     fun getInputCover() = binding.layoutInputCover
 
+    @Suppress("unused")
     val inputEditText: EditText get() = binding.messageInput
 
     fun setClickListener(listener: MessageInputClickListeners) {
         clickListeners.setListener(listener)
     }
 
+    @Suppress("unused")
     fun setCustomClickListener(listener: MessageInputClickListenersImpl) {
-        clickListeners = listener
+        clickListeners = listener.withDefaultListeners(this)
     }
 
+    @Suppress("unused")
     fun setActionListener(listener: InputActionsListener) {
         actionListeners.setListener(listener)
     }
 
+    @Suppress("unused")
     fun setCustomActionListener(listener: InputActionsListenerImpl) {
-        actionListeners = listener
+        actionListeners = listener.withDefaultListeners(this)
     }
 
     @Suppress("unused")
@@ -799,20 +775,22 @@ class MessageInputView @JvmOverloads constructor(
         eventListeners.setListener(listener)
     }
 
+    @Suppress("unused")
     fun setCustomEventListener(listener: InputEventsListenerImpl) {
-        eventListeners = listener
+        eventListeners = listener.withDefaultListeners(this)
     }
 
     @Suppress("unused")
     fun setCustomSelectFileTypePopupClickListener(listener: SelectFileTypePopupClickListenersImpl) {
-        selectFileTypePopupClickListeners = listener
+        selectFileTypePopupClickListeners = listener.withDefaultListeners(this)
     }
 
+    @Suppress("unused")
     fun setCustomAttachmentViewHolderFactory(factory: AttachmentsViewHolderFactory) {
         attachmentsViewHolderFactory = factory
     }
 
-    fun setSaveUrlsPlace(savePathsTo: MutableSet<String>) {
+    fun setSaveUrlsPlace(savePathsTo: MutableSet<Pair<AttachmentTypeEnum, String>>) {
         filePickerHelper?.setSaveUrlsPlace(savePathsTo)
     }
 
@@ -857,6 +835,11 @@ class MessageInputView @JvmOverloads constructor(
         attachmentsAdapter.removeItem(item)
         allAttachments.remove(item.attachment)
         binding.viewAttachments.isVisible = allAttachments.isNotEmpty()
+        // Delete file if it was copied to the app's internal storage
+        val file = File(item.attachment.filePath)
+        val copedFileDir = File(context.filesDir, SceytConstants.CopyFileDirName)
+        if (file.parent?.startsWith(copedFileDir.path) == true)
+            doSafe { file.delete() }
         determineInputState()
     }
 
@@ -866,7 +849,9 @@ class MessageInputView @JvmOverloads constructor(
 
     private fun getPickerListener(): BottomSheetMediaPicker.PickerListener {
         return BottomSheetMediaPicker.PickerListener {
-            addAttachment(*it.map { mediaData -> mediaData.realPath }.toTypedArray())
+            addAttachment(*it.map { mediaData ->
+                mediaData.mediaType.value to mediaData.realPath
+            }.toTypedArray())
             // Remove attachments that are not in the picker result
             allAttachments.filter { item ->
                 item.type.isEqualsVideoOrImage() && it.none { mediaData -> mediaData.realPath == item.filePath }
@@ -892,6 +877,12 @@ class MessageInputView @JvmOverloads constructor(
         }
     }
 
+    override fun setVisibility(visibility: Int) {
+        super.setVisibility(visibility)
+        voiceRecorderView?.visibility = visibility
+        mentionUsersListView?.visibility = visibility
+    }
+
     // Choose file type popup listeners
     override fun onGalleryClick() {
         binding.messageInput.clearFocus()
@@ -904,20 +895,24 @@ class MessageInputView @JvmOverloads constructor(
 
     override fun onTakePhotoClick() {
         filePickerHelper?.takePicture {
-            addAttachment(it)
+            addAttachment(AttachmentTypeEnum.Image to it)
         }
     }
 
     override fun onTakeVideoClick() {
         filePickerHelper?.takeVideo {
-            addAttachment(it)
+            addAttachment(AttachmentTypeEnum.Video to it)
         }
     }
 
-    override fun onFileClick() {
-        filePickerHelper?.chooseMultipleFiles(allowMultiple = true) {
-            addAttachment(*it.toTypedArray())
-        }
+    override fun onFileClick(mimeTypes: Array<String>?) {
+        filePickerHelper?.chooseMultipleFiles(
+            allowMultiple = true,
+            mimetypes = mimeTypes,
+            parentDirToCopyProvider = { context.filesDir },
+            result = { pats ->
+                addAttachment(*pats.map { AttachmentTypeEnum.File to it }.toTypedArray())
+            })
     }
 
     override fun onInputStateChanged(sendImage: ImageView, state: InputState) {
@@ -948,7 +943,7 @@ class MessageInputView @JvmOverloads constructor(
             mentionUserIds: List<Mention>,
             styling: List<BodyStyleRange>?,
             replyOrEditMessage: SceytMessage?,
-            isReply: Boolean
+            isReply: Boolean,
     ) {
         messageInputActionCallback?.updateDraftMessage(text, mentionUserIds, styling, replyOrEditMessage, isReply)
     }
@@ -1015,5 +1010,44 @@ class MessageInputView @JvmOverloads constructor(
                 determineInputState()
             }
         }
+    }
+
+    private fun SceytMessageInputViewBinding.applyStyle() {
+        layoutInput.setBackgroundColor(style.backgroundColor)
+        viewAttachments.setBackgroundColor(style.dividerColor)
+        divider.setBackgroundColor(style.dividerColor)
+        icSendMessage.setBackgroundTint(style.sendIconBackgroundColor)
+        icAddAttachments.setImageDrawable(style.attachmentIcon)
+        enableVoiceRecord = style.enableVoiceRecord
+        enableSendAttachment = style.enableSendAttachment
+        enableMention = style.enableMention
+        style.inputStyle.apply(messageInput, null)
+        style.joinButtonStyle.apply(btnJoin)
+        style.clearChatTextStyle.apply(btnClearChat)
+        applySelectedMediaStyle(style.selectedMediaStyle)
+        applySearchResultStyle(style.messageSearchControlsStyle)
+        layoutInputCover.applyInputCoverStyle(style.inputCoverStyle)
+        icAddAttachments.isVisible = enableSendAttachment
+        if (isInEditMode) {
+            icSendMessage.setImageDrawable(if (enableVoiceRecord)
+                style.voiceRecordIcon else style.sendMessageIcon)
+        }
+    }
+
+    private fun SceytMessageInputViewBinding.applySelectedMediaStyle(style: InputSelectedMediaStyle) {
+        rvAttachments.setBackgroundColor(style.backgroundColor)
+    }
+
+    private fun SceytMessageInputViewBinding.applySearchResultStyle(style: MessageSearchControlsStyle) {
+        layoutSearchControl.root.setBackgroundColor(style.backgroundColor)
+        layoutSearchControl.icDown.setImageDrawable(style.previousIcon)
+        layoutSearchControl.icUp.setImageDrawable(style.nextIcon)
+        style.resultTextStyle.apply(layoutSearchControl.tvResult)
+    }
+
+    private fun SceytDisableMessageInputBinding.applyInputCoverStyle(style: InputCoverStyle) {
+        root.setBackgroundColor(style.backgroundColor)
+        divider.setBackgroundColor(style.dividerColor)
+        style.textStyle.apply(tvMessage)
     }
 }

@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.persistence.logicimpl
 import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
+import com.sceyt.chat.models.user.UserListQuery
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -34,7 +35,7 @@ internal class PersistenceUsersLogicImpl(
 ) : PersistenceUsersLogic, SceytKoinComponent {
     private val persistenceChannelsLogic: PersistenceChannelsLogic by inject()
 
-    override suspend fun loadUsers(query: String): SceytResponse<List<SceytUser>> {
+    override suspend fun loadUsers(query: UserListQuery): SceytResponse<List<SceytUser>> {
         val response = userRepository.loadUsers(query)
 
         if (response is SceytResponse.Success) {
@@ -76,6 +77,13 @@ internal class PersistenceUsersLogicImpl(
 
     override suspend fun getUsersDbByIds(id: List<String>): List<SceytUser> {
         return userDao.getUsersById(id).map { it.toSceytUser() }
+    }
+
+    override suspend fun searchLocaleUserByMetadata(
+            metadataKeys: List<String>,
+            metadataValue: String
+    ): List<SceytUser> {
+        return userDao.searchUsersByMetadata(metadataKeys, metadataValue).map { it.toSceytUser() }
     }
 
     override suspend fun getCurrentUser(): SceytUser? {

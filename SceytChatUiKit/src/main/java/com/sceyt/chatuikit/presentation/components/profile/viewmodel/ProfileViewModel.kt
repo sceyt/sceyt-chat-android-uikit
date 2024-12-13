@@ -13,6 +13,8 @@ import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
@@ -41,16 +43,23 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
     val logOutErrorLiveData: LiveData<String> = _logOutErrorLiveData
 
     fun getCurrentUser() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val user = userInteractor.getCurrentUser()
-            _currentUserLiveData.postValue(user ?: return@launch)
-        }
+        userInteractor.getCurrentUserAsFlow()
+            .onEach { user ->
+                _currentUserLiveData.postValue(user)
+            }
+            .launchIn(viewModelScope)
     }
 
-    fun saveProfile(firstName: String?, lastName: String?, avatarUrl: String?, editedAvatar: Boolean) {
+    fun saveProfile(
+        firstName: String?,
+        lastName: String?,
+        username: String,
+        avatarUrl: String?,
+        shouldUploadAvatar: Boolean
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             var newUrl = avatarUrl
-            if (editedAvatar && avatarUrl != null) {
+            if (shouldUploadAvatar && avatarUrl != null) {
                 val uploadResult = userInteractor.uploadAvatar(avatarUrl)
                 if (uploadResult is SceytResponse.Success) {
                     newUrl = uploadResult.data
@@ -61,8 +70,10 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
             }
             val currentUser = _currentUserLiveData.value ?: userInteractor.getCurrentUser()
             ?: return@launch
-            when (val response = userInteractor.updateProfile(currentUser.username, firstName, lastName,
-                newUrl, currentUser.metadataMap)) {
+            when (val response = userInteractor.updateProfile(
+                username, firstName, lastName,
+                newUrl, currentUser.metadataMap
+            )) {
                 is SceytResponse.Success -> {
                     _editProfileLiveData.postValue(response.data ?: return@launch)
                 }

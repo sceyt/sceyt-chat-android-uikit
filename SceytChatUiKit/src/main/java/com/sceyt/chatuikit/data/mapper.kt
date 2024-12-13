@@ -37,6 +37,7 @@ fun SceytAttachment.toFileListItem(): FileListItem {
     )
 }
 
-fun Presence.hasDiff(other: Presence): Boolean {
+fun Presence.hasDiff(other: Presence?): Boolean {
+    other ?: return true
     return state != other.state || status != other.status || lastActiveAt != other.lastActiveAt
 }

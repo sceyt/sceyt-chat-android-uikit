@@ -9,7 +9,6 @@ import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -36,8 +35,11 @@ import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.ChannelListViewStyle
 
-class ChannelListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners,
+class ChannelListView @JvmOverloads constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0
+) : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners,
         ChannelPopupClickListeners.PopupClickListeners {
 
     private val binding: SceytChannelListViewBinding
@@ -58,7 +60,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
         channelsRV = binding.channelsRV.also { it.setStyle(style) }
         channelsRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
         channelsRV.clipToPadding = clipToPadding
-        setPadding(0, 0, 0, 0)
+        super.setPadding(0, 0, 0, 0)
 
         binding.pageStateView.apply {
             setLoadingStateView(style.loadingState)
@@ -90,12 +92,12 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
         channelsRV.addNewChannels(channels)
     }
 
-    internal fun addNewChannelAndSort(channelItem: ChannelListItem.ChannelItem) {
+    internal fun addNewChannelAndSort(order: ChannelListOrder, channelItem: ChannelListItem.ChannelItem) {
         channelsRV.getData()?.let {
             if (it.contains(channelItem)) return
-            val newData = ArrayList(it).also { items -> items.add(channelItem) }
-            channelsRV.sortByAndSetNewData(SceytChatUIKit.config.channelListOrder, newData)
-        } ?: channelsRV.setData(arrayListOf(channelItem))
+            val newData = it.plus(channelItem)
+            channelsRV.sortByAndSetNewData(order, newData)
+        } ?: channelsRV.setData(listOf(channelItem))
 
         binding.pageStateView.updateState(PageState.Nothing)
     }
@@ -132,10 +134,11 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
         }
     }
 
-    internal fun deleteChannel(channelId: Long?, searchQuery: String) {
-        channelsRV.deleteChannel(channelId ?: return)
+    internal fun deleteChannel(channelId: Long?, searchQuery: String): Boolean {
+        val deleted = channelsRV.deleteChannel(channelId ?: return false)
         if (channelsRV.getData().isNullOrEmpty())
             binding.pageStateView.updateState(PageState.StateEmpty(searchQuery))
+        return deleted
     }
 
     internal fun userBlocked(data: List<SceytUser>?) {
@@ -241,7 +244,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
      * @param listener The custom channel click listeners.
      */
     fun setCustomChannelClickListeners(listener: ChannelClickListenersImpl) {
-        clickListeners = listener
+        clickListeners = listener.withDefaultListeners(this)
     }
 
     /**
@@ -249,7 +252,7 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
      * @param listener is the custom listener.
      */
     fun setCustomChannelPopupClickListener(listener: ChannelPopupClickListenersImpl) {
-        popupClickListeners = listener
+        popupClickListeners = listener.withDefaultListeners(this)
     }
 
     /**
@@ -275,13 +278,25 @@ class ChannelListView @JvmOverloads constructor(context: Context, attrs: Attribu
      */
     fun getPageStateView() = binding.pageStateView
 
+    override fun setPadding(left: Int, top: Int, right: Int, bottom: Int) {
+        channelsRV.setPadding(left, top, right, bottom)
+    }
+
+    override fun setClipToPadding(clipToPadding: Boolean) {
+        super.setClipToPadding(clipToPadding)
+        try {
+            channelsRV.clipToPadding = clipToPadding
+        } catch (_: Exception) {
+        }
+    }
+
     // Channel Click callbacks
     override fun onChannelClick(item: ChannelListItem.ChannelItem) {
-        ChannelActivity.newInstance(context, item.channel)
+        ChannelActivity.launch(context, item.channel)
     }
 
     override fun onAvatarClick(item: ChannelListItem.ChannelItem) {
-        ChannelActivity.newInstance(context, item.channel)
+        clickListeners.onChannelClick(item)
     }
 
     override fun onChannelLongClick(view: View, item: ChannelListItem.ChannelItem) {

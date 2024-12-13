@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.databinding.SceytBottomSheetMediaPickerBinding
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.checkAndAskPermissions
@@ -320,9 +321,9 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
             val mediaType: MediaType
     )
 
-    enum class MediaType {
-        Image,
-        Video
+    enum class MediaType(val value: AttachmentTypeEnum) {
+        Image(AttachmentTypeEnum.Image),
+        Video(AttachmentTypeEnum.Video)
     }
 
     fun interface PickerListener {
