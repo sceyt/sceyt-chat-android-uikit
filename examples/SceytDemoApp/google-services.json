@@ -1,51 +1,26 @@
 {
   "project_info": {
-    "project_number": "931153911783",
-    "project_id": "sceyt-live-chat",
-    "storage_bucket": "sceyt-live-chat.firebasestorage.app"
+    "project_number": "251482660332",
+    "project_id": "sceyt-chat-demo",
+    "storage_bucket": "sceyt-chat-demo.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:931153911783:android:0f6ebb1b1975b2d51d6742",
+        "mobilesdk_app_id": "1:251482660332:android:f6cfc3877b12d47727b4c9",
         "android_client_info": {
           "package_name": "com.sceyt.chat.demo"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "931153911783-miojfp1sentpb399a9dtoqk8itluq61s.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.sceyt.chat.demo",
-            "certificate_hash": "f5952e0333ae52270074fa7247e3c06bbc8d46f9"
-          }
-        },
-        {
-          "client_id": "931153911783-4qrkt36equdefml59l207k7u0ins12s0.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCrcVKrNdRY26Epaq4TWingCKUJzG05Uco"
+          "current_key": "AIzaSyBT0E188zTpoLKLEs65uPOBNIcShCRfxnc"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "931153911783-4qrkt36equdefml59l207k7u0ins12s0.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "931153911783-fjjst6teg7l27egp6qb3jn9nqkkr9dkj.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.sceyt.livechat"
-              }
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }
