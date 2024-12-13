@@ -364,7 +364,13 @@ internal class PersistenceMessagesLogicImpl(
                 is SceytResponse.Success -> {
                     val newChannelId = response.data?.id ?: 0L
                     message.channelId = newChannelId
-                    return sendMessageImpl(newChannelId, message, false, isPendingMessage, isUploadedAttachments)
+                    return sendMessageImpl(
+                        channelId = newChannelId,
+                        message = message,
+                        isSharing = false,
+                        isPendingMessage = isPendingMessage,
+                        isUploadedAttachments = isUploadedAttachments,
+                    )
                 }
 
                 is SceytResponse.Error -> {
@@ -583,15 +589,28 @@ internal class PersistenceMessagesLogicImpl(
         if (pendingMessages.isNotEmpty()) {
             if (channel?.pending == true) {
                 pendingMessages.forEach {
-                    createChannelAndSendMessageWithLock(channel, it.toMessage(), isPendingMessage = true, isUploadedAttachments = false).collect()
+                    createChannelAndSendMessageWithLock(
+                        pendingChannel = channel,
+                        message = it.toMessage(),
+                        isPendingMessage = true,
+                        isUploadedAttachments = false
+                    ).collect()
                 }
                 if (!createChannelAndSendMessageMutex.isLocked)
                     channelCache.removeFromPendingToRealChannelsData(channelId)
             } else {
                 pendingMessages.forEach {
-                    if (it.attachments.isNullOrEmpty() || it.attachments.any { attachmentDb -> attachmentDb.payLoad?.transferState != TransferState.PauseUpload }) {
+                    if (it.attachments.isNullOrEmpty() || it.attachments.any { attachmentDb ->
+                                attachmentDb.payLoad?.transferState != TransferState.PauseUpload
+                            }) {
                         val message = it.toMessage()
-                        sendMessageImpl(channelId, message, isSharing = false, isPendingMessage = true, isUploadedAttachments = false).collect()
+                        sendMessageImpl(
+                            channelId = channelId,
+                            message = message,
+                            isSharing = false,
+                            isPendingMessage = true,
+                            isUploadedAttachments = false
+                        ).collect()
                     }
                 }
             }
