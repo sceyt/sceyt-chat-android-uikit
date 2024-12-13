@@ -346,13 +346,15 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun createChannelAndSendMessageWithLock(
-            channel: SceytChannel, message: Message,
+            pendingChannel: SceytChannel,
+            message: Message,
             isPendingMessage: Boolean,
             isUploadedAttachments: Boolean,
     ): Flow<SendMessageResult> {
         createChannelAndSendMessageMutex.withLock {
-            val channelId = channel.id
-            val updated = channel.copy(lastMessage = message.toSceytUiMessage())
+            val channelId = pendingChannel.id
+            val updated = pendingChannel.copy(lastMessage = message.toSceytUiMessage())
+            // If channel is already created, we don't need to create it again
             channelCache.getRealChannelIdWithPendingChannelId(channelId)?.let {
                 message.channelId = it
                 return sendMessageImpl(it, message, false, isPendingMessage, isUploadedAttachments)
@@ -379,7 +381,11 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    private suspend fun emitTmpMessageAndStore(channelId: Long, message: Message, sendChannel: SendChannel<SendMessageResult>) {
+    private suspend fun emitTmpMessageAndStore(
+            channelId: Long,
+            message: Message,
+            sendChannel: SendChannel<SendMessageResult>
+    ) {
         val tmpMessage = tmpMessageToSceytMessage(channelId, message)
         sendChannel.trySend(SendMessageResult.TempMessage(tmpMessage))
         MessageEventManager.emitOutgoingMessage(tmpMessage)
@@ -387,10 +393,14 @@ internal class PersistenceMessagesLogicImpl(
         insertTmpMessageToDb(tmpMessage)
     }
 
-    private suspend fun createNewChannelInsteadOfPendingChannel(channel: SceytChannel): SceytResponse<SceytChannel> {
-        val response = persistenceChannelsLogic.createNewChannelInsteadOfPendingChannel(channel)
+    private suspend fun createNewChannelInsteadOfPendingChannel(
+            pendingChannel: SceytChannel
+    ): SceytResponse<SceytChannel> {
+        val response = persistenceChannelsLogic.createNewChannelInsteadOfPendingChannel(pendingChannel)
         if (response is SceytResponse.Success) {
-            response.data?.let { messagesCache.moveMessagesToNewChannel(channel.id, it.id) }
+            response.data?.let {
+                messagesCache.moveMessagesToNewChannel(pendingChannel.id, it.id)
+            }
         }
         return response
     }
@@ -429,7 +439,10 @@ internal class PersistenceMessagesLogicImpl(
         return@withContext SceytResponse.Success(true)
     }
 
-    override suspend fun sendMessageWithUploadedAttachments(channelId: Long, message: Message): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
+    override suspend fun sendMessageWithUploadedAttachments(
+            channelId: Long,
+            message: Message
+    ): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
         val channel = channelCache.getOneOf(channelId)
                 ?: persistenceChannelsLogic.getChannelFromDb(channelId)
         val response = if (channel?.pending == true) {
@@ -459,8 +472,11 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private fun sendMessageImpl(
-            channelId: Long, message: Message, isSharing: Boolean,
-            isPendingMessage: Boolean, isUploadedAttachments: Boolean,
+            channelId: Long,
+            message: Message,
+            isSharing: Boolean,
+            isPendingMessage: Boolean,
+            isUploadedAttachments: Boolean,
     ) = callbackFlow {
         // If message is pending, we don't need to insert it to db and emit it to UI as outgoing message
         if (!isPendingMessage && !isUploadedAttachments)

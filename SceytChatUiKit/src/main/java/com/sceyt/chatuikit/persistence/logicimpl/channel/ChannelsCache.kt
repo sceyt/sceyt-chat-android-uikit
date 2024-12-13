@@ -74,6 +74,8 @@ class ChannelsCache {
     /** Added channels like upsert, and check is differences between channels*/
     fun addAll(config: ChannelListConfig, list: List<SceytChannel>, checkDifference: Boolean): Boolean {
         synchronized(lock) {
+            // Create config map if not exists
+            getOrCreateMap(config)
             return if (checkDifference)
                 putAndCheckHasDiff(config, list)
             else {
@@ -431,10 +433,9 @@ class ChannelsCache {
 
     private fun putAndCheckHasDiff(config: ChannelListConfig, list: List<SceytChannel>): Boolean {
         var detectedDiff = false
-        val map = getOrCreateMap(config)
         list.forEach {
             if (!detectedDiff) {
-                val old = map[it.id]
+                val old = getOrCreateMap(config)[it.id]
                 detectedDiff = old?.diff(it)?.hasDifference() ?: true
             }
             putToCache(config, it)
