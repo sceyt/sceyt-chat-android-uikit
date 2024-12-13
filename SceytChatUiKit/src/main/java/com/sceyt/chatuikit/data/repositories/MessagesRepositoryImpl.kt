@@ -18,7 +18,6 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.TAG
@@ -212,29 +211,17 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
-    override suspend fun sendMessageAsFlow(channelId: Long, message: Message) = callbackFlow {
-        val transformMessage = SceytChatUIKit.messageTransformer?.let {
-            it.transformToSend(message) ?: return@callbackFlow
-        } ?: message
-        val response = sendMessage(channelId, transformMessage, tmpMessageCb = {
-            trySend(SendMessageResult.TempMessage(it.toSceytUiMessage()))
-        })
-        when (response) {
-            is SceytResponse.Success -> trySend(SendMessageResult.Success(response))
-            is SceytResponse.Error -> trySend(SendMessageResult.Error(response))
-        }
-        channel.close()
-        awaitClose()
-    }
-
     override suspend fun sendMessage(
-            channelId: Long, message: Message,
-            tmpMessageCb: ((Message) -> Unit)?
+            channelId: Long,
+            message: Message
     ): SceytResponse<SceytMessage> = suspendCancellableCoroutine { continuation ->
+        val transformMessage = SceytChatUIKit.messageTransformer?.transformToSend(message)
+                ?: message
         SceytLog.i(TAG, "sending message with channelId $channelId, tid: ${message.tid}, body: ${message.body}")
-        val tmpMessage = ChannelOperator.build(channelId).sendMessage(message, object : MessageCallback {
+        ChannelOperator.build(channelId).sendMessage(transformMessage, object : MessageCallback {
             override fun onResult(message: Message) {
-                SceytLog.i(TAG, "send message success with tid: ${message.tid}, body: ${message.body}, initialTid: ${message.tid}")
+                SceytLog.i(TAG, "send message success with tid: ${message.tid}," +
+                        " body: ${message.body}, initialTid: ${message.tid}")
                 val resultTransformed = SceytChatUIKit.messageTransformer?.transformToGet(message)
                         ?: message
                 continuation.safeResume(SceytResponse.Success(resultTransformed.toSceytUiMessage()))
@@ -243,13 +230,16 @@ class MessagesRepositoryImpl : MessagesRepository {
             override fun onError(error: SceytException?) {
                 continuation.safeResume(SceytResponse.Error(error))
                 SceytLog.e(TAG, "sendMessage error: ${error?.message}, messageTid: " +
-                        "${message.tid}, body: ${message.body}")
+                        "${transformMessage.tid}, body: ${transformMessage.body}")
             }
         })
-        tmpMessageCb?.invoke(tmpMessage)
     }
 
-    override suspend fun deleteMessage(channelId: Long, messageId: Long, deleteType: DeleteMessageType): SceytResponse<SceytMessage> {
+    override suspend fun deleteMessage(
+            channelId: Long,
+            messageId: Long,
+            deleteType: DeleteMessageType
+    ): SceytResponse<SceytMessage> {
         return suspendCancellableCoroutine { continuation ->
             ChannelOperator.build(channelId).deleteMessage(messageId, deleteType, object : MessageCallback {
                 override fun onResult(msg: Message) {

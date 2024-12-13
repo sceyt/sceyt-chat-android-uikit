@@ -5,7 +5,6 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
-import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import kotlinx.coroutines.flow.Flow
@@ -33,10 +32,7 @@ interface MessagesRepository {
     suspend fun loadMessagesById(conversationId: Long,
                                  ids: List<Long>): SceytResponse<List<SceytMessage>>
 
-    suspend fun sendMessageAsFlow(channelId: Long, message: Message): Flow<SendMessageResult>
-    suspend fun sendMessage(channelId: Long, message: Message,
-                            tmpMessageCb: ((Message) -> Unit)? = null): SceytResponse<SceytMessage>
-
+    suspend fun sendMessage(channelId: Long, message: Message): SceytResponse<SceytMessage>
     suspend fun deleteMessage(channelId: Long, messageId: Long,
                               deleteType: DeleteMessageType): SceytResponse<SceytMessage>
 
