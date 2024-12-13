@@ -47,7 +47,6 @@ import com.sceyt.chatuikit.extensions.isThePositionVisible
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
-import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
@@ -133,8 +132,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     fun checkEnableDisableActions(channel: SceytChannel) {
         messagesListView.setActionsEnabled(
-            enabled = !replyInThread && channel.checkIsMemberInChannel() && !channel.isPeerDeleted()
-                    && (channel.isGroup || channel.getPeer()?.user?.blocked != true), false)
+            enabled = !replyInThread && channel.checkIsMemberInChannel() &&
+                    (channel.isGroup || channel.getPeer()?.user?.blocked != true), false)
     }
 
     checkEnableDisableActions(channel)
