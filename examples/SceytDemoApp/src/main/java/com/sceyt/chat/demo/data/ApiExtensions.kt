@@ -1,6 +1,6 @@
 package com.sceyt.chat.demo.data
 
-import retrofit2.HttpException
+import com.sceyt.chat.models.SceytException
 import retrofit2.Response
 import java.net.HttpURLConnection.HTTP_NO_CONTENT
 
@@ -13,12 +13,12 @@ suspend fun <T> makeApiCall(call: suspend () -> Response<T>): Result<T?> {
                 when {
                     body != null -> Result.success(body)
                     response.code() == HTTP_NO_CONTENT -> Result.success(null)
-                    else -> error(Exception("Response body is null"))
+                    else -> error(SceytException(response.code(), "Response body is null"))
                 }
             }
 
             else -> {
-                error(HttpException(response))
+                error(SceytException(response.code(), response.message()))
             }
         }
     } catch (e: Exception) {

@@ -31,6 +31,7 @@ class ChatClientConnectionInterceptor(private val connectionRepo: ConnectionRepo
             val token: String? = result.getOrNull()?.token
             SceytLog.i(Tag, "Sceyt token success, token ${token?.take(8)}")
             preference.setString(AppSharedPreference.PREF_USER_TOKEN, token)
+            preference.setString(AppSharedPreference.PREF_USER_ID, userId)
             token?.let {
                 Result.success(it)
             } ?: Result.failure(Throwable("Sceyt token is null"))

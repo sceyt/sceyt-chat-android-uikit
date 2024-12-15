@@ -16,7 +16,6 @@ import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.ClearedHistory
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Created
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Deleted
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Invited
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Joined
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Left
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Updated
@@ -85,7 +84,7 @@ import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import org.koin.core.component.inject
 
 internal class PersistenceChannelsLogicImpl(
@@ -166,7 +165,7 @@ internal class PersistenceChannelsLogicImpl(
                 else onChanelAdded(data.channel)
             }
 
-            is Invited -> onChanelJoined(data.channel)
+            is ChannelEventEnum.Event -> Unit
         }
     }
 
@@ -992,8 +991,8 @@ internal class PersistenceChannelsLogicImpl(
         return channelDao.getAllChannelsCount()
     }
 
-    override fun getTotalUnreadCount(): Flow<Int> {
-        return channelDao.getTotalUnreadCountAsFlow().filterNotNull()
+    override fun getTotalUnreadCount(channelTypes: List<String>): Flow<Int> {
+        return channelDao.getTotalUnreadCountAsFlow(channelTypes).map { it ?: 0 }
     }
 
     override suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>) {

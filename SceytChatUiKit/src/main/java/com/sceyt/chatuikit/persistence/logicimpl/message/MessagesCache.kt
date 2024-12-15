@@ -322,6 +322,7 @@ class MessagesCache {
                         ?: includeNotExistToDiff
                 if (!detectedDiff)
                     detectedDiff = hasDiff
+
                 if (checkDiffAndNotifyUpdate && hasDiff)
                     emitMessageUpdated(channelId, updateMessage)
             }
