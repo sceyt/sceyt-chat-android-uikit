@@ -102,8 +102,8 @@ class ChannelsRV @JvmOverloads constructor(
             channelsAdapter?.addList(channels)
     }
 
-    fun deleteChannel(id: Long) {
-        channelsAdapter?.deleteChannel(id)
+    fun deleteChannel(id: Long): Boolean {
+        return channelsAdapter?.deleteChannel(id) ?: false
     }
 
     fun getChannels(): List<ChannelListItem.ChannelItem>? {

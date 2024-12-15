@@ -2,13 +2,14 @@ package com.sceyt.chatuikit.persistence.logic
 
 import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
+import com.sceyt.chat.models.user.UserListQuery
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.Flow
 
 interface PersistenceUsersLogic {
-    suspend fun loadUsers(query: String): SceytResponse<List<SceytUser>>
+    suspend fun loadUsers(query: UserListQuery): SceytResponse<List<SceytUser>>
     suspend fun loadMoreUsers(): SceytResponse<List<SceytUser>>
     suspend fun getSceytUsers(ids: List<String>): SceytResponse<List<SceytUser>>
     suspend fun getUserDbById(id: String): SceytUser?

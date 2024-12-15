@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.select_users.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chat.models.user.UserListQuery
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
@@ -31,7 +32,7 @@ class UsersViewModel : BaseViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             val response = if (isLoadMore)
                 SceytChatUIKit.chatUIFacade.userInteractor.loadMoreUsers()
-            else SceytChatUIKit.chatUIFacade.userInteractor.loadUsers(query)
+            else SceytChatUIKit.chatUIFacade.userInteractor.loadUsers(createUserListQueryBuilder(query))
 
             var empty = false
             if (response is SceytResponse.Success) {
@@ -65,4 +66,11 @@ class UsersViewModel : BaseViewModel() {
             notifyResponseAndPageState(_createChannelLiveData, response)
         }
     }
+
+    private fun createUserListQueryBuilder(searchQuery: String) = UserListQuery.Builder()
+        .order(UserListQuery.UserListQueryOrderKeyType.UserListQueryOrderKeyFirstName)
+        .filter(UserListQuery.UserListFilterType.UserListFilterTypeAll)
+        .limit(SceytChatUIKit.config.queryLimits.userListQueryLimit)
+        .query(searchQuery)
+        .build()
 }

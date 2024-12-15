@@ -89,8 +89,8 @@ open class ChannelActionsDialog(context: Context) : Dialog(context, R.style.Scey
 
     protected open fun SceytDialogChannelActionsBinding.setIconsVisibility() {
         val isSelf = channel.isSelf
-        markAsRead.isVisible = channel.unread
-        markAsUnRead.isVisible = !channel.unread
+        markAsRead.isVisible = channel.unread || channel.newMessageCount > 0
+        markAsUnRead.isVisible = !channel.unread && channel.newMessageCount == 0L
         mute.isVisible = !channel.muted && !isSelf
         unMute.isVisible = channel.muted && !isSelf
         pin.isVisible = !channel.pinned

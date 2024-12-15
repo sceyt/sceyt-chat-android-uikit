@@ -120,7 +120,11 @@ class ShareViewModel : BaseViewModel(), SceytKoinComponent {
             try {
                 var realFile: File? = null
                 try {
-                    val path = FilePathUtil.getFilePathFromUri(application, uri) ?: return@forEach
+                    val path = FilePathUtil.getFilePathFromUri(
+                        context = application,
+                        parentDirToCopy = application.filesDir,
+                        uri = uri
+                    ) ?: return@forEach
                     FileInputStream(File(path))
                     realFile = File(path)
                 } catch (ex: Exception) {

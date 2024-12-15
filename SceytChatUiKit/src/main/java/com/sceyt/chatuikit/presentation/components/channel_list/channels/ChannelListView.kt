@@ -134,10 +134,11 @@ class ChannelListView @JvmOverloads constructor(
         }
     }
 
-    internal fun deleteChannel(channelId: Long?, searchQuery: String) {
-        channelsRV.deleteChannel(channelId ?: return)
+    internal fun deleteChannel(channelId: Long?, searchQuery: String): Boolean {
+        val deleted = channelsRV.deleteChannel(channelId ?: return false)
         if (channelsRV.getData().isNullOrEmpty())
             binding.pageStateView.updateState(PageState.StateEmpty(searchQuery))
+        return deleted
     }
 
     internal fun userBlocked(data: List<SceytUser>?) {

@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.persistence.extensions
 
-import android.content.Context
 import android.util.Log
 import com.abedelazizshe.lightcompressorlibrary.VideoQuality
 import com.sceyt.chatuikit.extensions.getMimeTypeTakeExtension
@@ -16,17 +15,20 @@ import java.io.File
 import java.util.UUID
 
 
-fun resizeImage(context: Context,
-                path: String?,
-                reqSize: Int = 600,
-                quality: Int = 80
+fun resizeImage(
+        path: String?,
+        parentDir: File,
+        reqSize: Int = 600,
+        quality: Int = 80,
 ): Result<String> {
     return try {
         path?.let {
-            val resizedImageFile = FileResizeUtil.resizeAndCompressImage(context,
+            val resizedImageFile = FileResizeUtil.resizeAndCompressImage(
                 filePath = it,
+                parentDir = parentDir,
                 reqSize = reqSize,
-                preferQuality = quality)
+                preferQuality = quality
+            )
             if (resizedImageFile == null) {
                 Result.failure(Exception("Could not resize image"))
             } else Result.success(resizedImageFile.path)
@@ -37,14 +39,15 @@ fun resizeImage(context: Context,
     }
 }
 
-fun transcodeVideo(context: Context,
-                   path: String?,
-                   quality: VideoQuality = VideoQuality.MEDIUM,
-                   progressCallback: ((VideoTranscodeData) -> Unit)? = null,
-                   callback: (Result<String>) -> Unit
+fun transcodeVideo(
+        path: String?,
+        parentDir: File,
+        quality: VideoQuality = VideoQuality.MEDIUM,
+        progressCallback: ((VideoTranscodeData) -> Unit)? = null,
+        callback: (Result<String>) -> Unit
 ) {
     path?.let {
-        val dest = File("${context.filesDir}/" + UUID.randomUUID() + getMimeTypeTakeExtension(path))
+        val dest = File(parentDir, "${UUID.randomUUID()}${getMimeTypeTakeExtension(path)}")
         VideoTranscodeHelper.transcodeAsResultWithCallback(destination = dest, path = it, quality) { data ->
             when (data.resultType) {
                 Cancelled -> callback(Result.failure(Exception("Canceled")))

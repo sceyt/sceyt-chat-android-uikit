@@ -14,7 +14,7 @@ sealed interface SelectFileTypePopupClickListeners {
     }
 
     fun interface FileClickListener : SelectFileTypePopupClickListeners {
-        fun onFileClick()
+        fun onFileClick(mimeTypes: Array<String>?)
     }
 
     /** Use this if you want to implement all callbacks */

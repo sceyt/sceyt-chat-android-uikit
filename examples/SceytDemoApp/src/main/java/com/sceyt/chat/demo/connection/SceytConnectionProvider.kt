@@ -76,8 +76,10 @@ class SceytConnectionProvider(
         initialized = true
     }
 
-    fun connectChatClient(userId: String = preference.getString(AppSharedPreference.PREF_USER_ID)
-            ?: "") {
+    fun connectChatClient(
+            userId: String = preference.getString(AppSharedPreference.PREF_USER_ID) ?: "",
+            onConnectStarted: ((Boolean, Exception?) -> Unit)? = null
+    ) {
         launch {
             val savedUserId = preference.getString(AppSharedPreference.PREF_USER_ID)
             if (userId.isNotBlank() && !savedUserId.isNullOrBlank() && userId != savedUserId) {
@@ -112,13 +114,16 @@ class SceytConnectionProvider(
             if (!sceytToken.isNullOrBlank()) {
                 SceytLog.i(Tag, "$Tag saved ChatClient token is exist, trying connect with that token: ${sceytToken}.")
                 SceytChatUIKit.connect(sceytToken)
+                onConnectStarted?.invoke(true, null)
             } else {
                 SceytLog.i(Tag, "$Tag saved ChatClient token is empty, trying to get Cat client token, userId: $userId.")
                 chatClientConnectionInterceptor.getChatToken(userId)?.let { token ->
                     SceytLog.i(Tag, "$Tag connectChatClient will connect with new token: ${token.take(8)}")
                     SceytChatUIKit.connect(token)
+                    onConnectStarted?.invoke(true, null)
                 } ?: run {
                     SceytLog.i(Tag, "$Tag connectChatClient failed because ChatClient token is null. Called in connectChatClient")
+                    onConnectStarted?.invoke(false, Exception("Couldn't get chat token, please try again."))
                 }
             }
             isConnecting.set(false)
