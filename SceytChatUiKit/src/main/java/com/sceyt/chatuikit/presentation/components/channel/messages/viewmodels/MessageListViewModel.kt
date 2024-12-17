@@ -109,7 +109,7 @@ class MessageListViewModel(
     internal val channelMemberInteractor: ChannelMemberInteractor by inject()
     internal val userInteractor: UserInteractor by inject()
     private val application: Application by inject()
-    private val syncManager: SceytSyncManager by inject()
+    internal val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
     private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
     internal var pinnedLastReadMessageId: Long = 0

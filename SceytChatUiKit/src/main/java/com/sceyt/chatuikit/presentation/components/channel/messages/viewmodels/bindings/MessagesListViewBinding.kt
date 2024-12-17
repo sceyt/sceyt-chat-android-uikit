@@ -62,6 +62,7 @@ import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -330,28 +331,32 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 
-    ConnectionEventManager.onChangedConnectStatusFlow.onEach { stateData ->
-        if (stateData.state == ConnectionState.Connected) {
-            val message = messagesListView.getLastMessageBy {
-                // First trying to get last displayed message
-                it is MessageItem && it.message.deliveryStatus == DeliveryStatus.Displayed
-            } ?: messagesListView.getFirstMessageBy {
-                // Next trying to get fist sent message
-                it is MessageItem && it.message.deliveryStatus == DeliveryStatus.Sent
-            } ?: messagesListView.getFirstMessageBy {
-                // Next trying to get fist received message
-                it is MessageItem && it.message.deliveryStatus == DeliveryStatus.Received
+    ConnectionEventManager.onChangedConnectStatusFlow
+        .distinctUntilChanged()
+        .onEach { stateData ->
+            viewModelScope.launch(Dispatchers.IO) {
+                if (stateData.state == ConnectionState.Connected) {
+                    val message = messagesListView.getLastMessageBy {
+                        // First trying to get last displayed message
+                        it is MessageItem && it.message.deliveryStatus == DeliveryStatus.Displayed
+                    } ?: messagesListView.getFirstMessageBy {
+                        // Next trying to get fist sent message
+                        it is MessageItem && it.message.deliveryStatus == DeliveryStatus.Sent
+                    } ?: messagesListView.getFirstMessageBy {
+                        // Next trying to get fist received message
+                        it is MessageItem && it.message.deliveryStatus == DeliveryStatus.Received
+                    }
+                    (message as? MessageItem)?.let {
+                        syncManager.syncConversationMessagesAfter(conversationId, it.message.id)
+                    }
+                    // Sync messages near center visible message
+                    syncNearCenterVisibleMessageIfNeeded()
+                } else {
+                    lastSyncCenterOffsetId = 0L
+                    needSyncMessagesWhenScrollStateIdle = true
+                }
             }
-            (message as? MessageItem)?.let {
-                syncConversationMessagesAfter(it.message.id)
-            }
-            // Sync messages near center visible message
-            syncNearCenterVisibleMessageIfNeeded()
-        } else {
-            lastSyncCenterOffsetId = 0L
-            needSyncMessagesWhenScrollStateIdle = true
-        }
-    }.launchIn(lifecycleOwner.lifecycleScope)
+        }.launchIn(lifecycleOwner.lifecycleScope)
 
     syncCenteredMessageLiveData.observe(lifecycleOwner) { data ->
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
