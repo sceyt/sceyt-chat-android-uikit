@@ -83,7 +83,7 @@ open class ChannelInfoURIFragment : Fragment(), ChannelUpdateListener, ChannelIn
     }
 
     private fun SceytFragmentChannelInfoUriBinding.applyStyle() {
-        root.setBackgroundColor(style.backgroundColor)
+        uri.setBackgroundColor(style.backgroundColor)
         uri.apply {
             setDrawableStart(style.uriIcon)
             style.titleTextStyle.apply(this)

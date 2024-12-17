@@ -97,18 +97,13 @@ fun MessageListViewModel.bind(
 
     channelLiveData.observe(lifecycleOwner) {
         if (it is SceytResponse.Success) {
-            channel = it.data ?: return@observe
             messageInputView.checkIsParticipant(channel)
         }
     }
 
     joinLiveData.observe(lifecycleOwner) {
         when (it) {
-            is SceytResponse.Success -> {
-                messageInputView.joinSuccess()
-                channel = channel.copy(members = it.data?.members)
-            }
-
+            is SceytResponse.Success -> messageInputView.joinSuccess()
             is SceytResponse.Error -> customToastSnackBar(messageInputView, it.message.toString())
         }
     }
@@ -152,8 +147,8 @@ fun MessageListViewModel.bind(
     ChannelsCache.channelUpdatedFlow
         .filter { it.channel.id == channel.id }
         .onEach {
+            val channel = it.channel
             val wasJoined = channel.userRole.isNotNullOrBlank()
-            channel = it.channel
             if (channel.userRole.isNotNullOrBlank()) {
                 if (!wasJoined)
                     messageInputView.joinSuccess()

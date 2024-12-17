@@ -34,6 +34,10 @@ sealed interface MessageInputClickListeners {
         fun onRemoveAttachmentClick(item: AttachmentItem)
     }
 
+    fun interface AttachmentClickListener : MessageInputClickListeners {
+        fun onAttachmentClick( item: AttachmentItem)
+    }
+
     fun interface JoinClickListener : MessageInputClickListeners {
         fun onJoinClick()
     }
@@ -61,6 +65,7 @@ sealed interface MessageInputClickListeners {
             CancelReplyMessageViewClickListener,
             CancelLinkPreviewClickListener,
             RemoveAttachmentClickListener,
+            AttachmentClickListener,
             JoinClickListener,
             VoiceClickListener,
             VoiceLongClickListener,

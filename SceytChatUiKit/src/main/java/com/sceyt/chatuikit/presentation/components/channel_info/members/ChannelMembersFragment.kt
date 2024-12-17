@@ -16,7 +16,6 @@ import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Invited
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Joined
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Left
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
@@ -407,7 +406,6 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
             }
 
             is Joined -> addMembers(event.joinedMembers)
-            is Invited -> {}
             else -> return
         }
     }

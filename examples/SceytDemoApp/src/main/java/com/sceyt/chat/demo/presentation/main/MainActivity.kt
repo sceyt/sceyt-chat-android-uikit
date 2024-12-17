@@ -1,5 +1,7 @@
 package com.sceyt.chat.demo.presentation.main
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -12,6 +14,7 @@ import com.sceyt.chat.demo.presentation.main.adapters.MainViewPagerAdapter
 import com.sceyt.chat.demo.presentation.main.profile.ProfileFragment
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.requestPermissionsSafety
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListFragment
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -52,13 +55,14 @@ class MainActivity : AppCompatActivity() {
             } else
                 finish()
         }
+        requestNotificationPermission()
     }
 
     private fun initViewModel() {
         createProfileViewModel.pageStateLiveData.observe(this) { pageState ->
             if (pageState is PageState.StateError) customToastSnackBar(
                 pageState.errorMessage
-                    ?: return@observe
+                        ?: return@observe
             )
         }
     }
@@ -80,9 +84,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun setPagerAdapter() {
         val adapter =
-            MainViewPagerAdapter(this, arrayListOf(ChannelListFragment(), ProfileFragment()))
+                MainViewPagerAdapter(this, arrayListOf(ChannelListFragment(), ProfileFragment()))
         binding.viewPager.adapter = adapter
         binding.viewPager.isUserInputEnabled = false
         binding.viewPager.offscreenPageLimit = 2
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            requestPermissionsSafety(Manifest.permission.POST_NOTIFICATIONS, requestCode = 100)
     }
 }

@@ -7,7 +7,6 @@ sealed class ChannelEventEnum {
     data object Deleted : ChannelEventEnum()
     data object Updated : ChannelEventEnum()
     data object ClearedHistory : ChannelEventEnum()
-    data object Invited : ChannelEventEnum()
     data class Joined(val joinedMembers: List<SceytMember>) : ChannelEventEnum()
     data class Left(val leftMembers: List<SceytMember>) : ChannelEventEnum()
     data class Mute(val muted: Boolean) : ChannelEventEnum()

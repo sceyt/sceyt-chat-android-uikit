@@ -64,7 +64,7 @@ data class MediaPreviewStyle(
     ) {
         fun build(): MediaPreviewStyle {
             context.obtainStyledAttributes(attributeSet, R.styleable.MediaPreview).use { array ->
-                val opPrimaryColor = context.getCompatColor(SceytChatUIKitTheme.colors.primaryColor)
+                val opPrimaryColor = context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
 
                 val backgroundColor = Color.BLACK
                 val videoControllerBackgroundColor = context.getCompatColor(R.color.sceyt_media_primary_color)

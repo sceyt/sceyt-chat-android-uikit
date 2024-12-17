@@ -20,7 +20,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 internal fun MediaPreviewStyle.Builder.buildTimelineTextStyle(
         array: TypedArray,
 ) = TextStyle(
-    color = context.getCompatColor(SceytChatUIKitTheme.colors.primaryColor)
+    color = context.getCompatColor(SceytChatUIKitTheme.colors.onPrimaryColor)
 )
 
 internal fun MediaPreviewStyle.Builder.buildToolbarStyle(

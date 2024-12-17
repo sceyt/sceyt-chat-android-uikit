@@ -78,6 +78,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQuery
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQueryChangedListener
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.ChooseFileTypeDialog
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadata
@@ -98,9 +99,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessageInputView @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners,
         SelectFileTypePopupClickListeners.ClickListeners, InputEventsListener.InputEventListeners,
         InputActionsListener.InputActionListeners {
@@ -324,8 +327,9 @@ class MessageInputView @JvmOverloads constructor(
             return
         }
         val metadata = Gson().toJson(AudioMetadata(amplitudes, duration))
-        createAttachmentWithPaths(file.path, metadata = metadata,
-            attachmentType = AttachmentTypeEnum.Voice.value).getOrNull(0)?.let {
+        createAttachmentWithPaths(
+            AttachmentTypeEnum.Voice to file.path, metadata = metadata,
+        ).getOrNull(0)?.let {
             allAttachments.add(it)
             sendMessage()
         } ?: finishRecording()
@@ -401,7 +405,7 @@ class MessageInputView @JvmOverloads constructor(
                 PickType.Gallery -> selectFileTypePopupClickListeners.onGalleryClick()
                 PickType.Photo -> selectFileTypePopupClickListeners.onTakePhotoClick()
                 PickType.Video -> selectFileTypePopupClickListeners.onTakeVideoClick()
-                PickType.File -> selectFileTypePopupClickListeners.onFileClick()
+                PickType.File -> selectFileTypePopupClickListeners.onFileClick(null)
             }
         }.show()
     }
@@ -438,8 +442,14 @@ class MessageInputView @JvmOverloads constructor(
         attachmentsAdapter = AttachmentsAdapter(
             data = allAttachments.map { AttachmentItem(it) },
             factory = attachmentsViewHolderFactory.also {
-                it.setClickListener(AttachmentClickListeners.RemoveAttachmentClickListener { _, item ->
-                    clickListeners.onRemoveAttachmentClick(item)
+                it.setClickListener(object : AttachmentClickListeners.ClickListeners {
+                    override fun onRemoveAttachmentClick(view: View, item: AttachmentItem) {
+                        clickListeners.onRemoveAttachmentClick(item)
+                    }
+
+                    override fun onAttachmentClick(view: View, item: AttachmentItem) {
+                        clickListeners.onAttachmentClick(item)
+                    }
                 })
             })
         binding.rvAttachments.adapter = attachmentsAdapter
@@ -668,19 +678,20 @@ class MessageInputView @JvmOverloads constructor(
 
     @SuppressWarnings("WeakerAccess")
     fun createAttachmentWithPaths(
-            vararg filePath: String,
+            vararg typeAndPath: Pair<AttachmentTypeEnum, String>,
             metadata: String = "",
-            attachmentType: String? = null,
     ): MutableList<Attachment> {
         val attachments = mutableListOf<Attachment>()
-        for (path in filePath) {
+        for (item in typeAndPath) {
+            val (attachmentType, path) = item
             if (checkIsExistAttachment(path))
                 continue
 
             val attachment = messageToSendHelper.buildAttachment(
                 path = path,
                 metadata = metadata,
-                attachmentType = attachmentType)
+                attachmentType = attachmentType.value
+            )
             if (attachment != null) {
                 attachments.add(attachment)
             } else
@@ -689,8 +700,8 @@ class MessageInputView @JvmOverloads constructor(
         return attachments
     }
 
-    fun addAttachment(vararg filePath: String) {
-        val attachments = createAttachmentWithPaths(*filePath)
+    fun addAttachment(vararg typeAndPath: Pair<AttachmentTypeEnum, String>) {
+        val attachments = createAttachmentWithPaths(*typeAndPath)
         addAttachments(attachments)
     }
 
@@ -788,7 +799,7 @@ class MessageInputView @JvmOverloads constructor(
         attachmentsViewHolderFactory = factory
     }
 
-    fun setSaveUrlsPlace(savePathsTo: MutableSet<String>) {
+    fun setSaveUrlsPlace(savePathsTo: MutableSet<Pair<AttachmentTypeEnum, String>>) {
         filePickerHelper?.setSaveUrlsPlace(savePathsTo)
     }
 
@@ -832,13 +843,16 @@ class MessageInputView @JvmOverloads constructor(
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
         attachmentsAdapter.removeItem(item)
         allAttachments.remove(item.attachment)
-        binding.viewAttachments.isVisible = allAttachments.isNotEmpty()
+        determineInputState()
         // Delete file if it was copied to the app's internal storage
         val file = File(item.attachment.filePath)
         val copedFileDir = File(context.filesDir, SceytConstants.CopyFileDirName)
         if (file.parent?.startsWith(copedFileDir.path) == true)
             doSafe { file.delete() }
-        determineInputState()
+    }
+
+    override fun onAttachmentClick(item: AttachmentItem) {
+        item.attachment.openFile(context)
     }
 
     override fun onJoinClick() {
@@ -847,7 +861,9 @@ class MessageInputView @JvmOverloads constructor(
 
     private fun getPickerListener(): BottomSheetMediaPicker.PickerListener {
         return BottomSheetMediaPicker.PickerListener {
-            addAttachment(*it.map { mediaData -> mediaData.realPath }.toTypedArray())
+            addAttachment(*it.map { mediaData ->
+                mediaData.mediaType.value to mediaData.realPath
+            }.toTypedArray())
             // Remove attachments that are not in the picker result
             allAttachments.filter { item ->
                 item.type.isEqualsVideoOrImage() && it.none { mediaData -> mediaData.realPath == item.filePath }
@@ -891,21 +907,24 @@ class MessageInputView @JvmOverloads constructor(
 
     override fun onTakePhotoClick() {
         filePickerHelper?.takePicture {
-            addAttachment(it)
+            addAttachment(AttachmentTypeEnum.Image to it)
         }
     }
 
     override fun onTakeVideoClick() {
         filePickerHelper?.takeVideo {
-            addAttachment(it)
+            addAttachment(AttachmentTypeEnum.Video to it)
         }
     }
 
-    override fun onFileClick() {
-        filePickerHelper?.chooseMultipleFiles(allowMultiple = true,
-            parentDirToCopyProvider = { context.filesDir }) {
-            addAttachment(*it.toTypedArray())
-        }
+    override fun onFileClick(mimeTypes: Array<String>?) {
+        filePickerHelper?.chooseMultipleFiles(
+            allowMultiple = true,
+            mimetypes = mimeTypes,
+            parentDirToCopyProvider = { context.filesDir },
+            result = { pats ->
+                addAttachment(*pats.map { AttachmentTypeEnum.File to it }.toTypedArray())
+            })
     }
 
     override fun onInputStateChanged(sendImage: ImageView, state: InputState) {
