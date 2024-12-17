@@ -49,6 +49,7 @@ import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.safeResume
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper.onTransferUpdatedLiveData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
@@ -297,35 +298,37 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             messagesListView.context.asActivity().finish()
         }.launchIn(lifecycleOwner.lifecycleScope)
 
-    ChannelsCache.pendingChannelCreatedFlow
-        .filter { it.first == channel.id }
-        .onEach {
-            channel = it.second
-        }.launchIn(viewModelScope)
+    SceytSyncManager.syncChannelMessagesFinished
+        .filter { it.first.id == channel.id }
+        .onEach { (syncChannel, messages) ->
+            if (syncChannel.id == channel.id) {
+                if (pinnedLastReadMessageId == 0L && syncChannel.lastDisplayedMessageId != 0L
+                        && syncChannel.lastDisplayedMessageId != syncChannel.lastMessage?.id)
+                    pinnedLastReadMessageId = syncChannel.lastDisplayedMessageId
 
-    SceytSyncManager.syncChannelMessagesFinished.observe(lifecycleOwner) {
-        if (it.first.id == channel.id) {
-            channel = it.first
+                lifecycleOwner.lifecycleScope.launch {
+                    val currentMessages = messagesListView.getData()
+                        .filterIsInstance<MessageItem>()
+                        .map { item -> item.message }
+                    val newMessages = messages.minus(currentMessages.toSet())
+                    if (newMessages.isNotEmpty()) {
+                        val isLastDisplaying = messagesListView.isLastCompletelyItemDisplaying()
+                        messagesListView.addNextPageMessages(mapToMessageListItem(
+                            data = newMessages,
+                            hasNext = false,
+                            hasPrev = false,
+                            compareMessage = messagesListView.getLastMessage()?.message,
+                            enableDateSeparator = messagesListView.style.enableDateSeparator
+                        ))
+                        if (isLastDisplaying)
+                            messagesListView.scrollToLastMessage()
 
-            if (pinnedLastReadMessageId == 0L && channel.lastDisplayedMessageId != 0L && channel.lastDisplayedMessageId != channel.lastMessage?.id)
-                pinnedLastReadMessageId = channel.lastDisplayedMessageId
-
-            lifecycleOwner.lifecycleScope.launch {
-                val currentMessages = messagesListView.getData().filterIsInstance<MessageItem>().map { item -> item.message }
-                val newMessages = it.second.minus(currentMessages.toSet())
-                if (newMessages.isNotEmpty()) {
-                    val isLastDisplaying = messagesListView.isLastCompletelyItemDisplaying()
-                    messagesListView.addNextPageMessages(mapToMessageListItem(data = newMessages,
-                        hasNext = false, hasPrev = false, messagesListView.getLastMessage()?.message,
-                        enableDateSeparator = messagesListView.style.enableDateSeparator))
-                    if (isLastDisplaying)
-                        messagesListView.scrollToLastMessage()
-
-                    messagesListView.sortMessages()
+                        messagesListView.sortMessages()
+                    }
                 }
             }
         }
-    }
+        .launchIn(lifecycleOwner.lifecycleScope)
 
     ConnectionEventManager.onChangedConnectStatusFlow.onEach { stateData ->
         if (stateData.state == ConnectionState.Connected) {
@@ -400,11 +403,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         .onEach(::initMessagesResponse)
         .launchIn(lifecycleOwner.lifecycleScope)
 
-    onChannelUpdatedEventFlow.onEach {
-        channel = it
-        messagesListView.setUnreadCount(it.newMessageCount)
+    onChannelUpdatedEventFlow.onEach { channel ->
+        messagesListView.setUnreadCount(channel.newMessageCount)
         checkEnableDisableActions(channel)
-        if (it.lastMessage == null)
+        if (channel.lastMessage == null)
             messagesListView.clearData()
     }.launchIn(lifecycleOwner.lifecycleScope)
 
@@ -656,7 +658,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     if (SceytChatUIKit.config.hardDeleteMessageForAll)
                         DeleteMessageType.DeleteHard else DeleteMessageType.DeleteForEveryone
                 }
-                deleteMessages(event.message.toList(), type)
+                deleteMessage(*event.messages.toTypedArray(), deleteType = type)
             }
 
             is MessageCommandEvent.EditMessage -> {

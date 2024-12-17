@@ -2,6 +2,8 @@ package com.sceyt.chatuikit.persistence.extensions
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 
@@ -34,6 +36,16 @@ inline fun <T> Continuation<T>.safeResume(value: T, onExceptionCalled: () -> Uni
 fun <T> MutableLiveData<T>.asLiveData(): LiveData<T> {
     return this
 }
+
+fun <T> broadcastSharedFlow(
+        replay: Int = 0,
+        extraBufferCapacity: Int = 1,
+        onBufferOverflow: BufferOverflow = BufferOverflow.DROP_OLDEST
+) = MutableSharedFlow<T>(
+    replay = replay,
+    extraBufferCapacity = extraBufferCapacity,
+    onBufferOverflow = onBufferOverflow,
+)
 
 fun <T> MutableCollection<T>.removeFirstIf(filter: (T) -> Boolean): Int {
     val each = iterator()
