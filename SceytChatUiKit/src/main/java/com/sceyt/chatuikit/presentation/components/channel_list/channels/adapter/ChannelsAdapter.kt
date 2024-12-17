@@ -17,9 +17,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 
-class ChannelsAdapter(private var channels: SyncArrayList<ChannelListItem>,
-                      private var viewHolderFactory: ChannelViewHolderFactory) :
-        RecyclerView.Adapter<BaseChannelViewHolder>() {
+class ChannelsAdapter(
+        private var data: SyncArrayList<ChannelListItem>,
+        private var viewHolderFactory: ChannelViewHolderFactory
+) : RecyclerView.Adapter<BaseChannelViewHolder>() {
 
     companion object {
         val clickAvailableData by lazy { ClickAvailableData(true) }
@@ -34,19 +35,19 @@ class ChannelsAdapter(private var channels: SyncArrayList<ChannelListItem>,
     }
 
     override fun onBindViewHolder(holder: BaseChannelViewHolder, position: Int) {
-        holder.bind(item = channels[position], diff = ChannelDiff.DEFAULT)
+        holder.bind(item = data[position], diff = ChannelDiff.DEFAULT)
     }
 
     override fun onBindViewHolder(holder: BaseChannelViewHolder, position: Int, payloads: MutableList<Any>) {
         val diff = payloads.find { it is ChannelDiff } as? ChannelDiff
                 ?: ChannelDiff.DEFAULT
-        holder.bind(item = channels[position], diff)
+        holder.bind(item = data[position], diff)
     }
 
-    override fun getItemCount(): Int = channels.size
+    override fun getItemCount(): Int = data.size
 
     override fun getItemViewType(position: Int): Int {
-        return viewHolderFactory.getItemViewType(channels[position], position)
+        return viewHolderFactory.getItemViewType(data[position], position)
     }
 
     override fun onViewAttachedToWindow(holder: BaseChannelViewHolder) {
@@ -60,19 +61,19 @@ class ChannelsAdapter(private var channels: SyncArrayList<ChannelListItem>,
     }
 
     fun removeLoading() {
-        if (channels.remove(mLoadingItem))
-            notifyItemRemoved(channels.lastIndex + 1)
+        if (data.remove(mLoadingItem))
+            notifyItemRemoved(data.lastIndex + 1)
     }
 
     fun notifyUpdate(channels: List<ChannelListItem>, recyclerView: RecyclerView) {
         updateJob?.cancel()
         updateJob = recyclerView.context.asComponentActivity().lifecycleScope.launch {
             recyclerView.awaitAnimationEnd {
-                val myDiffUtil = ChannelsDiffUtil(this@ChannelsAdapter.channels, channels)
+                val myDiffUtil = ChannelsDiffUtil(this@ChannelsAdapter.data, channels)
                 val productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
                 productDiffResult.dispatchUpdatesToSafety(recyclerView)
-                this@ChannelsAdapter.channels.clear()
-                this@ChannelsAdapter.channels.addAll(channels)
+                this@ChannelsAdapter.data.clear()
+                this@ChannelsAdapter.data.addAll(channels)
             }
         }
     }
@@ -81,31 +82,29 @@ class ChannelsAdapter(private var channels: SyncArrayList<ChannelListItem>,
     fun addList(items: List<ChannelListItem>) {
         removeLoading()
 
-        val filteredItems = items.minus(channels.toSet())
-        channels.addAll(filteredItems)
+        val filteredItems = items.minus(data.toSet())
+        data.addAll(filteredItems)
 
-        if (channels.size == filteredItems.size)
+        if (data.size == filteredItems.size)
             notifyDataSetChanged()
         else
-            notifyItemRangeInserted(channels.size - filteredItems.size, filteredItems.size)
+            notifyItemRangeInserted(data.size - filteredItems.size, filteredItems.size)
     }
 
-    fun getSkip() = channels.filter { it !is ChannelListItem.LoadingMoreItem }.size
+    fun getSkip() = getChannels().size
 
-    fun getData() = channels
+    fun getData() = data
 
-    fun getChannels() = channels
-        .filter { it !is ChannelListItem.LoadingMoreItem }
-        .map { it as ChannelListItem.ChannelItem }
+    fun getChannels() = data.mapNotNull { it as? ChannelListItem.ChannelItem }
 
-
-    fun deleteChannel(id: Long) {
-        getChannels().forEachIndexed { index, channelItem ->
-            if (channelItem.channel.id == id) {
-                channels.removeAt(index)
+    fun deleteChannel(id: Long): Boolean {
+        data.forEachIndexed { index, item ->
+            if (item is ChannelListItem.ChannelItem && item.channel.id == id) {
+                data.removeAt(index)
                 notifyItemRemoved(index)
-                return@forEachIndexed
+                return true
             }
         }
+        return false
     }
 }

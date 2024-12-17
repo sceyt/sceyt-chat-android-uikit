@@ -154,11 +154,6 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
                 eventManager.onChannelEvent(ChannelEventData(channel?.toSceytUiChannel(), ChannelEventEnum.MarkedUs(true)))
             }
 
-            override fun onChannelInvited(channelId: Long?) {
-                val data = ChannelEventData(null, ChannelEventEnum.Invited, channelId)
-                eventManager.onChannelEvent(data)
-            }
-
             override fun onChannelBlocked(channelId: Long) {
                 val data = ChannelEventData(null, ChannelEventEnum.Block(true), channelId)
                 eventManager.onChannelEvent(data)
@@ -274,6 +269,7 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
         onMarkerReceivedFlow_.tryEmit(data)
     }
 
+    @Suppress("unused")
     fun setCustomListener(listener: ChannelEventHandlerImpl) {
         eventManager = listener
         eventManager.setDefaultListeners(this)

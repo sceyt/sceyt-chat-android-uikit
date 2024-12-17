@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 sealed interface MessageCommandEvent {
 
     data class DeleteMessage(
-            val message: List<SceytMessage>,
+            val messages: List<SceytMessage>,
             val onlyForMe: Boolean
     ) : MessageCommandEvent
 

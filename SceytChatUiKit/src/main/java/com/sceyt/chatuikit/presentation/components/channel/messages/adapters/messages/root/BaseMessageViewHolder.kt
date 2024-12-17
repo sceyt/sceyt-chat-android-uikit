@@ -67,7 +67,6 @@ import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.ToReplyLineView
 import com.sceyt.chatuikit.presentation.extensions.setChatMessageDateAndStatusIcon
 import com.sceyt.chatuikit.shared.helpers.RecyclerItemOffsetDecoration
-import com.sceyt.chatuikit.shared.utils.ViewUtil
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import java.util.Date
 import kotlin.math.min
@@ -458,16 +457,16 @@ abstract class BaseMessageViewHolder(
     protected open fun initFilesRecyclerView(message: SceytMessage, rvFiles: RecyclerView) {
         with(rvFiles) {
             if (itemDecorationCount == 0) {
-                val offset = ViewUtil.dpToPx(2f)
+                val offset = dpToPx(2f)
                 addItemDecoration(RecyclerItemOffsetDecoration(left = offset, top = offset, right = offset))
             }
 
             message.attachments?.firstOrNull()?.let {
                 if (!it.type.isEqualsVideoOrImage()) {
-                    setPadding(ViewUtil.dpToPx(8f))
+                    setPadding(dpToPx(8f))
                 } else {
                     if (message.isForwarded || message.isReplied || message.shouldShowAvatarAndName || message.body.isNotNullOrBlank())
-                        setPadding(0, ViewUtil.dpToPx(4f), 0, 0)
+                        setPadding(0, dpToPx(4f), 0, 0)
                     else setPadding(0)
                 }
             }
