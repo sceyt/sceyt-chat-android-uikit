@@ -14,16 +14,6 @@ import kotlin.math.roundToInt
 
 object ViewUtil {
 
-    fun pxToDp(px: Float): Float {
-        val densityDpi = Resources.getSystem().displayMetrics.densityDpi
-        return px / (densityDpi / 160f)
-    }
-
-    fun dpToPx(dp: Float): Int {
-        val density = Resources.getSystem().displayMetrics.density
-        return (dp * density).roundToInt()
-    }
-
     fun expandHeight(v: View, from: Int = 0, duration: Long,
                      updateListener: ((Int) -> Unit)? = null,
                      endListener: (() -> Unit)? = null): ValueAnimator {
@@ -142,14 +132,5 @@ object ViewUtil {
         }
         widthAnimator.duration = duration
         widthAnimator.start()
-    }
-
-    fun getStatusBarHeight(context: Context): Int {
-        var result = 0
-        val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
-        if (resourceId > 0) {
-            result += context.resources.getDimensionPixelSize(resourceId)
-        }
-        return result
     }
 }
