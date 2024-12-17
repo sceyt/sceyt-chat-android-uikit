@@ -74,6 +74,7 @@ open class EditProfileFragment : Fragment() {
         viewModel.editProfileLiveData.observe(viewLifecycleOwner) {
             setUserDetails(user = it)
             SceytLoader.hideLoading()
+            requireActivity().onBackPressedDispatcher.onBackPressed()
         }
 
         viewModel.editProfileErrorLiveData.observe(viewLifecycleOwner) {
