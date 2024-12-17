@@ -658,7 +658,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     if (SceytChatUIKit.config.hardDeleteMessageForAll)
                         DeleteMessageType.DeleteHard else DeleteMessageType.DeleteForEveryone
                 }
-                deleteMessage(*event.messages.toTypedArray(), deleteType = type)
+                deleteMessages(event.messages, deleteType = type)
             }
 
             is MessageCommandEvent.EditMessage -> {
