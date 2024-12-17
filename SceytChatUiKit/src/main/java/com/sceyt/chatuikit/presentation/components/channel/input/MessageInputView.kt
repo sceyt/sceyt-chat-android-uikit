@@ -78,6 +78,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQuery
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQueryChangedListener
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.ChooseFileTypeDialog
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadata
@@ -441,8 +442,14 @@ class MessageInputView @JvmOverloads constructor(
         attachmentsAdapter = AttachmentsAdapter(
             data = allAttachments.map { AttachmentItem(it) },
             factory = attachmentsViewHolderFactory.also {
-                it.setClickListener(AttachmentClickListeners.RemoveAttachmentClickListener { _, item ->
-                    clickListeners.onRemoveAttachmentClick(item)
+                it.setClickListener(object : AttachmentClickListeners.ClickListeners {
+                    override fun onRemoveAttachmentClick(view: View, item: AttachmentItem) {
+                        clickListeners.onRemoveAttachmentClick(item)
+                    }
+
+                    override fun onAttachmentClick(view: View, item: AttachmentItem) {
+                        clickListeners.onAttachmentClick(item)
+                    }
                 })
             })
         binding.rvAttachments.adapter = attachmentsAdapter
@@ -836,13 +843,16 @@ class MessageInputView @JvmOverloads constructor(
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
         attachmentsAdapter.removeItem(item)
         allAttachments.remove(item.attachment)
-        binding.viewAttachments.isVisible = allAttachments.isNotEmpty()
+        determineInputState()
         // Delete file if it was copied to the app's internal storage
         val file = File(item.attachment.filePath)
         val copedFileDir = File(context.filesDir, SceytConstants.CopyFileDirName)
         if (file.parent?.startsWith(copedFileDir.path) == true)
             doSafe { file.delete() }
-        determineInputState()
+    }
+
+    override fun onAttachmentClick(item: AttachmentItem) {
+        item.attachment.openFile(context)
     }
 
     override fun onJoinClick() {

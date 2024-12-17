@@ -32,9 +32,15 @@ class AttachmentFileViewHolder(
             style.fileAttachmentIconProvider.provide(context, sceytAttachment)?.let {
                 icFile.setImageDrawable(it)
             }
-        }
 
-        itemView.setOnClickListener { clickListeners.onRemoveAttachmentClick(it, item) }
+            layoutRemove.setOnClickListener {
+                clickListeners.onRemoveAttachmentClick(it, item)
+            }
+
+            root.setOnClickListener {
+                clickListeners.onAttachmentClick(it, item)
+            }
+        }
     }
 
     private fun SceytItemInputFileAttachmentBinding.applyStyle() {
