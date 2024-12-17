@@ -64,6 +64,7 @@ class ChannelsViewModel(
         }
     }
 
+    @Suppress("unused")
     fun searchChannelsWithUserIds(
             offset: Int,
             query: String = searchQuery,
@@ -262,9 +263,19 @@ class ChannelsViewModel(
         }
     }
 
+    @Suppress("unused")
     fun hideChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelInteractor.hideChannel(channelId)
+            if (response is SceytResponse.Error)
+                notifyPageStateWithResponse(response)
+        }
+    }
+
+    @Suppress("unused")
+    fun unHideChannel(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelInteractor.unHideChannel(channelId)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
         }
