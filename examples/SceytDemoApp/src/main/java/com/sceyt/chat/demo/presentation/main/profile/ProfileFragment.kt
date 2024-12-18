@@ -28,6 +28,8 @@ import com.sceyt.chatuikit.presentation.components.profile.viewmodel.ProfileView
 import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import com.sceyt.chatuikit.R as SceytKitR
@@ -43,9 +45,9 @@ class ProfileFragment : Fragment() {
     private var updateThemeJob: Job? = null
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
         return FragmentProfileBinding.inflate(inflater, container, false).also {
             binding = it
@@ -61,15 +63,10 @@ class ProfileFragment : Fragment() {
         viewModel.getSettings()
     }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.getCurrentUser()
-    }
-
     private fun initViewModel() {
-        viewModel.currentUserLiveData.observe(viewLifecycleOwner) {
-            setUserDetails(user = it)
-        }
+        viewModel.getCurrentUserAsFlow()
+            .onEach(::setUserDetails)
+            .launchIn(lifecycleScope)
 
         viewModel.settingsLiveData.observe(viewLifecycleOwner) {
             muted = it.mute.isMuted

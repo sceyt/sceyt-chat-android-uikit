@@ -596,10 +596,10 @@ internal class PersistenceMiddleWareImpl(
     }
 
     override suspend fun updateProfile(
-            username: String, firsName: String?, lastName: String?,
+            username: String, firstName: String?, lastName: String?,
             avatarUrl: String?, metadataMap: Map<String, String>?,
     ): SceytResponse<SceytUser> {
-        return usersLogic.updateProfile(username, firsName, lastName, avatarUrl, metadataMap)
+        return usersLogic.updateProfile(username, firstName, lastName, avatarUrl, metadataMap)
     }
 
     override suspend fun setPresenceState(presenceState: PresenceState): SceytResponse<Boolean> {
