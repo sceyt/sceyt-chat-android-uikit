@@ -7,7 +7,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivityChannelBinding
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
@@ -20,8 +19,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.b
 open class ChannelActivity : AppCompatActivity() {
     private lateinit var binding: SceytActivityChannelBinding
     private val viewModel: MessageListViewModel by viewModels(factoryProducer = { factory })
-    private lateinit var channel: SceytChannel
-    private var replyMessage: SceytMessage? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,19 +31,13 @@ open class ChannelActivity : AppCompatActivity() {
             statusBarColor = SceytChatUIKit.theme.colors.statusBarColor,
             navigationBarColor = SceytChatUIKit.theme.colors.primaryColor)
 
-        getDataFromIntent()
-
         viewModel.bind(binding.messagesListView, lifecycleOwner = this)
-        viewModel.bind(binding.messageInputView, replyMessage, lifecycleOwner = this)
-        viewModel.bind(binding.headerView, replyMessage, lifecycleOwner = this)
+        viewModel.bind(binding.messageInputView, null, lifecycleOwner = this)
+        viewModel.bind(binding.headerView, null, lifecycleOwner = this)
     }
 
     private val factory: MessageListViewModelFactory by lazy(LazyThreadSafetyMode.NONE) {
-        MessageListViewModelFactory(channel)
-    }
-
-    private fun getDataFromIntent() {
-        channel = requireNotNull(intent.parcelable(CHANNEL))
+        MessageListViewModelFactory(requireNotNull(intent.parcelable(CHANNEL)))
     }
 
     companion object {
