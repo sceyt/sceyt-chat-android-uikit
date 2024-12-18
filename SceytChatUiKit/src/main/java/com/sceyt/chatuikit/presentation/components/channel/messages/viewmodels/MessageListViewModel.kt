@@ -492,10 +492,8 @@ class MessageListViewModel(
     }
 
     fun deleteMessages(message: List<SceytMessage>, deleteType: DeleteMessageType) {
-        viewModelScope.launch(Dispatchers.IO) {
-            message.forEach {
-                messageInteractor.deleteMessage(channel.id, it, deleteType)
-            }
+        message.forEach {
+            deleteMessage(it, deleteType)
         }
     }
 
