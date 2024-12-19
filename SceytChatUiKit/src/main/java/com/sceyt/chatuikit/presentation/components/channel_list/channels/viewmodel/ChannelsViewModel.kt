@@ -159,14 +159,12 @@ class ChannelsViewModel(
         if (filteredChannels.isEmpty())
             return emptyList()
 
-        val channelItems: List<ChannelListItem> = filteredChannels.map { item ->
-            ChannelListItem.ChannelItem(item)
-        }
+        val channelItems = filteredChannels.map { ChannelListItem.ChannelItem(it) }
 
-        if (hasNext)
-            (channelItems as ArrayList).add(ChannelListItem.LoadingMoreItem)
-
-        return channelItems
+        return if (hasNext)
+            channelItems + ChannelListItem.LoadingMoreItem
+        else
+            channelItems
     }
 
     fun markChannelAsRead(channelId: Long) {
