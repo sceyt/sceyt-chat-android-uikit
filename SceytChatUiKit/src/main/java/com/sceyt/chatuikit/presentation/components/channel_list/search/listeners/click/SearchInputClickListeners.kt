@@ -15,3 +15,7 @@ sealed interface SearchInputClickListeners {
     /** Use this if you want to implement all callbacks */
     interface ClickListeners : ClearClickListener, KeyboardSearchClickListener
 }
+
+internal fun SearchInputClickListeners.setListener(listener: SearchInputClickListeners) {
+    (this as? SearchInputClickListenersImpl)?.setListener(listener)
+}
