@@ -25,3 +25,7 @@ sealed interface ChannelClickListeners {
             AvatarClickListener,
             ChannelClickListeners
 }
+
+internal fun ChannelClickListeners.setListener(listener: ChannelClickListeners) {
+    (this as? ChannelClickListenersImpl)?.setListener(listener)
+}
