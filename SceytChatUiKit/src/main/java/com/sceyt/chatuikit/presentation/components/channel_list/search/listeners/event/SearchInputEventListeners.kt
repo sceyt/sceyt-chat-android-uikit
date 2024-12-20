@@ -13,3 +13,7 @@ sealed interface SearchInputEventListeners {
     /** Use this if you want to implement all callbacks */
     interface EventListeners : SearchSubmittedListener, SearchSubmittedByDebounceListener
 }
+
+internal fun SearchInputEventListeners.setListener(listener: SearchInputEventListeners) {
+    (this as? SearchInputEventListenersImpl)?.setListener(listener)
+}
