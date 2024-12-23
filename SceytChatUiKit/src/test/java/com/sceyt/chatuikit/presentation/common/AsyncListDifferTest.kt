@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.any
@@ -273,6 +274,22 @@ class AsyncListDifferTest {
         delay(100)
 
         assertEquals(listOf("A_UPDATED", "B_UPDATED", "C_UPDATED", "D", "E"), asyncListDiffer.currentList)
+    }
+
+
+    @Test
+    fun `get current list should be unmodifiable list`() {
+        // Arrange
+        val initialList = arrayListOf("A", "B", "C")
+        asyncListDiffer.submitList(initialList)
+
+        // Act
+        val currentList = asyncListDiffer.currentList
+
+        // Assert
+        assertThrows(ClassCastException::class.java) {
+            (currentList.iterator() as MutableIterator<String>)
+        }
     }
 
     private suspend fun delay(time: Long) = withContext(testDispatcher) {

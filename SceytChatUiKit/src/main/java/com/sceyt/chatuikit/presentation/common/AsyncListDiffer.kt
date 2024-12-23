@@ -18,6 +18,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.Collections
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
 
@@ -25,7 +26,7 @@ class AsyncListDiffer<T : Any>(
         private val updateCallback: ListUpdateCallback,
         private val diffCallback: DiffUtil.ItemCallback<T>,
         private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
-        private val backgroundDispatcher: CoroutineDispatcher = Dispatchers.Default
+        private val backgroundDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
 
     private val mutex = Mutex()
@@ -81,7 +82,7 @@ class AsyncListDiffer<T : Any>(
             val position = newList.indexOfFirst(predicate).takeIf { it != -1 } ?: return@withLock
             newList[position] = newItem
             list = newList
-            readOnlyList = newList.toList()
+            readOnlyList = Collections.unmodifiableList(newList)
             updateCallback.onChanged(position, 1, payloads)
             onCurrentListChanged(previousList, commitCallback)
         }
@@ -98,7 +99,7 @@ class AsyncListDiffer<T : Any>(
             val newList = list?.toMutableList() ?: mutableListOf()
             val position = newList.removeFirstIf(predicate).takeIf { it != -1 } ?: return@withLock
             list = newList
-            readOnlyList = newList.toList()
+            readOnlyList = Collections.unmodifiableList(newList)
             updateCallback.onRemoved(position, 1)
             onCurrentListChanged(previousList, commitCallback)
             return@withLock
@@ -181,7 +182,7 @@ class AsyncListDiffer<T : Any>(
     ) = withContext(mainDispatcher) {
         val previousList = readOnlyList
         list = newList
-        readOnlyList = newList.toList()
+        readOnlyList = Collections.unmodifiableList(newList)
         diffResult.dispatchUpdatesTo(updateCallback)
         onCurrentListChanged(previousList, commitCallback)
     }
@@ -194,7 +195,7 @@ class AsyncListDiffer<T : Any>(
 
     private fun submitListImpl(
             newList: List<T>?,
-            commitCallback: (() -> Unit)? = null
+            commitCallback: (() -> Unit)? = null,
     ) {
         lastSubmitJob?.cancel()
         lastOperationsJob?.cancel()
@@ -219,7 +220,7 @@ class AsyncListDiffer<T : Any>(
             if (list == null) {
                 // Fast insert-all scenario
                 list = newList
-                readOnlyList = newList.toList()
+                readOnlyList = Collections.unmodifiableList(newList)
                 updateCallback.onInserted(0, newList.size)
                 onCurrentListChanged(previousList, commitCallback)
                 return@launch
@@ -252,7 +253,7 @@ class AsyncListDiffer<T : Any>(
                 newList.addAll(position, items.toList())
             }
             list = newList
-            readOnlyList = newList.toList()
+            readOnlyList = Collections.unmodifiableList(newList)
             val positionToInsert = position.takeIf { it != -1 } ?: previousList.size
             updateCallback.onInserted(positionToInsert, items.size)
             onCurrentListChanged(previousList, commitCallback)
