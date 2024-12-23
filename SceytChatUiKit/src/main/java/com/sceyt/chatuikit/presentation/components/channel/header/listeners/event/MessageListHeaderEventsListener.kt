@@ -16,3 +16,7 @@ sealed interface MessageListHeaderEventsListener {
     /** Use this if you want to implement all callbacks */
     interface EventListeners : TypingListener, PresenceUpdateListener
 }
+
+internal fun MessageListHeaderEventsListener.setListener(listener: MessageListHeaderEventsListener) {
+    (this as? MessageListHeaderEventsListenerImpl)?.setListener(listener)
+}

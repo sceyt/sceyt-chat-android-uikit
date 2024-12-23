@@ -25,3 +25,7 @@ sealed interface InputEventsListener {
     interface InputEventListeners : InputStateListener, MentionUsersListener,
             MultiselectModeListener, SearchModeListener
 }
+
+internal fun InputEventsListener.setListener(listener: InputEventsListener) {
+    (this as? InputEventsListenerImpl)?.setListener(listener)
+}

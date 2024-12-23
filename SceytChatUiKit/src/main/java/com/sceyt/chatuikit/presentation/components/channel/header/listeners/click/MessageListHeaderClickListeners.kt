@@ -19,3 +19,7 @@ sealed interface MessageListHeaderClickListeners {
     /** Use this if you want to implement all callbacks */
     interface ClickListeners : AvatarClickListener, ToolbarClickListener, BackClickListener
 }
+
+internal fun MessageListHeaderClickListeners.setListener(listener: MessageListHeaderClickListeners) {
+    (this as? MessageListHeaderClickListenersImpl)?.setListener(listener)
+}

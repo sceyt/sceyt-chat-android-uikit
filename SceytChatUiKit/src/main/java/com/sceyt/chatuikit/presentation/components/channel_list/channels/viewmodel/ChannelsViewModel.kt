@@ -64,6 +64,7 @@ class ChannelsViewModel(
         }
     }
 
+    @Suppress("unused")
     fun searchChannelsWithUserIds(
             offset: Int,
             query: String = searchQuery,
@@ -158,14 +159,12 @@ class ChannelsViewModel(
         if (filteredChannels.isEmpty())
             return emptyList()
 
-        val channelItems: List<ChannelListItem> = filteredChannels.map { item ->
-            ChannelListItem.ChannelItem(item)
-        }
+        val channelItems = filteredChannels.map { ChannelListItem.ChannelItem(it) }
 
-        if (hasNext)
-            (channelItems as ArrayList).add(ChannelListItem.LoadingMoreItem)
-
-        return channelItems
+        return if (hasNext)
+            channelItems + ChannelListItem.LoadingMoreItem
+        else
+            channelItems
     }
 
     fun markChannelAsRead(channelId: Long) {
@@ -262,9 +261,19 @@ class ChannelsViewModel(
         }
     }
 
+    @Suppress("unused")
     fun hideChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelInteractor.hideChannel(channelId)
+            if (response is SceytResponse.Error)
+                notifyPageStateWithResponse(response)
+        }
+    }
+
+    @Suppress("unused")
+    fun unHideChannel(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = channelInteractor.unHideChannel(channelId)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
         }

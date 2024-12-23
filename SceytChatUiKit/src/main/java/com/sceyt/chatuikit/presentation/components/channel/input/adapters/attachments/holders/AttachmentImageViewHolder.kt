@@ -25,7 +25,13 @@ class AttachmentImageViewHolder(
             .override(itemView.width)
             .into(binding.fileImage)
 
-        itemView.setOnClickListener { clickListeners.onRemoveAttachmentClick(it, item) }
+        binding.layoutRemove.setOnClickListener {
+            clickListeners.onRemoveAttachmentClick(it, item)
+        }
+
+        binding.root.setOnClickListener {
+            clickListeners.onAttachmentClick(it, item)
+        }
     }
 
     private fun SceytItemInputImageAttachmentBinding.setStyle() {

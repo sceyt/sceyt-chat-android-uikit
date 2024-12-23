@@ -30,6 +30,7 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.listene
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelPopupClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelPopupClickListenersImpl
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.setListener
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.popups.ChannelActionsPopup
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -38,15 +39,15 @@ import com.sceyt.chatuikit.styles.ChannelListViewStyle
 class ChannelListView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+        defStyleAttr: Int = 0,
 ) : FrameLayout(context, attrs, defStyleAttr), ChannelClickListeners.ClickListeners,
         ChannelPopupClickListeners.PopupClickListeners {
 
     private val binding: SceytChannelListViewBinding
     private var channelsRV: ChannelsRV
     private var defaultClickListeners: ChannelClickListenersImpl
-    private var clickListeners = ChannelClickListenersImpl(this)
-    private var popupClickListeners = ChannelPopupClickListenersImpl(this)
+    private var clickListeners: ChannelClickListeners.ClickListeners = ChannelClickListenersImpl(this)
+    private var popupClickListeners: ChannelPopupClickListeners.PopupClickListeners = ChannelPopupClickListenersImpl(this)
     private var channelCommandEventListener: ((ChannelEvent) -> Unit)? = null
     private val debounceHelper by lazy { DebounceHelper(300, this) }
     private val style: ChannelListViewStyle
@@ -236,23 +237,25 @@ class ChannelListView @JvmOverloads constructor(
     /**
      * @param listener Channel click listeners, to listen click events.
      */
-    fun setChannelClickListener(listener: ChannelClickListeners) {
+    fun setChannelClickListener(listener: ChannelClickListeners.ClickListeners) {
         clickListeners.setListener(listener)
     }
 
     /**
      * @param listener The custom channel click listeners.
      */
-    fun setCustomChannelClickListeners(listener: ChannelClickListenersImpl) {
-        clickListeners = listener.withDefaultListeners(this)
+    fun setCustomChannelClickListeners(listener: ChannelClickListeners.ClickListeners) {
+        clickListeners = (listener as? ChannelClickListenersImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     /**
      * User this method to set your custom popup click listeners.
      * @param listener is the custom listener.
      */
-    fun setCustomChannelPopupClickListener(listener: ChannelPopupClickListenersImpl) {
-        popupClickListeners = listener.withDefaultListeners(this)
+    fun setCustomChannelPopupClickListener(listener: ChannelPopupClickListeners.PopupClickListeners) {
+        popupClickListeners = (listener as? ChannelPopupClickListenersImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     /**

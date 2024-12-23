@@ -14,7 +14,15 @@ data class SceytMember(
 
     constructor(user: SceytUser) : this(Role(SceytChatUIKit.config.memberRolesConfig.participant), user)
 
-    constructor(user: SceytUser, roleName: String) : this(Role(roleName), user)
+    constructor(
+            userId: String,
+            roleName: String = SceytChatUIKit.config.memberRolesConfig.participant
+    ) : this(Role(roleName), SceytUser(userId))
+
+    constructor(
+            user: SceytUser,
+            roleName: String = SceytChatUIKit.config.memberRolesConfig.participant
+    ) : this(Role(roleName), user)
 
     val fullName: String
         get() = "${user.firstName} ${user.lastName}".trim()
