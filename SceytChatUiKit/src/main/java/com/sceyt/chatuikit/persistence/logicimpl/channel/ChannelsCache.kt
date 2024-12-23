@@ -207,6 +207,10 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData.forEachKeyValue { config, map ->
                 map[channelId]?.let { channel ->
+                    if (message != null && channel.lastMessage != null)
+                        if (!channel.lastMessage.diff(message).hasDifference())
+                            return@forEachKeyValue
+
                     val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
                     val updatedChannel = channel.copy(lastMessage = message)
                     channelUpdated(config, updatedChannel, needSort, ChannelUpdatedType.LastMessage)
