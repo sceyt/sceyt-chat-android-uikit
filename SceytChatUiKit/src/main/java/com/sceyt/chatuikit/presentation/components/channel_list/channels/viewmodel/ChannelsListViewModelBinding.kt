@@ -112,9 +112,14 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
     }.launchIn(viewModelScope)
 
     ChannelsCache.channelUpdatedFlow.onEach { data ->
-        if (!lifecycleOwner.isResumed())
-            needToUpdateChannelsAfterResume[data.channel.id] = data
-        else {
+        if (!lifecycleOwner.isResumed()) {
+            val old = needToUpdateChannelsAfterResume[data.channel.id]
+            // Check maybe already exists with needSorting
+            val newData = if (old != null && old.needSorting) {
+                data.copy(needSorting = true)
+            } else data
+            needToUpdateChannelsAfterResume[data.channel.id] = newData
+        } else {
             lifecycleOwner.lifecycleScope.launch {
                 val isCanceled = channelListView.cancelLastSort()
                 val diff = channelListView.channelUpdated(data.channel)
