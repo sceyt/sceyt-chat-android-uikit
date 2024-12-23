@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
 class ChannelsRV @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+        defStyleAttr: Int = 0,
 ) : RecyclerView(context, attrs, defStyleAttr) {
 
     private var channelsAdapter: ChannelsAdapter? = null
@@ -115,17 +115,10 @@ class ChannelsRV @JvmOverloads constructor(
     }
 
     fun getChannelIndexed(channelId: Long): Pair<Int, ChannelListItem.ChannelItem>? {
-        return channelsAdapter?.getData()?.findIndexed { it is ChannelListItem.ChannelItem && it.channel.id == channelId }?.let {
-            return@let Pair(it.first, it.second as ChannelListItem.ChannelItem)
-        }
-    }
-
-    fun getDirectChannelByUserIdIndexed(userId: String): Pair<Int, ChannelListItem.ChannelItem>? {
         return channelsAdapter?.getData()?.findIndexed {
-            it is ChannelListItem.ChannelItem && it.channel.isDirect()
-                    && it.channel.getPeer()?.id == userId
+            it is ChannelListItem.ChannelItem && it.channel.id == channelId
         }?.let {
-            return@let Pair(it.first, it.second as ChannelListItem.ChannelItem)
+            Pair(it.first, it.second as ChannelListItem.ChannelItem)
         }
     }
 
