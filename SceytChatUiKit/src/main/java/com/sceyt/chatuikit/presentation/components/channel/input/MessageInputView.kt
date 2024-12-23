@@ -63,14 +63,19 @@ import com.sceyt.chatuikit.presentation.components.channel.input.helpers.Message
 import com.sceyt.chatuikit.presentation.components.channel.input.link.SingleLinkDetailsProvider
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.action.InputActionsListener
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.action.InputActionsListener.InputActionListeners
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.action.InputActionsListenerImpl
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.action.setListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListenersImpl
-import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners.ClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListenersImpl
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.setListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.event.InputEventsListener
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.event.InputEventsListener.InputEventListeners
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.event.InputEventsListenerImpl
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.event.setListener
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionAnnotation
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionUserHelper
@@ -105,18 +110,18 @@ class MessageInputView @JvmOverloads constructor(
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners,
-        SelectFileTypePopupClickListeners.ClickListeners, InputEventsListener.InputEventListeners,
-        InputActionsListener.InputActionListeners {
+        ClickListeners, InputEventListeners,
+        InputActionListeners {
 
     private lateinit var attachmentsAdapter: AttachmentsAdapter
     private var attachmentsViewHolderFactory by lazyVar { AttachmentsViewHolderFactory(context, style) }
     private var allAttachments = mutableListOf<Attachment>()
     private val binding: SceytMessageInputViewBinding
     private var style: MessageInputStyle
-    private var clickListeners = MessageInputClickListenersImpl(this)
-    private var eventListeners = InputEventsListenerImpl(this)
-    private var actionListeners = InputActionsListenerImpl(this)
-    private var selectFileTypePopupClickListeners = SelectFileTypePopupClickListenersImpl(this)
+    private var clickListeners: MessageInputClickListeners.ClickListeners = MessageInputClickListenersImpl(this)
+    private var eventListeners: InputEventListeners = InputEventsListenerImpl(this)
+    private var actionListeners: InputActionListeners = InputActionsListenerImpl(this)
+    private var selectFileTypePopupClickListeners: ClickListeners = SelectFileTypePopupClickListenersImpl(this)
     private var filePickerHelper: FilePickerHelper? = null
     private val typingDebounceHelper by lazy { DebounceHelper(100, getScope()) }
     private var typingTimeoutJob: Job? = null
@@ -765,8 +770,9 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
-    fun setCustomClickListener(listener: MessageInputClickListenersImpl) {
-        clickListeners = listener.withDefaultListeners(this)
+    fun setCustomClickListener(listener: MessageInputClickListeners.ClickListeners) {
+        clickListeners = (listener as? MessageInputClickListenersImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     @Suppress("unused")
@@ -775,8 +781,9 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
-    fun setCustomActionListener(listener: InputActionsListenerImpl) {
-        actionListeners = listener.withDefaultListeners(this)
+    fun setCustomActionListener(listener: InputActionListeners) {
+        actionListeners = (listener as? InputActionsListenerImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     @Suppress("unused")
@@ -785,13 +792,15 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
-    fun setCustomEventListener(listener: InputEventsListenerImpl) {
-        eventListeners = listener.withDefaultListeners(this)
+    fun setCustomEventListener(listener: InputEventListeners) {
+        eventListeners = (listener as? InputEventsListenerImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     @Suppress("unused")
-    fun setCustomSelectFileTypePopupClickListener(listener: SelectFileTypePopupClickListenersImpl) {
-        selectFileTypePopupClickListeners = listener.withDefaultListeners(this)
+    fun setCustomSelectFileTypePopupClickListener(listener: ClickListeners) {
+        selectFileTypePopupClickListeners = (listener as? SelectFileTypePopupClickListenersImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     @Suppress("unused")
