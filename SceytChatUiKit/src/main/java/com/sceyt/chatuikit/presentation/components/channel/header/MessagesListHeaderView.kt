@@ -29,7 +29,6 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytMessagesListHeaderViewBinding
@@ -45,11 +44,17 @@ import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderTypingUsersHelper
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners.ClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListenersImpl
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.setListener
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListener
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListener.EventListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.MessageListHeaderEventsListenerImpl
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.event.setListener
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.MessageListHeaderUIElementsListener
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.MessageListHeaderUIElementsListener.ElementsListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.MessageListHeaderUIElementsListenerImpl
+import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.setListener
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
@@ -64,13 +69,13 @@ class MessagesListHeaderView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0,
-) : AppBarLayout(context, attrs, defStyleAttr), MessageListHeaderClickListeners.ClickListeners,
-        MessageListHeaderEventsListener.EventListeners, MessageListHeaderUIElementsListener.ElementsListeners {
+) : AppBarLayout(context, attrs, defStyleAttr), ClickListeners,
+        EventListeners, ElementsListeners {
 
     private val binding: SceytMessagesListHeaderViewBinding
-    private var clickListeners = MessageListHeaderClickListenersImpl(this)
-    private var eventListeners = MessageListHeaderEventsListenerImpl(this)
-    internal var uiElementsListeners = MessageListHeaderUIElementsListenerImpl(this)
+    private var clickListeners: ClickListeners = MessageListHeaderClickListenersImpl(this)
+    private var eventListeners: EventListeners = MessageListHeaderEventsListenerImpl(this)
+    internal var uiElementsListeners: ElementsListeners = MessageListHeaderUIElementsListenerImpl(this)
     private lateinit var channel: SceytChannel
     private var replyMessage: SceytMessage? = null
     private var isReplyInThread: Boolean = false
@@ -329,8 +334,9 @@ class MessagesListHeaderView @JvmOverloads constructor(
     fun getReplyMessage() = replyMessage
 
     @Suppress("unused")
-    fun setCustomClickListener(listeners: MessageListHeaderClickListenersImpl) {
-        clickListeners = listeners.withDefaultListeners(this)
+    fun setCustomClickListener(listeners: ClickListeners) {
+        clickListeners = (listeners as? MessageListHeaderClickListenersImpl)?.withDefaultListeners(this)
+                ?: listeners
     }
 
     fun setClickListener(listeners: MessageListHeaderClickListeners) {
@@ -343,8 +349,9 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
-    fun setCustomEventListener(listener: MessageListHeaderEventsListenerImpl) {
-        eventListeners = listener.withDefaultListeners(this)
+    fun setCustomEventListener(listener: EventListeners) {
+        eventListeners = (listener as? MessageListHeaderEventsListenerImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     @Suppress("unused")
@@ -353,8 +360,9 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
-    fun setCustomUiElementsListener(listener: MessageListHeaderUIElementsListenerImpl) {
-        uiElementsListeners = listener.withDefaultListeners(this)
+    fun setCustomUiElementsListener(listener: ElementsListeners) {
+        uiElementsListeners = (listener as? MessageListHeaderUIElementsListenerImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     fun setSearchQueryChangeListener(listener: (String) -> Unit) {

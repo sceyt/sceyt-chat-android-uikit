@@ -9,6 +9,10 @@ class MessageListViewModelFactory(private val channel: SceytChannel) : ViewModel
         val conversationId = channel.id
 
         @Suppress("UNCHECKED_CAST")
-        return MessageListViewModel(conversationId, false, channel) as T
+        return MessageListViewModel(
+            _conversationId = conversationId,
+            _channel = channel,
+            replyInThread = false,
+        ) as T
     }
 }

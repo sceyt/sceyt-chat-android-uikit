@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels
 
 import android.app.Application
 import android.text.Editable
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.work.ExistingWorkPolicy
@@ -99,11 +98,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 
 class MessageListViewModel(
-        var conversationId: Long,
+        private var _conversationId: Long,
+        private var _channel: SceytChannel,
         val replyInThread: Boolean = false,
-        var channel: SceytChannel,
 ) : BaseViewModel(), SceytKoinComponent {
-
     private val messageInteractor: MessageInteractor by inject()
     internal val channelInteractor: ChannelInteractor by inject()
     private val messageReactionInteractor: MessageReactionInteractor by inject()
@@ -111,7 +109,7 @@ class MessageListViewModel(
     internal val channelMemberInteractor: ChannelMemberInteractor by inject()
     internal val userInteractor: UserInteractor by inject()
     private val application: Application by inject()
-    private val syncManager: SceytSyncManager by inject()
+    internal val syncManager: SceytSyncManager by inject()
     private val fileTransferService: FileTransferService by inject()
     private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
     internal var pinnedLastReadMessageId: Long = 0
@@ -135,14 +133,12 @@ class MessageListViewModel(
     internal var loadNextOffsetId = 0L
     internal var lastSyncCenterOffsetId = 0L
 
-    private val isGroup = channel.isGroup
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
+    val channel: SceytChannel get() = _channel
+    val conversationId: Long get() = _conversationId
 
     private val _loadMessagesFlow = MutableStateFlow<PaginationResponse<SceytMessage>>(PaginationResponse.Nothing())
     val loadMessagesFlow: StateFlow<PaginationResponse<SceytMessage>> = _loadMessagesFlow
-
-    private val _messageForceDeleteLiveData = MutableLiveData<SceytResponse<SceytMessage>>()
-    val checkMessageForceDeleteLiveData = _messageForceDeleteLiveData.asLiveData()
 
     private val _joinLiveData = MutableLiveData<SceytResponse<SceytChannel>>()
     val joinLiveData = _joinLiveData.asLiveData()
@@ -170,8 +166,6 @@ class MessageListViewModel(
     //val onNewThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
 
     // val onOutGoingThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
-    val onTransferUpdatedLiveData: LiveData<TransferData>
-
 
     // Chanel events
     val onChannelEventFlow: Flow<ChannelEventData>
@@ -216,7 +210,10 @@ class MessageListViewModel(
 
         onChannelUpdatedEventFlow = ChannelsCache.channelUpdatedFlow
             .filter { it.channel.id == channel.id }
-            .map { it.channel }
+            .map {
+                updateChannel(it.channel)
+                it.channel
+            }
 
         viewModelScope.launch(Dispatchers.IO) {
             ChannelEventManager.onChannelMembersEventFlow
@@ -225,20 +222,24 @@ class MessageListViewModel(
         }
 
         ChannelsCache.pendingChannelCreatedFlow
-            .filter { it.first == channel.id }
-            .onEach { data ->
-                val newChannelId = data.second.id
-                channel = channel.copy(id = newChannelId, pending = false)
-                conversationId = newChannelId
-            }.launchIn(viewModelScope)
+            .filter { (pendingChannelId, _) -> pendingChannelId == channel.id }
+            .onEach { (_, newChannel) ->
+                updateChannel(newChannel)
+            }
+            .launchIn(viewModelScope)
+
+        SceytSyncManager.syncChannelMessagesFinished
+            .filter { (syncedChannel, _) -> syncedChannel.id == channel.id }
+            .onEach { (syncedChannel, _) ->
+                updateChannel(syncedChannel)
+            }
+            .launchIn(viewModelScope)
 
         onNewOutGoingMessageFlow = MessageEventManager.onOutgoingMessageFlow
             .filter { it.channelId == channel.id /*&& !it.replyInThread*/ }
 
         /*onOutGoingThreadMessageFlow = MessageEventsObserver.onOutgoingMessageFlow
             .filter { it.channelId == channel.id && it.replyInThread }*/
-
-        onTransferUpdatedLiveData = FileTransferHelper.onTransferUpdatedLiveData
     }
 
     fun loadPrevMessages(lastMessageId: Long, offset: Int, loadKey: LoadKeyData = LoadKeyData(value = lastMessageId)) {
@@ -286,6 +287,7 @@ class MessageListViewModel(
         }
     }
 
+    @Suppress("unused")
     fun loadNewestMessages(loadKey: LoadKeyData) {
         setPagingLoadingStarted(LoadNewest)
 
@@ -485,8 +487,7 @@ class MessageListViewModel(
 
     fun deleteMessage(message: SceytMessage, deleteType: DeleteMessageType) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = messageInteractor.deleteMessage(channel.id, message, deleteType)
-            _messageForceDeleteLiveData.postValue(response)
+            messageInteractor.deleteMessage(channel.id, message, deleteType)
         }
     }
 
@@ -511,6 +512,7 @@ class MessageListViewModel(
     }
 
     fun sendTypingEvent(typing: Boolean) {
+        if (channel.pending) return
         viewModelScope.launch(Dispatchers.IO) {
             messageInteractor.sendTyping(channel.id, typing)
         }
@@ -532,24 +534,38 @@ class MessageListViewModel(
     fun join() {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelInteractor.join(channel.id)
+            if (response is SceytResponse.Success) {
+                updateChannel(response.data ?: return@launch)
+            }
             _joinLiveData.postValue(response)
         }
     }
 
     fun getChannel(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val response = channelInteractor.getChannelFromServer(channelId)
-            // If response is Error, try to get channel from db.
-            if (response is SceytResponse.Error)
-                channelInteractor.getChannelFromDb(channelId)?.let {
-                    _channelLiveData.postValue(SceytResponse.Success(it))
-                } ?: _channelLiveData.postValue(response)
+            when (val response = channelInteractor.getChannelFromServer(channelId)) {
+                // If response is Error, try to get channel from db.
+                is SceytResponse.Error -> {
+                    channelInteractor.getChannelFromDb(channelId)?.let {
+                        _channelLiveData.postValue(SceytResponse.Success(it))
+                    } ?: _channelLiveData.postValue(response)
+                }
+
+                is SceytResponse.Success -> {
+                    updateChannel(response.data ?: return@launch)
+                    _channelLiveData.postValue(response)
+                }
+            }
         }
     }
 
     fun markChannelAsRead(channelId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelInteractor.markChannelAsRead(channelId)
+            if (response is SceytResponse.Success) {
+                val data = response.data ?: return@launch
+                updateChannel(data)
+            }
             _channelLiveData.postValue(response)
         }
     }
@@ -562,6 +578,7 @@ class MessageListViewModel(
         }
     }
 
+    @Suppress("unused")
     fun loadChannelAllMembers() {
         viewModelScope.launch(Dispatchers.IO) {
 
@@ -594,6 +611,7 @@ class MessageListViewModel(
         }
     }
 
+    @Suppress("unused")
     fun showSenderAvatarAndNameIfNeeded(show: Boolean) {
         showSenderAvatarAndNameIfNeeded = show
     }
@@ -625,13 +643,16 @@ class MessageListViewModel(
                         && prevMessage?.id == pinnedLastReadMessageId && unreadLineMessage == null) {
 
                     messageWithData = messageWithData.copy(
-                        shouldShowAvatarAndName = messageWithData.incoming && isGroup && showSenderAvatarAndNameIfNeeded,
+                        shouldShowAvatarAndName = messageWithData.incoming && channel.isGroup
+                                && showSenderAvatarAndNameIfNeeded,
                         disabledShowAvatarAndName = !showSenderAvatarAndNameIfNeeded,
                     )
                     if (!ignoreUnreadMessagesSeparator)
-                        messageItems.add(MessageListItem.UnreadMessagesSeparatorItem(message.createdAt, pinnedLastReadMessageId).also {
-                            unreadLineMessage = it
-                        })
+                        messageItems.add(
+                            MessageListItem.UnreadMessagesSeparatorItem(message.createdAt, pinnedLastReadMessageId)
+                                .also {
+                                    unreadLineMessage = it
+                                })
                 }
 
                 messageItems.add(MessageListItem.MessageItem(messageWithData.copy(isSelected = isSelected)))
@@ -654,7 +675,7 @@ class MessageListViewModel(
             initNameAndAvatar: Boolean = false
     ): SceytMessage {
         return sceytMessage.copy(
-            isGroup = this@MessageListViewModel.isGroup,
+            isGroup = channel.isGroup,
             files = sceytMessage.attachments?.map { it.toFileListItem() },
             shouldShowAvatarAndName = if (initNameAndAvatar && showSenderAvatarAndNameIfNeeded)
                 shouldShowAvatarAndName(sceytMessage, prevMessage)
@@ -729,10 +750,10 @@ class MessageListViewModel(
     private fun shouldShowAvatarAndName(sceytMessage: SceytMessage, prevMessage: SceytMessage?): Boolean {
         if (!sceytMessage.incoming) return false
         return if (prevMessage == null)
-            isGroup
+            channel.isGroup
         else {
             val sameSender = prevMessage.user?.id == sceytMessage.user?.id
-            isGroup && (!sameSender || shouldShowDate(sceytMessage, prevMessage)
+            channel.isGroup && (!sameSender || shouldShowDate(sceytMessage, prevMessage)
                     || prevMessage.type == MessageTypeEnum.System.value)
         }
     }
@@ -809,7 +830,7 @@ class MessageListViewModel(
         when (eventData.eventType) {
             ChannelMembersEventEnum.Added -> {
                 channelMembers.addAll(sceytMembers)
-                channel = channel.copy(
+                _channel = channel.copy(
                     members = channelMembers,
                     memberCount = channel.memberCount + sceytMembers.size
                 )
@@ -818,7 +839,7 @@ class MessageListViewModel(
 
             ChannelMembersEventEnum.Kicked -> {
                 channelMembers.removeAll(sceytMembers)
-                channel = channel.copy(
+                _channel = channel.copy(
                     members = channelMembers,
                     memberCount = channel.memberCount - sceytMembers.size
                 )
@@ -827,5 +848,10 @@ class MessageListViewModel(
 
             else -> return
         }
+    }
+
+    private fun updateChannel(channel: SceytChannel) {
+        _channel = channel
+        _conversationId = channel.id
     }
 }

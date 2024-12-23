@@ -50,3 +50,7 @@ sealed interface MessageListHeaderUIElementsListener {
     interface ElementsListeners : TitleListener, SubTitleListener, AvatarListener,
             ActionsMenuListener, ToolbarActionsVisibilityListener, ShowSearchMessage
 }
+
+internal fun MessageListHeaderUIElementsListener.setListener(listener: MessageListHeaderUIElementsListener) {
+    (this as? MessageListHeaderUIElementsListenerImpl)?.setListener(listener)
+}

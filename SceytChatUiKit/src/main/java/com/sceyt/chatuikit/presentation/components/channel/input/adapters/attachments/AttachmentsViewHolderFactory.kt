@@ -54,7 +54,7 @@ open class AttachmentsViewHolderFactory(
         }
     }
 
-    fun setClickListener(listeners: AttachmentClickListeners) {
+    fun setClickListener(listeners: AttachmentClickListeners.ClickListeners) {
         clickListeners.setListener(listeners)
     }
 

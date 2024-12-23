@@ -8,6 +8,10 @@ sealed interface AttachmentClickListeners {
         fun onRemoveAttachmentClick(view: View, item: AttachmentItem)
     }
 
+    fun interface AttachmentClickListener : AttachmentClickListeners {
+        fun onAttachmentClick(view: View, item: AttachmentItem)
+    }
+
     /** Use this if you want to implement all callbacks */
-    interface ClickListeners : RemoveAttachmentClickListener
+    interface ClickListeners : RemoveAttachmentClickListener, AttachmentClickListener
 }

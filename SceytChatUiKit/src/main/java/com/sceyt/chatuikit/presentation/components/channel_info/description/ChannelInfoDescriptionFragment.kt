@@ -53,13 +53,17 @@ open class ChannelInfoDescriptionFragment : Fragment(), ChannelUpdateListener, C
 
     open fun setChannelDescription(channel: SceytChannel) {
         with(binding) {
+            if (channel.isSelf) {
+                root.isVisible = false
+                return
+            }
             val about = if (channel.isDirect()) {
-                channel.getPeer()?.user?.presence?.status
+                channel.getPeer()?.user?.presence?.status.takeIf { !it.isNullOrBlank() }
                         ?: SceytChatUIKit.config.presenceConfig.defaultPresenceStatus
             } else channel.metadata?.jsonToObject(ChannelDescriptionData::class.java)?.description
 
             tvDescription.text = about
-            binding.root.isVisible = about.isNotNullOrBlank()
+            root.isVisible = about.isNotNullOrBlank()
         }
     }
 

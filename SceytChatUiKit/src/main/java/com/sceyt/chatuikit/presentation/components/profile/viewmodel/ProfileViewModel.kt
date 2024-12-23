@@ -13,16 +13,11 @@ import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
 class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
     private val userInteractor: UserInteractor by inject()
-
-    private val _currentUserLiveData = MutableLiveData<SceytUser>()
-    val currentUserLiveData = _currentUserLiveData.asLiveData()
 
     private val _editProfileLiveData = MutableLiveData<SceytUser>()
     val editProfileLiveData = _editProfileLiveData.asLiveData()
@@ -42,20 +37,15 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
     private val _logOutErrorLiveData = MutableLiveData<String>()
     val logOutErrorLiveData: LiveData<String> = _logOutErrorLiveData
 
-    fun getCurrentUser() {
-        userInteractor.getCurrentUserAsFlow()
-            .onEach { user ->
-                _currentUserLiveData.postValue(user)
-            }
-            .launchIn(viewModelScope)
-    }
+    fun getCurrentUserAsFlow() = userInteractor.getCurrentUserAsFlow()
 
-    fun saveProfile(
-        firstName: String?,
-        lastName: String?,
-        username: String,
-        avatarUrl: String?,
-        shouldUploadAvatar: Boolean
+    fun updateProfile(
+            firstName: String?,
+            lastName: String?,
+            username: String,
+            avatarUrl: String?,
+            shouldUploadAvatar: Boolean,
+            metadataMap: Map<String, String>?
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             var newUrl = avatarUrl
@@ -68,11 +58,13 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
                     return@launch
                 }
             }
-            val currentUser = _currentUserLiveData.value ?: userInteractor.getCurrentUser()
-            ?: return@launch
+
             when (val response = userInteractor.updateProfile(
-                username, firstName, lastName,
-                newUrl, currentUser.metadataMap
+                username = username,
+                firstName = firstName,
+                lastName = lastName,
+                avatarUrl = newUrl,
+                metadataMap = metadataMap
             )) {
                 is SceytResponse.Success -> {
                     _editProfileLiveData.postValue(response.data ?: return@launch)
