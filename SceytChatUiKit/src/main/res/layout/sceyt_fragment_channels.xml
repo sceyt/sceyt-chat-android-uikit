@@ -65,18 +65,19 @@
             android:clipToPadding="false"
             app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior" />
 
-        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fabNewChannel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|bottom"
             android:layout_margin="16dp"
             android:backgroundTint="@color/colorAccent"
-            app:icon="@drawable/sceyt_ic_edit"
-            app:iconTint="@color/sceyt_color_on_primary"
+            android:importantForAccessibility="no"
+            android:src="@drawable/sceyt_ic_edit"
             app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior"
             app:layout_constraintBottom_toBottomOf="@+id/viewPager"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:tint="@color/sceyt_color_on_primary" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

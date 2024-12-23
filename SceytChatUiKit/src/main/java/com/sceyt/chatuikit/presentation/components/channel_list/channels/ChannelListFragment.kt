@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setMargins
 import com.sceyt.chatuikit.extensions.setTextColorRes
+import com.sceyt.chatuikit.extensions.setTintColorRes
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModel
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModelFactory
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.bind
@@ -72,7 +73,7 @@ class ChannelListFragment : Fragment() {
             ConnectionState.Disconnected -> getString(R.string.sceyt_connecting_title)
             ConnectionState.Reconnecting,
             ConnectionState.Connecting,
-                -> getString(R.string.sceyt_connecting_title)
+            -> getString(R.string.sceyt_connecting_title)
 
             ConnectionState.Connected -> getString(R.string.sceyt_chats)
         }
@@ -85,5 +86,6 @@ class ChannelListFragment : Fragment() {
         title.setTextColorRes(SceytChatUIKit.theme.colors.textPrimaryColor)
         underline.setBackgroundColor(requireContext().getCompatColor(SceytChatUIKit.theme.colors.borderColor))
         fabNewChannel.setBackgroundTintColorRes(SceytChatUIKit.theme.colors.accentColor)
+        fabNewChannel.setTintColorRes(SceytChatUIKit.theme.colors.onPrimaryColor)
     }
 }
