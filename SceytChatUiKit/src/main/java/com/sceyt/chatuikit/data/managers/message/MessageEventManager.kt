@@ -5,10 +5,10 @@ import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.Reaction
 import com.sceyt.chat.sceyt_listeners.MessageListener
-import com.sceyt.chatuikit.data.managers.message.handler.MessageEventHandlerImpl
-import com.sceyt.chatuikit.data.managers.message.handler.MessageEventHandler
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum
+import com.sceyt.chatuikit.data.managers.message.handler.MessageEventHandler.AllEventManagers
+import com.sceyt.chatuikit.data.managers.message.handler.MessageEventHandlerImpl
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
@@ -22,8 +22,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.withContext
 
-object MessageEventManager : MessageEventHandler.AllEventManagers {
-    private var eventManager = MessageEventHandlerImpl(this)
+object MessageEventManager : AllEventManagers {
+    private var eventManager: AllEventManagers = MessageEventHandlerImpl(this)
 
     private val onMessageFlow_: MutableSharedFlow<Pair<SceytChannel, SceytMessage>> = MutableSharedFlow(
         extraBufferCapacity = 5,
@@ -112,9 +112,9 @@ object MessageEventManager : MessageEventHandler.AllEventManagers {
     }
 
     @Suppress("unused")
-    fun setCustomListener(listener: MessageEventHandlerImpl) {
+    fun setCustomListener(listener: AllEventManagers) {
         eventManager = listener
-        eventManager.setDefaultListeners(this)
+        (eventManager as? MessageEventHandlerImpl)?.setDefaultListeners(this)
     }
 
     suspend fun emitOutgoingMessage(sceytMessage: SceytMessage) {

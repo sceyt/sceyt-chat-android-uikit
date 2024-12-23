@@ -74,3 +74,7 @@ sealed interface MessageInputClickListeners {
             ScrollToPreviousMessageClickListener,
             SelectedUserToMentionClickListener
 }
+
+internal fun MessageInputClickListeners.setListener(listener: MessageInputClickListeners) {
+    (this as? MessageInputClickListenersImpl)?.setListener(listener)
+}

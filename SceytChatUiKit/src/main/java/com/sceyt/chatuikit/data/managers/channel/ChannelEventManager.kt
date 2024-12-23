@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 object ChannelEventManager : ChannelEventHandler.AllEvents {
-    private var eventManager = ChannelEventHandlerImpl(this)
+    private var eventManager: ChannelEventHandler.AllEvents = ChannelEventHandlerImpl(this)
 
     private val onTotalUnreadChangedFlow_ = MutableSharedFlow<ChannelUnreadCountUpdatedEventData>(
         extraBufferCapacity = 5,
@@ -270,8 +270,8 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
     }
 
     @Suppress("unused")
-    fun setCustomListener(listener: ChannelEventHandlerImpl) {
+    fun setCustomListener(listener: ChannelEventHandler.AllEvents) {
         eventManager = listener
-        eventManager.setDefaultListeners(this)
+        (eventManager as? ChannelEventHandlerImpl)?.setDefaultListeners(this)
     }
 }
