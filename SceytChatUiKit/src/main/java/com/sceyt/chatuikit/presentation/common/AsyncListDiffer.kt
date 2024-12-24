@@ -83,8 +83,10 @@ class AsyncListDiffer<T : Any>(
             newList[position] = newItem
             list = newList
             readOnlyList = Collections.unmodifiableList(newList)
-            updateCallback.onChanged(position, 1, payloads)
-            onCurrentListChanged(previousList, commitCallback)
+            withContext(mainDispatcher) {
+                updateCallback.onChanged(position, 1, payloads)
+                onCurrentListChanged(previousList, commitCallback)
+            }
         }
     }.also { lastOperationsJob = it }
 
@@ -100,8 +102,10 @@ class AsyncListDiffer<T : Any>(
             val position = newList.removeFirstIf(predicate).takeIf { it != -1 } ?: return@withLock
             list = newList
             readOnlyList = Collections.unmodifiableList(newList)
-            updateCallback.onRemoved(position, 1)
-            onCurrentListChanged(previousList, commitCallback)
+            withContext(mainDispatcher) {
+                updateCallback.onRemoved(position, 1)
+                onCurrentListChanged(previousList, commitCallback)
+            }
             return@withLock
         }
     }.also { lastOperationsJob = it }
@@ -201,7 +205,7 @@ class AsyncListDiffer<T : Any>(
         lastOperationsJob?.cancel()
         lastSubmitJob = coroutineScope.launch {
             val previousList = readOnlyList
-            if (newList == list) {
+            if (newList === list) {
                 // Same list, nothing to do
                 commitCallback?.invoke()
                 return@launch
@@ -255,8 +259,10 @@ class AsyncListDiffer<T : Any>(
             list = newList
             readOnlyList = Collections.unmodifiableList(newList)
             val positionToInsert = position.takeIf { it != -1 } ?: previousList.size
-            updateCallback.onInserted(positionToInsert, items.size)
-            onCurrentListChanged(previousList, commitCallback)
+            withContext(mainDispatcher) {
+                updateCallback.onInserted(positionToInsert, items.size)
+                onCurrentListChanged(previousList, commitCallback)
+            }
         }
     }.also { lastOperationsJob = it }
 
