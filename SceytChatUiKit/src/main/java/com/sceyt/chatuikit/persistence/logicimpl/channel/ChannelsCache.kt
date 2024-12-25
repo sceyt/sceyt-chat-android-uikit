@@ -176,7 +176,7 @@ class ChannelsCache {
                 val diff = putAndCheckHasDiff(config, channel)
                 if (diff.hasDifference()) {
                     val needSort = checkNeedSortByLastMessage(oldMsg, channel.lastMessage) || diff.pinStateChanged
-                    channelUpdated(config, channel, needSort, ChannelUpdatedType.Updated)
+                    channelUpdated(config, channel, diff, needSort, ChannelUpdatedType.Updated)
                 }
             }
         }
@@ -193,7 +193,7 @@ class ChannelsCache {
             val diff = putAndCheckHasDiff(config, channel)
             if (diff.hasDifference()) {
                 val needSort = checkNeedSortByLastMessage(oldMsg, channel.lastMessage) || diff.pinStateChanged
-                channelUpdated(config, channel, needSort, ChannelUpdatedType.Updated)
+                channelUpdated(config, channel, diff, needSort, ChannelUpdatedType.Updated)
             }
         }
     }
@@ -207,9 +207,14 @@ class ChannelsCache {
         synchronized(lock) {
             cachedData.forEachKeyValue { config, map ->
                 map[channelId]?.let { channel ->
+                    if (message != null && channel.lastMessage != null)
+                        if (!channel.lastMessage.diff(message).hasDifference())
+                            return@forEachKeyValue
+
                     val needSort = checkNeedSortByLastMessage(channel.lastMessage, message)
                     val updatedChannel = channel.copy(lastMessage = message)
-                    channelUpdated(config, updatedChannel, needSort, ChannelUpdatedType.LastMessage)
+                    val diff = channel.diff(updatedChannel)
+                    channelUpdated(config, updatedChannel, diff, needSort, ChannelUpdatedType.LastMessage)
                 }
             }
         }
@@ -224,7 +229,8 @@ class ChannelsCache {
                         lastMessage = message,
                         lastDisplayedMessageId = message.id
                     )
-                    channelUpdated(config, updatedChannel, needSort, ChannelUpdatedType.LastMessage)
+                    val diff = channel.diff(updatedChannel)
+                    channelUpdated(config, updatedChannel, diff, needSort, ChannelUpdatedType.LastMessage)
                 }
             }
         }
@@ -242,7 +248,8 @@ class ChannelsCache {
                         newReactions = null,
                         pendingReactions = null
                     )
-                    channelUpdated(key, updatedChannel, true, ChannelUpdatedType.ClearedHistory)
+                    val diff = channel.diff(updatedChannel)
+                    channelUpdated(key, updatedChannel, diff, true, ChannelUpdatedType.ClearedHistory)
                 }
             }
         }
@@ -256,7 +263,8 @@ class ChannelsCache {
                         muted = muted,
                         mutedTill = if (muted) muteUntil else 0
                     )
-                    channelUpdated(key, updatedChannel, false, ChannelUpdatedType.MuteState)
+                    val diff = channel.diff(updatedChannel)
+                    channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.MuteState)
                 }
             }
         }
@@ -269,7 +277,8 @@ class ChannelsCache {
                     val updatedChannel = channel.copy(
                         messageRetentionPeriod = period
                     )
-                    channelUpdated(key, updatedChannel, false, ChannelUpdatedType.AutoDeleteState)
+                    val diff = channel.diff(updatedChannel)
+                    channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.AutoDeleteState)
                 }
             }
         }
@@ -280,7 +289,8 @@ class ChannelsCache {
             cachedData.forEachKeyValue { key, value ->
                 value[channelId]?.let { channel ->
                     val updatedChannel = channel.copy(pinnedAt = pinnedAt)
-                    channelUpdated(key, updatedChannel, true, ChannelUpdatedType.PinnedAt)
+                    val diff = channel.diff(updatedChannel)
+                    channelUpdated(key, updatedChannel, diff, true, ChannelUpdatedType.PinnedAt)
                 }
             }
         }
@@ -291,7 +301,8 @@ class ChannelsCache {
             cachedData.forEachKeyValue { key, value ->
                 value[channelId]?.let { channel ->
                     val updatedChannel = channel.copy(newMessageCount = count.toLong(), unread = false)
-                    channelUpdated(key, updatedChannel, false, ChannelUpdatedType.UnreadCount)
+                    val diff = channel.diff(updatedChannel)
+                    channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.UnreadCount)
                 }
             }
         }
@@ -337,7 +348,8 @@ class ChannelsCache {
             cachedData.forEachKeyValue { key, value ->
                 value[channel.id]?.let {
                     val updatedChannel = it.copy(memberCount = channel.memberCount)
-                    channelUpdated(key, updatedChannel, false, ChannelUpdatedType.Members)
+                    val diff = it.diff(updatedChannel)
+                    channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.Members)
                     found = true
                 }
             }
@@ -374,8 +386,10 @@ class ChannelsCache {
                             } else member
                         }
                     )
-                    if (needToUpdate)
-                        channelUpdated(key, updatedChannel, false, ChannelUpdatedType.Presence)
+                    if (needToUpdate) {
+                        val diff = channel.diff(updatedChannel)
+                        channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.Presence)
+                    }
                 }
             }
         }
@@ -411,7 +425,8 @@ class ChannelsCache {
                         unread = channel.unread,
                         newMessageCount = channel.newMessageCount
                     )
-                    channelUpdated(key, updatedChannel, false, ChannelUpdatedType.Updated)
+                    val diff = it.diff(updatedChannel)
+                    channelUpdated(key, updatedChannel, diff, false, ChannelUpdatedType.Updated)
                 }
             }
         }
@@ -420,11 +435,12 @@ class ChannelsCache {
     private fun channelUpdated(
             config: ChannelListConfig,
             channel: SceytChannel,
+            diff: ChannelDiff,
             needSort: Boolean,
             type: ChannelUpdatedType,
     ) {
         getOrCreateMap(config)[channel.id] = channel
-        channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel, needSort, type))
+        channelUpdatedFlow_.tryEmit(ChannelUpdateData(channel, needSort, diff, type))
     }
 
     private fun channelAdded(channel: SceytChannel) {

@@ -14,10 +14,12 @@ import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.SceytDatabase
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.click.SearchInputClickListeners
+import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.click.SearchInputClickListeners.ClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.click.SearchInputClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.SearchInputEventListeners
+import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.SearchInputEventListeners.EventListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.SearchInputEventListenersImpl
+import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.setListener
 import com.sceyt.chatuikit.styles.SearchChannelInputStyle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,8 +28,8 @@ import org.koin.core.component.inject
 
 class SearchChannelInputView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
-) : ConstraintLayout(context, attrs, defStyleAttr), SearchInputClickListeners.ClickListeners,
-        SearchInputEventListeners.EventListeners, SceytKoinComponent {
+) : ConstraintLayout(context, attrs, defStyleAttr), ClickListeners,
+        EventListeners, SceytKoinComponent {
 
     private companion object {
         private const val TYPING_DEBOUNCE_MS = 300L
@@ -38,8 +40,8 @@ class SearchChannelInputView @JvmOverloads constructor(
     private val debounceInitDelegate = lazy { DebounceHelper(TYPING_DEBOUNCE_MS, this) }
     private val debounceHelper by debounceInitDelegate
 
-    private var clickListeners = SearchInputClickListenersImpl(this)
-    private var eventListeners = SearchInputEventListenersImpl(this)
+    private var clickListeners: ClickListeners = SearchInputClickListenersImpl(this)
+    private var eventListeners: EventListeners = SearchInputEventListenersImpl(this)
     private var debouncedInputChangedListener: InputChangedListener? = null
     private var inputChangedListener: InputChangedListener? = null
     private var querySubmitListener: InputTextSubmitListener? = null
@@ -119,13 +121,15 @@ class SearchChannelInputView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
-    fun setCustomClickListener(listener: SearchInputClickListenersImpl) {
-        clickListeners = listener.withDefaultListeners(this)
+    fun setCustomClickListener(listener: ClickListeners) {
+        clickListeners = (listener as? SearchInputClickListenersImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     @Suppress("unused")
-    fun setCustomEventListener(listener: SearchInputEventListenersImpl) {
-        eventListeners = listener.withDefaultListeners(this)
+    fun setCustomEventListener(listener: EventListeners) {
+        eventListeners = (listener as? SearchInputEventListenersImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     @Suppress("unused")

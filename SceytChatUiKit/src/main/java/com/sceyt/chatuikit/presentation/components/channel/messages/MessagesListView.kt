@@ -68,11 +68,16 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.events.Messa
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.ReactionsInfoBottomSheetFragment
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListeners
+import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListeners.ActionsViewClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.MessageActionsViewClickListenersImpl
+import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.action.setListener
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners
+import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListeners.ClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.MessageClickListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.ReactionPopupClickListeners
+import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.ReactionPopupClickListeners.PopupClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.ReactionPopupClickListenersImpl
+import com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click.setListener
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.MessageActionsPopupMenu
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.PopupReactionsAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.popups.ReactionsPopup
@@ -87,15 +92,15 @@ import kotlinx.coroutines.withContext
 
 @Suppress("Unused", "MemberVisibilityCanBePrivate")
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : ConstraintLayout(context, attrs, defStyleAttr), MessageClickListeners.ClickListeners,
-        MessageActionsViewClickListeners.ActionsViewClickListeners, ReactionPopupClickListeners.PopupClickListeners {
+    : ConstraintLayout(context, attrs, defStyleAttr), ClickListeners,
+        ActionsViewClickListeners, PopupClickListeners {
 
     private val binding: SceytMessagesListViewBinding
     private var messagesRV: MessagesRV
-    private lateinit var defaultClickListeners: MessageClickListenersImpl
-    private lateinit var clickListeners: MessageClickListenersImpl
-    internal lateinit var messageActionsViewClickListeners: MessageActionsViewClickListenersImpl
-    private lateinit var reactionClickListeners: ReactionPopupClickListenersImpl
+    private lateinit var defaultClickListeners: ClickListeners
+    private lateinit var clickListeners: ClickListeners
+    internal lateinit var messageActionsViewClickListeners: ActionsViewClickListeners
+    private lateinit var reactionClickListeners: PopupClickListeners
     private var messageCommandEventListener: ((MessageCommandEvent) -> Unit)? = null
     private var reactionEventListener: ((ReactionEvent) -> Unit)? = null
     private var reactionsPopupWindow: PopupWindow? = null
@@ -798,20 +803,23 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageActionsViewClickListeners.setListener(listener)
     }
 
-    fun setCustomMessageClickListener(listener: MessageClickListenersImpl) {
-        clickListeners = listener.withDefaultListeners(this)
-    }
-
-    fun setCustomMessageActionsViewClickListener(listener: MessageActionsViewClickListenersImpl) {
-        messageActionsViewClickListeners = listener.withDefaultListeners(this)
-    }
-
     fun setReactionPopupClickListener(listener: ReactionPopupClickListeners) {
         reactionClickListeners.setListener(listener)
     }
 
-    fun setCustomReactionPopupClickListener(listener: ReactionPopupClickListenersImpl) {
-        reactionClickListeners = listener.withDefaultListeners(this)
+    fun setCustomMessageClickListener(listener: ClickListeners) {
+        clickListeners = (listener as? MessageClickListenersImpl)?.withDefaultListeners(this)
+                ?: listener
+    }
+
+    fun setCustomMessageActionsViewClickListener(listener: ActionsViewClickListeners) {
+        messageActionsViewClickListeners = (listener as? MessageActionsViewClickListenersImpl)?.withDefaultListeners(this)
+                ?: listener
+    }
+
+    fun setCustomReactionPopupClickListener(listener: PopupClickListeners) {
+        reactionClickListeners = (listener as? ReactionPopupClickListenersImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     fun setActionsEnabled(enabled: Boolean, force: Boolean) {

@@ -6,15 +6,15 @@ import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.extensions.asLiveData
+import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
-import com.sceyt.chatuikit.persistence.shared.LiveEvent
 import com.sceyt.chatuikit.presentation.common.ConcurrentHashSet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -34,10 +34,10 @@ class SceytSyncManager(
     private var syncContext: CoroutineContext? = null
 
     companion object {
-        private val syncChannelsFinished_ = LiveEvent<SyncChannelData>()
-        val syncChannelsFinished = syncChannelsFinished_.asLiveData()
-        private val syncChannelMessagesFinished_ = LiveEvent<Pair<SceytChannel, List<SceytMessage>>>()
-        val syncChannelMessagesFinished = syncChannelMessagesFinished_.asLiveData()
+        private val syncChannelsFinished_ = broadcastSharedFlow<SyncChannelData>()
+        val syncChannelsFinished = syncChannelsFinished_.asSharedFlow()
+        private val syncChannelMessagesFinished_ = broadcastSharedFlow<Pair<SceytChannel, List<SceytMessage>>>()
+        val syncChannelMessagesFinished = syncChannelMessagesFinished_.asSharedFlow()
     }
 
     suspend fun startSync(
@@ -93,7 +93,7 @@ class SceytSyncManager(
                             }
 
                             is GetAllChannelsResponse.SuccessfullyFinished -> {
-                                syncChannelsFinished_.postValue(syncChannelData)
+                                syncChannelsFinished_.tryEmit(syncChannelData)
                                 cont.resume(syncResultData)
                             }
                         }
@@ -132,7 +132,7 @@ class SceytSyncManager(
             if (it is SceytResponse.Success)
                 it.data?.let { messages ->
                     if (syncConversation)
-                        syncChannelMessagesFinished_.postValue(Pair(channel, messages))
+                        syncChannelMessagesFinished_.tryEmit(channel to messages)
                     syncResultData.syncedMessagesCount += messages.size
                 }
         }

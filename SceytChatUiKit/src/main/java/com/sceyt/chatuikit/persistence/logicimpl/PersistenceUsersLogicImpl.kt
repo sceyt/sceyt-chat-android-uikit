@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.dao.UserDao
+import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
@@ -21,6 +22,7 @@ import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.repositories.UsersRepository
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
@@ -105,9 +107,12 @@ internal class PersistenceUsersLogicImpl(
     }
 
     override fun getCurrentUserAsFlow(): Flow<SceytUser> {
-        (preference.getUserId() ?: ClientWrapper.currentUser?.id)?.let {
-            return userDao.getUserByIdAsFlow(it).filterNotNull().map { entity -> entity.toSceytUser() }
-        } ?: return emptyFlow()
+        return (preference.getUserId() ?: ClientWrapper.currentUser?.id)?.let {
+            userDao.getUserByIdAsFlow(it)
+                .filterNotNull()
+                .map { userDb -> userDb.toSceytUser() }
+                .distinctUntilChanged { old, new -> !old.diff(new).hasDifference() }
+        } ?: emptyFlow()
     }
 
     override suspend fun uploadAvatar(avatarUrl: String): SceytResponse<String> {

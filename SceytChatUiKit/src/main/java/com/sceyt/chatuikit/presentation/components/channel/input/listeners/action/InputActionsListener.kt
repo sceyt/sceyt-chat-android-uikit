@@ -35,3 +35,7 @@ sealed interface InputActionsListener {
     interface InputActionListeners : SendMessageListener, SendMessagesListener,
             SendEditMessageListener, TypingListener, UpdateDraftMessageListener
 }
+
+internal fun InputActionsListener.setListener(listener: InputActionsListener) {
+    (this as? InputActionsListenerImpl)?.setListener(listener)
+}

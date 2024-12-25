@@ -21,11 +21,11 @@ import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click
 open class MessageInputClickListenersImpl : ClickListeners {
     @Suppress("unused")
     constructor()
-    
+
     internal constructor(view: MessageInputView) {
         defaultListeners = view
     }
-    
+
     private var defaultListeners: ClickListeners? = null
     private var sendMsgClickListener: SendMsgClickListener? = null
     private var addAttachmentClickListener: SendAttachmentClickListener? = null
@@ -34,6 +34,7 @@ open class MessageInputClickListenersImpl : ClickListeners {
     private var cancelReplyMessageViewClickListener: CancelReplyMessageViewClickListener? = null
     private var cancelLinkPreviewClickListener: CancelLinkPreviewClickListener? = null
     private var removeAttachmentClickListener: RemoveAttachmentClickListener? = null
+    private var onAttachmentClickListener: MessageInputClickListeners.AttachmentClickListener? = null
     private var joinClickListener: JoinClickListener? = null
     private var clearChatClickListener: ClearChatClickListener? = null
     private var scrollToNextMessageClickListener: ScrollToNextMessageClickListener? = null
@@ -75,6 +76,11 @@ open class MessageInputClickListenersImpl : ClickListeners {
         removeAttachmentClickListener?.onRemoveAttachmentClick(item)
     }
 
+    override fun onAttachmentClick(item: AttachmentItem) {
+        defaultListeners?.onAttachmentClick(item)
+        onAttachmentClickListener?.onAttachmentClick(item)
+    }
+
     override fun onJoinClick() {
         defaultListeners?.onJoinClick()
         joinClickListener?.onJoinClick()
@@ -109,6 +115,7 @@ open class MessageInputClickListenersImpl : ClickListeners {
                 voiceLongClickListener = listener
                 cancelReplyMessageViewClickListener = listener
                 removeAttachmentClickListener = listener
+                onAttachmentClickListener = listener
                 joinClickListener = listener
                 clearChatClickListener = listener
                 scrollToNextMessageClickListener = listener
@@ -142,6 +149,10 @@ open class MessageInputClickListenersImpl : ClickListeners {
 
             is RemoveAttachmentClickListener -> {
                 removeAttachmentClickListener = listener
+            }
+
+            is MessageInputClickListeners.AttachmentClickListener -> {
+                onAttachmentClickListener = listener
             }
 
             is JoinClickListener -> {

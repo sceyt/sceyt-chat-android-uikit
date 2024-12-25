@@ -40,9 +40,15 @@ class AttachmentVideoViewHolder(
                     isVisible = durationMillis > 0
                 }
             }
-        }
 
-        itemView.setOnClickListener { clickListeners.onRemoveAttachmentClick(it, item) }
+            layoutRemove.setOnClickListener {
+                clickListeners.onRemoveAttachmentClick(it, item)
+            }
+
+            root.setOnClickListener {
+                clickListeners.onAttachmentClick(it, item)
+            }
+        }
     }
 
     private fun SceytItemInputVideoAttachmentBinding.setStyle() {

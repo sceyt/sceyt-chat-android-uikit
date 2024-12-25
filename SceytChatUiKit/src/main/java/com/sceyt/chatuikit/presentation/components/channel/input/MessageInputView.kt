@@ -63,14 +63,19 @@ import com.sceyt.chatuikit.presentation.components.channel.input.helpers.Message
 import com.sceyt.chatuikit.presentation.components.channel.input.link.SingleLinkDetailsProvider
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.action.InputActionsListener
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.action.InputActionsListener.InputActionListeners
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.action.InputActionsListenerImpl
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.action.setListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListenersImpl
-import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListeners.ClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.SelectFileTypePopupClickListenersImpl
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.setListener
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.event.InputEventsListener
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.event.InputEventsListener.InputEventListeners
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.event.InputEventsListenerImpl
+import com.sceyt.chatuikit.presentation.components.channel.input.listeners.event.setListener
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionAnnotation
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MentionUserHelper
@@ -78,6 +83,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQuery
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.query.InlineQueryChangedListener
+import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.ChooseFileTypeDialog
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadata
@@ -98,22 +104,24 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessageInputView @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr), MessageInputClickListeners.ClickListeners,
-        SelectFileTypePopupClickListeners.ClickListeners, InputEventsListener.InputEventListeners,
-        InputActionsListener.InputActionListeners {
+        ClickListeners, InputEventListeners,
+        InputActionListeners {
 
     private lateinit var attachmentsAdapter: AttachmentsAdapter
     private var attachmentsViewHolderFactory by lazyVar { AttachmentsViewHolderFactory(context, style) }
     private var allAttachments = mutableListOf<Attachment>()
     private val binding: SceytMessageInputViewBinding
     private var style: MessageInputStyle
-    private var clickListeners = MessageInputClickListenersImpl(this)
-    private var eventListeners = InputEventsListenerImpl(this)
-    private var actionListeners = InputActionsListenerImpl(this)
-    private var selectFileTypePopupClickListeners = SelectFileTypePopupClickListenersImpl(this)
+    private var clickListeners: MessageInputClickListeners.ClickListeners = MessageInputClickListenersImpl(this)
+    private var eventListeners: InputEventListeners = InputEventsListenerImpl(this)
+    private var actionListeners: InputActionListeners = InputActionsListenerImpl(this)
+    private var selectFileTypePopupClickListeners: ClickListeners = SelectFileTypePopupClickListenersImpl(this)
     private var filePickerHelper: FilePickerHelper? = null
     private val typingDebounceHelper by lazy { DebounceHelper(100, getScope()) }
     private var typingTimeoutJob: Job? = null
@@ -439,8 +447,14 @@ class MessageInputView @JvmOverloads constructor(
         attachmentsAdapter = AttachmentsAdapter(
             data = allAttachments.map { AttachmentItem(it) },
             factory = attachmentsViewHolderFactory.also {
-                it.setClickListener(AttachmentClickListeners.RemoveAttachmentClickListener { _, item ->
-                    clickListeners.onRemoveAttachmentClick(item)
+                it.setClickListener(object : AttachmentClickListeners.ClickListeners {
+                    override fun onRemoveAttachmentClick(view: View, item: AttachmentItem) {
+                        clickListeners.onRemoveAttachmentClick(item)
+                    }
+
+                    override fun onAttachmentClick(view: View, item: AttachmentItem) {
+                        clickListeners.onAttachmentClick(item)
+                    }
                 })
             })
         binding.rvAttachments.adapter = attachmentsAdapter
@@ -756,8 +770,9 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
-    fun setCustomClickListener(listener: MessageInputClickListenersImpl) {
-        clickListeners = listener.withDefaultListeners(this)
+    fun setCustomClickListener(listener: MessageInputClickListeners.ClickListeners) {
+        clickListeners = (listener as? MessageInputClickListenersImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     @Suppress("unused")
@@ -766,8 +781,9 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
-    fun setCustomActionListener(listener: InputActionsListenerImpl) {
-        actionListeners = listener.withDefaultListeners(this)
+    fun setCustomActionListener(listener: InputActionListeners) {
+        actionListeners = (listener as? InputActionsListenerImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     @Suppress("unused")
@@ -776,13 +792,15 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
-    fun setCustomEventListener(listener: InputEventsListenerImpl) {
-        eventListeners = listener.withDefaultListeners(this)
+    fun setCustomEventListener(listener: InputEventListeners) {
+        eventListeners = (listener as? InputEventsListenerImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     @Suppress("unused")
-    fun setCustomSelectFileTypePopupClickListener(listener: SelectFileTypePopupClickListenersImpl) {
-        selectFileTypePopupClickListeners = listener.withDefaultListeners(this)
+    fun setCustomSelectFileTypePopupClickListener(listener: ClickListeners) {
+        selectFileTypePopupClickListeners = (listener as? SelectFileTypePopupClickListenersImpl)?.withDefaultListeners(this)
+                ?: listener
     }
 
     @Suppress("unused")
@@ -834,13 +852,16 @@ class MessageInputView @JvmOverloads constructor(
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
         attachmentsAdapter.removeItem(item)
         allAttachments.remove(item.attachment)
-        binding.viewAttachments.isVisible = allAttachments.isNotEmpty()
+        determineInputState()
         // Delete file if it was copied to the app's internal storage
         val file = File(item.attachment.filePath)
         val copedFileDir = File(context.filesDir, SceytConstants.CopyFileDirName)
         if (file.parent?.startsWith(copedFileDir.path) == true)
             doSafe { file.delete() }
-        determineInputState()
+    }
+
+    override fun onAttachmentClick(item: AttachmentItem) {
+        item.attachment.openFile(context)
     }
 
     override fun onJoinClick() {
