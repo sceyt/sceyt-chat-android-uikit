@@ -20,9 +20,6 @@ open class ChannelPopupClickListenersImpl : ChannelPopupClickListeners.PopupClic
     private var leaveChannelListener: ChannelPopupClickListeners.LeaveChannel? = null
     private var deleteChannelListener: ChannelPopupClickListeners.DeleteChannel? = null
     private var clearHistoryListener: ChannelPopupClickListeners.ClearHistory? = null
-    private var blockChannelListener: ChannelPopupClickListeners.BlockChannel? = null
-    private var blockUserListener: ChannelPopupClickListeners.BlockUser? = null
-    private var unBlockUserListener: ChannelPopupClickListeners.UnBlockUser? = null
 
     override fun onMarkAsReadClick(channel: SceytChannel) {
         defaultListeners?.onMarkAsReadClick(channel)
@@ -69,21 +66,6 @@ open class ChannelPopupClickListenersImpl : ChannelPopupClickListeners.PopupClic
         clearHistoryListener?.onClearHistoryClick(channel)
     }
 
-    override fun onBlockChannelClick(channel: SceytChannel) {
-        defaultListeners?.onBlockChannelClick(channel)
-        blockChannelListener?.onBlockChannelClick(channel)
-    }
-
-    override fun onBlockUserClick(channel: SceytChannel) {
-        defaultListeners?.onBlockUserClick(channel)
-        blockUserListener?.onBlockUserClick(channel)
-    }
-
-    override fun onUnBlockUserClick(channel: SceytChannel) {
-        defaultListeners?.onUnBlockUserClick(channel)
-        unBlockUserListener?.onUnBlockUserClick(channel)
-    }
-
     fun setListener(listener: ChannelPopupClickListeners) {
         when (listener) {
             is ChannelPopupClickListeners.PopupClickListeners -> {
@@ -96,9 +78,6 @@ open class ChannelPopupClickListenersImpl : ChannelPopupClickListeners.PopupClic
                 markAsUnReadListener = listener
                 leaveChannelListener = listener
                 clearHistoryListener = listener
-                blockChannelListener = listener
-                blockUserListener = listener
-                unBlockUserListener = listener
             }
 
             is ChannelPopupClickListeners.Pin -> {
@@ -136,23 +115,11 @@ open class ChannelPopupClickListenersImpl : ChannelPopupClickListeners.PopupClic
             is ChannelPopupClickListeners.ClearHistory -> {
                 clearHistoryListener = listener
             }
-
-            is ChannelPopupClickListeners.BlockChannel -> {
-                blockChannelListener = listener
-            }
-
-            is ChannelPopupClickListeners.BlockUser -> {
-                blockUserListener = listener
-            }
-
-            is ChannelPopupClickListeners.UnBlockUser -> {
-                unBlockUserListener = listener
-            }
         }
     }
 
     internal fun withDefaultListeners(
-            listener: ChannelPopupClickListeners.PopupClickListeners
+            listener: ChannelPopupClickListeners.PopupClickListeners,
     ): ChannelPopupClickListenersImpl {
         defaultListeners = listener
         return this

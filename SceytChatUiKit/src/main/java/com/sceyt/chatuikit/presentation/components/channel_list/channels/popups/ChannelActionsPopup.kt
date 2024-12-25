@@ -8,7 +8,6 @@ import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.PopupMenu
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 
 open class ChannelActionsPopup(
         context: Context,
@@ -23,14 +22,17 @@ open class ChannelActionsPopup(
 
         val isGroup = channel.isGroup
         menu.findItem(R.id.sceyt_leave_channel).isVisible = isGroup
-        menu.findItem(R.id.sceyt_block_channel)?.isVisible = isGroup
+        menu.findItem(R.id.sceyt_delete_channel)?.isVisible = !isGroup
 
         menu.findItem(R.id.sceyt_mark_as_read).isVisible = channel.newMessageCount > 0 || channel.unread
         menu.findItem(R.id.sceyt_mark_as_unread).isVisible = channel.newMessageCount == 0L && !channel.unread
 
-        val isBlocked = channel.isPeerBlocked()
-        menu.findItem(R.id.sceyt_block_user)?.isVisible = isBlocked.not() && isGroup.not()
-        menu.findItem(R.id.sceyt_un_block_user)?.isVisible = isBlocked && isGroup.not()
+        menu.findItem(R.id.sceyt_pin_channel).isVisible = !channel.pinned
+        menu.findItem(R.id.sceyt_unpin_channel).isVisible = channel.pinned
+
+        menu.findItem(R.id.sceyt_mute_channel).isVisible = !channel.muted
+        menu.findItem(R.id.sceyt_un_mute_channel).isVisible = channel.muted
+
         super.show()
     }
 }
