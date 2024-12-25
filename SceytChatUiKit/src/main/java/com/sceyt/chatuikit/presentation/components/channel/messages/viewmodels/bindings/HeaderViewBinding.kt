@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.bindings
 
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -63,15 +62,14 @@ fun MessageListViewModel.bind(headerView: MessagesListHeaderView,
     }
 
     joinLiveData.observe(lifecycleOwner) {
-        if (!replyInThread)
-            getChannel(channel.id)
+        if (!replyInThread && it is SceytResponse.Success) {
+            headerView.setChannel(it.data ?: return@observe)
+        }
     }
 
-    channelLiveData.observe(lifecycleOwner, Observer {
-        if (it is SceytResponse.Success) {
-            channel = it.data ?: return@Observer
-            if (!replyInThread)
-                headerView.setChannel(it.data)
+    channelLiveData.observe(lifecycleOwner) {
+        if (!replyInThread && it is SceytResponse.Success) {
+            headerView.setChannel(it.data ?: return@observe)
         }
-    })
+    }
 }

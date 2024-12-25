@@ -98,6 +98,11 @@ dependencies {
     androidTestImplementation libs.truth
     testImplementation libs.junit
     testImplementation libs.truth
+    testImplementation libs.kotlinx.coroutines.test
+    testImplementation libs.mockito.core
+    testImplementation libs.mockito.inline
+    testImplementation libs.mockito.kotlin
+
     // Koin testing tools
     testImplementation libs.koin.test
     androidTestImplementation libs.koin.test

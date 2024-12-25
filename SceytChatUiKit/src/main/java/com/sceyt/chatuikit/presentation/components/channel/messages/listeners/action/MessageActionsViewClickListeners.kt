@@ -40,3 +40,7 @@ sealed interface MessageActionsViewClickListeners {
     interface ActionsViewClickListeners : CopyMessage, DeleteMessage, EditMessage, MessageInfo,
             ForwardMessage, ReactMessage, ReplyMessage, ReplyInThreadMessage
 }
+
+internal fun MessageActionsViewClickListeners.setListener(listener: MessageActionsViewClickListeners) {
+    (this as? MessageActionsViewClickListenersImpl)?.setListener(listener)
+}

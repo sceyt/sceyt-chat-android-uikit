@@ -92,3 +92,7 @@ sealed interface MessageClickListeners {
             AttachmentLoaderClickListener,
             MultiSelectClickListener
 }
+
+internal fun MessageClickListeners.setListener(listener: MessageClickListeners) {
+    (this as? MessageClickListenersImpl)?.setListener(listener)
+}
