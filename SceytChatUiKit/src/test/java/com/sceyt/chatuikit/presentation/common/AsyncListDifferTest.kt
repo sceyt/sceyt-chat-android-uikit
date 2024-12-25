@@ -13,7 +13,9 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Before
+import org.junit.FixMethodOrder
 import org.junit.Test
+import org.junit.runners.MethodSorters
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -29,16 +31,11 @@ class AsyncListDifferTest {
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
         diffUtil = mock()
         updateCallback = mock()
         listUpdateListener = mock()
         asyncListDiffer = AsyncListDiffer(updateCallback, diffUtil, testDispatcher, testDispatcher)
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
     }
 
     @Test
@@ -252,15 +249,11 @@ class AsyncListDifferTest {
         asyncListDiffer.removeItem { it == "B" }
         asyncListDiffer.removeItem { it == "C" }
         asyncListDiffer.removeItem { it == "A" }
-        asyncListDiffer.updateItem({ it == "D" }, "D_UPDATED")
-        asyncListDiffer.addItem(1, "X")
-        asyncListDiffer.addItems(listOf("Y", "Z"))
-        asyncListDiffer.updateItem({ it == "Z" }, "Z_UPDATED")
 
         // Wait for completion
         delay(1000)
 
-        assertEquals(listOf("D_UPDATED","X", "E", "Y", "Z_UPDATED"), asyncListDiffer.currentList)
+        assertEquals(listOf("D", "E"), asyncListDiffer.currentList)
     }
 
     @Test
@@ -280,6 +273,46 @@ class AsyncListDifferTest {
         assertEquals(listOf("A_UPDATED", "B_UPDATED", "C_UPDATED", "D", "E"), asyncListDiffer.currentList)
     }
 
+    @Test
+    fun `multiple random operations should be work sequentially`() = runTest {
+        // Arrange
+        val initialList = listOf("A", "B", "C", "D", "E")
+
+        // Act
+        asyncListDiffer.submitList(initialList)
+        asyncListDiffer.removeItem { it == "B" }
+        asyncListDiffer.removeItem { it == "C" }
+        asyncListDiffer.removeItem { it == "A" }
+        asyncListDiffer.updateItem({ it == "D" }, "D_UPDATED")
+        asyncListDiffer.addItem(1, "X")
+        asyncListDiffer.addItems(listOf("Y", "Z"))
+        asyncListDiffer.updateItem({ it == "Z" }, "Z_UPDATED")
+
+        // Wait for completion
+        delay(1000)
+
+        assertEquals(listOf("D_UPDATED", "X", "E", "Y", "Z_UPDATED"), asyncListDiffer.currentList)
+    }
+
+    @Test
+    fun `multiple all operations will be canceled on submit list`() = runTest {
+        // Arrange
+        val initialList = listOf("A", "B", "C", "D", "E")
+
+        // Act
+        asyncListDiffer.submitList(initialList)
+        asyncListDiffer.removeItem { it == "B" }
+        asyncListDiffer.removeItem { it == "C" }
+        asyncListDiffer.removeItem { it == "A" }
+        asyncListDiffer.updateItem({ it == "D" }, "D_UPDATED")
+        asyncListDiffer.submitList(listOf("X", "Y", "Z"))
+        asyncListDiffer.updateItem({ it == "Z" }, "Z_UPDATED")
+
+        // Wait for completion
+        delay(1000)
+
+        assertEquals(listOf("X", "Y", "Z_UPDATED"), asyncListDiffer.currentList)
+    }
 
     @Test
     fun `get current list should be unmodifiable list`() {
