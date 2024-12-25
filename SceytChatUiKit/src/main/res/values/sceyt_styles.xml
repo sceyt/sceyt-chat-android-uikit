@@ -65,7 +65,7 @@
         <item name="cornerSizeBottomRight">4dp</item>
     </style>
 
-    <style name="SceytPopupMenuStyle" parent="@style/Widget.AppCompat.ListView.DropDown">
+    <style name="SceytPopupMenuStyle" parent="@style/Theme.MaterialComponents">
         <item name="popupMenuBackground">@drawable/sceyt_bg_popup</item>
         <item name="android:textColor">@color/sceyt_color_text_primary</item>
         <item name="android:overScrollMode">never</item>

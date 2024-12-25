@@ -3,6 +3,30 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/sceyt_pin_channel"
+        android:icon="@drawable/sceyt_ic_pin"
+        android:title="@string/sceyt_pin_chat"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/sceyt_unpin_channel"
+        android:icon="@drawable/sceyt_ic_un_pin"
+        android:title="@string/sceyt_un_pin_chat"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/sceyt_mute_channel"
+        android:icon="@drawable/sceyt_ic_mute"
+        android:title="@string/sceyt_mute_"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/sceyt_un_mute_channel"
+        android:icon="@drawable/sceyt_ic_un_mute"
+        android:title="@string/sceyt_un_mute_"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/sceyt_mark_as_read"
         android:icon="@drawable/sceyt_ic_mark_as_read"
         android:title="@string/sceyt_mark_as_read"
@@ -16,33 +40,15 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/sceyt_clear_history"
+        android:id="@+id/sceyt_delete_channel"
         android:icon="@drawable/sceyt_ic_trash"
-        android:title="@string/sceyt_clear_history"
+        android:title="@string/sceyt_delete"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/sceyt_leave_channel"
         android:icon="@drawable/sceyt_ic_leave"
         android:title="@string/sceyt_leave_channel"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/sceyt_block_channel"
-        android:icon="@drawable/sceyt_ic_block"
-        android:title="@string/sceyt_block_and_leave_channel"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/sceyt_block_user"
-        android:icon="@drawable/sceyt_ic_block"
-        android:title="@string/sceyt_block"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/sceyt_un_block_user"
-        android:icon="@drawable/sceyt_ic_block"
-        android:title="@string/sceyt_unblock"
         app:showAsAction="ifRoom" />
 
 </menu>

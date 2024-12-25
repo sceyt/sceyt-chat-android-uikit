@@ -16,9 +16,6 @@ import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.isFirstItemDisplaying
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
-import com.sceyt.chatuikit.persistence.extensions.getPeer
-import com.sceyt.chatuikit.persistence.extensions.isDirect
-import com.sceyt.chatuikit.presentation.common.SyncArrayList
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsItemComparatorBy
@@ -67,20 +64,22 @@ class ChannelsRV @JvmOverloads constructor(
 
     fun setData(channels: List<ChannelListItem>) {
         if (channelsAdapter == null) {
-            adapter = ChannelsAdapter(SyncArrayList(channels), viewHolderFactory)
+            adapter = ChannelsAdapter(channels, viewHolderFactory)
                 .also { channelsAdapter = it }
         } else {
-            channelsAdapter?.notifyUpdate(channels, this)
-            awaitAnimationEnd {
-                if (isFirstItemDisplaying())
-                    scrollToPosition(0)
-            }
+            val needScrollUp = isFirstItemDisplaying()
+            channelsAdapter?.notifyUpdate(channels) {
+                awaitAnimationEnd {
+                    if (needScrollUp)
+                        scrollToPosition(0)
+                }
 
-            context.maybeComponentActivity()?.let {
-                it.lifecycleScope.launch {
-                    it.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                        delay(500)
-                        checkReachToEnd()
+                context.maybeComponentActivity()?.let {
+                    it.lifecycleScope.launch {
+                        it.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                            delay(500)
+                            checkReachToEnd()
+                        }
                     }
                 }
             }
@@ -102,8 +101,8 @@ class ChannelsRV @JvmOverloads constructor(
             channelsAdapter?.addList(channels)
     }
 
-    fun deleteChannel(id: Long): Boolean {
-        return channelsAdapter?.deleteChannel(id) ?: false
+    fun deleteChannel(id: Long, commitCallback: (() -> Unit)? = null) {
+        channelsAdapter?.deleteChannel(id, commitCallback)
     }
 
     fun getChannels(): List<ChannelListItem.ChannelItem>? {
@@ -111,14 +110,30 @@ class ChannelsRV @JvmOverloads constructor(
     }
 
     fun getData(): List<ChannelListItem>? {
-        return channelsAdapter?.getData()
+        return channelsAdapter?.currentList
     }
 
     fun getChannelIndexed(channelId: Long): Pair<Int, ChannelListItem.ChannelItem>? {
-        return channelsAdapter?.getData()?.findIndexed {
+        return channelsAdapter?.currentList?.findIndexed {
             it is ChannelListItem.ChannelItem && it.channel.id == channelId
-        }?.let {
-            Pair(it.first, it.second as ChannelListItem.ChannelItem)
+        }?.let { (index, item) ->
+            index to item as ChannelListItem.ChannelItem
+        }
+    }
+
+    fun updateChannel(
+            predicate: (ChannelListItem) -> Boolean,
+            newItem: ChannelListItem,
+            payloads: Any? = null,
+            commitCallback: (() -> Unit)? = null,
+    ) {
+        post {
+            channelsAdapter?.updateChannel(
+                predicate,
+                newItem,
+                payloads,
+                commitCallback
+            )
         }
     }
 
@@ -142,7 +157,7 @@ class ChannelsRV @JvmOverloads constructor(
     }
 
     fun sortBy(sortChannelsBy: ChannelListOrder = SceytChatUIKit.config.channelListOrder) {
-        sortAndUpdate(sortChannelsBy, channelsAdapter?.getData() ?: return)
+        sortAndUpdate(sortChannelsBy, channelsAdapter?.currentList ?: return)
     }
 
     fun sortByAndSetNewData(sortChannelsBy: ChannelListOrder, data: List<ChannelListItem>) {
