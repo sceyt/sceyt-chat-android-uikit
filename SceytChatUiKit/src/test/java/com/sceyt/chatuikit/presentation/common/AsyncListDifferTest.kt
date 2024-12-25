@@ -252,11 +252,15 @@ class AsyncListDifferTest {
         asyncListDiffer.removeItem { it == "B" }
         asyncListDiffer.removeItem { it == "C" }
         asyncListDiffer.removeItem { it == "A" }
+        asyncListDiffer.updateItem({ it == "D" }, "D_UPDATED")
+        asyncListDiffer.addItem(1, "X")
+        asyncListDiffer.addItems(listOf("Y", "Z"))
+        asyncListDiffer.updateItem({ it == "Z" }, "Z_UPDATED")
 
         // Wait for completion
         delay(1000)
 
-        assertEquals(listOf("D", "E"), asyncListDiffer.currentList)
+        assertEquals(listOf("D_UPDATED","X", "E", "Y", "Z_UPDATED"), asyncListDiffer.currentList)
     }
 
     @Test
