@@ -5,10 +5,10 @@
     <item name="sceyt_leave_channel" type="id" />
     <item name="sceyt_mark_as_read" type="id" />
     <item name="sceyt_mark_as_unread" type="id" />
-    <item name="sceyt_block_channel" type="id" />
-    <item name="sceyt_block_user" type="id" />
-    <item name="sceyt_un_block_user" type="id" />
-    <item name="sceyt_clear_history" type="id" />
+    <item name="sceyt_mute_channel" type="id" />
+    <item name="sceyt_un_mute_channel" type="id" />
+    <item name="sceyt_pin_channel" type="id" />
+    <item name="sceyt_unpin_channel" type="id" />
 
     <!-- Message popup ids-->
     <item name="sceyt_edit_message" type="id" />

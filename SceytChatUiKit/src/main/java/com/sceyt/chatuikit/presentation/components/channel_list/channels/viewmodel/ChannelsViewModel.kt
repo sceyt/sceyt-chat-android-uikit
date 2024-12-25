@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.chatuikit.config.ChannelListConfig
@@ -9,16 +8,14 @@ import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
-import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.extensions.asLiveData
-import com.sceyt.chatuikit.persistence.extensions.getPeer
-import com.sceyt.chatuikit.persistence.extensions.isDirect
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
-import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem.ChannelItem
+import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsComparatorDescBy
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.data.ChannelEvent
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
@@ -26,13 +23,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 class ChannelsViewModel(
         internal val config: ChannelListConfig = ChannelListConfig.default,
 ) : BaseViewModel(), SceytKoinComponent {
     private val channelInteractor: ChannelInteractor by inject()
-    private val userInteractor: UserInteractor by inject()
     private var getChannelsJog: Job? = null
     val selectedChannels = mutableSetOf<Long>()
 
@@ -41,9 +38,6 @@ class ChannelsViewModel(
 
     private val _loadChannelsFlow = MutableStateFlow<PaginationResponse<SceytChannel>>(PaginationResponse.Nothing())
     val loadChannelsFlow: StateFlow<PaginationResponse<SceytChannel>> = _loadChannelsFlow
-
-    private val _blockUserLiveData = MutableLiveData<SceytResponse<List<SceytUser>>>()
-    val blockUserLiveData = _blockUserLiveData.asLiveData()
 
     fun getChannels(
             offset: Int,
@@ -101,7 +95,7 @@ class ChannelsViewModel(
     @Suppress("unused")
     fun searchLocalChannelsBySQLiteQuery(
             searchQuery: String,
-            sqLiteQuery: SimpleSQLiteQuery
+            sqLiteQuery: SimpleSQLiteQuery,
     ) {
         this.searchQuery = searchQuery
         setPagingLoadingStarted(
@@ -147,6 +141,55 @@ class ChannelsViewModel(
         pagingResponseReceived(response)
     }
 
+    internal suspend fun initDataOnNewChannelsOnSync(
+            existingChannels: List<SceytChannel>,
+            syncChannels: List<SceytChannel>,
+    ): List<ChannelListItem>? = withContext(Dispatchers.Default) {
+        // Filter channels by config
+        val filtered = syncChannels.filter { config.isValidForConfig(it) }
+        if (filtered.isEmpty()) return@withContext null
+
+        val existing = existingChannels.toMutableSet()
+        // If loadedChannels are empty and not loading data from server, it means we can setData,
+        // otherwise we filter only channels which are between loaded channels and
+        // insert them to the list.
+        if (existing.isEmpty()) {
+            if (loadingFromServer || loadingFromDb) return@withContext  null
+            val sorted = filtered.sortedWith(ChannelsComparatorDescBy(config.order))
+            val date = mapToChannelItem(data = sorted, hasNext = false)
+            SceytLog.i("syncResultUpdate", "loaded channels are empty, set data : ${sorted.map { it.channelSubject }}")
+            return@withContext  date
+        } else {
+            // Get last channel to understand where to insert new channels
+            val lastChannel = existing.last()
+            val sorted = filtered.toSet().plus(lastChannel).sortedWith(ChannelsComparatorDescBy(config.order))
+            val index = sorted.indexOf(lastChannel)
+
+            // If index is last and we have more channels, we don't need to insert them,
+            // because they will be inserted by next page loading
+            if (index == existing.size - 1 && (hasNext || hasNextDb)) {
+                return@withContext  null
+            }
+            // Get channels which need to be inserted
+            sorted.subList(0, index).forEach {
+                existing.add(it)
+            }
+            var newData: List<ChannelListItem> = existing.sortedWith(ChannelsComparatorDescBy(config.order)).map {
+                ChannelItem(it)
+            }
+
+            if (hasNext || hasNextDb)
+                newData = newData.plus(ChannelListItem.LoadingMoreItem)
+
+            SceytLog.i("syncResultUpdate", "should be applied synced channels : ${
+                newData.map {
+                    (it as? ChannelItem)?.channel?.channelSubject ?: it.toString()
+                }
+            }")
+            return@withContext  newData
+        }
+    }
+
     internal fun mapToChannelItem(
             data: List<SceytChannel>?, hasNext: Boolean,
             includeDirectChannelsWithDeletedPeers: Boolean = true,
@@ -159,7 +202,7 @@ class ChannelsViewModel(
         if (filteredChannels.isEmpty())
             return emptyList()
 
-        val channelItems = filteredChannels.map { ChannelListItem.ChannelItem(it) }
+        val channelItems = filteredChannels.map { ChannelItem(it) }
 
         return if (hasNext)
             channelItems + ChannelListItem.LoadingMoreItem
@@ -180,28 +223,6 @@ class ChannelsViewModel(
             val response = channelInteractor.markChannelAsUnRead(channelId)
             if (response is SceytResponse.Error)
                 notifyPageStateWithResponse(response)
-        }
-    }
-
-    fun blockAndLeaveChannel(channelId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val response = channelInteractor.blockAndLeaveChannel(channelId)
-            if (response is SceytResponse.Error)
-                notifyPageStateWithResponse(response)
-        }
-    }
-
-    fun blockUser(userId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val response = userInteractor.blockUnBlockUser(userId, true)
-            _blockUserLiveData.postValue(response)
-        }
-    }
-
-    fun unBlockUser(userId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val response = userInteractor.blockUnBlockUser(userId, false)
-            _blockUserLiveData.postValue(response)
         }
     }
 
@@ -283,19 +304,8 @@ class ChannelsViewModel(
         when (event) {
             is ChannelEvent.MarkAsRead -> markChannelAsRead(event.channel.id)
             is ChannelEvent.MarkAsUnRead -> markChannelAsUnRead(event.channel.id)
-            is ChannelEvent.BlockChannel -> blockAndLeaveChannel(event.channel.id)
             is ChannelEvent.ClearHistory -> clearHistory(event.channel.id, event.channel.isPublic())
             is ChannelEvent.LeaveChannel -> leaveChannel(event.channel.id)
-            is ChannelEvent.BlockUser -> {
-                if (event.channel.isDirect())
-                    blockUser((event.channel.getPeer() ?: return).id)
-            }
-
-            is ChannelEvent.UnBlockUser -> {
-                if (event.channel.isDirect())
-                    unBlockUser((event.channel.getPeer() ?: return).id)
-            }
-
             is ChannelEvent.DeleteChannel -> deleteChannel(event.channel.id)
             is ChannelEvent.Mute -> muteChannel(event.channel.id, event.muteUntil)
             is ChannelEvent.UnMute -> unMuteChannel(event.channel.id)

@@ -40,19 +40,7 @@ sealed interface ChannelPopupClickListeners {
         fun onClearHistoryClick(channel: SceytChannel)
     }
 
-    fun interface BlockChannel : ChannelPopupClickListeners {
-        fun onBlockChannelClick(channel: SceytChannel)
-    }
-
-    fun interface BlockUser : ChannelPopupClickListeners {
-        fun onBlockUserClick(channel: SceytChannel)
-    }
-
-    fun interface UnBlockUser : ChannelPopupClickListeners {
-        fun onUnBlockUserClick(channel: SceytChannel)
-    }
-
     /** Use this if you want to implement all callbacks */
-    interface PopupClickListeners : Pin, UnPin, Mute, UnMute, LeaveChannel, DeleteChannel, ClearHistory,
-            BlockChannel, MarkAsRead, MarkAsUnRead, BlockUser, UnBlockUser
+    interface PopupClickListeners : Pin, UnPin, Mute, UnMute, LeaveChannel, DeleteChannel,
+            ClearHistory, MarkAsRead, MarkAsUnRead
 }
