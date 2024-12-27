@@ -53,7 +53,7 @@ internal class FileTransferLogicImpl(
         private val attachmentLogic: PersistenceAttachmentLogic,
 ) : FileTransferLogic, SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
-    private var transferService: FileTransferUtility = FileTransferUtility(context)
+    private val transferUtility by lazy { FileTransferUtility(context) }
     private var downloadingUrlMap = hashMapOf<String, String>()
     private var thumbPaths = hashMapOf<String, ThumbPathsData>()
     private var preparingThumbsMap = hashMapOf<Long, Long>()
@@ -128,7 +128,7 @@ internal class FileTransferLogicImpl(
                 url = attachment.url)
             )
 
-            transferService.downloadFile(
+            transferUtility.downloadFile(
                 attachment = attachment,
                 destFile = destFile,
                 onProgress = { progressPercent ->
@@ -159,7 +159,7 @@ internal class FileTransferLogicImpl(
                     it.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseUpload))
                 }
 
-                transferService.pauseUpload(attachment)
+                transferUtility.pauseUpload(attachment)
                 uploadNext()
             }
 
@@ -170,7 +170,7 @@ internal class FileTransferLogicImpl(
                     it.resumePauseCallback?.onResumePause(attachment.toTransferData(PauseDownload))
                 }
 
-                transferService.pauseDownload(attachment)
+                transferUtility.pauseDownload(attachment)
             }
 
             else -> return
@@ -204,7 +204,7 @@ internal class FileTransferLogicImpl(
                     it.resumePauseCallback?.onResumePause(attachment.toTransferData(WaitingToUpload))
                 }
 
-                if (!transferService.resumeUpload(attachment)) {
+                if (!transferUtility.resumeUpload(attachment)) {
                     if (resizingAttachmentsMap[attachment.messageTid] == null) {
                         if (wasSharing)
                             uploadSharedFile(
@@ -230,7 +230,7 @@ internal class FileTransferLogicImpl(
                         SceytResponse.Success(file.path)
                     )
                 } else {
-                    if (!transferService.resumeDownload(attachment)) {
+                    if (!transferUtility.resumeDownload(attachment)) {
                         downloadingUrlMap.remove(attachment.downloadMapKey)
                         downloadFile(attachment, fileTransferService.findOrCreateTransferTask(attachment))
                     }
@@ -321,8 +321,8 @@ internal class FileTransferLogicImpl(
                 }
             } else SceytLog.i("resizeResult", "Couldn't resize file with reason ${it.exceptionOrNull()}")
 
-            if (!transferService.resumeUpload(attachment)) {
-                transferService.uploadFile(uploadAttachment,
+            if (!transferUtility.resumeUpload(attachment)) {
+                transferUtility.uploadFile(uploadAttachment,
                     onProgress = { progressPercent ->
                         transferTask.progressCallback?.onProgress(TransferData(transferTask.messageTid,
                             progressPercent, Uploading, uploadAttachment.filePath, null))
@@ -336,7 +336,7 @@ internal class FileTransferLogicImpl(
     }
 
     private fun uploadSharedAttachment(attachment: SceytAttachment, transferTask: TransferTask) {
-        transferService.uploadFile(
+        transferUtility.uploadFile(
             attachment = attachment,
             onProgress = { progressPercent ->
                 if (pausedTasksMap[attachment.messageTid] != null) return@uploadFile
