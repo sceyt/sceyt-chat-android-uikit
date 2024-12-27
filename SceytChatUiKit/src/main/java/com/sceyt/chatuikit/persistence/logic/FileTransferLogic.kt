@@ -11,6 +11,6 @@ interface FileTransferLogic {
     fun downloadFile(attachment: SceytAttachment, task: TransferTask)
     fun pauseLoad(attachment: SceytAttachment, state: TransferState)
     fun resumeLoad(attachment: SceytAttachment, state: TransferState)
-    fun getAttachmentThumb(messageTid: Long, attachment: SceytAttachment, thumbData: ThumbData)
+    fun getAttachmentThumb(messageTid: Long, attachment: SceytAttachment, data: ThumbData)
     fun clearPreparingThumbPaths()
 }

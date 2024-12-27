@@ -159,7 +159,7 @@ object CustomCompressor : CoroutineScope {
         }
 
         rotation = rotationData.toInt()
-        val bitrate = bitrateData.toInt()
+        val bitrate = bitrateData.toLong()
         duration = durationData.toLong() * 1000
 
         // Check for a min video bitrate before compression
