@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.persistence.repositories
 
 import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.SetProfileRequest
-import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 

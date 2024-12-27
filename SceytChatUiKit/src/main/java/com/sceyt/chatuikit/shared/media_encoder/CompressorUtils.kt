@@ -1,7 +1,11 @@
 package com.sceyt.chatuikit.shared.media_encoder
 
 import android.content.Context
-import android.media.*
+import android.media.MediaCodecInfo
+import android.media.MediaCodecList
+import android.media.MediaExtractor
+import android.media.MediaFormat
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.util.Log
@@ -205,7 +209,7 @@ object CompressorUtils {
      * @return new smaller bitrate value
      */
     fun getBitrate(
-            bitrate: Int,
+            bitrate: Long,
             quality: VideoQuality,
     ): Int {
         return when (quality) {
