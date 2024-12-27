@@ -1,5 +1,5 @@
 package com.sceyt.chat.demo.data.models
 
-data class DeleteUserResponse(
+data class UsernameValidationResponse(
         val message: String?
 )
