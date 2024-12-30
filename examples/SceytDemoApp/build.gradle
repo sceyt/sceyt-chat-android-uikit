@@ -24,11 +24,13 @@ android {
 
         ndk { abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64" }
     }
+
     flavorDimensions = ["environment"]
     buildTypes {
         release {
             signingConfig signingConfigs.debug
-            isDefault = true
+            minifyEnabled = true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

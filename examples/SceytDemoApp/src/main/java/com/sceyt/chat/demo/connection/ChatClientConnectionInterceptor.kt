@@ -6,8 +6,10 @@ import com.sceyt.chat.demo.data.repositories.ConnectionRepo
 import com.sceyt.chatuikit.logger.SceytLog
 import java.util.concurrent.atomic.AtomicBoolean
 
-class ChatClientConnectionInterceptor(private val connectionRepo: ConnectionRepo,
-                                      private val preference: AppSharedPreference) {
+class ChatClientConnectionInterceptor(
+        private val connectionRepo: ConnectionRepo,
+        private val preference: AppSharedPreference
+) {
 
     private var processing = AtomicBoolean(false)
 
