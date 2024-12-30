@@ -67,18 +67,20 @@ class ChannelsRV @JvmOverloads constructor(
             adapter = ChannelsAdapter(channels, viewHolderFactory)
                 .also { channelsAdapter = it }
         } else {
-            val needScrollUp = isFirstItemDisplaying()
-            channelsAdapter?.notifyUpdate(channels) {
-                awaitAnimationEnd {
-                    if (needScrollUp)
-                        scrollToPosition(0)
-                }
+            post {
+                val needScrollUp = isFirstItemDisplaying()
+                channelsAdapter?.notifyUpdate(channels) {
+                    awaitAnimationEnd {
+                        if (needScrollUp)
+                            scrollToPosition(0)
+                    }
 
-                context.maybeComponentActivity()?.let {
-                    it.lifecycleScope.launch {
-                        it.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                            delay(500)
-                            checkReachToEnd()
+                    context.maybeComponentActivity()?.let {
+                        it.lifecycleScope.launch {
+                            it.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                                delay(500)
+                                checkReachToEnd()
+                            }
                         }
                     }
                 }
