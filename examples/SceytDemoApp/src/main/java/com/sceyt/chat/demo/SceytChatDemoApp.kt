@@ -8,6 +8,8 @@ import com.sceyt.chat.demo.di.appModules
 import com.sceyt.chat.demo.di.repositoryModule
 import com.sceyt.chat.demo.di.viewModelModules
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.config.UploadNotificationPendingIntentData
+import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -37,6 +39,11 @@ class SceytChatDemoApp : Application() {
             appId = BuildConfig.APP_ID,
             clientId = UUID.randomUUID().toString(),
             enableDatabase = true
+        )
+
+        SceytChatUIKit.config.uploadNotificationPendingIntentData = UploadNotificationPendingIntentData(
+            classToOpen = ChannelActivity::class.java,
+            extraKey = ChannelActivity.CHANNEL
         )
     }
 }
