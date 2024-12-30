@@ -330,7 +330,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         SceytDialog.showDialog(requireContext(), R.string.sceyt_revoke_admin_title, R.string.sceyt_revoke_admin_desc, R.string.sceyt_revoke, positiveCb = {
             revokeAdmin(member)
         }).apply {
-            val name = style.itemStyle.listItemStyle.subtitleFormatter.format(requireContext(), member.user)
+            val name = style.itemStyle.listItemStyle.titleFormatter.format(requireContext(), member.user)
             val desc = String.format(getString(R.string.sceyt_revoke_admin_desc), name)
             val nameFromIndex = desc.lastIndexOf(name.toString())
             val roleFromIndex = desc.lastIndexOf("“Admin”")
@@ -359,7 +359,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         SceytDialog.showDialog(requireContext(), titleId = titleId, positiveBtnTitleId = R.string.sceyt_remove, positiveCb = {
             viewModel.kickMember(channel.id, member.id, false)
         }).apply {
-            val name = style.itemStyle.listItemStyle.subtitleFormatter.format(requireContext(), member.user)
+            val name = style.itemStyle.listItemStyle.titleFormatter.format(requireContext(), member.user)
             val desc = String.format(getString(descId), name)
             val fromIndex = desc.lastIndexOf(name.toString())
             setDescription(desc.setBoldSpan(fromIndex, fromIndex + name.length))

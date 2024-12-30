@@ -13,7 +13,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class PickerVideoViewHolder(
         private val binding: SceytItemPickerVideoBinding,
         private val style: MediaPickerItemStyle,
-        clickListener: MediaAdapter.MediaClickListener
+        clickListener: MediaAdapter.MediaClickListener,
 ) : BasePickerViewHolder(binding.root, clickListener) {
 
     private lateinit var mediaItem: MediaItem.Video
@@ -22,10 +22,6 @@ class PickerVideoViewHolder(
         binding.applyStyle()
 
         itemView.setOnClickListener {
-            onItemClick(mediaItem)
-        }
-
-        binding.checkbox.setOnClickListener {
             onItemClick(mediaItem)
         }
     }
