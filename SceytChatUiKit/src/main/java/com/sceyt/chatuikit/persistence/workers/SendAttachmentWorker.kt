@@ -26,6 +26,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.extensions.hasPermissions
 import com.sceyt.chatuikit.extensions.initPendingIntent
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -59,8 +60,13 @@ object SendAttachmentWorkManager : SceytKoinComponent {
     internal const val UPLOAD_CHANNEL_ID = "Sceyt_Upload_Attachment_Channel"
     internal const val NOTIFICATION_ID = 1223344
 
-    fun schedule(context: Context, messageTid: Long, channelId: Long?,
-                 workPolicy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP, isSharing: Boolean = false): Operation {
+    fun schedule(
+            context: Context,
+            messageTid: Long,
+            channelId: Long?,
+            workPolicy: ExistingWorkPolicy = ExistingWorkPolicy.KEEP,
+            isSharing: Boolean = false,
+    ): Operation {
         val dataBuilder = Data.Builder()
         dataBuilder.putLong(MESSAGE_TID, messageTid)
         dataBuilder.putBoolean(IS_SHARING, isSharing)
@@ -171,11 +177,12 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         if (tmpMessage.deliveryStatus != DeliveryStatus.Pending)
             return Result.success()
 
-        startForeground(tmpMessage.channelId)
+        if (applicationContext.hasPermissions(android.Manifest.permission.FOREGROUND_SERVICE))
+            startForeground(tmpMessage.channelId)
 
         val result = checkToUploadAttachmentsBeforeSend(tmpMessage, isSharing)
         return if (result.isSuccess && !isStopped) {
-            val messageToSend  = tmpMessage.copy(attachments = result.getOrThrow()).toMessage()
+            val messageToSend = tmpMessage.copy(attachments = result.getOrThrow()).toMessage()
 
             ConnectionEventManager.awaitToConnectSceyt()
             val response = messageLogic.sendMessageWithUploadedAttachments(tmpMessage.channelId, messageToSend)
