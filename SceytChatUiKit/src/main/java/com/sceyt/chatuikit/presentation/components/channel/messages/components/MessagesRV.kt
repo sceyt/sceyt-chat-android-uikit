@@ -33,6 +33,7 @@ import com.sceyt.chatuikit.shared.helpers.MessageSwipeController
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.absoluteValue
 
 
 class MessagesRV @JvmOverloads constructor(
@@ -62,6 +63,7 @@ class MessagesRV @JvmOverloads constructor(
     private var swipeToReplyListener: ((MessageListItem) -> Unit)? = null
     private var enableSwipe: Boolean = true
     private lateinit var style: MessagesListViewStyle
+    private var scrollY = 0
 
     init {
         init()
@@ -87,6 +89,7 @@ class MessagesRV @JvmOverloads constructor(
 
     private fun addOnScrollListener() {
         addRVScrollListener(onScrolled = { _: RecyclerView, _: Int, dy: Int ->
+            scrollY += dy
             checkNeedLoadPrev(dy)
             checkNeedLoadNext(dy)
         }, onScrollStateChanged = { _, newState ->
@@ -128,7 +131,7 @@ class MessagesRV @JvmOverloads constructor(
     private fun checkNeedLoadNext(dy: Int) {
         if (mAdapter.itemCount == 0) return
         val lastVisiblePosition = getLastVisibleItemPosition()
-        checkScrollDown(lastVisiblePosition)
+        checkScrollDown()
 
         if (mAdapter.itemCount - lastVisiblePosition <= messageListQueryLimit / 2 && dy > 0) {
             if (lastVisiblePosition == mAdapter.itemCount - 1) {
@@ -153,8 +156,13 @@ class MessagesRV @JvmOverloads constructor(
         it is MessageListItem.MessageItem && it.message.deliveryStatus != DeliveryStatus.Pending
     }
 
-    private fun checkScrollDown(lastVisiblePosition: Int) {
-        showHideDownScroller?.invoke(mAdapter.itemCount - lastVisiblePosition >= 2 && canScrollVertically(0))
+    private fun checkScrollDown() {
+        val canScrollVertically = canScrollVertically(0)
+        if (!canScrollVertically)
+            scrollY = 0
+
+        val show = canScrollVertically && scrollY.absoluteValue >= 300
+        showHideDownScroller?.invoke(show)
     }
 
     private fun checkScrollToEnd(addedItemsCount: Int, isMySendMessage: Boolean): Boolean {
@@ -276,11 +284,11 @@ class MessagesRV @JvmOverloads constructor(
         needLoadNextMessagesListener = listener
     }
 
-    fun setreachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+    fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         reachToStartListener = listener
     }
 
-    fun setreachToEndListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
+    fun setReachToEndListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
         reachToEndListener = listener
     }
 
