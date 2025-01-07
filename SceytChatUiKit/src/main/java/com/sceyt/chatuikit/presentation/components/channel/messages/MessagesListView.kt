@@ -631,7 +631,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     internal fun setReachToStartListener(listener: (offset: Int, message: MessageListItem?) -> Unit) {
-        messagesRV.setreachToStartListener(listener)
+        messagesRV.setReachToStartListener(listener)
     }
 
     internal fun setMessageReactionsEventListener(listener: (ReactionEvent) -> Unit) {
