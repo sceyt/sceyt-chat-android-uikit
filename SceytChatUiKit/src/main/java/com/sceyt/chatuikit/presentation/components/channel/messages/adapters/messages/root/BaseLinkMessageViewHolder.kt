@@ -83,7 +83,7 @@ abstract class BaseLinkMessageViewHolder(
                 }?.blurredThumb?.toDrawable(context.resources) ?: style.linkPreviewStyle.placeHolder
 
                 Glide.with(context.applicationContext)
-                    .load(data.imageUrl + "ijij1")
+                    .load(data.imageUrl)
                     .override(data.imageWidth ?: maxSize, data.imageHeight ?: maxSize)
                     .placeholder(thumb)
                     .listener(glideRequestListener(
