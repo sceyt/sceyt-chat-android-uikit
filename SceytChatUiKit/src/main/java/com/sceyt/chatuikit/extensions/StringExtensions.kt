@@ -16,9 +16,6 @@ import androidx.emoji2.text.EmojiSpan
 import com.google.gson.Gson
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.data.models.messages.MarkerType
-import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT
-import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING
-import java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE
 import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT
 import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
 import java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING
@@ -126,17 +123,13 @@ fun CharSequence?.isValidEmail(): Boolean {
 }
 
 fun String?.isRtl(): Boolean {
-    this ?: return false
+    if (isNullOrBlank()) return false
     for (char in this) {
         when (getDirectionality(char)) {
             DIRECTIONALITY_RIGHT_TO_LEFT,
             DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC,
             DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING,
             DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE -> return true
-
-            DIRECTIONALITY_LEFT_TO_RIGHT,
-            DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING,
-            DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE -> return false
         }
     }
     return false
