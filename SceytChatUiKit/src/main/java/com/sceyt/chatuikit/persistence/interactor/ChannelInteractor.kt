@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.interactor
 
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.chatuikit.config.ChannelListConfig
+import com.sceyt.chatuikit.config.SearchChannelParams
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -28,11 +29,12 @@ interface ChannelInteractor {
             offset: Int,
             searchQuery: String,
             userIds: List<String>,
+            config: ChannelListConfig,
+            params: SearchChannelParams,
             includeSearchByUserDisplayName: Boolean,
-            loadKey: LoadKeyData?,
             onlyMine: Boolean,
             ignoreDb: Boolean,
-            config: ChannelListConfig,
+            loadKey: LoadKeyData?,
             directChatType: String = ChannelTypeEnum.Direct.value
     ): Flow<PaginationResponse<SceytChannel>>
 

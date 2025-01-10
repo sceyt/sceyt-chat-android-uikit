@@ -11,6 +11,7 @@ import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.UserState
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.ChannelListConfig
+import com.sceyt.chatuikit.config.SearchChannelParams
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.ClearedHistory
@@ -306,7 +307,8 @@ internal class PersistenceChannelsLogicImpl(
 
             awaitToConnectSceyt()
 
-            val response = if (offset == 0) channelsRepository.getChannels(searchQuery, config)
+            val response = if (offset == 0)
+                channelsRepository.getChannels(searchQuery, config, SearchChannelParams.default)
             else channelsRepository.loadMoreChannels()
 
             if (response is SceytResponse.Success) {
@@ -334,11 +336,12 @@ internal class PersistenceChannelsLogicImpl(
             offset: Int,
             searchQuery: String,
             userIds: List<String>,
+            config: ChannelListConfig,
+            params: SearchChannelParams,
             includeSearchByUserDisplayName: Boolean,
-            loadKey: LoadKeyData?,
             onlyMine: Boolean,
             ignoreDb: Boolean,
-            config: ChannelListConfig,
+            loadKey: LoadKeyData?,
             directChatType: String,
     ): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
@@ -372,7 +375,7 @@ internal class PersistenceChannelsLogicImpl(
             awaitToConnectSceyt()
 
             val response = if (offset == 0)
-                channelsRepository.getChannels(searchQuery, config)
+                channelsRepository.getChannels(searchQuery, config, params)
             else channelsRepository.loadMoreChannels()
 
             if (response is SceytResponse.Success) {
