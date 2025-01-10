@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.persistence.repositories
 
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chatuikit.config.ChannelListConfig
+import com.sceyt.chatuikit.config.SearchChannelParams
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
@@ -13,7 +14,12 @@ import kotlinx.coroutines.flow.Flow
 interface ChannelsRepository {
     suspend fun getChannel(id: Long): SceytResponse<SceytChannel>
     suspend fun getChannelByUri(uri: String): SceytResponse<SceytChannel?>
-    suspend fun getChannels(query: String, config: ChannelListConfig): SceytResponse<List<SceytChannel>>
+    suspend fun getChannels(
+            query: String,
+            config: ChannelListConfig,
+            params: SearchChannelParams
+    ): SceytResponse<List<SceytChannel>>
+
     suspend fun getAllChannels(limit: Int): Flow<GetAllChannelsResponse>
     suspend fun loadMoreChannels(): SceytResponse<List<SceytChannel>>
     suspend fun createChannel(channelData: CreateChannelData): SceytResponse<SceytChannel>

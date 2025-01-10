@@ -46,15 +46,19 @@ interface UserDao {
     @Query("select * from users where user_id in (:id)")
     suspend fun getUsersById(id: List<String>): List<UserDb>
 
-    @Query("select user_id from users where firstName like '%' || :searchQuery || '%' " +
-            "or lastName like  '%' || :searchQuery || '%' or (firstName || ' ' || lastName) like :searchQuery || '%'")
+    @Query("""
+           select user_id from users where 
+           firstName like '%' || :searchQuery || '%' 
+           or lastName like  '%' || :searchQuery || '%'
+           or (firstName || ' ' || lastName) like :searchQuery || '%'
+           """)
     suspend fun getUserIdsByDisplayName(searchQuery: String): List<String>
 
     @Transaction
     @Query("""
-            select * from users where user_id in (
-            select user_id from UserMetadata
-            where `key` in (:key) and value like '%' || :value || '%')
+           select * from users where user_id in (
+           select user_id from UserMetadata
+           where `key` in (:key) and value like '%' || :value || '%')
            """
     )
     suspend fun searchUsersByMetadata(key: List<String>, value: String): List<UserDb>

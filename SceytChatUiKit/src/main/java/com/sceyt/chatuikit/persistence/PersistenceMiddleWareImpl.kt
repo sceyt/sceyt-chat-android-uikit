@@ -8,6 +8,7 @@ import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.UserListQuery
 import com.sceyt.chatuikit.config.ChannelListConfig
+import com.sceyt.chatuikit.config.SearchChannelParams
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
@@ -172,23 +173,25 @@ internal class PersistenceMiddleWareImpl(
             offset: Int,
             searchQuery: String,
             userIds: List<String>,
+            config: ChannelListConfig,
+            params: SearchChannelParams,
             includeSearchByUserDisplayName: Boolean,
-            loadKey: LoadKeyData?,
             onlyMine: Boolean,
             ignoreDb: Boolean,
-            config: ChannelListConfig,
+            loadKey: LoadKeyData?,
             directChatType: String,
     ): Flow<PaginationResponse<SceytChannel>> {
         return channelLogic.searchChannelsWithUserIds(
-            offset,
-            searchQuery,
-            userIds,
-            includeSearchByUserDisplayName,
-            loadKey,
-            onlyMine,
-            ignoreDb,
-            config,
-            directChatType,
+            offset = offset,
+            searchQuery = searchQuery,
+            userIds = userIds,
+            config = config,
+            params = params,
+            includeSearchByUserDisplayName = includeSearchByUserDisplayName,
+            onlyMine = onlyMine,
+            ignoreDb = ignoreDb,
+            loadKey = loadKey,
+            directChatType = directChatType,
         )
     }
 

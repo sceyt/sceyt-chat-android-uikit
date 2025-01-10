@@ -18,7 +18,6 @@ import com.sceyt.chat.demo.presentation.main.profile.edit.EditProfileFragment
 import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
 import com.sceyt.chatuikit.config.defaults.DefaultMuteNotificationOptions
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.isNightMode
 import com.sceyt.chatuikit.extensions.setOnlyClickable
@@ -83,10 +82,6 @@ class ProfileFragment : Fragment() {
             preference.setString(AppSharedPreference.PREF_USER_TOKEN, null)
             WelcomeActivity.launch(requireContext())
             requireActivity().finish()
-        }
-
-        viewModel.logOutErrorLiveData.observe(viewLifecycleOwner) {
-            customToastSnackBar(it.toString())
         }
     }
 
