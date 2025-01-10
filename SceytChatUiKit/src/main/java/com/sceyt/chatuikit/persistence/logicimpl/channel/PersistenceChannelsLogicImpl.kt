@@ -337,7 +337,6 @@ internal class PersistenceChannelsLogicImpl(
             searchQuery: String,
             userIds: List<String>,
             config: ChannelListConfig,
-            params: SearchChannelParams,
             includeSearchByUserDisplayName: Boolean,
             onlyMine: Boolean,
             ignoreDb: Boolean,
@@ -375,7 +374,7 @@ internal class PersistenceChannelsLogicImpl(
             awaitToConnectSceyt()
 
             val response = if (offset == 0)
-                channelsRepository.getChannels(searchQuery, config, params)
+                channelsRepository.getChannels(searchQuery, config, SearchChannelParams.default)
             else channelsRepository.loadMoreChannels()
 
             if (response is SceytResponse.Success) {

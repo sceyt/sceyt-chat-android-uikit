@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmo
 import androidx.lifecycle.viewModelScope
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.chatuikit.config.ChannelListConfig
-import com.sceyt.chatuikit.config.SearchChannelParams
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -64,7 +63,6 @@ class ChannelsViewModel(
             offset: Int,
             query: String = searchQuery,
             userIds: List<String> = emptyList(),
-            searchConfig: SearchChannelParams = SearchChannelParams.default,
             directChatType: String = ChannelTypeEnum.Direct.value,
             config: ChannelListConfig = this.config,
             onlyMine: Boolean = false,
@@ -84,11 +82,10 @@ class ChannelsViewModel(
                 searchQuery = query,
                 userIds = userIds,
                 config = config,
-                params = searchConfig,
                 includeSearchByUserDisplayName = includeSearchByUserDisplayName,
-                loadKey = loadKey,
                 onlyMine = onlyMine,
                 ignoreDb = ignoreDatabase,
+                loadKey = loadKey,
                 directChatType = directChatType
             ).collect {
                 initPaginationResponse(it)
