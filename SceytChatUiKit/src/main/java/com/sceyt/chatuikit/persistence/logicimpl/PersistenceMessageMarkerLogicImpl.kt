@@ -7,9 +7,9 @@ import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
-import com.sceyt.chatuikit.persistence.dao.MarkerDao
-import com.sceyt.chatuikit.persistence.dao.MessageDao
-import com.sceyt.chatuikit.persistence.entity.messages.MarkerEntity
+import com.sceyt.chatuikit.persistence.database.dao.MarkerDao
+import com.sceyt.chatuikit.persistence.database.dao.MessageDao
+import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.interactor.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.mappers.toMarker
 import com.sceyt.chatuikit.persistence.mappers.toMarkerEntity

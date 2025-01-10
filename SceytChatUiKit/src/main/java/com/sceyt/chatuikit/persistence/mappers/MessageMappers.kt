@@ -7,13 +7,13 @@ import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.persistence.entity.messages.AutoDeleteMessageEntity
-import com.sceyt.chatuikit.persistence.entity.messages.DraftMessageDb
-import com.sceyt.chatuikit.persistence.entity.messages.DraftMessageEntity
-import com.sceyt.chatuikit.persistence.entity.messages.ForwardingDetailsDb
-import com.sceyt.chatuikit.persistence.entity.messages.MessageDb
-import com.sceyt.chatuikit.persistence.entity.messages.MessageEntity
-import com.sceyt.chatuikit.persistence.entity.messages.ParentMessageDb
+import com.sceyt.chatuikit.persistence.database.entity.messages.AutoDeleteMessageEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageDb
+import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.ForwardingDetailsDb
+import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
+import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.ParentMessageDb
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 
 fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(

@@ -5,9 +5,9 @@ import androidx.room.Room
 import com.sceyt.chatuikit.BuildConfig
 import com.sceyt.chatuikit.SceytChatUIFacade
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.persistence.DatabaseMigrations
+import com.sceyt.chatuikit.persistence.database.DatabaseMigrations
 import com.sceyt.chatuikit.persistence.PersistenceMiddleWareImpl
-import com.sceyt.chatuikit.persistence.SceytDatabase
+import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
