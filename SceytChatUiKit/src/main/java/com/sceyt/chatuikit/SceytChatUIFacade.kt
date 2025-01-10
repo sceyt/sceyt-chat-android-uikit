@@ -9,6 +9,7 @@ import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.persistence.SceytDatabase
+import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
@@ -29,6 +30,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 class SceytChatUIFacade(
@@ -66,10 +70,13 @@ class SceytChatUIFacade(
 
     init {
         FirebaseApp.initializeApp(context)
-        setListener()
+        setListeners()
     }
 
-    fun updateToken(token: String, listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
+    fun updateToken(
+            token: String,
+            listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null
+    ) {
         ChatClient.updateToken(token, object : ActionCallback {
             override fun onSuccess() {
                 listener?.invoke(true, null)
@@ -81,7 +88,7 @@ class SceytChatUIFacade(
         })
     }
 
-    private fun setListener() {
+    private fun setListeners() {
         ConnectionEventManager.onTokenExpired.onEach {
             _onTokenExpired.tryEmit(Unit)
         }.launchIn(scope)
@@ -91,25 +98,34 @@ class SceytChatUIFacade(
         }.launchIn(scope)
     }
 
-
-    fun clearData() {
+    suspend fun clearData() = withContext(Dispatchers.IO) {
         database.clearAllTables()
         preferences.clear()
         channelsCache.clearAll()
     }
 
-    fun logOut(unregisterPushCallback: ((success: Boolean, errorMessage: String?) -> Unit)? = null) {
-        sceytSyncManager.cancelSync()
-        WorkManager.getInstance(context).cancelAllWork()
-        clearData()
-        ClientWrapper.currentUser = null
-        clientUserId = null
-        FirebaseMessagingDelegate.unregisterFirebaseToken { success, error ->
-            if (success) {
-                ChatClient.getClient().disconnect()
-                unregisterPushCallback?.invoke(true, null)
-            } else {
-                unregisterPushCallback?.invoke(false, error)
+    fun logOut(
+            unregisterPushCallback: ((Result<Boolean>) -> Unit)? = null
+    ) {
+        scope.launch {
+            sceytSyncManager.cancelSync()
+            WorkManager.getInstance(context).cancelAllWork()
+            clearData()
+            val result = unregisterFirebaseToken()
+            ChatClient.getClient().disconnect()
+            ClientWrapper.currentUser = null
+            clientUserId = null
+            unregisterPushCallback?.invoke(result)
+        }
+    }
+
+    private suspend fun unregisterFirebaseToken(): Result<Boolean> = withContext(Dispatchers.IO) {
+        suspendCancellableCoroutine { continuation ->
+            FirebaseMessagingDelegate.unregisterFirebaseToken { success, error ->
+                if (success) {
+                    continuation.safeResume(Result.success(true))
+                } else
+                    continuation.safeResume(Result.failure(Exception(error)))
             }
         }
     }
