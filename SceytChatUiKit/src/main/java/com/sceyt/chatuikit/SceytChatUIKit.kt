@@ -89,6 +89,10 @@ object SceytChatUIKit : SceytKoinComponent {
         chatClient.disconnect()
     }
 
+    fun logOut(unregisterPushCallback: ((Result<Boolean>) -> Unit)? = null) {
+        chatUIFacade.logOut(unregisterPushCallback)
+    }
+
     fun setLogger(logLevel: SceytLogLevel, logger: SceytLogger) {
         SceytLog.setLogger(logLevel, logger)
     }
