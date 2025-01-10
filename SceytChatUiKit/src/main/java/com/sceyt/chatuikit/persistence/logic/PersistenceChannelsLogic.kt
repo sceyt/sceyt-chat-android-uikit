@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.persistence.logic
 
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.chatuikit.config.ChannelListConfig
-import com.sceyt.chatuikit.config.SearchChannelParams
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
@@ -40,7 +39,6 @@ interface PersistenceChannelsLogic {
             searchQuery: String,
             userIds: List<String>,
             config: ChannelListConfig,
-            params: SearchChannelParams,
             includeSearchByUserDisplayName: Boolean,
             onlyMine: Boolean,
             ignoreDb: Boolean,

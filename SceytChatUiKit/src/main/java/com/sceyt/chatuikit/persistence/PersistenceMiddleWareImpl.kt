@@ -8,7 +8,6 @@ import com.sceyt.chat.models.settings.UserSettings
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.UserListQuery
 import com.sceyt.chatuikit.config.ChannelListConfig
-import com.sceyt.chatuikit.config.SearchChannelParams
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
@@ -174,7 +173,6 @@ internal class PersistenceMiddleWareImpl(
             searchQuery: String,
             userIds: List<String>,
             config: ChannelListConfig,
-            params: SearchChannelParams,
             includeSearchByUserDisplayName: Boolean,
             onlyMine: Boolean,
             ignoreDb: Boolean,
@@ -186,7 +184,6 @@ internal class PersistenceMiddleWareImpl(
             searchQuery = searchQuery,
             userIds = userIds,
             config = config,
-            params = params,
             includeSearchByUserDisplayName = includeSearchByUserDisplayName,
             onlyMine = onlyMine,
             ignoreDb = ignoreDb,
