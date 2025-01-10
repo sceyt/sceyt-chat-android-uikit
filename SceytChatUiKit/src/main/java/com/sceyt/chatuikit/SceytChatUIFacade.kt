@@ -104,9 +104,7 @@ class SceytChatUIFacade(
         channelsCache.clearAll()
     }
 
-    fun logOut(
-            unregisterPushCallback: ((Result<Boolean>) -> Unit)? = null
-    ) {
+    fun logOut(unregisterPushCallback: ((Result<Boolean>) -> Unit)? = null) {
         scope.launch {
             sceytSyncManager.cancelSync()
             WorkManager.getInstance(context).cancelAllWork()
