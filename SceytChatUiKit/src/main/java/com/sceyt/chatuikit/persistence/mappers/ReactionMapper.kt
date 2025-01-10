@@ -7,12 +7,12 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.PendingReactionData
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.persistence.entity.channel.ChatUserReactionDb
-import com.sceyt.chatuikit.persistence.entity.channel.ChatUserReactionEntity
-import com.sceyt.chatuikit.persistence.entity.messages.ReactionDb
-import com.sceyt.chatuikit.persistence.entity.messages.ReactionEntity
-import com.sceyt.chatuikit.persistence.entity.messages.ReactionTotalEntity
-import com.sceyt.chatuikit.persistence.entity.pendings.PendingReactionEntity
+import com.sceyt.chatuikit.persistence.database.entity.channel.ChatUserReactionDb
+import com.sceyt.chatuikit.persistence.database.entity.channel.ChatUserReactionEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionDb
+import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionEntity
 
 fun SceytReaction.toReactionEntity() = ReactionEntity(
     id = id,

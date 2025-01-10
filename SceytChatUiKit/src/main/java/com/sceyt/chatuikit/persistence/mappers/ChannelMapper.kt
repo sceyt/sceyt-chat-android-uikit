@@ -6,8 +6,8 @@ import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.toSceytMember
-import com.sceyt.chatuikit.persistence.entity.channel.ChannelDb
-import com.sceyt.chatuikit.persistence.entity.channel.ChannelEntity
+import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelDb
+import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
 
 fun SceytChannel.toChannelEntity() = ChannelEntity(
     id = id,

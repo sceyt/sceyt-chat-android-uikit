@@ -13,11 +13,11 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.decodeByteArrayToBitmap
 import com.sceyt.chatuikit.extensions.getMimeTypeTakeFirstPart
 import com.sceyt.chatuikit.extensions.toByteArraySafety
-import com.sceyt.chatuikit.persistence.entity.FileChecksumEntity
-import com.sceyt.chatuikit.persistence.entity.messages.AttachmentDb
-import com.sceyt.chatuikit.persistence.entity.messages.AttachmentEntity
-import com.sceyt.chatuikit.persistence.entity.messages.AttachmentPayLoadEntity
-import com.sceyt.chatuikit.persistence.entity.messages.MessageEntity
+import com.sceyt.chatuikit.persistence.database.entity.FileChecksumEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentDb
+import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData.Companion.withPrettySizes
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState

@@ -9,11 +9,11 @@ import androidx.test.filters.SmallTest
 import com.google.common.truth.Truth
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chatuikit.persistence.SceytDatabase
-import com.sceyt.chatuikit.persistence.dao.LoadRangeDao
-import com.sceyt.chatuikit.persistence.dao.MessageDao
-import com.sceyt.chatuikit.persistence.entity.messages.LoadRangeEntity
-import com.sceyt.chatuikit.persistence.entity.messages.MessageEntity
+import com.sceyt.chatuikit.persistence.database.SceytDatabase
+import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
+import com.sceyt.chatuikit.persistence.database.dao.MessageDao
+import com.sceyt.chatuikit.persistence.database.entity.messages.LoadRangeEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
