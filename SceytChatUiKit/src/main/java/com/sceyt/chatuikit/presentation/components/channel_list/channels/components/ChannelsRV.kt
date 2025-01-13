@@ -63,11 +63,11 @@ class ChannelsRV @JvmOverloads constructor(
     }
 
     fun setData(channels: List<ChannelListItem>) {
-        if (channelsAdapter == null) {
-            adapter = ChannelsAdapter(channels, viewHolderFactory)
-                .also { channelsAdapter = it }
-        } else {
-            post {
+        post {
+            if (channelsAdapter == null) {
+                adapter = ChannelsAdapter(channels, viewHolderFactory)
+                    .also { channelsAdapter = it }
+            } else {
                 val needScrollUp = isFirstItemDisplaying()
                 channelsAdapter?.notifyUpdate(channels) {
                     awaitAnimationEnd {
