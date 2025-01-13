@@ -22,9 +22,14 @@ open class DefaultUserAndNotesAvatarRenderer : AvatarRenderer<SceytUser> {
 
         if (from.id == SceytChatUIKit.currentUserId) {
             builder.setImageUrl(null)
-            builder.setDefaultAvatar(context.getCompatDrawable(R.drawable.sceyt_ic_notes_with_bachgriund_layers).applyTintBackgroundLayer(
-                context, SceytChatUIKit.theme.colors.accentColor, R.id.backgroundLayer
-            ))
+            builder.setDefaultAvatar(
+                drawable = context
+                    .getCompatDrawable(R.drawable.sceyt_ic_notes_with_bachgriund_layers)
+                    .applyTintBackgroundLayer(
+                        context = context,
+                        tintColor = SceytChatUIKit.theme.colors.accentColor,
+                        bgLayerId = R.id.backgroundLayer
+                    ))
         }
 
         builder.build().applyToAvatar()
