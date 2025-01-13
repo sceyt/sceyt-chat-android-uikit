@@ -8,8 +8,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.applyTintBackgroundLayer
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.extensions.getFirstCharIsEmoji
-import com.sceyt.chatuikit.extensions.processEmojiCompat
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
@@ -59,23 +57,4 @@ open class DefaultChannelAvatarRenderer : AvatarRenderer<SceytChannel> {
             .build()
             .applyToAvatar()
     }
-
-    protected open fun getInitialText(title: String): CharSequence {
-        if (title.isBlank()) return ""
-        val strings = title.trim().split(" ").filter { it.isNotBlank() }
-        if (strings.isEmpty()) return ""
-        val data = strings[0].getFirstCharIsEmoji()
-        val firstChar = data.first
-        val isEmoji = data.second
-        if (isEmoji)
-            return firstChar.processEmojiCompat() ?: title.take(1)
-
-        val text = if (strings.size > 1) {
-            val secondChar = strings[1].getFirstCharIsEmoji().first
-            "${firstChar}${secondChar}".uppercase()
-        } else firstChar.toString().uppercase()
-
-        return text.processEmojiCompat() ?: title.take(1)
-    }
-
 }
