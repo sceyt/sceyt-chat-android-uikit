@@ -10,6 +10,7 @@ import com.sceyt.chat.demo.data.api.UserApiService
 import com.sceyt.chat.demo.data.interceptors.RetryInterceptor
 import com.sceyt.chat.demo.data.repositories.ConnectionRepo
 import com.sceyt.chat.demo.data.repositories.UserRepository
+import com.sceyt.chat.demo.presentation.main.profile.UserProfileViewModel
 import com.sceyt.chat.demo.presentation.main.profile.edit.EditProfileViewModel
 import com.sceyt.chat.demo.presentation.splash.SplashViewModel
 import com.sceyt.chat.demo.presentation.welcome.accounts_bottomsheet.SelectAccountsBottomSheetViewModel
@@ -43,6 +44,7 @@ val viewModelModules = module {
     viewModel { SelectAccountsBottomSheetViewModel() }
     viewModel { WelcomeViewModel(get(), get()) }
     viewModel { SplashViewModel(get()) }
+    viewModel { UserProfileViewModel(get()) }
 }
 
 val apiModule = module {

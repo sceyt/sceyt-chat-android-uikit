@@ -10,4 +10,8 @@ class UserRepository(
     suspend fun checkUsername(username: String) = makeApiCall {
         userApiService.checkUsername(username)
     }
+
+    suspend fun deleteUser(userId: String) = makeApiCall {
+        userApiService.deleteUser(userId)
+    }
 }

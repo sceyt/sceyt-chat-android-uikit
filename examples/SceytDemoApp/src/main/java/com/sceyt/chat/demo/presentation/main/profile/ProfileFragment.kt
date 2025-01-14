@@ -14,14 +14,14 @@ import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.databinding.FragmentProfileBinding
+import com.sceyt.chat.demo.presentation.main.profile.dialogs.LogoutDialog
 import com.sceyt.chat.demo.presentation.main.profile.edit.EditProfileFragment
 import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
 import com.sceyt.chatuikit.config.defaults.DefaultMuteNotificationOptions
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isNightMode
 import com.sceyt.chatuikit.extensions.setOnlyClickable
-import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.MuteNotificationDialog
 import com.sceyt.chatuikit.presentation.components.profile.viewmodel.ProfileViewModel
 import com.sceyt.chatuikit.presentation.extensions.setUserAvatar
@@ -31,12 +31,13 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import com.sceyt.chatuikit.R as SceytKitR
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
     private lateinit var displayNameDefaultBg: Drawable
     private val viewModel by viewModels<ProfileViewModel>()
+    private val userProfileViewModel: UserProfileViewModel by viewModel()
     private val preference by inject<AppSharedPreference>()
     private var currentUser: SceytUser? = null
     private var avatarUrl: String? = null
@@ -83,10 +84,15 @@ class ProfileFragment : Fragment() {
             WelcomeActivity.launch(requireContext())
             requireActivity().finish()
         }
+
+        userProfileViewModel.deleteUserErrorLiveData.observe(viewLifecycleOwner) {
+            customToastSnackBar(it.toString())
+        }
     }
 
     private fun FragmentProfileBinding.initViews() {
         displayNameDefaultBg = binding.displayName.background
+        ivEdit.isVisible = !userProfileViewModel.isDemoUser()
         switchNotifications.setOnlyClickable()
 
         avatar.setAvatarImageLoadListener {
@@ -114,15 +120,19 @@ class ProfileFragment : Fragment() {
         }
 
         logout.setOnClickListener {
-            SceytDialog(requireContext()).setTitle(getString(R.string.log_out_title))
-                .setDescription(getString(R.string.log_out_desc))
-                .setPositiveButtonTitle(getString(R.string.log_out))
-                .setPositiveButtonTextColor(requireContext().getCompatColor(SceytKitR.color.sceyt_color_warning))
-                .setPositiveButtonClickListener {
+            showLogoutDialog()
+        }
+    }
+
+    private fun showLogoutDialog() {
+        LogoutDialog(requireContext())
+            .setIsDemoUser(userProfileViewModel.isDemoUser())
+            .setAcceptCallback { deleteUser ->
+                userProfileViewModel.logout(deleteUser) {
                     viewModel.logout()
                 }
-                .show()
-        }
+            }
+            .show()
     }
 
     private fun setUserDetails(user: SceytUser?) {
