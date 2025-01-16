@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.logger.SceytLogLevel
 import com.sceyt.chatuikit.logger.SceytLogger
+import com.sceyt.chatuikit.notifications.SceytNotifications
 import com.sceyt.chatuikit.persistence.di.appModules
 import com.sceyt.chatuikit.persistence.di.cacheModule
 import com.sceyt.chatuikit.persistence.di.coroutineModule
@@ -50,6 +51,7 @@ object SceytChatUIKit : SceytKoinComponent {
     var formatters: SceytChatUIKitFormatters by lazyVar { SceytChatUIKitFormatters() }
     var providers: SceytChatUIKitProviders by lazyVar { SceytChatUIKitProviders() }
     var renderers: SceytChatUIKitRenderers by lazyVar { SceytChatUIKitRenderers() }
+    var notifications: SceytNotifications by lazyVar { SceytNotifications() }
 
     @JvmField
     var messageTransformer: MessageTransformer? = null

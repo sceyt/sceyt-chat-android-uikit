@@ -19,7 +19,8 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.repositories.UsersRepository
-import com.sceyt.chatuikit.push.FirebaseMessagingDelegate
+import com.sceyt.chatuikit.persistence.repositories.getUserId
+import com.sceyt.chatuikit.push.service.PushService
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.CoroutineScope
@@ -32,6 +33,7 @@ internal class PersistenceConnectionLogicImpl(
         private var preference: SceytSharedPreference,
         private val usersDao: UserDao,
         private val usersRepository: UsersRepository,
+        private val pushService: PushService
 ) : PersistenceConnectionLogic, SceytKoinComponent {
 
     private val messageLogic: PersistenceMessagesLogic by inject()
@@ -58,7 +60,7 @@ internal class PersistenceConnectionLogicImpl(
         if (state.state == ConnectionState.Connected) {
             scope.launch {
                 SceytPresenceChecker.startPresenceCheck()
-                FirebaseMessagingDelegate.checkNeedRegisterForPushToken()
+                pushService.ensurePushTokenRegistered()
                 insertCurrentUser()
                 if (isAppOnForeground())
                     setUserPresence()
@@ -79,7 +81,7 @@ internal class PersistenceConnectionLogicImpl(
     private suspend fun insertCurrentUser() {
         ClientWrapper.currentUser?.let {
             usersDao.insertUserWithMetadata(it.toUserDb())
-            preference.setUserId(it.id)
+            preference.setString(SceytSharedPreference.KEY_USER_ID, it.id)
         } ?: run {
             preference.getUserId()?.let {
                 val response = usersRepository.getSceytUserById(it)

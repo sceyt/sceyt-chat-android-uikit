@@ -42,6 +42,7 @@ truth = "1.4.4"
 ucrop = "2.2.8"
 waveformseekbar = "5.0.2"
 workRuntimeKtx = "2.10.0"
+playServicesBase = "18.5.0"
 
 [libraries]
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -95,6 +96,7 @@ truth = { module = "com.google.truth:truth", version.ref = "truth" }
 ucrop = { module = "com.github.yalantis:ucrop", version.ref = "ucrop" }
 waveformSeekBar = { module = "com.github.massoudss:waveformSeekBar", version.ref = "waveformseekbar" }
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+play-services-base = { group = "com.google.android.gms", name = "play-services-base", version.ref = "playServicesBase" }
 
 [plugins]
 

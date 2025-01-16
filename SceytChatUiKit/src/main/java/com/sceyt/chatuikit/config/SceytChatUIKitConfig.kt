@@ -14,6 +14,7 @@ class SceytChatUIKitConfig {
     var channelURIConfig: ChannelURIConfig by lazyVar { ChannelURIConfig() }
     var channelTypesConfig: ChannelTypesConfig by lazyVar { ChannelTypesConfig() }
     var memberRolesConfig: MemberRolesConfig by lazyVar { MemberRolesConfig() }
+    var notificationConfig: PushNotificationConfig by lazyVar { PushNotificationConfig() }
     var syncChannelsAfterConnect: Boolean = true
     var hardDeleteMessageForAll: Boolean = false
     var messageEditTimeout: Long = 2.hours.inWholeMilliseconds

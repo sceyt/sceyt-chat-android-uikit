@@ -78,11 +78,9 @@ internal class PersistenceMiddleWareImpl(
         private val membersLogic: PersistenceMembersLogic,
         private val usersLogic: PersistenceUsersLogic,
         private val connectionLogic: PersistenceConnectionLogic,
-) :
-        ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
+) : ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
         UserInteractor, AttachmentInteractor, MessageMarkerInteractor,
         MessageReactionInteractor, SceytKoinComponent {
-
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 

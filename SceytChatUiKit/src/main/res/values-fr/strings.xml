@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="sceyt_search_for_channels">Rechercher des canals</string>
+    <string name="sceyt_chat_notifications_channel_name">Messages de Discussion</string>
     <string name="sceyt_search">Rechercher</string>
     <string name="sceyt_your_last_message">You</string>
     <string name="sceyt_copy">Copier</string>

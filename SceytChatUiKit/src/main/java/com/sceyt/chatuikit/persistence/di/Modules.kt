@@ -39,12 +39,13 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogi
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageLoadRangeUpdater
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.PersistenceMessagesLogicImpl
+import com.sceyt.chatuikit.push.service.PushService
+import com.sceyt.chatuikit.push.service.PushServiceImpl
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -57,6 +58,7 @@ internal val appModules = module {
     single { SceytSyncManager(get(), get()) }
     single<FileTransferService> { FileTransferServiceImpl(get(), get()) }
     single<MessageLoadRangeUpdater> { MessageLoadRangeUpdater(get()) }
+    single<PushService> { PushServiceImpl(get(), get(), get(), get()) }
 }
 
 internal fun databaseModule(enableDatabase: Boolean) = module {
@@ -113,7 +115,7 @@ internal val logicModule = module {
     single<PersistenceMembersLogic> { PersistenceMembersLogicImpl(get(), get(), get(), get(), get(), get(), get()) }
     single<PersistenceUsersLogic> { PersistenceUsersLogicImpl(get(), get(), get(), get()) }
     single<PersistenceMessageMarkerLogic> { PersistenceMessageMarkerLogicImpl(get(), get(), get()) }
-    single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get()) }
+    single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get()) }
     single<FileTransferLogic> { FileTransferLogicImpl(get(), get()) }
 }
 
@@ -123,7 +125,6 @@ internal val cacheModule = module {
     factory { AttachmentsCache() }
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 internal val coroutineModule = module {
     single {
         CoroutineExceptionHandler { _, throwable ->
@@ -131,7 +132,7 @@ internal val coroutineModule = module {
                 SceytLog.e("Coroutine", "An exception accrued in base CoroutineExceptionHandler", throwable)
         }
     }
-    single<CoroutineScope> { GlobalScope }
+    single<CoroutineScope> { CoroutineScope(SupervisorJob()) }
     single(qualifier = named(CoroutineContextType.Ui)) { providesUiContext(get()) }
     single(qualifier = named(CoroutineContextType.IO)) { providesIOContext(get()) }
     single(qualifier = named(CoroutineContextType.Computation)) { providesComputationContext(get()) }

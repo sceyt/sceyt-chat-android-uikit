@@ -59,7 +59,7 @@ inline fun <reified T : Parcelable> Intent.parcelableArrayList(key: String): Arr
     else -> @Suppress("DEPRECATION") getParcelableArrayListExtra(key)
 }
 
-fun Application.isAppOnForeground(): Boolean {
+fun Context.isAppOnForeground(): Boolean {
     val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
     val appProcesses = activityManager.runningAppProcesses ?: return false
     val packageName = applicationContext.packageName
