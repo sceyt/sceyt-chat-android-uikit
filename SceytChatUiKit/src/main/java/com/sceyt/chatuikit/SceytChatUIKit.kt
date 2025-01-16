@@ -26,6 +26,7 @@ import com.sceyt.chatuikit.persistence.di.coroutineModule
 import com.sceyt.chatuikit.persistence.di.databaseModule
 import com.sceyt.chatuikit.persistence.di.interactorModule
 import com.sceyt.chatuikit.persistence.di.logicModule
+import com.sceyt.chatuikit.persistence.di.useCaseModule
 import com.sceyt.chatuikit.persistence.lazyVar
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.presentation.di.viewModelModule
@@ -51,20 +52,25 @@ object SceytChatUIKit : SceytKoinComponent {
     var formatters: SceytChatUIKitFormatters by lazyVar { SceytChatUIKitFormatters() }
     var providers: SceytChatUIKitProviders by lazyVar { SceytChatUIKitProviders() }
     var renderers: SceytChatUIKitRenderers by lazyVar { SceytChatUIKitRenderers() }
-    var notifications: SceytNotifications by lazyVar { SceytNotifications() }
+    var notifications: SceytNotifications by lazyVar { SceytNotifications(appContext) }
 
     @JvmField
     var messageTransformer: MessageTransformer? = null
 
+    @JvmStatic
     val chatClient: ChatClient
         get() = ChatClient.getClient()
 
+    @JvmStatic
     val currentUserId: String?
         get() = chatUIFacade.userInteractor.getCurrentUserId()
 
+    @JvmStatic
     val currentUser: SceytUser?
         get() = ClientWrapper.currentUser?.toSceytUser()
 
+    @JvmStatic
+    @JvmOverloads
     fun initialize(
             appContext: Context,
             apiUrl: String,
@@ -79,22 +85,27 @@ object SceytChatUIKit : SceytKoinComponent {
         SceytLog.i(TAG, "SceytChatUIKit initialized. Version: ${BuildConfig.MAVEN_VERSION}")
     }
 
+    @JvmStatic
     fun connect(token: String) {
         chatClient.connect(token)
     }
 
+    @JvmStatic
     fun reconnect() {
         chatClient.reconnect()
     }
 
+    @JvmStatic
     fun disconnect() {
         chatClient.disconnect()
     }
 
+    @JvmStatic
     fun logOut(unregisterPushCallback: ((Result<Boolean>) -> Unit)? = null) {
         chatUIFacade.logOut(unregisterPushCallback)
     }
 
+    @JvmStatic
     fun setLogger(logLevel: SceytLogLevel, logger: SceytLogger) {
         SceytLog.setLogger(logLevel, logger)
     }
@@ -144,6 +155,7 @@ object SceytChatUIKit : SceytKoinComponent {
             databaseModule(enableDatabase),
             interactorModule,
             logicModule,
+            useCaseModule,
             repositoryModule,
             cacheModule,
             viewModelModule,

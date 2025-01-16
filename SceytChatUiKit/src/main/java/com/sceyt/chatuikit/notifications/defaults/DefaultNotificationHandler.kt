@@ -8,28 +8,29 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.MessagingStyle
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.Person
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.SceytChatUIKit.notifications
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.notifications.NotificationHandler
 import com.sceyt.chatuikit.push.PushData
 
-open class DefaultNotificationHandler : NotificationHandler {
-    protected val personsMap = mutableMapOf<String, Person>()
+open class DefaultNotificationHandler(
+        private val context: Context
+) : NotificationHandler {
+    private val notificationManager by lazy { NotificationManagerCompat.from(context) }
+    private val personsMap by lazy { mutableMapOf<String, Person>() }
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override suspend fun showNotification(context: Context, data: PushData) {
-        val notificationManager = NotificationManagerCompat.from(context)
         val channel = data.channel
         val notificationId = channel.id.toInt()
 
         val messagingStyle = notificationManager.extractMessagingStyle(notificationId)
-                ?: data.createMessagingStyle(context)
-        messagingStyle.addMessage(data.toNotificationStyle(context))
+                ?: data.createMessagingStyle()
+        messagingStyle.addMessage(data.toNotificationStyle())
 
         val notificationBuilder = NotificationCompat.Builder(context, context.getNotificationChannelId())
-            .setSmallIcon(R.drawable.sceyt_ic_notification_small_icon)
+            .setSmallIcon(notifications.notificationBuilder.provideNotificationSmallIcon())
             .setStyle(messagingStyle)
             .setContentIntent(notifications.notificationBuilder.providePendingIntent(context, data))
             .apply {
@@ -42,11 +43,19 @@ open class DefaultNotificationHandler : NotificationHandler {
         NotificationManagerCompat.from(context).notify(notificationId, notification)
     }
 
-    private suspend fun PushData.toNotificationStyle(context: Context) = with(message) {
+    override fun cancelNotification(notificationId: Int) {
+        notificationManager.cancel(notificationId)
+    }
+
+    override fun cancelAllNotifications() {
+        notificationManager.cancelAll()
+    }
+
+    private suspend fun PushData.toNotificationStyle() = with(message) {
         MessagingStyle.Message(
-            body,
+            SceytChatUIKit.formatters.notificationBodyFormatter.format(context, this@toNotificationStyle),
             createdAt.takeIf { it != 0L } ?: System.currentTimeMillis(),
-            getPerson(context),
+            getPerson(),
         )
     }
 
@@ -67,12 +76,10 @@ open class DefaultNotificationHandler : NotificationHandler {
         return MessagingStyle.extractMessagingStyleFromNotification(notification)
     }
 
-    private suspend fun PushData.createMessagingStyle(
-            context: Context
-    ) = MessagingStyle(getPerson(context))
+    private suspend fun PushData.createMessagingStyle() = MessagingStyle(getPerson())
         .setConversationTitle(channel.channelSubject)
 
-    private suspend fun SceytUser.toPerson(context: Context, pushData: PushData): Person {
+    private suspend fun SceytUser.toPerson(pushData: PushData): Person {
         return Person.Builder()
             .setKey(id)
             .setName(SceytChatUIKit.formatters.userNameFormatter.format(context, this))
@@ -80,9 +87,9 @@ open class DefaultNotificationHandler : NotificationHandler {
             .build()
     }
 
-    private suspend fun PushData.getPerson(context: Context) = user.let {
+    private suspend fun PushData.getPerson() = user.let {
         personsMap.getOrPut(it.id) {
-            it.toPerson(context, this)
+            it.toPerson(this)
         }
     }
 }

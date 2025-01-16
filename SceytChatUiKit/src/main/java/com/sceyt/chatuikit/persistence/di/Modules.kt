@@ -39,6 +39,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogi
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageLoadRangeUpdater
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.PersistenceMessagesLogicImpl
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShowOnlineMessageNotificationUseCase
 import com.sceyt.chatuikit.push.service.PushService
 import com.sceyt.chatuikit.push.service.PushServiceImpl
 import com.sceyt.chatuikit.services.SceytSyncManager
@@ -96,7 +97,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
 }
 
 internal val interactorModule = module {
-    single { PersistenceMiddleWareImpl(get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { PersistenceMiddleWareImpl(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<ChannelInteractor> { get<PersistenceMiddleWareImpl>() }
     single<MessageInteractor> { get<PersistenceMiddleWareImpl>() }
     single<AttachmentInteractor> { get<PersistenceMiddleWareImpl>() }
@@ -117,6 +118,10 @@ internal val logicModule = module {
     single<PersistenceMessageMarkerLogic> { PersistenceMessageMarkerLogicImpl(get(), get(), get()) }
     single<PersistenceConnectionLogic> { PersistenceConnectionLogicImpl(get(), get(), get(), get()) }
     single<FileTransferLogic> { FileTransferLogicImpl(get(), get()) }
+}
+
+internal val useCaseModule = module {
+    factory { ShowOnlineMessageNotificationUseCase(get()) }
 }
 
 internal val cacheModule = module {

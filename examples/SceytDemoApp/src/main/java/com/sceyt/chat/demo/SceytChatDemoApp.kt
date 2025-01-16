@@ -59,15 +59,13 @@ class SceytChatDemoApp : Application() {
             suppressWhenAppIsInForeground = true,
         )
 
-        SceytChatUIKit.notifications = SceytChatUIKit.notifications.copy(
-            notificationBuilder = object : DefaultNotificationBuilder() {
-                override fun providePendingIntent(context: Context, data: PushData): PendingIntent {
-                    val intent = Intent(context, ChannelActivity::class.java).apply {
-                        putExtra(ChannelActivity.CHANNEL, data.channel)
-                    }
-                    return PendingIntent.getActivity(context, Random.nextInt(), intent, pendingIntentFlags)
+        SceytChatUIKit.notifications.notificationBuilder = object : DefaultNotificationBuilder() {
+            override fun providePendingIntent(context: Context, data: PushData): PendingIntent {
+                val intent = Intent(context, ChannelActivity::class.java).apply {
+                    putExtra(ChannelActivity.CHANNEL, data.channel)
                 }
+                return PendingIntent.getActivity(context, Random.nextInt(), intent, pendingIntentFlags)
             }
-        )
+        }
     }
 }

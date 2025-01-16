@@ -39,7 +39,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.findIndexed
-import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.extensions.toSha256
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
@@ -215,38 +214,6 @@ internal class PersistenceChannelsLogicImpl(
 
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
         updateChannelDbAndCache(data.first)
-        val (channel, message) = data
-        if (shouldShowOnlineNotification(message, channel)) {
-            SceytChatUIKit.notifications.notificationHandler.showNotification(
-                context = context,
-                data = PushData(
-                    channel = channel,
-                    message = message,
-                    user = message.user ?: return,
-                    reaction = null
-                ))
-        }
-    }
-
-    private fun shouldShowOnlineNotification(
-            message: SceytMessage,
-            channel: SceytChannel,
-    ): Boolean {
-        if (!message.incoming || channel.muted) return false
-        val config = SceytChatUIKit.config.notificationConfig
-        val pushData by lazy {
-            PushData(
-                message = message,
-                channel = channel,
-                user = message.user ?: return@lazy null,
-                reaction = null)
-        }
-        val isAppInForeground = context.isAppOnForeground()
-        val isChannelOpen = ChannelsCache.currentChannelId == channel.id && isAppInForeground
-        return isChannelOpen.not()
-                && config.isPushEnabled
-                && (config.suppressWhenAppIsInForeground.not() || !isAppInForeground)
-                && config.shouldDisplayNotification(pushData ?: return false)
     }
 
     override suspend fun handlePush(data: PushData) {
