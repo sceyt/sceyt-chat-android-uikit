@@ -56,6 +56,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShowOnlineMessageNotificationUseCase
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.services.SceytPresenceChecker
@@ -78,6 +79,7 @@ internal class PersistenceMiddleWareImpl(
         private val membersLogic: PersistenceMembersLogic,
         private val usersLogic: PersistenceUsersLogic,
         private val connectionLogic: PersistenceConnectionLogic,
+        private val showOnlineMessageNotificationUseCase: ShowOnlineMessageNotificationUseCase
 ) : ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
         UserInteractor, AttachmentInteractor, MessageMarkerInteractor,
         MessageReactionInteractor, SceytKoinComponent {
@@ -137,6 +139,7 @@ internal class PersistenceMiddleWareImpl(
         scope.launch(Dispatchers.IO) {
             messagesLogic.onMessage(data)
             channelLogic.onMessage(data)
+            showOnlineMessageNotificationUseCase(data.first, data.second)
         }
     }
 

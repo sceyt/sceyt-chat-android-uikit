@@ -37,6 +37,7 @@ object FirebaseMessagingDelegate : SceytKoinComponent {
         return remoteMessage.isValid()
     }
 
+    @JvmStatic
     fun getDataFromRemoteMessage(remoteMessage: RemoteMessage): PushData? {
         val user = getUserFromPushJson(remoteMessage) ?: return null
         val channel = getChannelFromPushJson(remoteMessage)?.toSceytUiChannel() ?: return null

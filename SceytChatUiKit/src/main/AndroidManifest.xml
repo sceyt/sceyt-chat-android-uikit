@@ -25,6 +25,7 @@
         <activity
             android:name=".presentation.components.channel.messages.ChannelActivity"
             android:exported="false"
+            android:launchMode="singleTask"
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustResize" />
         <activity
