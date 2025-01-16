@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="sceyt_search_for_channels">Raadi kannaalo</string>
+    <string name="sceyt_chat_notifications_channel_name">Fariimaha wada sheekaysiga</string>
     <string name="sceyt_search">Raadi</string>
     <string name="sceyt_your_last_message">Adiga</string>
     <string name="sceyt_copy">Copy</string>

@@ -83,9 +83,10 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
+import com.sceyt.chatuikit.persistence.repositories.getUserId
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
-import com.sceyt.chatuikit.push.RemoteMessageData
+import com.sceyt.chatuikit.push.PushData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.awaitClose
@@ -151,15 +152,15 @@ internal class PersistenceMessagesLogicImpl(
         return@withContext
     }
 
-    override suspend fun onFcmMessage(data: RemoteMessageData) = withContext(dispatcherIO) {
+    override suspend fun handlePush(data: PushData): Boolean = withContext(dispatcherIO) {
         val message = data.message
-        if (message?.id == 0L) return@withContext
-        val channelDb = persistenceChannelsLogic.getChannelFromDb(data.channel?.id
-                ?: return@withContext)
-        if (channelDb != null && (message?.createdAt ?: 0) <= channelDb.messagesClearedAt)
-            return@withContext
+        if (message.id == 0L)
+            return@withContext false
+        val channel = persistenceChannelsLogic.getChannelFromDb(data.channel.id)
+        if (channel != null && message.createdAt <= channel.messagesClearedAt)
+            return@withContext false
 
-        val messageDb = messageDao.getMessageById(message?.id ?: return@withContext)
+        val messageDb = messageDao.getMessageById(message.id)
 
         val isReaction = data.reaction != null
 
@@ -168,13 +169,15 @@ internal class PersistenceMessagesLogicImpl(
             messagesCache.add(data.channel.id, message)
             onMessageFlow.tryEmit(Pair(data.channel, message))
 
-            updateMessageLoadRangeOnMessageEvent(message, channelDb?.lastMessage?.id)
-            persistenceChannelsLogic.onFcmMessage(data)
+            updateMessageLoadRangeOnMessageEvent(message, channel?.lastMessage?.id)
+            persistenceChannelsLogic.handlePush(data)
         }
 
         if (messageDb != null && isReaction)
             persistenceReactionLogic.onMessageReactionUpdated(ReactionUpdateEventData(
                 messageDb.toSceytMessage(), data.reaction!!, ReactionUpdateEventEnum.Add))
+
+        return@withContext true
     }
 
     override suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData) = withContext(dispatcherIO) {

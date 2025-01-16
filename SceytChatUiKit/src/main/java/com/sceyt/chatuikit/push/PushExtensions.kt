@@ -50,13 +50,36 @@ fun getMessageFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, user:
                 }
             }
         }
-        val parentMessage = if (parentMessageIdString != null) Message(parentMessageIdString, channelId, MessageState.Unmodified) else null
+        val parentMessage = if (parentMessageIdString != null)
+            Message(parentMessageIdString, channelId, MessageState.Unmodified) else null
         val messageId = messageIdString.toLongOrNull() ?: return null
-        Message(messageId, messageId, channelId, bodyString, messageType, meta, createdAt?.time
-                ?: 0,
-            0L, true, transient, false, deliveryStatus, state,
-            user, attachmentArray.toTypedArray(), null, null, null, null,
-            null, parentMessage, 0, 0, 0, forwardingDetails, bodyAttributes.toTypedArray())
+        Message(
+            /* id = */ messageId,
+            /* tid = */ messageId,
+            /* channelId = */ channelId,
+            /* body = */ bodyString,
+            /* type = */ messageType,
+            /* metadata = */ meta,
+            /* createdAt = */ createdAt?.time ?: 0,
+            /* updatedAt = */ 0L,
+            /* incoming = */ true,
+            /* isTransient = */ transient,
+            /* silent = */ false,
+            /* deliveryStatus = */ deliveryStatus,
+            /* state = */ state,
+            /* user = */ user,
+            /* attachments = */ attachmentArray.toTypedArray(),
+            /* userReactions = */ null,
+            /* reactionTotal = */ null,
+            /* markerTotals = */ null,
+            /* userMarkers = */ null,
+            /* mentionedUsers = */ null,
+            /* parentMessage = */ parentMessage,
+            /* replyCount = */ 0,
+            /* displayCount = */ 0,
+            /* autoDeleteAt = */ 0,
+            /* forwardingDetails = */ forwardingDetails,
+            /* bodyAttributes = */ bodyAttributes.toTypedArray())
     } catch (e: Exception) {
         e.printStackTrace()
         null
@@ -120,9 +143,9 @@ fun getAttachmentFromPushJson(attachment: JSONObject?): Attachment? {
     }
 }
 
-fun getReactionFromPushJson(json: String?, messageId: Long?, user: User?): SceytReaction? {
+fun getReactionFromPushJson(remoteMessage: RemoteMessage, messageId: Long?, user: User?): SceytReaction? {
     return try {
-        val jsonObject = JSONObject(json ?: return null)
+        val jsonObject = JSONObject(remoteMessage.data["reaction"] ?: return null)
         val id = jsonObject.getString("id").toLongOrNull() ?: return null
         val key = jsonObject.getString("key")
         val score = jsonObject.getString("score").toInt()

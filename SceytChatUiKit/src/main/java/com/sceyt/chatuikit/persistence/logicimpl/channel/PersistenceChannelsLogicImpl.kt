@@ -39,6 +39,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.findIndexed
+import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.extensions.toSha256
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
@@ -80,7 +81,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.extensions.isDeleted
 import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
 import com.sceyt.chatuikit.presentation.extensions.isHardDeleted
-import com.sceyt.chatuikit.push.RemoteMessageData
+import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -89,6 +90,7 @@ import kotlinx.coroutines.flow.map
 import org.koin.core.component.inject
 
 internal class PersistenceChannelsLogicImpl(
+        private val context: Context,
         private val channelsRepository: ChannelsRepository,
         private val channelDao: ChannelDao,
         private val usersDao: UserDao,
@@ -97,8 +99,7 @@ internal class PersistenceChannelsLogicImpl(
         private val draftMessageDao: DraftMessageDao,
         private val chatUserReactionDao: ChatUserReactionDao,
         private val pendingReactionDao: PendingReactionDao,
-        private val context: Context,
-        private val channelsCache: ChannelsCache,
+        private val channelsCache: ChannelsCache
 ) : PersistenceChannelsLogic, SceytKoinComponent {
 
     private val messageLogic: PersistenceMessagesLogic by inject()
@@ -214,11 +215,43 @@ internal class PersistenceChannelsLogicImpl(
 
     override suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>) {
         updateChannelDbAndCache(data.first)
+        val (channel, message) = data
+        if (shouldShowOnlineNotification(message, channel)) {
+            SceytChatUIKit.notifications.notificationHandler.showNotification(
+                context = context,
+                data = PushData(
+                    channel = channel,
+                    message = message,
+                    user = message.user ?: return,
+                    reaction = null
+                ))
+        }
     }
 
-    override suspend fun onFcmMessage(data: RemoteMessageData) {
-        val dataChannel = data.channel ?: return
-        val dataMessage = data.message ?: return
+    private fun shouldShowOnlineNotification(
+            message: SceytMessage,
+            channel: SceytChannel,
+    ): Boolean {
+        if (!message.incoming || channel.muted) return false
+        val config = SceytChatUIKit.config.notificationConfig
+        val pushData by lazy {
+            PushData(
+                message = message,
+                channel = channel,
+                user = message.user ?: return@lazy null,
+                reaction = null)
+        }
+        val isAppInForeground = context.isAppOnForeground()
+        val isChannelOpen = ChannelsCache.currentChannelId == channel.id && isAppInForeground
+        return isChannelOpen.not()
+                && config.isPushEnabled
+                && (config.suppressWhenAppIsInForeground.not() || !isAppInForeground)
+                && config.shouldDisplayNotification(pushData ?: return false)
+    }
+
+    override suspend fun handlePush(data: PushData) {
+        val dataChannel = data.channel
+        val dataMessage = data.message
 
         var channel: SceytChannel
         val channelDb = channelDao.getChannelById(dataChannel.id)
