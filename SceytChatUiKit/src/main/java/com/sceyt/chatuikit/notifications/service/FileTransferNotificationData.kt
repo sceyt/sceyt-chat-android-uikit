@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.notifications
+package com.sceyt.chatuikit.notifications.service
 
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage

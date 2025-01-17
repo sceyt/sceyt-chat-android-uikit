@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.notifications
 
 import android.content.Context
+import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
 import com.sceyt.chatuikit.push.PushData
 
 typealias PushNotificationHandler = NotificationHandler<PushData>

@@ -4,9 +4,9 @@ import android.content.Context
 import com.sceyt.chatuikit.notifications.FileTransferNotificationBuilder
 import com.sceyt.chatuikit.notifications.FileTransferNotificationHandler
 import com.sceyt.chatuikit.notifications.NotificationChannelProvider
-import com.sceyt.chatuikit.notifications.defaults.DefaultFileTransferNotificationBuilder
-import com.sceyt.chatuikit.notifications.defaults.DefaultFileTransferNotificationChannelProvider
-import com.sceyt.chatuikit.notifications.defaults.DefaultFileTransferNotificationHandler
+import com.sceyt.chatuikit.notifications.service.defaults.DefaultFileTransferNotificationBuilder
+import com.sceyt.chatuikit.notifications.service.defaults.DefaultFileTransferNotificationChannelProvider
+import com.sceyt.chatuikit.notifications.service.defaults.DefaultFileTransferNotificationHandler
 import com.sceyt.chatuikit.persistence.lazyVar
 
 /**

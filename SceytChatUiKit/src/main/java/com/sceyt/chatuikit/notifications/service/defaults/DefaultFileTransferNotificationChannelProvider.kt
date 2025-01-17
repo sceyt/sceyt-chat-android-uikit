@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.notifications.defaults
+package com.sceyt.chatuikit.notifications.service.defaults
 
 import android.app.NotificationChannel
 import android.app.NotificationManager

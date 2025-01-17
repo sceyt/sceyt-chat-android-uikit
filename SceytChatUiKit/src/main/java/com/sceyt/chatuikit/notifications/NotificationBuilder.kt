@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.IconCompat
+import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
 import com.sceyt.chatuikit.push.PushData
 
 typealias PushNotificationBuilder = NotificationBuilder<PushData>
