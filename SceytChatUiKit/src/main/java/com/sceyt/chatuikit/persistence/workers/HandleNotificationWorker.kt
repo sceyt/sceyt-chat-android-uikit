@@ -86,7 +86,7 @@ internal class HandleNotificationWorker(
                 && !channel.muted
                 && (ChannelsCache.currentChannelId != channelId || !applicationContext.isAppOnForeground())
         ) {
-            SceytChatUIKit.notifications.notificationHandler.showNotification(
+            SceytChatUIKit.notifications.pushNotification.pushNotificationHandler.showNotification(
                 context = applicationContext,
                 data = PushData(
                     channel = channel,
