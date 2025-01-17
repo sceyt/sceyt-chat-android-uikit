@@ -1,11 +1,11 @@
-package com.sceyt.chatuikit.notifications.defaults
+package com.sceyt.chatuikit.notifications.service.defaults
 
 import android.Manifest
 import android.content.Context
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationManagerCompat
 import com.sceyt.chatuikit.SceytChatUIKit.notifications
-import com.sceyt.chatuikit.notifications.FileTransferNotificationData
+import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
 import com.sceyt.chatuikit.notifications.FileTransferNotificationHandler
 
 @Suppress("MemberVisibilityCanBePrivate")

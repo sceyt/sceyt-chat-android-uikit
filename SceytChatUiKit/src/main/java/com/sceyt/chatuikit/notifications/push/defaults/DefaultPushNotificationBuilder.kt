@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.notifications.defaults
+package com.sceyt.chatuikit.notifications.push.defaults
 
 import android.app.Notification
 import android.app.PendingIntent

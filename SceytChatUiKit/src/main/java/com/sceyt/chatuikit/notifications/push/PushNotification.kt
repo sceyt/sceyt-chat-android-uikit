@@ -4,9 +4,9 @@ import android.content.Context
 import com.sceyt.chatuikit.notifications.NotificationChannelProvider
 import com.sceyt.chatuikit.notifications.PushNotificationBuilder
 import com.sceyt.chatuikit.notifications.PushNotificationHandler
-import com.sceyt.chatuikit.notifications.defaults.DefaultPushNotificationBuilder
-import com.sceyt.chatuikit.notifications.defaults.DefaultPushNotificationChannelProvider
-import com.sceyt.chatuikit.notifications.defaults.DefaultPushNotificationHandler
+import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationBuilder
+import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationChannelProvider
+import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationHandler
 import com.sceyt.chatuikit.persistence.lazyVar
 
 /**

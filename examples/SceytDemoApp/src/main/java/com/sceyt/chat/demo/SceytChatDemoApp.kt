@@ -20,10 +20,10 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.PushNotificationConfig
 import com.sceyt.chatuikit.config.UploadNotificationPendingIntentData
 import com.sceyt.chatuikit.extensions.isAppOnForeground
-import com.sceyt.chatuikit.notifications.FileTransferNotificationData
-import com.sceyt.chatuikit.notifications.defaults.DefaultFileTransferNotificationBuilder
-import com.sceyt.chatuikit.notifications.defaults.DefaultPushNotificationBuilder
-import com.sceyt.chatuikit.notifications.defaults.DefaultPushNotificationChannelProvider
+import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
+import com.sceyt.chatuikit.notifications.service.defaults.DefaultFileTransferNotificationBuilder
+import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationBuilder
+import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationChannelProvider
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.push.providers.firebase.FirebasePushServiceProvider

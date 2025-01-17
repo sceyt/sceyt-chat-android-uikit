@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.notifications.defaults
+package com.sceyt.chatuikit.notifications.service.defaults
 
 import android.app.PendingIntent
 import android.content.Context
@@ -8,7 +8,7 @@ import androidx.core.graphics.drawable.IconCompat
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit.notifications
 import com.sceyt.chatuikit.notifications.FileTransferNotificationBuilder
-import com.sceyt.chatuikit.notifications.FileTransferNotificationData
+import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
 import com.sceyt.chatuikit.notifications.NotificationBuilder
 
 /**
