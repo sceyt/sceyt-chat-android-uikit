@@ -1,45 +1,34 @@
 package com.sceyt.chatuikit.notifications
 
 import android.content.Context
-import com.sceyt.chatuikit.notifications.defaults.DefaultNotificationBuilder
-import com.sceyt.chatuikit.notifications.defaults.DefaultNotificationChannelBuilder
-import com.sceyt.chatuikit.notifications.defaults.DefaultNotificationHandler
+import com.sceyt.chatuikit.notifications.push.PushNotification
+import com.sceyt.chatuikit.notifications.service.FileTransferServiceNotification
 import com.sceyt.chatuikit.persistence.lazyVar
 
 /**
- * A class responsible for managing notifications in the application.
- * Provides customizable handlers and builders for notification behavior.
+ * Manages different types of notifications used in the application.
+ * This class acts as a central point for accessing and configuring various notification components.
+ *
+ * @param context The application context used for initializing notification components.
  */
 class SceytNotifications(
         private val context: Context
 ) {
     /**
-     * The handler responsible for processing incoming notifications.
-     * This property can be customized to define custom notification handling logic.
-     *
-     * Default value: [DefaultNotificationHandler].
+     * Handles push notifications for the app, such as incoming messages or events.
      */
-    var notificationHandler: NotificationHandler by lazyVar {
-        DefaultNotificationHandler(context)
+    var pushNotification: PushNotification by lazyVar {
+        PushNotification(context)
     }
 
     /**
-     * The builder responsible for creating notification channels.
-     * This allows for customizing channel creation logic as needed.
+     * Manages notifications related to file transfers, such as uploads attachments.
      *
-     * Default value: [DefaultNotificationChannelBuilder].
+     * A notification is shown when a file transfer starts, as it is tied to a foreground service
+     * responsible for performing the operation. This ensures that the service is less likely to be
+     * terminated by the system during the transfer.
      */
-    var notificationChannelBuilder: NotificationChannelBuilder by lazyVar {
-        DefaultNotificationChannelBuilder()
-    }
-
-    /**
-     * The builder responsible for constructing notification objects.
-     * This allows for customizing notification appearance and behavior.
-     *
-     * Default value: [DefaultNotificationBuilder].
-     */
-    var notificationBuilder: NotificationBuilder by lazyVar {
-        DefaultNotificationBuilder()
+    var fileTransferServiceNotification: FileTransferServiceNotification by lazyVar {
+        FileTransferServiceNotification(context)
     }
 }

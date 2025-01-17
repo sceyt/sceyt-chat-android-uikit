@@ -115,7 +115,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         markChannelAsRead(channel.id)
 
     // Cancel notification for current channel
-    SceytChatUIKit.notifications.notificationHandler.cancelNotification(channel.id.toInt())
+    SceytChatUIKit.notifications.pushNotification.pushNotificationHandler.cancelNotification(
+        notificationId = channel.id.toInt()
+    )
 
     // If userRole is null or empty, get channel again to update channel
     if (channel.userRole.isNullOrEmpty())

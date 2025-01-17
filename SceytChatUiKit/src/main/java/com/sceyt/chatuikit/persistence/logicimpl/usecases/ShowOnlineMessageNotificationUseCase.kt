@@ -13,7 +13,7 @@ class ShowOnlineMessageNotificationUseCase(
 ) {
     suspend operator fun invoke(channel: SceytChannel, message: SceytMessage) {
         if (shouldShowOnlineNotification(message, channel)) {
-            SceytChatUIKit.notifications.notificationHandler.showNotification(
+            SceytChatUIKit.notifications.pushNotification.pushNotificationHandler.showNotification(
                 context = context,
                 data = PushData(
                     channel = channel,
