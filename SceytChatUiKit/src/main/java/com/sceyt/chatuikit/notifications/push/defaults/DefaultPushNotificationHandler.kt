@@ -2,9 +2,11 @@ package com.sceyt.chatuikit.notifications.push.defaults
 
 import android.Manifest
 import android.content.Context
+import android.os.Build
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationManagerCompat
 import com.sceyt.chatuikit.SceytChatUIKit.notifications
+import com.sceyt.chatuikit.extensions.cancelChannelNotifications
 import com.sceyt.chatuikit.notifications.PushNotificationHandler
 import com.sceyt.chatuikit.push.PushData
 
@@ -28,6 +30,9 @@ open class DefaultPushNotificationHandler(
     }
 
     override fun cancelAllNotifications() {
-        notificationManager.cancelAll()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channelId = notifications.pushNotification.notificationChannelProvider.createChannel(context).id
+            notificationManager.cancelChannelNotifications(channelId)
+        }
     }
 }

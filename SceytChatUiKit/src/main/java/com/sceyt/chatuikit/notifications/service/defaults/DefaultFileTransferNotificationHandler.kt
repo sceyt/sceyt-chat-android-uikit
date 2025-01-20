@@ -2,9 +2,11 @@ package com.sceyt.chatuikit.notifications.service.defaults
 
 import android.Manifest
 import android.content.Context
+import android.os.Build
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationManagerCompat
 import com.sceyt.chatuikit.SceytChatUIKit.notifications
+import com.sceyt.chatuikit.extensions.cancelChannelNotifications
 import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
 import com.sceyt.chatuikit.notifications.FileTransferNotificationHandler
 
@@ -27,6 +29,9 @@ open class DefaultFileTransferNotificationHandler(
     }
 
     override fun cancelAllNotifications() {
-        notificationManager.cancelAll()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channelId = serviceNotifications.notificationChannelProvider.createChannel(context).id
+            notificationManager.cancelChannelNotifications(channelId)
+        }
     }
 }
