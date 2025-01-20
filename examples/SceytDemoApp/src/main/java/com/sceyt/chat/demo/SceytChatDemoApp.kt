@@ -1,30 +1,17 @@
 package com.sceyt.chat.demo
 
 import android.app.Application
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.core.app.NotificationManagerCompat
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.di.apiModule
 import com.sceyt.chat.demo.di.appModules
 import com.sceyt.chat.demo.di.repositoryModule
 import com.sceyt.chat.demo.di.viewModelModules
-import com.sceyt.chatuikit.R
+import com.sceyt.chat.demo.notifications.CustomFileTransferNotificationBuilder
+import com.sceyt.chat.demo.notifications.CustomPushNotificationBuilder
+import com.sceyt.chat.demo.notifications.CustomPushNotificationChannelProvider
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.PushNotificationConfig
-import com.sceyt.chatuikit.extensions.isAppOnForeground
-import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationBuilder
-import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationChannelProvider
-import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
-import com.sceyt.chatuikit.notifications.service.defaults.DefaultFileTransferNotificationBuilder
-import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
-import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.push.providers.firebase.FirebasePushServiceProvider
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
@@ -57,45 +44,21 @@ class SceytChatDemoApp : Application() {
             enableDatabase = true
         )
 
+        // Setting Firebase push notification provider
         SceytChatUIKit.config.notificationConfig = PushNotificationConfig(
             pushProviders = listOf(FirebasePushServiceProvider())
         )
 
-        SceytChatUIKit.notifications.pushNotification.apply {
-            notificationBuilder = object : DefaultPushNotificationBuilder(this@SceytChatDemoApp) {
-                override fun providePendingIntent(context: Context, data: PushData): PendingIntent {
-                    val intent = Intent(context, ChannelActivity::class.java).apply {
-                        putExtra(ChannelActivity.CHANNEL, data.channel)
-                    }
-                    return PendingIntent.getActivity(context, data.channel.id.toInt(), intent, pendingIntentFlags)
-                }
+        SceytChatUIKit.notifications.apply {
+            // Customizing the push notifications
+            pushNotification.apply {
+                notificationBuilder = CustomPushNotificationBuilder(this@SceytChatDemoApp)
+                notificationChannelProvider = CustomPushNotificationChannelProvider(this@SceytChatDemoApp)
             }
 
-            notificationChannelProvider = object : DefaultPushNotificationChannelProvider(this@SceytChatDemoApp) {
-                @RequiresApi(Build.VERSION_CODES.O)
-                override fun createChannel(context: Context): NotificationChannel {
-                    return if (isAppOnForeground()) {
-                        NotificationChannel(
-                            context.getString(R.string.sceyt_chat_notifications_channel_id) + "_silent",
-                            "${context.getString(R.string.sceyt_chat_notifications_channel_name)} Silent",
-                            NotificationManager.IMPORTANCE_HIGH
-                        ).apply {
-                            setSound(null, null)
-                            enableVibration(true)
-                            NotificationManagerCompat.from(context).createNotificationChannel(this)
-                        }
-                    } else super.createChannel(context)
-                }
-            }
-        }
-
-        SceytChatUIKit.notifications.fileTransferServiceNotification.notificationBuilder = object : DefaultFileTransferNotificationBuilder(this) {
-            override fun providePendingIntent(context: Context, data: FileTransferNotificationData): PendingIntent {
-                val intent = Intent(context, ChannelActivity::class.java).apply {
-                    putExtra(ChannelActivity.CHANNEL, data.channel)
-                }
-                return PendingIntent.getActivity(context, data.channel.id.toInt(), intent, pendingIntentFlags)
-            }
+            // Customizing the file transfer notification
+            fileTransferServiceNotification.notificationBuilder =
+                    CustomFileTransferNotificationBuilder(this@SceytChatDemoApp)
         }
     }
 }
