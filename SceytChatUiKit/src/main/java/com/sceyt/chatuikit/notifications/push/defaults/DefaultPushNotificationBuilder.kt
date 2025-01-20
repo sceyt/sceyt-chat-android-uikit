@@ -21,7 +21,7 @@ import com.sceyt.chatuikit.push.PushData
  */
 @Suppress("MemberVisibilityCanBePrivate")
 open class DefaultPushNotificationBuilder(
-        protected  val context: Context
+        private val context: Context
 ) : PushNotificationBuilder {
     protected val notificationManager by lazy { NotificationManagerCompat.from(context) }
     protected val personsMap by lazy { mutableMapOf<String, Person>() }

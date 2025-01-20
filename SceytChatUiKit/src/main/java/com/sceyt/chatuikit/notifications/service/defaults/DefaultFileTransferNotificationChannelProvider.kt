@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.notifications.NotificationChannelProvider
  */
 @Suppress("MemberVisibilityCanBePrivate")
 open class DefaultFileTransferNotificationChannelProvider(
-        protected val context: Context
+        private val context: Context
 ) : NotificationChannelProvider {
     protected val notificationManager by lazy { NotificationManagerCompat.from(context) }
     protected var notificationChannel: NotificationChannel? = null
