@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.notifications.NotificationChannelProvider
  */
 @Suppress("MemberVisibilityCanBePrivate")
 open class DefaultPushNotificationChannelProvider(
-        protected val context: Context
+        private val context: Context
 ) : NotificationChannelProvider {
     protected var notificationChannel: NotificationChannel? = null
     protected val notificationManager by lazy { NotificationManagerCompat.from(context) }

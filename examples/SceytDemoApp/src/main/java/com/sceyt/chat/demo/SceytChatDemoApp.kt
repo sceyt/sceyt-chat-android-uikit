@@ -18,12 +18,11 @@ import com.sceyt.chat.demo.di.viewModelModules
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.PushNotificationConfig
-import com.sceyt.chatuikit.config.UploadNotificationPendingIntentData
 import com.sceyt.chatuikit.extensions.isAppOnForeground
-import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
-import com.sceyt.chatuikit.notifications.service.defaults.DefaultFileTransferNotificationBuilder
 import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationBuilder
 import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationChannelProvider
+import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
+import com.sceyt.chatuikit.notifications.service.defaults.DefaultFileTransferNotificationBuilder
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.push.providers.firebase.FirebasePushServiceProvider
@@ -56,11 +55,6 @@ class SceytChatDemoApp : Application() {
             appId = BuildConfig.APP_ID,
             clientId = UUID.randomUUID().toString(),
             enableDatabase = true
-        )
-
-        SceytChatUIKit.config.uploadNotificationPendingIntentData = UploadNotificationPendingIntentData(
-            classToOpen = ChannelActivity::class.java,
-            extraKey = ChannelActivity.CHANNEL
         )
 
         SceytChatUIKit.config.notificationConfig = PushNotificationConfig(

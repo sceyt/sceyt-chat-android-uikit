@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.notifications.PushNotificationHandler
 import com.sceyt.chatuikit.push.PushData
 
 open class DefaultPushNotificationHandler(
-        protected val context: Context
+        private val context: Context
 ) : PushNotificationHandler {
     private val notificationManager by lazy { NotificationManagerCompat.from(context) }
 

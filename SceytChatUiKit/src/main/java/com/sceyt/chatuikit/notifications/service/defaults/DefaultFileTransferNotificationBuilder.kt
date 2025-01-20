@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.notifications.NotificationBuilder
  * Implementation of [NotificationBuilder] for creating and customizing notifications for file transfers.
  */
 open class DefaultFileTransferNotificationBuilder(
-        protected val context: Context
+        private val context: Context
 ) : FileTransferNotificationBuilder {
     private val serviceNotifications by lazy { notifications.fileTransferServiceNotification }
 
