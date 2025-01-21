@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.push
+package com.sceyt.chatuikit.push.providers.firebase
 
 import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -6,6 +6,14 @@ import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
+import com.sceyt.chatuikit.push.PushData
+import com.sceyt.chatuikit.push.PushDevice
+import com.sceyt.chatuikit.push.PushServiceType
+import com.sceyt.chatuikit.push.PushValidator
+import com.sceyt.chatuikit.push.getChannelFromPushJson
+import com.sceyt.chatuikit.push.getMessageFromPushJson
+import com.sceyt.chatuikit.push.getReactionFromPushJson
+import com.sceyt.chatuikit.push.getUserFromPushJson
 import com.sceyt.chatuikit.push.service.PushService
 import org.koin.core.component.inject
 

@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.services
 
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.sceyt.chatuikit.push.FirebaseMessagingDelegate
+import com.sceyt.chatuikit.push.providers.firebase.FirebaseMessagingDelegate
 
 
 internal class SceytFirebaseMessageReceiver : FirebaseMessagingService() {

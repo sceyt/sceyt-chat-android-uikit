@@ -38,6 +38,7 @@ import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MarkerType.Received
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.repositories.getUserId
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.toDeliveryStatus
@@ -84,7 +85,6 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
-import com.sceyt.chatuikit.persistence.repositories.getUserId
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
 import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.chatuikit.push.PushData
@@ -165,7 +165,7 @@ internal class PersistenceMessagesLogicImpl(
         val isReaction = data.type == NotificationType.MessageReaction
 
         if (messageDb == null && !isReaction) {
-            saveMessagesToDb(arrayListOf(message), includeParents = false)
+            saveMessagesToDb(arrayListOf(message), includeParents = false, replaceUserOnConflict = false)
             messagesCache.add(data.channel.id, message)
             onMessageFlow.tryEmit(Pair(data.channel, message))
 
@@ -1088,6 +1088,7 @@ internal class PersistenceMessagesLogicImpl(
             list: List<SceytMessage>?,
             includeParents: Boolean = true,
             unListAll: Boolean = false,
+            replaceUserOnConflict: Boolean = true
     ): List<SceytMessage> {
         if (list.isNullOrEmpty()) return emptyList()
         val pendingStates = pendingMessageStateDao.getAll()
@@ -1124,7 +1125,7 @@ internal class PersistenceMessagesLogicImpl(
                 usersDb.addAll(users.map { it.toUserDb() })
         }
 
-        userDao.insertUsersWithMetadata(usersDb.toList())
+        userDao.insertUsersWithMetadata(usersDb.toList(), replaceUserOnConflict)
         checkAndInsertAutoDeleteMessage(*mutableList.toTypedArray())
         return mutableList
     }
