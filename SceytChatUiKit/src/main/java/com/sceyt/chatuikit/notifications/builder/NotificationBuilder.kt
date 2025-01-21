@@ -67,14 +67,14 @@ interface NotificationBuilder<T> {
      * @param context The context used for accessing resources and services.
      * @param data The data required to build the notification.
      * @param notificationId The ID of the notification to build.
-     * @param builderModifier A lambda function that applies additional settings to the notification builder.
+     * @param builderCustomizer A lambda function that applies additional settings to the notification builder.
      * @return A fully constructed [Notification] instance.
      */
     suspend fun buildNotification(
             context: Context,
             data: T,
             notificationId: Int,
-            builderModifier: (NotificationCompat.Builder).() -> Unit = {}
+            builderCustomizer: (NotificationCompat.Builder).() -> Unit = {}
     ): Notification
 
     /**
@@ -84,7 +84,7 @@ interface NotificationBuilder<T> {
      * @param data The data required to build the notification.
      * @param notificationId The ID of the notification to build.
      * @param style The style to apply to the notification.
-     * @param builderModifier A lambda function that applies additional settings to the notification builder.
+     * @param builderCustomizer A lambda function that applies additional settings to the notification builder.
      * @return A fully constructed [Notification] instance.
      */
     suspend fun buildNotification(
@@ -92,6 +92,6 @@ interface NotificationBuilder<T> {
             data: T,
             notificationId: Int,
             style: NotificationCompat.Style?,
-            builderModifier: (NotificationCompat.Builder).() -> Unit = {}
+            builderCustomizer: (NotificationCompat.Builder).() -> Unit = {}
     ): Notification
 }
