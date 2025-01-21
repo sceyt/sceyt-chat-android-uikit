@@ -212,4 +212,6 @@ internal fun String.toDeliveryStatus(): DeliveryStatus? {
     }
 }
 
+fun String.whitSpace() = plus(" ")
+
 const val empty = ""
