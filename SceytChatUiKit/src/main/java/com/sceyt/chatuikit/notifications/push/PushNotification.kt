@@ -2,8 +2,8 @@ package com.sceyt.chatuikit.notifications.push
 
 import android.content.Context
 import com.sceyt.chatuikit.notifications.NotificationChannelProvider
-import com.sceyt.chatuikit.notifications.PushNotificationBuilder
 import com.sceyt.chatuikit.notifications.PushNotificationHandler
+import com.sceyt.chatuikit.notifications.builder.PushNotificationBuilder
 import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationBuilder
 import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationChannelProvider
 import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationHandler

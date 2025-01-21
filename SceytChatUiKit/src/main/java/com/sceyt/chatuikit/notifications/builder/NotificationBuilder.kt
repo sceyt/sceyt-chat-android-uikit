@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.notifications
+package com.sceyt.chatuikit.notifications.builder
 
 import android.app.Notification
 import android.app.PendingIntent
@@ -29,7 +29,11 @@ interface NotificationBuilder<T> {
     @DrawableRes
     fun provideNotificationSmallIcon(data: T): Int
 
-    suspend fun provideNotificationStyle(context: Context, data: T, notificationId: Int): NotificationCompat.Style?
+    suspend fun provideNotificationStyle(
+            context: Context,
+            data: T,
+            notificationId: Int
+    ): NotificationCompat.Style?
 
     /**
      * Defines actions to be added to the notification.
@@ -63,7 +67,31 @@ interface NotificationBuilder<T> {
      * @param context The context used for accessing resources and services.
      * @param data The data required to build the notification.
      * @param notificationId The ID of the notification to build.
+     * @param builderModifier A lambda function that applies additional settings to the notification builder.
      * @return A fully constructed [Notification] instance.
      */
-    suspend fun buildNotification(context: Context, data: T, notificationId: Int): Notification
+    suspend fun buildNotification(
+            context: Context,
+            data: T,
+            notificationId: Int,
+            builderModifier: (NotificationCompat.Builder).() -> Unit = {}
+    ): Notification
+
+    /**
+     * Builds a notification object using the provided data and style.
+     *
+     * @param context The context used for accessing resources and services.
+     * @param data The data required to build the notification.
+     * @param notificationId The ID of the notification to build.
+     * @param style The style to apply to the notification.
+     * @param builderModifier A lambda function that applies additional settings to the notification builder.
+     * @return A fully constructed [Notification] instance.
+     */
+    suspend fun buildNotification(
+            context: Context,
+            data: T,
+            notificationId: Int,
+            style: NotificationCompat.Style?,
+            builderModifier: (NotificationCompat.Builder).() -> Unit = {}
+    ): Notification
 }

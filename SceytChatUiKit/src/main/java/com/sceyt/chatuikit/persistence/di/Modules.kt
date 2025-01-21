@@ -5,8 +5,8 @@ import androidx.room.Room
 import com.sceyt.chatuikit.BuildConfig
 import com.sceyt.chatuikit.SceytChatUIFacade
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.notifications.RealtimeNotificationManager
-import com.sceyt.chatuikit.notifications.RealtimeNotificationManagerImpl
+import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManager
+import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManagerImpl
 import com.sceyt.chatuikit.persistence.PersistenceMiddleWareImpl
 import com.sceyt.chatuikit.persistence.database.DatabaseMigrations
 import com.sceyt.chatuikit.persistence.database.SceytDatabase

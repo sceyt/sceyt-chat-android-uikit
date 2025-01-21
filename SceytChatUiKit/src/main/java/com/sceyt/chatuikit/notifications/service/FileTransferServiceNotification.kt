@@ -1,9 +1,9 @@
 package com.sceyt.chatuikit.notifications.service
 
 import android.content.Context
-import com.sceyt.chatuikit.notifications.FileTransferNotificationBuilder
 import com.sceyt.chatuikit.notifications.FileTransferNotificationHandler
 import com.sceyt.chatuikit.notifications.NotificationChannelProvider
+import com.sceyt.chatuikit.notifications.builder.FileTransferNotificationBuilder
 import com.sceyt.chatuikit.notifications.service.defaults.DefaultFileTransferNotificationBuilder
 import com.sceyt.chatuikit.notifications.service.defaults.DefaultFileTransferNotificationChannelProvider
 import com.sceyt.chatuikit.notifications.service.defaults.DefaultFileTransferNotificationHandler
