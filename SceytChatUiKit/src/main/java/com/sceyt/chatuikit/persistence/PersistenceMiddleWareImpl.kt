@@ -39,6 +39,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.notifications.RealtimeNotificationManager
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadDb
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
@@ -56,7 +57,6 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShowOnlineMessageNotificationUseCase
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.services.SceytPresenceChecker
@@ -79,7 +79,7 @@ internal class PersistenceMiddleWareImpl(
         private val membersLogic: PersistenceMembersLogic,
         private val usersLogic: PersistenceUsersLogic,
         private val connectionLogic: PersistenceConnectionLogic,
-        private val showOnlineMessageNotificationUseCase: ShowOnlineMessageNotificationUseCase
+        private val realtimeNotificationManager: RealtimeNotificationManager
 ) : ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
         UserInteractor, AttachmentInteractor, MessageMarkerInteractor,
         MessageReactionInteractor, SceytKoinComponent {
@@ -139,17 +139,21 @@ internal class PersistenceMiddleWareImpl(
         scope.launch(Dispatchers.IO) {
             messagesLogic.onMessage(data)
             channelLogic.onMessage(data)
-            showOnlineMessageNotificationUseCase(data.first, data.second)
+            realtimeNotificationManager.onMessageReceived(data.first, data.second)
         }
     }
 
     private fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
-        scope.launch(Dispatchers.IO) { reactionsLogic.onMessageReactionUpdated(data) }
+        scope.launch(Dispatchers.IO) {
+            reactionsLogic.onMessageReactionUpdated(data)
+            realtimeNotificationManager.onReactionEvent(data)
+        }
     }
 
     private fun onMessageEditedOrDeleted(sceytMessage: SceytMessage) {
         scope.launch(Dispatchers.IO) { messagesLogic.onMessageEditedOrDeleted(sceytMessage) }
         scope.launch(Dispatchers.IO) { channelLogic.onMessageEditedOrDeleted(sceytMessage) }
+        scope.launch(Dispatchers.IO) { realtimeNotificationManager.onMessageStateChanged(sceytMessage) }
     }
 
     private fun onChangedConnectStatus(data: ConnectionStateData) {
@@ -634,8 +638,12 @@ internal class PersistenceMiddleWareImpl(
         return reactionsLogic.loadReactions(messageId, offset, key, loadKey, ignoreDb)
     }
 
-    override suspend fun getMessageReactionsDbByKey(messageId: Long, key: String): List<SceytReaction> {
-        return reactionsLogic.getMessageReactionsDbByKey(messageId, key)
+    override suspend fun getLocalMessageReactionsById(reactionId: Long): SceytReaction? {
+        return reactionsLogic.getLocalMessageReactionsById(reactionId)
+    }
+
+    override suspend fun getLocalMessageReactionsByKey(messageId: Long, key: String): List<SceytReaction> {
+        return reactionsLogic.getLocalMessageReactionsByKey(messageId, key)
     }
 
     override suspend fun addReaction(

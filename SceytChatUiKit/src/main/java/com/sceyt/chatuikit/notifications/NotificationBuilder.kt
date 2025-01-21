@@ -22,19 +22,22 @@ interface NotificationBuilder<T> {
     /**
      * Provides the small icon resource ID for the notification.
      *
+     * @param data The data used to determine the icon.
+     *
      * @return The resource ID of the small icon.
      */
     @DrawableRes
-    fun provideNotificationSmallIcon(): Int
+    fun provideNotificationSmallIcon(data: T): Int
+
+    suspend fun provideNotificationStyle(context: Context, data: T, notificationId: Int): NotificationCompat.Style?
 
     /**
      * Defines actions to be added to the notification.
      *
-     * @param notificationId The ID of the notification.
      * @param data The data required to create the actions.
      * @return A list of [NotificationCompat.Action] objects.
      */
-    fun provideActions(notificationId: Int, data: T): List<NotificationCompat.Action>
+    fun provideActions(context: Context, data: T): List<NotificationCompat.Action>
 
     /**
      * Creates a pending intent for the notification.
@@ -59,7 +62,8 @@ interface NotificationBuilder<T> {
      *
      * @param context The context used for accessing resources and services.
      * @param data The data required to build the notification.
+     * @param notificationId The ID of the notification to build.
      * @return A fully constructed [Notification] instance.
      */
-    suspend fun buildNotification(context: Context, data: T): Notification
+    suspend fun buildNotification(context: Context, data: T, notificationId: Int): Notification
 }

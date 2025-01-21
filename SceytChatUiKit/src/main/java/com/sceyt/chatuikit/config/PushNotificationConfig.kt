@@ -17,9 +17,9 @@ data class PushNotificationConfig(
         /**
          * Suppresses push notifications when the app is in the foreground.
          * If `true`, notifications will not be displayed while the app is actively in use.
-         * Default value: `false`.
+         * Default value: `true`.
          */
-        val suppressWhenAppIsInForeground: Boolean = false,
+        val suppressWhenAppIsInForeground: Boolean = true,
         /**
          * Determines whether the app should display notifications upon receiving a push message.
          * Accepts a lambda that can include app-specific logic.

@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.push
 
 import com.google.firebase.messaging.RemoteMessage
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
@@ -39,15 +40,20 @@ object FirebaseMessagingDelegate : SceytKoinComponent {
 
     @JvmStatic
     fun getDataFromRemoteMessage(remoteMessage: RemoteMessage): PushData? {
+        val type = remoteMessage.data["type"]?.toIntOrNull()?.let {
+            NotificationType.entries.getOrNull(it)
+        } ?: return null
         val user = getUserFromPushJson(remoteMessage) ?: return null
         val channel = getChannelFromPushJson(remoteMessage)?.toSceytUiChannel() ?: return null
         val message = getMessageFromPushJson(remoteMessage, channel.id, user)?.toSceytUiMessage()
                 ?: return null
         val reaction = getReactionFromPushJson(remoteMessage, message.id, user)
-        return PushData(channel, message, user.toSceytUser(), reaction)
+        return PushData(type, channel, message, user.toSceytUser(), reaction)
     }
 
     private fun RemoteMessage.isValid() = !data["user"].isNullOrBlank() &&
             !data["channel"].isNullOrBlank() &&
             !data["message"].isNullOrBlank()
+
+    // data["app"] == "chat"
 }

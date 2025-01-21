@@ -24,6 +24,10 @@ abstract class ReactionDao {
     abstract suspend fun getReactionTotal(messageId: Long, key: String): ReactionTotalEntity?
 
     @Transaction
+    @Query("select * from ReactionEntity where id =:id")
+    abstract suspend fun getReactionsById(id: Long): ReactionDb?
+
+    @Transaction
     @Query("select * from ReactionEntity where messageId =:messageId")
     abstract suspend fun getReactionsByMsgId(messageId: Long): List<ReactionDb>
 

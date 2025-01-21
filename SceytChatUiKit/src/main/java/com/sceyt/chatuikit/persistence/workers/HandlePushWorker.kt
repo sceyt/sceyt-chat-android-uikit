@@ -9,28 +9,33 @@ import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
+import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.extensions.TAG
-import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
-import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager.CHANNEL_ID
-import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager.MESSAGE_ID
+import com.sceyt.chatuikit.notifications.NotificationType
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
+import com.sceyt.chatuikit.persistence.workers.HandlePushWorkManager.CHANNEL_ID
+import com.sceyt.chatuikit.persistence.workers.HandlePushWorkManager.MESSAGE_ID
+import com.sceyt.chatuikit.persistence.workers.HandlePushWorkManager.NOTIFICATION_TYPE
+import com.sceyt.chatuikit.persistence.workers.HandlePushWorkManager.REACTION_ID
 import com.sceyt.chatuikit.push.PushData
+import org.koin.core.component.inject
 
-internal object HandleNotificationWorkManager : SceytKoinComponent {
+internal object HandlePushWorkManager : SceytKoinComponent {
 
     internal const val CHANNEL_ID = "CHANNEL_ID"
     internal const val MESSAGE_ID = "MESSAGE_ID"
     internal const val USER_ID = "USER_ID"
+    internal const val REACTION_ID = "REACTION_ID"
+    internal const val NOTIFICATION_TYPE = "NOTIFICATION_TYPE"
 
     fun schedule(context: Context, data: Map<String, Any>): Operation {
         val inputData = Data.Builder()
             .putAll(data)
             .build()
 
-        val myWorkRequest = OneTimeWorkRequest.Builder(HandleNotificationWorker::class.java)
+        val myWorkRequest = OneTimeWorkRequest.Builder(HandlePushWorker::class.java)
             .setInputData(inputData)
             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
@@ -41,58 +46,75 @@ internal object HandleNotificationWorkManager : SceytKoinComponent {
     }
 }
 
-internal class HandleNotificationWorker(
+internal class HandlePushWorker(
         context: Context,
         workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams), SceytKoinComponent {
+    private val shouldShowNotificationUseCase by inject<ShouldShowNotificationUseCase>()
 
     override suspend fun doWork(): Result {
         val data = inputData
+        val notificationTypeValue = data.getInt(NOTIFICATION_TYPE, -1)
         val channelId = data.getLong(CHANNEL_ID, -1)
         val messageId = data.getLong(MESSAGE_ID, -1)
-        return processChatMessages(messageId = messageId, channelId = channelId)
+        val reactionId = data.getLong(REACTION_ID, -1)
+        val type = NotificationType.entries.getOrNull(notificationTypeValue) ?: run {
+            SceytLog.e(TAG, "HandlePushWorker worker was resumed with error: NotificationType is null with notificationTypeValue->${notificationTypeValue}")
+            return Result.failure()
+        }
+
+        // If runAttemptCount is 0, it's indicating that the push notification is received for the first time
+        if (runAttemptCount > 0)
+            return Result.success()
+
+        return getDataAndShowNotificationIfNeeded(
+            type = type,
+            channelId = channelId,
+            messageId = messageId,
+            reactionId = reactionId
+        )
     }
 
-    private suspend fun processChatMessages(
+    private suspend fun getDataAndShowNotificationIfNeeded(
+            type: NotificationType,
+            channelId: Long,
             messageId: Long,
-            channelId: Long
+            reactionId: Long? = null
     ): Result {
         SceytLog.i(TAG, "Got a notification with chatId: $channelId, messageId: $messageId ")
 
-        // When app is in foreground and chat client is connected, app will handle notification
-        if (ConnectionEventManager.isConnected || ChannelsCache.currentChannelId == channelId) {
-            SceytLog.i(TAG, "App is on foreground and chat client is connected, ignore worker chatId: $channelId, messageId: $messageId ")
-            return Result.success()
-        }
-
-        val shouldShowNotification = runAttemptCount == 0
         val channel = SceytChatUIKit.chatUIFacade.channelInteractor.getChannelFromDb(channelId)
                 ?: run {
-                    SceytLog.e(TAG, "HandleNotificationWorkManager worker was resumed with error: Channel is null with channelId->${channelId}")
+                    SceytLog.e(TAG, "HandlePushWorker worker was resumed with error: Channel is null with channelId->${channelId}")
                     return Result.failure()
                 }
         val message = SceytChatUIKit.chatUIFacade.messageInteractor.getMessageDbById(messageId)
                 ?: run {
-                    SceytLog.e(TAG, "HandleNotificationWorkManager worker was resumed with error: Message is null with message->${messageId}")
+                    SceytLog.e(TAG, "HandlePushWorker worker was resumed with error: Message is null with message->${messageId}")
                     return Result.failure()
                 }
 
-        if (message.createdAt <= channel.messagesClearedAt || message.id <= channel.messagesClearedAt) {
-            SceytLog.e(TAG, "HandleNotificationWorkManager worker was resumed with error: Message is cleared with message->${messageId}")
-            return Result.failure()
+        var reaction: SceytReaction? = null
+        if (type == NotificationType.MessageReaction) {
+            reactionId?.let {
+                reaction = SceytChatUIKit.chatUIFacade.messageReactionInteractor.getLocalMessageReactionsById(
+                    reactionId = reactionId
+                )
+            } ?: run {
+                SceytLog.e(TAG, "HandlePushWorker worker was resumed with error: ReactionId is null")
+                Result.failure()
+            }
         }
 
-        if (shouldShowNotification
-                && !channel.muted
-                && (ChannelsCache.currentChannelId != channelId || !applicationContext.isAppOnForeground())
-        ) {
+        if (shouldShowNotificationUseCase(type, channel, message, reaction)) {
             SceytChatUIKit.notifications.pushNotification.pushNotificationHandler.showNotification(
                 context = applicationContext,
                 data = PushData(
+                    type = type,
                     channel = channel,
                     message = message,
                     user = message.user ?: return Result.failure(),
-                    reaction = null
+                    reaction = reaction
                 ))
         }
 

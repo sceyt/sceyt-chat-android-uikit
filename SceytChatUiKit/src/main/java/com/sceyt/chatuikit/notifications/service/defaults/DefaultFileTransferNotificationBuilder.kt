@@ -8,8 +8,8 @@ import androidx.core.graphics.drawable.IconCompat
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit.notifications
 import com.sceyt.chatuikit.notifications.FileTransferNotificationBuilder
-import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
 import com.sceyt.chatuikit.notifications.NotificationBuilder
+import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
 
 /**
  * Implementation of [NotificationBuilder] for creating and customizing notifications for file transfers.
@@ -24,19 +24,24 @@ open class DefaultFileTransferNotificationBuilder(
      *
      * @return The resource ID of the small icon (default: [R.drawable.sceyt_ic_upload]).
      */
-    override fun provideNotificationSmallIcon(): Int {
+    override fun provideNotificationSmallIcon(data: FileTransferNotificationData): Int {
         return R.drawable.sceyt_ic_upload
     }
+
+    override suspend fun provideNotificationStyle(
+            context: Context,
+            data: FileTransferNotificationData,
+            notificationId: Int
+    ): NotificationCompat.Style? = null
 
     /**
      * Provides a list of actions to be added to the notification.
      *
-     * @param notificationId The unique ID of the notification.
      * @param data The push data received for the notification.
      * @return A list of [NotificationCompat.Action] objects (default: empty list).
      */
     override fun provideActions(
-            notificationId: Int,
+            context: Context,
             data: FileTransferNotificationData
     ): List<NotificationCompat.Action> {
         return emptyList()
@@ -78,23 +83,21 @@ open class DefaultFileTransferNotificationBuilder(
 
     override suspend fun buildNotification(
             context: Context,
-            data: FileTransferNotificationData
+            data: FileTransferNotificationData,
+            notificationId: Int
     ) = NotificationCompat.Builder(context, provideNotificationChannelId())
         .setContentTitle(context.getString(R.string.sceyt_sending_attachment))
         .setPriority(NotificationCompat.PRIORITY_MIN)
         .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-        .setSmallIcon(serviceNotifications.notificationBuilder.provideNotificationSmallIcon())
+        .setSmallIcon(serviceNotifications.notificationBuilder.provideNotificationSmallIcon(data))
         .setContentIntent(serviceNotifications.notificationBuilder.providePendingIntent(
             context = context,
             data = data
         ))
         .apply {
-            serviceNotifications.notificationBuilder.provideActions(
-                notificationId = data.channel.id.toInt(),
-                data = data
-            ).forEach(::addAction)
-        }
-        .build()
+            provideNotificationStyle(context, data, notificationId)?.let(::setStyle)
+            provideActions(context, data).forEach(::addAction)
+        }.build()
 
     protected open fun provideNotificationChannelId(): String {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

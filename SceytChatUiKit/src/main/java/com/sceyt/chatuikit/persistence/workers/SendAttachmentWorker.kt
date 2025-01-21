@@ -37,9 +37,9 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
+import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.FILE_TRANSFER_NOTIFICATION_ID
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.IS_SHARING
 import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.MESSAGE_TID
-import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.NOTIFICATION_ID
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.runBlocking
@@ -50,7 +50,7 @@ object SendAttachmentWorkManager : SceytKoinComponent {
 
     internal const val MESSAGE_TID = "MESSAGE_TID"
     internal const val IS_SHARING = "IS_SHARING"
-    internal const val NOTIFICATION_ID = 1223344
+    const val FILE_TRANSFER_NOTIFICATION_ID = 1223344
 
     fun schedule(
             context: Context,
@@ -191,8 +191,8 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
     private suspend fun startForeground(channelId: Long, message: SceytMessage) {
         val notification = creteNotification(channelId, message) ?: return
         val foregroundInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            ForegroundInfo(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-        } else ForegroundInfo(NOTIFICATION_ID, notification)
+            ForegroundInfo(FILE_TRANSFER_NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else ForegroundInfo(FILE_TRANSFER_NOTIFICATION_ID, notification)
         setForeground(foregroundInfo)
     }
 
@@ -201,7 +201,8 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         val channel = channelLogic.getChannelFromDb(channelId) ?: return null
         return serviceNotification.notificationBuilder.buildNotification(
             context = applicationContext,
-            data = FileTransferNotificationData(channel = channel, message = message)
+            data = FileTransferNotificationData(channel = channel, message = message),
+            notificationId = FILE_TRANSFER_NOTIFICATION_ID
         )
     }
 }
