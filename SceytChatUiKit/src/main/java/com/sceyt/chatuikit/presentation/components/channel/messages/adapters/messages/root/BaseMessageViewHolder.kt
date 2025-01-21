@@ -242,7 +242,7 @@ abstract class BaseMessageViewHolder(
                 imageAttachment.isVisible = false
                 icFile.isVisible = false
             } else {
-                val attachment = parent.attachments.getOrNull(0)
+                val attachment = parent.attachments.firstOrNull()
                 val icon = attachment?.let { itemStyle.replyMessageStyle.attachmentIconProvider.provide(context, it) }
                 when {
                     attachment?.type.isEqualsVideoOrImage() -> {

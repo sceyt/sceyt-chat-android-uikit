@@ -175,7 +175,7 @@ internal class PersistenceMembersLogicImpl(
         val response = channelsRepository.changeChannelOwner(channelId, newOwnerId)
 
         if (response is SceytResponse.Success) {
-            response.data?.members?.getOrNull(0)?.let { member ->
+            response.data?.members?.firstOrNull()?.let { member ->
                 memberDao.updateOwner(channelId = channelId, newOwnerId = member.id)
                 channelDao.getChannelById(channelId)?.let {
                     channelsCache.upsertChannel(it.toChannel())

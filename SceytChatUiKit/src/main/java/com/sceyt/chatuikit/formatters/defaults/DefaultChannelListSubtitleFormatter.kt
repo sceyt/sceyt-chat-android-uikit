@@ -39,7 +39,7 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
             mentionTextStyle = style.mentionTextStyle)
         )
         val senderName = style.lastMessageSenderNameFormatter.format(context, channel)
-        val attachmentIcon = message.attachments?.getOrNull(0)?.let {
+        val attachmentIcon = message.attachments?.firstOrNull()?.let {
             style.attachmentIconProvider.provide(context, it)
         }
 
