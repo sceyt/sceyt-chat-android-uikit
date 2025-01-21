@@ -86,7 +86,7 @@ open class DefaultFileTransferNotificationBuilder(
             context: Context,
             data: FileTransferNotificationData,
             notificationId: Int,
-            builderModifier: NotificationCompat.Builder.() -> Unit
+            builderCustomizer: NotificationCompat.Builder.() -> Unit
     ): Notification {
         val style = provideNotificationStyle(context, data, notificationId)
         return buildNotificationImpl(context, data, notificationId, style)
@@ -97,7 +97,7 @@ open class DefaultFileTransferNotificationBuilder(
             data: FileTransferNotificationData,
             notificationId: Int,
             style: NotificationCompat.Style?,
-            builderModifier: NotificationCompat.Builder.() -> Unit
+            builderCustomizer: NotificationCompat.Builder.() -> Unit
     ): Notification {
         return buildNotificationImpl(context, data, notificationId, style)
     }

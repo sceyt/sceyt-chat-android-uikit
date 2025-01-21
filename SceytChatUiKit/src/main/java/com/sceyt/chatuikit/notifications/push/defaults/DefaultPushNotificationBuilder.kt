@@ -76,10 +76,10 @@ open class DefaultPushNotificationBuilder(
             context: Context,
             data: PushData,
             notificationId: Int,
-            builderModifier: NotificationCompat.Builder.() -> Unit
+            builderCustomizer: NotificationCompat.Builder.() -> Unit
     ): Notification {
         val style = provideNotificationStyle(context, data, notificationId)
-        return buildNotificationImpl(context, data, notificationId, style, builderModifier)
+        return buildNotificationImpl(context, data, notificationId, style, builderCustomizer)
     }
 
     override suspend fun buildNotification(
@@ -87,8 +87,8 @@ open class DefaultPushNotificationBuilder(
             data: PushData,
             notificationId: Int,
             style: NotificationCompat.Style?,
-            builderModifier: NotificationCompat.Builder.() -> Unit
-    ) = buildNotificationImpl(context, data, notificationId, style, builderModifier)
+            builderCustomizer: NotificationCompat.Builder.() -> Unit
+    ) = buildNotificationImpl(context, data, notificationId, style, builderCustomizer)
 
     protected open suspend fun buildNotificationImpl(
             context: Context,

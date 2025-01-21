@@ -103,7 +103,7 @@ open class DefaultPushNotificationHandler(
                         data = pushData,
                         notificationId = notificationId,
                         style = style,
-                        builderModifier = { setSilent(true) }
+                        builderCustomizer = { setSilent(true) }
                     ).let {
                         notificationManager.notify(notificationId, it)
                     }
@@ -176,7 +176,7 @@ open class DefaultPushNotificationHandler(
             data = data,
             notificationId = notificationId,
             style = style,
-            builderModifier = { setSilent(true) }
+            builderCustomizer = { setSilent(true) }
         ).let {
             notificationManager.notify(notificationId, it)
         }
