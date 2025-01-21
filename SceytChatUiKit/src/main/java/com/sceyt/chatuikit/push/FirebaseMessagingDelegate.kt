@@ -35,14 +35,14 @@ object FirebaseMessagingDelegate : SceytKoinComponent {
 
     @JvmStatic
     fun isSceytPushNotification(remoteMessage: RemoteMessage): Boolean {
-        return remoteMessage.isValid()
+        return PushValidator.isSceytPushNotification(remoteMessage.data)
     }
 
     @JvmStatic
     fun getDataFromRemoteMessage(remoteMessage: RemoteMessage): PushData? {
         val type = remoteMessage.data["type"]?.toIntOrNull()?.let {
             NotificationType.entries.getOrNull(it)
-        } ?: return null
+        } ?: NotificationType.ChannelMessage
         val user = getUserFromPushJson(remoteMessage) ?: return null
         val channel = getChannelFromPushJson(remoteMessage)?.toSceytUiChannel() ?: return null
         val message = getMessageFromPushJson(remoteMessage, channel.id, user)?.toSceytUiMessage()
@@ -50,10 +50,4 @@ object FirebaseMessagingDelegate : SceytKoinComponent {
         val reaction = getReactionFromPushJson(remoteMessage, message.id, user)
         return PushData(type, channel, message, user.toSceytUser(), reaction)
     }
-
-    private fun RemoteMessage.isValid() = !data["user"].isNullOrBlank() &&
-            !data["channel"].isNullOrBlank() &&
-            !data["message"].isNullOrBlank()
-
-    // data["app"] == "chat"
 }
