@@ -3,6 +3,13 @@ package com.sceyt.chatuikit.data.repositories
 import android.content.Context
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 
+internal object Keys {
+    const val KEY_USER_ID = "user_id"
+    const val KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION = "key_subscribed_for_push"
+}
+
+internal fun SceytSharedPreference.getUserId(): String? = getString(Keys.KEY_USER_ID)
+
 internal class SceytSharedPreferenceImpl(context: Context) : SceytSharedPreference {
     private val editor by lazy { pref.edit() }
 

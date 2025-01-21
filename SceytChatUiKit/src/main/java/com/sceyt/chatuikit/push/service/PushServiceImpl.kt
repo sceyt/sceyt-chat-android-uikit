@@ -5,11 +5,11 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.repositories.Keys.KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
-import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference.Companion.KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION
 import com.sceyt.chatuikit.persistence.workers.HandlePushWorkManager
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.push.PushDevice

@@ -10,6 +10,8 @@ import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.repositories.Keys
+import com.sceyt.chatuikit.data.repositories.getUserId
 import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
@@ -19,7 +21,6 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.repositories.UsersRepository
-import com.sceyt.chatuikit.persistence.repositories.getUserId
 import com.sceyt.chatuikit.push.service.PushService
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.services.SceytSyncManager
@@ -81,7 +82,7 @@ internal class PersistenceConnectionLogicImpl(
     private suspend fun insertCurrentUser() {
         ClientWrapper.currentUser?.let {
             usersDao.insertUserWithMetadata(it.toUserDb())
-            preference.setString(SceytSharedPreference.KEY_USER_ID, it.id)
+            preference.setString(Keys.KEY_USER_ID, it.id)
         } ?: run {
             preference.getUserId()?.let {
                 val response = usersRepository.getSceytUserById(it)
