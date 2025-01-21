@@ -42,7 +42,7 @@ internal class MessageActionBridge {
         val menuStyle = headerView?.style ?: return
         headerView?.uiElementsListeners?.onShowMessageActionsMenu(*selectedMessages,
             menuStyle = menuStyle.messageActionsMenuStyle) { it, actionFinish ->
-            val firstMessage = selectedMessages.getOrNull(0)
+            val firstMessage = selectedMessages.firstOrNull()
             when (it.itemId) {
                 R.id.sceyt_edit_message -> firstMessage?.let { message ->
                     actionFinish.invoke()

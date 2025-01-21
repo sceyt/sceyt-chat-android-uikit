@@ -171,7 +171,7 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun onChanelJoined(channel: SceytChannel?) {
-        val joinedMember = channel?.members?.getOrNull(0)?.id ?: return
+        val joinedMember = channel?.members?.firstOrNull()?.id ?: return
         if (joinedMember == myId) {
             onChanelAdded(channel)
         } else updateMembersCount(channel.id, channel.memberCount.toInt())
@@ -913,7 +913,7 @@ internal class PersistenceChannelsLogicImpl(
 
         if (response is SceytResponse.Success)
             response.data?.let {
-                it.members?.getOrNull(0)?.let { sceytMember ->
+                it.members?.firstOrNull()?.let { sceytMember ->
                     channelDao.insertUserChatLink(UserChatLink(
                         userId = sceytMember.id,
                         chatId = it.id,

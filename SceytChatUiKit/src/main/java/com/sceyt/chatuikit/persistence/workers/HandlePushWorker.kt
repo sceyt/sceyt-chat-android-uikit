@@ -125,7 +125,7 @@ internal class HandlePushWorker(
                   channelId,
                   MarkerType.Received,
                   messageId
-              ).getOrNull(0)
+              ).firstOrNull()
               if (result is SceytResponse.Success) {
                   SceytLog.i(TAG, "Sent ack receive for Id: ${message.id} body: ${message.body} succeeded")
               } else SceytLog.e(TAG, "Failed to send ack received for msgId: ${message.id} body: ${message.body}  error: ${result?.message}")

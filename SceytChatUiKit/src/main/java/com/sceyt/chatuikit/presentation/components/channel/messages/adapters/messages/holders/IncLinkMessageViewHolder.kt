@@ -51,7 +51,7 @@ class IncLinkMessageViewHolder(
             with(binding) {
                 val message = item.message
                 tvForwarded.isVisible = message.isForwarded
-                val linkAttachment = message.attachments?.getOrNull(0)
+                val linkAttachment = message.attachments?.firstOrNull()
                 loadLinkPreview(message, linkAttachment, layoutLinkPreview)
 
                 if (diff.edited || diff.statusChanged)
