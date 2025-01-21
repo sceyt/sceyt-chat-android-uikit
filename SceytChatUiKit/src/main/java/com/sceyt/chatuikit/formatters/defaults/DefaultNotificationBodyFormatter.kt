@@ -7,6 +7,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.extensions.whitSpace
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.presentation.extensions.getFormattedBodyWithAttachments
@@ -17,7 +18,6 @@ open class DefaultNotificationBodyFormatter : Formatter<PushData> {
 
     override fun format(context: Context, from: PushData): CharSequence {
         val attachmentIcon = from.message.attachments?.firstOrNull()?.getEmojiIcon()
-
         val messageBody = from.message.getFormattedBodyWithAttachments(
             context = context,
             mentionTextStyle = TextStyle(style = Typeface.BOLD),
@@ -27,10 +27,8 @@ open class DefaultNotificationBodyFormatter : Formatter<PushData> {
         )
 
         val formattedBody = buildSpannedString {
-            if (!attachmentIcon.isNullOrBlank()) {
-                append(attachmentIcon)
-                append(" ")
-            }
+            if (!attachmentIcon.isNullOrBlank())
+                append(attachmentIcon.whitSpace())
 
             append(messageBody)
         }
@@ -38,9 +36,9 @@ open class DefaultNotificationBodyFormatter : Formatter<PushData> {
             NotificationType.ChannelMessage -> formattedBody
             NotificationType.MessageReaction -> {
                 buildSpannedString {
-                    append("${context.getString(R.string.sceyt_reacted)} " +
-                            "${from.reaction?.key} " +
-                            "${context.getString(R.string.sceyt_to)} ")
+                    append(context.getString(R.string.sceyt_reacted).whitSpace() +
+                            from.reaction?.key?.whitSpace() +
+                            context.getString(R.string.sceyt_to).whitSpace())
                     append("\"")
                     append(formattedBody)
                     append("\"")
