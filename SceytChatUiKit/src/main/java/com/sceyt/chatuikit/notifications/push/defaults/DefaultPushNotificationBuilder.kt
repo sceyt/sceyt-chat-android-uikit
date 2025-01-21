@@ -3,18 +3,18 @@ package com.sceyt.chatuikit.notifications.push.defaults
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
-import android.os.Build
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationCompat.MessagingStyle
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.app.Person
 import androidx.core.graphics.drawable.IconCompat
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getBitmapFromUrl
-import com.sceyt.chatuikit.notifications.PushNotificationBuilder
 import com.sceyt.chatuikit.notifications.extractMessagingStyle
-import com.sceyt.chatuikit.notifications.toPerson
+import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.createMessagingStyle
+import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.getPerson
+import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.provideNotificationChannelId
+import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.toMessagingStyle
+import com.sceyt.chatuikit.notifications.builder.PushNotificationBuilder
 import com.sceyt.chatuikit.push.PushData
 
 /**
@@ -25,11 +25,14 @@ open class DefaultPushNotificationBuilder(
         private val context: Context
 ) : PushNotificationBuilder {
     protected val notificationManager by lazy { NotificationManagerCompat.from(context) }
-    protected val personMap by lazy { mutableMapOf<String, Person>() }
+    protected val channelProvider by lazy {
+        SceytChatUIKit.notifications.pushNotification.notificationChannelProvider
+    }
 
     companion object {
         const val EXTRAS_NOTIFICATION_TYPE = "type"
         const val EXTRAS_MESSAGE_ID = "messageId"
+        const val EXTRAS_REACTION_ID = "reactionId"
     }
 
     override fun provideNotificationSmallIcon(data: PushData): Int {
@@ -40,9 +43,12 @@ open class DefaultPushNotificationBuilder(
             context: Context,
             data: PushData,
             notificationId: Int
-    ): NotificationCompat.Style? = notificationManager.extractMessagingStyle(notificationId)?.run {
-        addMessage(data.toMessagingStyle())
-    } ?: data.createMessagingStyle()
+    ): NotificationCompat.Style? {
+        val person = data.getPerson(context, provideAvatarIcon(context, data))
+        return (notificationManager.extractMessagingStyle(notificationId)
+                ?: data.createMessagingStyle(person)
+                ).addMessage(data.toMessagingStyle(context, person))
+    }
 
     override fun provideActions(context: Context, data: PushData): List<NotificationCompat.Action> {
         return emptyList()
@@ -69,48 +75,41 @@ open class DefaultPushNotificationBuilder(
     override suspend fun buildNotification(
             context: Context,
             data: PushData,
-            notificationId: Int
+            notificationId: Int,
+            builderModifier: NotificationCompat.Builder.() -> Unit
     ): Notification {
-        val notificationBuilder = NotificationCompat.Builder(context, provideNotificationChannelId())
+        val style = provideNotificationStyle(context, data, notificationId)
+        return buildNotificationImpl(context, data, notificationId, style, builderModifier)
+    }
+
+    override suspend fun buildNotification(
+            context: Context,
+            data: PushData,
+            notificationId: Int,
+            style: NotificationCompat.Style?,
+            builderModifier: NotificationCompat.Builder.() -> Unit
+    ) = buildNotificationImpl(context, data, notificationId, style, builderModifier)
+
+    protected open suspend fun buildNotificationImpl(
+            context: Context,
+            data: PushData,
+            notificationId: Int,
+            style: NotificationCompat.Style?,
+            builderModifier: NotificationCompat.Builder.() -> Unit
+    ): Notification {
+        val channelId = channelProvider.provideNotificationChannelId(context)
+        val notificationBuilder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(provideNotificationSmallIcon(data))
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setContentIntent(providePendingIntent(context, data))
             .apply {
-                provideNotificationStyle(context, data, notificationId)?.let(::setStyle)
+                style?.let(::setStyle)
                 provideActions(context, data).forEach(::addAction)
+                builderModifier()
             }
 
         return notificationBuilder.build()
-    }
-
-    protected open fun provideNotificationChannelId(): String {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            SceytChatUIKit.notifications.pushNotification.notificationChannelProvider.createChannel(
-                context = context
-            ).id
-        } else ""
-    }
-
-    protected open suspend fun PushData.toMessagingStyle() = with(message) {
-        MessagingStyle.Message(
-            SceytChatUIKit.formatters.notificationBodyFormatter.format(context, this@toMessagingStyle),
-            createdAt.takeIf { it != 0L } ?: System.currentTimeMillis(),
-            getPerson(),
-        ).apply {
-            extras.putLong(EXTRAS_MESSAGE_ID, message.id)
-            extras.putInt(EXTRAS_NOTIFICATION_TYPE, this@toMessagingStyle.type.ordinal)
-        }
-    }
-
-    protected open suspend fun PushData.createMessagingStyle() = MessagingStyle(getPerson())
-        .setConversationTitle(channel.channelSubject)
-        .setGroupConversation(channel.isGroup)
-
-    protected open suspend fun PushData.getPerson() = user.let {
-        personMap.getOrPut(it.id) {
-            it.toPerson(context, provideAvatarIcon(context, this))
-        }
     }
 
     protected open val pendingIntentFlags: Int

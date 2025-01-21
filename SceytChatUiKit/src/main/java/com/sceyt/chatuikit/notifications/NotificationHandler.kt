@@ -1,11 +1,18 @@
 package com.sceyt.chatuikit.notifications
 
 import android.content.Context
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
 import com.sceyt.chatuikit.push.PushData
 
-typealias PushNotificationHandler = NotificationHandler<PushData>
+interface PushNotificationHandler : NotificationHandler<PushData> {
+    suspend fun onMessageStateChanged(context: Context, message: SceytMessage)
+    suspend fun onReactionDeleted(context: Context, message: SceytMessage, reaction: SceytReaction)
+}
+
 typealias FileTransferNotificationHandler = NotificationHandler<FileTransferNotificationData>
+
 
 /**
  * Defines how notifications are managed for a specific type of data.

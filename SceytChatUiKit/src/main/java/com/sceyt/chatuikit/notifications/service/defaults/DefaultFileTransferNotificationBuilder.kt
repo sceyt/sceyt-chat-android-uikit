@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.notifications.service.defaults
 
+import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.os.Build
@@ -7,8 +8,8 @@ import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit.notifications
-import com.sceyt.chatuikit.notifications.FileTransferNotificationBuilder
-import com.sceyt.chatuikit.notifications.NotificationBuilder
+import com.sceyt.chatuikit.notifications.builder.FileTransferNotificationBuilder
+import com.sceyt.chatuikit.notifications.builder.NotificationBuilder
 import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
 
 /**
@@ -84,20 +85,40 @@ open class DefaultFileTransferNotificationBuilder(
     override suspend fun buildNotification(
             context: Context,
             data: FileTransferNotificationData,
-            notificationId: Int
-    ) = NotificationCompat.Builder(context, provideNotificationChannelId())
-        .setContentTitle(context.getString(R.string.sceyt_sending_attachment))
-        .setPriority(NotificationCompat.PRIORITY_MIN)
-        .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-        .setSmallIcon(serviceNotifications.notificationBuilder.provideNotificationSmallIcon(data))
-        .setContentIntent(serviceNotifications.notificationBuilder.providePendingIntent(
-            context = context,
-            data = data
-        ))
-        .apply {
-            provideNotificationStyle(context, data, notificationId)?.let(::setStyle)
-            provideActions(context, data).forEach(::addAction)
-        }.build()
+            notificationId: Int,
+            builderModifier: NotificationCompat.Builder.() -> Unit
+    ): Notification {
+        val style = provideNotificationStyle(context, data, notificationId)
+        return buildNotificationImpl(context, data, notificationId, style)
+    }
+
+    override suspend fun buildNotification(
+            context: Context,
+            data: FileTransferNotificationData,
+            notificationId: Int,
+            style: NotificationCompat.Style?,
+            builderModifier: NotificationCompat.Builder.() -> Unit
+    ): Notification {
+        return buildNotificationImpl(context, data, notificationId, style)
+    }
+
+    protected open fun buildNotificationImpl(
+            context: Context,
+            data: FileTransferNotificationData,
+            notificationId: Int,
+            style: NotificationCompat.Style?
+    ): Notification {
+        return NotificationCompat.Builder(context, provideNotificationChannelId())
+            .setSmallIcon(provideNotificationSmallIcon(data))
+            .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setContentIntent(providePendingIntent(context, data))
+            .setStyle(style)
+            .apply {
+                provideActions(context, data).forEach(::addAction)
+            }
+            .build()
+    }
 
     protected open fun provideNotificationChannelId(): String {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
