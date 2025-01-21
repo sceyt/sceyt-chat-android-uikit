@@ -43,6 +43,7 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.toDeliveryStatus
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.persistence.database.dao.AttachmentDao
 import com.sceyt.chatuikit.persistence.database.dao.AutoDeleteMessageDao
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
@@ -161,8 +162,7 @@ internal class PersistenceMessagesLogicImpl(
             return@withContext false
 
         val messageDb = messageDao.getMessageById(message.id)
-
-        val isReaction = data.reaction != null
+        val isReaction = data.type == NotificationType.MessageReaction
 
         if (messageDb == null && !isReaction) {
             saveMessagesToDb(arrayListOf(message), includeParents = false)

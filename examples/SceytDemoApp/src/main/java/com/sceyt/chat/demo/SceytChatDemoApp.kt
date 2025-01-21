@@ -46,7 +46,8 @@ class SceytChatDemoApp : Application() {
 
         // Setting Firebase push notification provider
         SceytChatUIKit.config.notificationConfig = PushNotificationConfig(
-            pushProviders = listOf(FirebasePushServiceProvider())
+            pushProviders = listOf(FirebasePushServiceProvider()),
+            suppressWhenAppIsInForeground = false
         )
 
         SceytChatUIKit.notifications.apply {

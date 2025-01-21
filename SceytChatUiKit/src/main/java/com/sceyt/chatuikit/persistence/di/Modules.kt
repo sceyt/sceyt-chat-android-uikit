@@ -5,8 +5,10 @@ import androidx.room.Room
 import com.sceyt.chatuikit.BuildConfig
 import com.sceyt.chatuikit.SceytChatUIFacade
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.persistence.database.DatabaseMigrations
+import com.sceyt.chatuikit.notifications.RealtimeNotificationManager
+import com.sceyt.chatuikit.notifications.RealtimeNotificationManagerImpl
 import com.sceyt.chatuikit.persistence.PersistenceMiddleWareImpl
+import com.sceyt.chatuikit.persistence.database.DatabaseMigrations
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
@@ -39,7 +41,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.PersistenceChannelsLogi
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessageLoadRangeUpdater
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.PersistenceMessagesLogicImpl
-import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShowOnlineMessageNotificationUseCase
+import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
 import com.sceyt.chatuikit.push.service.PushService
 import com.sceyt.chatuikit.push.service.PushServiceImpl
 import com.sceyt.chatuikit.services.SceytSyncManager
@@ -60,6 +62,7 @@ internal val appModules = module {
     single<FileTransferService> { FileTransferServiceImpl(get(), get()) }
     single<MessageLoadRangeUpdater> { MessageLoadRangeUpdater(get()) }
     single<PushService> { PushServiceImpl(get(), get(), get(), get()) }
+    single<RealtimeNotificationManager> { RealtimeNotificationManagerImpl(get(), get()) }
 }
 
 internal fun databaseModule(enableDatabase: Boolean) = module {
@@ -121,7 +124,7 @@ internal val logicModule = module {
 }
 
 internal val useCaseModule = module {
-    factory { ShowOnlineMessageNotificationUseCase(get()) }
+    factory { ShouldShowNotificationUseCase(get()) }
 }
 
 internal val cacheModule = module {

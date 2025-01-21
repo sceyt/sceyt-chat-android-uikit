@@ -172,7 +172,11 @@ internal class PersistenceReactionsLogicImpl(
         return dbReactions
     }
 
-    override suspend fun getMessageReactionsDbByKey(messageId: Long, key: String): List<SceytReaction> {
+    override suspend fun getLocalMessageReactionsById(reactionId: Long): SceytReaction? {
+        return reactionDao.getReactionsById(reactionId)?.toSceytReaction()
+    }
+
+    override suspend fun getLocalMessageReactionsByKey(messageId: Long, key: String): List<SceytReaction> {
         return if (key.isEmpty())
             reactionDao.getReactionsByMsgId(messageId).map { it.toSceytReaction() }
         else
