@@ -1,6 +1,7 @@
-package com.sceyt.chatuikit.push
+package com.sceyt.chatuikit.push.providers
 
 import android.content.Context
+import com.sceyt.chatuikit.push.PushDevice
 
 /**
  * Interface responsible for providing the information needed to register a push notifications provider.

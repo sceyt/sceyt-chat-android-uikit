@@ -7,7 +7,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.push.PushDevice
-import com.sceyt.chatuikit.push.PushDeviceProvider
+import com.sceyt.chatuikit.push.providers.PushDeviceProvider
 import com.sceyt.chatuikit.push.PushServiceType
 
 /**

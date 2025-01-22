@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.push
 
-import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.sceyt.chat.models.attachment.Attachment
@@ -20,10 +19,10 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import org.json.JSONObject
 
-fun getMessageFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, user: User?): Message? {
+fun getMessageFromPush(payload: Map<String, String>, channelId: Long?, user: User?): Message? {
     channelId ?: return null
     return try {
-        val messageJson = remoteMessage.data["message"]
+        val messageJson = payload["message"]
         val messageJsonObject = JSONObject(messageJson ?: return null)
 
         // Do not getLong from json when its a string
@@ -35,10 +34,10 @@ fun getMessageFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, user:
         val meta = messageJsonObject.getString("metadata")
         val createdAtString = messageJsonObject.getString("created_at")
         val transient = messageJsonObject.getBoolean("transient")
-        val deliveryStatus = getDeliveryStatusFromPushJson(messageJsonObject)
-        val state = getStateFromPushJson(messageJsonObject)
-        val forwardingDetails = getForwardingDetailsFromPushJson(messageJsonObject)
-        val bodyAttributes = getBodyAttributesFromPushJson(messageJsonObject)
+        val deliveryStatus = getDeliveryStatusFromJson(messageJsonObject)
+        val state = getStateFromJson(messageJsonObject)
+        val forwardingDetails = getForwardingDetailsFromJson(messageJsonObject)
+        val bodyAttributes = getBodyAttributesFromJson(messageJsonObject)
         val createdAt = DateTimeUtil.convertStringToDate(createdAtString, DateTimeUtil.SERVER_DATE_PATTERN)
 
         val attachmentArray = ArrayList<Attachment>()
@@ -46,7 +45,7 @@ fun getMessageFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, user:
         for (i in 0 until attachments.length()) {
             when (val value: Any = attachments[i]) {
                 is JSONObject -> {
-                    getAttachmentFromPushJson(value)?.let { attachmentArray.add(it) }
+                    getAttachmentFromJson(value)?.let { attachmentArray.add(it) }
                 }
             }
         }
@@ -86,8 +85,8 @@ fun getMessageFromPushJson(remoteMessage: RemoteMessage, channelId: Long?, user:
     }
 }
 
-fun getUserFromPushJson(remoteMessage: RemoteMessage): User? {
-    val userJson = remoteMessage.data["user"] ?: return null
+fun getUserFromPush(payload: Map<String, String>): User? {
+    val userJson = payload["user"] ?: return null
     return try {
         val userJsonObject = JSONObject(userJson)
         val id = userJsonObject.getString("id")
@@ -104,8 +103,8 @@ fun getUserFromPushJson(remoteMessage: RemoteMessage): User? {
     }
 }
 
-fun getChannelFromPushJson(remoteMessage: RemoteMessage): Channel? {
-    val channelJson = remoteMessage.data["channel"] ?: return null
+fun getChannelFromPush(payload: Map<String, String>): Channel? {
+    val channelJson = payload["channel"] ?: return null
     return try {
         val channelJsonObject = JSONObject(channelJson)
         val id = channelJsonObject.getString("id").toLongOrNull() ?: return null
@@ -125,7 +124,24 @@ fun getChannelFromPushJson(remoteMessage: RemoteMessage): Channel? {
     }
 }
 
-fun getAttachmentFromPushJson(attachment: JSONObject?): Attachment? {
+fun getReactionFromPush(payload: Map<String, String>, messageId: Long?, user: User?): SceytReaction? {
+    return try {
+        val jsonObject = JSONObject(payload["reaction"] ?: return null)
+        val id = jsonObject.getString("id").toLongOrNull() ?: return null
+        val key = jsonObject.getString("key")
+        val score = jsonObject.getString("score").toInt()
+        val reason = jsonObject.getString("reason")
+        val createdAt = jsonObject.getString("created_at").toLongOrNull() ?: return null
+
+        if (key.isEmpty() || score == 0 || messageId == null || user == null) return null
+        SceytReaction(id, messageId, key, score, reason, createdAt, user.toSceytUser(), false)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+
+fun getAttachmentFromJson(attachment: JSONObject?): Attachment? {
     return try {
         attachment ?: return null
         val data = attachment.getString("data")
@@ -143,24 +159,7 @@ fun getAttachmentFromPushJson(attachment: JSONObject?): Attachment? {
     }
 }
 
-fun getReactionFromPushJson(remoteMessage: RemoteMessage, messageId: Long?, user: User?): SceytReaction? {
-    return try {
-        val jsonObject = JSONObject(remoteMessage.data["reaction"] ?: return null)
-        val id = jsonObject.getString("id").toLongOrNull() ?: return null
-        val key = jsonObject.getString("key")
-        val score = jsonObject.getString("score").toInt()
-        val reason = jsonObject.getString("reason")
-        val createdAt = jsonObject.getString("created_at").toLongOrNull() ?: return null
-
-        if (key.isEmpty() || score == 0 || messageId == null || user == null) return null
-        SceytReaction(id, messageId, key, score, reason, createdAt, user.toSceytUser(), false)
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
-}
-
-private fun getDeliveryStatusFromPushJson(jsonObject: JSONObject): DeliveryStatus {
+private fun getDeliveryStatusFromJson(jsonObject: JSONObject): DeliveryStatus {
     return try {
         when (jsonObject.getString("delivery_status")) {
             "sent" -> DeliveryStatus.Sent
@@ -174,7 +173,7 @@ private fun getDeliveryStatusFromPushJson(jsonObject: JSONObject): DeliveryStatu
     }
 }
 
-private fun getForwardingDetailsFromPushJson(jsonObject: JSONObject): ForwardingDetails? {
+private fun getForwardingDetailsFromJson(jsonObject: JSONObject): ForwardingDetails? {
     return try {
         val data = jsonObject.getJSONObject("forwarding_details")
         val channelId = data.getString("channel_id").toLongOrNull() ?: return null
@@ -188,7 +187,7 @@ private fun getForwardingDetailsFromPushJson(jsonObject: JSONObject): Forwarding
     }
 }
 
-private fun getStateFromPushJson(jsonObject: JSONObject): MessageState {
+private fun getStateFromJson(jsonObject: JSONObject): MessageState {
     return try {
         when (jsonObject.getString("state")) {
             "none" -> MessageState.Unmodified
@@ -202,7 +201,7 @@ private fun getStateFromPushJson(jsonObject: JSONObject): MessageState {
     }
 }
 
-private fun getBodyAttributesFromPushJson(jsonObject: JSONObject): List<BodyAttribute> {
+private fun getBodyAttributesFromJson(jsonObject: JSONObject): List<BodyAttribute> {
     return try {
         val bodyAttributes = jsonObject.getString("body_attributes")
         val typeToken = object : TypeToken<List<BodyAttribute>>() {}.type
