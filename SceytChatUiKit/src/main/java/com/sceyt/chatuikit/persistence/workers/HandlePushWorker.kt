@@ -8,9 +8,14 @@ import androidx.work.Operation
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.sceyt.chat.ChatClient
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
+import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.MarkerType
+import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
-import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.NotificationType
@@ -21,6 +26,7 @@ import com.sceyt.chatuikit.persistence.workers.HandlePushWorkManager.NOTIFICATIO
 import com.sceyt.chatuikit.persistence.workers.HandlePushWorkManager.REACTION_ID
 import com.sceyt.chatuikit.push.PushData
 import org.koin.core.component.inject
+import kotlin.time.Duration.Companion.minutes
 
 internal object HandlePushWorkManager : SceytKoinComponent {
 
@@ -118,19 +124,42 @@ internal class HandlePushWorker(
                 ))
         }
 
-        //   connectionProvider.connectChatClient()
+        if (ConnectionEventManager.isConnected) {
+            SceytLog.i(TAG, "SceytChat is connected. Marking message as received: $messageId")
+            markMessageAsReceived(channelId, message)
+        } else {
+            SceytLog.i(TAG, "SceytChat is not connected. Connecting to mark message as received: $messageId")
+            val token = SceytChatUIKit.tokenProvider?.provideToken().takeIf { !it.isNullOrBlank() }
+                    ?: run {
+                        SceytLog.e(TAG, "Couldn't get token to connect to mark message as received: $messageId")
+                        return Result.failure()
+                    }
 
-        /*  if (ConnectionEventManager.awaitToConnectSceytWithTimeout(1.minutes.inWholeMilliseconds)) {
-              val result = SceytChatUIKit.chatUIFacade.messageInteractor.markMessagesAs(
-                  channelId,
-                  MarkerType.Received,
-                  messageId
-              ).firstOrNull()
-              if (result is SceytResponse.Success) {
-                  SceytLog.i(TAG, "Sent ack receive for Id: ${message.id} body: ${message.body} succeeded")
-              } else SceytLog.e(TAG, "Failed to send ack received for msgId: ${message.id} body: ${message.body}  error: ${result?.message}")
-          }*/
+            ChatClient.getClient().connect(token)
 
+            if (ConnectionEventManager.awaitToConnectSceytWithTimeout(1.minutes.inWholeMilliseconds)) {
+                markMessageAsReceived(channelId, message)
+            }
+
+            if (!applicationContext.isAppOnForeground())
+                ChatClient.getClient().disconnect()
+        }
         return Result.success()
+    }
+
+    private suspend fun markMessageAsReceived(channelId: Long, message: SceytMessage) {
+        val result = SceytChatUIKit.chatUIFacade.messageInteractor.markMessagesAs(
+            channelId,
+            MarkerType.Received,
+            message.id
+        ).firstOrNull()
+
+        if (result is SceytResponse.Success) {
+            SceytLog.i(TAG, "Sent ack receive for Id: ${message.id} succeeded")
+        } else SceytLog.e(TAG, "Failed to send ack received for msgId: ${message.id} error: ${result?.message}")
+    }
+
+    private companion object {
+        const val TAG = "HandlePushWorker"
     }
 }

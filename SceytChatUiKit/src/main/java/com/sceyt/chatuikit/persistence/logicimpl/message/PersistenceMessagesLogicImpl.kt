@@ -1207,7 +1207,12 @@ internal class PersistenceMessagesLogicImpl(
         pendingMarkerDao.insertMany(list)
     }
 
-    private suspend fun onMarkerResponse(channelId: Long, response: SceytResponse<MessageListMarker>, status: String, vararg ids: Long) {
+    private suspend fun onMarkerResponse(
+            channelId: Long,
+            response: SceytResponse<MessageListMarker>,
+            status: String,
+            vararg ids: Long
+    ) {
         when (response) {
             is SceytResponse.Success -> {
                 response.data?.let { data ->
