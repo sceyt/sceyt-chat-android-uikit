@@ -31,6 +31,7 @@ import com.sceyt.chatuikit.persistence.lazyVar
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.presentation.di.viewModelModule
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
+import com.sceyt.chatuikit.providers.TokenProvider
 import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 import com.vanniktech.emoji.EmojiManager
@@ -53,6 +54,7 @@ object SceytChatUIKit : SceytKoinComponent {
     var providers: SceytChatUIKitProviders by lazyVar { SceytChatUIKitProviders() }
     var renderers: SceytChatUIKitRenderers by lazyVar { SceytChatUIKitRenderers() }
     var notifications: SceytNotifications by lazyVar { SceytNotifications(appContext) }
+    var tokenProvider: TokenProvider? = null
 
     @JvmField
     var messageTransformer: MessageTransformer? = null
@@ -78,8 +80,8 @@ object SceytChatUIKit : SceytKoinComponent {
             clientId: String,
             enableDatabase: Boolean = true
     ) {
-        ChatClient.initialize(appContext, apiUrl, appId, clientId)
         this.appContext = appContext
+        ChatClient.initialize(appContext, apiUrl, appId, clientId)
         initKoin(enableDatabase)
         initEmojiSupport()
         SceytLog.i(TAG, "SceytChatUIKit initialized. Version: ${BuildConfig.MAVEN_VERSION}")

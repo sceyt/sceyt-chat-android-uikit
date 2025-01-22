@@ -28,6 +28,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 internal class PersistenceConnectionLogicImpl(
@@ -79,7 +80,7 @@ internal class PersistenceConnectionLogicImpl(
         } else SceytPresenceChecker.stopPresenceCheck()
     }
 
-    private suspend fun insertCurrentUser() {
+    private suspend fun insertCurrentUser() = withContext(Dispatchers.IO) {
         ClientWrapper.currentUser?.let {
             usersDao.insertUserWithMetadata(it.toUserDb())
             preference.setString(Keys.KEY_USER_ID, it.id)
@@ -94,7 +95,7 @@ internal class PersistenceConnectionLogicImpl(
         }
     }
 
-    private suspend fun setUserPresence() {
+    private suspend fun setUserPresence() = withContext(Dispatchers.IO) {
         val state = SceytChatUIKit.config.presenceConfig.defaultPresenceState
         SceytChatUIKit.chatUIFacade.userInteractor.setPresenceState(state)
     }
