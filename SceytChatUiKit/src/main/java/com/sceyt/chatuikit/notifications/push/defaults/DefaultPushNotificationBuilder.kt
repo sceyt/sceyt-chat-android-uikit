@@ -3,18 +3,21 @@ package com.sceyt.chatuikit.notifications.push.defaults
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getBitmapFromUrl
-import com.sceyt.chatuikit.notifications.extractMessagingStyle
+import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.createMessagingStyle
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.getPerson
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.provideNotificationChannelId
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.toMessagingStyle
 import com.sceyt.chatuikit.notifications.builder.PushNotificationBuilder
+import com.sceyt.chatuikit.notifications.extractMessagingStyle
+import com.sceyt.chatuikit.notifications.receivers.NotificationActionsBuilder
 import com.sceyt.chatuikit.push.PushData
 
 /**
@@ -51,7 +54,14 @@ open class DefaultPushNotificationBuilder(
     }
 
     override fun provideActions(context: Context, data: PushData): List<NotificationCompat.Action> {
-        return emptyList()
+        return if (data.type == NotificationType.MessageReaction) {
+            emptyList()
+        } else {
+            listOf(
+                NotificationActionsBuilder.createReplyAction(context, data),
+                NotificationActionsBuilder.createReadAction(context, data)
+            )
+        }
     }
 
     override fun providePendingIntent(
@@ -67,6 +77,9 @@ open class DefaultPushNotificationBuilder(
             context: Context,
             data: PushData
     ): IconCompat? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+            return null
+
         return data.user.avatarURL?.let { url ->
             getBitmapFromUrl(url)?.let { IconCompat.createWithAdaptiveBitmap(it) }
         }

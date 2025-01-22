@@ -159,7 +159,7 @@ internal class HandlePushWorker(
         } else SceytLog.e(TAG, "Failed to send ack received for msgId: ${message.id} error: ${result?.message}")
     }
 
-    private companion object {
-        const val TAG = "HandlePushWorker"
+    companion object {
+        private const val TAG = "HandlePushWorker"
     }
 }
