@@ -33,6 +33,7 @@ mockitoKotlin = "5.4.0"
 okhttp = "5.0.0-alpha.14"
 okio = "3.9.1"
 photoview = "2.3.0"
+pushHuawei = "6.11.0.300"
 recyclerview = "1.4.0"
 room = "2.6.1"
 sceytChatAndroidSdk = "1.6.72-SNAPSHOT"
@@ -45,6 +46,8 @@ workRuntimeKtx = "2.10.0"
 playServicesBase = "18.5.0"
 agp = "8.3.2"
 kotlin = "2.0.20"
+junitVersion = "1.2.1"
+jetbrainsKotlinJvm = "2.0.20"
 
 [libraries]
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -87,6 +90,7 @@ mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 photo-view = { module = "com.github.chrisbanes:PhotoView", version.ref = "photoview" }
+push-huawei = { module = "com.huawei.hms:push", version.ref = "pushHuawei" }
 recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
@@ -99,7 +103,9 @@ ucrop = { module = "com.github.yalantis:ucrop", version.ref = "ucrop" }
 waveformSeekBar = { module = "com.github.massoudss:waveformSeekBar", version.ref = "waveformseekbar" }
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 play-services-base = { group = "com.google.android.gms", name = "play-services-base", version.ref = "playServicesBase" }
+ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }

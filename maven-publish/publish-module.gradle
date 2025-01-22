@@ -53,9 +53,9 @@ afterEvaluate {
                     }
                     developers {
                         developer {
-                            id = 'artashsct'
-                            name = 'Artashes Vardanov'
-                            email = 'artashes@sceyt.com'
+                            id = 'maratsct'
+                            name = 'Marat Hambikyan'
+                            email = 'marat@sceyt.com'
                         }
                     }
 
