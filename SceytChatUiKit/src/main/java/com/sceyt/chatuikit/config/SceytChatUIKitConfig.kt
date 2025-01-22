@@ -25,7 +25,6 @@ class SceytChatUIKitConfig {
     var channelListOrder: ChannelListOrder = ChannelListOrder.ListQueryChannelOrderLastMessage
     var defaultReactions: List<String> = listOf("😎", "😂", "👌", "😍", "👍", "😏")
     var mentionTriggerPrefix = '@'
-    var uploadNotificationPendingIntentData: UploadNotificationPendingIntentData? = null
     var muteChannelNotificationOptions: MuteNotificationOptions by lazyVar {
         DefaultMuteNotificationOptions
     }
