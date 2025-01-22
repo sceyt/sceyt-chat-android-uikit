@@ -194,10 +194,10 @@ open class DefaultPushNotificationHandler(
     protected open fun checkMaybeAlreadyShown(pushData: PushData): Boolean {
         return when (pushData.type) {
             NotificationType.ChannelMessage -> {
-                if (showedNotifications.contains(pushData.message.id)) {
+                if (showedNotifications.contains(pushData.message.tid)) {
                     return true
                 }
-                showedNotifications.add(pushData.message.id)
+                showedNotifications.add(pushData.message.tid)
                 false
             }
 
