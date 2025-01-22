@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.config
 
 import com.sceyt.chatuikit.push.PushData
-import com.sceyt.chatuikit.push.PushDeviceProvider
+import com.sceyt.chatuikit.push.providers.PushDeviceProvider
 
 /**
  * Configuration class for push notifications in the application.
