@@ -15,7 +15,6 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
-import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.NotificationType
@@ -140,9 +139,6 @@ internal class HandlePushWorker(
             if (ConnectionEventManager.awaitToConnectSceytWithTimeout(1.minutes.inWholeMilliseconds)) {
                 markMessageAsReceived(channelId, message)
             }
-
-            if (!applicationContext.isAppOnForeground())
-                ChatClient.getClient().disconnect()
         }
         return Result.success()
     }

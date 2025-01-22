@@ -18,7 +18,6 @@ import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.receivers.NotificationActionsBuilder.ACTION_READ
@@ -78,9 +77,6 @@ internal class NotificationActionReceiver : BroadcastReceiver() {
             if (ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)) {
                 markAsReadAlreadyConnected(channelId, messageId)
             }
-
-            if (!context.isAppOnForeground())
-                ChatClient.getClient().disconnect()
         }
     }
 
@@ -125,9 +121,6 @@ internal class NotificationActionReceiver : BroadcastReceiver() {
             if (ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)) {
                 sendMessage(context, message, data)
             }
-
-            if (!context.isAppOnForeground())
-                ChatClient.getClient().disconnect()
         }
     }
 
