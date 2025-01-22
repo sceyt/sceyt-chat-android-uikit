@@ -129,7 +129,7 @@ internal class HandlePushWorker(
             markMessageAsReceived(channelId, message)
         } else {
             SceytLog.i(TAG, "SceytChat is not connected. Connecting to mark message as received: $messageId")
-            val token = SceytChatUIKit.tokenProvider?.provideToken().takeIf { !it.isNullOrBlank() }
+            val token = SceytChatUIKit.chatTokenProvider?.provideToken().takeIf { !it.isNullOrBlank() }
                     ?: run {
                         SceytLog.e(TAG, "Couldn't get token to connect to mark message as received: $messageId")
                         return Result.failure()

@@ -10,7 +10,7 @@ object PushValidator {
     // Values
     private const val APP_VALUE = "vt_chat"
 
-    fun isSceytPushNotification(data: Map<String, String>): Boolean {
+    fun isChatPushNotification(data: Map<String, String>): Boolean {
         return data[KEY_APP] == APP_VALUE
     }
 

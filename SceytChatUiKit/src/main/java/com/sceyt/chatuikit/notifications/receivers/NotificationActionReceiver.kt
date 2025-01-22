@@ -66,7 +66,7 @@ internal class NotificationActionReceiver : BroadcastReceiver() {
         if (ConnectionEventManager.isConnected) {
             markAsReadAlreadyConnected(channelId, messageId)
         } else {
-            val token = SceytChatUIKit.tokenProvider?.provideToken().takeIf { !it.isNullOrBlank() }
+            val token = SceytChatUIKit.chatTokenProvider?.provideToken().takeIf { !it.isNullOrBlank() }
                     ?: run {
                         SceytLog.e(TAG, "Couldn't get token to connect to markAsRead: " +
                                 "channelId->$channelId, messageId->$messageId")
@@ -114,7 +114,7 @@ internal class NotificationActionReceiver : BroadcastReceiver() {
         if (ConnectionEventManager.isConnected) {
             sendMessage(context, message, data)
         } else {
-            val token = SceytChatUIKit.tokenProvider?.provideToken().takeIf { !it.isNullOrBlank() }
+            val token = SceytChatUIKit.chatTokenProvider?.provideToken().takeIf { !it.isNullOrBlank() }
                     ?: run {
                         SceytLog.e(TAG, "Couldn't get token to connect to replyMessage: $text")
                         return@withContext
