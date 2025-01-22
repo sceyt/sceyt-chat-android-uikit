@@ -10,7 +10,7 @@ internal class SceytFirebaseMessageReceiver : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-        if (FirebaseMessagingDelegate.isSceytPushNotification(remoteMessage))
+        if (FirebaseMessagingDelegate.isChatPushNotification(remoteMessage))
             FirebaseMessagingDelegate.handleRemoteMessage(remoteMessage)
     }
 

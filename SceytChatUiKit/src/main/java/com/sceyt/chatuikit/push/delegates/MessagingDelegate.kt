@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.push.getUserFromPush
 import com.sceyt.chatuikit.push.service.PushService
 import org.koin.core.component.inject
 
-open class MessagingDelegate : SceytKoinComponent {
+abstract class MessagingDelegate : SceytKoinComponent {
     protected val pushService by inject<PushService>()
 
     fun getDataFromPayload(payload: Map<String, String>): PushData? {

@@ -1,5 +1,5 @@
 package com.sceyt.chatuikit.providers
 
-fun interface TokenProvider {
+fun interface ChatTokenProvider {
     suspend fun provideToken(): String?
 }

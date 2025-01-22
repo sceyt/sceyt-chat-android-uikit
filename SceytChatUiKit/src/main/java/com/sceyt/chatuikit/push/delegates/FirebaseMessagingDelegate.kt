@@ -21,17 +21,18 @@ object FirebaseMessagingDelegate : MessagingDelegate() {
     }
 
     @JvmStatic
-    fun handleRemoteMessage(remoteMessage: RemoteMessage) {
-        if (!isSceytPushNotification(remoteMessage)) {
-            return
+    fun handleRemoteMessage(remoteMessage: RemoteMessage): PushData? {
+        if (!isChatPushNotification(remoteMessage)) {
+            return null
         }
-        val data = getDataFromRemoteMessage(remoteMessage) ?: return
+        val data = getDataFromRemoteMessage(remoteMessage) ?: return null
         pushService.handlePush(data)
+        return data
     }
 
     @JvmStatic
-    fun isSceytPushNotification(remoteMessage: RemoteMessage): Boolean {
-        return PushValidator.isSceytPushNotification(remoteMessage.data)
+    fun isChatPushNotification(remoteMessage: RemoteMessage): Boolean {
+        return PushValidator.isChatPushNotification(remoteMessage.data)
     }
 
     @JvmStatic
