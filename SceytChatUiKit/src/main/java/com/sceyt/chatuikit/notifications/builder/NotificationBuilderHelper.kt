@@ -34,9 +34,14 @@ object NotificationBuilderHelper {
         }
     }
 
-    fun PushData.createMessagingStyle(person: Person) = NotificationCompat.MessagingStyle(person)
-        .setConversationTitle(channel.channelSubject)
-        .setGroupConversation(channel.isGroup)
+    fun PushData.createMessagingStyle(context: Context, person: Person): NotificationCompat.MessagingStyle {
+        val title = if (channel.isGroup)
+            channel.channelSubject
+        else SceytChatUIKit.formatters.userNameFormatter.format(context, user)
+        return NotificationCompat.MessagingStyle(person)
+            .setConversationTitle(title)
+            .setGroupConversation(channel.isGroup)
+    }
 
     fun PushData.getPerson(context: Context, icon: IconCompat?) = user.let {
         personMap.getOrPut(it.id) {

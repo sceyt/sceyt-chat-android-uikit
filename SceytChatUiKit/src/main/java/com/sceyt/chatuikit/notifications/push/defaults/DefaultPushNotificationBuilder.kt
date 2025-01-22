@@ -49,7 +49,7 @@ open class DefaultPushNotificationBuilder(
     ): NotificationCompat.Style? {
         val person = data.getPerson(context, provideAvatarIcon(context, data))
         return (notificationManager.extractMessagingStyle(notificationId)
-                ?: data.createMessagingStyle(person)
+                ?: data.createMessagingStyle(context, person)
                 ).addMessage(data.toMessagingStyle(context, person))
     }
 
