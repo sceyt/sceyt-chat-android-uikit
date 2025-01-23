@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.isFirstItemDisplaying
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
+import com.sceyt.chatuikit.extensions.runWhenReady
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsItemComparatorBy
@@ -62,26 +63,24 @@ class ChannelsRV @JvmOverloads constructor(
             reachToEndListener?.invoke(adapter.getSkip(), adapter.getChannels().lastOrNull()?.channel)
     }
 
-    fun setData(channels: List<ChannelListItem>) {
-        post {
-            if (channelsAdapter == null) {
-                adapter = ChannelsAdapter(viewHolderFactory)
-                    .also { channelsAdapter = it }
-                channelsAdapter?.notifyUpdate(channels)
-            } else {
-                val needScrollUp = isFirstItemDisplaying()
-                channelsAdapter?.notifyUpdate(channels) {
-                    awaitAnimationEnd {
-                        if (needScrollUp)
-                            scrollToPosition(0)
-                    }
+    fun setData(channels: List<ChannelListItem>) = runWhenReady {
+        if (channelsAdapter == null) {
+            adapter = ChannelsAdapter(viewHolderFactory)
+                .also { channelsAdapter = it }
+            channelsAdapter?.notifyUpdate(channels)
+        } else {
+            val needScrollUp = isFirstItemDisplaying()
+            channelsAdapter?.notifyUpdate(channels) {
+                awaitAnimationEnd {
+                    if (needScrollUp)
+                        scrollToPosition(0)
+                }
 
-                    context.maybeComponentActivity()?.let {
-                        it.lifecycleScope.launch {
-                            it.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                                delay(500)
-                                checkReachToEnd()
-                            }
+                context.maybeComponentActivity()?.let {
+                    it.lifecycleScope.launch {
+                        it.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                            delay(500)
+                            checkReachToEnd()
                         }
                     }
                 }
