@@ -19,7 +19,7 @@ fun NotificationManagerCompat.extractMessagingStyle(
 }
 
 @Suppress("unused")
-fun NotificationManagerCompat.provideAllChatMessagesCount(): Int {
+fun NotificationManagerCompat.getAllChatMessageNotificationsCount(): Int {
     return activeNotifications.filter {
         it.notification.extras.containsKey(EXTRAS_CHAT_NOTIFICATION)
     }.sumOf {

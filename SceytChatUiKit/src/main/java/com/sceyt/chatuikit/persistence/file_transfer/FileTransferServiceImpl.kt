@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.ErrorUpload
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState.PauseUpload
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
-import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.set
 
@@ -65,7 +65,7 @@ internal class FileTransferServiceImpl(
     override fun resume(messageTid: Long, attachment: SceytAttachment, state: TransferState) {
         val workInfo = WorkManager.getInstance(context).getWorkInfosByTag(messageTid.toString())
         if ((state == PauseUpload || state == ErrorUpload) && (workInfo.get().isEmpty() || workInfo.isCancelled))
-            SendAttachmentWorkManager.schedule(context, messageTid, null)
+            UploadAndSendAttachmentWorkManager.schedule(context, messageTid, null)
         else
             listeners.resume(messageTid, attachment, state)
     }

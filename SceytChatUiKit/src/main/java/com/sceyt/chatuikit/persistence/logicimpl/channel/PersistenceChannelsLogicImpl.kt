@@ -73,7 +73,7 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
-import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
@@ -695,7 +695,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.clearHistory(channelId, forEveryone)
 
         if (response is SceytResponse.Success) {
-            SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
+            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
             SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             clearHistory(channelId)
         }
@@ -707,7 +707,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.blockChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
+            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
             SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelFromDbAndCache(channelId)
         }
@@ -723,7 +723,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.leaveChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
+            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
             SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelFromDbAndCache(channelId)
         }
@@ -740,7 +740,7 @@ internal class PersistenceChannelsLogicImpl(
         val response = channelsRepository.deleteChannel(channelId)
 
         if (response is SceytResponse.Success) {
-            SendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
+            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, channelId.toString())
             SendForwardMessagesWorkManager.cancelWorksByTag(context, channelId.toString())
             deleteChannelFromDbAndCache(channelId)
         }

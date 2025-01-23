@@ -115,7 +115,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         markChannelAsRead(channel.id)
 
     // Cancel notification for current channel
-    SceytChatUIKit.notifications.pushNotification.pushNotificationHandler.cancelNotification(
+    SceytChatUIKit.notifications.pushNotification.notificationHandler.cancelNotification(
         notificationId = channel.id.toInt()
     )
 

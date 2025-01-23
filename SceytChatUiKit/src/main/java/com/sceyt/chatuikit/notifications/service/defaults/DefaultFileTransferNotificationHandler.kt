@@ -5,9 +5,9 @@ import android.content.Context
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationManagerCompat
 import com.sceyt.chatuikit.SceytChatUIKit.notifications
-import com.sceyt.chatuikit.notifications.FileTransferNotificationHandler
 import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
-import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.FILE_TRANSFER_NOTIFICATION_ID
+import com.sceyt.chatuikit.notifications.service.FileTransferNotificationHandler
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.FILE_TRANSFER_NOTIFICATION_ID
 
 @Suppress("MemberVisibilityCanBePrivate")
 open class DefaultFileTransferNotificationHandler(
