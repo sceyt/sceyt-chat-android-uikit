@@ -85,6 +85,9 @@ abstract class BaseMessageViewHolder(
     val isMessageListItemInitialized get() = this::messageListItem.isInitialized
     private var highlightAnim: ValueAnimator? = null
     private val selectableAnimHelper by lazy { MessageSelectableAnimHelper(this) }
+    private val px12 by lazy { dpToPx(12f) } // bodyTextView end margins
+    private val px8 by lazy { dpToPx(8f) } // bodyTextView bottom margins
+    private val px5 by lazy { dpToPx(5f) } // bodyTextView top margins
 
     @CallSuper
     open fun bind(item: MessageListItem, diff: MessageDiff) {
@@ -239,7 +242,7 @@ abstract class BaseMessageViewHolder(
                 imageAttachment.isVisible = false
                 icFile.isVisible = false
             } else {
-                val attachment = parent.attachments.getOrNull(0)
+                val attachment = parent.attachments.firstOrNull()
                 val icon = attachment?.let { itemStyle.replyMessageStyle.attachmentIconProvider.provide(context, it) }
                 when {
                     attachment?.type.isEqualsVideoOrImage() -> {
@@ -479,9 +482,6 @@ abstract class BaseMessageViewHolder(
         val currentViewWidth = bodyTextView.measuredWidth
         dateView.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
         val nextViewWidth = dateView.measuredWidth
-        val px12 = dpToPx(12f) // bodyTextView end margins
-        val px8 = dpToPx(8f) // bodyTextView bottom margins
-        val px5 = dpToPx(5f) // bodyTextView top margins
         val body = bodyTextView.text.toString()
         val constraintSet = ConstraintSet()
         constraintSet.clone(parentLayout)
@@ -500,7 +500,10 @@ abstract class BaseMessageViewHolder(
             val maxWidthWithoutDate = bubbleMaxWidth - (bodyTextView.marginStart + px12)
             bodyTextView.paint.getStaticLayout(body, bodyTextView.includeFontPadding, maxWidthWithoutDate).apply {
                 if (lineCount > 1) {
-                    val bodyIsRtl = body.isRtl()
+                    val lastLineStart = getLineStart(lineCount - 1)
+                    val lastLineEnd = getLineEnd(lineCount - 1)
+                    val lastLineText = body.substring(lastLineStart, lastLineEnd)
+                    val bodyIsRtl = lastLineText.isRtl()
                     val appIsRtl = context.isRtl()
                     val reqMinWidth = getLineMax(lineCount - 1) + nextViewWidth + px12
                     if (reqMinWidth < maxWidthWithDate && ((!bodyIsRtl && !appIsRtl) || (bodyIsRtl && appIsRtl))) {

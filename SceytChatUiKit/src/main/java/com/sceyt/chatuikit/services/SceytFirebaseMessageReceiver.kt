@@ -2,10 +2,7 @@ package com.sceyt.chatuikit.services
 
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.sceyt.chatuikit.extensions.TAG
-import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.push.FirebaseMessagingDelegate
-import kotlinx.coroutines.runBlocking
+import com.sceyt.chatuikit.push.delegates.FirebaseMessagingDelegate
 
 
 internal class SceytFirebaseMessageReceiver : FirebaseMessagingService() {
@@ -13,13 +10,8 @@ internal class SceytFirebaseMessageReceiver : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
-        try {
-            runBlocking {
-                FirebaseMessagingDelegate.handleRemoteMessage(remoteMessage)
-            }
-        } catch (exception: Exception) {
-            SceytLog.e(TAG, "handleRemoteMessage error: " + exception.message.toString())
-        }
+        if (FirebaseMessagingDelegate.isChatPushNotification(remoteMessage))
+            FirebaseMessagingDelegate.handleRemoteMessage(remoteMessage)
     }
 
     override fun onNewToken(s: String) {

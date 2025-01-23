@@ -34,9 +34,6 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
     private val _logOutLiveData = MutableLiveData<Boolean>()
     val logOutLiveData: LiveData<Boolean> = _logOutLiveData
 
-    private val _logOutErrorLiveData = MutableLiveData<String>()
-    val logOutErrorLiveData: LiveData<String> = _logOutErrorLiveData
-
     fun getCurrentUserAsFlow() = userInteractor.getCurrentUserAsFlow()
 
     fun updateProfile(
@@ -117,10 +114,8 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
 
     fun logout() {
         viewModelScope.launch(Dispatchers.IO) {
-            SceytChatUIKit.chatUIFacade.logOut { success, errorMessage ->
-                if (success)
-                    _logOutLiveData.postValue(true)
-                else _logOutErrorLiveData.postValue(errorMessage ?: "")
+            SceytChatUIKit.chatUIFacade.logOut {
+                _logOutLiveData.postValue(true)
             }
         }
     }

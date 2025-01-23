@@ -38,4 +38,5 @@
     <string name="username_is_available">Username is available</string>
     <string name="username_length_error">Username length must be 3 to 20 characters</string>
     <string name="username_invalid_characters">Use a-z, 0-9 and underscores</string>
+    <string name="delete_user">Delete user</string>
 </resources>

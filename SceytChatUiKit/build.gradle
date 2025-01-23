@@ -61,6 +61,7 @@ dependencies {
     api libs.glide.transformations
     api libs.ion
     api libs.firebase.messaging.ktx
+    api libs.play.services.base
     annotationProcessor libs.room.compiler
     //noinspection KaptUsageInsteadOfKsp
     kapt libs.room.compiler

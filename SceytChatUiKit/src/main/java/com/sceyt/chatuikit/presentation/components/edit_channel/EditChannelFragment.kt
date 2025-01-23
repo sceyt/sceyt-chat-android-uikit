@@ -138,7 +138,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             groupUrl.isVisible = channel.isPublic()
             avatar.setImageUrl(avatarUrl)
             inputUri.setText(channel.uri)
-            tvSubject.setText(channel.channelSubject.trim())
+            tvSubject.setText(SceytChatUIKit.formatters.channelNameFormatter.format(requireContext(), channel))
             uriPrefix.text = SceytChatUIKit.config.channelURIConfig.prefix
             tvDescription.setText(channel.metadata.jsonToObject(ChannelDescriptionData::class.java)?.description?.trim())
         }
@@ -204,7 +204,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
             URIValidationType.TooLong,
             URIValidationType.TooShort,
             URIValidationType.InvalidCharacters,
-                -> style.uriValidationStyle.errorTextStyle
+            -> style.uriValidationStyle.errorTextStyle
 
             URIValidationType.FreeToUse -> style.uriValidationStyle.successTextStyle
         }
@@ -281,7 +281,7 @@ open class EditChannelFragment : Fragment(), SceytKoinComponent {
         val newUrl = binding?.inputUri?.text?.trim().toString()
         val isEditedAvatar = avatarUrl != channel.avatarUrl
         val oldDesc = channel.metadata.jsonToObject(ChannelDescriptionData::class.java)?.description?.trim()
-        val isEditedSubjectOrDesc = newSubject != channel.channelSubject.trim() || newDescription != oldDesc
+        val isEditedSubjectOrDesc = newSubject != channel.subject?.trim() || newDescription != oldDesc
         val isEditedUrd = newUrl != channel.uri
         if (isEditedAvatar || isEditedSubjectOrDesc || isEditedUrd) {
             showLoading(requireContext())

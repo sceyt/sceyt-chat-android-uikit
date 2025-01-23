@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setOnClickListenerDisableClickViewForWhile
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
+import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
@@ -111,7 +112,13 @@ open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, Chann
                     getString(R.string.sceyt_deleted_user)
                 }
 
-                else -> channel.channelSubject
+                else -> {
+                    if (channel.isGroup)
+                        channel.subject.orEmpty()
+                    else channel.getPeer()?.run {
+                        SceytChatUIKit.formatters.userNameFormatter.format(requireContext(), user)
+                    } ?: ""
+                }
             }
         }
     }

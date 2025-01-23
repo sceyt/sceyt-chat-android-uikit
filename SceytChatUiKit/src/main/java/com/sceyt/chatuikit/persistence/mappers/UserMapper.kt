@@ -7,10 +7,10 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.persistence.entity.channel.ChanelMemberDb
-import com.sceyt.chatuikit.persistence.entity.user.UserDb
-import com.sceyt.chatuikit.persistence.entity.user.UserEntity
-import com.sceyt.chatuikit.persistence.entity.user.UserMetadataEntity
+import com.sceyt.chatuikit.persistence.database.entity.channel.ChanelMemberDb
+import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
+import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
+import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
 
 fun ChanelMemberDb.toSceytMember() = SceytMember(
     role = Role(link.role),

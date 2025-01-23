@@ -63,7 +63,7 @@ import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
-import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
@@ -400,7 +400,7 @@ class MessageListViewModel(
         val messageTid = attachment.messageTid
         when (val state = attachment.transferState ?: return) {
             PendingUpload, ErrorUpload -> {
-                SendAttachmentWorkManager.schedule(application, messageTid, channel.id)
+                UploadAndSendAttachmentWorkManager.schedule(application, messageTid, channel.id)
             }
 
             PendingDownload, ErrorDownload -> {
@@ -427,7 +427,7 @@ class MessageListViewModel(
                                     ?: 0f, Uploading, attachment.filePath, attachment.url))
                     }
 
-                    SendAttachmentWorkManager.schedule(application, messageTid, channel.id, ExistingWorkPolicy.REPLACE)
+                    UploadAndSendAttachmentWorkManager.schedule(application, messageTid, channel.id, ExistingWorkPolicy.REPLACE)
                 }
             }
 

@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.extensions.getStringOrNull
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.toBase64
 import com.sceyt.chatuikit.logger.SceytLog
-import com.sceyt.chatuikit.persistence.entity.messages.AttachmentEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.shared.utils.BitmapUtil
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
 import com.sceyt.chatuikit.shared.utils.ThumbHash

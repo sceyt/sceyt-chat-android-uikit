@@ -11,13 +11,13 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.toMember
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.dao.ChannelDao
-import com.sceyt.chatuikit.persistence.dao.LoadRangeDao
-import com.sceyt.chatuikit.persistence.dao.MemberDao
-import com.sceyt.chatuikit.persistence.dao.MessageDao
-import com.sceyt.chatuikit.persistence.dao.UserDao
-import com.sceyt.chatuikit.persistence.entity.channel.UserChatLink
-import com.sceyt.chatuikit.persistence.entity.user.UserDb
+import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
+import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
+import com.sceyt.chatuikit.persistence.database.dao.MemberDao
+import com.sceyt.chatuikit.persistence.database.dao.MessageDao
+import com.sceyt.chatuikit.persistence.database.dao.UserDao
+import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLink
+import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.toChannel
@@ -175,7 +175,7 @@ internal class PersistenceMembersLogicImpl(
         val response = channelsRepository.changeChannelOwner(channelId, newOwnerId)
 
         if (response is SceytResponse.Success) {
-            response.data?.members?.getOrNull(0)?.let { member ->
+            response.data?.members?.firstOrNull()?.let { member ->
                 memberDao.updateOwner(channelId = channelId, newOwnerId = member.id)
                 channelDao.getChannelById(channelId)?.let {
                     channelsCache.upsertChannel(it.toChannel())

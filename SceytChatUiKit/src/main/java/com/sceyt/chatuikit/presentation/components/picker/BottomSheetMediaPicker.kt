@@ -80,8 +80,9 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
             filterType = PickerFilterType.entries[it]
         }
 
-        checkPermissions {
-            if (it) LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this)
+        checkPermissions { granted ->
+            if (granted)
+                LoaderManager.getInstance(this).initLoader(LOADER_ID, null, this)
         }
     }
 
@@ -90,11 +91,8 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
         return MediaPickerItemViewHolderFactory(style.itemStyle, clickListener)
     }
 
-    private fun checkPermissions(callBack: (Boolean) -> Unit) {
-        val resultLauncher = initPermissionLauncher {
-            if (it) callBack.invoke(true)
-        }
-
+    private fun checkPermissions(callBack: (granted: Boolean) -> Unit) {
+        val resultLauncher = initPermissionLauncher(callBack)
         val permissions = getPermissionsForMangeStorage()
         val hasAccess = requireContext().checkAndAskPermissions(resultLauncher, *permissions)
 
@@ -256,7 +254,7 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     }
 
     private fun loadWithFlow(cursor: Cursor) = callbackFlow<List<MediaItem>> {
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             try {
                 val items = ArrayList<MediaItem>()
                 val wrongImages = ArrayList<MediaItem>()
@@ -318,7 +316,7 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
     data class SelectedMediaData(
             val contentUri: Uri,
             val realPath: String,
-            val mediaType: MediaType
+            val mediaType: MediaType,
     )
 
     enum class MediaType(val value: AttachmentTypeEnum) {
@@ -355,7 +353,7 @@ class BottomSheetMediaPicker : BottomSheetDialogFragment(), LoaderManager.Loader
         fun instance(
                 maxSelectCount: Int = MAX_SELECT_MEDIA_COUNT,
                 fileFilter: PickerFilterType = PickerFilterType.All,
-                vararg selections: String
+                vararg selections: String,
         ): BottomSheetMediaPicker {
             return BottomSheetMediaPicker().apply {
                 arguments = bundleOf(

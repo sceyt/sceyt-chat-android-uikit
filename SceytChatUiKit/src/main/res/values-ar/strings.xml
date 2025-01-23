@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="sceyt_search_for_channels">ابحث عن قنوات</string>
+    <string name="sceyt_chat_notifications_channel_name">رسائل الدردشة</string>
     <string name="sceyt_search">بحث</string>
     <string name="sceyt_your_last_message">أنت</string>
     <string name="sceyt_copy">نسخ</string>

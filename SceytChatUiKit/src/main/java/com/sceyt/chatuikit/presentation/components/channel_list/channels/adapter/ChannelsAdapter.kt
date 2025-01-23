@@ -13,7 +13,6 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 
 
 class ChannelsAdapter(
-        data: List<ChannelListItem>,
         private var viewHolderFactory: ChannelViewHolderFactory,
 ) : RecyclerView.Adapter<BaseChannelViewHolder>() {
 
@@ -41,11 +40,6 @@ class ChannelsAdapter(
     }
 
     private val differ = AsyncListDiffer(this, DIFF_CALLBACK)
-
-    init {
-        differ.submitList(data)
-    }
-
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return viewHolderFactory.createViewHolder(parent, viewType)

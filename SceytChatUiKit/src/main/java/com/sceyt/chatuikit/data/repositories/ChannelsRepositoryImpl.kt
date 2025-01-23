@@ -18,6 +18,7 @@ import com.sceyt.chat.sceyt_callbacks.ProgressCallback
 import com.sceyt.chat.sceyt_callbacks.UrlCallback
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.ChannelListConfig
+import com.sceyt.chatuikit.config.SearchChannelParams
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
@@ -93,9 +94,10 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     override suspend fun getChannels(
             query: String,
             config: ChannelListConfig,
+            params: SearchChannelParams,
     ): SceytResponse<List<SceytChannel>> {
         return suspendCancellableCoroutine { continuation ->
-            val channelListQuery = createChannelListQuery(config, query).also { channelsQuery = it }
+            val channelListQuery = createChannelListQuery(config, query, params).also { channelsQuery = it }
 
             channelListQuery.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
@@ -586,6 +588,7 @@ class ChannelsRepositoryImpl : ChannelsRepository {
     private fun createChannelListQuery(
             config: ChannelListConfig,
             query: String? = null,
+            params: SearchChannelParams,
     ): ChannelListQuery {
         return ChannelListQuery.Builder()
             .order(config.order)
@@ -593,6 +596,8 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             .query(query?.ifBlank { null })
             .withQueryParam(config.queryParam)
             .limit(config.queryLimit)
+            .filterKey(params.filterKey)
+            .queryType(params.queryType)
             .build()
     }
 

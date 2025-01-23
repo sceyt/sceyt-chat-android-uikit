@@ -11,14 +11,14 @@ import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
-import com.sceyt.chatuikit.persistence.dao.ChannelDao
-import com.sceyt.chatuikit.persistence.dao.ChatUserReactionDao
-import com.sceyt.chatuikit.persistence.dao.MessageDao
-import com.sceyt.chatuikit.persistence.dao.PendingReactionDao
-import com.sceyt.chatuikit.persistence.dao.ReactionDao
-import com.sceyt.chatuikit.persistence.dao.UserDao
-import com.sceyt.chatuikit.persistence.entity.messages.ReactionTotalEntity
-import com.sceyt.chatuikit.persistence.entity.pendings.PendingReactionEntity
+import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
+import com.sceyt.chatuikit.persistence.database.dao.ChatUserReactionDao
+import com.sceyt.chatuikit.persistence.database.dao.MessageDao
+import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
+import com.sceyt.chatuikit.persistence.database.dao.ReactionDao
+import com.sceyt.chatuikit.persistence.database.dao.UserDao
+import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionEntity
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
@@ -172,7 +172,11 @@ internal class PersistenceReactionsLogicImpl(
         return dbReactions
     }
 
-    override suspend fun getMessageReactionsDbByKey(messageId: Long, key: String): List<SceytReaction> {
+    override suspend fun getLocalMessageReactionsById(reactionId: Long): SceytReaction? {
+        return reactionDao.getReactionsById(reactionId)?.toSceytReaction()
+    }
+
+    override suspend fun getLocalMessageReactionsByKey(messageId: Long, key: String): List<SceytReaction> {
         return if (key.isEmpty())
             reactionDao.getReactionsByMsgId(messageId).map { it.toSceytReaction() }
         else
