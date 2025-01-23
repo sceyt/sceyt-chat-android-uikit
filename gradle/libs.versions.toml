@@ -8,7 +8,7 @@ coreTesting = "2.2.0"
 emoji2Bundled = "1.5.0"
 emojiGoogle = "0.21.0"
 espressoCore = "3.6.1"
-firebaseBom = "33.7.0"
+firebaseBom = "33.8.0"
 firebaseMessagingKtx = "24.1.0"
 flexbox = "3.0.0"
 fragmentKtx = "1.8.5"
@@ -33,15 +33,18 @@ mockitoKotlin = "5.4.0"
 okhttp = "5.0.0-alpha.14"
 okio = "3.9.1"
 photoview = "2.3.0"
-recyclerview = "1.3.2"
+recyclerview = "1.4.0"
 room = "2.6.1"
-sceytChatAndroidSdk = "1.6.72-SNAPSHOT"
+sceytChatAndroidSdk = "1.6.9"
 sdpAndroid = "1.1.1"
 sspAndroid = "1.1.1"
 truth = "1.4.4"
 ucrop = "2.2.8"
 waveformseekbar = "5.0.2"
 workRuntimeKtx = "2.10.0"
+playServicesBase = "18.5.0"
+agp = "8.3.2"
+kotlin = "2.0.20"
 
 [libraries]
 appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -95,6 +98,8 @@ truth = { module = "com.google.truth:truth", version.ref = "truth" }
 ucrop = { module = "com.github.yalantis:ucrop", version.ref = "ucrop" }
 waveformSeekBar = { module = "com.github.massoudss:waveformSeekBar", version.ref = "waveformseekbar" }
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+play-services-base = { group = "com.google.android.gms", name = "play-services-base", version.ref = "playServicesBase" }
 
 [plugins]
-
+android-library = { id = "com.android.library", version.ref = "agp" }
+jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

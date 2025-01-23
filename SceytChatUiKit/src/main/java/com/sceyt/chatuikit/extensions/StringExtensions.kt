@@ -140,7 +140,7 @@ fun String?.getFirstCharIsEmoji(): Pair<CharSequence, Boolean> {
     val processed = processEmojiCompat(0, length - 1, 1, EmojiCompat.REPLACE_STRATEGY_ALL)
     return if (processed is Spannable) {
         val emojiSpans = processed.getSpans(0, processed.length - 1, EmojiSpan::class.java)
-        val emojiSpan = emojiSpans.getOrNull(0) ?: Pair(take(1), false)
+        val emojiSpan = emojiSpans.firstOrNull() ?: Pair(take(1), false)
         val spanStart = processed.getSpanStart(emojiSpan)
         if (spanStart > 0)
             return Pair(take(1), false)
@@ -211,5 +211,7 @@ internal fun String.toDeliveryStatus(): DeliveryStatus? {
         else -> null
     }
 }
+
+fun String.whitSpace() = plus(" ")
 
 const val empty = ""

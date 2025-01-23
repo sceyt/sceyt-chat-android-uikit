@@ -116,7 +116,7 @@ fun SceytMessage.getFormattedBodyWithAttachments(
 ): SpannableString {
     val body = when {
         state == MessageState.Deleted -> context.getString(R.string.sceyt_message_was_deleted)
-        attachments.isNullOrEmpty() || attachments.getOrNull(0)?.type == AttachmentTypeEnum.Link.value -> {
+        attachments.isNullOrEmpty() || attachments.firstOrNull()?.type == AttachmentTypeEnum.Link.value -> {
             buildWithAttributes(context, mentionTextStyle, mentionUserNameFormatter, mentionClickListener)
         }
 

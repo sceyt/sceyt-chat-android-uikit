@@ -59,8 +59,6 @@ open class ChannelViewHolder(
         when (item) {
             is ChannelListItem.ChannelItem -> {
                 val channel = item.channel
-                val name: String = channel.channelSubject
-                val url = channel.iconUrl
 
                 // this ui states is changed more often, and to avoid wrong ui states we need to set them every time
                 setUnreadCount(channel, binding.unreadMessagesCount)
@@ -82,7 +80,7 @@ open class ChannelViewHolder(
                         setSubject(channel, binding.channelTitle)
 
                     if (subjectChanged || avatarViewChanged)
-                        setAvatar(channel, name, url, binding.avatar)
+                        setAvatar(channel, binding.avatar)
 
                     if (markedUsUnreadChanged)
                         setChannelMarkedUsUnread(channel, binding.unreadMessagesCount)
@@ -151,7 +149,10 @@ open class ChannelViewHolder(
         binding.viewPinned.isVisible = isPinned
     }
 
-    protected open fun setAvatar(channel: SceytChannel, name: String, url: String?, avatarView: AvatarView) {
+    protected open fun setAvatar(
+            channel: SceytChannel,
+            avatarView: AvatarView
+    ) {
         itemStyle.channelAvatarRenderer.render(
             context = context,
             from = channel,
@@ -160,7 +161,10 @@ open class ChannelViewHolder(
         )
     }
 
-    protected open fun setLastMessageStatusAndDate(channel: SceytChannel, decoratedTextView: DecoratedTextView) {
+    protected open fun setLastMessageStatusAndDate(
+            channel: SceytChannel,
+            decoratedTextView: DecoratedTextView
+    ) {
         val data = getDateData(channel)
         val shouldShowStatus = data.second
         channel.lastMessage.setChannelMessageDateAndStatusIcon(
@@ -171,7 +175,10 @@ open class ChannelViewHolder(
             shouldShowStatus = shouldShowStatus)
     }
 
-    protected open fun setPresenceState(channel: SceytChannel, indicatorView: PresenceStateIndicatorView) {
+    protected open fun setPresenceState(
+            channel: SceytChannel,
+            indicatorView: PresenceStateIndicatorView
+    ) {
         val state = channel.getPeer()?.user?.presence?.state ?: PresenceState.Offline
         val showState = !channel.isSelf && channel.isDirect() && state == PresenceState.Online
         indicatorView.setIndicatorColor(itemStyle.presenceStateColorProvider.provide(context, state))

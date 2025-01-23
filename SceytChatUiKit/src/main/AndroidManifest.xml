@@ -25,6 +25,7 @@
         <activity
             android:name=".presentation.components.channel.messages.ChannelActivity"
             android:exported="false"
+            android:launchMode="singleTask"
             android:theme="@style/DefaultFontTheme"
             android:windowSoftInputMode="adjustResize" />
         <activity
@@ -88,10 +89,22 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
+
+        <receiver
+            android:name=".notifications.receivers.NotificationActionReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="sceyt_action_mark_us_read" />
+                <action android:name="sceyt_action_reply" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

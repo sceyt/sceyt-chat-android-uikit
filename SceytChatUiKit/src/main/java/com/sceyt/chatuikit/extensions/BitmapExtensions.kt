@@ -1,7 +1,13 @@
 package com.sceyt.chatuikit.extensions
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import android.graphics.Rect
 import android.util.Base64
 import androidx.core.graphics.scale
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
@@ -9,10 +15,11 @@ import java.io.File
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.*
+import java.util.UUID
 import kotlin.math.roundToInt
 
 fun getBitmapFromUrl(imageUrl: String?, isCircleImage: Boolean = true): Bitmap? {
+    imageUrl.takeIf { !it.isNullOrBlank() } ?: return null
     return try {
         val url = URL(imageUrl)
         val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
