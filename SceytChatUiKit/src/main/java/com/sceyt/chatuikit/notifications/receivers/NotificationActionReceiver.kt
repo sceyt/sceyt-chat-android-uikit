@@ -13,7 +13,6 @@ import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.SceytChatUIKit.notifications
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.MarkerType
@@ -35,18 +34,23 @@ import kotlin.time.Duration.Companion.seconds
 
 internal class NotificationActionReceiver : BroadcastReceiver() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val pushNotification by lazy {
+        SceytChatUIKit.notifications.pushNotification
+    }
 
     override fun onReceive(context: Context, intent: Intent) {
         val data = intent.parcelable<PushData>(KEY_PUSH_DATA) ?: return
         scope.launch {
             when (intent.action) {
                 ACTION_READ -> {
+                    pushNotification.notificationHandler.onMarkAsReadAction()
                     cancelNotification(data)
-                    markAsRead(context, data.channel.id, data.message.id)
+                    markAsRead(data.channel.id, data.message.id)
                 }
 
                 ACTION_REPLY -> {
                     RemoteInput.getResultsFromIntent(intent)?.getCharSequence(KEY_REPLY_TEXT)?.let { message ->
+                        pushNotification.notificationHandler.onReplyAction(message)
                         replyMessage(context, data, message)
                     }
                 }
@@ -55,7 +59,6 @@ internal class NotificationActionReceiver : BroadcastReceiver() {
     }
 
     private suspend fun markAsRead(
-            context: Context,
             channelId: Long,
             messageId: Long
     ) = withContext(Dispatchers.IO) {
@@ -67,15 +70,19 @@ internal class NotificationActionReceiver : BroadcastReceiver() {
         } else {
             val token = SceytChatUIKit.chatTokenProvider?.provideToken().takeIf { !it.isNullOrBlank() }
                     ?: run {
-                        SceytLog.e(TAG, "Couldn't get token to connect to markAsRead: " +
+                        val exception = Exception("Couldn't get token to connect to markAsRead: " +
                                 "channelId->$channelId, messageId->$messageId")
-                        return@withContext
+                        SceytLog.e(TAG, exception.message)
+                        return@withContext markUsReadActionFinished(Result.failure(exception))
                     }
 
             ChatClient.getClient().connect(token)
 
             if (ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)) {
                 markAsReadAlreadyConnected(channelId, messageId)
+            } else {
+                markUsReadActionFinished(Result.failure(Exception("Couldn't connect to markAsRead: " +
+                        "channelId->$channelId, messageId->$messageId")))
             }
         }
     }
@@ -90,6 +97,8 @@ internal class NotificationActionReceiver : BroadcastReceiver() {
         if (result is SceytResponse.Success) {
             SceytLog.i(TAG, "MarkAsRead: channelId->$channelId, messageId->$messageId -> success!")
         } else SceytLog.e(TAG, "MarkAsRead:channelId->$channelId, messageId->$messageId -> error ${result?.message}")
+
+        markUsReadActionFinished(Result.success(true))
     }
 
     private suspend fun replyMessage(
@@ -112,14 +121,17 @@ internal class NotificationActionReceiver : BroadcastReceiver() {
         } else {
             val token = SceytChatUIKit.chatTokenProvider?.provideToken().takeIf { !it.isNullOrBlank() }
                     ?: run {
-                        SceytLog.e(TAG, "Couldn't get token to connect to replyMessage: $text")
-                        return@withContext
+                        val exception = Exception("Couldn't get token to connect to replyMessage: $text")
+                        SceytLog.e(TAG, exception.message)
+                        return@withContext replyActionFinished(Result.failure(exception))
                     }
 
             ChatClient.getClient().connect(token)
 
             if (ConnectionEventManager.awaitToConnectSceytWithTimeout(10.seconds.inWholeMilliseconds)) {
                 sendMessage(context, message, data)
+            } else {
+                replyActionFinished(Result.failure(Exception("Couldn't connect to replyMessage: $text")))
             }
         }
     }
@@ -140,10 +152,11 @@ internal class NotificationActionReceiver : BroadcastReceiver() {
                 user = user
             ))
         }
+        replyActionFinished(Result.success(true))
     }
 
     private fun cancelNotification(data: PushData) {
-        notifications.pushNotification.pushNotificationHandler.cancelNotification(
+        pushNotification.notificationHandler.cancelNotification(
             data.channel.id.toInt()
         )
     }
@@ -153,7 +166,7 @@ internal class NotificationActionReceiver : BroadcastReceiver() {
             return
 
         val notificationId = data.channel.id.toInt()
-        val notification = notifications.pushNotification.notificationBuilder.buildNotification(
+        val notification = pushNotification.notificationBuilder.buildNotification(
             context = context,
             data = data,
             notificationId = notificationId,
@@ -161,6 +174,14 @@ internal class NotificationActionReceiver : BroadcastReceiver() {
         )
 
         NotificationManagerCompat.from(context).notify(notificationId, notification)
+    }
+
+    private fun markUsReadActionFinished(result: Result<Boolean>) {
+        pushNotification.notificationHandler.markUsReadActionFinished(result)
+    }
+
+    private fun replyActionFinished(result: Result<Boolean>) {
+        pushNotification.notificationHandler.replyActionFinished(result)
     }
 
     companion object {

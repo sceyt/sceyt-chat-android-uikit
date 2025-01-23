@@ -85,7 +85,7 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
-import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
 import com.sceyt.chatuikit.push.PushData
 import kotlinx.coroutines.Dispatchers
@@ -494,7 +494,7 @@ internal class PersistenceMessagesLogicImpl(
             emitTmpMessageAndStore(channelId, message)
 
         if (checkHasFileAttachments(message) && !isUploadedAttachments) {
-            SendAttachmentWorkManager.schedule(context, message.tid, channelId, isSharing = isSharing).await()
+            UploadAndSendAttachmentWorkManager.schedule(context, message.tid, channelId, isSharing = isSharing).await()
             trySend(SendMessageResult.StartedSendingAttachment)
         } else {
             val response = messagesRepository.sendMessage(channelId, message)
@@ -710,7 +710,7 @@ internal class PersistenceMessagesLogicImpl(
             messageDao.deleteMessageByTid(message.tid)
             messagesCache.hardDeleteMessage(channelId, message.tid)
             persistenceChannelsLogic.onMessageEditedOrDeleted(clonedMessage)
-            SendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString())
+            UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString())
             message.attachments?.firstOrNull()?.let {
                 fileTransferService.pause(it.messageTid, it, it.transferState
                         ?: TransferState.Uploading)
