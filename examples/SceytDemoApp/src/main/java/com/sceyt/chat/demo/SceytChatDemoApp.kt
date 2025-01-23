@@ -1,7 +1,6 @@
 package com.sceyt.chat.demo
 
 import android.app.Application
-import com.sceyt.chat.ChatClient
 import com.sceyt.chat.demo.connection.ChatClientConnectionInterceptor
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.di.apiModule
@@ -36,9 +35,6 @@ class SceytChatDemoApp : Application() {
     }
 
     private fun initSceyt() {
-        ChatClient.setEnableNetworkAwarenessReconnection(true)
-        ChatClient.setEnableNetworkChangeDetection(true)
-
         SceytChatUIKit.initialize(
             appContext = this,
             apiUrl = BuildConfig.API_URL,
