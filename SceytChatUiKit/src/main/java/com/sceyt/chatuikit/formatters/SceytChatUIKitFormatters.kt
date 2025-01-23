@@ -27,6 +27,8 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultMessageDateSeparatorFormat
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageInfoDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageMarkerDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageViewCountFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationBodyFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserAndNotesNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
@@ -34,6 +36,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultUserPresenceDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserShortNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultVoiceDurationFormatter
 import com.sceyt.chatuikit.persistence.lazyVar
+import com.sceyt.chatuikit.push.PushData
 import java.util.Date
 
 class SceytChatUIKitFormatters {
@@ -168,5 +171,13 @@ class SceytChatUIKitFormatters {
 
     var unreadCountFormatter: Formatter<Long> by lazyVar {
         DefaultUnreadCountFormatter()
+    }
+
+    var notificationTitleFormatter: Formatter<PushData> by lazyVar {
+        DefaultNotificationTitleFormatter()
+    }
+
+    var notificationBodyFormatter: Formatter<PushData> by lazyVar {
+        DefaultNotificationBodyFormatter()
     }
 }

@@ -64,6 +64,7 @@ class ChannelsViewModel(
             query: String = searchQuery,
             userIds: List<String> = emptyList(),
             directChatType: String = ChannelTypeEnum.Direct.value,
+            config: ChannelListConfig = this.config,
             onlyMine: Boolean = false,
             includeSearchByUserDisplayName: Boolean = false,
             ignoreDatabase: Boolean = false,
@@ -79,13 +80,13 @@ class ChannelsViewModel(
             channelInteractor.searchChannelsWithUserIds(
                 offset = offset,
                 searchQuery = query,
-                loadKey = loadKey,
                 userIds = userIds,
-                ignoreDb = ignoreDatabase,
                 config = config,
-                directChatType = directChatType,
+                includeSearchByUserDisplayName = includeSearchByUserDisplayName,
                 onlyMine = onlyMine,
-                includeSearchByUserDisplayName = includeSearchByUserDisplayName
+                ignoreDb = ignoreDatabase,
+                loadKey = loadKey,
+                directChatType = directChatType
             ).collect {
                 initPaginationResponse(it)
             }
@@ -154,11 +155,11 @@ class ChannelsViewModel(
         // otherwise we filter only channels which are between loaded channels and
         // insert them to the list.
         if (existing.isEmpty()) {
-            if (loadingFromServer || loadingFromDb) return@withContext  null
+            if (loadingFromServer || loadingFromDb) return@withContext null
             val sorted = filtered.sortedWith(ChannelsComparatorDescBy(config.order))
             val date = mapToChannelItem(data = sorted, hasNext = false)
-            SceytLog.i("syncResultUpdate", "loaded channels are empty, set data : ${sorted.map { it.channelSubject }}")
-            return@withContext  date
+            SceytLog.i("syncResultUpdate", "loaded channels are empty, set data : ${sorted.map { it.id }}")
+            return@withContext date
         } else {
             // Get last channel to understand where to insert new channels
             val lastChannel = existing.last()
@@ -168,7 +169,7 @@ class ChannelsViewModel(
             // If index is last and we have more channels, we don't need to insert them,
             // because they will be inserted by next page loading
             if (index == existing.size - 1 && (hasNext || hasNextDb)) {
-                return@withContext  null
+                return@withContext null
             }
             // Get channels which need to be inserted
             sorted.subList(0, index).forEach {
@@ -183,10 +184,10 @@ class ChannelsViewModel(
 
             SceytLog.i("syncResultUpdate", "should be applied synced channels : ${
                 newData.map {
-                    (it as? ChannelItem)?.channel?.channelSubject ?: it.toString()
+                    (it as? ChannelItem)?.channel?.id ?: it.toString()
                 }
             }")
-            return@withContext  newData
+            return@withContext newData
         }
     }
 

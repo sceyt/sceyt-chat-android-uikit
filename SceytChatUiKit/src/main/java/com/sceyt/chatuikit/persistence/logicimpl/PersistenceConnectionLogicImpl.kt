@@ -10,28 +10,32 @@ import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.repositories.Keys
+import com.sceyt.chatuikit.data.repositories.getUserId
 import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.persistence.dao.UserDao
+import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
 import com.sceyt.chatuikit.persistence.repositories.UsersRepository
-import com.sceyt.chatuikit.push.FirebaseMessagingDelegate
+import com.sceyt.chatuikit.push.service.PushService
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 internal class PersistenceConnectionLogicImpl(
         private var preference: SceytSharedPreference,
         private val usersDao: UserDao,
         private val usersRepository: UsersRepository,
+        private val pushService: PushService
 ) : PersistenceConnectionLogic, SceytKoinComponent {
 
     private val messageLogic: PersistenceMessagesLogic by inject()
@@ -58,7 +62,7 @@ internal class PersistenceConnectionLogicImpl(
         if (state.state == ConnectionState.Connected) {
             scope.launch {
                 SceytPresenceChecker.startPresenceCheck()
-                FirebaseMessagingDelegate.checkNeedRegisterForPushToken()
+                pushService.ensurePushTokenRegistered()
                 insertCurrentUser()
                 if (isAppOnForeground())
                     setUserPresence()
@@ -76,10 +80,10 @@ internal class PersistenceConnectionLogicImpl(
         } else SceytPresenceChecker.stopPresenceCheck()
     }
 
-    private suspend fun insertCurrentUser() {
+    private suspend fun insertCurrentUser() = withContext(Dispatchers.IO) {
         ClientWrapper.currentUser?.let {
             usersDao.insertUserWithMetadata(it.toUserDb())
-            preference.setUserId(it.id)
+            preference.setString(Keys.KEY_USER_ID, it.id)
         } ?: run {
             preference.getUserId()?.let {
                 val response = usersRepository.getSceytUserById(it)
@@ -91,7 +95,7 @@ internal class PersistenceConnectionLogicImpl(
         }
     }
 
-    private suspend fun setUserPresence() {
+    private suspend fun setUserPresence() = withContext(Dispatchers.IO) {
         val state = SceytChatUIKit.config.presenceConfig.defaultPresenceState
         SceytChatUIKit.chatUIFacade.userInteractor.setPresenceState(state)
     }

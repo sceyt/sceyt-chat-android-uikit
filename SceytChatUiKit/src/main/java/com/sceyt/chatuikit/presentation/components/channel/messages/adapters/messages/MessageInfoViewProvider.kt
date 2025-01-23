@@ -110,7 +110,7 @@ open class MessageInfoViewProvider(
                 if (links.size == attachments.size)
                     return (if (inc) MessageViewTypeEnum.IncLink else MessageViewTypeEnum.OutLink).ordinal
 
-                val attachment = others.getOrNull(0)
+                val attachment = others.firstOrNull()
                 when (attachment?.type) {
                     AttachmentTypeEnum.Image.value -> if (inc) MessageViewTypeEnum.IncImage else MessageViewTypeEnum.OutImage
                     AttachmentTypeEnum.Video.value -> if (inc) MessageViewTypeEnum.IncVideo else MessageViewTypeEnum.OutVideo

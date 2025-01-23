@@ -55,7 +55,7 @@ abstract class BaseLinkMessageViewHolder(
             data: LinkPreviewDetails?,
             message: SceytMessage,
             attachment: SceytAttachment,
-            viewStub: ViewStub
+            viewStub: ViewStub,
     ) {
         if (data == null || data.link != attachment.url) {
             viewStub.isVisible = false
@@ -82,15 +82,19 @@ abstract class BaseLinkMessageViewHolder(
                     it.attachment.type == AttachmentTypeEnum.Link.value
                 }?.blurredThumb?.toDrawable(context.resources) ?: style.linkPreviewStyle.placeHolder
 
+                val size = calculateScaleWidthHeight(maxSize, minSize, data.imageWidth
+                        ?: 0, data.imageHeight ?: 0)
                 Glide.with(context.applicationContext)
                     .load(data.imageUrl)
-                    .override(data.imageWidth ?: maxSize, data.imageHeight ?: maxSize)
+                    .override(size.width, size.height)
                     .placeholder(thumb)
-                    .listener(glideRequestListener(onResourceReady = {
-                        previewImage.isVisible = true
-                    }, onLoadFailed = {
-                        previewImage.isVisible = false
-                    }))
+                    .listener(glideRequestListener(
+                        onResourceReady = {
+                            previewImage.isVisible = true
+                        },
+                        onLoadFailed = {
+                            previewImage.isVisible = thumb != null
+                        }))
                     .transition(DrawableTransitionOptions.withCrossFade(100))
                     .into(previewImage)
             } else previewImage.isVisible = false

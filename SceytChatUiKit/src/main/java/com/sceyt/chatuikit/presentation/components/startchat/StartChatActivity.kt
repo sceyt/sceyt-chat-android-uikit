@@ -84,7 +84,6 @@ class StartChatActivity : AppCompatActivity() {
 
         viewModel.createChannelLiveData.observe(this) {
             ChannelActivity.launch(this, it)
-            finish()
             creatingChannel = false
         }
     }

@@ -14,8 +14,8 @@ import com.sceyt.chatuikit.styles.ShareablePageStyle
 
 @Suppress("MemberVisibilityCanBePrivate")
 open class ShareableChannelViewHolderFactory(
-        protected val context: Context,
-        protected val style: ShareablePageStyle
+        context: Context,
+        private val style: ShareablePageStyle
 ) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     protected val clickListeners = ChannelClickListenersImpl()

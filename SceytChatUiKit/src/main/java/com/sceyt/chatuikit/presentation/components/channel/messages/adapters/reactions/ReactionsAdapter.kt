@@ -34,7 +34,7 @@ class ReactionsAdapter(
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val shouldShowCount = (currentList.size > 1 || (currentList.getOrNull(0)?.reaction?.score
+        val shouldShowCount = (currentList.size > 1 || (currentList.firstOrNull()?.reaction?.score
                 ?: 0) > 1) && position == currentList.size - 1
         (holder as ReactionViewHolder).bind(currentList[position], shouldShowCount, message)
     }

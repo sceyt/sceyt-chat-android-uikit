@@ -13,10 +13,10 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.common.SelectableListItemStyle
 
 open class ShareableChannelViewHolder(
-        protected val binding: SceytItemShareChannelBinding,
-        protected val itemStyle: SelectableListItemStyle<Formatter<SceytChannel>,
+        private val binding: SceytItemShareChannelBinding,
+        private val itemStyle: SelectableListItemStyle<Formatter<SceytChannel>,
                 Formatter<SceytChannel>, ChannelAvatarRenderer>,
-        protected val clickListener: ChannelClickListeners.ChannelClickListener
+        private val clickListener: ChannelClickListeners.ChannelClickListener
 ) : BaseChannelViewHolder(binding.root) {
 
     init {

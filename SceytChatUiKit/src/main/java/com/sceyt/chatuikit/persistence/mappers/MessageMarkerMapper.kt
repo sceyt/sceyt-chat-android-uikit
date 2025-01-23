@@ -4,8 +4,8 @@ import com.sceyt.chat.models.message.Marker
 import com.sceyt.chat.models.user.User
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.persistence.entity.messages.MarkerEntity
-import com.sceyt.chatuikit.persistence.entity.messages.MarkerWithUserDb
+import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerWithUserDb
 
 fun MarkerEntity.toSceytMarker(user: SceytUser) = SceytMarker(messageId, user, name, createdAt)
 

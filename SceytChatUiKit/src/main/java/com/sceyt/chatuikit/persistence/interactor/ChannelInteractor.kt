@@ -11,8 +11,8 @@ import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
+import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import kotlinx.coroutines.flow.Flow
 
 interface ChannelInteractor {
@@ -28,11 +28,11 @@ interface ChannelInteractor {
             offset: Int,
             searchQuery: String,
             userIds: List<String>,
+            config: ChannelListConfig,
             includeSearchByUserDisplayName: Boolean,
-            loadKey: LoadKeyData?,
             onlyMine: Boolean,
             ignoreDb: Boolean,
-            config: ChannelListConfig,
+            loadKey: LoadKeyData?,
             directChatType: String = ChannelTypeEnum.Direct.value
     ): Flow<PaginationResponse<SceytChannel>>
 

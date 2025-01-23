@@ -7,8 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.sceyt.chat.demo.R
-import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
 import com.sceyt.chat.demo.presentation.main.MainActivity
+import com.sceyt.chat.demo.presentation.welcome.WelcomeActivity
 import com.sceyt.chatuikit.extensions.launchActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -27,6 +27,7 @@ class SplashActivity : AppCompatActivity() {
         }
 
         observeViewModel()
+        viewModel.checkIntent(intent)
     }
 
     private fun observeViewModel() {

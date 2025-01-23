@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityCreateGroupBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.hideSoftInput
+import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
@@ -208,6 +209,15 @@ class CreateGroupActivity : AppCompatActivity() {
 
     companion object {
         private const val MEMBERS = "MEMBERS"
+
+        fun launch(context: Context, members: List<SceytMember>) {
+            context.launchActivity<CreateGroupActivity>(
+                enterAnimResId = R.anim.sceyt_anim_slide_in_right,
+                exitAnimResId = R.anim.sceyt_anim_slide_hold
+            ) {
+                putParcelableArrayListExtra(MEMBERS, members.toArrayList())
+            }
+        }
 
         fun newIntent(context: Context, members: List<SceytMember>): Intent {
             val intent = Intent(context, CreateGroupActivity::class.java)

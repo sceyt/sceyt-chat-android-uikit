@@ -6,7 +6,6 @@ import com.sceyt.chatuikit.config.defaults.DefaultAutoDeleteMessagesOptions
 import com.sceyt.chatuikit.config.defaults.DefaultAvatarBackgroundColors
 import com.sceyt.chatuikit.config.defaults.DefaultMuteNotificationOptions
 import com.sceyt.chatuikit.persistence.lazyVar
-import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import kotlin.time.Duration.Companion.hours
 
 class SceytChatUIKitConfig {
@@ -15,6 +14,7 @@ class SceytChatUIKitConfig {
     var channelURIConfig: ChannelURIConfig by lazyVar { ChannelURIConfig() }
     var channelTypesConfig: ChannelTypesConfig by lazyVar { ChannelTypesConfig() }
     var memberRolesConfig: MemberRolesConfig by lazyVar { MemberRolesConfig() }
+    var notificationConfig: PushNotificationConfig by lazyVar { PushNotificationConfig() }
     var syncChannelsAfterConnect: Boolean = true
     var hardDeleteMessageForAll: Boolean = false
     var messageEditTimeout: Long = 2.hours.inWholeMilliseconds
@@ -25,11 +25,6 @@ class SceytChatUIKitConfig {
     var channelListOrder: ChannelListOrder = ChannelListOrder.ListQueryChannelOrderLastMessage
     var defaultReactions: List<String> = listOf("😎", "😂", "👌", "😍", "👍", "😏")
     var mentionTriggerPrefix = '@'
-    var uploadNotificationPendingIntentData: UploadNotificationPendingIntentData? by lazyVar {
-        UploadNotificationPendingIntentData(
-            ChannelActivity::class.java, ChannelActivity.CHANNEL
-        )
-    }
     var muteChannelNotificationOptions: MuteNotificationOptions by lazyVar {
         DefaultMuteNotificationOptions
     }
