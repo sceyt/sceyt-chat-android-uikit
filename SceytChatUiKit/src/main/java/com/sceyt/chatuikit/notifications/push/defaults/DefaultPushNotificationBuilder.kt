@@ -33,6 +33,7 @@ open class DefaultPushNotificationBuilder(
     }
 
     companion object {
+        const val EXTRAS_CHAT_NOTIFICATION = "chat_notification"
         const val EXTRAS_NOTIFICATION_TYPE = "type"
         const val EXTRAS_MESSAGE_ID = "messageId"
         const val EXTRAS_REACTION_ID = "reactionId"
@@ -117,6 +118,7 @@ open class DefaultPushNotificationBuilder(
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setContentIntent(providePendingIntent(context, data))
             .apply {
+                extras.putBoolean(EXTRAS_CHAT_NOTIFICATION, true)
                 style?.let(::setStyle)
                 provideActions(context, data).forEach(::addAction)
                 builderModifier()
