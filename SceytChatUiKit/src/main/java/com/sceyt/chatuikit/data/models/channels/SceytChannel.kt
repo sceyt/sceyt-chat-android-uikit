@@ -6,7 +6,6 @@ import com.sceyt.chatuikit.data.models.messages.PendingReactionData
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isGroup
 import com.sceyt.chatuikit.persistence.extensions.isSelf
@@ -50,17 +49,15 @@ data class SceytChannel(
         val typingData: ChannelTypingEventData? = null
 ) : Parcelable {
 
-    val channelSubject: String
-        get() = (if (isGroup) subject
-        else getPeer()?.getPresentableName()) ?: ""
-
     val iconUrl: String?
         get() = if (isGroup) avatarUrl
         else getPeer()?.avatarUrl
 
-    val pinned get() = pinnedAt != null && pinnedAt != 0L
+    val pinned: Boolean
+        get() = pinnedAt != null && pinnedAt != 0L
 
-    val autoDeleteEnabled get() = messageRetentionPeriod > 0
+    val autoDeleteEnabled: Boolean
+        get() = messageRetentionPeriod > 0
 
     @IgnoredOnParcel
     val isGroup by lazy { isGroup() }

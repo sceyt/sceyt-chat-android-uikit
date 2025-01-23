@@ -158,7 +158,7 @@ class ChannelsViewModel(
             if (loadingFromServer || loadingFromDb) return@withContext null
             val sorted = filtered.sortedWith(ChannelsComparatorDescBy(config.order))
             val date = mapToChannelItem(data = sorted, hasNext = false)
-            SceytLog.i("syncResultUpdate", "loaded channels are empty, set data : ${sorted.map { it.channelSubject }}")
+            SceytLog.i("syncResultUpdate", "loaded channels are empty, set data : ${sorted.map { it.id }}")
             return@withContext date
         } else {
             // Get last channel to understand where to insert new channels
@@ -184,7 +184,7 @@ class ChannelsViewModel(
 
             SceytLog.i("syncResultUpdate", "should be applied synced channels : ${
                 newData.map {
-                    (it as? ChannelItem)?.channel?.channelSubject ?: it.toString()
+                    (it as? ChannelItem)?.channel?.id ?: it.toString()
                 }
             }")
             return@withContext newData
