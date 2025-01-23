@@ -1,5 +1,9 @@
 <resources>
     <string name="sceyt_empty_string" translatable="false" />
+    <string name="sceyt_chat_notifications_channel_id" translatable="false">sceyt_chat_channel_id</string>
+    <string name="sceyt_file_transfer_notifications_channel_id" translatable="false">sceyt_file_transfer_channel_id</string>
+    <string name="sceyt_chat_notifications_channel_name">Chat Messages</string>
+    <string name="sceyt_file_transfer_notifications_channel_name">Upload Attachments</string>
     <string name="sceyt_search_for_channels">Search for channels</string>
     <string name="sceyt_search">Search</string>
     <string name="sceyt_your_last_message">You</string>

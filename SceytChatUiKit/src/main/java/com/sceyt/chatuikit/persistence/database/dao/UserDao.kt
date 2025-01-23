@@ -19,6 +19,9 @@ interface UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUsers(users: List<UserEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertUsersIgnored(users: List<UserEntity>)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMetadata(list: List<UserMetadataEntity>)
 
@@ -29,8 +32,12 @@ interface UserDao {
     }
 
     @Transaction
-    suspend fun insertUsersWithMetadata(users: List<UserDb>) {
-        insertUsers(users.map { it.user })
+    suspend fun insertUsersWithMetadata(users: List<UserDb>, replaceUserOnConflict: Boolean = true) {
+        if (replaceUserOnConflict) {
+            insertUsers(users.map { it.user })
+        } else {
+            insertUsersIgnored(users.map { it.user })
+        }
         insertMetadata(users.flatMap { it.metadata })
     }
 

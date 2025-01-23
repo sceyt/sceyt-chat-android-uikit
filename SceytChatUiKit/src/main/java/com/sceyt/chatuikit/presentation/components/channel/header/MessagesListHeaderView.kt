@@ -449,7 +449,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     override fun onInitToolbarActionsMenu(vararg messages: SceytMessage, menu: Menu) {
         val isSingleMessage = messages.size == 1
-        val newSelectedMessage = messages.getOrNull(0)
+        val newSelectedMessage = messages.firstOrNull()
 
         newSelectedMessage?.let { message ->
             val isPending = message.deliveryStatus == DeliveryStatus.Pending

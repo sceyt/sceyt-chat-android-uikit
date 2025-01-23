@@ -33,7 +33,7 @@ fun LinkPreviewDetails.toLinkDetailsEntity() = LinkDetailsEntity(
 )
 
 fun LinkDetails.toLinkPreviewDetails(link: String): LinkPreviewDetails {
-    val image = images.getOrNull(0)
+    val image = images.firstOrNull()
     return LinkPreviewDetails(
         link = link,
         url = url,

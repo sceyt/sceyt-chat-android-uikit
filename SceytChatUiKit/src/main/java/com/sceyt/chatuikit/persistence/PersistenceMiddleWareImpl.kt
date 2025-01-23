@@ -39,6 +39,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManager
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadDb
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
@@ -78,11 +79,10 @@ internal class PersistenceMiddleWareImpl(
         private val membersLogic: PersistenceMembersLogic,
         private val usersLogic: PersistenceUsersLogic,
         private val connectionLogic: PersistenceConnectionLogic,
-) :
-        ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
+        private val realtimeNotificationManager: RealtimeNotificationManager
+) : ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
         UserInteractor, AttachmentInteractor, MessageMarkerInteractor,
         MessageReactionInteractor, SceytKoinComponent {
-
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -139,16 +139,21 @@ internal class PersistenceMiddleWareImpl(
         scope.launch(Dispatchers.IO) {
             messagesLogic.onMessage(data)
             channelLogic.onMessage(data)
+            realtimeNotificationManager.onMessageReceived(data.first, data.second)
         }
     }
 
     private fun onMessageReactionUpdated(data: ReactionUpdateEventData) {
-        scope.launch(Dispatchers.IO) { reactionsLogic.onMessageReactionUpdated(data) }
+        scope.launch(Dispatchers.IO) {
+            reactionsLogic.onMessageReactionUpdated(data)
+            realtimeNotificationManager.onReactionEvent(data)
+        }
     }
 
     private fun onMessageEditedOrDeleted(sceytMessage: SceytMessage) {
         scope.launch(Dispatchers.IO) { messagesLogic.onMessageEditedOrDeleted(sceytMessage) }
         scope.launch(Dispatchers.IO) { channelLogic.onMessageEditedOrDeleted(sceytMessage) }
+        scope.launch(Dispatchers.IO) { realtimeNotificationManager.onMessageStateChanged(sceytMessage) }
     }
 
     private fun onChangedConnectStatus(data: ConnectionStateData) {
@@ -633,8 +638,12 @@ internal class PersistenceMiddleWareImpl(
         return reactionsLogic.loadReactions(messageId, offset, key, loadKey, ignoreDb)
     }
 
-    override suspend fun getMessageReactionsDbByKey(messageId: Long, key: String): List<SceytReaction> {
-        return reactionsLogic.getMessageReactionsDbByKey(messageId, key)
+    override suspend fun getLocalMessageReactionsById(reactionId: Long): SceytReaction? {
+        return reactionsLogic.getLocalMessageReactionsById(reactionId)
+    }
+
+    override suspend fun getLocalMessageReactionsByKey(messageId: Long, key: String): List<SceytReaction> {
+        return reactionsLogic.getLocalMessageReactionsByKey(messageId, key)
     }
 
     override suspend fun addReaction(

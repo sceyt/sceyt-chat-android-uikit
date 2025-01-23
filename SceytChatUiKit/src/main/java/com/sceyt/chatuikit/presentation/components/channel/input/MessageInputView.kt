@@ -334,7 +334,7 @@ class MessageInputView @JvmOverloads constructor(
         val metadata = Gson().toJson(AudioMetadata(amplitudes, duration))
         createAttachmentWithPaths(
             AttachmentTypeEnum.Voice to file.path, metadata = metadata,
-        ).getOrNull(0)?.let {
+        ).firstOrNull()?.let {
             allAttachments.add(it)
             sendMessage()
         } ?: finishRecording()

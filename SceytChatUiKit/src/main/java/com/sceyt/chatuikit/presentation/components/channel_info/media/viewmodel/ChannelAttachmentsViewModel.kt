@@ -23,7 +23,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.getInfoFromMetadata
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
-import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItemType
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
@@ -165,7 +165,7 @@ class ChannelAttachmentsViewModel(
     private fun prepareToPauseOrResumeUpload(item: SceytAttachment, channelId: Long) {
         when (val state = item.transferState ?: return) {
             TransferState.PendingUpload, TransferState.ErrorUpload -> {
-                SendAttachmentWorkManager.schedule(application, item.messageTid, channelId)
+                UploadAndSendAttachmentWorkManager.schedule(application, item.messageTid, channelId)
             }
 
             TransferState.PendingDownload, TransferState.ErrorDownload -> {
@@ -192,7 +192,7 @@ class ChannelAttachmentsViewModel(
                                     ?: 0f, TransferState.Uploading, item.filePath, item.url))
                     }
 
-                    SendAttachmentWorkManager.schedule(application, item.messageTid, channelId, ExistingWorkPolicy.REPLACE)
+                    UploadAndSendAttachmentWorkManager.schedule(application, item.messageTid, channelId, ExistingWorkPolicy.REPLACE)
                 }
             }
 

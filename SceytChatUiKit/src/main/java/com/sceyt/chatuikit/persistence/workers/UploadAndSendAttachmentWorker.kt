@@ -1,14 +1,9 @@
 package com.sceyt.chatuikit.persistence.workers
 
 import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Context
-import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
@@ -18,7 +13,6 @@ import androidx.work.Operation
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -27,10 +21,10 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.hasPermissions
-import com.sceyt.chatuikit.extensions.initPendingIntent
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
 import com.sceyt.chatuikit.persistence.database.dao.FileChecksumDao
 import com.sceyt.chatuikit.persistence.database.entity.FileChecksumEntity
 import com.sceyt.chatuikit.persistence.extensions.safeResume
@@ -43,22 +37,20 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.mappers.toMessage
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
-import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.IS_SHARING
-import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.MESSAGE_TID
-import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.NOTIFICATION_ID
-import com.sceyt.chatuikit.persistence.workers.SendAttachmentWorkManager.UPLOAD_CHANNEL_ID
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.FILE_TRANSFER_NOTIFICATION_ID
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.IS_SHARING
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager.MESSAGE_TID
 import com.sceyt.chatuikit.shared.utils.FileChecksumCalculator
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
 
-object SendAttachmentWorkManager : SceytKoinComponent {
+object UploadAndSendAttachmentWorkManager {
 
     internal const val MESSAGE_TID = "MESSAGE_TID"
     internal const val IS_SHARING = "IS_SHARING"
-    internal const val UPLOAD_CHANNEL_ID = "Sceyt_Upload_Attachment_Channel"
-    internal const val NOTIFICATION_ID = 1223344
+    const val FILE_TRANSFER_NOTIFICATION_ID = 1223344
 
     fun schedule(
             context: Context,
@@ -71,7 +63,7 @@ object SendAttachmentWorkManager : SceytKoinComponent {
         dataBuilder.putLong(MESSAGE_TID, messageTid)
         dataBuilder.putBoolean(IS_SHARING, isSharing)
 
-        val myWorkRequest = OneTimeWorkRequest.Builder(SendAttachmentWorker::class.java)
+        val myWorkRequest = OneTimeWorkRequest.Builder(UploadAndSendAttachmentWorker::class.java)
             .addTag(messageTid.toString())
             .apply { channelId?.let { addTag(channelId.toString()) } }
             .setInputData(dataBuilder.build())
@@ -86,7 +78,10 @@ object SendAttachmentWorkManager : SceytKoinComponent {
     }
 }
 
-class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), SceytKoinComponent {
+class UploadAndSendAttachmentWorker(
+        context: Context,
+        workerParams: WorkerParameters
+) : CoroutineWorker(context, workerParams), SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
     private val attachmentLogic: PersistenceAttachmentLogic by inject()
     private val messageLogic: PersistenceMessagesLogic by inject()
@@ -172,13 +167,13 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
         val messageTid = data.getLong(MESSAGE_TID, 0)
         val isSharing = data.getBoolean(IS_SHARING, false)
         val tmpMessage = messageLogic.getMessageDbByTid(messageTid)
-                ?: return Result.failure()
+                ?: return finishWorkWithFailure("Message not found: $messageTid")
 
         if (tmpMessage.deliveryStatus != DeliveryStatus.Pending)
-            return Result.success()
+            return finishWorkWithSuccess()
 
         if (applicationContext.hasPermissions(android.Manifest.permission.FOREGROUND_SERVICE))
-            startForeground(tmpMessage.channelId)
+            startForeground(tmpMessage.channelId, tmpMessage)
 
         val result = checkToUploadAttachmentsBeforeSend(tmpMessage, isSharing)
         return if (result.isSuccess && !isStopped) {
@@ -190,51 +185,42 @@ class SendAttachmentWorker(context: Context, workerParams: WorkerParameters) : C
                 response.data?.let {
                     messageLogic.attachmentSuccessfullySent(it)
                 }
-                Result.success()
+                finishWorkWithSuccess()
             } else Result.retry()
 
-        } else Result.failure()
+        } else finishWorkWithFailure("Could not upload attachments")
     }
 
-    private suspend fun startForeground(channelId: Long) {
-        val notification = creteNotification(channelId)
+    private fun finishWorkWithFailure(error: String): Result {
+        val result = Result.success()
+        SceytLog.e(HandleNotificationWorker.TAG, "HandlePushWorker worker finished with error: $error")
+        SceytChatUIKit.notifications.fileTransferServiceNotification.notificationHandler
+            .serviceWorkerFinished(result = result)
+        return result
+    }
+
+    private fun finishWorkWithSuccess(): Result {
+        val result = Result.success()
+        SceytChatUIKit.notifications.fileTransferServiceNotification.notificationHandler
+            .serviceWorkerFinished(result = result)
+        return Result.success()
+    }
+
+    private suspend fun startForeground(channelId: Long, message: SceytMessage) {
+        val notification = creteNotification(channelId, message) ?: return
         val foregroundInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            ForegroundInfo(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-        } else ForegroundInfo(NOTIFICATION_ID, notification)
+            ForegroundInfo(FILE_TRANSFER_NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else ForegroundInfo(FILE_TRANSFER_NOTIFICATION_ID, notification)
         setForeground(foregroundInfo)
     }
 
-    private suspend fun creteNotification(channelId: Long): Notification {
-        val notificationBuilder = NotificationCompat.Builder(applicationContext, UPLOAD_CHANNEL_ID)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationChannel = NotificationChannel(UPLOAD_CHANNEL_ID, "Upload Attachments", NotificationManager.IMPORTANCE_MIN)
-            NotificationManagerCompat.from(applicationContext).createNotificationChannel(notificationChannel)
-        }
-
-        notificationBuilder
-            .setContentTitle(applicationContext.getString(R.string.sceyt_sending_attachment))
-            .setPriority(NotificationCompat.PRIORITY_MIN)
-            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-            .setSmallIcon(R.drawable.sceyt_ic_upload)
-
-        val clickData = SceytChatUIKit.config.uploadNotificationPendingIntentData
-        val channel = if (clickData != null)
-            channelLogic.getChannelFromDb(channelId) else null
-
-        if (channel != null && clickData != null) {
-            val pendingIntent = applicationContext.initPendingIntent(Intent(applicationContext, clickData.classToOpen).apply {
-                clickData.extraKey?.let {
-                    putExtra(it, channel)
-                }
-                clickData.intentFlags?.let {
-                    flags = clickData.intentFlags
-                }
-            })
-
-            notificationBuilder.setContentIntent(pendingIntent)
-        }
-
-        return notificationBuilder.build()
+    private suspend fun creteNotification(channelId: Long, message: SceytMessage): Notification? {
+        val serviceNotification = SceytChatUIKit.notifications.fileTransferServiceNotification
+        val channel = channelLogic.getChannelFromDb(channelId) ?: return null
+        return serviceNotification.notificationBuilder.buildNotification(
+            context = applicationContext,
+            data = FileTransferNotificationData(channel = channel, message = message),
+            notificationId = FILE_TRANSFER_NOTIFICATION_ID
+        )
     }
 }

@@ -13,13 +13,13 @@ import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.push.RemoteMessageData
+import com.sceyt.chatuikit.push.PushData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
 interface PersistenceMessagesLogic {
     suspend fun onMessage(data: Pair<SceytChannel, SceytMessage>, sendDeliveryMarker: Boolean = true)
-    suspend fun onFcmMessage(data: RemoteMessageData)
+    suspend fun handlePush(data: PushData): Boolean
     suspend fun onMessageStatusChangeEvent(data: MessageStatusChangeData)
     suspend fun onMessageEditedOrDeleted(message: SceytMessage)
     suspend fun loadPrevMessages(conversationId: Long, lastMessageId: Long, replyInThread: Boolean, offset: Int,

@@ -12,8 +12,8 @@ import com.sceyt.chatuikit.presentation.components.media.adapter.holders.MediaVi
 import com.sceyt.chatuikit.styles.MediaPreviewStyle
 
 open class MediaFilesViewHolderFactory(
-        protected val context: Context,
-        protected val style: MediaPreviewStyle
+        context: Context,
+        private val style: MediaPreviewStyle
 ) {
     protected val layoutInflater: LayoutInflater = LayoutInflater.from(context)
     private var clickListeners: (MediaItem) -> Unit = {}

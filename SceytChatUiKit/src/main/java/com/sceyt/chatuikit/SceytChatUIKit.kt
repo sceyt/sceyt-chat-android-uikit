@@ -19,16 +19,19 @@ import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.logger.SceytLogLevel
 import com.sceyt.chatuikit.logger.SceytLogger
+import com.sceyt.chatuikit.notifications.SceytNotifications
 import com.sceyt.chatuikit.persistence.di.appModules
 import com.sceyt.chatuikit.persistence.di.cacheModule
 import com.sceyt.chatuikit.persistence.di.coroutineModule
 import com.sceyt.chatuikit.persistence.di.databaseModule
 import com.sceyt.chatuikit.persistence.di.interactorModule
 import com.sceyt.chatuikit.persistence.di.logicModule
+import com.sceyt.chatuikit.persistence.di.useCaseModule
 import com.sceyt.chatuikit.persistence.lazyVar
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.presentation.di.viewModelModule
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
+import com.sceyt.chatuikit.providers.ChatTokenProvider
 import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 import com.vanniktech.emoji.EmojiManager
@@ -50,19 +53,26 @@ object SceytChatUIKit : SceytKoinComponent {
     var formatters: SceytChatUIKitFormatters by lazyVar { SceytChatUIKitFormatters() }
     var providers: SceytChatUIKitProviders by lazyVar { SceytChatUIKitProviders() }
     var renderers: SceytChatUIKitRenderers by lazyVar { SceytChatUIKitRenderers() }
+    var notifications: SceytNotifications by lazyVar { SceytNotifications(appContext) }
+    var chatTokenProvider: ChatTokenProvider? = null
 
     @JvmField
     var messageTransformer: MessageTransformer? = null
 
+    @JvmStatic
     val chatClient: ChatClient
         get() = ChatClient.getClient()
 
+    @JvmStatic
     val currentUserId: String?
         get() = chatUIFacade.userInteractor.getCurrentUserId()
 
+    @JvmStatic
     val currentUser: SceytUser?
         get() = ClientWrapper.currentUser?.toSceytUser()
 
+    @JvmStatic
+    @JvmOverloads
     fun initialize(
             appContext: Context,
             apiUrl: String,
@@ -70,29 +80,34 @@ object SceytChatUIKit : SceytKoinComponent {
             clientId: String,
             enableDatabase: Boolean = true
     ) {
-        ChatClient.initialize(appContext, apiUrl, appId, clientId)
         this.appContext = appContext
+        ChatClient.initialize(appContext, apiUrl, appId, clientId)
         initKoin(enableDatabase)
         initEmojiSupport()
         SceytLog.i(TAG, "SceytChatUIKit initialized. Version: ${BuildConfig.MAVEN_VERSION}")
     }
 
+    @JvmStatic
     fun connect(token: String) {
         chatClient.connect(token)
     }
 
+    @JvmStatic
     fun reconnect() {
         chatClient.reconnect()
     }
 
+    @JvmStatic
     fun disconnect() {
         chatClient.disconnect()
     }
 
+    @JvmStatic
     fun logOut(unregisterPushCallback: ((Result<Boolean>) -> Unit)? = null) {
         chatUIFacade.logOut(unregisterPushCallback)
     }
 
+    @JvmStatic
     fun setLogger(logLevel: SceytLogLevel, logger: SceytLogger) {
         SceytLog.setLogger(logLevel, logger)
     }
@@ -142,6 +157,7 @@ object SceytChatUIKit : SceytKoinComponent {
             databaseModule(enableDatabase),
             interactorModule,
             logicModule,
+            useCaseModule,
             repositoryModule,
             cacheModule,
             viewModelModule,
