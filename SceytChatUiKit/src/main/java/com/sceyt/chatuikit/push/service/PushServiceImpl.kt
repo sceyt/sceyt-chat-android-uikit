@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
-import com.sceyt.chatuikit.persistence.workers.HandlePushWorkManager
+import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.push.PushDevice
 import kotlinx.coroutines.CoroutineScope
@@ -32,15 +32,15 @@ internal class PushServiceImpl(
             val config = SceytChatUIKit.config.notificationConfig
             if (config.isPushEnabled && config.shouldDisplayNotification(data)) {
                 val workerData = mutableMapOf<String, Any>(
-                    HandlePushWorkManager.NOTIFICATION_TYPE to data.type.ordinal,
-                    HandlePushWorkManager.CHANNEL_ID to data.channel.id,
-                    HandlePushWorkManager.MESSAGE_ID to data.message.id,
-                    HandlePushWorkManager.USER_ID to data.user.id,
+                    HandleNotificationWorkManager.NOTIFICATION_TYPE to data.type.ordinal,
+                    HandleNotificationWorkManager.CHANNEL_ID to data.channel.id,
+                    HandleNotificationWorkManager.MESSAGE_ID to data.message.id,
+                    HandleNotificationWorkManager.USER_ID to data.user.id,
                 )
                 data.reaction?.let {
-                    workerData[HandlePushWorkManager.REACTION_ID] = it.id
+                    workerData[HandleNotificationWorkManager.REACTION_ID] = it.id
                 }
-                HandlePushWorkManager.schedule(context, workerData)
+                HandleNotificationWorkManager.schedule(context, workerData)
             }
         }
     }

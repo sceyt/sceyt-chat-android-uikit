@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.notifications.push
 
 import android.content.Context
 import com.sceyt.chatuikit.notifications.NotificationChannelProvider
-import com.sceyt.chatuikit.notifications.PushNotificationHandler
 import com.sceyt.chatuikit.notifications.builder.PushNotificationBuilder
 import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationBuilder
 import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationChannelProvider
@@ -19,7 +18,7 @@ class PushNotification(context: Context) {
      * Handles how push notifications are displayed and interacted with.
      * Default: [DefaultPushNotificationHandler].
      */
-    var pushNotificationHandler: PushNotificationHandler by lazyVar {
+    var notificationHandler: PushNotificationHandler by lazyVar {
         DefaultPushNotificationHandler(context)
     }
 

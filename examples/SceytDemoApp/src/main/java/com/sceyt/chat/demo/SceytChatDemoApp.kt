@@ -1,7 +1,6 @@
 package com.sceyt.chat.demo
 
 import android.app.Application
-import com.sceyt.chat.ChatClient
 import com.sceyt.chat.demo.connection.ChatClientConnectionInterceptor
 import com.sceyt.chat.demo.connection.SceytConnectionProvider
 import com.sceyt.chat.demo.di.apiModule
@@ -13,7 +12,7 @@ import com.sceyt.chat.demo.notifications.CustomPushNotificationBuilder
 import com.sceyt.chat.demo.notifications.CustomPushNotificationChannelProvider
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.PushNotificationConfig
-import com.sceyt.chatuikit.providers.TokenProvider
+import com.sceyt.chatuikit.providers.ChatTokenProvider
 import com.sceyt.chatuikit.push.providers.firebase.FirebasePushServiceProvider
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
@@ -36,9 +35,6 @@ class SceytChatDemoApp : Application() {
     }
 
     private fun initSceyt() {
-        ChatClient.setEnableNetworkAwarenessReconnection(true)
-        ChatClient.setEnableNetworkChangeDetection(true)
-
         SceytChatUIKit.initialize(
             appContext = this,
             apiUrl = BuildConfig.API_URL,
@@ -73,8 +69,8 @@ class SceytChatDemoApp : Application() {
         // This provider is responsible for supplying authentication tokens required by the ChatClient to establish a connection
         // and mark messages as received when a push notification is received.
         // It retrieves the current user's ID and uses it to fetch a chat token via the chat client connection interceptor.
-        SceytChatUIKit.tokenProvider = TokenProvider {
-            val userId = SceytChatUIKit.currentUserId ?: return@TokenProvider null
+        SceytChatUIKit.chatTokenProvider = ChatTokenProvider {
+            val userId = SceytChatUIKit.currentUserId ?: return@ChatTokenProvider null
             chatClientConnectionInterceptor.getChatToken(userId)
         }
     }
