@@ -5,8 +5,8 @@ import com.huawei.hms.aaid.HmsInstanceId
 import com.huawei.hms.api.ConnectionResult.SUCCESS
 import com.huawei.hms.api.HuaweiApiAvailability
 import com.sceyt.chatuikit.push.PushDevice
-import com.sceyt.chatuikit.push.providers.PushDeviceProvider
 import com.sceyt.chatuikit.push.PushServiceType
+import com.sceyt.chatuikit.push.providers.PushDeviceProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
