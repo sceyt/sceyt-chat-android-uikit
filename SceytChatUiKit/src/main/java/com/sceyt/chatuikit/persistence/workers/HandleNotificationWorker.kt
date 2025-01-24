@@ -15,20 +15,19 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
-import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.persistence.logicimpl.usecases.ShouldShowNotificationUseCase
-import com.sceyt.chatuikit.persistence.workers.HandlePushWorkManager.CHANNEL_ID
-import com.sceyt.chatuikit.persistence.workers.HandlePushWorkManager.MESSAGE_ID
-import com.sceyt.chatuikit.persistence.workers.HandlePushWorkManager.NOTIFICATION_TYPE
-import com.sceyt.chatuikit.persistence.workers.HandlePushWorkManager.REACTION_ID
+import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager.CHANNEL_ID
+import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager.MESSAGE_ID
+import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager.NOTIFICATION_TYPE
+import com.sceyt.chatuikit.persistence.workers.HandleNotificationWorkManager.REACTION_ID
 import com.sceyt.chatuikit.push.PushData
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.minutes
 
-internal object HandlePushWorkManager : SceytKoinComponent {
+internal object HandleNotificationWorkManager {
 
     internal const val CHANNEL_ID = "CHANNEL_ID"
     internal const val MESSAGE_ID = "MESSAGE_ID"
@@ -41,7 +40,7 @@ internal object HandlePushWorkManager : SceytKoinComponent {
             .putAll(data)
             .build()
 
-        val myWorkRequest = OneTimeWorkRequest.Builder(HandlePushWorker::class.java)
+        val myWorkRequest = OneTimeWorkRequest.Builder(HandleNotificationWorker::class.java)
             .setInputData(inputData)
             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
@@ -52,11 +51,14 @@ internal object HandlePushWorkManager : SceytKoinComponent {
     }
 }
 
-internal class HandlePushWorker(
+internal class HandleNotificationWorker(
         context: Context,
         workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams), SceytKoinComponent {
     private val shouldShowNotificationUseCase by inject<ShouldShowNotificationUseCase>()
+    private val pushNotificationHandler by lazy {
+        SceytChatUIKit.notifications.pushNotification.notificationHandler
+    }
 
     override suspend fun doWork(): Result {
         val data = inputData
@@ -65,13 +67,12 @@ internal class HandlePushWorker(
         val messageId = data.getLong(MESSAGE_ID, -1)
         val reactionId = data.getLong(REACTION_ID, -1)
         val type = NotificationType.entries.getOrNull(notificationTypeValue) ?: run {
-            SceytLog.e(TAG, "HandlePushWorker worker was resumed with error: NotificationType is null with notificationTypeValue->${notificationTypeValue}")
-            return Result.failure()
+            return finishWorkWithFailure("NotificationType is null with notificationTypeValue->${notificationTypeValue}")
         }
 
         // If runAttemptCount is 0, it's indicating that the push notification is received for the first time
         if (runAttemptCount > 0)
-            return Result.success()
+            return finishWorkWithSuccess()
 
         return getDataAndShowNotificationIfNeeded(
             type = type,
@@ -91,13 +92,11 @@ internal class HandlePushWorker(
 
         val channel = SceytChatUIKit.chatUIFacade.channelInteractor.getChannelFromDb(channelId)
                 ?: run {
-                    SceytLog.e(TAG, "HandlePushWorker worker was resumed with error: Channel is null with channelId->${channelId}")
-                    return Result.failure()
+                    return finishWorkWithFailure("Channel not found: $channelId")
                 }
         val message = SceytChatUIKit.chatUIFacade.messageInteractor.getMessageDbById(messageId)
                 ?: run {
-                    SceytLog.e(TAG, "HandlePushWorker worker was resumed with error: Message is null with message->${messageId}")
-                    return Result.failure()
+                    return finishWorkWithFailure("Message not found: $messageId")
                 }
 
         var reaction: SceytReaction? = null
@@ -107,19 +106,19 @@ internal class HandlePushWorker(
                     reactionId = reactionId
                 )
             } ?: run {
-                SceytLog.e(TAG, "HandlePushWorker worker was resumed with error: ReactionId is null")
-                Result.failure()
+                return finishWorkWithFailure("Reaction not found, but type is MessageReaction")
             }
         }
 
         if (shouldShowNotificationUseCase(type, channel, message, reaction)) {
-            SceytChatUIKit.notifications.pushNotification.pushNotificationHandler.showNotification(
+            pushNotificationHandler.showNotification(
                 context = applicationContext,
                 data = PushData(
                     type = type,
                     channel = channel,
                     message = message,
-                    user = message.user ?: return Result.failure(),
+                    user = message.user
+                            ?: return finishWorkWithFailure("Message sender not found: $messageId"),
                     reaction = reaction
                 ))
         }
@@ -129,10 +128,9 @@ internal class HandlePushWorker(
             markMessageAsReceived(channelId, message)
         } else {
             SceytLog.i(TAG, "SceytChat is not connected. Connecting to mark message as received: $messageId")
-            val token = SceytChatUIKit.tokenProvider?.provideToken().takeIf { !it.isNullOrBlank() }
+            val token = SceytChatUIKit.chatTokenProvider?.provideToken().takeIf { !it.isNullOrBlank() }
                     ?: run {
-                        SceytLog.e(TAG, "Couldn't get token to connect to mark message as received: $messageId")
-                        return Result.failure()
+                        return finishWorkWithFailure("Couldn't get token to connect to mark message as received: $messageId")
                     }
 
             ChatClient.getClient().connect(token)
@@ -140,11 +138,8 @@ internal class HandlePushWorker(
             if (ConnectionEventManager.awaitToConnectSceytWithTimeout(1.minutes.inWholeMilliseconds)) {
                 markMessageAsReceived(channelId, message)
             }
-
-            if (!applicationContext.isAppOnForeground())
-                ChatClient.getClient().disconnect()
         }
-        return Result.success()
+        return finishWorkWithSuccess()
     }
 
     private suspend fun markMessageAsReceived(channelId: Long, message: SceytMessage) {
@@ -159,7 +154,20 @@ internal class HandlePushWorker(
         } else SceytLog.e(TAG, "Failed to send ack received for msgId: ${message.id} error: ${result?.message}")
     }
 
-    private companion object {
-        const val TAG = "HandlePushWorker"
+    private fun finishWorkWithFailure(error: String): Result {
+        val result = Result.success()
+        SceytLog.e(TAG, "HandlePushWorker worker finished with error: $error")
+        pushNotificationHandler.notificationWorkerFinished(result = result)
+        return result
+    }
+
+    private fun finishWorkWithSuccess(): Result {
+        val result = Result.success()
+        pushNotificationHandler.notificationWorkerFinished(result = result)
+        return Result.success()
+    }
+
+    companion object {
+        private const val TAG = "HandlePushWorker"
     }
 }

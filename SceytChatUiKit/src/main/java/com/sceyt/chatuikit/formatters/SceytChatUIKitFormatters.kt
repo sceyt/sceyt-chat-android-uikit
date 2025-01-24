@@ -28,6 +28,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultMessageInfoDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageMarkerDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageViewCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationBodyFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserAndNotesNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
@@ -170,6 +171,10 @@ class SceytChatUIKitFormatters {
 
     var unreadCountFormatter: Formatter<Long> by lazyVar {
         DefaultUnreadCountFormatter()
+    }
+
+    var notificationTitleFormatter: Formatter<PushData> by lazyVar {
+        DefaultNotificationTitleFormatter()
     }
 
     var notificationBodyFormatter: Formatter<PushData> by lazyVar {

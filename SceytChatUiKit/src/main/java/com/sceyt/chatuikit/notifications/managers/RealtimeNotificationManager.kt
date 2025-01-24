@@ -34,7 +34,7 @@ internal class RealtimeNotificationManagerImpl(
     }
 
     override suspend fun onMessageStateChanged(message: SceytMessage) {
-        notifications.pushNotification.pushNotificationHandler.onMessageStateChanged(
+        notifications.pushNotification.notificationHandler.onMessageStateChanged(
             context = context,
             message = message
         )
@@ -60,7 +60,7 @@ internal class RealtimeNotificationManagerImpl(
             }
 
             ReactionUpdateEventEnum.Remove -> {
-                notifications.pushNotification.pushNotificationHandler.onReactionDeleted(
+                notifications.pushNotification.notificationHandler.onReactionDeleted(
                     context = context,
                     message = data.message,
                     reaction = data.reaction
@@ -71,7 +71,7 @@ internal class RealtimeNotificationManagerImpl(
 
     private suspend fun showNotificationIfNeeded(pushData: PushData) {
         if (showNotificationUseCase(pushData)) {
-            notifications.pushNotification.pushNotificationHandler.showNotification(
+            notifications.pushNotification.notificationHandler.showNotification(
                 context = context,
                 data = pushData
             )

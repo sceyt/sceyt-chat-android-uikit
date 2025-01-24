@@ -7,6 +7,7 @@ import androidx.core.app.Person
 import androidx.core.graphics.drawable.IconCompat
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationBuilder.Companion.EXTRAS_CHAT_NOTIFICATION
 
 fun NotificationManagerCompat.extractMessagingStyle(
         notificationId: Int
@@ -15,6 +16,16 @@ fun NotificationManagerCompat.extractMessagingStyle(
         it.id == notificationId
     }?.notification ?: return null
     return MessagingStyle.extractMessagingStyleFromNotification(notification)
+}
+
+@Suppress("unused")
+fun NotificationManagerCompat.getAllChatMessageNotificationsCount(): Int {
+    return activeNotifications.filter {
+        it.notification.extras.containsKey(EXTRAS_CHAT_NOTIFICATION)
+    }.sumOf {
+        val style = MessagingStyle.extractMessagingStyleFromNotification(it.notification)
+        style?.messages?.size ?: 1
+    }
 }
 
 fun SceytUser.toPerson(

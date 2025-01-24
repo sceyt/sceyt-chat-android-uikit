@@ -82,9 +82,11 @@ abstract class BaseLinkMessageViewHolder(
                     it.attachment.type == AttachmentTypeEnum.Link.value
                 }?.blurredThumb?.toDrawable(context.resources) ?: style.linkPreviewStyle.placeHolder
 
+                val size = calculateScaleWidthHeight(maxSize, minSize, data.imageWidth
+                        ?: 0, data.imageHeight ?: 0)
                 Glide.with(context.applicationContext)
                     .load(data.imageUrl)
-                    .override(data.imageWidth ?: maxSize, data.imageHeight ?: maxSize)
+                    .override(size.width, size.height)
                     .placeholder(thumb)
                     .listener(glideRequestListener(
                         onResourceReady = {

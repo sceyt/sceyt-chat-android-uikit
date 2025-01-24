@@ -11,7 +11,7 @@ open class DefaultChannelNameFormatter : Formatter<SceytChannel> {
 
     override fun format(context: Context, from: SceytChannel): CharSequence {
         return when {
-            from.isGroup -> from.channelSubject
+            from.isGroup -> from.subject.orEmpty()
             from.isSelf -> context.getString(R.string.sceyt_self_notes)
             else -> {
                 val member = from.getPeer() ?: return ""

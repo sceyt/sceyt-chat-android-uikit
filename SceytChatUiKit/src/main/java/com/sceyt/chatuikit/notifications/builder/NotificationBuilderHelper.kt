@@ -20,23 +20,30 @@ object NotificationBuilderHelper {
         } else ""
     }
 
-    fun PushData.toMessagingStyle(context: Context, person: Person) = with(message) {
-        NotificationCompat.MessagingStyle.Message(
-            SceytChatUIKit.formatters.notificationBodyFormatter.format(context, this@toMessagingStyle),
-            createdAt.takeIf { it != 0L } ?: System.currentTimeMillis(),
-            person,
-        ).apply {
-            extras.putLong(DefaultPushNotificationBuilder.EXTRAS_MESSAGE_ID, message.id)
-            extras.putInt(DefaultPushNotificationBuilder.EXTRAS_NOTIFICATION_TYPE, this@toMessagingStyle.type.ordinal)
-            reaction?.id?.let { reactionId ->
-                extras.putLong(DefaultPushNotificationBuilder.EXTRAS_REACTION_ID, reactionId)
-            }
+    fun PushData.toMessagingStyle(
+            context: Context,
+            person: Person
+    ) = NotificationCompat.MessagingStyle.Message(
+        SceytChatUIKit.formatters.notificationBodyFormatter.format(context, this),
+        message.createdAt.takeIf { it != 0L } ?: System.currentTimeMillis(),
+        person,
+    ).apply {
+        extras.putLong(DefaultPushNotificationBuilder.EXTRAS_MESSAGE_ID, message.id)
+        extras.putInt(DefaultPushNotificationBuilder.EXTRAS_NOTIFICATION_TYPE, type.ordinal)
+        reaction?.id?.let { reactionId ->
+            extras.putLong(DefaultPushNotificationBuilder.EXTRAS_REACTION_ID, reactionId)
         }
     }
 
-    fun PushData.createMessagingStyle(person: Person) = NotificationCompat.MessagingStyle(person)
-        .setConversationTitle(channel.channelSubject)
-        .setGroupConversation(channel.isGroup)
+    fun PushData.createMessagingStyle(
+            context: Context,
+            person: Person
+    ): NotificationCompat.MessagingStyle {
+        val title = SceytChatUIKit.formatters.notificationTitleFormatter.format(context, this)
+        return NotificationCompat.MessagingStyle(person)
+            .setConversationTitle(title)
+            .setGroupConversation(channel.isGroup)
+    }
 
     fun PushData.getPerson(context: Context, icon: IconCompat?) = user.let {
         personMap.getOrPut(it.id) {

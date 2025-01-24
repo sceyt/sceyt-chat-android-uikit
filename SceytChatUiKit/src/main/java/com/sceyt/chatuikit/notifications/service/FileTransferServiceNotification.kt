@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.notifications.service
 
 import android.content.Context
-import com.sceyt.chatuikit.notifications.FileTransferNotificationHandler
 import com.sceyt.chatuikit.notifications.NotificationChannelProvider
 import com.sceyt.chatuikit.notifications.builder.FileTransferNotificationBuilder
 import com.sceyt.chatuikit.notifications.service.defaults.DefaultFileTransferNotificationBuilder
@@ -10,7 +9,7 @@ import com.sceyt.chatuikit.notifications.service.defaults.DefaultFileTransferNot
 import com.sceyt.chatuikit.persistence.lazyVar
 
 /**
- * Manages notifications for file transfer services, such as uploads.
+ * Manages notifications for file transfer services, such as upload attachments in the chat.
  *
  * @param context The application context used for initializing components.
  */
@@ -20,7 +19,6 @@ class FileTransferServiceNotification(context: Context) {
      * Handles file transfer notifications.
      * Default: [DefaultFileTransferNotificationHandler].
      */
-    @Suppress("unused")
     var notificationHandler: FileTransferNotificationHandler by lazyVar {
         DefaultFileTransferNotificationHandler(context)
     }

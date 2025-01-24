@@ -17,11 +17,11 @@ import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.cancelChannelNotifications
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.NotificationType
-import com.sceyt.chatuikit.notifications.PushNotificationHandler
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.getPerson
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.toMessagingStyle
 import com.sceyt.chatuikit.notifications.extractMessagingStyle
+import com.sceyt.chatuikit.notifications.push.PushNotificationHandler
 import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationBuilder.Companion.EXTRAS_MESSAGE_ID
 import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationBuilder.Companion.EXTRAS_REACTION_ID
 import com.sceyt.chatuikit.push.PushData
@@ -194,10 +194,10 @@ open class DefaultPushNotificationHandler(
     protected open fun checkMaybeAlreadyShown(pushData: PushData): Boolean {
         return when (pushData.type) {
             NotificationType.ChannelMessage -> {
-                if (showedNotifications.contains(pushData.message.id)) {
+                if (showedNotifications.contains(pushData.message.tid)) {
                     return true
                 }
-                showedNotifications.add(pushData.message.id)
+                showedNotifications.add(pushData.message.tid)
                 false
             }
 

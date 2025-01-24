@@ -3,18 +3,21 @@ package com.sceyt.chatuikit.notifications.push.defaults
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getBitmapFromUrl
-import com.sceyt.chatuikit.notifications.extractMessagingStyle
+import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.createMessagingStyle
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.getPerson
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.provideNotificationChannelId
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.toMessagingStyle
 import com.sceyt.chatuikit.notifications.builder.PushNotificationBuilder
+import com.sceyt.chatuikit.notifications.extractMessagingStyle
+import com.sceyt.chatuikit.notifications.receivers.NotificationActionsBuilder
 import com.sceyt.chatuikit.push.PushData
 
 /**
@@ -30,6 +33,7 @@ open class DefaultPushNotificationBuilder(
     }
 
     companion object {
+        const val EXTRAS_CHAT_NOTIFICATION = "chat_notification"
         const val EXTRAS_NOTIFICATION_TYPE = "type"
         const val EXTRAS_MESSAGE_ID = "messageId"
         const val EXTRAS_REACTION_ID = "reactionId"
@@ -46,12 +50,19 @@ open class DefaultPushNotificationBuilder(
     ): NotificationCompat.Style? {
         val person = data.getPerson(context, provideAvatarIcon(context, data))
         return (notificationManager.extractMessagingStyle(notificationId)
-                ?: data.createMessagingStyle(person)
+                ?: data.createMessagingStyle(context, person)
                 ).addMessage(data.toMessagingStyle(context, person))
     }
 
     override fun provideActions(context: Context, data: PushData): List<NotificationCompat.Action> {
-        return emptyList()
+        return if (data.type == NotificationType.MessageReaction) {
+            emptyList()
+        } else {
+            listOf(
+                NotificationActionsBuilder.createReplyAction(context, data),
+                NotificationActionsBuilder.createReadAction(context, data)
+            )
+        }
     }
 
     override fun providePendingIntent(
@@ -67,6 +78,9 @@ open class DefaultPushNotificationBuilder(
             context: Context,
             data: PushData
     ): IconCompat? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+            return null
+
         return data.user.avatarURL?.let { url ->
             getBitmapFromUrl(url)?.let { IconCompat.createWithAdaptiveBitmap(it) }
         }
@@ -104,6 +118,7 @@ open class DefaultPushNotificationBuilder(
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setContentIntent(providePendingIntent(context, data))
             .apply {
+                extras.putBoolean(EXTRAS_CHAT_NOTIFICATION, true)
                 style?.let(::setStyle)
                 provideActions(context, data).forEach(::addAction)
                 builderModifier()
