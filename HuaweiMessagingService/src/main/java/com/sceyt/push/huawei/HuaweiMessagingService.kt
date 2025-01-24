@@ -6,7 +6,7 @@ import com.huawei.hms.push.RemoteMessage
 class HuaweiMessagingService : HmsMessageService() {
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        if (HuaweiMessagingDelegate.isSceytPushNotification(remoteMessage))
+        if (HuaweiMessagingDelegate.isChatPushNotification(remoteMessage))
             HuaweiMessagingDelegate.handleRemoteMessage(remoteMessage)
     }
 
