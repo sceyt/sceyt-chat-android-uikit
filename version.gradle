@@ -1,7 +1,8 @@
+import com.sceyt.chat.Config
+
 ext {
     // MavenCentral
-    maven_central_publish_group = "com.sceyt"
-    maven_central_atifact_id = "sceyt-chat-android-uikit"
-    //maven_central_version = "1.7.59018-SNAPSHOT"
-    maven_central_version = "1.7.6"
+    maven_central_publish_group = Config.mavenCentralGroup
+    maven_central_atifact_id = Config.mavenCentralArtifactId
+    maven_central_version = Config.mavenCentralVersion
 }
