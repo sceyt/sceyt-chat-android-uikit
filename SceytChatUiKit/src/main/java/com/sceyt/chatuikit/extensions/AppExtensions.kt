@@ -192,6 +192,7 @@ fun Context.isLandscape(): Boolean {
     return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
 
+@Suppress("DEPRECATION")
 fun Activity.statusBarIconsColorWithBackground(
         isDark: Boolean = isNightMode(),
         @ColorRes statusBarColor: Int = SceytChatUIKit.theme.colors.statusBarColor,
