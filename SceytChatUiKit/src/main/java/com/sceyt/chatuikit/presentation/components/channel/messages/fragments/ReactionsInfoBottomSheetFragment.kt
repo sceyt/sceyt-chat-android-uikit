@@ -11,11 +11,11 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
+import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.databinding.SceytBottomShetReactionsInfoBinding
 import com.sceyt.chatuikit.extensions.dismissSafety
 import com.sceyt.chatuikit.extensions.parcelable
@@ -78,7 +78,7 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
                     return@onEach
                 }
                 val reactionTotal = eventData.message.reactionTotals?.find { it.key == eventData.reaction.key }
-                        ?: ReactionTotal(eventData.reaction.key, 0, eventData.reaction.score.toLong())
+                        ?: SceytReactionTotal(eventData.reaction.key, 0, eventData.reaction.score)
                 when (eventData.eventType) {
                     ReactionUpdateEventEnum.Add -> {
                         headerAdapter?.addOrUpdateItem(reactionTotal)
@@ -86,7 +86,7 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
                     }
 
                     ReactionUpdateEventEnum.Remove -> {
-                        if (reactionTotal.score == 0L) {
+                        if (reactionTotal.score == 0) {
                             headerAdapter?.removeItem(eventData.reaction)
                             pagerAdapter?.removeFragment(eventData.reaction.key)
                         } else {
@@ -121,7 +121,7 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
     private fun initHeaderAdapter(data: List<ReactionItem.Reaction>) {
         val allItem = ReactionHeaderItem.All(message.messageReactions?.sumOf {
             it.reaction.score
-        }?.toLong() ?: 0)
+        } ?: 0)
         val reactions = listOf(allItem)
             .plus(data.map { ReactionHeaderItem.Reaction(it.reaction) })
 

@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.channel_info.members.viewmod
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
@@ -18,6 +17,7 @@ import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytRole
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
@@ -200,7 +200,7 @@ class ChannelMembersViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val response = channelsLogic.findOrCreatePendingChannelByMembers(CreateChannelData(
                 type = ChannelTypeEnum.Direct.value,
-                members = listOf(SceytMember(role = Role(RoleTypeEnum.Owner.value), user = user)),
+                members = listOf(SceytMember(role = SceytRole(RoleTypeEnum.Owner.value), user = user)),
             ))
             if (response is SceytResponse.Success)
                 _findOrCreateChatLiveData.postValue(response.data ?: return@launch)

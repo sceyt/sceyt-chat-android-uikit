@@ -4,8 +4,7 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-data class SceytReactionTotal(
-        val key: String,
-        val count: Long,
-        val score: Int
+data class SceytMarkerTotal(
+        val name: String,
+        val count: Long
 ) : Parcelable

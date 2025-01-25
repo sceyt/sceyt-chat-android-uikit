@@ -1,10 +1,12 @@
 package com.sceyt.chatuikit.data
 
 import com.sceyt.chat.models.member.Member
-import com.sceyt.chat.models.user.Presence
+import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytPresence
+import com.sceyt.chatuikit.data.models.messages.SceytRole
 import com.sceyt.chatuikit.persistence.mappers.getInfoFromMetadata
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
@@ -12,12 +14,12 @@ import com.sceyt.chatuikit.persistence.mappers.toUser
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 
 fun Member.toSceytMember() = SceytMember(
-    role = role,
+    role = role.toSceytRole(),
     user = toSceytUser()
 )
 
 fun SceytMember.toMember(): Member {
-    return Member(role, user.toUser())
+    return Member(role.toRole(), user.toUser())
 }
 
 fun SceytAttachment.toFileListItem(): FileListItem {
@@ -37,7 +39,11 @@ fun SceytAttachment.toFileListItem(): FileListItem {
     )
 }
 
-fun Presence.hasDiff(other: Presence?): Boolean {
+fun Role.toSceytRole() = SceytRole(name)
+
+fun SceytRole.toRole() = Role(name)
+
+fun SceytPresence.hasDiff(other: SceytPresence?): Boolean {
     other ?: return true
     return state != other.state || status != other.status || lastActiveAt != other.lastActiveAt
 }

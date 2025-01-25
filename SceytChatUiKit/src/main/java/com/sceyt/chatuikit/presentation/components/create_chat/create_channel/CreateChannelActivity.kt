@@ -8,10 +8,10 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytRole
 import com.sceyt.chatuikit.databinding.SceytActivityCreateChannelBinding
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
@@ -98,7 +98,7 @@ class CreateChannelActivity : AppCompatActivity() {
     private val selectUsersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.parcelable<SelectUsersResult>(SelectUsersActivity.SELECTED_USERS_RESULT)?.let { data ->
-                val members = data.selectedUsers.map { SceytMember(Role(MemberTypeEnum.Subscriber.toRole()), it) }
+                val members = data.selectedUsers.map { SceytMember(SceytRole(MemberTypeEnum.Subscriber.toRole()), it) }
                 viewModel.addMembers(createdChannel.id, members)
             }
         } else startConversationPageAndFinish(createdChannel)

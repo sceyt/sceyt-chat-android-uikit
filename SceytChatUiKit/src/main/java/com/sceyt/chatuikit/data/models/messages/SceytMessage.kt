@@ -1,12 +1,9 @@
 package com.sceyt.chatuikit.data.models.messages
 
 import android.os.Parcelable
-import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.ForwardingDetails
-import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
-import com.sceyt.chat.models.message.ReactionTotal
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import kotlinx.parcelize.Parcelize
@@ -29,8 +26,8 @@ data class SceytMessage(
         val user: SceytUser?,
         val attachments: List<SceytAttachment>?,
         val userReactions: List<SceytReaction>?,
-        val reactionTotals: List<ReactionTotal>?,
-        val markerTotals: List<MarkerTotal>?,
+        val reactionTotals: List<SceytReactionTotal>?,
+        val markerTotals: List<SceytMarkerTotal>?,
         val userMarkers: List<SceytMarker>?,
         val mentionedUsers: List<SceytUser>?,
         val parentMessage: SceytMessage?,
@@ -39,7 +36,7 @@ data class SceytMessage(
         val autoDeleteAt: Long?,
         val forwardingDetails: ForwardingDetails?,
         val pendingReactions: List<PendingReactionData>?,
-        val bodyAttributes: List<BodyAttribute>?,
+        val bodyAttributes: List<SceytBodyAttribute>?,
     // Local properties
         val shouldShowAvatarAndName: Boolean = false,
         val disabledShowAvatarAndName: Boolean = false,

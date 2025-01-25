@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.persistence.database.entity.messages
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.sceyt.chat.models.message.BodyAttribute
+import com.sceyt.chatuikit.data.models.messages.SceytBodyAttribute
 
 @Entity
 data class DraftMessageEntity(
@@ -12,5 +12,5 @@ data class DraftMessageEntity(
         val createdAt: Long,
         val replyOrEditMessageId: Long?,
         val isReplyMessage: Boolean?,
-        val styleRanges: List<BodyAttribute>?,
+        val styleRanges: List<SceytBodyAttribute>?,
 )

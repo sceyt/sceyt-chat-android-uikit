@@ -3,11 +3,11 @@ package com.sceyt.chatuikit.presentation.components.channel.input.helpers
 import android.content.Context
 import android.text.SpannableStringBuilder
 import com.sceyt.chat.models.attachment.Attachment
-import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
+import com.sceyt.chatuikit.data.models.messages.SceytBodyAttribute
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.extractLinks
@@ -78,7 +78,7 @@ class MessageToSendHelper(
         if (withMentionedUsers) {
             val (bodyAttributes, mentionedUsers) = getMentionUsersAndAttributes(body)
             message.setMentionedUsers(mentionedUsers.map { it.toUser() }.toTypedArray())
-            message.setBodyAttributes(bodyAttributes.toTypedArray())
+            message.setBodyAttributes(bodyAttributes.map { it.toBodyAttribute() }.toTypedArray())
         }
 
         return message.build()
@@ -96,7 +96,7 @@ class MessageToSendHelper(
         return newBody
     }
 
-    private fun initBodyAttributes(styling: List<BodyStyleRange>?, mentions: List<Mention>?): List<BodyAttribute> {
+    private fun initBodyAttributes(styling: List<BodyStyleRange>?, mentions: List<Mention>?): List<SceytBodyAttribute> {
         val attributes = styling?.map { it.toBodyAttribute() }?.toArrayList() ?: arrayListOf()
 
         if (!mentions.isNullOrEmpty()) {
@@ -145,8 +145,8 @@ class MessageToSendHelper(
         return true
     }
 
-    private fun getMentionUsersAndAttributes(body: CharSequence): Pair<List<BodyAttribute>, List<SceytUser>> {
-        val bodyAttributes = arrayListOf<BodyAttribute>()
+    private fun getMentionUsersAndAttributes(body: CharSequence): Pair<List<SceytBodyAttribute>, List<SceytUser>> {
+        val bodyAttributes = arrayListOf<SceytBodyAttribute>()
         var mentionUsers = listOf<SceytUser>()
         val mentions = MentionAnnotation.getMentionsFromAnnotations(body)
         val styling = BodyStyler.getStyling(body)

@@ -1,10 +1,14 @@
 package com.sceyt.chatuikit.persistence.mappers
 
+import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.ForwardingDetails
+import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
+import com.sceyt.chatuikit.data.models.messages.SceytBodyAttribute
+import com.sceyt.chatuikit.data.models.messages.SceytMarkerTotal
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.database.entity.messages.AutoDeleteMessageEntity
@@ -32,7 +36,7 @@ fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
     deliveryStatus = deliveryStatus,
     state = state,
     fromId = user?.id,
-    markerCount = markerTotals?.toList(),
+    markerCount = markerTotals,
     mentionedUsersIds = mentionedUsers?.map { it.id },
     parentId = if (parentMessage?.id == 0L) null else parentMessage?.id,
     replyCount = replyCount,
@@ -85,7 +89,7 @@ fun MessageDb.toSceytMessage(): SceytMessage {
             user = from?.toSceytUser(),
             attachments = attachments?.map { it.toAttachment() },
             userReactions = selfReactions?.map { it.toSceytReaction() },
-            reactionTotals = reactionsTotals?.map { it.toReactionTotal() },
+            reactionTotals = reactionsTotals?.map { it.toSceytReactionTotal() },
             markerTotals = markerCount,
             userMarkers = userMarkers?.map {
                 it.toSceytMarker(ClientWrapper.currentUser?.toSceytUser() ?: SceytUser(it.userId))
@@ -173,7 +177,7 @@ fun MessageDb.toMessage(): Message {
             attachments?.map { it.toSdkAttachment(false) }?.toTypedArray(),
             selfReactions?.map { it.toReaction() }?.toTypedArray(),
             reactionsTotals?.map { it.toReactionTotal() }?.toTypedArray(),
-            markerCount?.toTypedArray(),
+            markerCount?.map { it.toMarkerTotal() }?.toTypedArray(),
             emptyArray(),
             emptyArray(),
             parent?.toSceytMessage()?.toMessage(),
@@ -181,7 +185,7 @@ fun MessageDb.toMessage(): Message {
             displayCount,
             autoDeleteAt ?: 0L,
             forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toSceytUser()),
-            bodyAttribute?.toTypedArray()
+            bodyAttribute?.map { it.toBodyAttribute() }?.toTypedArray()
         )
     }
 }
@@ -217,8 +221,8 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
             it.toSceytAttachment(tid, transferState, progress)
         },
         userReactions = userReactions?.map { it.toSceytReaction() },
-        reactionTotals = reactionTotals?.toList(),
-        markerTotals = markerTotals?.toList(),
+        reactionTotals = reactionTotals?.map { it.toSceytReactionTotal() },
+        markerTotals = markerTotals?.map { it.toSceytMarkerTotal() },
         userMarkers = userMarkers?.map { it.toSceytMarker() },
         mentionedUsers = mentionedUsers?.map { it.toSceytUser() }?.toList(),
         parentMessage = parentMessage?.toSceytUiMessage(),
@@ -227,7 +231,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         autoDeleteAt = autoDeleteAt,
         forwardingDetails = forwardingDetails,
         pendingReactions = null,
-        bodyAttributes = bodyAttributes?.toList(),
+        bodyAttributes = bodyAttributes?.map { it.toSceytBodyAttribute() }?.toList(),
         isGroup = isGroup ?: false
     )
 }
@@ -250,8 +254,8 @@ fun SceytMessage.toMessage(): Message {
         user?.toUser(),
         attachments?.map { it.toAttachment() }?.toTypedArray(),
         userReactions?.map { it.toReaction() }?.toTypedArray(),
-        reactionTotals?.toTypedArray(),
-        markerTotals?.toTypedArray(),
+        reactionTotals?.map { it.toReactionTotal() }?.toTypedArray(),
+        markerTotals?.map { it.toMarkerTotal() }?.toTypedArray(),
         userMarkers?.map { it.toMarker() }?.toTypedArray(),
         mentionedUsers?.map { it.toUser() }?.toTypedArray(),
         parentMessage?.toMessage(),
@@ -259,7 +263,7 @@ fun SceytMessage.toMessage(): Message {
         displayCount,
         autoDeleteAt ?: 0L,
         forwardingDetails,
-        bodyAttributes?.toTypedArray())
+        bodyAttributes?.map { it.toBodyAttribute() }?.toTypedArray())
 }
 
 fun ForwardingDetails.toForwardingDetailsDb() = ForwardingDetailsDb(
@@ -305,3 +309,19 @@ fun SceytMessage.toAutoDeleteMessageEntity() = AutoDeleteMessageEntity(
 )
 
 fun List<SceytMessage>.toAutoDeleteMessageEntities() = map { it.toAutoDeleteMessageEntity() }
+
+fun MarkerTotal.toSceytMarkerTotal() = SceytMarkerTotal(
+    name, count
+)
+
+fun SceytMarkerTotal.toMarkerTotal() = MarkerTotal(
+    name, count
+)
+
+fun BodyAttribute.toSceytBodyAttribute() = SceytBodyAttribute(
+    type, offset, length, metadata
+)
+
+fun SceytBodyAttribute.toBodyAttribute() = BodyAttribute(
+    type, offset, length, metadata
+)

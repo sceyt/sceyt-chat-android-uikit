@@ -1,28 +1,28 @@
 package com.sceyt.chatuikit.data.models.channels
 
 import android.os.Parcelable
-import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.SceytRole
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class SceytMember(
-        val role: Role,
+        val role: SceytRole,
         val user: SceytUser,
 ) : Parcelable {
 
-    constructor(user: SceytUser) : this(Role(SceytChatUIKit.config.memberRolesConfig.participant), user)
+    constructor(user: SceytUser) : this(SceytRole(SceytChatUIKit.config.memberRolesConfig.participant), user)
 
     constructor(
             userId: String,
             roleName: String = SceytChatUIKit.config.memberRolesConfig.participant
-    ) : this(Role(roleName), SceytUser(userId))
+    ) : this(SceytRole(roleName), SceytUser(userId))
 
     constructor(
             user: SceytUser,
             roleName: String = SceytChatUIKit.config.memberRolesConfig.participant
-    ) : this(Role(roleName), user)
+    ) : this(SceytRole(roleName), user)
 
     val fullName: String
         get() = "${user.firstName} ${user.lastName}".trim()

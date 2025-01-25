@@ -8,8 +8,8 @@ import android.text.TextPaint
 import android.text.style.ClickableSpan
 import android.view.View
 import com.google.gson.Gson
-import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.messages.SceytBodyAttribute
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.notAutoCorrectable
 import com.sceyt.chatuikit.formatters.Formatter
@@ -19,11 +19,11 @@ object MentionUserHelper {
     const val MENTION = "mention"
     private val userNameFormatter get() = SceytChatUIKit.formatters.mentionUserNameFormatter
 
-    fun initMentionAttributes(mentionUsers: List<Mention>): List<BodyAttribute>? {
+    fun initMentionAttributes(mentionUsers: List<Mention>): List<SceytBodyAttribute>? {
         if (mentionUsers.isEmpty()) return null
-        val items = mutableListOf<BodyAttribute>()
+        val items = mutableListOf<SceytBodyAttribute>()
         mentionUsers.forEach {
-            items.add(BodyAttribute(MENTION, it.start, it.length, it.recipientId))
+            items.add(SceytBodyAttribute(MENTION, it.start, it.length, it.recipientId))
         }
         return items
     }
@@ -31,7 +31,7 @@ object MentionUserHelper {
     fun buildWithMentionedUsers(
             context: Context,
             body: CharSequence,
-            mentionAttributes: List<BodyAttribute>?,
+            mentionAttributes: List<SceytBodyAttribute>?,
             mentionUsers: List<SceytUser>?,
             mentionTextStyle: TextStyle,
             mentionUserNameFormatter: Formatter<SceytUser>,
@@ -65,7 +65,7 @@ object MentionUserHelper {
 
     fun getMentionsIndexed(
             context: Context,
-            attributes: List<BodyAttribute>?,
+            attributes: List<SceytBodyAttribute>?,
             mentionUsers: List<SceytUser>?
     ): List<Mention> {
         val list = arrayListOf<Mention>()
@@ -84,7 +84,7 @@ object MentionUserHelper {
             context: Context,
             mentionUsers: List<SceytUser>?,
             newBody: SpannableStringBuilder,
-            item: BodyAttribute,
+            item: SceytBodyAttribute,
             mentionUserNameFormatter: Formatter<SceytUser>
     ): CharSequence {
         val mentionUser = mentionUsers?.find { mentionUser -> mentionUser.id == item.metadata }

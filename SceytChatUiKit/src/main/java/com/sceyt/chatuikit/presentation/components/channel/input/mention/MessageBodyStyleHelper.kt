@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.presentation.components.channel.input.mention
 
 import android.content.Context
 import android.text.SpannableStringBuilder
-import com.sceyt.chat.models.message.BodyAttribute
+import com.sceyt.chatuikit.data.models.messages.SceytBodyAttribute
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
@@ -16,7 +16,7 @@ object MessageBodyStyleHelper {
 
     fun buildOnlyTextStyles(
             body: CharSequence,
-            attribute: List<BodyAttribute>?
+            attribute: List<SceytBodyAttribute>?
     ): CharSequence {
         if (attribute.isNullOrEmpty()) return body
         return appendTextStyle(body, attribute)
@@ -43,7 +43,7 @@ object MessageBodyStyleHelper {
             context: Context,
             body: CharSequence,
             mentionUsers: List<SceytUser>?,
-            bodyAttributes: List<BodyAttribute>?,
+            bodyAttributes: List<SceytBodyAttribute>?,
             mentionTextStyle: TextStyle,
             mentionUserNameFormatter: Formatter<SceytUser>,
             mentionClickListener: ((String) -> Unit)?,
@@ -62,7 +62,7 @@ object MessageBodyStyleHelper {
     private fun appendAttributes(
             context: Context,
             body: CharSequence,
-            list: List<BodyAttribute>?,
+            list: List<SceytBodyAttribute>?,
             mentionUsers: List<SceytUser>?,
             mentionTextStyle: TextStyle,
             mentionUserNameFormatter: Formatter<SceytUser>,
@@ -87,7 +87,7 @@ object MessageBodyStyleHelper {
         return spannableString
     }
 
-    private fun appendTextStyle(body: CharSequence, list: List<BodyAttribute>?): CharSequence {
+    private fun appendTextStyle(body: CharSequence, list: List<SceytBodyAttribute>?): CharSequence {
         val spannableString = SpannableStringBuilder(body)
         list ?: return spannableString
         try {

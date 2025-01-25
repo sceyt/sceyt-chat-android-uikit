@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
+import com.sceyt.chatuikit.persistence.mappers.toBodyAttribute
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -22,19 +23,20 @@ class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
         trySend(State.Loading)
         channelIds.forEach { channelId ->
             val messagesToSend = mutableListOf<Message>()
-            messages.sortedBy { it.createdAt }.forEach {
+            messages.sortedBy { it.createdAt }.forEach { msg ->
                 val message = MessageBuilder(channelId)
-                    .setBody(it.body)
+                    .setBody(msg.body)
                     .setTid(ClientWrapper.generateTid())
-                    .setType(it.type)
+                    .setType(msg.type)
                     .apply {
-                        if (markOwnMessageAsForwarded || it.incoming)
-                            setForwardingMessageId(it.id)
+                        if (markOwnMessageAsForwarded || msg.incoming)
+                            setForwardingMessageId(msg.id)
                     }
-                    .setAttachments(initAttachments(it.attachments).toTypedArray())
-                    .setMetadata(it.metadata)
-                    .setBodyAttributes(it.bodyAttributes?.toTypedArray() ?: emptyArray())
-                    .setMentionedUserIds(it.mentionedUsers?.map { user -> user.id }?.toTypedArray()
+                    .setAttachments(initAttachments(msg.attachments).toTypedArray())
+                    .setMetadata(msg.metadata)
+                    .setBodyAttributes(msg.bodyAttributes?.map { it.toBodyAttribute() }?.toTypedArray()
+                            ?: emptyArray())
+                    .setMentionedUserIds(msg.mentionedUsers?.map { user -> user.id }?.toTypedArray()
                             ?: arrayOf())
                     //.setReplyInThread(it.replyInThread)
                     .build()

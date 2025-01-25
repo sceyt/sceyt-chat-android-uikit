@@ -3,10 +3,10 @@ package com.sceyt.chatuikit.persistence.database.converters
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chatuikit.data.models.messages.SceytBodyAttribute
+import com.sceyt.chatuikit.data.models.messages.SceytMarkerTotal
 import com.sceyt.chatuikit.persistence.extensions.toEnum
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 
@@ -30,9 +30,9 @@ class MessageConverter {
     fun intToTransferStateTypeEnum(value: Int?) = value?.toEnum<TransferState>()
 
     @TypeConverter
-    fun stringToMarkerTotal(json: String?): List<MarkerTotal>? {
+    fun stringToMarkerTotal(json: String?): List<SceytMarkerTotal>? {
         json ?: return null
-        val type = object : TypeToken<List<MarkerTotal>>() {}.type
+        val type = object : TypeToken<List<SceytMarkerTotal>>() {}.type
         return try {
             Gson().fromJson(json, type)
         } catch (e: Exception) {
@@ -41,19 +41,19 @@ class MessageConverter {
     }
 
     @TypeConverter
-    fun markerCountToString(obj: List<MarkerTotal>?): String? {
+    fun markerCountToString(obj: List<SceytMarkerTotal>?): String? {
         if (obj == null)
             return null
 
         val gson = Gson()
-        val type = object : TypeToken<List<MarkerTotal>>() {}.type
+        val type = object : TypeToken<List<SceytMarkerTotal>>() {}.type
         return gson.toJson(obj, type)
     }
 
     @TypeConverter
-    fun stringToBodyAttribute(json: String?): List<BodyAttribute>? {
+    fun stringToBodyAttribute(json: String?): List<SceytBodyAttribute>? {
         json ?: return null
-        val type = object : TypeToken<List<BodyAttribute>>() {}.type
+        val type = object : TypeToken<List<SceytBodyAttribute>>() {}.type
         return try {
             Gson().fromJson(json, type)
         } catch (e: Exception) {
@@ -62,12 +62,12 @@ class MessageConverter {
     }
 
     @TypeConverter
-    fun bodyAttributeToString(obj: List<BodyAttribute>?): String? {
+    fun bodyAttributeToString(obj: List<SceytBodyAttribute>?): String? {
         if (obj == null)
             return null
 
         val gson = Gson()
-        val type = object : TypeToken<List<BodyAttribute>>() {}.type
+        val type = object : TypeToken<List<SceytBodyAttribute>>() {}.type
         return gson.toJson(obj, type)
     }
 }
