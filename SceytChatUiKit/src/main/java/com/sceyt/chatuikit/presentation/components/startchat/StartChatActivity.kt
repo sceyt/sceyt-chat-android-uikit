@@ -10,10 +10,10 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityOptionsCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.R.anim.sceyt_anim_slide_hold
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytRole
 import com.sceyt.chatuikit.databinding.SceytActivityStartChatBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
@@ -137,7 +137,7 @@ class StartChatActivity : AppCompatActivity() {
     private val selectUsersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.parcelable<SelectUsersResult>(SelectUsersActivity.SELECTED_USERS_RESULT)?.let { data ->
-                val members = data.selectedUsers.map { SceytMember(Role(MemberTypeEnum.Member.toRole()), it) }
+                val members = data.selectedUsers.map { SceytMember(SceytRole(MemberTypeEnum.Member.toRole()), it) }
                 createGroupLauncher.launch(CreateGroupActivity.newIntent(this, members), animOptions)
             }
         }

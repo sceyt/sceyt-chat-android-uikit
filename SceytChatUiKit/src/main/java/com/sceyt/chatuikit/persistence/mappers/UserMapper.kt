@@ -1,11 +1,12 @@
 package com.sceyt.chatuikit.persistence.mappers
 
-import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytPresence
+import com.sceyt.chatuikit.data.models.messages.SceytRole
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChanelMemberDb
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
@@ -13,7 +14,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
 
 fun ChanelMemberDb.toSceytMember() = SceytMember(
-    role = Role(link.role),
+    role = SceytRole(link.role),
     user = user?.toSceytUser() ?: SceytUser(link.userId)
 )
 
@@ -34,7 +35,7 @@ fun UserDb.toSceytUser() = with(user) {
 fun UserDb.toUser() = with(user) {
     User(
         id, username, firstName, lastName, avatarURL, metadata.associate { it.key to it.value },
-        presence, activityStatus, blocked
+        presence?.toPresence(), activityStatus, blocked
     )
 }
 
@@ -56,7 +57,7 @@ fun User.toUserDb() = UserDb(
         firstName = firstName,
         lastName = lastName,
         avatarURL = avatarURL,
-        presence = presence,
+        presence = presence?.toSceytPresence(),
         activityStatus = activityState,
         blocked = blocked
     ),
@@ -83,18 +84,26 @@ fun User.toSceytUser() = SceytUser(
     lastName = lastName,
     avatarURL = avatarURL,
     metadataMap = metadataMap,
-    presence = presence,
+    presence = presence?.toSceytPresence(),
     state = activityState,
     blocked = blocked
 )
 
+fun Presence.toSceytPresence() = SceytPresence(
+    state, status, lastActiveAt
+)
+
+fun SceytPresence.toPresence() = Presence(
+    state, status, lastActiveAt
+)
+
 fun SceytUser.toUser() = User(
-    id, username, firstName, lastName, avatarURL, metadataMap, presence, state, blocked
+    id, username, firstName, lastName, avatarURL, metadataMap, presence?.toPresence(), state, blocked
 )
 
 fun SceytUser.isDeleted() = state == UserState.Deleted
 
 fun createEmptyUser(id: String, displayName: String = ""): SceytUser {
     return SceytUser(id, "", displayName, "", "", null,
-        Presence(PresenceState.Offline, "", 0), UserState.Active, false)
+        SceytPresence(PresenceState.Offline, "", 0), UserState.Active, false)
 }

@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.fragments.a
 
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.message.ReactionTotal
+import com.sceyt.chatuikit.data.models.messages.ReactionData
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.extensions.findIndexed
@@ -40,12 +40,12 @@ class ReactionsHeaderAdapter(
         notifyItemChanged(position, Any())
     }
 
-    fun addOrUpdateItem(reaction: ReactionTotal) {
+    fun addOrUpdateItem(reaction: SceytReactionTotal) {
         data.findIndexed { it is ReactionHeaderItem.Reaction && it.reactionTotal.key == reaction.key }?.let {
-            (it.second as ReactionHeaderItem.Reaction).reactionTotal = SceytReactionTotal(reaction.key, reaction.score.toInt(), false)
+            (it.second as ReactionHeaderItem.Reaction).reactionTotal = ReactionData(reaction.key, reaction.score)
             notifyItemChanged(it.first, Any())
         } ?: let {
-            data.add(ReactionHeaderItem.Reaction(SceytReactionTotal(reaction.key, reaction.score.toInt(), false)))
+            data.add(ReactionHeaderItem.Reaction(ReactionData(reaction.key, reaction.score)))
             notifyItemInserted(data.lastIndex)
         }
     }
@@ -57,7 +57,7 @@ class ReactionsHeaderAdapter(
         }
     }
 
-    fun updateAppItem(sumOf: Long) {
+    fun updateAppItem(sumOf: Int) {
         if (data.isEmpty()) return
         data[0] = ReactionHeaderItem.All(sumOf).also { it.selected = data[0].selected }
         notifyItemChanged(0, Any())

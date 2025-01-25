@@ -1,8 +1,8 @@
 package com.sceyt.chatuikit.services
 
-import com.sceyt.chat.models.user.Presence
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.messages.SceytPresence
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getPresentableName
 import com.sceyt.chatuikit.extensions.isAppOnForeground
@@ -89,7 +89,7 @@ object SceytPresenceChecker : SceytKoinComponent {
 
     data class PresenceUser(val user: SceytUser) {
 
-        private fun arePresencesEquals(one: Presence?, two: Presence?): Boolean {
+        private fun arePresencesEquals(one: SceytPresence?, two: SceytPresence?): Boolean {
             return one?.status == two?.status && one?.state == two?.state && one?.lastActiveAt == two?.lastActiveAt
         }
 

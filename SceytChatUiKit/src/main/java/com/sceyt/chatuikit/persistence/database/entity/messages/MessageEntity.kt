@@ -5,10 +5,10 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.DeliveryStatus
-import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chatuikit.data.models.messages.SceytBodyAttribute
+import com.sceyt.chatuikit.data.models.messages.SceytMarkerTotal
 
 @Entity(tableName = "messages",
     indices = [Index(value = ["message_id"], unique = true)])
@@ -32,7 +32,7 @@ data class MessageEntity(
         val deliveryStatus: DeliveryStatus,
         val state: MessageState,
         val fromId: String?,
-        val markerCount: List<MarkerTotal>?,
+        val markerCount: List<SceytMarkerTotal>?,
         val mentionedUsersIds: List<String>?,
         val parentId: Long?,
         val replyCount: Long,
@@ -40,7 +40,7 @@ data class MessageEntity(
         val autoDeleteAt: Long?,
         @Embedded
         val forwardingDetailsDb: ForwardingDetailsDb?,
-        val bodyAttribute: List<BodyAttribute>?,
+        val bodyAttribute: List<SceytBodyAttribute>?,
         @ColumnInfo(index = true)
         // This flag is used to ignore getting this message, when querying get channel messages
         val unList: Boolean

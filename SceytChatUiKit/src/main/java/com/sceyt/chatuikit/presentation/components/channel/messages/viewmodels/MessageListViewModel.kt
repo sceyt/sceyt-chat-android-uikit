@@ -31,8 +31,8 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
+import com.sceyt.chatuikit.data.models.messages.ReactionData
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.data.toFileListItem
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -701,7 +701,7 @@ class MessageListViewModel(
     private fun initReactionsItems(message: SceytMessage): List<ReactionItem.Reaction>? {
         val pendingReactions = message.pendingReactions
         val reactionItems = message.reactionTotals?.map {
-            ReactionItem.Reaction(SceytReactionTotal(it.key, it.score.toInt(),
+            ReactionItem.Reaction(ReactionData(it.key, it.score,
                 message.userReactions?.find { reaction ->
                     reaction.key == it.key && reaction.user?.id == myId
                 } != null), message.tid, false)
@@ -732,7 +732,7 @@ class MessageListViewModel(
                 } ?: run {
                     if (pendingReaction.isAdd)
                         reactionItems.add(ReactionItem.Reaction(
-                            reaction = SceytReactionTotal(pendingReaction.key, pendingReaction.score, true),
+                            reaction = ReactionData(pendingReaction.key, pendingReaction.score, true),
                             messageTid = message.tid,
                             isPending = true))
                 }

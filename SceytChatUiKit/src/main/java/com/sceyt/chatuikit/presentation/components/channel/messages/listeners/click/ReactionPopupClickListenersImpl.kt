@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.listeners.c
 
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
-import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 
 class ReactionPopupClickListenersImpl : ReactionPopupClickListeners.PopupClickListeners {
     @Suppress("unused")
@@ -21,9 +20,9 @@ class ReactionPopupClickListenersImpl : ReactionPopupClickListeners.PopupClickLi
         addReaction?.onAddReaction(message, key)
     }
 
-    override fun onRemoveReaction(message: SceytMessage, reactionItem: ReactionItem.Reaction) {
-        defaultListeners?.onRemoveReaction(message, reactionItem)
-        removeReactionListener?.onRemoveReaction(message, reactionItem)
+    override fun onRemoveReaction(message: SceytMessage, key: String) {
+        defaultListeners?.onRemoveReaction(message, key)
+        removeReactionListener?.onRemoveReaction(message, key)
     }
 
 

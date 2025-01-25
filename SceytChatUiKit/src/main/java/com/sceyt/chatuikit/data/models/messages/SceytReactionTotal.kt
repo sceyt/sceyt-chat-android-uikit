@@ -6,6 +6,6 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class SceytReactionTotal(
         val key: String,
-        val score: Int = 1,
-        val containsSelf: Boolean = false
+        val count: Long,
+        val score: Int
 ) : Parcelable

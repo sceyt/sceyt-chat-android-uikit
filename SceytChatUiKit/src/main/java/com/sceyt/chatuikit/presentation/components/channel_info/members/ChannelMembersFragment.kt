@@ -12,7 +12,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
@@ -29,6 +28,7 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum.Public
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.messages.SceytRole
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelMembersBinding
 import com.sceyt.chatuikit.extensions.awaitAnimationEnd
 import com.sceyt.chatuikit.extensions.customToastSnackBar
@@ -69,7 +69,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         private set
     protected lateinit var style: ChannelMembersStyle
         private set
-    protected var currentUserRole: Role? = null
+    protected var currentUserRole: SceytRole? = null
         private set
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
     private lateinit var selectUsersActivityLauncher: ActivityResultLauncher<Intent>
@@ -98,7 +98,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         selectUsersActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 result.data?.parcelable<SelectUsersResult>(SelectUsersActivity.SELECTED_USERS_RESULT)?.let { data ->
-                    val members = data.selectedUsers.map { SceytMember(Role(memberType.toRole()), it) }
+                    val members = data.selectedUsers.map { SceytMember(SceytRole(memberType.toRole()), it) }
                     if (memberType == MemberTypeEnum.Admin) {
                         changeRole(*members.toTypedArray())
                     }
@@ -188,7 +188,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
 
     private fun updateMemberRole(newRole: String, pair: Pair<Int, MemberItem>) {
         val (index, item) = pair
-        val member = (item as MemberItem.Member).member.copy(role = Role(newRole))
+        val member = (item as MemberItem.Member).member.copy(role = SceytRole(newRole))
         item.member = member
         membersAdapter?.notifyItemChanged(index, MemberItemPayloadDiff.NOT_CHANGED_STATE.apply {
             roleChanged = true
@@ -390,7 +390,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     }
 
     protected open fun revokeAdmin(member: SceytMember) {
-        viewModel.changeRole(channel.id, member.copy(role = Role(RoleTypeEnum.Member.value)))
+        viewModel.changeRole(channel.id, member.copy(role = SceytRole(RoleTypeEnum.Member.value)))
     }
 
     protected open fun changeRole(vararg member: SceytMember) {

@@ -14,7 +14,7 @@ import androidx.core.view.marginTop
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
+import com.sceyt.chatuikit.data.models.messages.ReactionData
 import com.sceyt.chatuikit.databinding.SceytPopupAddReactionBinding
 import com.sceyt.chatuikit.extensions.isRtl
 import com.sceyt.chatuikit.extensions.marginHorizontal
@@ -84,8 +84,9 @@ open class ReactionsPopup(
         val reactionsItems = reactions.map {
             val reactionItem = message.messageReactions?.find { data -> data.reaction.key == it }
             val containsSelf = reactionItem?.reaction?.containsSelf ?: false
-            ReactionItem.Reaction(SceytReactionTotal(it, containsSelf = containsSelf), message.tid, reactionItem?.isPending
-                    ?: false)
+            ReactionItem.Reaction(reaction = ReactionData(
+                key = it, score = 1, containsSelf = containsSelf
+            ), messageTid = message.tid, isPending = reactionItem?.isPending ?: false)
         }.run {
             if ((message.userReactions?.size
                             ?: 0) < SceytChatUIKit.config.messageReactionPerUserLimit)

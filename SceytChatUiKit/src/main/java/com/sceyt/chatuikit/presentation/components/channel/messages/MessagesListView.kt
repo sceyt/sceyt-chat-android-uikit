@@ -22,7 +22,6 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.databinding.SceytMessagesListViewBinding
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asActivity
@@ -294,7 +293,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         return ReactionsPopup.showPopup(view, message, reactions.take(maxSize), style.reactionPickerStyle,
             object : PopupReactionsAdapter.OnItemClickListener {
                 override fun onReactionClick(reaction: ReactionItem.Reaction) {
-                    this@MessagesListView.onAddOrRemoveReaction(reaction, message)
+                    this@MessagesListView.onAddOrRemoveReaction(
+                        key = reaction.reaction.key,
+                        message = message,
+                        containsSelf = reaction.reaction.containsSelf
+                    )
                 }
 
                 override fun onAddClick() {
@@ -318,7 +321,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_add -> reactionClickListeners.onAddReaction(message, reaction.reaction.key)
-                R.id.sceyt_remove -> reactionClickListeners.onRemoveReaction(message, reaction)
+                R.id.sceyt_remove -> reactionClickListeners.onRemoveReaction(message, reaction.reaction.key)
             }
             false
         }
@@ -350,12 +353,11 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToReplyMessage(item.message))
     }
 
-    private fun onAddOrRemoveReaction(reaction: ReactionItem.Reaction, message: SceytMessage) {
-        val containsSelf = reaction.reaction.containsSelf
+    private fun onAddOrRemoveReaction(key: String, message: SceytMessage, containsSelf: Boolean) {
         if (containsSelf)
-            reactionClickListeners.onRemoveReaction(message, reaction)
+            reactionClickListeners.onRemoveReaction(message, key)
         else
-            reactionClickListeners.onAddReaction(message, reaction.reaction.key)
+            reactionClickListeners.onAddReaction(message, key)
     }
 
     private fun onAttachmentLoaderClick(item: FileListItem, message: SceytMessage) {
@@ -366,9 +368,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         context.getFragmentManager()?.let {
             EmojiPickerBottomSheetFragment().also { fragment ->
                 fragment.setEmojiListener { emoji ->
-                    val containsSelf = message.userReactions?.find { reaction -> reaction.key == emoji } != null
-                    onAddOrRemoveReaction(ReactionItem.Reaction(SceytReactionTotal(emoji,
-                        containsSelf = containsSelf), message.tid, true), message)
+                    val containsSelf = message.userReactions?.find { reaction ->
+                        reaction.key == emoji
+                    } != null
+                    onAddOrRemoveReaction(emoji, message, containsSelf)
                 }
             }.show(it, null)
         }
@@ -896,8 +899,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             ReactionsInfoBottomSheetFragment.newInstance(message).also { fragment ->
                 fragment.setClickListener { reaction ->
                     if (reaction.user?.id == SceytChatUIKit.chatUIFacade.myId)
-                        reactionClickListeners.onRemoveReaction(message,
-                            ReactionItem.Reaction(SceytReactionTotal(reaction.key, containsSelf = true), message.tid, reaction.pending))
+                        reactionClickListeners.onRemoveReaction(message, reaction.key)
                 }
             }.show(it, null)
         }
@@ -1006,7 +1008,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         addReaction(message, key)
     }
 
-    override fun onRemoveReaction(message: SceytMessage, reactionItem: ReactionItem.Reaction) {
-        reactionEventListener?.invoke(ReactionEvent.RemoveReaction(message, reactionItem.reaction.key))
+    override fun onRemoveReaction(message: SceytMessage, key: String) {
+        reactionEventListener?.invoke(ReactionEvent.RemoveReaction(message, key))
     }
 }
