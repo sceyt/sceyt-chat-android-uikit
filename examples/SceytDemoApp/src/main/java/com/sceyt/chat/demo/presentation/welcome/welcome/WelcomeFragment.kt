@@ -87,6 +87,7 @@ class WelcomeFragment : Fragment() {
 
     private fun setResultListener() {
         setFragmentResultListener(KEY_USER_ID_REQUEST) { _, bundle ->
+            if (!isAdded) return@setFragmentResultListener
             val userId = bundle.getString(KEY_USER_ID)
             viewModel.loginUser(userId = userId ?: return@setFragmentResultListener)
         }
