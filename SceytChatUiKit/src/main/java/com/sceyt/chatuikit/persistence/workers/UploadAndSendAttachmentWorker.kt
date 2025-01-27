@@ -188,8 +188,6 @@ class UploadAndSendAttachmentWorker(
         return if (result.isSuccess && !isStopped) {
             val messageToSend = tmpMessage.copy(attachments = result.getOrThrow()).toMessage()
 
-            ChatClient.getClient().disconnect()
-
             if (ConnectionEventManager.isConnected) {
                 sendMessage(tmpMessage.channelId, messageToSend)
             } else {
@@ -216,8 +214,8 @@ class UploadAndSendAttachmentWorker(
             }
             finishWorkWithSuccess()
         } else {
-            SceytLog.e(TAG, "Could not send message: ${response.message}, retrying")
-            Result.retry()
+            SceytLog.e(TAG, "Could not send message: ${response.message}")
+            finishWorkWithFailure("Could not send message: ${response.message}")
         }
     }
 
