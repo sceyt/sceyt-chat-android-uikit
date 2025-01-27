@@ -1,6 +1,6 @@
 package com.sceyt.chat.demo.connection
 
-import com.sceyt.chat.demo.connection.SceytConnectionProvider.Companion.Tag
+import com.sceyt.chat.demo.connection.SceytConnectionProvider.Companion.TAG
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.data.repositories.ConnectionRepo
 import com.sceyt.chatuikit.logger.SceytLog
@@ -14,7 +14,7 @@ class ChatClientConnectionInterceptor(
     private var processing = AtomicBoolean(false)
 
     suspend fun getChatToken(userId: String): String? {
-        SceytLog.i(Tag, "$Tag getChatToken invoked. processing: ${processing.get()}")
+        SceytLog.i(TAG, "$TAG getChatToken invoked. processing: ${processing.get()}")
         if (processing.get()) return null
         processing.set(true)
         var sceytToken: String? = null
@@ -26,12 +26,12 @@ class ChatClientConnectionInterceptor(
     }
 
     private suspend fun getSceytToken(userId: String): Result<String> {
-        SceytLog.i(Tag, "$Tag try to get Sceyt token")
+        SceytLog.i(TAG, "$TAG try to get Sceyt token")
         val result = connectionRepo.getSceytToken(userId)
 
         return if (result.isSuccess) {
             val token: String? = result.getOrNull()?.token
-            SceytLog.i(Tag, "Sceyt token success, token ${token?.take(8)}")
+            SceytLog.i(TAG, "Sceyt token success, token ${token?.take(8)}")
             preference.setString(AppSharedPreference.PREF_USER_TOKEN, token)
             preference.setString(AppSharedPreference.PREF_USER_ID, userId)
             token?.let {
@@ -39,7 +39,7 @@ class ChatClientConnectionInterceptor(
             } ?: Result.failure(Throwable("Sceyt token is null"))
         } else {
             val message = "couldn't get SceytToken: " + result.exceptionOrNull()?.message
-            SceytLog.e(Tag, message)
+            SceytLog.e(TAG, message)
             Result.failure(Throwable(message))
         }
     }
