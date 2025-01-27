@@ -85,8 +85,8 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
-import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.push.PushData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
@@ -600,16 +600,22 @@ internal class PersistenceMessagesLogicImpl(
                     channelCache.removeFromPendingToRealChannelsData(channelId)
             } else {
                 pendingMessages.forEach {
-                    if (it.attachments.isNullOrEmpty() || it.attachments.any { attachmentDb ->
-                                attachmentDb.payLoad?.transferState != TransferState.PauseUpload
+                    // If have attachments, we need to check maybe the upload was paused,
+                    // if so, we don't need to send message until upload is finished
+                    if (it.attachments.isNullOrEmpty() || it.attachments.any { attachment ->
+                                attachment.payLoad?.transferState != TransferState.PauseUpload
                             }) {
+                        val isUploaded = it.attachments?.all { attachment ->
+                            attachment.attachmentEntity.type == AttachmentTypeEnum.Link.value
+                                    || attachment.payLoad?.transferState == TransferState.Uploaded
+                        } ?: false
                         val message = it.toMessage()
                         sendMessageImpl(
                             channelId = channelId,
                             message = message,
                             isSharing = false,
                             isPendingMessage = true,
-                            isUploadedAttachments = false
+                            isUploadedAttachments = isUploaded
                         ).collect()
                     }
                 }
