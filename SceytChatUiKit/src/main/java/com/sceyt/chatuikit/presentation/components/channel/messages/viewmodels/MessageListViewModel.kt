@@ -526,7 +526,7 @@ class MessageListViewModel(
             isReply: Boolean
     ) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.updateDraftMessage(channel.id, text.toString(),
+            channelInteractor.updateDraftMessage(channel.id, text?.toString(),
                 mentionUsers, styling, replyOrEditMessage, isReply)
         }
     }
