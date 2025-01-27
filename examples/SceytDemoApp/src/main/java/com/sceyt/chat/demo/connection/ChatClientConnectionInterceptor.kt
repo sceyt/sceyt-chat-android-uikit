@@ -1,6 +1,5 @@
 package com.sceyt.chat.demo.connection
 
-import com.sceyt.chat.demo.connection.SceytConnectionProvider.Companion.TAG
 import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.data.repositories.ConnectionRepo
 import com.sceyt.chatuikit.logger.SceytLog
@@ -42,5 +41,9 @@ class ChatClientConnectionInterceptor(
             SceytLog.e(TAG, message)
             Result.failure(Throwable(message))
         }
+    }
+
+    companion object {
+        private const val TAG = "ChatClientConnectionInterceptor"
     }
 }
