@@ -239,7 +239,7 @@ internal class PersistenceMembersLogicImpl(
         return response
     }
 
-    override suspend fun getMembersCountDb(channelId: Long): Int {
+    override suspend fun getMembersCountFromDb(channelId: Long): Int {
         return memberDao.getMembersCount(channelId)
     }
 }

@@ -356,8 +356,8 @@ internal class PersistenceMiddleWareImpl(
         return membersLogic.deleteMember(channelId, memberId)
     }
 
-    override suspend fun getMembersCountDb(channelId: Long): Int {
-        return membersLogic.getMembersCountDb(channelId)
+    override suspend fun getMembersCountFromDb(channelId: Long): Int {
+        return membersLogic.getMembersCountFromDb(channelId)
     }
 
     override suspend fun loadPrevMessages(
@@ -484,12 +484,12 @@ internal class PersistenceMiddleWareImpl(
         return messagesLogic.getMessageFromServerById(channelId, messageId)
     }
 
-    override suspend fun getMessageDbById(messageId: Long): SceytMessage? {
-        return messagesLogic.getMessageDbById(messageId)
+    override suspend fun getMessageFromDb(messageId: Long): SceytMessage? {
+        return messagesLogic.getMessageFromDb(messageId)
     }
 
-    override suspend fun getMessageDbByTid(messageTid: Long): SceytMessage? {
-        return messagesLogic.getMessageDbByTid(messageTid)
+    override suspend fun getMessageFromDbByTid(messageTid: Long): SceytMessage? {
+        return messagesLogic.getMessageFromDbByTid(messageTid)
     }
 
     override suspend fun sendTyping(channelId: Long, typing: Boolean) {
@@ -569,12 +569,12 @@ internal class PersistenceMiddleWareImpl(
         return usersLogic.getSceytUsers(ids)
     }
 
-    override suspend fun getUserDbById(id: String): SceytUser? {
-        return usersLogic.getUserDbById(id)
+    override suspend fun getUserFromDbById(id: String): SceytUser? {
+        return usersLogic.getUserFromDbById(id)
     }
 
-    override suspend fun getUsersDbByIds(id: List<String>): List<SceytUser> {
-        return usersLogic.getUsersDbByIds(id)
+    override suspend fun getUsersFromDbByIds(id: List<String>): List<SceytUser> {
+        return usersLogic.getUsersFromDbByIds(id)
     }
 
     override suspend fun searchLocaleUserByMetadata(

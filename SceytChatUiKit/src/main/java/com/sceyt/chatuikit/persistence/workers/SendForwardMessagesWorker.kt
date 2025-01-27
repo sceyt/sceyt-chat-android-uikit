@@ -45,7 +45,7 @@ class SendForwardMessagesWorker(context: Context, workerParams: WorkerParameters
         val tIds = data.getLongArray(SendForwardMessagesWorkManager.MESSAGE_TID)
                 ?: return Result.failure()
 
-        val messages = messageLogic.getMessagesDbByTid(tIds.toList()).sortedBy { it.createdAt }
+        val messages = messageLogic.getMessagesFromDbByTid(tIds.toList()).sortedBy { it.createdAt }
         messages.forEach {
             messageLogic.sendMessageWithUploadedAttachments(channelId, it.toMessage())
         }

@@ -37,7 +37,7 @@ object ChatReactionMessagesCache : SceytKoinComponent {
             list[it.id] = it
             channelsCache.channelLastReactionLoaded(channelId)
         } ?: run {
-            messageInteractor.getMessageDbById(messageId)?.let {
+            messageInteractor.getMessageFromDb(messageId)?.let {
                 list[it.id] = it
                 channelsCache.channelLastReactionLoaded(channelId)
             } ?: run {

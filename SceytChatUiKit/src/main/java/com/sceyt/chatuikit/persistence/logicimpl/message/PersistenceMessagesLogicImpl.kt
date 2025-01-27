@@ -780,15 +780,15 @@ internal class PersistenceMessagesLogicImpl(
         return@withContext result
     }
 
-    override suspend fun getMessageDbById(messageId: Long): SceytMessage? = withContext(dispatcherIO) {
+    override suspend fun getMessageFromDb(messageId: Long): SceytMessage? = withContext(dispatcherIO) {
         return@withContext messageDao.getMessageById(messageId)?.toSceytMessage()
     }
 
-    override suspend fun getMessageDbByTid(tid: Long): SceytMessage? = withContext(dispatcherIO) {
+    override suspend fun getMessageFromDbByTid(tid: Long): SceytMessage? = withContext(dispatcherIO) {
         return@withContext messageDao.getMessageByTid(tid)?.toSceytMessage()
     }
 
-    override suspend fun getMessagesDbByTid(tIds: List<Long>): List<SceytMessage> = withContext(dispatcherIO) {
+    override suspend fun getMessagesFromDbByTid(tIds: List<Long>): List<SceytMessage> = withContext(dispatcherIO) {
         return@withContext messageDao.getMessagesByTid(tIds).map { it.toSceytMessage() }
     }
 

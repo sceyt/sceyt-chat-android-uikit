@@ -74,11 +74,11 @@ internal class PersistenceUsersLogicImpl(
         return response
     }
 
-    override suspend fun getUserDbById(id: String): SceytUser? {
+    override suspend fun getUserFromDbById(id: String): SceytUser? {
         return userDao.getUserById(id)?.toSceytUser()
     }
 
-    override suspend fun getUsersDbByIds(id: List<String>): List<SceytUser> {
+    override suspend fun getUsersFromDbByIds(id: List<String>): List<SceytUser> {
         return userDao.getUsersById(id).map { it.toSceytUser() }
     }
 
