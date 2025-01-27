@@ -27,7 +27,7 @@ class SceytConnectionProvider(
     private var isConnecting = AtomicBoolean(false)
 
     companion object {
-        const val TAG = "SceytConnectionProvider"
+        private const val TAG = "SceytConnectionProvider"
     }
 
     fun init() {
