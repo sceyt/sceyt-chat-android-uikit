@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.extensions.getBitmapFromUrl
 import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.createMessagingStyle
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.getPerson
+import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.immutablePendingIntentFlags
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.provideNotificationChannelId
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.toMessagingStyle
 import com.sceyt.chatuikit.notifications.builder.PushNotificationBuilder
@@ -71,7 +72,7 @@ open class DefaultPushNotificationBuilder(
     ): PendingIntent {
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
         val requestCode = data.channel.id.toInt()
-        return PendingIntent.getActivity(context, requestCode, intent, pendingIntentFlags)
+        return PendingIntent.getActivity(context, requestCode, intent, immutablePendingIntentFlags)
     }
 
     override suspend fun provideAvatarIcon(
@@ -126,7 +127,4 @@ open class DefaultPushNotificationBuilder(
 
         return notificationBuilder.build()
     }
-
-    protected open val pendingIntentFlags: Int
-        get() = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
 }
