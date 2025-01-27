@@ -27,7 +27,7 @@ class SceytConnectionProvider(
     private var isConnecting = AtomicBoolean(false)
 
     companion object {
-        const val Tag = "SceytConnectionProvider"
+        const val TAG = "SceytConnectionProvider"
     }
 
     fun init() {
@@ -37,15 +37,15 @@ class SceytConnectionProvider(
 
         launch {
             SceytChatUIKit.chatUIFacade.onTokenExpired.collect {
-                SceytLog.i(Tag, "onTokenExpired")
+                SceytLog.i(TAG, "onTokenExpired")
                 launch {
                     chatClientConnectionInterceptor.getChatToken(SceytChatUIKit.chatUIFacade.myId.toString())?.let { token ->
                         if (application.isAppOnForeground()) {
-                            SceytLog.i(Tag, "onTokenExpired, will connect with new token: ${token.take(8)}")
+                            SceytLog.i(TAG, "onTokenExpired, will connect with new token: ${token.take(8)}")
                             SceytChatUIKit.connect(token)
                         }
                     } ?: run {
-                        SceytLog.i(Tag, "connectChatClient failed because ChatClient token is null. Called in onTokenExpired")
+                        SceytLog.i(TAG, "connectChatClient failed because ChatClient token is null. Called in onTokenExpired")
                     }
                 }
             }
@@ -54,20 +54,20 @@ class SceytConnectionProvider(
         launch {
             SceytChatUIKit.chatUIFacade.onTokenWillExpire.collect {
                 launch {
-                    SceytLog.i(Tag, "onTokenWillExpire")
+                    SceytLog.i(TAG, "onTokenWillExpire")
                     chatClientConnectionInterceptor.getChatToken(SceytChatUIKit.chatUIFacade.myId.toString())?.let { token ->
                         SceytChatUIKit.chatUIFacade.updateToken(token, listener = { success, errorMessage ->
                             if (!success) {
-                                SceytLog.e(Tag, "$Tag update chatSdk Token failed, will connect, error: $errorMessage")
+                                SceytLog.e(TAG, "$TAG update chatSdk Token failed, will connect, error: $errorMessage")
                                 if (application.isAppOnForeground()) {
-                                    SceytLog.i(Tag, "$Tag onTokenWillExpire, will connect with new token: ${token.take(8)}")
+                                    SceytLog.i(TAG, "$TAG onTokenWillExpire, will connect with new token: ${token.take(8)}")
                                     SceytChatUIKit.connect(token)
                                 }
                             } else
-                                SceytLog.i(Tag, "$Tag updateToken success")
+                                SceytLog.i(TAG, "$TAG updateToken success")
                         })
                     } ?: run {
-                        SceytLog.i(Tag, "$Tag connectChatClient failed because ChatClient token is null. Called in onTokenWillExpire")
+                        SceytLog.i(TAG, "$TAG connectChatClient failed because ChatClient token is null. Called in onTokenWillExpire")
                     }
                 }
             }
@@ -88,41 +88,41 @@ class SceytConnectionProvider(
             }
 
             if (ConnectionEventManager.connectionState == ConnectionState.Connecting) {
-                SceytLog.i(Tag, "$Tag connectChatClient ignore login because ChatClient is connecting.")
+                SceytLog.i(TAG, "$TAG connectChatClient ignore login because ChatClient is connecting.")
                 return@launch
             }
 
             if (ConnectionEventManager.isConnected) {
-                SceytLog.i(Tag, "$Tag connectChatClient ignore login because ChatClient is connected.")
+                SceytLog.i(TAG, "$TAG connectChatClient ignore login because ChatClient is connected.")
                 return@launch
             }
 
             if (isConnecting.get()) {
-                SceytLog.i(Tag, "$Tag connectChatClient ignore because started connecting flow.")
+                SceytLog.i(TAG, "$TAG connectChatClient ignore because started connecting flow.")
                 return@launch
             }
 
             val sceytToken = preference.getString(AppSharedPreference.PREF_USER_TOKEN)
 
             if (userId.isBlank() && sceytToken.isNullOrBlank()) {
-                SceytLog.i(Tag, "$Tag connectChatClient ignore login because has not userId and token.")
+                SceytLog.i(TAG, "$TAG connectChatClient ignore login because has not userId and token.")
                 return@launch
             }
 
             isConnecting.set(true)
 
             if (!sceytToken.isNullOrBlank()) {
-                SceytLog.i(Tag, "$Tag saved ChatClient token is exist, trying connect with that token: ${sceytToken}.")
+                SceytLog.i(TAG, "$TAG saved ChatClient token is exist, trying connect with that token: ${sceytToken}.")
                 SceytChatUIKit.connect(sceytToken)
                 onConnectStarted?.invoke(true, null)
             } else {
-                SceytLog.i(Tag, "$Tag saved ChatClient token is empty, trying to get Cat client token, userId: $userId.")
+                SceytLog.i(TAG, "$TAG saved ChatClient token is empty, trying to get Cat client token, userId: $userId.")
                 chatClientConnectionInterceptor.getChatToken(userId)?.let { token ->
-                    SceytLog.i(Tag, "$Tag connectChatClient will connect with new token: ${token.take(8)}")
+                    SceytLog.i(TAG, "$TAG connectChatClient will connect with new token: ${token.take(8)}")
                     SceytChatUIKit.connect(token)
                     onConnectStarted?.invoke(true, null)
                 } ?: run {
-                    SceytLog.i(Tag, "$Tag connectChatClient failed because ChatClient token is null. Called in connectChatClient")
+                    SceytLog.i(TAG, "$TAG connectChatClient failed because ChatClient token is null. Called in connectChatClient")
                     onConnectStarted?.invoke(false, Exception("Couldn't get chat token, please try again."))
                 }
             }
@@ -150,13 +150,13 @@ class SceytConnectionProvider(
         launch {
             ConnectionEventManager.onChangedConnectStatusFlow.collect {
                 when (it.state) {
-                    ConnectionState.Failed -> SceytLog.e(Tag, "${it.exception?.message}")
+                    ConnectionState.Failed -> SceytLog.e(TAG, "${it.exception?.message}")
                     ConnectionState.Disconnected -> {
                         if (it.exception?.code == 1021) {
-                            SceytLog.i(Tag, "disconnected, reason ${it.exception?.message}, clear old token because of 1021 error")
+                            SceytLog.i(TAG, "disconnected, reason ${it.exception?.message}, clear old token because of 1021 error")
                             preference.setString(AppSharedPreference.PREF_USER_TOKEN, null)
                         } else
-                            SceytLog.i(Tag, "$Tag disconnected ${it.exception?.message}")
+                            SceytLog.i(TAG, "$TAG disconnected ${it.exception?.message}")
                     }
 
                     else -> Unit

@@ -4,7 +4,6 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_listeners.ClientListener
-import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.persistence.extensions.safeResume
@@ -24,7 +23,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 object ConnectionEventManager {
-    val connectionState get() = ClientWrapper.getConnectionState() ?: ConnectionState.Disconnected
+    val connectionState: ConnectionState
+        get() = getConnectionStateIfInitialized()
+
     val isConnected get() = connectionState == ConnectionState.Connected
 
     private val onChangedConnectStatusFlow_: MutableSharedFlow<ConnectionStateData> = MutableSharedFlow(
@@ -87,5 +88,11 @@ object ConnectionEventManager {
                     }
                 }.launchIn(scope)
         }
+    }
+
+    private fun getConnectionStateIfInitialized(): ConnectionState {
+        return if (ChatClient.isInitialized()) {
+            ChatClient.getClient().connectionState()
+        } else ConnectionState.Disconnected
     }
 }
