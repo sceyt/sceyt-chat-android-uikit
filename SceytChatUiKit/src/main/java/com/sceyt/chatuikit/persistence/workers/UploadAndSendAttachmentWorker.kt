@@ -12,14 +12,15 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.Operation
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.message.DeliveryStatus
+import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.hasPermissions
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -45,6 +46,7 @@ import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.koin.core.component.inject
+import kotlin.time.Duration.Companion.seconds
 
 object UploadAndSendAttachmentWorkManager {
 
@@ -88,7 +90,10 @@ class UploadAndSendAttachmentWorker(
     private val channelLogic: PersistenceChannelsLogic by inject()
     private val fileChecksumDao: FileChecksumDao by inject()
 
-    private suspend fun checkToUploadAttachmentsBeforeSend(tmpMessage: SceytMessage, isSharing: Boolean): kotlin.Result<List<SceytAttachment>> {
+    private suspend fun checkToUploadAttachmentsBeforeSend(
+            tmpMessage: SceytMessage,
+            isSharing: Boolean
+    ): kotlin.Result<List<SceytAttachment>> {
         val payloads = attachmentLogic.getAllPayLoadsByMsgTid(tmpMessage.tid)
         val attachments = tmpMessage.attachments?.toMutableList()
                 ?: return kotlin.Result.failure(Exception("Attachments not found"))
@@ -146,7 +151,11 @@ class UploadAndSendAttachmentWorker(
         return kotlin.Result.failure(Exception("Could not find any attachment to upload"))
     }
 
-    private fun uploadFile(attachment: SceytAttachment, continuation: CancellableContinuation<Pair<Boolean, String?>>, isSharing: Boolean) {
+    private fun uploadFile(
+            attachment: SceytAttachment,
+            continuation: CancellableContinuation<Pair<Boolean, String?>>,
+            isSharing: Boolean
+    ) {
         if (isSharing) {
             fileTransferService.uploadSharedFile(attachment, FileTransferHelper.createTransferTask(attachment).also { task ->
                 task.addOnCompletionListener(this.toString(), listener = { success: Boolean, url: String? ->
@@ -179,21 +188,42 @@ class UploadAndSendAttachmentWorker(
         return if (result.isSuccess && !isStopped) {
             val messageToSend = tmpMessage.copy(attachments = result.getOrThrow()).toMessage()
 
-            ConnectionEventManager.awaitToConnectSceyt()
-            val response = messageLogic.sendMessageWithUploadedAttachments(tmpMessage.channelId, messageToSend)
-            if (response is SceytResponse.Success) {
-                response.data?.let {
-                    messageLogic.attachmentSuccessfullySent(it)
-                }
-                finishWorkWithSuccess()
-            } else Result.retry()
+            ChatClient.getClient().disconnect()
 
-        } else finishWorkWithFailure("Could not upload attachments")
+            if (ConnectionEventManager.isConnected) {
+                sendMessage(tmpMessage.channelId, messageToSend)
+            } else {
+                SceytLog.i(TAG, "SceytChat is not connected. Connecting to send message tid: $messageTid")
+                val token = SceytChatUIKit.chatTokenProvider?.provideToken().takeIf { !it.isNullOrBlank() }
+                        ?: run {
+                            return finishWorkWithFailure("Couldn't get token to connect to send message tid: $messageTid")
+                        }
+
+                ChatClient.getClient().connect(token)
+
+                if (ConnectionEventManager.awaitToConnectSceytWithTimeout(20.seconds.inWholeMilliseconds)) {
+                    sendMessage(tmpMessage.channelId, messageToSend)
+                } else finishWorkWithFailure("Could not connect to send message tid: $messageTid")
+            }
+        } else finishWorkWithFailure("Could not upload attachments, message tid: $messageTid")
+    }
+
+    private suspend fun sendMessage(channelId: Long, message: Message): Result {
+        val response = messageLogic.sendMessageWithUploadedAttachments(channelId, message)
+        return if (response is SceytResponse.Success) {
+            response.data?.let {
+                messageLogic.attachmentSuccessfullySent(it)
+            }
+            finishWorkWithSuccess()
+        } else {
+            SceytLog.e(TAG, "Could not send message: ${response.message}, retrying")
+            Result.retry()
+        }
     }
 
     private fun finishWorkWithFailure(error: String): Result {
         val result = Result.success()
-        SceytLog.e(HandleNotificationWorker.TAG, "HandlePushWorker worker finished with error: $error")
+        SceytLog.e(TAG, "SendAttachmentWorker worker finished with error: $error")
         SceytChatUIKit.notifications.fileTransferServiceNotification.notificationHandler
             .serviceWorkerFinished(result = result)
         return result
@@ -222,5 +252,9 @@ class UploadAndSendAttachmentWorker(
             data = FileTransferNotificationData(channel = channel, message = message),
             notificationId = FILE_TRANSFER_NOTIFICATION_ID
         )
+    }
+
+    companion object {
+        private const val TAG = "UploadAndSendAttachmentWorker"
     }
 }
