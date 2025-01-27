@@ -166,7 +166,7 @@ class UploadAndSendAttachmentWorker(
         val data = inputData
         val messageTid = data.getLong(MESSAGE_TID, 0)
         val isSharing = data.getBoolean(IS_SHARING, false)
-        val tmpMessage = messageLogic.getMessageDbByTid(messageTid)
+        val tmpMessage = messageLogic.getMessageFromDbByTid(messageTid)
                 ?: return finishWorkWithFailure("Message not found: $messageTid")
 
         if (tmpMessage.deliveryStatus != DeliveryStatus.Pending)

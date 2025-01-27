@@ -572,7 +572,7 @@ class MessageListViewModel(
 
     fun loadChannelMembersIfNeeded() {
         viewModelScope.launch(Dispatchers.IO) {
-            val count = channelMemberInteractor.getMembersCountDb(channel.id)
+            val count = channelMemberInteractor.getMembersCountFromDb(channel.id)
             if (channel.memberCount > count)
                 loadChannelMembers(0, null).collect()
         }
@@ -588,7 +588,7 @@ class MessageListViewModel(
                 } as? PaginationResponse.ServerResponse<SceytMember>
             }
 
-            val count = channelMemberInteractor.getMembersCountDb(channel.id)
+            val count = channelMemberInteractor.getMembersCountFromDb(channel.id)
             if (channel.memberCount > count) {
                 var offset = 0
                 var rest = loadMembers(0)
