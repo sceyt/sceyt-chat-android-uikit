@@ -110,9 +110,10 @@ open class DefaultFileTransferNotificationBuilder(
             style: NotificationCompat.Style?
     ): Notification {
         return NotificationCompat.Builder(context, provideNotificationChannelId())
+            .setContentTitle(context.getString(R.string.sceyt_sending_attachment))
             .setSmallIcon(provideNotificationSmallIcon(data))
-            .setAutoCancel(true)
-            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setContentIntent(providePendingIntent(context, data))
             .setStyle(style)
             .apply {

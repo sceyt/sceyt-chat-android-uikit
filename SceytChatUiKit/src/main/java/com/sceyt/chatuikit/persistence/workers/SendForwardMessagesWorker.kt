@@ -35,7 +35,10 @@ object SendForwardMessagesWorkManager : SceytKoinComponent {
     }
 }
 
-class SendForwardMessagesWorker(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams), SceytKoinComponent {
+class SendForwardMessagesWorker(
+        context: Context,
+        workerParams: WorkerParameters
+) : CoroutineWorker(context, workerParams), SceytKoinComponent {
     private val messageLogic: PersistenceMessagesLogic by inject()
 
     override suspend fun doWork(): Result {
