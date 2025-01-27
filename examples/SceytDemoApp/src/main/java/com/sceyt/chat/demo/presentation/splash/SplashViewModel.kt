@@ -44,8 +44,8 @@ class SplashViewModel(
 
     private fun openNextScreen() {
         when {
-            isLoggedIn() -> _navigationState.postValue(NavigationState.Main)
-            else -> _navigationState.postValue(NavigationState.Welcome)
+            isLoggedIn() -> _navigationState.value = NavigationState.Main
+            else -> _navigationState.value = NavigationState.Welcome
         }
     }
 
