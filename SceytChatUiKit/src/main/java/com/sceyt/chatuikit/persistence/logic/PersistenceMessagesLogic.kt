@@ -74,7 +74,7 @@ interface PersistenceMessagesLogic {
     suspend fun deleteMessage(channelId: Long, message: SceytMessage,
                               deleteType: DeleteMessageType): SceytResponse<SceytMessage>
 
-    suspend fun getMessageFromDb(messageId: Long): SceytMessage?
+    suspend fun getMessageFromDbById(messageId: Long): SceytMessage?
     suspend fun getMessageFromDbByTid(tid: Long): SceytMessage?
     suspend fun getMessagesFromDbByTid(tIds: List<Long>): List<SceytMessage>
     suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
