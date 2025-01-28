@@ -94,7 +94,7 @@ internal class HandleNotificationWorker(
                 ?: run {
                     return finishWorkWithFailure("Channel not found: $channelId")
                 }
-        val message = SceytChatUIKit.chatUIFacade.messageInteractor.getMessageFromDb(messageId)
+        val message = SceytChatUIKit.chatUIFacade.messageInteractor.getMessageFromDbById(messageId)
                 ?: run {
                     return finishWorkWithFailure("Message not found: $messageId")
                 }

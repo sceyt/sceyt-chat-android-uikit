@@ -98,7 +98,7 @@ class MessageInfoViewModel(
 
     private fun getMessage() {
         viewModelScope.launch(Dispatchers.IO) {
-            (messageInteractor.getMessageFromDb(messageId)
+            (messageInteractor.getMessageFromDbById(messageId)
                     ?: messageInteractor.getMessageFromServerById(channelId, messageId).run {
                         if (this is SceytResponse.Success) this.data else null
                     })?.let { message ->

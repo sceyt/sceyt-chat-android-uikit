@@ -484,8 +484,8 @@ internal class PersistenceMiddleWareImpl(
         return messagesLogic.getMessageFromServerById(channelId, messageId)
     }
 
-    override suspend fun getMessageFromDb(messageId: Long): SceytMessage? {
-        return messagesLogic.getMessageFromDb(messageId)
+    override suspend fun getMessageFromDbById(messageId: Long): SceytMessage? {
+        return messagesLogic.getMessageFromDbById(messageId)
     }
 
     override suspend fun getMessageFromDbByTid(messageTid: Long): SceytMessage? {
