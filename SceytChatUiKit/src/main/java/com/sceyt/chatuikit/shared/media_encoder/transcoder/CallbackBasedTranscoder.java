@@ -10,7 +10,6 @@ import android.media.MediaCodecList;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -49,13 +48,7 @@ public class CallbackBasedTranscoder {
     /**
      * How long to wait for the next buffer to become available.
      */
-    private static final int TIMEOUT_USEC = 10000;
     private final MediaCodecList mediaCodecList;
-
-    /**
-     * Where to output the test files.
-     */
-    private static final File OUTPUT_FILENAME_DIR = Environment.getExternalStorageDirectory();
 
     // parameters for the video encoder
     private static final String OUTPUT_VIDEO_MIME_TYPE = "video/avc"; // H.264 Advanced Video Coding
@@ -72,20 +65,6 @@ public class CallbackBasedTranscoder {
     private static final int OUTPUT_AUDIO_AAC_PROFILE =
             MediaCodecInfo.CodecProfileLevel.AACObjectHE;
     private static final int OUTPUT_AUDIO_SAMPLE_RATE_HZ = 44100; // Must match the input stream.
-
-    /**
-     * Used for editing the frames.
-     *
-     * <p>Swaps green and blue channels by storing an RBGA color in an RGBA buffer.
-     */
-    private static final String FRAGMENT_SHADER =
-            "#extension GL_OES_EGL_image_external : require\n" +
-                    "precision mediump float;\n" +
-                    "varying vec2 vTextureCoord;\n" +
-                    "uniform samplerExternalOES sTexture;\n" +
-                    "void main() {\n" +
-                    "  gl_FragColor = texture2D(sTexture, vTextureCoord).rbga;\n" +
-                    "}\n";
 
     /**
      * Whether to copy the video from the test video.
@@ -128,31 +107,6 @@ public class CallbackBasedTranscoder {
         mediaCodecList = new MediaCodecList(MediaCodecList.REGULAR_CODECS);
     }
 
-//    public void testExtractDecodeEditEncodeMuxQCIF() throws Throwable {
-//        setSize(176, 144);
-//        setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
-//        setCopyVideo();
-//        TestWrapper.runTest(this);
-//    }
-//
-//    public void testExtractDecodeEditEncodeMuxQVGA() throws Throwable {
-//        setSize(320, 240);
-//        setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
-//        setCopyVideo();
-//        TestWrapper.runTest(this);
-//    }
-
-    public void testExtractDecodeEditEncodeMux720p(String source, String output, int mWidth, int mHeight, MediaFormat mOutputVideoFormat) throws Throwable {
-        setSize(mWidth, mHeight);
-//        setSource("/storage/emulated/0/DCIM/Camera/VID_20160519_161509.mp4");
-        setSourceFile(source);
-        setOutputFilePath(output);
-        setCopyVideo();
-        setOutputVideoFormat(mOutputVideoFormat);
-//        setCopyAudio();
-        TestWrapper.runTest(this);
-    }
-
     private TestWrapper mTestWrapper;
 
     public void runTranscode() throws Throwable {
@@ -189,21 +143,6 @@ public class CallbackBasedTranscoder {
         VERBOSE = print;
     }
 
-//    public void testExtractDecodeEditEncodeMuxAudio() throws Throwable {
-//        setSize(1280, 720);
-//        setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
-//        setCopyAudio();
-//        TestWrapper.runTest(this);
-//    }
-//
-//    public void testExtractDecodeEditEncodeMuxAudioVideo() throws Throwable {
-//        setSize(1280, 720);
-//        setSource(R.raw.video_480x360_mp4_h264_500kbps_30fps_aac_stereo_128kbps_44100hz);
-//        setCopyAudio();
-//        setCopyVideo();
-//        TestWrapper.runTest(this);
-//    }
-
     /**
      * Wraps testExtractDecodeEditEncodeMux()
      */
@@ -221,20 +160,6 @@ public class CallbackBasedTranscoder {
                 mTest.extractDecodeEditEncodeMux();
             } catch (Throwable th) {
                 mThrowable = th;
-            }
-        }
-
-        /**
-         * Entry point.
-         */
-        public static void runTest(CallbackBasedTranscoder test) throws Throwable {
-//            test.setOutputFile();
-            TestWrapper wrapper = new TestWrapper(test);
-            Thread th = new Thread(wrapper, "codec test");
-            th.start();
-            th.join();
-            if (wrapper.mThrowable != null) {
-                throw wrapper.mThrowable;
             }
         }
 
@@ -355,13 +280,13 @@ public class CallbackBasedTranscoder {
         mAudioExtractorDone = false;
         mAudioDecoderDone = false;
         mAudioEncoderDone = false;
-        mPendingAudioDecoderOutputBufferIndices = new LinkedList<Integer>();
-        mPendingAudioDecoderOutputBufferInfos = new LinkedList<MediaCodec.BufferInfo>();
-        mPendingAudioEncoderInputBufferIndices = new LinkedList<Integer>();
-        mPendingVideoEncoderOutputBufferIndices = new LinkedList<Integer>();
-        mPendingVideoEncoderOutputBufferInfos = new LinkedList<MediaCodec.BufferInfo>();
-        mPendingAudioEncoderOutputBufferIndices = new LinkedList<Integer>();
-        mPendingAudioEncoderOutputBufferInfos = new LinkedList<MediaCodec.BufferInfo>();
+        mPendingAudioDecoderOutputBufferIndices = new LinkedList<>();
+        mPendingAudioDecoderOutputBufferInfos = new LinkedList<>();
+        mPendingAudioEncoderInputBufferIndices = new LinkedList<>();
+        mPendingVideoEncoderOutputBufferIndices = new LinkedList<>();
+        mPendingVideoEncoderOutputBufferInfos = new LinkedList<>();
+        mPendingAudioEncoderOutputBufferIndices = new LinkedList<>();
+        mPendingAudioEncoderOutputBufferInfos = new LinkedList<>();
         mMuxing = false;
         mVideoExtractedFrameCount = 0;
         mVideoDecodedFrameCount = 0;
