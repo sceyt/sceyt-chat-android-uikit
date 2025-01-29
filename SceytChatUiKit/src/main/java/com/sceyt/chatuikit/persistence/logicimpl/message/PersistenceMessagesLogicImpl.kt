@@ -1080,9 +1080,11 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun checkAndInsertAutoDeleteMessage(vararg messages: SceytMessage) {
-        val filtered = messages.filter { message -> message.autoDeleteAt != null && message.autoDeleteAt > 0 }
+        val filtered = messages.filter { it.autoDeleteAt != null && it.autoDeleteAt > 0 }
         if (filtered.isEmpty()) return
-        autoDeleteMessageDao.insertAutoDeletedMessages(filtered.toAutoDeleteMessageEntities())
+        runCatching {
+            autoDeleteMessageDao.insertAutoDeletedMessages(filtered.toAutoDeleteMessageEntities())
+        }
     }
 
     private suspend fun clearOutdatedMessages(channelId: Long) {
