@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.extensions
 
 import android.app.Activity
 import android.app.ActivityManager
-import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -19,6 +18,8 @@ import android.view.WindowInsetsController
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.annotation.ColorRes
+import androidx.core.content.IntentCompat
+import androidx.core.os.BundleCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
@@ -27,36 +28,28 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.android.material.snackbar.Snackbar
 import com.sceyt.chatuikit.SceytChatUIKit
-import java.io.File
 import java.io.Serializable
 
 fun Any?.isNull() = this == null
 
-fun Any?.isNotNull() = this != null
-
-inline fun <reified T : Parcelable> Intent.parcelable(key: String): T? = when {
-    SDK_INT >= 33 -> getParcelableExtra(key, T::class.java)
-    else -> @Suppress("DEPRECATION") getParcelableExtra(key) as? T
+inline fun <reified T : Parcelable> Intent.parcelable(key: String): T? {
+    return IntentCompat.getParcelableExtra(this, key, T::class.java)
 }
 
-inline fun <reified T : Parcelable> Bundle.parcelable(key: String): T? = when {
-    SDK_INT >= 33 -> getParcelable(key, T::class.java)
-    else -> @Suppress("DEPRECATION") getParcelable(key) as? T
+inline fun <reified T : Parcelable> Bundle.parcelable(key: String): T? {
+    return BundleCompat.getParcelable(this, key, T::class.java)
 }
 
-inline fun <reified T : Serializable> Bundle.serializable(key: String): T? = when {
-    SDK_INT >= 33 -> getSerializable(key, T::class.java)
-    else -> @Suppress("DEPRECATION") getSerializable(key) as? T
+inline fun <reified T : Serializable> Bundle.serializable(key: String): T? {
+    return BundleCompat.getSerializable(this, key, T::class.java)
 }
 
-inline fun <reified T : Parcelable> Bundle.parcelableArrayList(key: String): ArrayList<T>? = when {
-    SDK_INT >= 33 -> getParcelableArrayList(key, T::class.java)
-    else -> @Suppress("DEPRECATION") getParcelableArrayList(key)
+inline fun <reified T : Parcelable> Bundle.parcelableArrayList(key: String): ArrayList<T>? {
+    return BundleCompat.getParcelableArrayList(this, key, T::class.java)
 }
 
-inline fun <reified T : Parcelable> Intent.parcelableArrayList(key: String): ArrayList<T>? = when {
-    SDK_INT >= 33 -> getParcelableArrayListExtra(key, T::class.java)
-    else -> @Suppress("DEPRECATION") getParcelableArrayListExtra(key)
+inline fun <reified T : Parcelable> Intent.parcelableArrayList(key: String): ArrayList<T>? {
+    return IntentCompat.getParcelableArrayListExtra(this, key, T::class.java)
 }
 
 fun Context.isAppOnForeground(): Boolean {
@@ -139,20 +132,20 @@ fun Fragment.customToastSnackBar(message: String?) {
     }
 }
 
-
-fun Fragment.setBundleArguments(init: Bundle.() -> Unit = {}): Fragment {
+fun Fragment.setBundleArguments(init: Bundle.() -> Unit): Fragment {
     arguments = Bundle().apply { init() }
     return this
 }
 
-
-inline fun <reified T : Fragment> Fragment.setBundleArgumentsAs(init: Bundle.() -> Unit = {}): T {
+inline fun <reified T : Fragment> Fragment.setBundleArgumentsAs(init: Bundle.() -> Unit): T {
     arguments = Bundle().apply { init() }
     return this as T
 }
 
 
-inline fun <reified T : DialogFragment> DialogFragment.setBundleArgumentsTyped(init: Bundle.() -> Unit = {}): T {
+inline fun <reified T : DialogFragment> DialogFragment.setBundleArgumentsTyped(
+        init: Bundle.() -> Unit
+): T {
     arguments = Bundle().apply { init() }
     return this as T
 }
@@ -165,26 +158,11 @@ fun Activity.postDelayed(delayInMillis: Long, functionToExecute: () -> Unit) {
     }, delayInMillis)
 }
 
-
-fun checkIfImagePathIsLocale(path: String?): Boolean {
-    if (path != null) {
-        val file = File(path)
-        return file.exists()
-    }
-    return false
-}
-
 fun runOnMainThread(run: () -> Unit) {
     Handler(Looper.getMainLooper()).post(run)
 }
 
 fun Activity.getRootView() = findViewById<View>(android.R.id.content)
-
-fun Activity.recreateWithoutAnim() {
-    finish()
-    startActivity(intent)
-    overrideTransitions(0, 0, false)
-}
 
 fun Context.isRtl() = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
 
@@ -216,11 +194,6 @@ fun Activity.statusBarIconsColorWithBackground(
     }
 }
 
-inline fun <reified T> Any.castSafety(): T? {
-    return if (this is T)
-        this else null
-}
-
 @Suppress("DEPRECATION")
 fun Context.keepScreenOn(): PowerManager.WakeLock {
     return (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
@@ -238,44 +211,5 @@ inline fun doSafe(action: () -> Unit) {
         action()
     } catch (e: Exception) {
         e.printStackTrace()
-    }
-}
-
-inline fun activityLifecycleCallbacks(
-        crossinline onActivityCreated: (activity: Activity, savedInstanceState: Bundle?) -> Unit = { _, _ -> },
-        crossinline onActivityStarted: (activity: Activity) -> Unit = { _ -> },
-        crossinline onActivityResumed: (activity: Activity) -> Unit = { _ -> },
-        crossinline onActivityPaused: (activity: Activity) -> Unit = { _ -> },
-        crossinline onActivityStopped: (activity: Activity) -> Unit = { _ -> },
-        crossinline onActivitySaveInstanceState: (activity: Activity, outState: Bundle) -> Unit = { _, _ -> },
-        crossinline onActivityDestroyed: (activity: Activity) -> Unit = { _ -> }): Application.ActivityLifecycleCallbacks {
-    return object : Application.ActivityLifecycleCallbacks {
-        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-            onActivityCreated(activity, savedInstanceState)
-        }
-
-        override fun onActivityStarted(activity: Activity) {
-            onActivityStarted(activity)
-        }
-
-        override fun onActivityResumed(activity: Activity) {
-            onActivityResumed(activity)
-        }
-
-        override fun onActivityPaused(activity: Activity) {
-            onActivityPaused(activity)
-        }
-
-        override fun onActivityStopped(activity: Activity) {
-            onActivityStopped(activity)
-        }
-
-        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
-            onActivitySaveInstanceState(activity, outState)
-        }
-
-        override fun onActivityDestroyed(activity: Activity) {
-            onActivityDestroyed(activity)
-        }
     }
 }
