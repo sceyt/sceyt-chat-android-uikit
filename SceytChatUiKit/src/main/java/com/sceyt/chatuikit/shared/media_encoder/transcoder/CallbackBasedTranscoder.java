@@ -50,6 +50,7 @@ public class CallbackBasedTranscoder {
      * How long to wait for the next buffer to become available.
      */
     private static final int TIMEOUT_USEC = 10000;
+    private final MediaCodecList mediaCodecList;
 
     /**
      * Where to output the test files.
@@ -124,6 +125,7 @@ public class CallbackBasedTranscoder {
 
     public CallbackBasedTranscoder(Context applicationContext) {
         mContext = applicationContext;
+        mediaCodecList = new MediaCodecList(MediaCodecList.REGULAR_CODECS);
     }
 
 //    public void testExtractDecodeEditEncodeMuxQCIF() throws Throwable {
@@ -1259,11 +1261,9 @@ public class CallbackBasedTranscoder {
      * Returns the first codec capable of encoding the specified MIME type, or null if no match was
      * found.
      */
-    private static MediaCodecInfo selectCodec(String mimeType) {
-        int numCodecs = MediaCodecList.getCodecCount();
-        for (int i = 0; i < numCodecs; i++) {
-            MediaCodecInfo codecInfo = MediaCodecList.getCodecInfoAt(i);
-
+    private MediaCodecInfo selectCodec(String mimeType) {
+        MediaCodecInfo[] numCodecs = mediaCodecList.getCodecInfos();
+        for (MediaCodecInfo codecInfo : numCodecs) {
             if (!codecInfo.isEncoder()) {
                 continue;
             }
@@ -1274,8 +1274,8 @@ public class CallbackBasedTranscoder {
             }
 
             String[] types = codecInfo.getSupportedTypes();
-            for (int j = 0; j < types.length; j++) {
-                if (types[j].equalsIgnoreCase(mimeType)) {
+            for (String type : types) {
+                if (type.equalsIgnoreCase(mimeType)) {
                     return codecInfo;
                 }
             }
