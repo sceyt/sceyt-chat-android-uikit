@@ -12,9 +12,6 @@ interface AutoDeleteMessageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAutoDeletedMessages(messages: List<AutoDeleteMessageEntity>)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAutoDeletedMessage(message: AutoDeleteMessageEntity)
-
     @Query("select * from AutoDeleteMessages where channelId = :channelId and autoDeleteAt <= :localTime")
     suspend fun getOutdatedMessages(channelId: Long, localTime: Long): List<AutoDeleteMessageEntity>
 
