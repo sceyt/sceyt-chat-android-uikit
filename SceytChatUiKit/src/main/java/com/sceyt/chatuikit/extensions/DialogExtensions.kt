@@ -7,7 +7,7 @@ import androidx.fragment.app.DialogFragment
 fun DialogFragment.dismissSafety() {
     try {
         dismissAllowingStateLoss()
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
     }
 }
 
@@ -19,14 +19,14 @@ fun Dialog.dismissSafety() {
     try {
         if (isShowing)
             dismiss()
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
     }
 }
 
 fun Dialog.showSafety() {
     try {
         show()
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
     }
 }
 
@@ -35,7 +35,7 @@ fun Dialog.checkAndShowSafety() {
         if (isShowing)
             return
         showSafety()
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
     }
 }
 
@@ -44,7 +44,7 @@ fun Dialog.checkAndDismissSafety() {
         if (!isShowing)
             return
         dismissSafety()
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
     }
 }
 

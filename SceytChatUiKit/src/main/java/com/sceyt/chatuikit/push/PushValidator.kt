@@ -18,6 +18,7 @@ object PushValidator {
         return data[KEY_APP] == APP_VALUE && type in NotificationType.entries.indices
     }
 
+    @Suppress("unused")
     fun isPushPayloadValid(data: Map<String, String>): Boolean {
         return !data[KEY_USER].isNullOrBlank() &&
                 !data[KEY_CHANNEL].isNullOrBlank() &&

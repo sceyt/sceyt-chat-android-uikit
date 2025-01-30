@@ -138,7 +138,7 @@ class MediaViewModel : BaseViewModel(), SceytKoinComponent {
     }
 
     fun getMessageById(messageId: Long) = callbackFlow {
-        messageInteractor.getMessageDbById(messageId)?.let {
+        messageInteractor.getMessageFromDbById(messageId)?.let {
             trySend(it)
         } ?: trySend(null)
         channel.close()

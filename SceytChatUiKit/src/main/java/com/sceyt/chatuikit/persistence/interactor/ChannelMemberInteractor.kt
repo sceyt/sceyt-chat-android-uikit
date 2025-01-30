@@ -12,7 +12,7 @@ interface ChannelMemberInteractor {
     suspend fun addMembersToChannel(channelId: Long, members: List<SceytMember>): SceytResponse<SceytChannel>
     suspend fun blockAndDeleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel>
     suspend fun deleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel>
-    suspend fun getMembersCountDb(channelId: Long): Int
+    suspend fun getMembersCountFromDb(channelId: Long): Int
     suspend fun loadChannelMembersByIds(channelId: Long, vararg ids: String): List<SceytMember>
     suspend fun loadChannelMembersByDisplayName(channelId: Long, name: String): List<SceytMember>
     suspend fun filterOnlyMembersByIds(channelId: Long, ids: List<String>): List<String>

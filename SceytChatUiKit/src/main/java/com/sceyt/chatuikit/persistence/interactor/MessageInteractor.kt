@@ -77,8 +77,8 @@ interface MessageInteractor {
                               deleteType: DeleteMessageType): SceytResponse<SceytMessage>
 
     suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
-    suspend fun getMessageDbById(messageId: Long): SceytMessage?
-    suspend fun getMessageDbByTid(messageTid: Long): SceytMessage?
+    suspend fun getMessageFromDbById(messageId: Long): SceytMessage?
+    suspend fun getMessageFromDbByTid(messageTid: Long): SceytMessage?
     suspend fun sendTyping(channelId: Long, typing: Boolean)
     fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>>
 }

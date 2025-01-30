@@ -85,8 +85,8 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.repositories.MessagesRepository
 import com.sceyt.chatuikit.persistence.repositories.SceytSharedPreference
-import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.push.PushData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
@@ -600,16 +600,22 @@ internal class PersistenceMessagesLogicImpl(
                     channelCache.removeFromPendingToRealChannelsData(channelId)
             } else {
                 pendingMessages.forEach {
-                    if (it.attachments.isNullOrEmpty() || it.attachments.any { attachmentDb ->
-                                attachmentDb.payLoad?.transferState != TransferState.PauseUpload
+                    // If have attachments, we need to check maybe the upload was paused,
+                    // if so, we don't need to send message until upload is finished
+                    if (it.attachments.isNullOrEmpty() || it.attachments.any { attachment ->
+                                attachment.payLoad?.transferState != TransferState.PauseUpload
                             }) {
+                        val isUploaded = it.attachments?.all { attachment ->
+                            attachment.attachmentEntity.type == AttachmentTypeEnum.Link.value
+                                    || attachment.payLoad?.transferState == TransferState.Uploaded
+                        } ?: false
                         val message = it.toMessage()
                         sendMessageImpl(
                             channelId = channelId,
                             message = message,
                             isSharing = false,
                             isPendingMessage = true,
-                            isUploadedAttachments = false
+                            isUploadedAttachments = isUploaded
                         ).collect()
                     }
                 }
@@ -780,15 +786,15 @@ internal class PersistenceMessagesLogicImpl(
         return@withContext result
     }
 
-    override suspend fun getMessageDbById(messageId: Long): SceytMessage? = withContext(dispatcherIO) {
+    override suspend fun getMessageFromDbById(messageId: Long): SceytMessage? = withContext(dispatcherIO) {
         return@withContext messageDao.getMessageById(messageId)?.toSceytMessage()
     }
 
-    override suspend fun getMessageDbByTid(tid: Long): SceytMessage? = withContext(dispatcherIO) {
+    override suspend fun getMessageFromDbByTid(tid: Long): SceytMessage? = withContext(dispatcherIO) {
         return@withContext messageDao.getMessageByTid(tid)?.toSceytMessage()
     }
 
-    override suspend fun getMessagesDbByTid(tIds: List<Long>): List<SceytMessage> = withContext(dispatcherIO) {
+    override suspend fun getMessagesFromDbByTid(tIds: List<Long>): List<SceytMessage> = withContext(dispatcherIO) {
         return@withContext messageDao.getMessagesByTid(tIds).map { it.toSceytMessage() }
     }
 
@@ -1074,9 +1080,11 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun checkAndInsertAutoDeleteMessage(vararg messages: SceytMessage) {
-        val filtered = messages.filter { message -> message.autoDeleteAt != null && message.autoDeleteAt > 0 }
+        val filtered = messages.filter { it.autoDeleteAt != null && it.autoDeleteAt > 0 }
         if (filtered.isEmpty()) return
-        autoDeleteMessageDao.insertAutoDeletedMessages(filtered.toAutoDeleteMessageEntities())
+        runCatching {
+            autoDeleteMessageDao.insertAutoDeletedMessages(filtered.toAutoDeleteMessageEntities())
+        }
     }
 
     private suspend fun clearOutdatedMessages(channelId: Long) {

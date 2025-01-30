@@ -23,6 +23,8 @@ internal class RealtimeNotificationManagerImpl(
 ) : RealtimeNotificationManager {
 
     override suspend fun onMessageReceived(channel: SceytChannel, message: SceytMessage) {
+        // Check maybe event comes from carbon user, if true then ignore
+        if (message.user?.id == SceytChatUIKit.currentUserId) return
         val pushData = PushData(
             type = NotificationType.ChannelMessage,
             channel = channel,
@@ -42,7 +44,11 @@ internal class RealtimeNotificationManagerImpl(
 
     override suspend fun onReactionEvent(data: ReactionUpdateEventData) {
         val channelId = data.message.channelId
+        // If message is incoming ignore
         if (data.message.incoming) return
+        // Check maybe event comes from carbon user, if true then ignore
+        if (data.reaction.user?.id == SceytChatUIKit.currentUserId) return
+
         when (data.eventType) {
             ReactionUpdateEventEnum.Add -> {
                 val channel = SceytChatUIKit.chatUIFacade.channelInteractor.getChannelFromDb(channelId)

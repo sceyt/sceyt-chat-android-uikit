@@ -1,3 +1,5 @@
+import com.sceyt.chat.Config
+
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
@@ -28,9 +30,9 @@ afterEvaluate {
     publishing {
         publications {
             release(MavenPublication) {
-                groupId maven_central_publish_group
-                artifactId maven_central_atifact_id
-                version maven_central_version
+                groupId Config.mavenCentralGroup
+                artifactId Config.mavenCentralArtifactId
+                version Config.mavenCentralVersion
 
                 if (project.plugins.findPlugin("com.android.library")) {
                     from components.release
@@ -42,7 +44,7 @@ afterEvaluate {
                 artifact androidJavadocsJar
 
                 pom {
-                    name = maven_central_atifact_id
+                    name = Config.mavenCentralArtifactId
                     description = 'Sceyt Chat Android UIKit'
                     url = 'https://github.com/sceyt/sceyt-chat-android-uikit'
                     licenses {

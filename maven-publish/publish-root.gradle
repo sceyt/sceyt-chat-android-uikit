@@ -1,6 +1,4 @@
-// Create variables with empty default values
-apply from: "$project.rootDir/version.gradle"
-
+import com.sceyt.chat.Config
 
 ext["ossrhUsername"] = ''
 ext["ossrhPassword"] = ''
@@ -32,7 +30,7 @@ nexusPublishing {
             stagingProfileId = sonatypeStagingProfileId
             username = ossrhUsername
             password = ossrhPassword
-            version maven_central_version
+            version Config.mavenCentralVersion
 
             nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
             snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
