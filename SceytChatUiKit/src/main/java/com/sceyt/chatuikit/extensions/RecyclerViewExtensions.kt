@@ -2,12 +2,12 @@ package com.sceyt.chatuikit.extensions
 
 import android.os.Handler
 import android.os.Looper
-import android.view.ViewTreeObserver
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.sceyt.chatuikit.logger.SceytLog
 import kotlin.math.abs
 
 
@@ -242,13 +242,12 @@ fun RecyclerView.runWhenReady(action: () -> Unit) {
     if (!isComputingLayout)
         action()
     else {
-        val globalLayoutListener = object : ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                action()
-                viewTreeObserver.removeOnGlobalLayoutListener(this)
-            }
+        SceytLog.i("RecyclerViewLogTag", "Computing layout")
+        post {
+            if (isComputingLayout) {
+                runWhenReady(action)
+            } else action()
         }
-        viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)
     }
 }
 
@@ -260,7 +259,7 @@ fun DiffUtil.DiffResult.dispatchUpdatesToSafety(recyclerView: RecyclerView) {
     }
 }
 
-fun RecyclerView.getChildTopByPosition( position: Int): Int {
+fun RecyclerView.getChildTopByPosition(position: Int): Int {
     val layoutManager = layoutManager
             ?: return -1
     val childView = layoutManager.findViewByPosition(position)
