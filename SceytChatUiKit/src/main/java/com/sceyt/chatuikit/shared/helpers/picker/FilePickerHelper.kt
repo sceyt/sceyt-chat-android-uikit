@@ -15,7 +15,6 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.withResumed
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.TAG
@@ -46,7 +45,6 @@ import java.io.FileInputStream
 import java.util.UUID
 
 class FilePickerHelper {
-    private lateinit var context: Context
     private var requestCameraPermissionLauncher: ActivityResultLauncher<String>? = null
     private var requestVideoCameraPermissionLauncher: ActivityResultLauncher<String>? = null
     private var requestSceytGalleryPermissionLauncher: ActivityResultLauncher<String>? = null
@@ -63,10 +61,14 @@ class FilePickerHelper {
     private var takeVideoCb: ((String) -> Unit)? = null
     private var scope: CoroutineScope
     private var placeToSavePathsList: MutableSet<Pair<AttachmentTypeEnum, String>> = mutableSetOf()
+    private val contextProvider: () -> Context
+
+    private val context: Context
+        get() = contextProvider()
 
     constructor(activity: ComponentActivity) {
         with(activity) {
-            this@FilePickerHelper.context = activity
+            contextProvider = { this }
             scope = activity.lifecycleScope
 
             if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED))
@@ -99,13 +101,8 @@ class FilePickerHelper {
 
     constructor(fragment: Fragment) {
         with(fragment) {
+            contextProvider = { requireContext() }
             scope = fragment.lifecycleScope
-
-            lifecycleScope.launch {
-                lifecycle.withResumed {
-                    this@FilePickerHelper.context = requireContext()
-                }
-            }
 
             if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED))
                 return

@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit.notifications
 import com.sceyt.chatuikit.notifications.builder.FileTransferNotificationBuilder
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilder
+import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.immutablePendingIntentFlags
 import com.sceyt.chatuikit.notifications.service.FileTransferNotificationData
 
 /**
@@ -64,7 +65,7 @@ open class DefaultFileTransferNotificationBuilder(
             context,
             "${data.channel.id}${data.message.tid}".hashCode(),
             intent,
-            pendingIntentFlags
+            immutablePendingIntentFlags
         )
     }
 
@@ -109,9 +110,10 @@ open class DefaultFileTransferNotificationBuilder(
             style: NotificationCompat.Style?
     ): Notification {
         return NotificationCompat.Builder(context, provideNotificationChannelId())
+            .setContentTitle(context.getString(R.string.sceyt_sending_attachment))
             .setSmallIcon(provideNotificationSmallIcon(data))
-            .setAutoCancel(true)
-            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setContentIntent(providePendingIntent(context, data))
             .setStyle(style)
             .apply {
@@ -127,10 +129,4 @@ open class DefaultFileTransferNotificationBuilder(
             ).id
         } else ""
     }
-
-    /**
-     * Defines the flags to be used when creating the [PendingIntent].
-     */
-    protected open val pendingIntentFlags: Int
-        get() = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
 }

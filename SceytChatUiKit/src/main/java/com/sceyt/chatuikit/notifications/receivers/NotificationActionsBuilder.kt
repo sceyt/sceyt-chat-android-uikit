@@ -3,10 +3,11 @@ package com.sceyt.chatuikit.notifications.receivers
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.RemoteInput
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.immutablePendingIntentFlags
+import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.mutablePendingIntentFlags
 import com.sceyt.chatuikit.push.PushData
 
 object NotificationActionsBuilder {
@@ -58,14 +59,4 @@ object NotificationActionsBuilder {
             this.action = action
         }
     }
-
-    private val immutablePendingIntentFlags =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            } else PendingIntent.FLAG_UPDATE_CURRENT
-
-    private val mutablePendingIntentFlags =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-            } else PendingIntent.FLAG_UPDATE_CURRENT
 }

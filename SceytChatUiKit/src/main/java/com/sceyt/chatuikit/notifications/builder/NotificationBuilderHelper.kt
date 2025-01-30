@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.notifications.builder
 
+import android.app.PendingIntent
 import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -50,4 +51,14 @@ object NotificationBuilderHelper {
             it.toPerson(context, icon)
         }
     }
+
+    val immutablePendingIntentFlags =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            } else PendingIntent.FLAG_UPDATE_CURRENT
+
+    val mutablePendingIntentFlags =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            } else PendingIntent.FLAG_UPDATE_CURRENT
 }
