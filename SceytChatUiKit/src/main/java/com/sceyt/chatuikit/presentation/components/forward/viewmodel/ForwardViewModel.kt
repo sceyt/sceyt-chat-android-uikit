@@ -18,7 +18,11 @@ import org.koin.core.component.inject
 class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
     private val messageInteractor by inject<MessageInteractor>()
 
-    fun sendForwardMessage(vararg channelIds: Long, markOwnMessageAsForwarded: Boolean, messages: List<SceytMessage>) = callbackFlow {
+    fun sendForwardMessage(
+            vararg channelIds: Long,
+            markOwnMessageAsForwarded: Boolean,
+            messages: List<SceytMessage>
+    ) = callbackFlow {
         trySend(State.Loading)
         channelIds.forEach { channelId ->
             val messagesToSend = mutableListOf<Message>()
