@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.notifications.push.defaults
 import android.Manifest.permission.POST_NOTIFICATIONS
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat.checkSelfPermission
 import androidx.core.app.NotificationCompat
@@ -14,7 +13,6 @@ import com.sceyt.chatuikit.SceytChatUIKit.notifications
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.extensions.TAG
-import com.sceyt.chatuikit.extensions.cancelChannelNotifications
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.NotificationType
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper
@@ -22,6 +20,7 @@ import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.getPe
 import com.sceyt.chatuikit.notifications.builder.NotificationBuilderHelper.toMessagingStyle
 import com.sceyt.chatuikit.notifications.extractMessagingStyle
 import com.sceyt.chatuikit.notifications.push.PushNotificationHandler
+import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationBuilder.Companion.EXTRAS_CHAT_NOTIFICATION
 import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationBuilder.Companion.EXTRAS_MESSAGE_ID
 import com.sceyt.chatuikit.notifications.push.defaults.DefaultPushNotificationBuilder.Companion.EXTRAS_REACTION_ID
 import com.sceyt.chatuikit.push.PushData
@@ -158,9 +157,9 @@ open class DefaultPushNotificationHandler(
     }
 
     override fun cancelAllNotifications() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channelId = notifications.pushNotification.notificationChannelProvider.createChannel(context).id
-            notificationManager.cancelChannelNotifications(channelId)
+        notificationManager.activeNotifications.forEach {
+            if (it.notification.extras.getBoolean(EXTRAS_CHAT_NOTIFICATION))
+                notificationManager.cancel(it.id)
         }
     }
 
