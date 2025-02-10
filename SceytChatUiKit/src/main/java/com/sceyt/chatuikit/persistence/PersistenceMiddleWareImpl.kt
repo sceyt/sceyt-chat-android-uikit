@@ -316,7 +316,11 @@ internal class PersistenceMiddleWareImpl(
         channelLogic.updateDraftMessage(channelId, message, mentionUsers, styling, replyOrEditMessage, isReply)
     }
 
-    override fun getTotalUnreadCount(channelTypes: List<String>): Flow<Int> {
+    override fun getChannelMessageCount(channelId: Long): Flow<Long> {
+        return channelLogic.getChannelMessageCount(channelId)
+    }
+
+    override fun getTotalUnreadCount(channelTypes: List<String>): Flow<Long> {
         return channelLogic.getTotalUnreadCount(channelTypes)
     }
 
