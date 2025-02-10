@@ -73,8 +73,8 @@ import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
-import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.persistence.workers.SendForwardMessagesWorkManager
+import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.extensions.isDeleted
@@ -85,6 +85,7 @@ import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import org.koin.core.component.inject
 
@@ -995,10 +996,6 @@ internal class PersistenceChannelsLogicImpl(
         return channelDao.getAllChannelsCount()
     }
 
-    override fun getTotalUnreadCount(channelTypes: List<String>): Flow<Int> {
-        return channelDao.getTotalUnreadCountAsFlow(channelTypes).map { it ?: 0 }
-    }
-
     override suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>) {
         users.forEach { presenceUser ->
             channelsCache.getCachedData().values.forEach {
@@ -1009,6 +1006,18 @@ internal class PersistenceChannelsLogicImpl(
                 }
             }
         }
+    }
+
+    override fun getChannelMessageCount(channelId: Long): Flow<Long> {
+        return messageDao.getMessagesCountAsFlow(channelId).map {
+            it ?: 0
+        }.distinctUntilChanged()
+    }
+
+    override fun getTotalUnreadCount(channelTypes: List<String>): Flow<Long> {
+        return channelDao.getTotalUnreadCountAsFlow(channelTypes).map {
+            it ?: 0
+        }.distinctUntilChanged()
     }
 
     private suspend fun initPendingLastMessageBeforeInsert(channels: List<SceytChannel>): List<SceytChannel> {

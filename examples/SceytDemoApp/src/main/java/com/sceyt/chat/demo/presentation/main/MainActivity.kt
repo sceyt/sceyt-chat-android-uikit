@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
 
         SceytChatUIKit.chatUIFacade.channelInteractor.getTotalUnreadCount().onEach {
             binding.bottomNavigationView.getOrCreateBadge(R.id.channelsFragment).apply {
-                number = it
+                number = it.toInt()
                 isVisible = it > 0
                 maxCharacterCount = 3
                 backgroundColor = "#FA4C56".toColorInt()
