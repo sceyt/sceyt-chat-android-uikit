@@ -203,7 +203,7 @@ internal class PersistenceMessagesLogicImpl(
 
             MessageState.DeletedHard -> {
                 messageDao.deleteMessageByTid(message.tid)
-                messagesCache.hardDeleteMessage(message.channelId, message.tid)
+                messagesCache.hardDeleteMessage(message.channelId, message)
             }
         }
     }
@@ -714,7 +714,7 @@ internal class PersistenceMessagesLogicImpl(
         if (message.deliveryStatus == DeliveryStatus.Pending) {
             val clonedMessage = message.copy(state = MessageState.Deleted)
             messageDao.deleteMessageByTid(message.tid)
-            messagesCache.hardDeleteMessage(channelId, message.tid)
+            messagesCache.hardDeleteMessage(channelId, message)
             persistenceChannelsLogic.onMessageEditedOrDeleted(clonedMessage)
             UploadAndSendAttachmentWorkManager.cancelWorksByTag(context, message.tid.toString())
             message.attachments?.firstOrNull()?.let {
