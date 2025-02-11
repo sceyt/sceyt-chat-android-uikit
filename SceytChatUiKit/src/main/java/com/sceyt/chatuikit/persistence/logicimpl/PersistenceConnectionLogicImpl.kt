@@ -86,7 +86,7 @@ internal class PersistenceConnectionLogicImpl(
             preference.setString(Keys.KEY_USER_ID, it.id)
         } ?: run {
             preference.getUserId()?.let {
-                val response = usersRepository.getSceytUserById(it)
+                val response = usersRepository.getUserById(it)
                 if (response is SceytResponse.Success)
                     response.data?.toUserDb()?.let { userDb ->
                         usersDao.insertUserWithMetadata(userDb)

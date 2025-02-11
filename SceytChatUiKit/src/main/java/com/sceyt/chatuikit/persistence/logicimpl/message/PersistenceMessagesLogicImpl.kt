@@ -137,7 +137,7 @@ internal class PersistenceMessagesLogicImpl(
     override suspend fun onMessage(
             data: Pair<SceytChannel, SceytMessage>,
             sendDeliveryMarker: Boolean,
-    ) = withContext(dispatcherIO) {
+    ): Unit = withContext(dispatcherIO) {
         val channel = data.first
         val message = data.second
         saveMessagesToDb(arrayListOf(message))
@@ -150,7 +150,6 @@ internal class PersistenceMessagesLogicImpl(
             if (message.incoming && sendDeliveryMarker)
                 markMessagesAs(channel.id, Received, message.id)
         }
-        return@withContext
     }
 
     override suspend fun handlePush(data: PushData): Boolean = withContext(dispatcherIO) {
