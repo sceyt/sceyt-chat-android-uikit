@@ -33,12 +33,15 @@ interface UserDao {
 
     @Transaction
     suspend fun insertUsersWithMetadata(users: List<UserDb>, replaceUserOnConflict: Boolean = true) {
+        if (users.isEmpty()) return
         if (replaceUserOnConflict) {
             insertUsers(users.map { it.user })
         } else {
             insertUsersIgnored(users.map { it.user })
         }
-        insertMetadata(users.flatMap { it.metadata })
+        users.flatMap { it.metadata }.takeIf { it.isNotEmpty() }?.let {
+            insertMetadata(it)
+        }
     }
 
     @Transaction
