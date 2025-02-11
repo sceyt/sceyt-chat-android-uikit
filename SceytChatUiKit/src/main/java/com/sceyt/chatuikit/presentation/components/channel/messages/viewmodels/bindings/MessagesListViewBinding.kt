@@ -403,10 +403,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
         }.launchIn(lifecycleOwner.lifecycleScope)
 
-    MessagesCache.messagesHardDeletedFlow
+    MessagesCache.messageHardDeletedFlow
         .filter { (channelId, _) -> channelId == channel.id }
-        .onEach { (_, tid) ->
-            messagesListView.forceDeleteMessageByTid(tid)
+        .onEach { (_, message) ->
+            messagesListView.forceDeleteMessageByTid(message.tid)
         }.launchIn(lifecycleOwner.lifecycleScope)
 
     loadMessagesFlow

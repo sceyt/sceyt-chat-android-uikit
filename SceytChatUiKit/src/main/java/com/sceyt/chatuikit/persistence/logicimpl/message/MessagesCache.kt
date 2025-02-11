@@ -29,31 +29,32 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 
+typealias ChannelId = Long
+typealias MessageDeletionDate = Long
+
 class MessagesCache {
     @Volatile
     private var cachedMessages = hashMapOf<Long, HashMap<Long, SceytMessage>>()
     private val lock = Any()
 
     companion object {
-        private val messageUpdatedFlow_ = MutableSharedFlow<Pair<Long, List<SceytMessage>>>(
+        private val messageUpdatedFlow_ = MutableSharedFlow<Pair<ChannelId, List<SceytMessage>>>(
             extraBufferCapacity = 30,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
-        val messageUpdatedFlow: SharedFlow<Pair<Long, List<SceytMessage>>> = messageUpdatedFlow_
+        val messageUpdatedFlow: SharedFlow<Pair<ChannelId, List<SceytMessage>>> = messageUpdatedFlow_
 
-        // Pair<channelId, messagesDeletionDate>
-        private val messagesClearedFlow_ = MutableSharedFlow<Pair<Long, Long>>(
+        private val messagesClearedFlow_ = MutableSharedFlow<Pair<ChannelId, MessageDeletionDate>>(
             extraBufferCapacity = 30,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
-        val messagesClearedFlow: SharedFlow<Pair<Long, Long>> = messagesClearedFlow_
+        val messagesClearedFlow: SharedFlow<Pair<ChannelId, MessageDeletionDate>> = messagesClearedFlow_
 
-        // Pair<channelId, tid>
-        private val messagesHardDeletedFlow_ = MutableSharedFlow<Pair<Long, Long>>(
+        private val messageHardDeletedFlow_ = MutableSharedFlow<Pair<ChannelId, SceytMessage>>(
             extraBufferCapacity = 30,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
-        val messagesHardDeletedFlow: SharedFlow<Pair<Long, Long>> = messagesHardDeletedFlow_
+        val messageHardDeletedFlow: SharedFlow<Pair<ChannelId, SceytMessage>> = messageHardDeletedFlow_
     }
 
 
@@ -159,10 +160,10 @@ class MessagesCache {
         }
     }
 
-    fun hardDeleteMessage(channelId: Long, tid: Long) {
+    fun hardDeleteMessage(channelId: Long, message: SceytMessage) {
         synchronized(lock) {
-            cachedMessages[channelId]?.remove(tid)
-            messagesHardDeletedFlow_.tryEmit(Pair(channelId, tid))
+            cachedMessages[channelId]?.remove(message.tid)
+            messageHardDeletedFlow_.tryEmit(Pair(channelId, message))
         }
     }
 
