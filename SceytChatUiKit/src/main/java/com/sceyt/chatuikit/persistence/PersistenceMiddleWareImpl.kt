@@ -569,8 +569,12 @@ internal class PersistenceMiddleWareImpl(
         return usersLogic.loadMoreUsers()
     }
 
+    override suspend fun getUserById(id: String): SceytResponse<SceytUser> {
+        return usersLogic.getUserById(id)
+    }
+
     override suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<SceytUser>> {
-        return usersLogic.getSceytUsers(ids)
+        return usersLogic.getUsersByIds(ids)
     }
 
     override suspend fun getUserFromDbById(id: String): SceytUser? {
