@@ -45,7 +45,7 @@ internal class PersistenceConnectionLogicImpl(
     private val sceytSyncManager: SceytSyncManager by inject()
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private val _allPendingEventsSendFlow = broadcastSharedFlow<Boolean>()
+    private val _allPendingEventsSentFlow = broadcastSharedFlow<Unit>()
 
     init {
         if (ConnectionEventManager.connectionState == ConnectionState.Connected)
@@ -76,7 +76,7 @@ internal class PersistenceConnectionLogicImpl(
                 messageLogic.sendAllPendingMessages()
                 messageLogic.sendAllPendingMessageStateUpdates()
                 reactionsLogic.sendAllPendingReactions()
-                _allPendingEventsSendFlow.tryEmit(true)
+                _allPendingEventsSentFlow.tryEmit(Unit)
                 if (SceytChatUIKit.config.syncChannelsAfterConnect) {
                     sceytSyncManager.startSync(ChannelListConfig.default)
                 }
@@ -84,8 +84,8 @@ internal class PersistenceConnectionLogicImpl(
         } else SceytPresenceChecker.stopPresenceCheck()
     }
 
-    override val allPendingEventsSentFlow: Flow<Boolean>
-        get() = _allPendingEventsSendFlow
+    override val allPendingEventsSentFlow: Flow<Unit>
+        get() = _allPendingEventsSentFlow
 
     private suspend fun insertCurrentUser() = withContext(Dispatchers.IO) {
         ClientWrapper.currentUser?.let {
