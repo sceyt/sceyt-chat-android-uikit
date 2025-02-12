@@ -86,7 +86,8 @@ abstract class MessageDao {
                 attachments.filter { it.attachmentEntity.type != AttachmentTypeEnum.Link.value }
                     .map { it.toAttachmentPayLoad(messageDb.messageEntity) }
             })
-            insertLinkDetails(attachmentPairs.flatMap { (attachments, _) -> attachments.mapNotNull { attachmentDb -> attachmentDb.linkDetails } })
+            insertLinkDetails(attachmentPairs.flatMap { (attachments, _) ->
+                attachments.mapNotNull { attachmentDb -> attachmentDb.linkDetails } })
         }
 
         //Insert user markers
