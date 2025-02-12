@@ -62,6 +62,7 @@ import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
+import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
@@ -107,6 +108,7 @@ class MessageListViewModel(
     private val messageReactionInteractor: MessageReactionInteractor by inject()
     internal val attachmentInteractor: AttachmentInteractor by inject()
     internal val channelMemberInteractor: ChannelMemberInteractor by inject()
+    internal val connectionLogic: PersistenceConnectionLogic by inject()
     internal val userInteractor: UserInteractor by inject()
     private val application: Application by inject()
     internal val syncManager: SceytSyncManager by inject()
@@ -362,12 +364,6 @@ class MessageListViewModel(
     fun sendPendingMessages() {
         viewModelScope.launch(Dispatchers.IO) {
             messageInteractor.sendPendingMessages(conversationId)
-        }
-    }
-
-    fun syncConversationMessagesAfter(messageId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
-            syncManager.syncConversationMessagesAfter(conversationId, messageId)
         }
     }
 

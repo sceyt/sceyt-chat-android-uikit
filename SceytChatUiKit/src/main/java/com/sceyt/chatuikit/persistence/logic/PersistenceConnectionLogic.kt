@@ -5,5 +5,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface PersistenceConnectionLogic {
     fun onChangedConnectStatus(state: ConnectionStateData)
-    val allPendingEventsSentFlow: Flow<Boolean>
+    val allPendingEventsSentFlow: Flow<Unit>
 }
