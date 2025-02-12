@@ -2,11 +2,8 @@ package com.sceyt.chatuikit.persistence.database
 
 import androidx.room.AutoMigration
 import androidx.room.Database
-import androidx.room.DeleteColumn
-import androidx.room.RenameColumn
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import androidx.room.migration.AutoMigrationSpec
 import com.sceyt.chatuikit.persistence.database.converters.ChannelConverter
 import com.sceyt.chatuikit.persistence.database.converters.ListStringConverter
 import com.sceyt.chatuikit.persistence.database.converters.MessageConverter
@@ -74,21 +71,21 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoDeleteMessageEntity::class,
         UserMetadataEntity::class,
     ],
-    version = 16,
+    version = 17,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
-        AutoMigration(from = 3, to = 4, spec = SceytDatabase.AutoMigrationSpec3to4::class),
+        AutoMigration(from = 3, to = 4, spec = DatabaseMigrations.AutoMigrationSpec3to4::class),
         AutoMigration(from = 4, to = 5),
-        AutoMigration(from = 5, to = 6, spec = SceytDatabase.AutoMigrationSpec5To6::class),
+        AutoMigration(from = 5, to = 6, spec = DatabaseMigrations.AutoMigrationSpec5To6::class),
         AutoMigration(from = 6, to = 7),
         AutoMigration(from = 7, to = 8),
         AutoMigration(from = 8, to = 9),
         AutoMigration(from = 9, to = 10),
-        AutoMigration(from = 10, to = 11, spec = SceytDatabase.AutoMigrationSpec10To11::class),
+        AutoMigration(from = 10, to = 11, spec = DatabaseMigrations.AutoMigrationSpec10To11::class),
         AutoMigration(from = 11, to = 12),
         AutoMigration(from = 12, to = 13),
-        AutoMigration(from = 13, to = 14, spec = SceytDatabase.AutoMigrationSpec13To14::class),
+        AutoMigration(from = 13, to = 14, spec = DatabaseMigrations.AutoMigrationSpec13To14::class),
         AutoMigration(from = 14, to = 15)
     ])
 
@@ -110,16 +107,4 @@ abstract class SceytDatabase : RoomDatabase() {
     abstract fun loadRangeDao(): LoadRangeDao
     abstract fun markerDao(): MarkerDao
     abstract fun autoDeleteMessageDao(): AutoDeleteMessageDao
-
-    @RenameColumn(tableName = "messages", fromColumnName = "isParentMessage", toColumnName = "unList")
-    class AutoMigrationSpec3to4 : AutoMigrationSpec
-
-    @DeleteColumn(tableName = "DraftMessageEntity", columnName = "metadata")
-    class AutoMigrationSpec5To6 : AutoMigrationSpec
-
-    @DeleteColumn(tableName = "MentionUserMessageLink", columnName = "id")
-    class AutoMigrationSpec10To11 : AutoMigrationSpec
-
-    @DeleteColumn(tableName = "users", columnName = "metadata")
-    class AutoMigrationSpec13To14 : AutoMigrationSpec
 }
