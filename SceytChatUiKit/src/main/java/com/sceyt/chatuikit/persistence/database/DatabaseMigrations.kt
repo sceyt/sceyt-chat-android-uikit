@@ -46,7 +46,6 @@ object DatabaseMigrations {
             db.execSQL("DELETE FROM AutoDeleteMessages")
             // Start migration
             db.execSQL("CREATE TABLE IF NOT EXISTS `_new_AutoDeleteMessages` (`messageTid` INTEGER NOT NULL, `channelId` INTEGER NOT NULL, `autoDeleteAt` INTEGER NOT NULL, PRIMARY KEY(`messageTid`), FOREIGN KEY(`messageTid`) REFERENCES `messages`(`tid`) ON UPDATE NO ACTION ON DELETE CASCADE )")
-            db.execSQL("INSERT INTO `_new_AutoDeleteMessages` (`messageTid`,`channelId`,`autoDeleteAt`) SELECT `messageId`,`channelId`,`autoDeleteAt` FROM `AutoDeleteMessages`")
             db.execSQL("DROP TABLE `AutoDeleteMessages`")
             db.execSQL("ALTER TABLE `_new_AutoDeleteMessages` RENAME TO `AutoDeleteMessages`")
         }
