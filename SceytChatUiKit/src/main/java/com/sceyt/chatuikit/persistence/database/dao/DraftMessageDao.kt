@@ -15,9 +15,11 @@ interface DraftMessageDao {
     suspend fun insertDraftMessageUserLinks(links: List<DraftMessageUserLink>)
 
     @Transaction
-    suspend fun insertWithUserLinks(entity: DraftMessageEntity, links: List<DraftMessageUserLink>?) {
+    suspend fun insertWithUserLinks(entity: DraftMessageEntity, links: List<DraftMessageUserLink>) {
         insert(entity)
-        links?.let { insertDraftMessageUserLinks(it) }
+        links.takeIf { it.isNotEmpty() }?.let {
+            insertDraftMessageUserLinks(it)
+        }
     }
 
     @Transaction
