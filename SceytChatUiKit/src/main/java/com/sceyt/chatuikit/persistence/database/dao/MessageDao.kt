@@ -156,9 +156,6 @@ abstract class MessageDao {
     abstract suspend fun insertUserMarkers(userMarkers: List<MarkerEntity>): List<Long>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertUserMarker(userMarker: MarkerEntity): Long
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
