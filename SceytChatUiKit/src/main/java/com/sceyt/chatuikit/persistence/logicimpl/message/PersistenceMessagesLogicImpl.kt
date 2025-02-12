@@ -1108,16 +1108,23 @@ internal class PersistenceMessagesLogicImpl(
             updateMessageStatesWithPendingStates(message, pendingStates)?.let { updatedMessage ->
                 mutableList[index] = updatedMessage
             }
-            messagesDb.add(message.toMessageDb(unListAll))
+
             if (includeParents) {
                 message.parentMessage?.let { parent ->
                     if (parent.id != 0L) {
                         parentMessagesDb.add(parent.toMessageDb(true))
-                        if (parent.incoming)
-                            parent.user?.let { user -> usersDb.add(user.toUserDb()) }
+                        if (parent.incoming && parent.user != null) {
+                            usersDb.add(parent.user.toUserDb())
+                        }
                     }
                 }
             }
+
+            messagesDb.add(message.toMessageDb(unListAll))
+            if (message.incoming && message.user != null) {
+                usersDb.add(message.user.toUserDb())
+            }
+
             message.mentionedUsers?.let {
                 usersDb.addAll(it.map { user -> user.toUserDb() })
             }
@@ -1125,12 +1132,6 @@ internal class PersistenceMessagesLogicImpl(
         messageDao.upsertMessages(messagesDb)
         if (parentMessagesDb.isNotEmpty())
             messageDao.insertMessagesIgnored(parentMessagesDb)
-
-        // Update users
-        list.filter { it.incoming && it.user != null }.mapNotNull { it.user }.toSet().let { users ->
-            if (users.isNotEmpty())
-                usersDb.addAll(users.map { it.toUserDb() })
-        }
 
         userDao.insertUsersWithMetadata(usersDb.toList(), replaceUserOnConflict)
         checkAndInsertAutoDeleteMessage(*mutableList.toTypedArray())

@@ -10,8 +10,10 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
 
-@Entity(tableName = "messages",
-    indices = [Index(value = ["message_id"], unique = true)])
+@Entity(
+    tableName = "messages",
+    indices = [Index(value = ["message_id"], unique = true)]
+)
 data class MessageEntity(
         @PrimaryKey
         val tid: Long,
