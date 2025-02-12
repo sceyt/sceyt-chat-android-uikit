@@ -75,7 +75,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
 
         return builder
             .fallbackToDestructiveMigration()
-            .addMigrations(DatabaseMigrations.Migration_15_16)
+            .addMigrations(DatabaseMigrations.Migration_15_16, DatabaseMigrations.Migration_16_17)
             .allowMainThreadQueries()
             .build()
     }
