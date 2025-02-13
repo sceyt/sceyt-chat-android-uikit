@@ -335,8 +335,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     @Suppress("unused")
     fun setCustomClickListener(listeners: ClickListeners) {
-        clickListeners = (listeners as? MessageListHeaderClickListenersImpl)?.withDefaultListeners(this)
-                ?: listeners
+        clickListeners = (listeners as? MessageListHeaderClickListenersImpl)
+            ?.withDefaultListeners(this) ?: listeners
     }
 
     fun setClickListener(listeners: MessageListHeaderClickListeners) {
@@ -350,8 +350,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     @Suppress("unused")
     fun setCustomEventListener(listener: EventListeners) {
-        eventListeners = (listener as? MessageListHeaderEventsListenerImpl)?.withDefaultListeners(this)
-                ?: listener
+        eventListeners = (listener as? MessageListHeaderEventsListenerImpl)
+            ?.withDefaultListeners(this) ?: listener
     }
 
     @Suppress("unused")
@@ -361,8 +361,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     @Suppress("unused")
     fun setCustomUiElementsListener(listener: ElementsListeners) {
-        uiElementsListeners = (listener as? MessageListHeaderUIElementsListenerImpl)?.withDefaultListeners(this)
-                ?: listener
+        uiElementsListeners = (listener as? MessageListHeaderUIElementsListenerImpl)
+            ?.withDefaultListeners(this) ?: listener
     }
 
     fun setSearchQueryChangeListener(listener: (String) -> Unit) {
@@ -423,11 +423,21 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     //Ui elements listeners
-    override fun onTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
+    override fun onTitle(
+            titleTextView: TextView,
+            channel: SceytChannel,
+            replyMessage: SceytMessage?,
+            replyInThread: Boolean
+    ) {
         setChannelTitle(titleTextView, channel, replyMessage, replyInThread)
     }
 
-    override fun onSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage?, replyInThread: Boolean) {
+    override fun onSubTitle(
+            subjectTextView: TextView,
+            channel: SceytChannel,
+            replyMessage: SceytMessage?,
+            replyInThread: Boolean
+    ) {
         setChannelSubTitle(subjectTextView, channel, replyMessage, replyInThread)
     }
 
