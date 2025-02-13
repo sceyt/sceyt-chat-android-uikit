@@ -6,17 +6,16 @@ import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentPhotoPreviewBinding
 import com.sceyt.chatuikit.extensions.launchActivity
-import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.styles.ImagePreviewStyle
 
 class ImagePreviewActivity : AppCompatActivity() {
     private lateinit var binding: SceytFragmentPhotoPreviewBinding
     private lateinit var style: ImagePreviewStyle
-    private lateinit var channel: SceytChannel
+    private var imageUrl: String = ""
+    private var toolbarTitle: CharSequence = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,14 +38,15 @@ class ImagePreviewActivity : AppCompatActivity() {
     }
 
     private fun getBundleArguments() {
-        channel = requireNotNull(intent?.parcelable(CHANNEL))
+        imageUrl = intent.getStringExtra(IMAGE_URL) ?: ""
+        toolbarTitle = intent.getCharSequenceExtra(TOOLBAR_TITLE) ?: ""
     }
 
     private fun setDetails() {
-        binding.toolbar.setTitle(style.channelNameFormatter.format(this, channel))
+        binding.toolbar.setTitle(toolbarTitle)
 
         Glide.with(this)
-            .load(channel.iconUrl)
+            .load(imageUrl)
             .transition(DrawableTransitionOptions.withCrossFade())
             .into(binding.imageView)
     }
@@ -57,11 +57,17 @@ class ImagePreviewActivity : AppCompatActivity() {
     }
 
     companion object {
-        private var CHANNEL = "channel"
+        private const val IMAGE_URL = "image_url"
+        private const val TOOLBAR_TITLE = "toolbar_title"
 
-        fun launchActivity(context: Context, channel: SceytChannel) {
+        fun launchActivity(
+                context: Context,
+                imageUrl: String,
+                toolbarTitle: CharSequence
+        ) {
             context.launchActivity<ImagePreviewActivity> {
-                putExtra(CHANNEL, channel)
+                putExtra(IMAGE_URL, imageUrl)
+                putExtra(TOOLBAR_TITLE, toolbarTitle)
             }
         }
     }
