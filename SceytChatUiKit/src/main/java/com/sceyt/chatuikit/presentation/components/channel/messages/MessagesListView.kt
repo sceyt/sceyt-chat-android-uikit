@@ -813,13 +813,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun setCustomMessageActionsViewClickListener(listener: ActionsViewClickListeners) {
-        messageActionsViewClickListeners = (listener as? MessageActionsViewClickListenersImpl)?.withDefaultListeners(this)
-                ?: listener
+        messageActionsViewClickListeners = (listener as? MessageActionsViewClickListenersImpl)
+            ?.withDefaultListeners(this) ?: listener
     }
 
     fun setCustomReactionPopupClickListener(listener: PopupClickListeners) {
-        reactionClickListeners = (listener as? ReactionPopupClickListenersImpl)?.withDefaultListeners(this)
-                ?: listener
+        reactionClickListeners = (listener as? ReactionPopupClickListenersImpl)
+            ?.withDefaultListeners(this) ?: listener
     }
 
     fun setActionsEnabled(enabled: Boolean, force: Boolean) {
