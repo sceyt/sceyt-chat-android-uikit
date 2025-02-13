@@ -50,6 +50,18 @@ internal class PersistenceUsersLogicImpl(
         return response
     }
 
+    override suspend fun getUserById(id: String): SceytResponse<SceytUser> {
+        val response = userRepository.getUserById(id)
+
+        if (response is SceytResponse.Success) {
+            response.data?.let { user ->
+                userDao.insertUserWithMetadata(user.toUserDb())
+            }
+        }
+
+        return response
+    }
+
     override suspend fun loadMoreUsers(): SceytResponse<List<SceytUser>> {
         val response = userRepository.loadMoreUsers()
 
@@ -62,8 +74,8 @@ internal class PersistenceUsersLogicImpl(
         return response
     }
 
-    override suspend fun getSceytUsers(ids: List<String>): SceytResponse<List<SceytUser>> {
-        val response = userRepository.getSceytUsersByIds(ids)
+    override suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<SceytUser>> {
+        val response = userRepository.getUsersByIds(ids)
 
         if (response is SceytResponse.Success) {
             response.data?.let { users ->
@@ -213,7 +225,7 @@ internal class PersistenceUsersLogicImpl(
 
     private suspend fun updateCurrentUser() {
         (preference.getUserId() ?: ClientWrapper.currentUser?.id)?.let {
-            val response = userRepository.getSceytUserById(it)
+            val response = userRepository.getUserById(it)
             if (response is SceytResponse.Success)
                 response.data?.toUserDb()?.let { userDb ->
                     userDao.insertUserWithMetadata(userDb)

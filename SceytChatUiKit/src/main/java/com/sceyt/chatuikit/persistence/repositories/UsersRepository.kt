@@ -7,8 +7,8 @@ import com.sceyt.chatuikit.data.models.messages.SceytUser
 interface UsersRepository {
     suspend fun loadUsers(query: UserListQuery): SceytResponse<List<SceytUser>>
     suspend fun loadMoreUsers(): SceytResponse<List<SceytUser>>
-    suspend fun getSceytUsersByIds(ids: List<String>): SceytResponse<List<SceytUser>>
-    suspend fun getSceytUserById(id: String): SceytResponse<SceytUser>
+    suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<SceytUser>>
+    suspend fun getUserById(id: String): SceytResponse<SceytUser>
     suspend fun blockUser(userId: String): SceytResponse<List<SceytUser>>
     suspend fun unblockUser(userId: String): SceytResponse<List<SceytUser>>
 }

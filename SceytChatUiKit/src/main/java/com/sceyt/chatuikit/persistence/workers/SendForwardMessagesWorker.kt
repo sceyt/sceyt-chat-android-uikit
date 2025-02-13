@@ -7,6 +7,7 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.Operation
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.sceyt.chatuikit.data.constants.SceytConstants.SCEYT_WORKER_TAG
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.mappers.toMessage
@@ -25,6 +26,7 @@ object SendForwardMessagesWorkManager : SceytKoinComponent {
         val myWorkRequest = OneTimeWorkRequest.Builder(SendForwardMessagesWorker::class.java)
             .setInputData(dataBuilder.build())
             .addTag(channelId.toString())
+            .addTag(SCEYT_WORKER_TAG)
             .build()
 
         return WorkManager.getInstance(context).beginWith(myWorkRequest).enqueue()

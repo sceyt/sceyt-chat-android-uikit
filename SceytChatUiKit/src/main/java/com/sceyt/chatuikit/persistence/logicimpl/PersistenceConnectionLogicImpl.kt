@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.data.repositories.getUserId
 import com.sceyt.chatuikit.extensions.isAppOnForeground
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
+import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
@@ -27,6 +28,7 @@ import com.sceyt.chatuikit.services.SceytSyncManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
@@ -43,6 +45,7 @@ internal class PersistenceConnectionLogicImpl(
     private val sceytSyncManager: SceytSyncManager by inject()
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val _allPendingEventsSentFlow = broadcastSharedFlow<Unit>()
 
     init {
         if (ConnectionEventManager.connectionState == ConnectionState.Connected)
@@ -73,6 +76,7 @@ internal class PersistenceConnectionLogicImpl(
                 messageLogic.sendAllPendingMessages()
                 messageLogic.sendAllPendingMessageStateUpdates()
                 reactionsLogic.sendAllPendingReactions()
+                _allPendingEventsSentFlow.tryEmit(Unit)
                 if (SceytChatUIKit.config.syncChannelsAfterConnect) {
                     sceytSyncManager.startSync(ChannelListConfig.default)
                 }
@@ -80,13 +84,16 @@ internal class PersistenceConnectionLogicImpl(
         } else SceytPresenceChecker.stopPresenceCheck()
     }
 
+    override val allPendingEventsSentFlow: Flow<Unit>
+        get() = _allPendingEventsSentFlow
+
     private suspend fun insertCurrentUser() = withContext(Dispatchers.IO) {
         ClientWrapper.currentUser?.let {
             usersDao.insertUserWithMetadata(it.toUserDb())
             preference.setString(Keys.KEY_USER_ID, it.id)
         } ?: run {
             preference.getUserId()?.let {
-                val response = usersRepository.getSceytUserById(it)
+                val response = usersRepository.getUserById(it)
                 if (response is SceytResponse.Success)
                     response.data?.toUserDb()?.let { userDb ->
                         usersDao.insertUserWithMetadata(userDb)

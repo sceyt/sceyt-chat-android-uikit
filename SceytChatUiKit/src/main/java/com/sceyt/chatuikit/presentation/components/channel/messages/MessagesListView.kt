@@ -90,7 +90,7 @@ import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-@Suppress("Unused", "MemberVisibilityCanBePrivate")
+@Suppress("Unused", "MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : ConstraintLayout(context, attrs, defStyleAttr), ClickListeners,
         ActionsViewClickListeners, PopupClickListeners {
@@ -813,13 +813,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun setCustomMessageActionsViewClickListener(listener: ActionsViewClickListeners) {
-        messageActionsViewClickListeners = (listener as? MessageActionsViewClickListenersImpl)?.withDefaultListeners(this)
-                ?: listener
+        messageActionsViewClickListeners = (listener as? MessageActionsViewClickListenersImpl)
+            ?.withDefaultListeners(this) ?: listener
     }
 
     fun setCustomReactionPopupClickListener(listener: PopupClickListeners) {
-        reactionClickListeners = (listener as? ReactionPopupClickListenersImpl)?.withDefaultListeners(this)
-                ?: listener
+        reactionClickListeners = (listener as? ReactionPopupClickListenersImpl)
+            ?.withDefaultListeners(this) ?: listener
     }
 
     fun setActionsEnabled(enabled: Boolean, force: Boolean) {

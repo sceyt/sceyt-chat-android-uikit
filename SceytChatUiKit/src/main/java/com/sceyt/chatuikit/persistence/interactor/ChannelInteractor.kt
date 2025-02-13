@@ -68,5 +68,6 @@ interface ChannelInteractor {
             styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean,
     )
 
-    fun getTotalUnreadCount(channelTypes: List<String> = emptyList()): Flow<Int>
+    fun getChannelMessageCount(channelId: Long): Flow<Long>
+    fun getTotalUnreadCount(channelTypes: List<String> = emptyList()): Flow<Long>
 }

@@ -10,9 +10,6 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEnt
 interface PendingMarkerDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(entity: PendingMarkerEntity)
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertMany(entities: List<PendingMarkerEntity>)
 
     @Query("select * from PendingMarker")

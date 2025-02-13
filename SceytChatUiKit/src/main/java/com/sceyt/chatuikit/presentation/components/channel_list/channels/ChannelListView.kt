@@ -222,7 +222,7 @@ class ChannelListView @JvmOverloads constructor(
     /**
      * @param listener Channel click listeners, to listen click events.
      */
-    fun setChannelClickListener(listener: ChannelClickListeners.ClickListeners) {
+    fun setChannelClickListener(listener: ChannelClickListeners) {
         clickListeners.setListener(listener)
     }
 

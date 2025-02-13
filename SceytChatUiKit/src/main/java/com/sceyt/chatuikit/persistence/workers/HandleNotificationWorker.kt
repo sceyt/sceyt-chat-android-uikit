@@ -10,6 +10,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.sceyt.chat.ChatClient
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.constants.SceytConstants.SCEYT_WORKER_TAG
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.MarkerType
@@ -42,6 +43,7 @@ internal object HandleNotificationWorkManager {
 
         val myWorkRequest = OneTimeWorkRequest.Builder(HandleNotificationWorker::class.java)
             .setInputData(inputData)
+            .addTag(SCEYT_WORKER_TAG)
             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
 

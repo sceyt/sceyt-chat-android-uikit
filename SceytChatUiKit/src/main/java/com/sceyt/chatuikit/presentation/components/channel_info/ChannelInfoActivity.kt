@@ -370,7 +370,11 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     protected open fun onAvatarClick(channel: SceytChannel) {
         if (!channel.iconUrl.isNullOrBlank())
-            ImagePreviewActivity.launchActivity(this, channel)
+            ImagePreviewActivity.launchActivity(
+                context = this,
+                imageUrl = channel.iconUrl.orEmpty(),
+                toolbarTitle = SceytChatUIKit.formatters.channelNameFormatter.format(this, channel)
+            )
     }
 
     protected open fun onClearHistoryClick(channel: SceytChannel) {

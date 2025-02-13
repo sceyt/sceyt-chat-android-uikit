@@ -7,6 +7,7 @@ import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ActionCallback
 import com.sceyt.chat.wrapper.ClientWrapper
+import com.sceyt.chatuikit.data.constants.SceytConstants.SCEYT_WORKER_TAG
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.repositories.getUserId
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
@@ -105,17 +106,16 @@ class SceytChatUIFacade(
         channelsCache.clearAll()
     }
 
-    fun logOut(unregisterPushCallback: ((Result<Boolean>) -> Unit)? = null) {
-        scope.launch {
-            sceytSyncManager.cancelSync()
-            WorkManager.getInstance(context).cancelAllWork()
-            clearData()
-            val result = unregisterFirebaseToken()
-            ChatClient.getClient().disconnect()
-            ClientWrapper.currentUser = null
-            clientUserId = null
-            unregisterPushCallback?.invoke(result)
-        }
+    fun logOut(unregisterPushCallback: ((Result<Boolean>) -> Unit)? = null) = scope.launch {
+        sceytSyncManager.cancelSync()
+        WorkManager.getInstance(context).cancelAllWorkByTag(SCEYT_WORKER_TAG)
+        clearData()
+        val result = unregisterFirebaseToken()
+        ChatClient.getClient().disconnect()
+        ClientWrapper.currentUser = null
+        clientUserId = null
+        SceytChatUIKit.notifications.pushNotification.notificationHandler.cancelAllNotifications()
+        unregisterPushCallback?.invoke(result)
     }
 
     private suspend fun unregisterFirebaseToken(): Result<Boolean> = withContext(Dispatchers.IO) {

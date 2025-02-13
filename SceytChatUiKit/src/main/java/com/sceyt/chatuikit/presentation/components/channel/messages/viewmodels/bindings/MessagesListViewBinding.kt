@@ -336,6 +336,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 
+    connectionLogic.allPendingEventsSentFlow
+        .onEach {
+            // Sync messages near center visible message
+            syncNearCenterVisibleMessageIfNeeded()
+        }
+        .launchIn(viewModelScope)
+
     ConnectionEventManager.onChangedConnectStatusFlow
         .distinctUntilChanged()
         .onEach { stateData ->
@@ -354,8 +361,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     (message as? MessageItem)?.let {
                         syncManager.syncConversationMessagesAfter(conversationId, it.message.id)
                     }
-                    // Sync messages near center visible message
-                    syncNearCenterVisibleMessageIfNeeded()
                 } else {
                     lastSyncCenterOffsetId = 0L
                     needSyncMessagesWhenScrollStateIdle = true
@@ -403,10 +408,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
         }.launchIn(lifecycleOwner.lifecycleScope)
 
-    MessagesCache.messagesHardDeletedFlow
+    MessagesCache.messageHardDeletedFlow
         .filter { (channelId, _) -> channelId == channel.id }
-        .onEach { (_, tid) ->
-            messagesListView.forceDeleteMessageByTid(tid)
+        .onEach { (_, message) ->
+            messagesListView.forceDeleteMessageByTid(message.tid)
         }.launchIn(lifecycleOwner.lifecycleScope)
 
     loadMessagesFlow
@@ -737,7 +742,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             is MessageCommandEvent.UserClick -> {
                 if (event.userId == SceytChatUIKit.chatUIFacade.myId) return@setMessageCommandEventListener
                 viewModelScope.launch(Dispatchers.IO) {
-                    val user = userInteractor.getUserFromDbById(event.userId) ?: SceytUser(event.userId)
+                    val user = userInteractor.getUserFromDbById(event.userId)
+                            ?: SceytUser(event.userId)
                     val response = channelInteractor.findOrCreatePendingChannelByMembers(CreateChannelData(
                         type = ChannelTypeEnum.Direct.value,
                         members = listOf(SceytMember(roleName = RoleTypeEnum.Owner.value, user = user)),
