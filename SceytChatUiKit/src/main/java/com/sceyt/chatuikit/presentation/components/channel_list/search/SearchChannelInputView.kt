@@ -14,8 +14,12 @@ import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.click.SearchInputClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.click.SearchInputClickListeners.ClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.click.SearchInputClickListenersImpl
+import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.click.setListener
+import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.InputChangedListener
+import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.InputTextSubmitListener
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.SearchInputEventListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.SearchInputEventListeners.EventListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.SearchInputEventListenersImpl
@@ -121,6 +125,11 @@ class SearchChannelInputView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
+    fun setClickListener(listener: SearchInputClickListeners) {
+        clickListeners.setListener(listener)
+    }
+
+    @Suppress("unused")
     fun setCustomClickListener(listener: ClickListeners) {
         clickListeners = (listener as? SearchInputClickListenersImpl)?.withDefaultListeners(this)
                 ?: listener
@@ -136,14 +145,6 @@ class SearchChannelInputView @JvmOverloads constructor(
     fun clearSearchAndFocus() {
         binding.input.text = null
         binding.input.clearFocus()
-    }
-
-    fun interface InputChangedListener {
-        fun onInputChanged(query: String)
-    }
-
-    fun interface InputTextSubmitListener {
-        fun onQueryTextSubmit(query: String)
     }
 
     override fun onClearClick(view: View) {

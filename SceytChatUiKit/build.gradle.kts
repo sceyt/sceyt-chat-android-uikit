@@ -32,6 +32,10 @@ android {
         viewBinding = true
         buildConfig = true
     }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 dependencies {
@@ -50,6 +54,7 @@ dependencies {
     api(libs.firebase.messaging.ktx)
     api(libs.play.services.base)
     annotationProcessor(libs.room.compiler)
+    //noinspection KaptUsageInsteadOfKsp
     kapt(libs.room.compiler)
     api(libs.room.runtime)
     api(libs.room.ktx)

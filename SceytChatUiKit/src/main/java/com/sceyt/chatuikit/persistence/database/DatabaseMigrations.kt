@@ -1,9 +1,24 @@
 package com.sceyt.chatuikit.persistence.database
 
+import androidx.room.DeleteColumn
+import androidx.room.RenameColumn
+import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 object DatabaseMigrations {
+
+    @RenameColumn(tableName = "messages", fromColumnName = "isParentMessage", toColumnName = "unList")
+    class AutoMigrationSpec3to4 : AutoMigrationSpec
+
+    @DeleteColumn(tableName = "DraftMessageEntity", columnName = "metadata")
+    class AutoMigrationSpec5To6 : AutoMigrationSpec
+
+    @DeleteColumn(tableName = "MentionUserMessageLink", columnName = "id")
+    class AutoMigrationSpec10To11 : AutoMigrationSpec
+
+    @DeleteColumn(tableName = "users", columnName = "metadata")
+    class AutoMigrationSpec13To14 : AutoMigrationSpec
 
     val Migration_15_16: Migration = object : Migration(15, 16) {
         override fun migrate(db: SupportSQLiteDatabase) {
@@ -22,6 +37,17 @@ object DatabaseMigrations {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_channels_lastMessageAt` ON `channels` (`lastMessageAt`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_channels_pending` ON `channels` (`pending`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_channels_isSelf` ON `channels` (`isSelf`)")
+        }
+    }
+
+    val Migration_16_17: Migration = object : Migration(16, 17) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Clear all auto delete messages
+            db.execSQL("DELETE FROM AutoDeleteMessages")
+            // Start migration
+            db.execSQL("CREATE TABLE IF NOT EXISTS `_new_AutoDeleteMessages` (`messageTid` INTEGER NOT NULL, `channelId` INTEGER NOT NULL, `autoDeleteAt` INTEGER NOT NULL, PRIMARY KEY(`messageTid`), FOREIGN KEY(`messageTid`) REFERENCES `messages`(`tid`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+            db.execSQL("DROP TABLE `AutoDeleteMessages`")
+            db.execSQL("ALTER TABLE `_new_AutoDeleteMessages` RENAME TO `AutoDeleteMessages`")
         }
     }
 }

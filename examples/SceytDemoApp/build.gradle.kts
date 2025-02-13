@@ -41,11 +41,16 @@ android {
                 "proguard-rules.pro"
             )
         }
+        getByName("debug") {
+            applicationIdSuffix = ".debug"
+        }
     }
 
     productFlavors {
         create("prod") {
             dimension = "environment"
+            resValue("string", "app_name", "Sceyt Chat")
+
             isDefault = true
             buildConfigField("String", "API_URL", "\"https://us-ohio-api.sceyt.com\"")
             buildConfigField("String", "APP_ID", "\"8lwox2ge93\"")
@@ -56,6 +61,8 @@ android {
 
         create("staging") {
             dimension = "environment"
+            resValue("string", "app_name", "Sceyt Chat Debug")
+
             buildConfigField("String", "API_URL", "\"https://uk-london-south-api-2-staging.waafi.com\"")
             buildConfigField("String", "APP_ID", "\"yzr58x11rm\"")
             buildConfigField("String", "GEN_TOKEN_BASE_URL", "\"https://hm25ehfh6i.execute-api.eu-central-1.amazonaws.com/\"")

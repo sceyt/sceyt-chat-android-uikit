@@ -11,7 +11,8 @@ import kotlinx.coroutines.flow.Flow
 interface PersistenceUsersLogic {
     suspend fun loadUsers(query: UserListQuery): SceytResponse<List<SceytUser>>
     suspend fun loadMoreUsers(): SceytResponse<List<SceytUser>>
-    suspend fun getSceytUsers(ids: List<String>): SceytResponse<List<SceytUser>>
+    suspend fun getUserById(id: String): SceytResponse<SceytUser>
+    suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<SceytUser>>
     suspend fun getUserFromDbById(id: String): SceytUser?
     suspend fun getUsersFromDbByIds(id: List<String>): List<SceytUser>
     suspend fun searchLocaleUserByMetadata(

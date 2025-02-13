@@ -37,7 +37,7 @@ class SplashViewModel(
 
     private fun checkLoginState() {
         awaitJob = viewModelScope.launch {
-            delay(1000)
+            delay(300)
             openNextScreen()
         }
     }

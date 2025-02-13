@@ -176,7 +176,7 @@ interface ChannelDao {
     fun getTotalUnreadCountAsFlow(
             channelTypes: List<String>,
             isEmptyTypes: Int = if (channelTypes.isEmpty()) 1 else 0,
-    ): Flow<Int?>
+    ): Flow<Long?>
 
     @Query("select count(chat_id) from channels")
     suspend fun getAllChannelsCount(): Int

@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.extensions.roundUp
 import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.AutoDeleteMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessageLink
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
@@ -27,6 +28,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEnt
 import com.sceyt.chatuikit.persistence.database.entity.messages.UserMarkerLink
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.mappers.toAttachmentPayLoad
+import kotlinx.coroutines.flow.Flow
 import kotlin.math.max
 
 @Dao
@@ -85,7 +87,9 @@ abstract class MessageDao {
                 attachments.filter { it.attachmentEntity.type != AttachmentTypeEnum.Link.value }
                     .map { it.toAttachmentPayLoad(messageDb.messageEntity) }
             })
-            insertLinkDetails(attachmentPairs.flatMap { (attachments, _) -> attachments.mapNotNull { attachmentDb -> attachmentDb.linkDetails } })
+            insertLinkDetails(attachmentPairs.flatMap { (attachments, _) ->
+                attachments.mapNotNull { attachmentDb -> attachmentDb.linkDetails }
+            })
         }
 
         //Insert user markers
@@ -104,7 +108,10 @@ abstract class MessageDao {
             insertReactionTotals(reactionTotals)
 
         //Inset mentioned users links
-        insertMentionedUsersMessageLinks(*messages.map { it.messageEntity }.toTypedArray())
+        insertMentionedUsersMessageLinks(*messages.toTypedArray())
+
+        //Insert auto delete messages
+        insertAutoDeleteMessage(*messages.toTypedArray())
     }
 
     @Transaction
@@ -149,9 +156,6 @@ abstract class MessageDao {
     abstract suspend fun insertUserMarkers(userMarkers: List<MarkerEntity>): List<Long>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertUserMarker(userMarker: MarkerEntity): Long
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -163,15 +167,33 @@ abstract class MessageDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract suspend fun insetUserMarkerLinks(links: List<UserMarkerLink>)
 
-    private suspend fun insertMentionedUsersMessageLinks(vararg messageEntity: MessageEntity) {
-        val entities = messageEntity.flatMap { entity ->
-            entity.mentionedUsersIds?.map {
-                MentionUserMessageLink(messageTid = entity.tid, userId = it)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertAutoDeletedMessages(entities: List<AutoDeleteMessageEntity>)
+
+    private suspend fun insertMentionedUsersMessageLinks(vararg messages: MessageDb) {
+        val entities = messages.flatMap { item ->
+            item.messageEntity.mentionedUsersIds?.map {
+                MentionUserMessageLink(messageTid = item.messageEntity.tid, userId = it)
             } ?: arrayListOf()
         }
         if (entities.isEmpty()) return
 
         insertMentionedUsersMessageLinks(entities)
+    }
+
+    private suspend fun insertAutoDeleteMessage(vararg messages: MessageDb) {
+        val filtered = messages.mapNotNull {
+            if ((it.messageEntity.autoDeleteAt ?: 0) > 0) {
+                val entity = it.messageEntity
+                AutoDeleteMessageEntity(
+                    messageTid = entity.tid,
+                    channelId = entity.channelId,
+                    autoDeleteAt = entity.autoDeleteAt ?: 0L
+                )
+            } else null
+        }.takeIf { it.isNotEmpty() } ?: return
+
+        insertAutoDeletedMessages(filtered)
     }
 
     @Transaction
@@ -313,6 +335,9 @@ abstract class MessageDao {
             "(select max(message_id) from messages where channelId =:channelId and deliveryStatus != $PENDING_STATUS)")
     abstract suspend fun getLastSentMessageId(channelId: Long): Long?
 
+    @Query("select count(*) from messages where channelId = :channelId")
+    abstract fun getMessagesCountAsFlow(channelId: Long): Flow<Long?>
+
     @Query("select exists(select * from messages where message_id =:messageId)")
     abstract suspend fun existsMessageById(messageId: Long): Boolean
 
@@ -346,6 +371,9 @@ abstract class MessageDao {
 
     @Query("delete from messages where tid =:tid")
     abstract fun deleteMessageByTid(tid: Long)
+
+    @Query("delete from messages where tid in (:tIds)")
+    abstract fun deleteMessagesByTid(tIds: List<Long>)
 
     @Query("delete from messages where message_id in (:ids)")
     abstract fun deleteMessagesById(ids: List<Long>)

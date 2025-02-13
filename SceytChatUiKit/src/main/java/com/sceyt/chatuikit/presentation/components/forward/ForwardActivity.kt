@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivityForwardBinding
 import com.sceyt.chatuikit.extensions.launchActivity
@@ -22,7 +21,7 @@ import kotlinx.coroutines.flow.onEach
 open class ForwardActivity : ShareableActivity<ForwardStyle>() {
     protected lateinit var binding: SceytActivityForwardBinding
     protected val viewModel: ForwardViewModel by viewModels()
-    protected lateinit var forwardMessages: List<SceytMessage>
+    protected var forwardMessages: List<SceytMessage>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,16 +60,22 @@ open class ForwardActivity : ShareableActivity<ForwardStyle>() {
     }
 
     protected open fun sendForwardMessage(markOwnMessageAsForwarded: Boolean) {
-        viewModel.sendForwardMessage(channelIds = selectedChannels.toLongArray(), markOwnMessageAsForwarded, forwardMessages)
-            .onEach {
-                when (it) {
-                    ForwardViewModel.State.Loading -> SceytLoader.showLoading(this@ForwardActivity)
-                    ForwardViewModel.State.Finish -> {
-                        SceytLoader.hideLoading()
-                        finishSharingAction()
-                    }
+        viewModel.sendForwardMessage(
+            channelIds = selectedChannels.toLongArray(),
+            markOwnMessageAsForwarded = markOwnMessageAsForwarded,
+            messages = forwardMessages ?: emptyList()
+        ).onEach {
+            when (it) {
+                ForwardViewModel.State.Loading -> {
+                    SceytLoader.showLoading(this@ForwardActivity)
                 }
-            }.launchIn(lifecycleScope)
+
+                ForwardViewModel.State.Finish -> {
+                    SceytLoader.hideLoading()
+                    finishSharingAction()
+                }
+            }
+        }.launchIn(lifecycleScope)
     }
 
     protected open fun determinateBtnState() {

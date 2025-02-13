@@ -63,7 +63,7 @@ class UsersRepositoryImpl : UsersRepository {
         }
     }
 
-    override suspend fun getSceytUsersByIds(ids: List<String>): SceytResponse<List<SceytUser>> {
+    override suspend fun getUsersByIds(ids: List<String>): SceytResponse<List<SceytUser>> {
         return suspendCancellableCoroutine { continuation ->
             val builder = UserListQueryByIds.Builder()
                 .setIds(ids)
@@ -84,7 +84,7 @@ class UsersRepositoryImpl : UsersRepository {
         }
     }
 
-    override suspend fun getSceytUserById(id: String): SceytResponse<SceytUser> {
+    override suspend fun getUserById(id: String): SceytResponse<SceytUser> {
         return suspendCancellableCoroutine { continuation ->
             val builder = UserListQueryByIds.Builder()
                 .setIds(listOf(id))

@@ -12,9 +12,6 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerWithUserDb
 interface MarkerDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(marker: MarkerEntity)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMany(marker: List<MarkerEntity>)
 
     @Transaction

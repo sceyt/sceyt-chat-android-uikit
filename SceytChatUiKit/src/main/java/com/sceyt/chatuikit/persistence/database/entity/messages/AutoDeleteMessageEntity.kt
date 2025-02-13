@@ -7,15 +7,15 @@ import androidx.room.PrimaryKey
 @Entity(foreignKeys = [
         ForeignKey(
                 entity = MessageEntity::class,
-                parentColumns = ["message_id"],
-                childColumns = ["messageId"],
+                parentColumns = ["tid"],
+                childColumns = ["messageTid"],
                 onDelete = ForeignKey.CASCADE
         )
 ],
 tableName = "AutoDeleteMessages")
 class AutoDeleteMessageEntity(
         @PrimaryKey
-        val messageId: Long,
+        val messageTid: Long,
         val channelId: Long,
         val autoDeleteAt: Long
 )
