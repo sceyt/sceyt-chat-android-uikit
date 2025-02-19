@@ -13,38 +13,38 @@ import androidx.annotation.DrawableRes
 import androidx.core.view.isVisible
 
 fun TextView.setDrawableEnd(@DrawableRes id: Int, @ColorRes tint: Int = 0) {
-    val drawables = compoundDrawables
+    val drawables = compoundDrawablesRelative
     val drawableEnd = context.getCompatDrawable(id)
     if (tint != 0)
         drawableEnd?.mutate()?.setTint(context.getCompatColor(tint))
 
-    setCompoundDrawablesWithIntrinsicBounds(drawables[0], drawables[2], drawableEnd, drawables[3])
+    setCompoundDrawablesRelativeWithIntrinsicBounds(drawables[0], drawables[2], drawableEnd, drawables[3])
 }
 
 fun TextView.setDrawableStart(@DrawableRes id: Int, @ColorRes tint: Int = 0) {
-    val drawables = compoundDrawables
+    val drawables = compoundDrawablesRelative
     val drawableStart = context.getCompatDrawable(id)
     if (tint != 0)
         drawableStart?.mutate()?.setTint(context.getCompatColor(tint))
 
-    setCompoundDrawablesWithIntrinsicBounds(drawableStart, drawables[1], drawables[2], drawables[3])
+    setCompoundDrawablesRelativeWithIntrinsicBounds(drawableStart, drawables[1], drawables[2], drawables[3])
 }
 
 fun TextView.setDrawableStart(drawable: Drawable?, @ColorInt tint: Int = 0) {
-    val drawables = compoundDrawables
+    val drawables = compoundDrawablesRelative
     if (tint != 0)
         drawable?.mutate()?.setTint(tint)
 
-    setCompoundDrawablesWithIntrinsicBounds(drawable, drawables[1], drawables[2], drawables[3])
+    setCompoundDrawablesRelativeWithIntrinsicBounds(drawable, drawables[1], drawables[2], drawables[3])
 }
 
 fun TextView.setDrawableTop(@DrawableRes id: Int, @ColorRes tint: Int = 0) {
-    val drawables = compoundDrawables
+    val drawables = compoundDrawablesRelative
     val drawableTop = context.getCompatDrawable(id)
     if (tint != 0)
         drawableTop?.mutate()?.setTint(context.getCompatColor(tint))
 
-    setCompoundDrawablesWithIntrinsicBounds(drawables[0], drawableTop, drawables[2], drawables[3])
+    setCompoundDrawablesRelativeWithIntrinsicBounds(drawables[0], drawableTop, drawables[2], drawables[3])
 }
 
 

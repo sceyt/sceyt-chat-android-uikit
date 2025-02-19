@@ -85,7 +85,7 @@
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/displayName"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:ellipsize="end"
@@ -93,11 +93,13 @@
                     android:includeFontPadding="false"
                     android:maxLines="1"
                     android:paddingVertical="5dp"
+                    android:textAlignment="textStart"
                     android:textColor="@color/sceyt_color_text_primary"
                     android:textColorHint="@color/sceyt_color_text_footnote"
                     android:textSize="@dimen/bigTextSize"
                     app:layout_constraintBottom_toTopOf="@+id/tvStatus"
                     app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0"
                     app:layout_constraintStart_toEndOf="@+id/avatar"
                     app:layout_constraintTop_toTopOf="@+id/avatar"
                     app:layout_constraintVertical_chainStyle="packed"

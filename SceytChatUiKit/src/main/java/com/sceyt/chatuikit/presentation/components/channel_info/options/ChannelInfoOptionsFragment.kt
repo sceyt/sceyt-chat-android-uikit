@@ -85,8 +85,8 @@ open class ChannelInfoOptionsFragment : Fragment(), ChannelUpdateListener, Chann
             searchMessages.isVisible = enableSearchMessages
 
             if (channel.isPublic()) {
-                members.text = style.subscribersTitleText
                 members.setDrawableStart(style.subscribersIcon)
+                members.text = style.subscribersTitleText
             } else {
                 members.setDrawableStart(style.membersIcon)
                 members.text = style.membersTitleText
