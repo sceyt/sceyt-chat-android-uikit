@@ -40,9 +40,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            manifestPlaceholders["crashlyticsCollectionEnabled"] = "true"
         }
         getByName("debug") {
             applicationIdSuffix = ".debug"
+            manifestPlaceholders["crashlyticsCollectionEnabled"] = "false"
         }
     }
 
