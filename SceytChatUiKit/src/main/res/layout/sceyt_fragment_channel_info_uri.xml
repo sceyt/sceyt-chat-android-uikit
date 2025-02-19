@@ -13,7 +13,7 @@
         android:drawableStart="@drawable/sceyt_ic_channel_uri_with_layers"
         android:drawablePadding="16dp"
         android:foreground="@drawable/sceyt_bg_ripple"
-        android:gravity="center_vertical"
+        android:gravity="center_vertical|start"
         android:paddingHorizontal="16dp"
         android:paddingVertical="10dp"
         android:textColor="@color/sceyt_color_text_primary"
