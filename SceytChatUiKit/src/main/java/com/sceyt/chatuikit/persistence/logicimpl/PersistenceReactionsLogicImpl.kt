@@ -256,13 +256,16 @@ internal class PersistenceReactionsLogicImpl(
                 pendingReactionDao.deletePendingReaction(messageId, key)
 
                 if (emitUpdate) {
-                    messagesCache.messageUpdated(channelId, resultMessage)
-                    ChatReactionMessagesCache.addMessage(resultMessage)
+                    val message = messageDao.getMessageById(messageId)?.toSceytMessage()
+                            ?: response.data
 
-                    if (!resultMessage.incoming) {
-                        val reaction = resultMessage.userReactions?.maxByOrNull { it.createdAt }
+                    messagesCache.messageUpdated(channelId, message)
+                    ChatReactionMessagesCache.addMessage(message)
+
+                    if (!message.incoming) {
+                        val reaction = message.userReactions?.maxByOrNull { it.createdAt }
                         if (reaction != null)
-                            handleChannelReaction(ReactionUpdateEventData(resultMessage, reaction, Add), resultMessage)
+                            handleChannelReaction(ReactionUpdateEventData(message, reaction, Add), message)
                     }
                 }
             }
@@ -292,12 +295,16 @@ internal class PersistenceReactionsLogicImpl(
                 messagesCache.deletePendingReaction(channelId, resultMessage.tid, key)
 
                 if (emitUpdate) {
-                    messagesCache.messageUpdated(channelId, resultMessage)
+                    val message = messageDao.getMessageById(messageId)
+                        ?.toSceytMessage() ?: response.data
 
-                    if (!resultMessage.incoming) {
-                        val reaction = SceytReaction(0, messageId, key, 1, "", 0,
-                            ClientWrapper.currentUser?.toSceytUser(), false)
-                        handleChannelReaction(ReactionUpdateEventData(resultMessage, reaction, Remove), resultMessage)
+                    messagesCache.messageUpdated(channelId, message)
+                    ChatReactionMessagesCache.addMessage(message)
+
+                    if (!message.incoming) {
+                        val reaction = message.userReactions?.maxByOrNull { it.createdAt }
+                        if (reaction != null)
+                            handleChannelReaction(ReactionUpdateEventData(message, reaction, Add), message)
                     }
                 }
             }
