@@ -31,6 +31,7 @@ object NotificationBuilderHelper {
     ).apply {
         extras.putLong(DefaultPushNotificationBuilder.EXTRAS_MESSAGE_ID, message.id)
         extras.putInt(DefaultPushNotificationBuilder.EXTRAS_NOTIFICATION_TYPE, type.ordinal)
+        extras.putBoolean(DefaultPushNotificationBuilder.EXTRAS_CHAT_NOTIFICATION, true)
         reaction?.id?.let { reactionId ->
             extras.putLong(DefaultPushNotificationBuilder.EXTRAS_REACTION_ID, reactionId)
         }
