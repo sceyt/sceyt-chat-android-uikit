@@ -55,6 +55,7 @@ object FileTransferHelper : SceytKoinComponent {
         }
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getProgressUpdateCallback() = ProgressUpdateCallback { transferData ->
         attachment = attachment.copy(
             transferState = transferData.state,
@@ -64,6 +65,7 @@ object FileTransferHelper : SceytKoinComponent {
         emitAttachmentTransferUpdate(transferData, attachment.fileSize)
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getPreparingCallback() = PreparingCallback { transferData ->
         attachment = attachment.copy(transferState = transferData.state)
         emitAttachmentTransferUpdate(transferData, attachment.fileSize)
@@ -72,6 +74,7 @@ object FileTransferHelper : SceytKoinComponent {
         }
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getResumePauseCallback() = ResumePauseCallback {
         attachment = attachment.copy(transferState = it.state)
         emitAttachmentTransferUpdate(it, attachment.fileSize)
@@ -80,6 +83,7 @@ object FileTransferHelper : SceytKoinComponent {
         }
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getDownloadResultCallback() = TransferResultCallback {
         when (it) {
             is SceytResponse.Success -> {
@@ -108,6 +112,7 @@ object FileTransferHelper : SceytKoinComponent {
         }
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getUploadResultCallback() = TransferResultCallback { result ->
         when (result) {
             is SceytResponse.Success -> {
@@ -139,6 +144,7 @@ object FileTransferHelper : SceytKoinComponent {
         }
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getUpdateFileLocationCallback() = UpdateFileLocationCallback { newPath ->
         val transferData = TransferData(attachment.messageTid, 0f,
             TransferState.FilePathChanged, newPath, attachment.url)
@@ -164,6 +170,7 @@ object FileTransferHelper : SceytKoinComponent {
         }
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     fun TransferTask.getThumbCallback() = ThumbCallback { newPath, thumbData ->
         val transferData = TransferData(attachment.messageTid, attachment.progressPercent ?: 0f,
             TransferState.ThumbLoaded, newPath, attachment.url, thumbData)

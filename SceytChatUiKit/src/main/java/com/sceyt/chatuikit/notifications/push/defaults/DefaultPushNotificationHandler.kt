@@ -29,10 +29,10 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.Collections
 
-@Suppress("MemberVisibilityCanBePrivate")
 open class DefaultPushNotificationHandler(
         private val context: Context
 ) : PushNotificationHandler {
+    @Suppress("MemberVisibilityCanBePrivate")
     protected val notificationManager by lazy { NotificationManagerCompat.from(context) }
     private val mutex by lazy { Mutex() }
     private val notificationBuilder by lazy { notifications.pushNotification.notificationBuilder }
@@ -63,10 +63,13 @@ open class DefaultPushNotificationHandler(
         if (checkSelfPermission(context, POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
             return
 
+        if (!SceytChatUIKit.config.notificationConfig.isPushEnabled)
+            return
+
         mutex.withLock {
             val notificationId = message.channelId.toInt()
             notificationManager.activeNotifications.firstOrNull {
-                it.id == notificationId
+                it.id == notificationId && it.notification.extras.getBoolean(EXTRAS_CHAT_NOTIFICATION)
             } ?: return@withLock
 
             val style = notificationManager.extractMessagingStyle(notificationId) ?: return@withLock
@@ -85,9 +88,9 @@ open class DefaultPushNotificationHandler(
             val messages = style.messages
             when (message.state) {
                 MessageState.Deleted, MessageState.DeletedHard -> {
-                    deleteNotification(
+                    onNotificationMessageDeleted(
                         notificationId = notificationId,
-                        data = pushData,
+                        dataProvider = { pushData },
                         predicate = { it.extras.getLong(EXTRAS_MESSAGE_ID) == message.id }
                     )
                 }
@@ -102,9 +105,7 @@ open class DefaultPushNotificationHandler(
                         it.extras.getLong(EXTRAS_MESSAGE_ID) == message.id
                     }.takeIf { it != -1 }?.let {
                         messages[it] = pushData.toMessagingStyle(context, person)
-                    } ?: run {
-                        messages.add(pushData.toMessagingStyle(context, person))
-                    }
+                    } ?: return@withLock
 
                     notificationBuilder.buildNotification(
                         context = context,
@@ -130,22 +131,28 @@ open class DefaultPushNotificationHandler(
     ) {
         if (checkSelfPermission(context, POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
             return
+        val user = reaction.user ?: return
 
         mutex.withLock {
             val notificationId = message.channelId.toInt()
             val channel = SceytChatUIKit.chatUIFacade.channelInteractor.getChannelFromDb(message.channelId)
                     ?: return@withLock
 
-            deleteNotification(
+            onNotificationMessageDeleted(
                 notificationId = notificationId,
-                data = PushData(
-                    type = NotificationType.MessageReaction,
-                    channel = channel,
-                    message = message,
-                    user = reaction.user ?: return@withLock,
-                    reaction = reaction
-                ),
-                predicate = { it.extras.getLong(EXTRAS_REACTION_ID) == reaction.id }
+                dataProvider = {
+                    PushData(
+                        type = NotificationType.MessageReaction,
+                        channel = channel,
+                        message = message,
+                        user = user,
+                        reaction = reaction
+                    )
+                },
+                predicate = {
+                    it.extras.getBoolean(EXTRAS_CHAT_NOTIFICATION) &&
+                            it.extras.getLong(EXTRAS_REACTION_ID) == reaction.id
+                }
             )
             // Delay for a short period to ensure the notification is removed before re-creating it
             delay(50)
@@ -153,6 +160,10 @@ open class DefaultPushNotificationHandler(
     }
 
     override fun cancelNotification(notificationId: Int) {
+        notificationManager.activeNotifications.firstOrNull {
+            it.id == notificationId && it.notification.extras.getBoolean(EXTRAS_CHAT_NOTIFICATION)
+        } ?: return
+
         notificationManager.cancel(notificationId)
     }
 
@@ -164,9 +175,9 @@ open class DefaultPushNotificationHandler(
     }
 
     @RequiresPermission(POST_NOTIFICATIONS)
-    protected open suspend fun deleteNotification(
+    protected open suspend fun onNotificationMessageDeleted(
             notificationId: Int,
-            data: PushData,
+            dataProvider: () -> PushData,
             predicate: (NotificationCompat.MessagingStyle.Message) -> Boolean
     ) {
         val style = notificationManager.extractMessagingStyle(notificationId) ?: return
@@ -181,7 +192,7 @@ open class DefaultPushNotificationHandler(
 
         notificationBuilder.buildNotification(
             context = context,
-            data = data,
+            data = dataProvider(),
             notificationId = notificationId,
             style = style,
             builderCustomizer = { setSilent(true) }
