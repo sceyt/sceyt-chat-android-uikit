@@ -26,6 +26,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MessageIdAndTid
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.UserMarkerLink
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.mappers.toAttachmentPayLoad
 import kotlinx.coroutines.flow.Flow
@@ -169,6 +170,19 @@ abstract class MessageDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertAutoDeletedMessages(entities: List<AutoDeleteMessageEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    abstract suspend fun insertPendingMarkersIgnored(entities: List<PendingMarkerEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Transaction
+    suspend fun insertPendingMarkers(entities: List<PendingMarkerEntity>) {
+        if (entities.isEmpty()) return
+        val existMessageIds = getExistMessageByIds(entities.map { it.messageId })
+        if (existMessageIds.isEmpty()) return
+        val filtered = entities.filter { it.messageId in existMessageIds }
+        insertPendingMarkersIgnored(filtered)
+    }
 
     private suspend fun insertMentionedUsersMessageLinks(vararg messages: MessageDb) {
         val entities = messages.flatMap { item ->
