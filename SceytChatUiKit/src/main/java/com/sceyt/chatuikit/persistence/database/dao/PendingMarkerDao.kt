@@ -1,16 +1,11 @@
 package com.sceyt.chatuikit.persistence.database.dao
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
 
 @Dao
 interface PendingMarkerDao {
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertMany(entities: List<PendingMarkerEntity>)
 
     @Query("select * from PendingMarker")
     suspend fun getAllMarkers(): List<PendingMarkerEntity>

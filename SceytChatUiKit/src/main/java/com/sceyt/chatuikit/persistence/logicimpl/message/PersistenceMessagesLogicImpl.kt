@@ -848,10 +848,19 @@ internal class PersistenceMessagesLogicImpl(
         }
     }
 
-    private suspend fun updateMessageLoadRange(messageId: Long, channelId: Long, response: SceytResponse<List<SceytMessage>>) {
+    private suspend fun updateMessageLoadRange(
+            messageId: Long,
+            channelId: Long,
+            response: SceytResponse<List<SceytMessage>>
+    ) {
         val data = (response as? SceytResponse.Success)?.data ?: return
         if (data.isEmpty()) return
-        messageLoadRangeUpdater.updateLoadRange(messageId = messageId, start = data.first().id, end = data.last().id, channelId = channelId)
+        messageLoadRangeUpdater.updateLoadRange(
+            messageId = messageId,
+            start = data.first().id,
+            end = data.last().id,
+            channelId = channelId
+        )
     }
 
     private suspend fun updateMessageLoadRangeOnMessageEvent(
@@ -1195,10 +1204,10 @@ internal class PersistenceMessagesLogicImpl(
 
     private suspend fun addPendingMarkerToDb(channelId: Long, marker: String, vararg ids: Long) {
         if (ids.isEmpty()) return
-        val existMessageIds = messageDao.getExistMessageByIds(ids.toList())
-        if (existMessageIds.isEmpty()) return
-        val list = existMessageIds.map { PendingMarkerEntity(channelId = channelId, messageId = it, name = marker) }
-        pendingMarkerDao.insertMany(list)
+        val list = ids.map {
+            PendingMarkerEntity(channelId = channelId, messageId = it, name = marker)
+        }
+        messageDao.insertPendingMarkers(list)
     }
 
     private suspend fun onMarkerResponse(
