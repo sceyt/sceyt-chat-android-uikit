@@ -95,7 +95,7 @@ abstract class MessageDao {
         //Insert user markers
         val userMarkers = messages.flatMap { it.userMarkers ?: arrayListOf() }
         if (userMarkers.isNotEmpty())
-            insertUserMarkersAndLinks(userMarkers)
+            insertUserMarkersAndLinks(userMarkers, checkExist = false)
 
         //Insert reactions
         val reactions = messages.flatMap { it.reactions ?: arrayListOf() }
@@ -197,9 +197,18 @@ abstract class MessageDao {
     }
 
     @Transaction
-    open suspend fun insertUserMarkersAndLinks(userMarkers: List<MarkerEntity>) {
-        val markersArray = userMarkers.toTypedArray()
-        val ids = insertUserMarkers(userMarkers)
+    open suspend fun insertUserMarkersAndLinks(
+            entities: List<MarkerEntity>,
+            checkExist: Boolean = true
+    ) {
+        val markers = if (checkExist) {
+            val existMessageIds = getExistMessageByIds(entities.map { it.messageId })
+            // Filter markers which message exist in db
+            entities.filter { it.messageId in existMessageIds }
+        } else entities
+
+        val markersArray = markers.takeIf { it.isNotEmpty() }?.toTypedArray() ?: return
+        val ids = insertUserMarkers(markers)
         val links = ids.mapIndexed { index, id ->
             val marker = markersArray[index]
             UserMarkerLink(messageId = marker.messageId, markerId = id)

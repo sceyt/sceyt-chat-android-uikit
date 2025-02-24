@@ -1221,8 +1221,7 @@ internal class PersistenceMessagesLogicImpl(
 
                     pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, status)
                     myId?.let { userId ->
-                        val existMessageIds = messageDao.getExistMessageByIds(responseIds)
-                        messageDao.insertUserMarkersAndLinks(existMessageIds.map {
+                        messageDao.insertUserMarkersAndLinks(responseIds.map {
                             MarkerEntity(messageId = it, userId = userId, name = data.name)
                         })
                     }
