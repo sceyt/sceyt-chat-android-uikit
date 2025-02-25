@@ -6,7 +6,10 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 
-@Entity(tableName = "AttachmentPayLoad",
+internal const val ATTACHMENT_PAYLOAD_TABLE = "sceyt_attachment_payload_table"
+
+@Entity(
+    tableName = ATTACHMENT_PAYLOAD_TABLE,
     foreignKeys = [
         ForeignKey(
             entity = MessageEntity::class,

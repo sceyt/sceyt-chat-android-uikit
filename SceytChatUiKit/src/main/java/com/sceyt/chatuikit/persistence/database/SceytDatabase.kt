@@ -26,16 +26,16 @@ import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.FileChecksumEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChatUserReactionEntity
-import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLink
+import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AutoDeleteMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUserLink
+import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUserLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.LoadRangeEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessageLink
+import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessageLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
@@ -49,11 +49,11 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
     entities = [
         ChannelEntity::class,
         UserEntity::class,
-        UserChatLink::class,
+        UserChatLinkEntity::class,
         MessageEntity::class,
-        MentionUserMessageLink::class,
+        MentionUserMessageLinkEntity::class,
         DraftMessageEntity::class,
-        DraftMessageUserLink::class,
+        DraftMessageUserLinkEntity::class,
         AttachmentEntity::class,
         MarkerEntity::class,
         ReactionEntity::class,
@@ -69,7 +69,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoDeleteMessageEntity::class,
         UserMetadataEntity::class,
     ],
-    version = 18,
+    version = 19,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
@@ -86,6 +86,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoMigration(from = 13, to = 14, spec = DatabaseMigrations.AutoMigrationSpec13To14::class),
         AutoMigration(from = 14, to = 15),
         AutoMigration(from = 17, to = 18, spec = DatabaseMigrations.AutoMigrationSpec17To18::class),
+        AutoMigration(from = 18, to = 19, spec = DatabaseMigrations.AutoMigrationSpec18To19::class),
     ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)

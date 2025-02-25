@@ -4,6 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.sceyt.chatuikit.persistence.database.entity.messages.MESSAGE_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PENDING_REACTION_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionEntity
 
 @Dao
@@ -17,21 +19,21 @@ abstract class PendingReactionDao {
             insert(entity)
     }
 
-    @Query("select message_id from messages where message_id = :messageId")
+    @Query("select message_id from $MESSAGE_TABLE where message_id = :messageId")
     protected abstract suspend fun checkExistMessage(messageId: Long): Long?
 
-    @Query("select * from pendingReaction")
+    @Query("select * from $PENDING_REACTION_TABLE")
     abstract suspend fun getAll(): List<PendingReactionEntity>
 
-    @Query("select * from pendingReaction where channelId =:channelId")
+    @Query("select * from $PENDING_REACTION_TABLE where channelId =:channelId")
     abstract suspend fun getAllByChannelId(channelId: Long): List<PendingReactionEntity>
 
-    @Query("select * from pendingReaction where messageId =:messageId")
+    @Query("select * from $PENDING_REACTION_TABLE where messageId =:messageId")
     abstract suspend fun getAllByMsgId(messageId: Long): List<PendingReactionEntity>
 
-    @Query("select * from pendingReaction where messageId =:messageId and reaction_key =:key")
+    @Query("select * from $PENDING_REACTION_TABLE where messageId =:messageId and reaction_key =:key")
     abstract suspend fun getAllByMsgIdAndKey(messageId: Long, key: String): List<PendingReactionEntity>
 
-    @Query("delete from pendingReaction where messageId =:messageId and reaction_key =:key")
+    @Query("delete from $PENDING_REACTION_TABLE where messageId =:messageId and reaction_key =:key")
     abstract suspend fun deletePendingReaction(messageId: Long, key: String)
 }

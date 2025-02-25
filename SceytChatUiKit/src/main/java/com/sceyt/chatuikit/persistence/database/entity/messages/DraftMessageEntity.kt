@@ -4,7 +4,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.sceyt.chat.models.message.BodyAttribute
 
-@Entity
+internal const val DRAFT_MESSAGE_TABLE = "sceyt_draft_message_table"
+
+@Entity(tableName = DRAFT_MESSAGE_TABLE)
 data class DraftMessageEntity(
         @PrimaryKey
         val chatId: Long,

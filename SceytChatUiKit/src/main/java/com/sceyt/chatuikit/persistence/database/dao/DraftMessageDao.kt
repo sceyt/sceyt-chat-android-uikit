@@ -5,9 +5,11 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import com.sceyt.chatuikit.persistence.database.entity.channel.CHANNEL_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.DRAFT_MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUserLink
+import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUserLinkEntity
 
 @Dao
 abstract class DraftMessageDao {
@@ -16,10 +18,10 @@ abstract class DraftMessageDao {
     abstract suspend fun insert(entity: DraftMessageEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    protected abstract suspend fun insertDraftMessageUserLinks(links: List<DraftMessageUserLink>)
+    protected abstract suspend fun insertDraftMessageUserLinks(links: List<DraftMessageUserLinkEntity>)
 
     @Transaction
-    open suspend fun insertWithUserLinks(entity: DraftMessageEntity, links: List<DraftMessageUserLink>) {
+    open suspend fun insertWithUserLinks(entity: DraftMessageEntity, links: List<DraftMessageUserLinkEntity>) {
         if (checkExistChannel(entity.chatId) > 0) {
             insert(entity)
             links.takeIf { it.isNotEmpty() }?.let {
@@ -28,13 +30,13 @@ abstract class DraftMessageDao {
         }
     }
 
-    @Query("select count(*) from channels where chat_id = :chatId")
+    @Query("select count(*) from $CHANNEL_TABLE where chat_id = :chatId")
     abstract suspend fun checkExistChannel(chatId: Long): Int
 
     @Transaction
-    @Query("select * from DraftMessageEntity where chatId = :chatId")
+    @Query("select * from $DRAFT_MESSAGE_TABLE where chatId = :chatId")
     abstract suspend fun getDraftByChannelId(chatId: Long): DraftMessageDb?
 
-    @Query("delete from DraftMessageEntity where chatId = :chatId")
+    @Query("delete from $DRAFT_MESSAGE_TABLE where chatId = :chatId")
     abstract suspend fun deleteDraftByChannelId(chatId: Long)
 }

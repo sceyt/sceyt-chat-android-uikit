@@ -12,7 +12,7 @@ data class DraftMessageDb(
 
         @Relation(parentColumn = "chatId", entityColumn = "user_id",
             entity = UserEntity::class,
-            associateBy = Junction(DraftMessageUserLink::class), )
+            associateBy = Junction(DraftMessageUserLinkEntity::class), )
         val mentionUsers: List<UserDb>?,
 
         @Relation(parentColumn = "replyOrEditMessageId", entityColumn = "message_id", entity = MessageEntity::class)

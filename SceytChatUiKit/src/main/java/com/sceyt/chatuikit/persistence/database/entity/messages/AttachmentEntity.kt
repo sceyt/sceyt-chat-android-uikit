@@ -6,7 +6,10 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+internal const val ATTACHMENT_TABLE = "sceyt_attachment_table"
+
 @Entity(
+    tableName = ATTACHMENT_TABLE,
     foreignKeys = [
         ForeignKey(
             entity = MessageEntity::class,

@@ -6,6 +6,9 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.sceyt.chatuikit.persistence.database.entity.messages.MESSAGE_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.REACTION_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.REACTION_TOTAL_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
@@ -64,57 +67,57 @@ abstract class ReactionDao {
             increaseReactionTotal(entity.messageId, entity.key, entity.score)
     }
 
-    @Query("select message_id from messages where message_id = :messageId")
+    @Query("select message_id from $MESSAGE_TABLE where message_id = :messageId")
     protected abstract suspend fun checkExistMessage(messageId: Long): Long?
 
-    @Query("select * from ReactionTotalEntity where messageId =:messageId and reaction_key =:key")
+    @Query("select * from $REACTION_TOTAL_TABLE where messageId =:messageId and reaction_key =:key")
     abstract suspend fun getReactionTotal(messageId: Long, key: String): ReactionTotalEntity?
 
     @Transaction
-    @Query("select * from ReactionEntity where id =:id")
+    @Query("select * from $REACTION_TABLE where id =:id")
     abstract suspend fun getReactionsById(id: Long): ReactionDb?
 
     @Transaction
-    @Query("select * from ReactionEntity where messageId =:messageId")
+    @Query("select * from $REACTION_TABLE where messageId =:messageId")
     abstract suspend fun getReactionsByMsgId(messageId: Long): List<ReactionDb>
 
     @Transaction
-    @Query("select * from ReactionEntity where messageId =:messageId and reaction_key =:key")
+    @Query("select * from $REACTION_TABLE where messageId =:messageId and reaction_key =:key")
     abstract suspend fun getReactionsByMsgIdAndKey(messageId: Long, key: String): List<ReactionDb>
 
     @Transaction
-    @Query("select * from ReactionEntity where messageId =:messageId order by id desc limit :limit offset :offset")
+    @Query("select * from $REACTION_TABLE where messageId =:messageId order by id desc limit :limit offset :offset")
     abstract suspend fun getReactions(messageId: Long, limit: Int, offset: Int): List<ReactionDb>
 
     @Transaction
-    @Query("select * from ReactionEntity where messageId =:messageId and reaction_key =:key " +
+    @Query("select * from $REACTION_TABLE where messageId =:messageId and reaction_key =:key " +
             "order by id desc limit :limit offset :offset")
     abstract suspend fun getReactionsByKey(messageId: Long, limit: Int, offset: Int, key: String): List<ReactionDb>
 
     @Transaction
-    @Query("select * from ReactionEntity where messageId =:messageId and fromId =:myId ")
+    @Query("select * from $REACTION_TABLE where messageId =:messageId and fromId =:myId ")
     abstract suspend fun getSelfReactionsByMessageId(messageId: Long, myId: String): List<ReactionDb>
 
     @Transaction
-    @Query("select * from ReactionEntity where messageId =:messageId and fromId =:userId and reaction_key =:key")
+    @Query("select * from $REACTION_TABLE where messageId =:messageId and fromId =:userId and reaction_key =:key")
     abstract suspend fun getUserReactionByKey(messageId: Long, userId: String, key: String): ReactionDb?
 
     @Update
     protected abstract suspend fun updateReactionTotal(reactionTotal: ReactionTotalEntity)
 
-    @Query("delete from ReactionTotalEntity where id =:id")
+    @Query("delete from $REACTION_TOTAL_TABLE where id =:id")
     abstract suspend fun deleteReactionTotalByTotalId(id: Int)
 
-    @Query("delete from ReactionTotalEntity where messageId =:messageId")
+    @Query("delete from $REACTION_TOTAL_TABLE where messageId =:messageId")
     abstract suspend fun deleteAllReactionTotalsByMessageId(messageId: Long)
 
-    @Query("delete from ReactionEntity where messageId =:messageId and reaction_key =:key and fromId =:fromId")
+    @Query("delete from $REACTION_TABLE where messageId =:messageId and reaction_key =:key and fromId =:fromId")
     abstract suspend fun deleteReaction(messageId: Long, key: String, fromId: String?): Int
 
-    @Query("delete from ReactionEntity where id in (:ids)")
+    @Query("delete from $REACTION_TABLE where id in (:ids)")
     abstract suspend fun deleteReactionByIds(vararg ids: Long)
 
-    @Query("delete from ReactionEntity where messageId =:messageId")
+    @Query("delete from $REACTION_TABLE where messageId =:messageId")
     protected abstract suspend fun deleteAllReactionsByMessageId(messageId: Long)
 
     @Transaction

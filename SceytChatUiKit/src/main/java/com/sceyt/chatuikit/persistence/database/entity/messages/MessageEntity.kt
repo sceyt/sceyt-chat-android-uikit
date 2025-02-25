@@ -10,8 +10,10 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
 
+internal const val MESSAGE_TABLE = "sceyt_message_table"
+
 @Entity(
-    tableName = "messages",
+    tableName = MESSAGE_TABLE,
     indices = [Index(value = ["message_id"], unique = true)]
 )
 data class MessageEntity(

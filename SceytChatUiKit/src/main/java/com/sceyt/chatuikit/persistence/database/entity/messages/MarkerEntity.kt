@@ -4,7 +4,10 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 
+internal const val MARKER_TABLE = "sceyt_marker_table"
+
 @Entity(
+    tableName = MARKER_TABLE,
     foreignKeys = [
         ForeignKey(
             entity = MessageEntity::class,

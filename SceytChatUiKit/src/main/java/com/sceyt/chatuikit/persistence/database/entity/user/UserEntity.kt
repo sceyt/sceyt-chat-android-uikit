@@ -7,7 +7,9 @@ import androidx.room.PrimaryKey
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.UserState
 
-@Entity(tableName = "users")
+internal const val USER_TABLE = "sceyt_user_table"
+
+@Entity(tableName = USER_TABLE)
 data class UserEntity(
         @ColumnInfo(name = "user_id")
         @PrimaryKey

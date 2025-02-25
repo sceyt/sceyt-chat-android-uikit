@@ -6,6 +6,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.sceyt.chatuikit.persistence.database.entity.user.USER_METADATA_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.user.USER_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
@@ -48,19 +50,19 @@ abstract class UserDao {
     }
 
     @Transaction
-    @Query("select * from users where user_id =:id")
+    @Query("select * from $USER_TABLE  where user_id =:id")
     abstract suspend fun getUserById(id: String): UserDb?
 
     @Transaction
-    @Query("select * from users where user_id =:id")
+    @Query("select * from $USER_TABLE  where user_id =:id")
     abstract fun getUserByIdAsFlow(id: String): Flow<UserDb?>
 
     @Transaction
-    @Query("select * from users where user_id in (:id)")
+    @Query("select * from $USER_TABLE  where user_id in (:id)")
     abstract suspend fun getUsersById(id: List<String>): List<UserDb>
 
     @Query("""
-           select user_id from users where 
+           select user_id from $USER_TABLE  where 
            firstName like '%' || :searchQuery || '%' 
            or lastName like  '%' || :searchQuery || '%'
            or (firstName || ' ' || lastName) like :searchQuery || '%'
@@ -69,8 +71,8 @@ abstract class UserDao {
 
     @Transaction
     @Query("""
-           select * from users where user_id in (
-           select user_id from UserMetadata
+           select * from $USER_TABLE  where user_id in (
+           select user_id from $USER_METADATA_TABLE
            where `key` in (:key) and value like '%' || :value || '%')
            """
     )
@@ -82,12 +84,12 @@ abstract class UserDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun updateUsers(users: List<UserEntity>)
 
-    @Query("update users set status =:status where user_id =:userId")
+    @Query("update $USER_TABLE set status =:status where user_id =:userId")
     abstract suspend fun updateUserStatus(userId: String, status: String)
 
-    @Query("update users set blocked =:blocked where user_id =:userId")
+    @Query("update $USER_TABLE set blocked =:blocked where user_id =:userId")
     abstract suspend fun blockUnBlockUser(userId: String, blocked: Boolean)
 
-    @Query("DELETE FROM users")
+    @Query("DELETE from $USER_TABLE ")
     abstract suspend fun deleteAll()
 }
