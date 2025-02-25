@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.persistence.database
 
 import androidx.room.DeleteColumn
+import androidx.room.DeleteTable
 import androidx.room.RenameColumn
 import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
@@ -50,4 +51,8 @@ object DatabaseMigrations {
             db.execSQL("ALTER TABLE `_new_AutoDeleteMessages` RENAME TO `AutoDeleteMessages`")
         }
     }
+
+    @DeleteColumn(tableName = "MarkerEntity", columnName = "primaryKey")
+    @DeleteTable(tableName = "UserMarkerLink")
+    class AutoMigrationSpec17To18 : AutoMigrationSpec
 }

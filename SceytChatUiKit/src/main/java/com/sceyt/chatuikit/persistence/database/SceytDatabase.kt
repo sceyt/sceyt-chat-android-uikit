@@ -39,7 +39,6 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessa
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.UserMarkerLink
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageStateEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionEntity
@@ -67,11 +66,10 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         FileChecksumEntity::class,
         LinkDetailsEntity::class,
         LoadRangeEntity::class,
-        UserMarkerLink::class,
         AutoDeleteMessageEntity::class,
         UserMetadataEntity::class,
     ],
-    version = 17,
+    version = 18,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
@@ -86,7 +84,8 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoMigration(from = 11, to = 12),
         AutoMigration(from = 12, to = 13),
         AutoMigration(from = 13, to = 14, spec = DatabaseMigrations.AutoMigrationSpec13To14::class),
-        AutoMigration(from = 14, to = 15)
+        AutoMigration(from = 14, to = 15),
+        AutoMigration(from = 17, to = 18, spec = DatabaseMigrations.AutoMigrationSpec17To18::class),
     ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)

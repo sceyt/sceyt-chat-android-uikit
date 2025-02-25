@@ -32,27 +32,29 @@ class PersistenceMessageMarkerLogicImpl(
             else -> return
         }
 
-        val existMessageIds = messageDao.getExistMessageByIds(data.marker.messageIds)
-        val markers = existMessageIds.map { messageId ->
+        val markers = data.marker.messageIds.map { messageId ->
             MarkerEntity(messageId, data.from.id, marker, data.marker.createdAt)
         }
-        markerDao.insertMany(markers)
+        messageDao.insertUserMarkersIfExistMessage(markers)
     }
 
     override suspend fun onMessageMarkerEvent(data: MessageMarkerEventData) {
-        val existMessageIds = messageDao.getExistMessageByIds(data.marker.messageIds)
-        val markers = existMessageIds.map {
+        val markers = data.marker.messageIds.map {
             MarkerEntity(it, data.user.id, data.marker.name, data.marker.createdAt)
         }
-        markerDao.insertMany(markers)
+        messageDao.insertUserMarkersIfExistMessage(markers)
     }
 
-    override suspend fun getMessageMarkers(messageId: Long, name: String, offset: Int, limit: Int): SceytResponse<List<SceytMarker>> {
+    override suspend fun getMessageMarkers(
+            messageId: Long,
+            name: String,
+            offset: Int,
+            limit: Int
+    ): SceytResponse<List<SceytMarker>> {
         val response = messageMarkersRepository.getMessageMarkers(messageId, name, offset, limit)
         if (response is SceytResponse.Success) {
             response.data?.let { markers ->
-                if (messageDao.existsMessageById(messageId))
-                    markerDao.insertMany(markers.map { it.toMarkerEntity() })
+                messageDao.insertUserMarkersIfExistMessage(markers.map { it.toMarkerEntity() })
             }
         }
         return response

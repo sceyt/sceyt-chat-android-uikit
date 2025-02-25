@@ -1,6 +1,11 @@
 package com.sceyt.chatuikit.persistence.database.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Update
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
@@ -9,16 +14,58 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEnt
 abstract class ReactionDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertReaction(reaction: ReactionEntity)
+    protected abstract suspend fun insertReaction(reaction: ReactionEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
+    protected abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertReactionTotals(reactionTotals: List<ReactionTotalEntity>)
+    protected abstract suspend fun insertReactionTotals(reactionTotals: List<ReactionTotalEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertReactionTotal(reactionTotal: ReactionTotalEntity)
+    protected abstract suspend fun insertReactionTotal(reactionTotal: ReactionTotalEntity)
+
+    @Transaction
+    open suspend fun insertReactionsIfMessageExist(reactions: List<ReactionEntity>) {
+        reactions.groupBy { it.messageId }.forEach { (messageId, reactions) ->
+            if (checkExistMessage(messageId) == messageId) {
+                insertReactions(reactions)
+            }
+        }
+    }
+
+    @Transaction
+    open suspend fun insertMessageReactionsAndTotalsIfMessageExist(
+            messageId: Long,
+            reactions: List<ReactionEntity>?,
+            reactionTotals: List<ReactionTotalEntity>?
+    ) {
+        if (reactions.isNullOrEmpty() && reactionTotals.isNullOrEmpty())
+            return
+
+        if (checkExistMessage(messageId) == messageId) {
+            reactions?.let { insertReactions(it) }
+            reactionTotals?.let { insertReactionTotals(it) }
+        }
+    }
+
+    @Transaction
+    open suspend fun insertReactionAndIncreaseTotalIfNeeded(entity: ReactionEntity) {
+        if (checkExistMessage(entity.messageId) != entity.messageId)
+            return
+
+        // Check maybe reaction already added by me, and ignore adding reactionTotal.
+        val reaction = entity.fromId?.let { userId ->
+            getUserReactionByKey(entity.messageId, userId, entity.key)
+        }
+        insertReaction(entity)
+
+        if (reaction == null)
+            increaseReactionTotal(entity.messageId, entity.key, entity.score)
+    }
+
+    @Query("select message_id from messages where message_id = :messageId")
+    protected abstract suspend fun checkExistMessage(messageId: Long): Long?
 
     @Query("select * from ReactionTotalEntity where messageId =:messageId and reaction_key =:key")
     abstract suspend fun getReactionTotal(messageId: Long, key: String): ReactionTotalEntity?
@@ -53,7 +100,7 @@ abstract class ReactionDao {
     abstract suspend fun getUserReactionByKey(messageId: Long, userId: String, key: String): ReactionDb?
 
     @Update
-    abstract suspend fun updateReactionTotal(reactionTotal: ReactionTotalEntity)
+    protected abstract suspend fun updateReactionTotal(reactionTotal: ReactionTotalEntity)
 
     @Query("delete from ReactionTotalEntity where id =:id")
     abstract suspend fun deleteReactionTotalByTotalId(id: Int)
@@ -81,6 +128,16 @@ abstract class ReactionDao {
                 } else
                     deleteReactionTotalByTotalId(it.id)
             }
+    }
+
+    private suspend fun increaseReactionTotal(messageId: Long, key: String, score: Int) {
+        getReactionTotal(messageId, key)?.let {
+            val newTotal = it.copy(score = it.score + score)
+            insertReactionTotal(newTotal)
+        } ?: run {
+            insertReactionTotal(ReactionTotalEntity(messageId = messageId,
+                key = key, score = score, count = 1))
+        }
     }
 
     @Transaction

@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
-import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.message.event.ReactionUpdateEventData
@@ -17,7 +16,6 @@ import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.ReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
-import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionEntity
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
@@ -30,7 +28,6 @@ import com.sceyt.chatuikit.persistence.mappers.toReactionEntity
 import com.sceyt.chatuikit.persistence.mappers.toReactionTotalEntity
 import com.sceyt.chatuikit.persistence.mappers.toSceytMessage
 import com.sceyt.chatuikit.persistence.mappers.toSceytReaction
-import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.mappers.toUserReactionsEntity
 import com.sceyt.chatuikit.persistence.repositories.ReactionsRepository
@@ -64,19 +61,16 @@ internal class PersistenceReactionsLogicImpl(
                 messageDao.upsertMessage(data.message.toMessageDb(false))
 
             when (data.eventType) {
-                Add -> {
-                    // Check maybe reaction already added by my, and this event comes from carbon user,
-                    // and ignore adding reactionTotal.
-                    val reaction = data.reaction.user?.id?.let { userId ->
-                        reactionDao.getUserReactionByKey(messageId, userId, data.reaction.key)
-                    }
-                    reactionDao.insertReaction(data.reaction.toReactionEntity())
+                Add -> reactionDao.insertReactionAndIncreaseTotalIfNeeded(
+                    entity = data.reaction.toReactionEntity()
+                )
 
-                    if (reaction == null)
-                        increaseReactionTotal(messageId, data.reaction.key, data.reaction.score)
-                }
-
-                Remove -> reactionDao.deleteReactionAndTotal(messageId, data.reaction.key, data.reaction.user?.id, data.reaction.score)
+                Remove -> reactionDao.deleteReactionAndTotal(
+                    messageId = messageId,
+                    key = data.reaction.key,
+                    fromId = data.reaction.user?.id,
+                    score = data.reaction.score
+                )
             }
 
             val message = messageDao.getMessageById(messageId)?.toSceytMessage() ?: data.message
@@ -105,7 +99,13 @@ internal class PersistenceReactionsLogicImpl(
         }
     }
 
-    override suspend fun loadReactions(messageId: Long, offset: Int, key: String, loadKey: LoadKeyData?, ignoreDb: Boolean): Flow<PaginationResponse<SceytReaction>> {
+    override suspend fun loadReactions(
+            messageId: Long,
+            offset: Int,
+            key: String,
+            loadKey: LoadKeyData?,
+            ignoreDb: Boolean
+    ): Flow<PaginationResponse<SceytReaction>> {
         return callbackFlow {
 
             var dbReactions = getReactionsDb(messageId, offset, reactionsLoadSize, key)
@@ -245,12 +245,13 @@ internal class PersistenceReactionsLogicImpl(
         val response = reactionsRepository.addReaction(channelId, messageId, key, score, reason, enforceUnique)
         if (response is SceytResponse.Success) {
             response.data?.let { resultMessage ->
-                resultMessage.userReactions?.let {
-                    reactionDao.insertReactions(it.map { reaction -> reaction.toReactionEntity() })
-                }
-                resultMessage.reactionTotals?.let { totals ->
-                    reactionDao.insertReactionTotals(totals.map { it.toReactionTotalEntity(messageId) })
-                }
+                reactionDao.insertMessageReactionsAndTotalsIfMessageExist(
+                    messageId = messageId,
+                    reactions = resultMessage.userReactions?.map { it.toReactionEntity() },
+                    reactionTotals = resultMessage.reactionTotals?.map {
+                        it.toReactionTotalEntity(messageId)
+                    }
+                )
 
                 messagesCache.deletePendingReaction(channelId, resultMessage.tid, key)
                 pendingReactionDao.deletePendingReaction(messageId, key)
@@ -283,13 +284,13 @@ internal class PersistenceReactionsLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.let { resultMessage ->
                 reactionDao.deleteAllReactionsAndTotals(messageId)
-
-                resultMessage.userReactions?.let {
-                    reactionDao.insertReactions(it.map { reaction -> reaction.toReactionEntity() })
-                }
-                resultMessage.reactionTotals?.let { totals ->
-                    reactionDao.insertReactionTotals(totals.map { it.toReactionTotalEntity(messageId) })
-                }
+                reactionDao.insertMessageReactionsAndTotalsIfMessageExist(
+                    messageId = messageId,
+                    reactions = resultMessage.userReactions?.map { it.toReactionEntity() },
+                    reactionTotals = resultMessage.reactionTotals?.map {
+                        it.toReactionTotalEntity(messageId)
+                    }
+                )
 
                 pendingReactionDao.deletePendingReaction(messageId, key)
                 messagesCache.deletePendingReaction(channelId, resultMessage.tid, key)
@@ -346,23 +347,12 @@ internal class PersistenceReactionsLogicImpl(
         messagesCache.messageUpdated(channelId, message)
         ChatReactionMessagesCache.addMessage(message)
 
-        if (pendingReactionEntity != null)
-            pendingReactionDao.insert(pendingReactionEntity)
+        pendingReactionEntity?.let { pendingReactionDao.insertIfMessageExist(it) }
 
         if (!message.incoming)
             notifyChannelReactionUpdated(channelId)
 
         return wasPending
-    }
-
-    private suspend fun increaseReactionTotal(messageId: Long, key: String, score: Int) {
-        reactionDao.getReactionTotal(messageId, key)?.let {
-            val newTotal = it.copy(score = it.score + score)
-            reactionDao.insertReactionTotal(newTotal)
-        } ?: run {
-            reactionDao.insertReactionTotal(ReactionTotalEntity(messageId = messageId,
-                key = key, score = score, count = 1))
-        }
     }
 
     private suspend fun notifyChannelReactionUpdated(channelId: Long) {
@@ -383,7 +373,7 @@ internal class PersistenceReactionsLogicImpl(
 
     private suspend fun saveReactionsToDb(list: List<SceytReaction>) {
         if (list.isEmpty()) return
-        reactionDao.insertReactions(list.map { it.toReactionEntity() })
+        reactionDao.insertReactionsIfMessageExist(list.map { it.toReactionEntity() })
         usersDao.insertUsersWithMetadata(list.mapNotNull { it.user?.toUserDb() })
     }
 }

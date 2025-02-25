@@ -1,31 +1,40 @@
 package com.sceyt.chatuikit.persistence.database.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Transaction
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUserLink
 
 @Dao
-interface DraftMessageDao {
+abstract class DraftMessageDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(entity: DraftMessageEntity)
+    abstract suspend fun insert(entity: DraftMessageEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertDraftMessageUserLinks(links: List<DraftMessageUserLink>)
+    protected abstract suspend fun insertDraftMessageUserLinks(links: List<DraftMessageUserLink>)
 
     @Transaction
-    suspend fun insertWithUserLinks(entity: DraftMessageEntity, links: List<DraftMessageUserLink>) {
-        insert(entity)
-        links.takeIf { it.isNotEmpty() }?.let {
-            insertDraftMessageUserLinks(it)
+    open suspend fun insertWithUserLinks(entity: DraftMessageEntity, links: List<DraftMessageUserLink>) {
+        if (checkExistChannel(entity.chatId) > 0) {
+            insert(entity)
+            links.takeIf { it.isNotEmpty() }?.let {
+                insertDraftMessageUserLinks(it)
+            }
         }
     }
 
+    @Query("select count(*) from channels where chat_id = :chatId")
+    abstract suspend fun checkExistChannel(chatId: Long): Int
+
     @Transaction
     @Query("select * from DraftMessageEntity where chatId = :chatId")
-    suspend fun getDraftByChannelId(chatId: Long): DraftMessageDb?
+    abstract suspend fun getDraftByChannelId(chatId: Long): DraftMessageDb?
 
     @Query("delete from DraftMessageEntity where chatId = :chatId")
-    suspend fun deleteDraftByChannelId(chatId: Long)
+    abstract suspend fun deleteDraftByChannelId(chatId: Long)
 }
