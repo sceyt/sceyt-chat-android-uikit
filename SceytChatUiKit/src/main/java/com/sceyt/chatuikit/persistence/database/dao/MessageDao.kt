@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.persistence.database.dao
 
-import androidx.annotation.VisibleForTesting
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -49,7 +48,7 @@ internal abstract class MessageDao {
     @Transaction
     open suspend fun upsertMessages(messagesDb: List<MessageDb>) {
         if (messagesDb.isEmpty()) return
-        upsertMessageEntitiesd(messagesDb.map { it.messageEntity })
+        upsertMessageEntities(messagesDb.map { it.messageEntity })
         insertMessagesPayloads(messagesDb)
     }
 
@@ -127,7 +126,7 @@ internal abstract class MessageDao {
         }
     }
 
-    private suspend fun upsertMessageEntitiesd(messageEntities: List<MessageEntity>) {
+    private suspend fun upsertMessageEntities(messageEntities: List<MessageEntity>) {
         val rowIds = insertMany(messageEntities)
         val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
             if (rowId == -1L) messageEntities[index] else null
@@ -135,7 +134,6 @@ internal abstract class MessageDao {
         updateMessages(entitiesToUpdate)
     }
 
-    @VisibleForTesting
     @Transaction
     suspend fun upsertMessageEntitiesInTransaction(messageEntities: List<MessageEntity>) {
         val rowIds = insertMany(messageEntities)
