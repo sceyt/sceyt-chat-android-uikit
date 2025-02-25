@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.persistence.database.entity.FILE_CHECKSUM_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.FileChecksumEntity
 
 @Dao
-interface FileChecksumDao {
+internal interface FileChecksumDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(fileChecksum: FileChecksumEntity)

@@ -14,7 +14,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-abstract class UserDao {
+internal abstract class UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insertUser(user: UserEntity)
 

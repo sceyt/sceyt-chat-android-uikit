@@ -5,7 +5,7 @@ import androidx.room.Relation
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 
-data class MarkerWithUserDb(
+internal data class MarkerWithUserDb(
         @Embedded
         val entity: MarkerEntity,
 

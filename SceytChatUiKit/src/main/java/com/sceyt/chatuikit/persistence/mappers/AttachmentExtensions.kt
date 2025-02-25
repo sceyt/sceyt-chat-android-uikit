@@ -196,7 +196,7 @@ fun Attachment.isHiddenLinkDetails(): Boolean {
     return isHiddenLinkDetails(metadata, type)
 }
 
-fun AttachmentEntity.isHiddenLinkDetails(): Boolean {
+internal fun AttachmentEntity.isHiddenLinkDetails(): Boolean {
     return isHiddenLinkDetails(metadata, type)
 }
 

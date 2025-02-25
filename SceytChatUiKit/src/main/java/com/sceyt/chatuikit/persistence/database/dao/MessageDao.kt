@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.persistence.database.dao
 
+import androidx.annotation.VisibleForTesting
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -37,7 +38,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlin.math.max
 
 @Dao
-abstract class MessageDao {
+internal abstract class MessageDao {
 
     @Transaction
     open suspend fun upsertMessage(messageDb: MessageDb) {
@@ -48,7 +49,7 @@ abstract class MessageDao {
     @Transaction
     open suspend fun upsertMessages(messagesDb: List<MessageDb>) {
         if (messagesDb.isEmpty()) return
-        upsertMessageEntities(messagesDb.map { it.messageEntity })
+        upsertMessageEntitiesd(messagesDb.map { it.messageEntity })
         insertMessagesPayloads(messagesDb)
     }
 
@@ -119,16 +120,24 @@ abstract class MessageDao {
         insertAutoDeleteMessage(*messages.toTypedArray())
     }
 
-    @Transaction
-    open suspend fun upsertMessageEntity(messageEntity: MessageEntity) {
+    private suspend fun upsertMessageEntity(messageEntity: MessageEntity) {
         val rowId = insert(messageEntity)
         if (rowId == -1L) {
             updateMessage(messageEntity)
         }
     }
 
+    private suspend fun upsertMessageEntitiesd(messageEntities: List<MessageEntity>) {
+        val rowIds = insertMany(messageEntities)
+        val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
+            if (rowId == -1L) messageEntities[index] else null
+        }
+        updateMessages(entitiesToUpdate)
+    }
+
+    @VisibleForTesting
     @Transaction
-    open suspend fun upsertMessageEntities(messageEntities: List<MessageEntity>) {
+    suspend fun upsertMessageEntitiesInTransaction(messageEntities: List<MessageEntity>) {
         val rowIds = insertMany(messageEntities)
         val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
             if (rowId == -1L) messageEntities[index] else null

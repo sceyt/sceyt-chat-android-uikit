@@ -18,7 +18,7 @@ internal const val MARKER_TABLE = "sceyt_marker_table"
         )
     ],
     primaryKeys = ["messageId", "name", "userId"])
-data class MarkerEntity(
+internal data class MarkerEntity(
         @ColumnInfo(index = true)
         val messageId: Long,
         val userId: String,

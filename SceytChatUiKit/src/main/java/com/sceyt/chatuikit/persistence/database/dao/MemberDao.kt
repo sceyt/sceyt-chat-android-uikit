@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.persistence.database.entity.channel.USER_CHAT_LINK_TA
 import com.sceyt.chatuikit.persistence.database.entity.user.USER_TABLE
 
 @Dao
-interface MemberDao {
+internal interface MemberDao {
 
     @Query("select user_id from $USER_CHAT_LINK_TABLE where chat_id =:channelId and role =:role")
     suspend fun getChannelOwner(channelId: Long, role: String = RoleTypeEnum.Owner.value): String?

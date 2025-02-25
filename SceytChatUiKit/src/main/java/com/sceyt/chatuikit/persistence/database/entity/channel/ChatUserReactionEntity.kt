@@ -11,7 +11,7 @@ internal const val CHAT_USER_REACTION_TABLE = "sceyt_chat_user_reaction_table"
     tableName = CHAT_USER_REACTION_TABLE,
     indices = [Index(value = ["messageId", "channelId", "reaction_key", "fromId"], unique = true)]
 )
-data class ChatUserReactionEntity(
+internal data class ChatUserReactionEntity(
         @PrimaryKey
         val id: Long,
         @ColumnInfo(index = true)

@@ -14,7 +14,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
 
 @Dao
-abstract class ReactionDao {
+internal abstract class ReactionDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insertReaction(reaction: ReactionEntity)

@@ -17,7 +17,7 @@ internal const val MENTION_USER_MESSAGE_LINK_TABLE = "sceyt_mention_user_message
             deferred = true
         )
     ], primaryKeys = ["messageTid", "user_id"])
-data class MentionUserMessageLinkEntity(
+internal data class MentionUserMessageLinkEntity(
         @ColumnInfo(index = true)
         val messageTid: Long,
         @ColumnInfo(name = "user_id", index = true)

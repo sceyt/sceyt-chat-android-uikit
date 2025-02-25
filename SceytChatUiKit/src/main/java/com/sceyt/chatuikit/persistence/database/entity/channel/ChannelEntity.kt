@@ -11,7 +11,7 @@ internal const val CHANNEL_TABLE = "sceyt_channel_table"
     tableName = CHANNEL_TABLE,
     indices = [Index(value = ["uri"], unique = true)]
 )
-data class ChannelEntity(
+internal data class ChannelEntity(
         @PrimaryKey
         @ColumnInfo(name = "chat_id")
         val id: Long,

@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 
-data class ChatUserReactionDb(
+internal data class ChatUserReactionDb(
         @Embedded
         val reaction: ChatUserReactionEntity,
 

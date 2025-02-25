@@ -10,6 +10,8 @@ import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManagerImp
 import com.sceyt.chatuikit.persistence.PersistenceMiddleWareImpl
 import com.sceyt.chatuikit.persistence.database.DatabaseMigrations
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
+import com.sceyt.chatuikit.persistence.database.cleaner.DatabaseCleaner
+import com.sceyt.chatuikit.persistence.database.cleaner.DatabaseCleanerImpl
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferServiceImpl
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
@@ -18,13 +20,13 @@ import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
-import com.sceyt.chatuikit.persistence.interactor.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMessagesLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
@@ -81,6 +83,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
     }
 
     single { provideDatabase(get()) }
+    single<DatabaseCleaner> { DatabaseCleanerImpl(get()) }
     single { get<SceytDatabase>().channelDao() }
     single { get<SceytDatabase>().messageDao() }
     single { get<SceytDatabase>().attachmentsDao() }

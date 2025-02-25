@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.persistence.database.entity.link.LINK_DETAILS_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
 
 @Dao
-interface LinkDao {
+internal interface LinkDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: LinkDetailsEntity)

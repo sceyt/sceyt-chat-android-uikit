@@ -67,7 +67,7 @@ class GetNewestThenMessagesTests{
             LoadRangeEntity(1, 4, channelId)
         )
 
-        messageDao.upsertMessageEntities(messages)
+        messageDao.upsertMessageEntitiesInTransaction(messages)
         rangeDao.insertAll(range)
 
         val limit = 4
@@ -94,7 +94,7 @@ class GetNewestThenMessagesTests{
             createMessage(6, 6),
         )
 
-        messageDao.upsertMessageEntities(messages)
+        messageDao.upsertMessageEntitiesInTransaction(messages)
 
         val loadedMessages = messageDao.getNewestThenMessage(channelId, 1, 10)
 
@@ -118,7 +118,7 @@ class GetNewestThenMessagesTests{
             LoadRangeEntity(1, 3, channelId)
         )
 
-        messageDao.upsertMessageEntities(messages)
+        messageDao.upsertMessageEntitiesInTransaction(messages)
         rangeDao.insertAll(range)
 
         val limit = 4

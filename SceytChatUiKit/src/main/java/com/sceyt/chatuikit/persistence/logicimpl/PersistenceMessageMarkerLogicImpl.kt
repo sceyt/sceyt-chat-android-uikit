@@ -10,12 +10,12 @@ import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.persistence.database.dao.MarkerDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
-import com.sceyt.chatuikit.persistence.interactor.PersistenceMessageMarkerLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.mappers.toMarker
 import com.sceyt.chatuikit.persistence.mappers.toMarkerEntity
 import com.sceyt.chatuikit.persistence.repositories.MessageMarkersRepository
 
-class PersistenceMessageMarkerLogicImpl(
+internal class PersistenceMessageMarkerLogicImpl(
         private val messageMarkersRepository: MessageMarkersRepository,
         private val markerDao: MarkerDao,
         private val messageDao: MessageDao,

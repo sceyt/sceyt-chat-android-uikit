@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 internal const val LINK_DETAILS_TABLE = "sceyt_link_details_table"
 
 @Entity(tableName = LINK_DETAILS_TABLE)
-data class LinkDetailsEntity(
+internal data class LinkDetailsEntity(
         @PrimaryKey
         val link: String,
         val url: String?,

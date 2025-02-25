@@ -6,7 +6,6 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.forEachKeyValue
-import com.sceyt.chatuikit.persistence.database.entity.messages.AutoDeleteMessageEntity
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.differs.diff
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsComparatorDescBy
@@ -285,12 +284,11 @@ class ChannelsCache {
         }
     }
 
-    fun messagesDeletedWithAutoDelete(channelId: Long, messageTIds: List<AutoDeleteMessageEntity>) {
-        val map = messageTIds.associate { it.messageTid to it.messageTid }
+    fun messagesDeletedWithAutoDelete(channelId: Long, messageTIds: Map<Long, Long>) {
         cachedData.forEachKeyValue { _, value ->
             value[channelId]?.let { channel ->
                 channel.lastMessage?.tid?.let {
-                    if (map.containsKey(it)) {
+                    if (messageTIds.containsKey(it)) {
                         val updatedChannel = channel.copy(lastMessage = null)
                         val diff = channel.diff(updatedChannel)
                         channelUpdatedFlow_.tryEmit(ChannelUpdateData(

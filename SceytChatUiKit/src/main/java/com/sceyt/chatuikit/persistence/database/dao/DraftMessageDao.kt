@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageEnti
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUserLinkEntity
 
 @Dao
-abstract class DraftMessageDao {
+internal abstract class DraftMessageDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun insert(entity: DraftMessageEntity)

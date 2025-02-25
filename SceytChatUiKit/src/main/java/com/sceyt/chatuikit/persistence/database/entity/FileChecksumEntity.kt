@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 internal const val FILE_CHECKSUM_TABLE = "sceyt_file_checksum_table"
 
 @Entity(tableName = FILE_CHECKSUM_TABLE)
-data class FileChecksumEntity(
+internal data class FileChecksumEntity(
         @PrimaryKey
         val checksum: Long,
         val resizedFilePath: String?,

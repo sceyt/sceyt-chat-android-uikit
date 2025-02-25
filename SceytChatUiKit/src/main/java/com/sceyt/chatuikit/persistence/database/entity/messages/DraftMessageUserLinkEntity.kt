@@ -16,7 +16,7 @@ internal const val DRAFT_MESSAGE_USER_LINK_TABLE = "sceyt_draft_message_user_lin
         onDelete = ForeignKey.CASCADE,
         deferred = true
     )])
-data class DraftMessageUserLinkEntity(
+internal data class DraftMessageUserLinkEntity(
         val chatId: Long,
         @ColumnInfo(name = "user_id", index = true)
         val userId: String)

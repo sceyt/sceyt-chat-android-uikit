@@ -13,7 +13,7 @@ internal const val LOAD_RANGE_TABLE = "sceyt_load_range_table"
         Index(value = ["startId", "channelId"], unique = true),
         Index(value = ["endId", "channelId"], unique = true)
     ])
-data class LoadRangeEntity(
+internal data class LoadRangeEntity(
         @ColumnInfo(index = true)
         val startId: Long,
         @ColumnInfo(index = true)

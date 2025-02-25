@@ -1083,7 +1083,9 @@ internal class PersistenceMessagesLogicImpl(
             localTime = System.currentTimeMillis()
         ).takeIf { it.isNotEmpty() } ?: return
         messageDao.deleteMessagesByTid(outdatedMessages.map { message -> message.messageTid })
-        channelCache.messagesDeletedWithAutoDelete(channelId, outdatedMessages)
+        channelCache.messagesDeletedWithAutoDelete(channelId, outdatedMessages.associate {
+            it.messageTid to it.messageTid
+        })
     }
 
     private suspend fun saveMessagesToDb(

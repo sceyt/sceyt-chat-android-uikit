@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PENDING_REACTION
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionEntity
 
 @Dao
-abstract class PendingReactionDao {
+internal abstract class PendingReactionDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insert(entity: PendingReactionEntity): Long

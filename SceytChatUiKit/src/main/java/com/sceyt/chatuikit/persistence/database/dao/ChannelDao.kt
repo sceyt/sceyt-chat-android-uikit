@@ -19,7 +19,7 @@ import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntit
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface ChannelDao {
+internal interface ChannelDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertChannel(channel: ChannelEntity): Long
 

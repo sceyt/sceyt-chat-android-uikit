@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageSt
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMessageStateEntity
 
 @Dao
-interface PendingMessageStateDao {
+internal interface PendingMessageStateDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: PendingMessageStateEntity)
 

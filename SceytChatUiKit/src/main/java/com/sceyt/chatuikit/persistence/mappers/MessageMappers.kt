@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ParentMessageDb
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 
-fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
+internal fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
     tid = getTid(id, tid, incoming),
     // Set id null if message is not sent yet, because id id unique in db
     id = if (id == 0L) null else id,
@@ -48,7 +48,7 @@ fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
     else tid
 }
 
-fun SceytMessage.toMessageDb(unList: Boolean): MessageDb {
+internal fun SceytMessage.toMessageDb(unList: Boolean): MessageDb {
     val tid = getTid(id, tid, incoming)
     return MessageDb(
         messageEntity = toMessageEntity(unList),
@@ -65,7 +65,7 @@ fun SceytMessage.toMessageDb(unList: Boolean): MessageDb {
 }
 
 
-fun MessageDb.toSceytMessage(): SceytMessage {
+internal fun MessageDb.toSceytMessage(): SceytMessage {
     with(messageEntity) {
         return SceytMessage(
             id = id ?: 0,
@@ -103,7 +103,7 @@ fun MessageDb.toSceytMessage(): SceytMessage {
     }
 }
 
-fun ParentMessageDb.toSceytMessage(): SceytMessage {
+internal fun ParentMessageDb.toSceytMessage(): SceytMessage {
     return messageEntity.parentMessageToSceytMessage(
         attachments = this@toSceytMessage.attachments?.map { it.toAttachment() }?.toTypedArray(),
         from = this@toSceytMessage.from?.toSceytUser(),
@@ -113,7 +113,7 @@ fun ParentMessageDb.toSceytMessage(): SceytMessage {
     )
 }
 
-fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
+internal fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
     return ParentMessageDb(toMessageEntity(true), user?.toUserDb(), attachments?.map {
         it.toAttachmentDb(id, getTid(id, tid, incoming), channelId)
     }, null)
@@ -152,7 +152,7 @@ private fun MessageEntity.parentMessageToSceytMessage(
     bodyAttributes = bodyAttribute
 )
 
-fun MessageDb.toMessage(): Message {
+internal fun MessageDb.toMessage(): Message {
     with(messageEntity) {
         return Message(
             id ?: 0,
@@ -261,20 +261,20 @@ fun SceytMessage.toMessage(): Message {
         bodyAttributes?.toTypedArray())
 }
 
-fun ForwardingDetails.toForwardingDetailsDb() = ForwardingDetailsDb(
+internal fun ForwardingDetails.toForwardingDetailsDb() = ForwardingDetailsDb(
     messageId = messageId,
     userId = user?.id,
     hops = hops
 )
 
 
-fun ForwardingDetailsDb.toForwardingDetails(channelId: Long, user: SceytUser?) = ForwardingDetails(
+internal fun ForwardingDetailsDb.toForwardingDetails(channelId: Long, user: SceytUser?) = ForwardingDetails(
     messageId, channelId,
     user?.toUser(),
     hops
 )
 
-fun DraftMessageDb.toDraftMessage() = DraftMessage(
+internal fun DraftMessageDb.toDraftMessage() = DraftMessage(
     chatId = draftMessageEntity.chatId,
     body = draftMessageEntity.message,
     createdAt = draftMessageEntity.createdAt,
@@ -284,7 +284,7 @@ fun DraftMessageDb.toDraftMessage() = DraftMessage(
     bodyAttributes = draftMessageEntity.styleRanges
 )
 
-fun DraftMessageEntity.toDraftMessage(
+internal fun DraftMessageEntity.toDraftMessage(
         mentionUsers: List<SceytUser>?,
         replyMessage: SceytMessage?
 ) = DraftMessage(
