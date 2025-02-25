@@ -14,7 +14,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 
 @Dao
-abstract class AttachmentDao {
+internal abstract class AttachmentDao {
     @Transaction
     @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id != 0 and id <:attachmentId and type in (:types)" +
             "order by createdAt desc, id desc limit :limit")

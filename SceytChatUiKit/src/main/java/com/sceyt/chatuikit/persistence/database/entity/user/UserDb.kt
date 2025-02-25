@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.persistence.database.entity.user
 import androidx.room.Embedded
 import androidx.room.Relation
 
-data class UserDb(
+internal data class UserDb(
         @Embedded
         val user: UserEntity,
 

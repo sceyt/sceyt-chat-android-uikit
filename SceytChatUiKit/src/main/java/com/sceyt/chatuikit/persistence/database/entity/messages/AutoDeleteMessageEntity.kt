@@ -16,7 +16,7 @@ internal const val AUTO_DELETE_MESSAGES_TABLE = "sceyt_auto_delete_messages_tabl
             onDelete = ForeignKey.CASCADE
         )
     ])
-class AutoDeleteMessageEntity(
+internal class AutoDeleteMessageEntity(
         @PrimaryKey
         val messageTid: Long,
         val channelId: Long,

@@ -29,7 +29,7 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PENDING_REACTION
 import com.sceyt.chatuikit.persistence.database.entity.user.USER_METADATA_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.user.USER_TABLE
 
-object DatabaseMigrations {
+internal object DatabaseMigrations {
 
     @RenameColumn(tableName = "messages", fromColumnName = "isParentMessage", toColumnName = "unList")
     class AutoMigrationSpec3to4 : AutoMigrationSpec

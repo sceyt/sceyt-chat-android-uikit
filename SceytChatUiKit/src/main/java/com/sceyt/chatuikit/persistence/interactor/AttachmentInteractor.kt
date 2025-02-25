@@ -7,12 +7,10 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadDb
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import kotlinx.coroutines.flow.Flow
 
 interface AttachmentInteractor {
-    suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoadDb>
     suspend fun getPrevAttachments(conversationId: Long, lastAttachmentId: Long, types: List<String>,
                                    offset: Int, ignoreDb: Boolean = false, loadKeyData: LoadKeyData = LoadKeyData()): Flow<PaginationResponse<AttachmentWithUserData>>
 

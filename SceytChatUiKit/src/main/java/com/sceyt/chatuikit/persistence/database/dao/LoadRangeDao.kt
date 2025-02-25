@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.LOAD_RANGE_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.LoadRangeEntity
 
 @Dao
-interface LoadRangeDao {
+internal interface LoadRangeDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: LoadRangeEntity)

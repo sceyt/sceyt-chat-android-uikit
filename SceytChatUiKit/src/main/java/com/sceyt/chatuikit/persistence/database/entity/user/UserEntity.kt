@@ -10,7 +10,7 @@ import com.sceyt.chat.models.user.UserState
 internal const val USER_TABLE = "sceyt_user_table"
 
 @Entity(tableName = USER_TABLE)
-data class UserEntity(
+internal data class UserEntity(
         @ColumnInfo(name = "user_id")
         @PrimaryKey
         val id: String,

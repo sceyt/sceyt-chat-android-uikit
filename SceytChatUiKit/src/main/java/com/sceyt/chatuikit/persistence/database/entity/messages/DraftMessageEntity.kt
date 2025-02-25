@@ -7,7 +7,7 @@ import com.sceyt.chat.models.message.BodyAttribute
 internal const val DRAFT_MESSAGE_TABLE = "sceyt_draft_message_table"
 
 @Entity(tableName = DRAFT_MESSAGE_TABLE)
-data class DraftMessageEntity(
+internal data class DraftMessageEntity(
         @PrimaryKey
         val chatId: Long,
         val message: String?,

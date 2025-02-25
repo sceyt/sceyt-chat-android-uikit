@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.persistence.logicimpl.message
 
 import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 
-class MessageLoadRangeUpdater(
+internal class MessageLoadRangeUpdater(
         private val loadRangeDao: LoadRangeDao
 ) {
 

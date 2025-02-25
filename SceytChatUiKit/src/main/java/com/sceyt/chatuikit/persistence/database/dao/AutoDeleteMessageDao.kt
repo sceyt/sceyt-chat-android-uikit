@@ -6,7 +6,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.AUTO_DELETE_MESS
 import com.sceyt.chatuikit.persistence.database.entity.messages.AutoDeleteMessageEntity
 
 @Dao
-interface AutoDeleteMessageDao {
+internal interface AutoDeleteMessageDao {
 
     @Query("select * from $AUTO_DELETE_MESSAGES_TABLE where channelId = :channelId and autoDeleteAt <= :localTime")
     suspend fun getOutdatedMessages(channelId: Long, localTime: Long): List<AutoDeleteMessageEntity>

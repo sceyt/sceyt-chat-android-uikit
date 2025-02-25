@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionE
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 
-data class MessageDb(
+internal data class MessageDb(
         @Embedded
         val messageEntity: MessageEntity,
 

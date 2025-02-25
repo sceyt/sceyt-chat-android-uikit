@@ -90,7 +90,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
     ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)
-abstract class SceytDatabase : RoomDatabase() {
+internal abstract class SceytDatabase : RoomDatabase() {
     abstract fun channelDao(): ChannelDao
     abstract fun messageDao(): MessageDao
     abstract fun attachmentsDao(): AttachmentDao

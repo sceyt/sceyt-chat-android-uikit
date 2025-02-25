@@ -10,7 +10,7 @@ internal const val USER_CHAT_LINK_TABLE = "sceyt_user_chat_link_table"
 @Entity(
     tableName = USER_CHAT_LINK_TABLE,
     indices = [Index(value = ["chat_id", "user_id"], unique = true, name = "uniqueUserInChat")])
-data class UserChatLinkEntity(
+internal data class UserChatLinkEntity(
         @PrimaryKey(autoGenerate = true)
         val id: Int = 0,
         @ColumnInfo(name = "user_id", index = true)

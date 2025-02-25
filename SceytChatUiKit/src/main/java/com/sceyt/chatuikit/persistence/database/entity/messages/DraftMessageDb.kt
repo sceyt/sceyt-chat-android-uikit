@@ -6,7 +6,7 @@ import androidx.room.Relation
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 
-data class DraftMessageDb(
+internal data class DraftMessageDb(
         @Embedded
         val draftMessageEntity: DraftMessageEntity,
 

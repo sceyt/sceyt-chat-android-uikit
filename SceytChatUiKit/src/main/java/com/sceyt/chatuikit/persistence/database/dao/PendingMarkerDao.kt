@@ -6,7 +6,7 @@ import com.sceyt.chatuikit.persistence.database.entity.pendings.PENDING_MARKER_T
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
 
 @Dao
-interface PendingMarkerDao {
+internal interface PendingMarkerDao {
 
     @Query("select * from $PENDING_MARKER_TABLE")
     suspend fun getAllMarkers(): List<PendingMarkerEntity>

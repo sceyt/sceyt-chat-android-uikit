@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.data.toSceytMember
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelDb
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
 
-fun SceytChannel.toChannelEntity() = ChannelEntity(
+internal fun SceytChannel.toChannelEntity() = ChannelEntity(
     id = id,
     parentChannelId = parentChannelId,
     uri = uri.takeIf { !it.isNullOrBlank() },
@@ -47,7 +47,7 @@ private fun getTid(msgId: Long?, tid: Long?, incoming: Boolean?): Long? {
     else tid
 }
 
-fun ChannelDb.toChannel(): SceytChannel {
+internal fun ChannelDb.toChannel(): SceytChannel {
     with(channelEntity) {
         return SceytChannel(
             id = id,

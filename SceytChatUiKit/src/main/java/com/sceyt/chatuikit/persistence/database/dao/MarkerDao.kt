@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MARKER_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerWithUserDb
 
 @Dao
-interface MarkerDao {
+internal interface MarkerDao {
 
     @Transaction
     @Query("select * from $MARKER_TABLE where messageId =:messageId and name in (:names) " +

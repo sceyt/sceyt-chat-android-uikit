@@ -19,7 +19,7 @@ internal const val REACTION_TABLE = "sceyt_reaction_table"
             deferred = true
         )
     ], indices = [Index("messageId", "reaction_key", "fromId", unique = true)])
-data class ReactionEntity(
+internal data class ReactionEntity(
         @PrimaryKey
         val id: Long,
         @ColumnInfo(index = true)

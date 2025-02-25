@@ -20,7 +20,7 @@ internal const val PENDING_REACTION_TABLE = "sceyt_pending_reaction_table"
             deferred = true
         )],
     indices = [Index("messageId", "reaction_key", unique = true)])
-data class PendingReactionEntity(
+internal data class PendingReactionEntity(
         @ColumnInfo(index = true)
         val messageId: Long,
         @ColumnInfo(name = "reaction_key", index = true)

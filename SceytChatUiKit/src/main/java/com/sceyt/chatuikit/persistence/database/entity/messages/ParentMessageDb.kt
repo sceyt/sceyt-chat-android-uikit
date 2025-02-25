@@ -5,7 +5,7 @@ import androidx.room.Relation
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 
-data class ParentMessageDb(
+internal data class ParentMessageDb(
         @Embedded
         val messageEntity: MessageEntity,
 

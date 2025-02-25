@@ -20,7 +20,7 @@ internal const val ATTACHMENT_PAYLOAD_TABLE = "sceyt_attachment_payload_table"
         )
     ],
     indices = [Index("messageTid", unique = true)])
-data class AttachmentPayLoadEntity(
+internal data class AttachmentPayLoadEntity(
         @PrimaryKey(autoGenerate = true)
         val id: Int = 0,
         val messageTid: Long,

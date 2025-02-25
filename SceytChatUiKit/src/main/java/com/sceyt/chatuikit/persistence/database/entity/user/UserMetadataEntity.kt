@@ -20,7 +20,7 @@ internal const val USER_METADATA_TABLE = "sceyt_user_metadata_table"
         )
     ]
 )
-data class UserMetadataEntity(
+internal data class UserMetadataEntity(
         @ColumnInfo(name = "user_id")
         val userId: String,
         val key: String,
