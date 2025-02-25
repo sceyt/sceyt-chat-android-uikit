@@ -35,7 +35,7 @@ data class MessageDb(
         @Relation(parentColumn = "userId", entityColumn = "user_id", entity = UserEntity::class)
         val forwardingUser: UserDb?,
 
-        @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = MentionUserMessageLink::class)
+        @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = MentionUserMessageLinkEntity::class)
         val mentionedUsers: List<MentionUserDb>?
 ) {
     val selfReactions get() = reactions?.filter { it.from?.id == SceytChatUIKit.chatUIFacade.myId }

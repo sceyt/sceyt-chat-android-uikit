@@ -4,7 +4,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.sceyt.chat.models.message.MessageState
 
-@Entity(tableName = "PendingMessageState")
+internal const val PENDING_MESSAGE_STATE_TABLE = "sceyt_pending_message_state_table"
+
+@Entity(tableName = PENDING_MESSAGE_STATE_TABLE)
 data class PendingMessageStateEntity(
         @PrimaryKey
         val messageId: Long,

@@ -15,14 +15,19 @@ import com.sceyt.chatuikit.data.models.LoadNearData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.roundUp
 import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.ATTACHMENT_PAYLOAD_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.ATTACHMENT_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AutoDeleteMessageEntity
+import com.sceyt.chatuikit.persistence.database.entity.messages.LOAD_RANGE_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessageLink
+import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessageLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageIdAndTid
+import com.sceyt.chatuikit.persistence.database.entity.messages.REACTION_TOTAL_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
@@ -162,7 +167,7 @@ abstract class MessageDao {
     protected abstract suspend fun insertReactionTotals(reactionTotals: List<ReactionTotalEntity>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    protected abstract suspend fun insertMentionedUsersMessageLinks(mentionedUsers: List<MentionUserMessageLink>)
+    protected abstract suspend fun insertMentionedUsersMessageLinks(mentionedUsers: List<MentionUserMessageLinkEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insertAutoDeletedMessages(entities: List<AutoDeleteMessageEntity>)
@@ -182,7 +187,7 @@ abstract class MessageDao {
     private suspend fun insertMentionedUsersMessageLinks(vararg messages: MessageDb) {
         val entities = messages.flatMap { item ->
             item.messageEntity.mentionedUsersIds?.map {
-                MentionUserMessageLink(messageTid = item.messageEntity.tid, userId = it)
+                MentionUserMessageLinkEntity(messageTid = item.messageEntity.tid, userId = it)
             } ?: arrayListOf()
         }
         if (entities.isEmpty()) return
@@ -218,45 +223,49 @@ abstract class MessageDao {
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
-    @Query("select * from messages join LoadRange as range on range.channelId = :channelId " +
+    @Query("select * from $MESSAGE_TABLE as message " +
+            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
             "and range.startId <= :lastMessageId and range.endId >= :lastMessageId " +
-            "where messages.channelId =:channelId and message_id <:lastMessageId " +
+            "where message.channelId =:channelId and message_id <:lastMessageId " +
             "and (message_id >= range.startId and message_id <= range.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
-            "group by messages.message_id " +
+            "group by message.message_id " +
             "order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
-    @Query("select * from messages join LoadRange as range on range.channelId = :channelId " +
+    @Query("select * from $MESSAGE_TABLE as message " +
+            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
             "and range.startId <= :lastMessageId and range.endId >= :lastMessageId " +
-            "where messages.channelId =:channelId and message_id <=:lastMessageId " +
+            "where message.channelId =:channelId and message_id <=:lastMessageId " +
             "and (message_id >= range.startId and message_id <= range.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
-            "group by messages.message_id " +
+            "group by message.message_id " +
             "order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessagesInclude(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
-    @Query("select * from messages join LoadRange as range on range.channelId = :channelId " +
+    @Query("select * from $MESSAGE_TABLE as message " +
+            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
             "and range.startId <= :messageId and range.endId >= :messageId " +
-            "where messages.channelId =:channelId and message_id >:messageId " +
+            "where message.channelId =:channelId and message_id >:messageId " +
             "and (message_id >= range.startId and message_id <= range.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
-            "group by messages.message_id " +
+            "group by message.message_id " +
             "order by createdAt, tid limit :limit")
     abstract suspend fun getNewestThenMessage(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Transaction
-    @Query("select * from messages join LoadRange as range on range.channelId = :channelId " +
+    @Query("select * from $MESSAGE_TABLE as message " +
+            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
             "and range.startId <= :messageId and range.endId >= :messageId " +
-            "where messages.channelId =:channelId and message_id >=:messageId " +
+            "where message.channelId =:channelId and message_id >=:messageId " +
             "and (message_id >= range.startId and message_id <= range.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
-            "group by messages.message_id " +
+            "group by message.message_id " +
             "order by createdAt, tid limit :limit")
     abstract suspend fun getNewestThenMessageInclude(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
@@ -293,64 +302,61 @@ abstract class MessageDao {
     }
 
     @Transaction
-    @Query("select * from messages where channelId =:channelId and deliveryStatus = $PENDING_STATUS " +
+    @Query("select * from $MESSAGE_TABLE where channelId =:channelId and deliveryStatus = $PENDING_STATUS " +
             "order by createdAt")
     abstract suspend fun getPendingMessages(channelId: Long): List<MessageDb>
 
     @Transaction
-    @Query("select * from messages where deliveryStatus = $PENDING_STATUS order by createdAt")
+    @Query("select * from $MESSAGE_TABLE where deliveryStatus = $PENDING_STATUS order by createdAt")
     abstract suspend fun getAllPendingMessages(): List<MessageDb>
 
     @Transaction
-    @Query("select * from messages where message_id =:id")
+    @Query("select * from $MESSAGE_TABLE where message_id =:id")
     abstract suspend fun getMessageById(id: Long): MessageDb?
 
-    @Query("select message_id as id, tid from messages where message_id in (:ids)")
+    @Query("select message_id as id, tid from $MESSAGE_TABLE where message_id in (:ids)")
     abstract suspend fun getExistMessagesIdTidByIds(ids: List<Long>): List<MessageIdAndTid>
 
-    @Query("select message_id from messages where message_id in (:ids)")
+    @Query("select message_id from $MESSAGE_TABLE where message_id in (:ids)")
     abstract suspend fun getExistMessageByIds(ids: List<Long>): List<Long>
 
     @Transaction
-    @Query("select * from messages where tid =:tid")
+    @Query("select * from $MESSAGE_TABLE where tid =:tid")
     abstract suspend fun getMessageByTid(tid: Long): MessageDb?
 
     @Transaction
-    @Query("select * from messages where tid in (:tIds)")
+    @Query("select * from $MESSAGE_TABLE where tid in (:tIds)")
     abstract suspend fun getMessagesByTid(tIds: List<Long>): List<MessageDb>
 
     @Transaction
-    @Query("select * from messages where deliveryStatus = 0 and tid in (:tIds)")
+    @Query("select * from $MESSAGE_TABLE where deliveryStatus = 0 and tid in (:tIds)")
     abstract suspend fun getPendingMessagesByTIds(tIds: List<Long>): List<MessageDb>
 
     @Transaction
-    @Query("select * from messages where deliveryStatus = 0 and tid =:tid")
+    @Query("select * from $MESSAGE_TABLE where deliveryStatus = 0 and tid =:tid")
     abstract suspend fun getPendingMessageByTid(tid: Long): MessageDb?
 
-    @Query("select tid from messages where message_id in (:ids)")
+    @Query("select tid from $MESSAGE_TABLE where message_id in (:ids)")
     abstract suspend fun getMessageTIdsByIds(vararg ids: Long): List<Long>
 
-    @Query("select tid from messages where message_id =:id")
-    abstract suspend fun getMessageTidById(id: Long): Long?
-
-    @Query("select message_id as id, tid from messages where channelId =:channelId and message_id <= :id and deliveryStatus in (:status)")
+    @Query("select message_id as id, tid from $MESSAGE_TABLE where channelId =:channelId and message_id <= :id and deliveryStatus in (:status)")
     abstract suspend fun getMessagesTidAndIdLoverThanByStatus(channelId: Long, id: Long, vararg status: DeliveryStatus): List<MessageIdAndTid>
 
     @Transaction
-    @Query("select * from messages where channelId =:channelId and createdAt >= (select max(createdAt) from messages where channelId =:channelId)")
+    @Query("select * from $MESSAGE_TABLE where channelId =:channelId and createdAt >= (select max(createdAt) from $MESSAGE_TABLE where channelId =:channelId)")
     abstract suspend fun getLastMessage(channelId: Long): MessageDb?
 
-    @Query("select message_id from messages where channelId =:channelId and message_id >= " +
-            "(select max(message_id) from messages where channelId =:channelId and deliveryStatus != $PENDING_STATUS)")
+    @Query("select message_id from $MESSAGE_TABLE where channelId =:channelId and message_id >= " +
+            "(select max(message_id) from $MESSAGE_TABLE where channelId =:channelId and deliveryStatus != $PENDING_STATUS)")
     abstract suspend fun getLastSentMessageId(channelId: Long): Long?
 
-    @Query("select count(*) from messages where channelId = :channelId")
+    @Query("select count(*) from $MESSAGE_TABLE where channelId = :channelId")
     abstract fun getMessagesCountAsFlow(channelId: Long): Flow<Long?>
 
-    @Query("select exists(select * from messages where message_id =:messageId)")
+    @Query("select exists(select * from $MESSAGE_TABLE where message_id =:messageId)")
     abstract suspend fun existsMessageById(messageId: Long): Boolean
 
-    @Query("update messages set deliveryStatus =:status where message_id in (:ids)")
+    @Query("update $MESSAGE_TABLE set deliveryStatus =:status where message_id in (:ids)")
     abstract suspend fun updateMessageStatus(status: DeliveryStatus, vararg ids: Long): Int
 
     @Transaction
@@ -369,34 +375,31 @@ abstract class MessageDao {
         return ids
     }
 
-    @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId and incoming")
+    @Query("update $MESSAGE_TABLE set deliveryStatus =:deliveryStatus where channelId =:channelId and incoming")
     abstract suspend fun updateAllIncomingMessagesStatusAsRead(channelId: Long, deliveryStatus: DeliveryStatus = Displayed)
 
-    @Query("update messages set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
+    @Query("update $MESSAGE_TABLE set deliveryStatus =:deliveryStatus where channelId =:channelId and message_id in (:messageIds)")
     abstract suspend fun updateMessagesStatus(channelId: Long, messageIds: List<Long>, deliveryStatus: DeliveryStatus)
 
-    @Query("update messages set channelId =:newChannelId where channelId =:oldChannelId")
+    @Query("update $MESSAGE_TABLE set channelId =:newChannelId where channelId =:oldChannelId")
     abstract suspend fun updateMessagesChannelId(oldChannelId: Long, newChannelId: Long): Int
 
-    @Query("delete from messages where tid =:tid")
+    @Query("delete from $MESSAGE_TABLE where tid =:tid")
     abstract fun deleteMessageByTid(tid: Long)
 
-    @Query("delete from messages where tid in (:tIds)")
+    @Query("delete from $MESSAGE_TABLE where tid in (:tIds)")
     abstract fun deleteMessagesByTid(tIds: List<Long>)
 
-    @Query("delete from messages where message_id in (:ids)")
-    abstract fun deleteMessagesById(ids: List<Long>)
-
-    @Query("delete from messages where channelId =:channelId")
+    @Query("delete from $MESSAGE_TABLE where channelId =:channelId")
     abstract suspend fun deleteAllMessagesByChannel(channelId: Long)
 
-    @Query("delete from messages where channelId in (:channelIds)")
+    @Query("delete from $MESSAGE_TABLE where channelId in (:channelIds)")
     abstract suspend fun deleteAllChannelsMessages(channelIds: List<Long>)
 
-    @Query("delete from messages where channelId =:channelId and createdAt <=:date and deliveryStatus != $PENDING_STATUS")
+    @Query("delete from $MESSAGE_TABLE where channelId =:channelId and createdAt <=:date and deliveryStatus != $PENDING_STATUS")
     abstract suspend fun deleteAllMessagesLowerThenDateIgnorePending(channelId: Long, date: Long)
 
-    @Query("delete from messages where channelId =:channelId and deliveryStatus != $PENDING_STATUS")
+    @Query("delete from $MESSAGE_TABLE where channelId =:channelId and deliveryStatus != $PENDING_STATUS")
     abstract suspend fun deleteAllMessagesExceptPending(channelId: Long)
 
     @Transaction
@@ -414,10 +417,10 @@ abstract class MessageDao {
         messageIdes.chunked(SQLITE_MAX_VARIABLE_NUMBER).forEach(::deleteAllReactionsAndTotals)
     }
 
-    @Query("delete from AttachmentEntity where messageTid in (:messageTides)")
+    @Query("delete from $ATTACHMENT_TABLE where messageTid in (:messageTides)")
     abstract fun deleteAttachments(messageTides: List<Long>)
 
-    @Query("delete from AttachmentPayLoad where messageTid in (:messageTides)")
+    @Query("delete from $ATTACHMENT_PAYLOAD_TABLE where messageTid in (:messageTides)")
     abstract fun deleteAttachmentsPayLoad(messageTides: List<Long>)
 
     @Transaction
@@ -425,11 +428,8 @@ abstract class MessageDao {
         deleteAllReactionTotalsByMessageId(messageIds)
     }
 
-    @Query("delete from ReactionTotalEntity where messageId in (:messageId)")
+    @Query("delete from $REACTION_TOTAL_TABLE where messageId in (:messageId)")
     abstract fun deleteAllReactionTotalsByMessageId(messageId: List<Long>)
-
-    @Query("delete from ReactionEntity where messageId in (:messageId)")
-    protected abstract fun deleteAllReactionsByMessageId(messageId: List<Long>)
 
     private companion object {
         private const val SQLITE_MAX_VARIABLE_NUMBER: Int = 999

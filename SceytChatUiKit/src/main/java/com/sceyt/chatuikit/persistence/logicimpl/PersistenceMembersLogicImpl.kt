@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.persistence.database.dao.LoadRangeDao
 import com.sceyt.chatuikit.persistence.database.dao.MemberDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
-import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLink
+import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
@@ -47,7 +47,7 @@ internal class PersistenceMembersLogicImpl(
             ChannelMembersEventEnum.Role, ChannelMembersEventEnum.Added -> {
                 usersDao.insertUsersWithMetadata(data.members.map { it.toUserDb() })
                 channelDao.insertUserChatLinks(data.members.map {
-                    UserChatLink(userId = it.id, chatId = chatId, role = it.role.name)
+                    UserChatLinkEntity(userId = it.id, chatId = chatId, role = it.role.name)
                 })
 
                 if (data.eventType == ChannelMembersEventEnum.Added)
@@ -141,11 +141,11 @@ internal class PersistenceMembersLogicImpl(
     private suspend fun saveMembersToDb(channelId: Long, list: List<SceytMember>?) {
         if (list.isNullOrEmpty()) return
 
-        val links = arrayListOf<UserChatLink>()
+        val links = arrayListOf<UserChatLinkEntity>()
         val users = arrayListOf<UserDb>()
 
         list.forEach { member ->
-            links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name))
+            links.add(UserChatLinkEntity(userId = member.id, chatId = channelId, role = member.role.name))
             users.add(member.toUserDb())
         }
 
@@ -193,7 +193,7 @@ internal class PersistenceMembersLogicImpl(
         if (response is SceytResponse.Success) {
             response.data?.members?.let { members ->
                 channelDao.insertUserChatLinks(members.map { sceytMember ->
-                    UserChatLink(
+                    UserChatLinkEntity(
                         userId = sceytMember.id,
                         chatId = channelId,
                         role = sceytMember.role.name
@@ -210,7 +210,7 @@ internal class PersistenceMembersLogicImpl(
         if (response is SceytResponse.Success) {
             usersDao.insertUsersWithMetadata(members.map { it.toUserDb() })
             channelDao.insertUserChatLinks(members.map {
-                UserChatLink(userId = it.id, chatId = channelId, role = it.role.name)
+                UserChatLinkEntity(userId = it.id, chatId = channelId, role = it.role.name)
             })
             response.data?.let { channelsCache.updateMembersCount(it) }
         }

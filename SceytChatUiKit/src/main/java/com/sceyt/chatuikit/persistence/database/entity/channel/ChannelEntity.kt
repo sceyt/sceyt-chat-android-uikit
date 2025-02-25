@@ -5,8 +5,10 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+internal const val CHANNEL_TABLE = "sceyt_channel_table"
+
 @Entity(
-    tableName = "channels",
+    tableName = CHANNEL_TABLE,
     indices = [Index(value = ["uri"], unique = true)]
 )
 data class ChannelEntity(

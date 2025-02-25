@@ -3,9 +3,31 @@ package com.sceyt.chatuikit.persistence.database
 import androidx.room.DeleteColumn
 import androidx.room.DeleteTable
 import androidx.room.RenameColumn
+import androidx.room.RenameTable
 import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.sceyt.chatuikit.persistence.database.entity.FILE_CHECKSUM_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.channel.CHANNEL_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.channel.CHAT_USER_REACTION_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.channel.USER_CHAT_LINK_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.link.LINK_DETAILS_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.ATTACHMENT_PAYLOAD_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.ATTACHMENT_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.AUTO_DELETE_MESSAGES_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.DRAFT_MESSAGE_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.DRAFT_MESSAGE_USER_LINK_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.LOAD_RANGE_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.MARKER_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.MENTION_USER_MESSAGE_LINK_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.MESSAGE_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.REACTION_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.REACTION_TOTAL_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PENDING_MARKER_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PENDING_MESSAGE_STATE_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.pendings.PENDING_REACTION_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.user.USER_METADATA_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.user.USER_TABLE
 
 object DatabaseMigrations {
 
@@ -55,4 +77,27 @@ object DatabaseMigrations {
     @DeleteColumn(tableName = "MarkerEntity", columnName = "primaryKey")
     @DeleteTable(tableName = "UserMarkerLink")
     class AutoMigrationSpec17To18 : AutoMigrationSpec
+
+    @RenameTable(fromTableName = "channels", toTableName = CHANNEL_TABLE)
+    @RenameTable(fromTableName = "users", toTableName = USER_TABLE)
+    @RenameTable(fromTableName = "UserChatLink", toTableName = USER_CHAT_LINK_TABLE)
+    @RenameTable(fromTableName = "messages", toTableName = MESSAGE_TABLE)
+    @RenameTable(fromTableName = "MentionUserMessageLink", toTableName = MENTION_USER_MESSAGE_LINK_TABLE)
+    @RenameTable(fromTableName = "DraftMessageEntity", toTableName = DRAFT_MESSAGE_TABLE)
+    @RenameTable(fromTableName = "DraftMessageUserLink", toTableName = DRAFT_MESSAGE_USER_LINK_TABLE)
+    @RenameTable(fromTableName = "AttachmentEntity", toTableName = ATTACHMENT_TABLE)
+    @RenameTable(fromTableName = "MarkerEntity", toTableName = MARKER_TABLE)
+    @RenameTable(fromTableName = "ReactionEntity", toTableName = REACTION_TABLE)
+    @RenameTable(fromTableName = "ReactionTotalEntity", toTableName = REACTION_TOTAL_TABLE)
+    @RenameTable(fromTableName = "ChatUserReactionEntity", toTableName = CHAT_USER_REACTION_TABLE)
+    @RenameTable(fromTableName = "PendingMarker", toTableName = PENDING_MARKER_TABLE)
+    @RenameTable(fromTableName = "pendingReaction", toTableName = PENDING_REACTION_TABLE)
+    @RenameTable(fromTableName = "PendingMessageState", toTableName = PENDING_MESSAGE_STATE_TABLE)
+    @RenameTable(fromTableName = "AttachmentPayLoad", toTableName = ATTACHMENT_PAYLOAD_TABLE)
+    @RenameTable(fromTableName = "FileChecksum", toTableName = FILE_CHECKSUM_TABLE)
+    @RenameTable(fromTableName = "LinkDetails", toTableName = LINK_DETAILS_TABLE)
+    @RenameTable(fromTableName = "LoadRange", toTableName = LOAD_RANGE_TABLE)
+    @RenameTable(fromTableName = "AutoDeleteMessages", toTableName = AUTO_DELETE_MESSAGES_TABLE)
+    @RenameTable(fromTableName = "UserMetadata", toTableName = USER_METADATA_TABLE)
+    class AutoMigrationSpec18To19 : AutoMigrationSpec
 }

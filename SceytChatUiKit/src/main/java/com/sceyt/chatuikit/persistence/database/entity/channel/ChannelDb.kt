@@ -14,7 +14,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 data class ChannelDb(
         @Embedded val channelEntity: ChannelEntity,
 
-        @Relation(parentColumn = "chat_id", entityColumn = "chat_id", entity = UserChatLink::class)
+        @Relation(parentColumn = "chat_id", entityColumn = "chat_id", entity = UserChatLinkEntity::class)
         val members: List<ChanelMemberDb>?,
 
         @Relation(parentColumn = "lastMessageTid", entityColumn = "tid", entity = MessageEntity::class)

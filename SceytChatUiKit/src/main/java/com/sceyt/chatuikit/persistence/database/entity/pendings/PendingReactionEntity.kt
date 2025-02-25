@@ -7,7 +7,10 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 
-@Entity(tableName = "pendingReaction",
+internal const val PENDING_REACTION_TABLE = "sceyt_pending_reaction_table"
+
+@Entity(
+    tableName = PENDING_REACTION_TABLE,
     foreignKeys = [
         ForeignKey(
             entity = MessageEntity::class,
