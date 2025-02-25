@@ -135,7 +135,7 @@ internal abstract class MessageDao {
     }
 
     @Transaction
-    suspend fun upsertMessageEntitiesInTransaction(messageEntities: List<MessageEntity>) {
+    open suspend fun upsertMessageEntitiesWithTransaction(messageEntities: List<MessageEntity>) {
         val rowIds = insertMany(messageEntities)
         val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
             if (rowId == -1L) messageEntities[index] else null
