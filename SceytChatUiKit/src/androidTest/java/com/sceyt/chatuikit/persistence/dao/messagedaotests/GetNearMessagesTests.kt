@@ -67,7 +67,7 @@ class GetNearMessagesTests {
             LoadRangeEntity(1, 4, channelId)
         )
 
-        messageDao.upsertMessageEntitiesInTransaction(messages)
+        messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
         val limit = 6
@@ -99,7 +99,7 @@ class GetNearMessagesTests {
             LoadRangeEntity(3, 5, channelId)
         )
 
-        messageDao.upsertMessageEntitiesInTransaction(messages)
+        messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
         val limit = 10
@@ -125,7 +125,7 @@ class GetNearMessagesTests {
             createMessage(6, 6),
         )
 
-        messageDao.upsertMessageEntitiesInTransaction(messages)
+        messageDao.upsertMessageEntitiesWithTransaction(messages)
 
         val loadedMessages = messageDao.getNearMessages(channelId, 6, 10)
 
@@ -153,7 +153,7 @@ class GetNearMessagesTests {
             LoadRangeEntity(1, 4, channelId)
         )
 
-        messageDao.upsertMessageEntitiesInTransaction(messages)
+        messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
         val limit = 4
@@ -179,7 +179,7 @@ class GetNearMessagesTests {
             LoadRangeEntity(1, 10, channelId)
         )
 
-        messageDao.upsertMessageEntitiesInTransaction(messages)
+        messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
         val limit = 4
@@ -213,7 +213,7 @@ class GetNearMessagesTests {
             LoadRangeEntity(1, 10, channelId)
         )
 
-        messageDao.upsertMessageEntitiesInTransaction(messages)
+        messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
         val limit = 4
@@ -245,7 +245,7 @@ class GetNearMessagesTests {
             LoadRangeEntity(1, 10, channelId)
         )
 
-        messageDao.upsertMessageEntitiesInTransaction(messages)
+        messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
         val limit = 4
