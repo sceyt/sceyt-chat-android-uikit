@@ -25,7 +25,6 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageIdAndTid
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.UserMarkerLink
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.mappers.toAttachmentPayLoad
@@ -96,7 +95,7 @@ abstract class MessageDao {
         //Insert user markers
         val userMarkers = messages.flatMap { it.userMarkers ?: arrayListOf() }
         if (userMarkers.isNotEmpty())
-            insertUserMarkersAndLinks(userMarkers, checkExist = false)
+            insertUserMarkers(userMarkers)
 
         //Insert reactions
         val reactions = messages.flatMap { it.reactions ?: arrayListOf() }
@@ -145,38 +144,34 @@ abstract class MessageDao {
     abstract suspend fun updateMessages(messageEntity: List<MessageEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertAttachments(attachments: List<AttachmentEntity>)
+    protected abstract suspend fun insertAttachments(attachments: List<AttachmentEntity>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    abstract suspend fun insertAttachmentPayLoads(payLoad: List<AttachmentPayLoadEntity>)
+    protected abstract suspend fun insertAttachmentPayLoads(payLoad: List<AttachmentPayLoadEntity>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract suspend fun insertLinkDetails(payLoad: List<LinkDetailsEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertUserMarkers(userMarkers: List<MarkerEntity>): List<Long>
+    protected abstract suspend fun insertUserMarkers(markers: List<MarkerEntity>): List<Long>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
+    protected abstract suspend fun insertReactions(reactions: List<ReactionEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertReactionTotals(reactionTotals: List<ReactionTotalEntity>)
+    protected abstract suspend fun insertReactionTotals(reactionTotals: List<ReactionTotalEntity>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    abstract suspend fun insertMentionedUsersMessageLinks(mentionedUsers: List<MentionUserMessageLink>)
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    abstract suspend fun insetUserMarkerLinks(links: List<UserMarkerLink>)
+    protected abstract suspend fun insertMentionedUsersMessageLinks(mentionedUsers: List<MentionUserMessageLink>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertAutoDeletedMessages(entities: List<AutoDeleteMessageEntity>)
+    protected abstract suspend fun insertAutoDeletedMessages(entities: List<AutoDeleteMessageEntity>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    abstract suspend fun insertPendingMarkersIgnored(entities: List<PendingMarkerEntity>)
+    protected abstract suspend fun insertPendingMarkersIgnored(entities: List<PendingMarkerEntity>)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
     @Transaction
-    suspend fun insertPendingMarkers(entities: List<PendingMarkerEntity>) {
+    open suspend fun insertPendingMarkers(entities: List<PendingMarkerEntity>) {
         if (entities.isEmpty()) return
         val existMessageIds = getExistMessageByIds(entities.map { it.messageId })
         if (existMessageIds.isEmpty()) return
@@ -211,23 +206,14 @@ abstract class MessageDao {
     }
 
     @Transaction
-    open suspend fun insertUserMarkersAndLinks(
-            entities: List<MarkerEntity>,
-            checkExist: Boolean = true
-    ) {
-        val markers = if (checkExist) {
-            val existMessageIds = getExistMessageByIds(entities.map { it.messageId })
-            // Filter markers which message exist in db
-            entities.filter { it.messageId in existMessageIds }
-        } else entities
+    open suspend fun insertUserMarkersIfExistMessage(entities: List<MarkerEntity>) {
+        val existMessageIds = getExistMessageByIds(entities.map { it.messageId })
+        // Filter markers which message exist in db
+        val filtered = entities
+            .filter { it.messageId in existMessageIds }
+            .takeIf { it.isNotEmpty() } ?: return
 
-        val markersArray = markers.takeIf { it.isNotEmpty() }?.toTypedArray() ?: return
-        val ids = insertUserMarkers(markers)
-        val links = ids.mapIndexed { index, id ->
-            val marker = markersArray[index]
-            UserMarkerLink(messageId = marker.messageId, markerId = id)
-        }
-        insetUserMarkerLinks(links)
+        insertUserMarkers(filtered)
     }
 
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)

@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.persistence.database.entity.messages
 
 import androidx.room.Embedded
-import androidx.room.Junction
 import androidx.room.Relation
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingReactionEntity
@@ -21,10 +20,7 @@ data class MessageDb(
         @Relation(parentColumn = "tid", entityColumn = "messageTid", entity = AttachmentEntity::class)
         val attachments: List<AttachmentDb>?,
 
-        @Relation(
-            parentColumn = "message_id",
-            entityColumn = "primaryKey",
-            associateBy = Junction(UserMarkerLink::class, parentColumn = "message_id", entityColumn = "markerId"))
+        @Relation(parentColumn = "message_id", entityColumn = "messageId")
         val userMarkers: List<MarkerEntity>?,
 
         @Relation(parentColumn = "message_id", entityColumn = "messageId", entity = ReactionEntity::class)
