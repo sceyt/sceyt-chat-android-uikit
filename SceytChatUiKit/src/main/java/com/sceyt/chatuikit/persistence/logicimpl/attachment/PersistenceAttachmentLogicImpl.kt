@@ -351,7 +351,10 @@ internal class PersistenceAttachmentLogicImpl(
         }
     }
 
-    private suspend fun getExistAttachmentsAndMissedMsgIds(attachments: List<Attachment>, idsData: List<MessageIdAndTid>): Pair<List<SceytAttachment>, List<Long>> {
+    private suspend fun getExistAttachmentsAndMissedMsgIds(
+            attachments: List<Attachment>,
+            idsData: List<MessageIdAndTid>
+    ): Pair<List<SceytAttachment>, List<Long>> {
         if (attachments.isEmpty())
             return Pair(emptyList(), emptyList())
 

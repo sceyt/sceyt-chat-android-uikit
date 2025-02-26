@@ -129,6 +129,7 @@ fun SceytAttachment.existThumb(): Boolean {
 
 
 fun SceytAttachment.getLinkPreviewDetails(): LinkPreviewDetails? {
+    if (type != AttachmentTypeEnum.Link.value) return null
     if (url.isNullOrBlank()) return null
     try {
         val jsonObject = JSONObject(metadata ?: return null)
@@ -157,6 +158,7 @@ fun SceytAttachment.getLinkPreviewDetails(): LinkPreviewDetails? {
 }
 
 fun Attachment.getLinkPreviewDetails(): LinkPreviewDetails? {
+    if (type != AttachmentTypeEnum.Link.value) return null
     if (url.isNullOrBlank()) return null
     try {
         val jsonObject = JSONObject(metadata ?: return null)
