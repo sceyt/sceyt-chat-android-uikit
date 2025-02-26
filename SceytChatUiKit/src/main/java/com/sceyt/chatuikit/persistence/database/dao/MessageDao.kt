@@ -82,20 +82,7 @@ internal abstract class MessageDao {
         deleteMessageReactionTotalsChunked(messages.mapNotNull { it.messageEntity.id })
 
         //Insert attachments
-
-        val attachmentPairs = messages.map {
-            it.attachments.orEmpty() to it
-        }
-        if (attachmentPairs.isNotEmpty()) {
-            insertAttachments(attachmentPairs.flatMap { it.first.map { attachmentDb -> attachmentDb.attachmentEntity } })
-            insertAttachmentPayLoads(attachmentPairs.flatMap { (attachments, messageDb) ->
-                attachments.filter { it.attachmentEntity.type != AttachmentTypeEnum.Link.value }
-                    .map { it.toAttachmentPayLoad(messageDb.messageEntity) }
-            })
-            insertLinkDetails(attachmentPairs.flatMap { (attachments, _) ->
-                attachments.mapNotNull { attachmentDb -> attachmentDb.linkDetails }
-            })
-        }
+        insertAttachmentsWithPayloads(*messages.toTypedArray())
 
         //Insert user markers
         val userMarkers = messages.flatMap { it.userMarkers ?: arrayListOf() }
@@ -189,6 +176,40 @@ internal abstract class MessageDao {
         if (existMessageIds.isEmpty()) return
         val filtered = entities.filter { it.messageId in existMessageIds }
         insertPendingMarkersIgnored(filtered)
+    }
+
+    private suspend fun insertAttachmentsWithPayloads(vararg messages: MessageDb) {
+        val attachmentPairs = messages.map {
+            if (it.attachments.isNullOrEmpty())
+                null
+            else it.attachments to it
+        }.mapNotNull { it }
+
+        if (attachmentPairs.isNotEmpty()) {
+            val attachments = mutableListOf<AttachmentEntity>()
+            val attachmentPayLoads = mutableListOf<AttachmentPayLoadEntity>()
+            val linkDetails = mutableListOf<LinkDetailsEntity>()
+
+            attachmentPairs.forEach { (attachmentsDb, messageDb) ->
+                // Add attachments to list
+                attachments.addAll(attachmentsDb.map { it.attachmentEntity })
+                // Add attachment payloads to list
+                attachmentPayLoads.addAll(attachmentsDb.filter {
+                    it.attachmentEntity.type != AttachmentTypeEnum.Link.value
+                }.map { it.toAttachmentPayLoad(messageDb.messageEntity) })
+                // Add link details to list
+                linkDetails.addAll(attachmentsDb.mapNotNull { it.linkDetails })
+            }
+
+            if (attachments.isNotEmpty())
+                insertAttachments(attachments)
+
+            if (attachmentPayLoads.isNotEmpty())
+                insertAttachmentPayLoads(attachmentPayLoads)
+
+            if (linkDetails.isNotEmpty())
+                insertLinkDetails(linkDetails)
+        }
     }
 
     private suspend fun insertMentionedUsersMessageLinks(vararg messages: MessageDb) {
