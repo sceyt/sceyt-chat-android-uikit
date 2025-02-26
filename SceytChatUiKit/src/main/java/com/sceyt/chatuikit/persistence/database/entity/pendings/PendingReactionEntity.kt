@@ -17,6 +17,7 @@ internal const val PENDING_REACTION_TABLE = "sceyt_pending_reaction_table"
             parentColumns = ["message_id"],
             childColumns = ["messageId"],
             onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE,
             deferred = true
         )],
     indices = [Index("messageId", "reaction_key", unique = true)])

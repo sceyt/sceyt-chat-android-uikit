@@ -14,6 +14,7 @@ internal const val MARKER_TABLE = "sceyt_marker_table"
             parentColumns = ["message_id"],
             childColumns = ["messageId"],
             onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE,
             deferred = true
         )
     ],
