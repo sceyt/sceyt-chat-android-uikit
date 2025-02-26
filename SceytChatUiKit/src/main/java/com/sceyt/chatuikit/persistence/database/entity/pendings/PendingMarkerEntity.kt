@@ -15,7 +15,8 @@ internal const val PENDING_MARKER_TABLE = "sceyt_pending_marker_table"
             entity = MessageEntity::class,
             parentColumns = ["message_id"],
             childColumns = ["messageId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
         )
     ],
     indices = [Index("messageId", "name", unique = true)]
