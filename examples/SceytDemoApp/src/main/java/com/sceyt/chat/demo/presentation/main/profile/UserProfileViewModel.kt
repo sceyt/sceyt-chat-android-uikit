@@ -18,18 +18,17 @@ class UserProfileViewModel(
 
     private val myId = SceytChatUIKit.currentUserId ?: ""
 
-    val isDemoUser = Constants.users.contains(myId)
+    val isDemoUser get() = Constants.users.contains(myId)
 
     private fun deleteUser(logout: () -> Unit) {
         viewModelScope.launch {
             val result = userRepository.deleteUser(myId)
-            when {
-                result.isSuccess -> logout()
-                else -> {
-                    val exception = result.exceptionOrNull()
-                    if (exception is SceytException)
-                        _deleteUserErrorLiveData.postValue(exception.message)
-                }
+            if (result.isSuccess)
+                logout()
+            else {
+                val exception = result.exceptionOrNull()
+                if (exception is SceytException)
+                    _deleteUserErrorLiveData.postValue(exception.message)
             }
         }
     }

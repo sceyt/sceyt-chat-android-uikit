@@ -26,9 +26,7 @@ class SelectAccountsBottomSheetViewModel : BaseViewModel() {
         }
     }
 
-    private suspend fun createAccounts(): List<SceytUser> {
-        return withContext(Dispatchers.Default) {
-            Constants.users.map { SceytUser(id = it) }
-        }
+    private suspend fun createAccounts() = withContext(Dispatchers.Default) {
+        return@withContext Constants.users.map { SceytUser(id = it) }.shuffled()
     }
 }
