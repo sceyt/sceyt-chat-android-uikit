@@ -16,16 +16,19 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 internal abstract class UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertUser(user: UserEntity)
+    protected abstract suspend fun insertUser(user: UserEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertUsers(users: List<UserEntity>)
+    protected abstract suspend fun insertUsers(users: List<UserEntity>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract suspend fun insertUsersIgnored(users: List<UserEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insertMetadata(list: List<UserMetadataEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    protected abstract suspend fun insertMetadataIgnored(list: List<UserMetadataEntity>)
 
     @Transaction
     open suspend fun insertUserWithMetadata(user: UserDb) {
@@ -44,8 +47,12 @@ internal abstract class UserDao {
         } else {
             insertUsersIgnored(users.map { it.user })
         }
-        users.flatMap { it.metadata }.takeIf { it.isNotEmpty() }?.let {
-            insertMetadata(it)
+
+        val metadata = users.flatMap { it.metadata }.takeIf { it.isNotEmpty() } ?: return
+        if (replaceUserOnConflict) {
+            insertMetadata(metadata)
+        } else {
+            insertMetadataIgnored(metadata)
         }
     }
 
