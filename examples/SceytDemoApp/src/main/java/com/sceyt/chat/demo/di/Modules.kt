@@ -41,10 +41,10 @@ val viewModelModules = module {
     viewModel { RoleViewModel() }
     viewModel { CreateAccountViewModel(get(), get(), get()) }
     viewModel { EditProfileViewModel(get()) }
-    viewModel { SelectAccountsBottomSheetViewModel() }
+    viewModel { SelectAccountsBottomSheetViewModel(get()) }
     viewModel { WelcomeViewModel(get(), get()) }
     viewModel { SplashViewModel(get()) }
-    viewModel { UserProfileViewModel(get()) }
+    viewModel { UserProfileViewModel(get(), get()) }
 }
 
 val apiModule = module {
