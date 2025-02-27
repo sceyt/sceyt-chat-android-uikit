@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogChannelActionsBinding
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
+import com.sceyt.chatuikit.persistence.extensions.haveDeleteChannelPermission
 import com.sceyt.chatuikit.styles.DialogStyle
 
 open class ChannelActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
@@ -96,7 +97,7 @@ open class ChannelActionsDialog(context: Context) : Dialog(context, R.style.Scey
         pin.isVisible = !channel.pinned
         unPin.isVisible = channel.pinned
         leave.isVisible = channel.isGroup && channel.checkIsMemberInChannel()
-        delete.isVisible = !channel.isGroup
+        delete.isVisible = !channel.isGroup && channel.haveDeleteChannelPermission()
     }
 
     enum class ActionsEnum {

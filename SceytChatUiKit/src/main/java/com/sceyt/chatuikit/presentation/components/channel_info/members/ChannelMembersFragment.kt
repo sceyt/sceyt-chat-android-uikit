@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
@@ -38,6 +39,7 @@ import com.sceyt.chatuikit.extensions.setBoldSpan
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.haveAddMemberPermission
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
@@ -68,8 +70,6 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     protected lateinit var memberType: MemberTypeEnum
         private set
     protected lateinit var style: ChannelMembersStyle
-        private set
-    protected var currentUserRole: Role? = null
         private set
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
     private lateinit var selectUsersActivityLauncher: ActivityResultLauncher<Intent>
@@ -117,7 +117,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         channel = requireNotNull(arguments?.parcelable(CHANNEL))
         val type = requireNotNull(arguments?.getInt(MEMBER_TYPE, MemberTypeEnum.Member.ordinal))
         memberType = MemberTypeEnum.entries.getOrNull(type) ?: MemberTypeEnum.Member
-        getCurrentUserRole()
+        setDetailsWithPermissions()
     }
 
     private fun initViewModel() {
@@ -173,10 +173,8 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         }
     }
 
-    private fun getCurrentUserRole() {
-        channel.members?.find { it.id == myId }?.let {
-            currentUserRole = it.role
-        }
+    private fun setDetailsWithPermissions() {
+        binding?.layoutAddMembers?.isVisible = channel.haveAddMemberPermission()
     }
 
     private fun setNewOwner(newOwnerId: String) {
@@ -243,10 +241,10 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     }
 
     protected open fun onMemberLongClick(item: MemberItem.Member) {
-        if (currentUserIsOwnerOrAdmin().not() || item.member.id == myId) return
+        if (!viewModel.shouldShowMemberActionsDialog(item, channel)) return
 
         MemberActionsDialog
-            .newInstance(requireContext(), item.member, currentUserRole?.name == RoleTypeEnum.Owner.value)
+            .newInstance(requireContext(), item.member, channel)
             .apply {
                 setChooseTypeCb {
                     when (it) {
@@ -259,11 +257,6 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
 
     protected open fun setOrUpdateMembersAdapter(data: List<MemberItem>) {
         if (membersAdapter == null) {
-            val currentUser = channel.members?.find {
-                it.id == myId
-            }
-            currentUserRole = currentUser?.role
-
             membersAdapter = ChannelMembersAdapter(data.toArrayList(),
                 ChannelMembersViewHolderFactory(requireContext(), style = style.itemStyle).also {
                     it.setOnClickListener(object : MemberClickListeners.ClickListeners {
@@ -298,10 +291,6 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
     }
 
     protected open fun onRemovedMember(data: List<SceytMember>) {
-    }
-
-    protected open fun currentUserIsOwnerOrAdmin(): Boolean {
-        return currentUserRole?.name == RoleTypeEnum.Owner.value || currentUserRole?.name == RoleTypeEnum.Admin.value
     }
 
     protected open fun loadInitialMembers() {
@@ -454,7 +443,7 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
 
     override fun onChannelUpdated(channel: SceytChannel) {
         this.channel = channel
-        getCurrentUserRole()
+        setDetailsWithPermissions()
     }
 
     private fun SceytFragmentChannelMembersBinding.applyStyle() {

@@ -8,6 +8,7 @@ import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.PopupMenu
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.persistence.extensions.haveDeleteChannelPermission
 
 open class ChannelActionsPopup(
         context: Context,
@@ -22,7 +23,7 @@ open class ChannelActionsPopup(
 
         val isGroup = channel.isGroup
         menu.findItem(R.id.sceyt_leave_channel).isVisible = isGroup
-        menu.findItem(R.id.sceyt_delete_channel)?.isVisible = !isGroup
+        menu.findItem(R.id.sceyt_delete_channel)?.isVisible = !isGroup && channel.haveDeleteChannelPermission()
 
         menu.findItem(R.id.sceyt_mark_as_read).isVisible = channel.newMessageCount > 0 || channel.unread
         menu.findItem(R.id.sceyt_mark_as_unread).isVisible = channel.newMessageCount == 0L && !channel.unread
