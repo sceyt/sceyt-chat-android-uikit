@@ -3,6 +3,7 @@ package com.sceyt.chat.demo.presentation.welcome.accounts_bottomsheet
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.sceyt.chat.demo.data.AppSharedPreference
 import com.sceyt.chat.demo.data.Constants
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
@@ -10,7 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class SelectAccountsBottomSheetViewModel : BaseViewModel() {
+class SelectAccountsBottomSheetViewModel(
+        private val sharedPreference: AppSharedPreference
+) : BaseViewModel() {
 
     private val _accountsLiveData = MutableLiveData<List<SceytUser>>()
     val accountsLiveData: LiveData<List<SceytUser>> = _accountsLiveData
@@ -27,6 +30,8 @@ class SelectAccountsBottomSheetViewModel : BaseViewModel() {
     }
 
     private suspend fun createAccounts() = withContext(Dispatchers.Default) {
-        return@withContext Constants.users.map { SceytUser(id = it) }.shuffled()
+        val storedUsers = sharedPreference.getUserIdList().map { SceytUser(id = it) }
+        val demoUsers = Constants.users.map { SceytUser(id = it) }.shuffled()
+        return@withContext storedUsers + demoUsers
     }
 }
