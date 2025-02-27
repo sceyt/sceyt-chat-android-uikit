@@ -46,7 +46,8 @@ data class SceytChannel(
         val pendingReactions: List<PendingReactionData>?,
         val pending: Boolean,
         val draftMessage: DraftMessage?,
-        val typingData: ChannelTypingEventData? = null
+        val typingData: ChannelTypingEventData? = null,
+        val userPermissions: List<String> = listOf(UserPermission.KickMember.value)
 ) : Parcelable {
 
     val iconUrl: String?

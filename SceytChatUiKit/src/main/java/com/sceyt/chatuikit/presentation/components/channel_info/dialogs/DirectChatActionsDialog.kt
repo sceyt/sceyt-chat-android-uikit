@@ -11,6 +11,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogDirectChannelActionsBinding
 import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.haveDeleteChannelPermission
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.styles.DialogStyle
 
@@ -99,6 +100,7 @@ class DirectChatActionsDialog(context: Context) : Dialog(context, R.style.SceytD
 
         pin.isVisible = !channel.pinned
         unPin.isVisible = channel.pinned
+        delete.isVisible = channel.haveDeleteChannelPermission()
     }
 
     enum class ActionsEnum {

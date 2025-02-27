@@ -9,17 +9,22 @@ import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytDialogMembrerActionsBinding
-import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.persistence.extensions.haveChangeMemberRolePermission
+import com.sceyt.chatuikit.persistence.extensions.haveKickAndBlockMemberPermission
+import com.sceyt.chatuikit.persistence.extensions.haveKickMemberPermission
 import com.sceyt.chatuikit.styles.DialogStyle
 
-class MemberActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95), SceytKoinComponent {
+class MemberActionsDialog(
+        context: Context
+) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogMembrerActionsBinding
     private val style = DialogStyle.default(context)
     private var listener: ((ActionsEnum) -> Unit)? = null
     private lateinit var member: SceytMember
-    private var currentIsOwner: Boolean = false
+    private lateinit var channel: SceytChannel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,12 +41,7 @@ class MemberActionsDialog(context: Context) : Dialog(context, R.style.SceytDialo
             wlp.y = 30
             it.attributes = wlp
         }
-        determinateState()
-    }
-
-    private fun setMember(member: SceytMember, currentIsOwner: Boolean) {
-        this.member = member
-        this.currentIsOwner = currentIsOwner
+        binding.determinateState()
     }
 
     private fun SceytDialogMembrerActionsBinding.initView() {
@@ -56,9 +56,11 @@ class MemberActionsDialog(context: Context) : Dialog(context, R.style.SceytDialo
         }
     }
 
-    private fun determinateState() {
-        val enableRevokeAdmin = member.role.name == RoleTypeEnum.Admin.value && currentIsOwner
-        binding.revokeAdmin.isVisible = enableRevokeAdmin
+    private fun SceytDialogMembrerActionsBinding.determinateState() {
+        remove.isVisible = channel.haveKickMemberPermission()
+                || channel.haveKickAndBlockMemberPermission()
+        revokeAdmin.isVisible = member.role.name == RoleTypeEnum.Admin.value
+                && channel.haveChangeMemberRolePermission()
     }
 
     fun setChooseTypeCb(cb: (ActionsEnum) -> Unit) {
@@ -74,9 +76,14 @@ class MemberActionsDialog(context: Context) : Dialog(context, R.style.SceytDialo
     }
 
     companion object {
-        fun newInstance(context: Context, member: SceytMember, currentIsOwner: Boolean): MemberActionsDialog {
+        fun newInstance(
+                context: Context,
+                member: SceytMember,
+                channel: SceytChannel
+        ): MemberActionsDialog {
             val dialog = MemberActionsDialog(context)
-            dialog.setMember(member, currentIsOwner)
+            dialog.member = member
+            dialog.channel = channel
             return dialog
         }
     }

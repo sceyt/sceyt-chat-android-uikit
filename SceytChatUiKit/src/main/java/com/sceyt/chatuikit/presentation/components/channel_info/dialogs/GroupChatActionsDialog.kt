@@ -9,10 +9,10 @@ import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
-import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogGroupChannelActionsBinding
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.haveDeleteChannelPermission
 import com.sceyt.chatuikit.styles.DialogStyle
 
 class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
@@ -86,10 +86,8 @@ class GroupChatActionsDialog(context: Context) : Dialog(context, R.style.SceytDi
     }
 
     private fun determinateState() {
-        val myRole = channel.userRole
-        val enabledActions = myRole == RoleTypeEnum.Owner.value
         with(binding) {
-            delete.isVisible = enabledActions
+            delete.isVisible = channel.haveDeleteChannelPermission()
             pin.isVisible = !channel.pinned
             unPin.isVisible = channel.pinned
         }
