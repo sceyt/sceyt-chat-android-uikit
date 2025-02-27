@@ -12,6 +12,9 @@ interface AppSharedPreference {
     fun getString(key: String): String?
     fun setBoolean(key: String, value: Boolean)
     fun getBoolean(key: String, defaultValue: Boolean = false): Boolean
+    fun addUserId(userId: String)
+    fun deleteUserId(userId: String)
+    fun getUserIdList(): List<String>
     fun clear()
     fun <T> getList(key: String, clazz: Class<T>): List<T>?
     fun <T> putList(key: String, list: List<T>?)

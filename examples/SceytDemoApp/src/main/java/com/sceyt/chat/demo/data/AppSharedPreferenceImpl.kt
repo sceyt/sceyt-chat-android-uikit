@@ -58,5 +58,4 @@ class AppSharedPreferenceImpl(application: Application) : AppSharedPreference {
         editor.clear()
         editor.apply()
     }
-
 }
