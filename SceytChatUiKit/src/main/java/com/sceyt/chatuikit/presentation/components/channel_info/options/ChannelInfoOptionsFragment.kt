@@ -12,6 +12,7 @@ import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoOptionsBinding
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setDrawableStart
+import com.sceyt.chatuikit.persistence.extensions.haveGetMembersPermission
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
@@ -91,7 +92,7 @@ open class ChannelInfoOptionsFragment : Fragment(), ChannelUpdateListener, Chann
                 members.setDrawableStart(style.membersIcon)
                 members.text = style.membersTitleText
             }
-
+            groupChannelMembers.isVisible = channel.haveGetMembersPermission()
             groupChannelAdmins.isVisible = isOwnerOrAdmin
         }
     }
