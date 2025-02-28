@@ -46,6 +46,7 @@ import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttrib
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.haveSendMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 import com.sceyt.chatuikit.persistence.lazyVar
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
@@ -622,13 +623,22 @@ class MessageInputView @JvmOverloads constructor(
                         viewAttachments.isVisible = false
                         messageActionsView.isVisible = false
                     }
-                    isInputHidden = if (isBlockedPeer) {
-                        hideInputWithMessage(getString(R.string.sceyt_you_blocked_this_user), R.drawable.sceyt_ic_warning)
-                        true
-                    } else {
-                        if (disabledInputByGesture.not())
-                            showInput()
-                        false
+                    isInputHidden = when {
+                        isBlockedPeer -> {
+                            hideInputWithMessage(getString(R.string.sceyt_you_blocked_this_user), R.drawable.sceyt_ic_warning)
+                            true
+                        }
+
+                        !channel.haveSendMessagePermission() -> {
+                            hideInputWithMessage(getString(R.string.read_only), R.drawable.sceyt_ic_warning)
+                            true
+                        }
+
+                        else -> {
+                            if (disabledInputByGesture.not())
+                                showInput()
+                            false
+                        }
                     }
                 }
             }

@@ -5,6 +5,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytItemShareChannelBinding
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
+import com.sceyt.chatuikit.persistence.extensions.haveSendMessagePermission
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.BaseChannelViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
@@ -32,10 +33,19 @@ open class ShareableChannelViewHolder(
         setTitle(channel)
         setSubtitle(channel)
 
-        binding.checkbox.isChecked = item.selected
+        val enabled = channel.haveSendMessagePermission()
+        checkRootEnabledState(enabled)
 
+        binding.checkbox.isChecked = item.selected
         binding.root.setOnClickListener {
             clickListener.onChannelClick(item)
+        }
+    }
+
+    private fun checkRootEnabledState(enabled: Boolean) {
+        binding.root.apply {
+            isEnabled = enabled
+            alpha = if (enabled) 1f else 0.5f
         }
     }
 

@@ -229,4 +229,5 @@
     <string name="sceyt_waiting_for_network_title">Waiting for network…</string>
     <string name="sceyt_connecting_title">Connecting…</string>
     <string name="sceyt_chats">Chats</string>
+    <string name="read_only">Read only</string>
 </resources>
