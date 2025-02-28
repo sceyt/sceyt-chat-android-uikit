@@ -16,7 +16,8 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.extensions.isNotNullOrBlank
+import com.sceyt.chatuikit.persistence.extensions.haveDeleteAnyMessagePermission
+import com.sceyt.chatuikit.persistence.extensions.haveDeleteOwnMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveEditAnyMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveEditOwnMessagePermission
 
@@ -37,12 +38,20 @@ class MessageActionsPopupMenu(
         val expiredEditMessage = (System.currentTimeMillis() - message.createdAt) > SceytChatUIKit.config.messageEditTimeout
 
         val editMessage = menu.findItem(R.id.sceyt_edit_message)
-        val deleteMessageItem = menu.findItem(R.id.sceyt_delete_message)
+        val deleteMessage = menu.findItem(R.id.sceyt_delete_message)
         val replyMessage = menu.findItem(R.id.sceyt_reply)
         val forwardMessage = menu.findItem(R.id.sceyt_forward)
         val replyInThread = menu.findItem(R.id.sceyt_reply_in_thread)
         val messageInfo = menu.findItem(R.id.sceyt_message_info)
         val copyMessage = menu.findItem(R.id.sceyt_copy_message)
+
+        if (!message.incoming) {
+            deleteMessage.apply {
+                title = setColoredTitle(title.toString())
+                icon?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+                    ContextCompat.getColor(context, R.color.sceyt_color_warning), BlendModeCompat.SRC_ATOP)
+            }
+        }
 
         replyMessage.isVisible = !isPending
         forwardMessage.isVisible = !isPending
@@ -51,16 +60,11 @@ class MessageActionsPopupMenu(
             message.incoming -> channel.haveEditAnyMessagePermission()
             else -> channel.haveEditOwnMessagePermission()
         }
+        deleteMessage.isVisible = when {
+            message.incoming -> channel.haveDeleteAnyMessagePermission()
+            else -> channel.haveDeleteOwnMessagePermission()
+        }
 
-        if (message.incoming) {
-            deleteMessageItem.isVisible = false
-            menu.findItem(R.id.sceyt_edit_message)?.isVisible = false
-        } else
-            deleteMessageItem.apply {
-                title = setColoredTitle(title.toString())
-                icon?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
-                    ContextCompat.getColor(context, R.color.sceyt_color_warning), BlendModeCompat.SRC_ATOP)
-            }
         super.show()
     }
 
