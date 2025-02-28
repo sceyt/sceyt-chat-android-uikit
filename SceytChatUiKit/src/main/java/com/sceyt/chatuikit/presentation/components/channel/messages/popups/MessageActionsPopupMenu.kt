@@ -14,13 +14,17 @@ import androidx.core.view.GravityCompat
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
+import com.sceyt.chatuikit.persistence.extensions.haveEditAnyMessagePermission
+import com.sceyt.chatuikit.persistence.extensions.haveEditOwnMessagePermission
 
 class MessageActionsPopupMenu(
         private val context: Context,
         anchor: View,
-        private var message: SceytMessage
+        private val message: SceytMessage,
+        private val channel: SceytChannel
 ) : PopupMenu(context, anchor) {
 
     @SuppressLint("RestrictedApi")
@@ -29,16 +33,24 @@ class MessageActionsPopupMenu(
         (menu as MenuBuilder).setOptionalIconsVisible(true)
         gravity = if (message.incoming) GravityCompat.START else GravityCompat.END
 
-
         val isPending = message.deliveryStatus == DeliveryStatus.Pending
-
-        menu.findItem(R.id.sceyt_reply).isVisible = !isPending
-        menu.findItem(R.id.sceyt_forward).isVisible = !isPending
-
         val expiredEditMessage = (System.currentTimeMillis() - message.createdAt) > SceytChatUIKit.config.messageEditTimeout
-        menu.findItem(R.id.sceyt_edit_message).isVisible = message.body.isNotNullOrBlank() && !expiredEditMessage
 
+        val editMessage = menu.findItem(R.id.sceyt_edit_message)
         val deleteMessageItem = menu.findItem(R.id.sceyt_delete_message)
+        val replyMessage = menu.findItem(R.id.sceyt_reply)
+        val forwardMessage = menu.findItem(R.id.sceyt_forward)
+        val replyInThread = menu.findItem(R.id.sceyt_reply_in_thread)
+        val messageInfo = menu.findItem(R.id.sceyt_message_info)
+        val copyMessage = menu.findItem(R.id.sceyt_copy_message)
+
+        replyMessage.isVisible = !isPending
+        forwardMessage.isVisible = !isPending
+        editMessage.isVisible = when {
+            message.body.isBlank() || expiredEditMessage -> false
+            message.incoming -> channel.haveEditAnyMessagePermission()
+            else -> channel.haveEditOwnMessagePermission()
+        }
 
         if (message.incoming) {
             deleteMessageItem.isVisible = false
