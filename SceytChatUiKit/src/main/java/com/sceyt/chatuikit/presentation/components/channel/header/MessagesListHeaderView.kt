@@ -464,7 +464,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         val newSelectedMessage = messages.firstOrNull()
 
         val editMessage = menu.findItem(R.id.sceyt_edit_message)
-        val deleteMessageItem = menu.findItem(R.id.sceyt_delete_message)
+        val deleteMessage = menu.findItem(R.id.sceyt_delete_message)
         val replyMessage = menu.findItem(R.id.sceyt_reply)
         val forwardMessage = menu.findItem(R.id.sceyt_forward)
         val replyInThread = menu.findItem(R.id.sceyt_reply_in_thread)
@@ -486,6 +486,10 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 message.incoming -> channel.haveEditAnyMessagePermission()
                 isSingleMessage -> channel.haveEditOwnMessagePermission()
                 else -> false
+            }
+            deleteMessage.isVisible = when {
+                message.incoming -> channel.haveEditAnyMessagePermission()
+                else -> channel.haveEditOwnMessagePermission()
             }
         }
     }
