@@ -44,6 +44,7 @@ import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.haveDeleteOwnMessageReactionPermission
 import com.sceyt.chatuikit.persistence.extensions.haveEditAnyMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveEditOwnMessagePermission
+import com.sceyt.chatuikit.persistence.extensions.haveForwardMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderTypingUsersHelper
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners
@@ -479,7 +480,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
             replyMessage?.isVisible = isSingleMessage && !isPending
             //replyInThread.isVisible = isSingleMessage && !isPending
-            forwardMessage?.isVisible = !isPending
+            forwardMessage?.isVisible = !isPending && channel.haveForwardMessagePermission()
             messageInfo.isVisible = isSingleMessage && !message.incoming && !isPending
             copyMessage?.isVisible = messages.any { it.body.isNotNullOrBlank() }
             editMessage.isVisible = when {
