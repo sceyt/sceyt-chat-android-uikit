@@ -58,11 +58,11 @@ class MessageActionsPopupMenu(
         editMessage.isVisible = when {
             message.body.isBlank() || expiredEditMessage -> false
             message.incoming -> channel.haveEditAnyMessagePermission()
-            else -> channel.haveEditOwnMessagePermission()
+            else -> channel.haveEditOwnMessagePermission() || channel.haveEditAnyMessagePermission()
         }
         deleteMessage.isVisible = when {
             message.incoming -> channel.haveDeleteAnyMessagePermission()
-            else -> channel.haveDeleteOwnMessagePermission()
+            else -> channel.haveDeleteOwnMessagePermission() || channel.haveDeleteAnyMessagePermission()
         }
 
         super.show()

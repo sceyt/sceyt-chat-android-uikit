@@ -41,6 +41,7 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.haveDeleteOwnMessageReactionPermission
 import com.sceyt.chatuikit.persistence.extensions.haveEditAnyMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveEditOwnMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
@@ -484,12 +485,12 @@ class MessagesListHeaderView @JvmOverloads constructor(
             editMessage.isVisible = when {
                 message.body.isBlank() || expiredEditMessage -> false
                 message.incoming -> channel.haveEditAnyMessagePermission()
-                isSingleMessage -> channel.haveEditOwnMessagePermission()
+                isSingleMessage -> channel.haveEditOwnMessagePermission() || channel.haveEditOwnMessagePermission()
                 else -> false
             }
             deleteMessage.isVisible = when {
                 message.incoming -> channel.haveEditAnyMessagePermission()
-                else -> channel.haveEditOwnMessagePermission()
+                else -> channel.haveEditOwnMessagePermission() || channel.haveDeleteOwnMessageReactionPermission()
             }
         }
     }
