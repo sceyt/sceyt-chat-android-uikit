@@ -46,6 +46,7 @@ import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttrib
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.haveClearAllMessagesPermission
 import com.sceyt.chatuikit.persistence.extensions.haveMentionMemberPermission
 import com.sceyt.chatuikit.persistence.extensions.haveSendAttachmentMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveSendMessagePermission
@@ -160,6 +161,8 @@ class MessageInputView @JvmOverloads constructor(
     var haveAddAttachmentPermission = true
         private set
     var haveMentionMemberPermission = true
+        private set
+    var haveClearAllMessagesPermission = true
         private set
 
     init {
@@ -617,6 +620,7 @@ class MessageInputView @JvmOverloads constructor(
     internal fun checkIsParticipant(channel: SceytChannel) {
         haveAddAttachmentPermission = channel.haveSendAttachmentMessagePermission()
         haveMentionMemberPermission = channel.haveMentionMemberPermission()
+        haveClearAllMessagesPermission = channel.haveClearAllMessagesPermission()
         when (channel.getChannelType()) {
             ChannelTypeEnum.Public -> {
                 if (channel.userRole.isNullOrBlank()) {
@@ -1013,7 +1017,7 @@ class MessageInputView @JvmOverloads constructor(
         with(binding) {
             isInMultiSelectMode = isMultiselectMode
             showHideInputOnModeChange(isMultiselectMode)
-            if (isMultiselectMode) {
+            if (isMultiselectMode && haveClearAllMessagesPermission) {
                 btnClearChat.animateToVisible(150)
             } else
                 btnClearChat.animateToGone(150)
