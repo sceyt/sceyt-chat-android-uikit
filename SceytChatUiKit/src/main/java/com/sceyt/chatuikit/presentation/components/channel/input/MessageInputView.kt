@@ -46,6 +46,7 @@ import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttrib
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.haveSendAttachmentMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveSendMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 import com.sceyt.chatuikit.persistence.lazyVar
@@ -154,6 +155,8 @@ class MessageInputView @JvmOverloads constructor(
     var replyThreadMessageId: Long? = null
         private set
     var linkDetails: LinkPreviewDetails? = null
+        private set
+    var haveAddAttachmentPermission = true
         private set
 
     init {
@@ -428,7 +431,7 @@ class MessageInputView @JvmOverloads constructor(
         inputState = newState
 
         binding.icSendMessage.isInvisible = showVoiceIcon
-        binding.icAddAttachments.isVisible = enableSendAttachment && !isEditingMessage()
+        binding.icAddAttachments.isVisible = enableSendAttachment && !isEditingMessage() && haveAddAttachmentPermission
         binding.viewAttachments.isVisible = allAttachments.isNotEmpty()
         if (showVoiceIcon) {
             showVoiceRecorder()
@@ -609,6 +612,7 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     internal fun checkIsParticipant(channel: SceytChannel) {
+        haveAddAttachmentPermission = channel.haveSendAttachmentMessagePermission()
         when (channel.getChannelType()) {
             ChannelTypeEnum.Public -> {
                 if (channel.userRole.isNullOrBlank()) {
