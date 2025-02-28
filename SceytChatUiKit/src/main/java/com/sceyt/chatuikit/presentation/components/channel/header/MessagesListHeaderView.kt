@@ -45,6 +45,7 @@ import com.sceyt.chatuikit.persistence.extensions.haveDeleteOwnMessageReactionPe
 import com.sceyt.chatuikit.persistence.extensions.haveEditAnyMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveEditOwnMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveForwardMessagePermission
+import com.sceyt.chatuikit.persistence.extensions.haveReplyMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderTypingUsersHelper
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners
@@ -478,7 +479,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             val expiredEditMessage = (System.currentTimeMillis() - message.createdAt) >
                     SceytChatUIKit.config.messageEditTimeout
 
-            replyMessage?.isVisible = isSingleMessage && !isPending
+            replyMessage?.isVisible = isSingleMessage && !isPending && channel.haveReplyMessagePermission()
             //replyInThread.isVisible = isSingleMessage && !isPending
             forwardMessage?.isVisible = !isPending && channel.haveForwardMessagePermission()
             messageInfo.isVisible = isSingleMessage && !message.incoming && !isPending

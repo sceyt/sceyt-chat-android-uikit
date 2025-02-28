@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.persistence.extensions.haveDeleteOwnMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveEditAnyMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveEditOwnMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveForwardMessagePermission
+import com.sceyt.chatuikit.persistence.extensions.haveReplyMessagePermission
 
 class MessageActionsPopupMenu(
         private val context: Context,
@@ -54,7 +55,7 @@ class MessageActionsPopupMenu(
             }
         }
 
-        replyMessage.isVisible = !isPending
+        replyMessage.isVisible = !isPending && channel.haveReplyMessagePermission()
         forwardMessage.isVisible = !isPending && channel.haveForwardMessagePermission()
         editMessage.isVisible = when {
             message.body.isBlank() || expiredEditMessage -> false
