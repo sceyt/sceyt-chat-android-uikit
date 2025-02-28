@@ -46,6 +46,7 @@ import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttrib
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
+import com.sceyt.chatuikit.persistence.extensions.haveMentionMemberPermission
 import com.sceyt.chatuikit.persistence.extensions.haveSendAttachmentMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveSendMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
@@ -157,6 +158,8 @@ class MessageInputView @JvmOverloads constructor(
     var linkDetails: LinkPreviewDetails? = null
         private set
     var haveAddAttachmentPermission = true
+        private set
+    var haveMentionMemberPermission = true
         private set
 
     init {
@@ -301,7 +304,7 @@ class MessageInputView @JvmOverloads constructor(
             override fun onQueryChanged(inlineQuery: InlineQuery) {
                 when (inlineQuery) {
                     is InlineQuery.Mention -> {
-                        if (enableMention)
+                        if (enableMention && haveMentionMemberPermission)
                             eventListeners.onMentionUsersListener(inlineQuery.query)
                     }
 
@@ -613,6 +616,7 @@ class MessageInputView @JvmOverloads constructor(
 
     internal fun checkIsParticipant(channel: SceytChannel) {
         haveAddAttachmentPermission = channel.haveSendAttachmentMessagePermission()
+        haveMentionMemberPermission = channel.haveMentionMemberPermission()
         when (channel.getChannelType()) {
             ChannelTypeEnum.Public -> {
                 if (channel.userRole.isNullOrBlank()) {
