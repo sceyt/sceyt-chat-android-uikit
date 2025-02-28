@@ -18,6 +18,7 @@ import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.extensions.setOnClickListenerDisableClickViewForWhile
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.haveUpdateChannelPermission
 import com.sceyt.chatuikit.persistence.extensions.isDirect
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoStyleApplier
@@ -79,7 +80,7 @@ open class ChannelInfoToolbarFragment : Fragment(), ChannelUpdateListener, Chann
             val myRole = channel.userRole
             val isOwnerOrAdmin = myRole == RoleTypeEnum.Owner.value || myRole == RoleTypeEnum.Admin.value
 
-            icEdit.isVisible = !channel.isDirect() && isOwnerOrAdmin
+            icEdit.isVisible = !channel.isDirect() && isOwnerOrAdmin && channel.haveUpdateChannelPermission()
             icMore.isVisible = channel.checkIsMemberInChannel()
 
             setChannelToolbarTitle(channel)
