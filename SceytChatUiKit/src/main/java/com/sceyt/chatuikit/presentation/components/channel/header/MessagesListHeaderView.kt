@@ -41,6 +41,8 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.persistence.extensions.getPeer
+import com.sceyt.chatuikit.persistence.extensions.haveEditAnyMessagePermission
+import com.sceyt.chatuikit.persistence.extensions.haveEditOwnMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderTypingUsersHelper
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners
@@ -461,17 +463,30 @@ class MessagesListHeaderView @JvmOverloads constructor(
         val isSingleMessage = messages.size == 1
         val newSelectedMessage = messages.firstOrNull()
 
+        val editMessage = menu.findItem(R.id.sceyt_edit_message)
+        val deleteMessageItem = menu.findItem(R.id.sceyt_delete_message)
+        val replyMessage = menu.findItem(R.id.sceyt_reply)
+        val forwardMessage = menu.findItem(R.id.sceyt_forward)
+        val replyInThread = menu.findItem(R.id.sceyt_reply_in_thread)
+        val messageInfo = menu.findItem(R.id.sceyt_message_info)
+        val copyMessage = menu.findItem(R.id.sceyt_copy_message)
+
         newSelectedMessage?.let { message ->
             val isPending = message.deliveryStatus == DeliveryStatus.Pending
-            menu.findItem(R.id.sceyt_reply)?.isVisible = isSingleMessage && !isPending
-            //menu.findItem(R.id.sceyt_reply_in_thread).isVisible = isSingleMessage && !isPending
-            menu.findItem(R.id.sceyt_forward)?.isVisible = !isPending
             val expiredEditMessage = (System.currentTimeMillis() - message.createdAt) >
                     SceytChatUIKit.config.messageEditTimeout
-            menu.findItem(R.id.sceyt_edit_message)?.isVisible = isSingleMessage &&
-                    !message.incoming && message.body.isNotNullOrBlank() && !expiredEditMessage
-            menu.findItem(R.id.sceyt_message_info)?.isVisible = isSingleMessage && !message.incoming && !isPending
-            menu.findItem(R.id.sceyt_copy_message)?.isVisible = messages.any { it.body.isNotNullOrBlank() }
+
+            replyMessage?.isVisible = isSingleMessage && !isPending
+            //replyInThread.isVisible = isSingleMessage && !isPending
+            forwardMessage?.isVisible = !isPending
+            messageInfo.isVisible = isSingleMessage && !message.incoming && !isPending
+            copyMessage?.isVisible = messages.any { it.body.isNotNullOrBlank() }
+            editMessage.isVisible = when {
+                message.body.isBlank() || expiredEditMessage -> false
+                message.incoming -> channel.haveEditAnyMessagePermission()
+                isSingleMessage -> channel.haveEditOwnMessagePermission()
+                else -> false
+            }
         }
     }
 

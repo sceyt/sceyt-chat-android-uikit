@@ -18,6 +18,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
@@ -325,8 +326,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         popup.show()
     }
 
-    private fun showMessageActionsPopup(view: View, message: SceytMessage) {
-        val popup = MessageActionsPopupMenu(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message)
+    private fun showMessageActionsPopup(view: View, message: SceytMessage, channel: SceytChannel) {
+        val popup = MessageActionsPopupMenu(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view, message, channel)
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.sceyt_edit_message -> messageActionsViewClickListeners.onEditMessageClick(message)
