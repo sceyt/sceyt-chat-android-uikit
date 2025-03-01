@@ -14,7 +14,7 @@ fun String.toStyleType(): StyleType? {
         StyleType.Italic.value -> StyleType.Italic
         StyleType.Strikethrough.value -> StyleType.Strikethrough
         StyleType.Monospace.value -> StyleType.Monospace
-        StyleType.Underline.value -> StyleType.Monospace
+        StyleType.Underline.value -> StyleType.Underline
         else -> null
     }
 }
