@@ -3,7 +3,7 @@ import com.sceyt.chat.MainGradlePlugin
 plugins {
     `android-library`
     `kotlin-android`
-    `kotlin-kapt`
+    id("com.google.devtools.ksp")
 }
 
 apply<MainGradlePlugin>()
@@ -21,6 +21,10 @@ android {
         }
     }
 
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
+
     buildTypes {
         getByName("release") {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -28,7 +32,6 @@ android {
     }
 
     buildFeatures {
-        dataBinding = true
         viewBinding = true
         buildConfig = true
     }
@@ -53,9 +56,9 @@ dependencies {
     api(libs.ion)
     api(libs.firebase.messaging.ktx)
     api(libs.play.services.base)
+    implementation(libs.lifecycle.process)
     annotationProcessor(libs.room.compiler)
-    //noinspection KaptUsageInsteadOfKsp
-    kapt(libs.room.compiler)
+    ksp(libs.room.compiler)
     api(libs.room.runtime)
     api(libs.room.ktx)
     api(libs.koin.android)

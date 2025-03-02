@@ -7,8 +7,7 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.annotation.LayoutRes
 import androidx.core.view.isVisible
-import androidx.databinding.DataBindingUtil
-import androidx.databinding.ViewDataBinding
+import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.presentation.root.PageState
 
@@ -17,16 +16,13 @@ class PageStateView @JvmOverloads constructor(
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
-    private val layoutInflater by lazy { LayoutInflater.from(context) }
+    internal val layoutInflater by lazy { LayoutInflater.from(context) }
     private var loadingStateView: View? = null
     private var emptyStateView: View? = null
     private var emptySearchStateView: View? = null
 
     private fun inflateView(@LayoutRes id: Int): View {
-        if (isInEditMode)
-            return layoutInflater.inflate(id, this, false)
-        val viewDataBinding = DataBindingUtil.inflate<ViewDataBinding>(layoutInflater, id, this, false)
-        return viewDataBinding?.root ?: layoutInflater.inflate(id, this, false)
+        return layoutInflater.inflate(id, this, false)
     }
 
     fun setLoadingStateView(@LayoutRes id: Int): View {
