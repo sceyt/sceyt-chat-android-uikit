@@ -3,7 +3,7 @@ import com.sceyt.chat.Config
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("kotlin-kapt")
+    id("com.google.devtools.ksp")
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
@@ -84,7 +84,6 @@ android {
     }
 
     buildFeatures {
-        dataBinding = true
         viewBinding = true
         buildConfig = true
     }
@@ -100,6 +99,7 @@ dependencies {
     implementation(libs.recyclerview)
     implementation(libs.fragment.ktx)
     implementation(libs.lifecycle.runtime.ktx)
+    implementation(libs.lifecycle.process)
     implementation(libs.glide)
     implementation(libs.okhttp)
     implementation(libs.koin.android)
