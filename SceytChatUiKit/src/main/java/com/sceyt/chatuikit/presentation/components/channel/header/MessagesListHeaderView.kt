@@ -41,7 +41,7 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.persistence.extensions.getPeer
-import com.sceyt.chatuikit.persistence.extensions.haveDeleteOwnMessageReactionPermission
+import com.sceyt.chatuikit.persistence.extensions.haveDeleteAnyMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveEditAnyMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveEditOwnMessagePermission
 import com.sceyt.chatuikit.persistence.extensions.haveForwardMessagePermission
@@ -470,7 +470,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         val deleteMessage = menu.findItem(R.id.sceyt_delete_message)
         val replyMessage = menu.findItem(R.id.sceyt_reply)
         val forwardMessage = menu.findItem(R.id.sceyt_forward)
-        val replyInThread = menu.findItem(R.id.sceyt_reply_in_thread)
+        //val replyInThread = menu.findItem(R.id.sceyt_reply_in_thread)
         val messageInfo = menu.findItem(R.id.sceyt_message_info)
         val copyMessage = menu.findItem(R.id.sceyt_copy_message)
 
@@ -491,8 +491,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 else -> false
             }
             deleteMessage.isVisible = when {
-                message.incoming -> channel.haveEditAnyMessagePermission()
-                else -> channel.haveEditOwnMessagePermission() || channel.haveDeleteOwnMessageReactionPermission()
+                message.incoming -> channel.haveDeleteAnyMessagePermission()
+                else -> channel.haveDeleteAnyMessagePermission() || channel.haveDeleteAnyMessagePermission()
             }
         }
     }
