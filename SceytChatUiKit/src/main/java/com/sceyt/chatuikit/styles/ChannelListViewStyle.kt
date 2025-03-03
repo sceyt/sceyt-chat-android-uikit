@@ -18,7 +18,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property backgroundColor - Background color of the channel list, default is [Colors.backgroundColor].
  * @property emptyState - Layout for empty state, default is [R.layout.sceyt_channel_list_empty_state].
  * @property emptySearchState - Layout for empty search state, default is [R.layout.sceyt_search_channels_empty_state].
- * @property loadingState - Layout for loading state, default is [R.layout.sceyt_channels_page_loading_state].
+ * @property loadingState - Layout for loading state, default is [R.layout.sceyt_page_loading_state].
  * @property popupStyle - Style for popup, default is [R.style.SceytPopupMenuStyle].
  * @property showChannelActionAsPopup - Show channel action as popup, default is false.
  * @property itemStyle - Style for channel item.
@@ -73,7 +73,7 @@ data class ChannelListViewStyle(
                     R.layout.sceyt_search_channels_empty_state)
 
                 val loadingState = array.getResourceId(R.styleable.ChannelListView_sceytUiChannelListLoadingView,
-                    R.layout.sceyt_channels_page_loading_state)
+                    R.layout.sceyt_page_loading_state)
 
                 val showChannelActionAsPopup = array.getBoolean(R.styleable.ChannelListView_sceytUiChannelListShowChannelActionAsPopup, false)
 

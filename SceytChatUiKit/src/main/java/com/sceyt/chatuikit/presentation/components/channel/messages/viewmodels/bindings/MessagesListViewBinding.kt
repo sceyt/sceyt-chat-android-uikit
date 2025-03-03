@@ -60,6 +60,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.M
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.services.SceytSyncManager
+import com.sceyt.chatuikit.styles.extensions.messages_list.setEmptyStateForSelfChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -76,8 +77,9 @@ import kotlin.collections.set
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
-    if (channel.isSelf)
-        messagesListView.getPageStateView().setEmptyStateView(messagesListView.style.emptyStateForSelfChannel)
+    if (channel.isSelf) {
+        messagesListView.setEmptyStateForSelfChannel()
+    }
 
     clearPreparingThumbs()
 

@@ -5,10 +5,10 @@
     android:layout_height="match_parent">
 
     <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/appCompatImageView2"
+        android:id="@+id/image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@+id/textView2"
+        app:layout_constraintBottom_toTopOf="@+id/title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -16,7 +16,7 @@
         app:srcCompat="@drawable/sceyt_ic_messages_empty_state" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/textView2"
+        android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -25,14 +25,14 @@
         android:text="@string/sceyt_no_messages_yet"
         android:textColor="@color/sceyt_color_text_primary"
         android:textSize="@dimen/largeTextSize"
-        app:layout_constraintBottom_toTopOf="@+id/appCompatTextView"
+        app:layout_constraintBottom_toTopOf="@+id/description"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/appCompatImageView2" />
+        app:layout_constraintTop_toBottomOf="@+id/image" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/appCompatTextView"
+        android:id="@+id/description"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="30dp"
@@ -45,6 +45,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+        app:layout_constraintTop_toBottomOf="@+id/title" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
