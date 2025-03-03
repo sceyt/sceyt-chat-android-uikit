@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
 
     <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/icEditPhoto"
+        android:id="@+id/image"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_gravity="center"
@@ -32,15 +32,15 @@
         android:text="@string/sceyt_add_notes"
         android:textDirection="locale"
         android:textSize="20sp"
-        app:layout_constraintBottom_toTopOf="@+id/desc"
+        app:layout_constraintBottom_toTopOf="@+id/description"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/icEditPhoto"
+        app:layout_constraintTop_toBottomOf="@+id/image"
         tools:textColor="@color/sceyt_color_text_primary" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/desc"
+        android:id="@+id/description"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"

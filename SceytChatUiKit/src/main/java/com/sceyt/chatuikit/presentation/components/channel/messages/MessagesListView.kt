@@ -87,6 +87,7 @@ import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoActiv
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
+import com.sceyt.chatuikit.styles.extensions.messages_list.setPageStateViews
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -121,8 +122,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             setBackgroundColor(style.backgroundColor)
 
         binding.scrollDownView.setStyle(style.scrollDownButtonStyle)
-        binding.pageStateView.setLoadingStateView(style.loadingState)
-        binding.pageStateView.setEmptyStateView(style.emptyState)
+        setPageStateViews()
 
         messagesRV = binding.rvMessages.also { it.setStyle(style) }
         messagesRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
