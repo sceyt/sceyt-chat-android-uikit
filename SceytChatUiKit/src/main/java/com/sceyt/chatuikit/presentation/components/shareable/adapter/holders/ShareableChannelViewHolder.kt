@@ -34,7 +34,7 @@ open class ShareableChannelViewHolder(
         setTitle(channel)
         setSubtitle(channel)
 
-        val enabled = channel.haveSendMessagePermission() && channel.haveSendAttachmentMessagePermission()
+        val enabled = channel.haveSendMessagePermission()
         checkRootEnabledState(enabled)
 
         binding.checkbox.isChecked = item.selected
