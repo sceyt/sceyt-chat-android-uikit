@@ -5,11 +5,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoFilesBinding
@@ -32,6 +30,7 @@ import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.di.ChannelInfoFilesViewModelQualifier
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.extensions.channel_info.files.setPageStatesView
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -50,7 +49,8 @@ open class ChannelInfoFilesFragment : Fragment, SceytKoinComponent, HistoryClear
     protected var pageStateView: PageStateView? = null
     protected val mediaType = listOf(AttachmentTypeEnum.File.value)
     protected val viewModel: ChannelAttachmentsViewModel by viewModel(ChannelInfoFilesViewModelQualifier)
-    protected lateinit var infoStyle: ChannelInfoStyle
+    lateinit var infoStyle: ChannelInfoStyle
+        protected set
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -131,8 +131,12 @@ open class ChannelInfoFilesFragment : Fragment, SceytKoinComponent, HistoryClear
         mediaAdapter?.addNewItems(list)
     }
 
-    open fun onPageStateChange(pageState: PageState) {
-        pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0, enableErrorSnackBar = false)
+    protected open fun onPageStateChange(pageState: PageState) {
+        pageStateView?.updateState(
+            state = pageState,
+            showLoadingIfNeed = (mediaAdapter?.itemCount ?: 0) == 0,
+            enableErrorSnackBar = false
+        )
     }
 
     protected open fun loadInitialFilesList() {
@@ -149,10 +153,7 @@ open class ChannelInfoFilesFragment : Fragment, SceytKoinComponent, HistoryClear
 
     private fun addPageStateView() {
         binding?.root?.addView(PageStateView(requireContext()).apply {
-            setEmptyStateView(R.layout.sceyt_empty_state).also {
-                it.findViewById<TextView>(R.id.empty_state_title).text = getString(R.string.sceyt_no_file_items_yet)
-            }
-            setLoadingStateView(R.layout.sceyt_loading_state)
+            setPageStatesView(this)
             pageStateView = this
 
             post {

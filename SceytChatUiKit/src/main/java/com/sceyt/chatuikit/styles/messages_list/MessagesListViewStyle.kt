@@ -26,7 +26,7 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
  * @property backgroundColor Background color of the message list view
  * @property emptyState Layout resource for the empty state view,default is [R.layout.sceyt_messages_empty_state]
  * @property emptyStateForSelfChannel Layout resource for the empty state view for self channel,default is [R.layout.sceyt_messages_empty_state_self_channel]
- * @property loadingState Layout resource for the loading state view,default is [R.layout.sceyt_loading_state]
+ * @property loadingState Layout resource for the loading state view,default is [R.layout.sceyt_page_loading_state]
  * @property sameSenderMessageDistance Distance between two messages from the same sender, default is 4dp
  * @property differentSenderMessageDistance Distance between two messages from different senders, default is 8dp
  * @property scrollDownButtonStyle Style for the scroll down button, default is [buildScrollDownButtonStyle]
@@ -91,7 +91,7 @@ data class MessagesListViewStyle(
                     R.layout.sceyt_messages_empty_state_self_channel)
 
                 val loadingState = array.getResourceId(R.styleable.MessagesListView_sceytUiMessagesListLoadingStateLayout,
-                    R.layout.sceyt_loading_state)
+                    R.layout.sceyt_page_loading_state)
 
                 val sameSenderMessageDistance = array.getDimensionPixelSize(R.styleable.MessagesListView_sceytUiMessagesListSameSenderMessageDistance,
                     dpToPx(4f))
