@@ -99,7 +99,6 @@ dependencies {
     implementation(libs.recyclerview)
     implementation(libs.fragment.ktx)
     implementation(libs.lifecycle.runtime.ktx)
-    implementation(libs.lifecycle.process)
     implementation(libs.glide)
     implementation(libs.okhttp)
     implementation(libs.koin.android)
