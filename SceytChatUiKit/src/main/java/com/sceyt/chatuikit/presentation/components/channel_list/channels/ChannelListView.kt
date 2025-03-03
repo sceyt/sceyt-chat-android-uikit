@@ -31,6 +31,7 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.popups.
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.ChannelListViewStyle
+import com.sceyt.chatuikit.styles.extensions.channel_list.setPageStateViews
 
 class ChannelListView @JvmOverloads constructor(
         context: Context,
@@ -46,7 +47,7 @@ class ChannelListView @JvmOverloads constructor(
     private var popupClickListeners: ChannelPopupClickListeners.PopupClickListeners = ChannelPopupClickListenersImpl(this)
     private var channelCommandEventListener: ((ChannelEvent) -> Unit)? = null
     private val debounceHelper by lazy { DebounceHelper(300, this) }
-    private val style: ChannelListViewStyle
+    val style: ChannelListViewStyle
 
     init {
         binding = SceytChannelListViewBinding.inflate(LayoutInflater.from(context), this)
@@ -59,11 +60,7 @@ class ChannelListView @JvmOverloads constructor(
         channelsRV.clipToPadding = clipToPadding
         super.setPadding(0, 0, 0, 0)
 
-        binding.pageStateView.apply {
-            setLoadingStateView(style.loadingState)
-            setEmptyStateView(style.emptyState)
-            setEmptySearchStateView(style.emptySearchState)
-        }
+        setPageStateViews()
 
         defaultClickListeners = object : ChannelClickListenersImpl() {
             override fun onChannelClick(item: ChannelListItem.ChannelItem) {
