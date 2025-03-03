@@ -1,29 +1,21 @@
 import com.sceyt.chat.MainGradlePlugin
 
 plugins {
-    `android-library`
-    `kotlin-android`
+    id("com.android.library")
+    id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
+    id("androidx.room")
 }
 
 apply<MainGradlePlugin>()
 apply(from = "${rootProject.projectDir}/maven-publish/publish-module.gradle")
 
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
 android {
     namespace = "com.sceyt.chatuikit"
-
-    defaultConfig {
-
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments["room.schemaLocation"] = "$projectDir/schemas"
-            }
-        }
-    }
-
-    ksp {
-        arg("room.schemaLocation", "$projectDir/schemas")
-    }
 
     buildTypes {
         getByName("release") {
@@ -56,8 +48,7 @@ dependencies {
     api(libs.ion)
     api(libs.firebase.messaging.ktx)
     api(libs.play.services.base)
-    implementation(libs.lifecycle.process)
-    annotationProcessor(libs.room.compiler)
+    api(libs.lifecycle.process)
     ksp(libs.room.compiler)
     api(libs.room.runtime)
     api(libs.room.ktx)
