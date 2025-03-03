@@ -76,10 +76,12 @@ import kotlin.collections.set
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
     messageActionBridge.setMessagesListView(messagesListView)
     messagesListView.setMultiselectDestination(selectedMessagesMap)
+
     if (channel.isSelf)
         messagesListView.getPageStateView().setEmptyStateView(messagesListView.style.emptyStateForSelfChannel)
 
     clearPreparingThumbs()
+    messagesListView.setChannel(channel)
 
     /** Send pending markers, pending messages and update attachments transfer states when
      * lifecycle come back onResume state. */
@@ -303,6 +305,13 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         .onEach {
             messagesListView.context.asActivity().finish()
         }.launchIn(lifecycleOwner.lifecycleScope)
+
+    ChannelsCache.channelUpdatedFlow
+        .filter { it.channel.id == channel.id }
+        .onEach {
+            messagesListView.setChannel(it.channel)
+        }
+        .launchIn(lifecycleOwner.lifecycleScope)
 
     SceytSyncManager.syncChannelMessagesFinished
         .filter { it.first.id == channel.id }

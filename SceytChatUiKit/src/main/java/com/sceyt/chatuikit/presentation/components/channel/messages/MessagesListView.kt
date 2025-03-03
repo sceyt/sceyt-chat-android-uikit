@@ -40,6 +40,8 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.differs.diff
+import com.sceyt.chatuikit.persistence.extensions.haveAddMessageReactionPermission
+import com.sceyt.chatuikit.persistence.extensions.haveDeleteOwnMessageReactionPermission
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -113,6 +115,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         private set
     var enableSwipeToReply = true
         private set
+    private lateinit var channel: SceytChannel
 
     init {
         binding = SceytMessagesListViewBinding.inflate(LayoutInflater.from(context), this)
@@ -353,6 +356,8 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     private fun onAddOrRemoveReaction(reaction: ReactionItem.Reaction, message: SceytMessage) {
         val containsSelf = reaction.reaction.containsSelf
+        if (containsSelf && !channel.haveDeleteOwnMessageReactionPermission()) return
+
         if (containsSelf)
             reactionClickListeners.onRemoveReaction(message, reaction)
         else
@@ -795,6 +800,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     fun isLastCompletelyItemDisplaying() = messagesRV.isLastCompletelyItemDisplaying()
 
+    internal fun setChannel(channel: SceytChannel) {
+        this.channel = channel
+    }
+
     // Click listeners
     fun setMessageClickListener(listener: MessageClickListeners) {
         clickListeners.setListener(listener)
@@ -864,7 +873,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     // Click events
     override fun onMessageClick(view: View, item: MessageItem) {
         if (enabledActions) {
-            if (reactionsPopupWindow == null)
+            if (reactionsPopupWindow == null && channel.haveAddMessageReactionPermission())
                 showModifyReactionsPopup(view, item.message)
         }
     }
@@ -896,7 +905,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         context.getFragmentManager()?.let {
             ReactionsInfoBottomSheetFragment.newInstance(message).also { fragment ->
                 fragment.setClickListener { reaction ->
-                    if (reaction.user?.id == SceytChatUIKit.chatUIFacade.myId)
+                    if (reaction.user?.id == SceytChatUIKit.chatUIFacade.myId && channel.haveDeleteOwnMessageReactionPermission())
                         reactionClickListeners.onRemoveReaction(message,
                             ReactionItem.Reaction(SceytReactionTotal(reaction.key, containsSelf = true), message.tid, reaction.pending))
                 }
@@ -1000,7 +1009,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     override fun onReplyMessageInThreadClick(message: SceytMessage) {
         messageCommandEventListener?.invoke(MessageCommandEvent.ReplyInThread(message))
     }
-
 
     //Reaction popup events
     override fun onAddReaction(message: SceytMessage, key: String) {
