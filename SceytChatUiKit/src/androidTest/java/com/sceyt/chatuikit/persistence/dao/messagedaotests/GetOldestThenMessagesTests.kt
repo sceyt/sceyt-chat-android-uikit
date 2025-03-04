@@ -67,7 +67,7 @@ class GetOldestThenMessagesTests{
             LoadRangeEntity(1, 5, channelId)
         )
 
-        messageDao.upsertMessageEntities(messages)
+        messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
         val limit = 4
@@ -97,7 +97,7 @@ class GetOldestThenMessagesTests{
             LoadRangeEntity(3, 6, channelId)
         )
 
-        messageDao.upsertMessageEntities(messages)
+        messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
         val loadedMessages = messageDao.getOldestThenMessages(channelId, 6, 10)
@@ -121,7 +121,7 @@ class GetOldestThenMessagesTests{
             createMessage(6, 6),
         )
 
-        messageDao.upsertMessageEntities(messages)
+        messageDao.upsertMessageEntitiesWithTransaction(messages)
 
         val loadedMessages = messageDao.getOldestThenMessages(channelId, 6, 10)
 
@@ -145,7 +145,7 @@ class GetOldestThenMessagesTests{
             LoadRangeEntity(5, 8, channelId)
         )
 
-        messageDao.upsertMessageEntities(messages)
+        messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
         val limit = 4

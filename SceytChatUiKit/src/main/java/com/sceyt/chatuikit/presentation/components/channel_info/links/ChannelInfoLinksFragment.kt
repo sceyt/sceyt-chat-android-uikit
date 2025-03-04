@@ -5,16 +5,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoLinksBinding
 import com.sceyt.chatuikit.extensions.findIndexed
-import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.parcelable
@@ -34,6 +31,7 @@ import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.di.ChannelInfoLinksViewModelQualifier
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.extensions.channel_info.link.setPageStatesView
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -50,7 +48,8 @@ open class ChannelInfoLinksFragment : Fragment, SceytKoinComponent, HistoryClear
     protected open var pageStateView: PageStateView? = null
     protected open val mediaType = listOf("link")
     protected val viewModel: ChannelAttachmentsViewModel by viewModel(ChannelInfoLinksViewModelQualifier)
-    protected lateinit var infoStyle: ChannelInfoStyle
+    lateinit var infoStyle: ChannelInfoStyle
+        protected set
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -102,10 +101,7 @@ open class ChannelInfoLinksFragment : Fragment, SceytKoinComponent, HistoryClear
 
     private fun addPageStateView() {
         binding?.root?.addView(PageStateView(requireContext()).apply {
-            setEmptyStateView(R.layout.sceyt_empty_state).also {
-                it.findViewById<TextView>(R.id.empty_state_title).text = getString(R.string.sceyt_no_link_items_yet)
-            }
-            setLoadingStateView(R.layout.sceyt_loading_state)
+            setPageStatesView(this)
             pageStateView = this
 
             post {
@@ -117,7 +113,7 @@ open class ChannelInfoLinksFragment : Fragment, SceytKoinComponent, HistoryClear
         })
     }
 
-    open fun onInitialLinksList(list: List<ChannelFileItem>) {
+    protected open fun onInitialLinksList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
             val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(
                 requireContext(), infoStyle, infoStyle.linkStyle.dateSeparatorStyle
@@ -146,11 +142,11 @@ open class ChannelInfoLinksFragment : Fragment, SceytKoinComponent, HistoryClear
         } else binding?.rvLinks?.let { mediaAdapter?.notifyUpdate(list, it) }
     }
 
-    open fun onMoreLinksList(list: List<ChannelFileItem>) {
+    protected open fun onMoreLinksList(list: List<ChannelFileItem>) {
         mediaAdapter?.addNewItems(list)
     }
 
-    open fun onLinkPreview(previewDetails: LinkPreviewDetails) {
+    protected open fun onLinkPreview(previewDetails: LinkPreviewDetails) {
         val data = mediaAdapter?.getData() ?: return
         data.findIndexed { it.isMediaItem() && it.attachment.url == previewDetails.link }?.let { (index, item) ->
             item.updateAttachment(item.attachment.copy(linkPreviewDetails = previewDetails))
@@ -158,8 +154,12 @@ open class ChannelInfoLinksFragment : Fragment, SceytKoinComponent, HistoryClear
         }
     }
 
-    open fun onPageStateChange(pageState: PageState) {
-        pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0, enableErrorSnackBar = false)
+    protected open fun onPageStateChange(pageState: PageState) {
+        pageStateView?.updateState(
+            state = pageState,
+            showLoadingIfNeed = (mediaAdapter?.itemCount ?: 0) == 0,
+            enableErrorSnackBar = false
+        )
     }
 
     protected open fun loadInitialLinksList() {

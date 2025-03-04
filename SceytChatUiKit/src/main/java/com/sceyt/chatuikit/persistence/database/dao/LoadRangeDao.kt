@@ -5,10 +5,11 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import com.sceyt.chatuikit.persistence.database.entity.messages.LOAD_RANGE_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.LoadRangeEntity
 
 @Dao
-interface LoadRangeDao {
+internal interface LoadRangeDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: LoadRangeEntity)
@@ -16,20 +17,20 @@ interface LoadRangeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(entities: List<LoadRangeEntity>)
 
-    @Query("select * from LoadRange where channelId =:channelId and ((startId >=:end and endId <=:start)" +
+    @Query("select * from $LOAD_RANGE_TABLE where channelId =:channelId and ((startId >=:end and endId <=:start)" +
             " or (endId >=:start and startId <= :end) or startId =:messageId or endId =:messageId)")
     suspend fun getLoadRanges(start: Long, end: Long, messageId: Long, channelId: Long): List<LoadRangeEntity>
 
-    @Query("select * from LoadRange where channelId =:channelId order by startId")
+    @Query("select * from $LOAD_RANGE_TABLE where channelId =:channelId order by startId")
     suspend fun getAll(channelId: Long): List<LoadRangeEntity>
 
-    @Query("delete from LoadRange where channelId =:channelId")
+    @Query("delete from $LOAD_RANGE_TABLE where channelId =:channelId")
     suspend fun deleteChannelLoadRanges(channelId: Long)
 
-    @Query("delete from LoadRange where channelId in (:channelIds)")
+    @Query("delete from $LOAD_RANGE_TABLE where channelId in (:channelIds)")
     suspend fun deleteChannelsLoadRanges(channelIds: List<Long>)
 
-    @Query("delete from LoadRange where rowId in (:rowIds)")
+    @Query("delete from $LOAD_RANGE_TABLE where rowId in (:rowIds)")
     suspend fun deleteLoadRanges(vararg rowIds: Long)
 
     @Transaction

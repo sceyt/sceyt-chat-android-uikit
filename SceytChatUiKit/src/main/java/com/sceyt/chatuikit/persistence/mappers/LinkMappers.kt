@@ -4,7 +4,7 @@ import com.sceyt.chat.models.link.LinkDetails
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
 
-fun LinkPreviewDetails.toLinkDetailsEntity(link: String, thumb: String?): LinkDetailsEntity {
+internal fun LinkPreviewDetails.toLinkDetailsEntity(link: String, thumb: String?): LinkDetailsEntity {
     return LinkDetailsEntity(
         link = link,
         url = url,
@@ -19,7 +19,7 @@ fun LinkPreviewDetails.toLinkDetailsEntity(link: String, thumb: String?): LinkDe
     )
 }
 
-fun LinkPreviewDetails.toLinkDetailsEntity() = LinkDetailsEntity(
+internal fun LinkPreviewDetails.toLinkDetailsEntity() = LinkDetailsEntity(
     link = link,
     url = url,
     title = title,
@@ -49,7 +49,7 @@ fun LinkDetails.toLinkPreviewDetails(link: String): LinkPreviewDetails {
     )
 }
 
-fun LinkDetailsEntity.toLinkPreviewDetails(hideDetails: Boolean): LinkPreviewDetails = LinkPreviewDetails(
+internal fun LinkDetailsEntity.toLinkPreviewDetails(hideDetails: Boolean): LinkPreviewDetails = LinkPreviewDetails(
     link = link,
     url = url,
     title = title,

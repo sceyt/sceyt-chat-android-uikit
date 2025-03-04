@@ -10,12 +10,12 @@ import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.persistence.database.dao.MarkerDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
-import com.sceyt.chatuikit.persistence.interactor.PersistenceMessageMarkerLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.mappers.toMarker
 import com.sceyt.chatuikit.persistence.mappers.toMarkerEntity
 import com.sceyt.chatuikit.persistence.repositories.MessageMarkersRepository
 
-class PersistenceMessageMarkerLogicImpl(
+internal class PersistenceMessageMarkerLogicImpl(
         private val messageMarkersRepository: MessageMarkersRepository,
         private val markerDao: MarkerDao,
         private val messageDao: MessageDao,
@@ -32,27 +32,29 @@ class PersistenceMessageMarkerLogicImpl(
             else -> return
         }
 
-        val existMessageIds = messageDao.getExistMessageByIds(data.marker.messageIds)
-        val markers = existMessageIds.map { messageId ->
+        val markers = data.marker.messageIds.map { messageId ->
             MarkerEntity(messageId, data.from.id, marker, data.marker.createdAt)
         }
-        markerDao.insertMany(markers)
+        messageDao.insertUserMarkersIfExistMessage(markers)
     }
 
     override suspend fun onMessageMarkerEvent(data: MessageMarkerEventData) {
-        val existMessageIds = messageDao.getExistMessageByIds(data.marker.messageIds)
-        val markers = existMessageIds.map {
+        val markers = data.marker.messageIds.map {
             MarkerEntity(it, data.user.id, data.marker.name, data.marker.createdAt)
         }
-        markerDao.insertMany(markers)
+        messageDao.insertUserMarkersIfExistMessage(markers)
     }
 
-    override suspend fun getMessageMarkers(messageId: Long, name: String, offset: Int, limit: Int): SceytResponse<List<SceytMarker>> {
+    override suspend fun getMessageMarkers(
+            messageId: Long,
+            name: String,
+            offset: Int,
+            limit: Int
+    ): SceytResponse<List<SceytMarker>> {
         val response = messageMarkersRepository.getMessageMarkers(messageId, name, offset, limit)
         if (response is SceytResponse.Success) {
             response.data?.let { markers ->
-                if (messageDao.existsMessageById(messageId))
-                    markerDao.insertMany(markers.map { it.toMarkerEntity() })
+                messageDao.insertUserMarkersIfExistMessage(markers.map { it.toMarkerEntity() })
             }
         }
         return response

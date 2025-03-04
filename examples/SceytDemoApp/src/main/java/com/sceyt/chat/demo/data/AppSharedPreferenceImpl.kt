@@ -2,6 +2,8 @@ package com.sceyt.chat.demo.data
 
 import android.app.Application
 import android.content.Context
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.sceyt.chat.demo.data.AppSharedPreference.Companion.PREF_USER_ID
 
 class AppSharedPreferenceImpl(application: Application) : AppSharedPreference {
@@ -30,6 +32,19 @@ class AppSharedPreferenceImpl(application: Application) : AppSharedPreference {
 
     override fun getBoolean(key: String, defaultValue: Boolean): Boolean {
         return pref.getBoolean(key, defaultValue)
+    }
+
+    override fun <T> getList(key: String, clazz: Class<T>): List<T>? = runCatching {
+        val typeOfT = TypeToken.getParameterized(List::class.java, clazz).type
+        Gson().fromJson<List<T>>(getString(key), typeOfT)
+    }.getOrNull()
+
+    override fun <T> putList(key: String, list: List<T>?) {
+        runCatching {
+            val gson = Gson()
+            val json = gson.toJson(list)
+            setString(key, json)
+        }
     }
 
     override fun deleteUsername() {

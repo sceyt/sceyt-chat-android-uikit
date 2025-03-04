@@ -104,7 +104,7 @@ class UploadAndSendAttachmentWorker(
             if (attachment.type == AttachmentTypeEnum.Link.value)
                 continue
 
-            val payload = payloads.find { it.payLoadEntity.messageTid == attachment.messageTid }?.payLoadEntity
+            val payload = payloads.find { it.messageTid == attachment.messageTid }
             if (payload != null && (payload.transferState == TransferState.Uploaded || payload.url.isNotNullOrBlank())) {
                 val transferData = payload.toTransferData(TransferState.Uploaded, 100f)
                 attachmentLogic.updateAttachmentWithTransferData(transferData)

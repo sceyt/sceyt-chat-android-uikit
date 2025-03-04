@@ -1,31 +1,42 @@
 package com.sceyt.chatuikit.persistence.database.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Transaction
+import com.sceyt.chatuikit.persistence.database.entity.channel.CHANNEL_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.messages.DRAFT_MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUserLink
+import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUserLinkEntity
 
 @Dao
-interface DraftMessageDao {
+internal abstract class DraftMessageDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(entity: DraftMessageEntity)
+    abstract suspend fun insert(entity: DraftMessageEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertDraftMessageUserLinks(links: List<DraftMessageUserLink>)
+    protected abstract suspend fun insertDraftMessageUserLinks(links: List<DraftMessageUserLinkEntity>)
 
     @Transaction
-    suspend fun insertWithUserLinks(entity: DraftMessageEntity, links: List<DraftMessageUserLink>) {
-        insert(entity)
-        links.takeIf { it.isNotEmpty() }?.let {
-            insertDraftMessageUserLinks(it)
+    open suspend fun insertWithUserLinks(entity: DraftMessageEntity, links: List<DraftMessageUserLinkEntity>) {
+        if (checkExistChannel(entity.chatId) > 0) {
+            insert(entity)
+            links.takeIf { it.isNotEmpty() }?.let {
+                insertDraftMessageUserLinks(it)
+            }
         }
     }
 
-    @Transaction
-    @Query("select * from DraftMessageEntity where chatId = :chatId")
-    suspend fun getDraftByChannelId(chatId: Long): DraftMessageDb?
+    @Query("select count(*) from $CHANNEL_TABLE where chat_id = :chatId")
+    abstract suspend fun checkExistChannel(chatId: Long): Int
 
-    @Query("delete from DraftMessageEntity where chatId = :chatId")
-    suspend fun deleteDraftByChannelId(chatId: Long)
+    @Transaction
+    @Query("select * from $DRAFT_MESSAGE_TABLE where chatId = :chatId")
+    abstract suspend fun getDraftByChannelId(chatId: Long): DraftMessageDb?
+
+    @Query("delete from $DRAFT_MESSAGE_TABLE where chatId = :chatId")
+    abstract suspend fun deleteDraftByChannelId(chatId: Long)
 }

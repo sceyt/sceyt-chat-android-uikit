@@ -5,6 +5,7 @@ import androidx.lifecycle.asFlow
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.models.AttachmentPayLoad
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.LoadNearData
 import com.sceyt.chatuikit.data.models.PaginationResponse
@@ -28,7 +29,6 @@ import com.sceyt.chatuikit.persistence.database.dao.LinkDao
 import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentDb
-import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageIdAndTid
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
@@ -39,6 +39,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
 import com.sceyt.chatuikit.persistence.mappers.getTid
 import com.sceyt.chatuikit.persistence.mappers.isHiddenLinkDetails
 import com.sceyt.chatuikit.persistence.mappers.toAttachment
+import com.sceyt.chatuikit.persistence.mappers.toAttachmentPayLoad
 import com.sceyt.chatuikit.persistence.mappers.toFileChecksumData
 import com.sceyt.chatuikit.persistence.mappers.toLinkDetailsEntity
 import com.sceyt.chatuikit.persistence.mappers.toLinkPreviewDetails
@@ -74,8 +75,10 @@ internal class PersistenceAttachmentLogicImpl(
         }
     }
 
-    override suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoadDb> {
-        return attachmentDao.getAllAttachmentPayLoadsByMsgTid(tid)
+    override suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoad> {
+        return attachmentDao.getAllAttachmentPayLoadsByMsgTid(tid).map {
+            it.toAttachmentPayLoad()
+        }
     }
 
     override suspend fun getPrevAttachments(
@@ -348,7 +351,10 @@ internal class PersistenceAttachmentLogicImpl(
         }
     }
 
-    private suspend fun getExistAttachmentsAndMissedMsgIds(attachments: List<Attachment>, idsData: List<MessageIdAndTid>): Pair<List<SceytAttachment>, List<Long>> {
+    private suspend fun getExistAttachmentsAndMissedMsgIds(
+            attachments: List<Attachment>,
+            idsData: List<MessageIdAndTid>
+    ): Pair<List<SceytAttachment>, List<Long>> {
         if (attachments.isEmpty())
             return Pair(emptyList(), emptyList())
 

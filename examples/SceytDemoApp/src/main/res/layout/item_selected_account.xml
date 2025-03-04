@@ -3,8 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:paddingVertical="8dp"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="?selectableItemBackground"
+    android:paddingVertical="8dp">
 
     <com.sceyt.chatuikit.presentation.custom_views.AvatarView
         android:id="@+id/iv_avatar"
@@ -14,17 +15,18 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar" />
+        app:sceytUiAvatarDefaultIcon="@drawable/sceyt_ic_default_avatar"
+        app:sceytUiAvatarEnableRipple="false" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/uriPrefix"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
+        android:layout_marginStart="16dp"
         android:layoutDirection="ltr"
         android:text="\@"
         android:textColor="@color/sceyt_color_text_primary"
-        android:textSize="16sp"
+        android:textSize="@dimen/mediumTextSize"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/iv_avatar"
         app:layout_constraintTop_toTopOf="parent"

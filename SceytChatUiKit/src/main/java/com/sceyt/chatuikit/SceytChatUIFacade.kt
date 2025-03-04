@@ -10,7 +10,7 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.constants.SceytConstants.SCEYT_WORKER_TAG
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.repositories.getUserId
-import com.sceyt.chatuikit.persistence.database.SceytDatabase
+import com.sceyt.chatuikit.persistence.database.cleaner.DatabaseCleaner
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
@@ -40,7 +40,7 @@ import kotlinx.coroutines.withContext
 class SceytChatUIFacade(
         private val context: Context,
         private val preferences: SceytSharedPreference,
-        private val database: SceytDatabase,
+        private val databaseCleaner: DatabaseCleaner,
         private val channelsCache: ChannelsCache,
         val sceytSyncManager: SceytSyncManager,
         val filesTransferService: FileTransferService,
@@ -101,7 +101,7 @@ class SceytChatUIFacade(
     }
 
     suspend fun clearData() = withContext(Dispatchers.IO) {
-        database.clearAllTables()
+        databaseCleaner.cleanDatabase()
         preferences.clear()
         channelsCache.clearAll()
     }

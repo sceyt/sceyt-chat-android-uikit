@@ -74,14 +74,14 @@ class IncAttachmentsMessageViewHolder(
                 if (diff.replyCountChanged)
                     setReplyCount(tvReplyCount, toReplyLine, item)
 
+                if (diff.replyContainerChanged)
+                    setReplyMessageContainer(message, binding.viewReply, false)
+
                 if (diff.reactionsChanged || diff.edited)
                     setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
                 if (diff.filesChanged)
                     setFilesAdapter(message)
-
-                if (diff.replyContainerChanged)
-                    setReplyMessageContainer(message, binding.viewReply, false)
 
                 if (item.message.shouldShowAvatarAndName)
                     avatar.setOnClickListener {

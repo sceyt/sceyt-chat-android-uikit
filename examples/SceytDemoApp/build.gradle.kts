@@ -3,7 +3,7 @@ import com.sceyt.chat.Config
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("kotlin-kapt")
+    id("com.google.devtools.ksp")
     id("kotlin-parcelize")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
@@ -26,6 +26,7 @@ android {
 
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
+            debugSymbolLevel = "FULL"
         }
     }
 
@@ -40,9 +41,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            manifestPlaceholders["crashlyticsCollectionEnabled"] = "true"
         }
         getByName("debug") {
             applicationIdSuffix = ".debug"
+            manifestPlaceholders["crashlyticsCollectionEnabled"] = "false"
         }
     }
 
@@ -61,7 +64,7 @@ android {
 
         create("staging") {
             dimension = "environment"
-            resValue("string", "app_name", "Sceyt Chat Debug")
+            resValue("string", "app_name", "Sceyt Chat Staging")
 
             buildConfigField("String", "API_URL", "\"https://uk-london-south-api-2-staging.waafi.com\"")
             buildConfigField("String", "APP_ID", "\"yzr58x11rm\"")
@@ -81,7 +84,6 @@ android {
     }
 
     buildFeatures {
-        dataBinding = true
         viewBinding = true
         buildConfig = true
     }

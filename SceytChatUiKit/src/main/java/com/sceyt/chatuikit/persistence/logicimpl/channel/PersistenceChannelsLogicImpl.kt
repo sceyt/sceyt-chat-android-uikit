@@ -50,9 +50,9 @@ import com.sceyt.chatuikit.persistence.database.dao.MessageDao
 import com.sceyt.chatuikit.persistence.database.dao.PendingReactionDao
 import com.sceyt.chatuikit.persistence.database.dao.UserDao
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChatUserReactionEntity
-import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLink
+import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUserLink
+import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUserLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
@@ -283,7 +283,7 @@ internal class PersistenceChannelsLogicImpl(
         }
         usersDao.insertUsersWithMetadata(users)
         channelDao.insertChannelAndLinks(updated.toChannelEntity(), members.map {
-            UserChatLink(userId = it.id, chatId = updated.id, role = it.role.name)
+            UserChatLinkEntity(userId = it.id, chatId = updated.id, role = it.role.name)
         })
     }
 
@@ -493,7 +493,7 @@ internal class PersistenceChannelsLogicImpl(
     private suspend fun saveChannelsToDb(list: List<SceytChannel>): List<SceytChannel> {
         if (list.isEmpty()) return emptyList()
 
-        val links = arrayListOf<UserChatLink>()
+        val links = arrayListOf<UserChatLinkEntity>()
         val users = arrayListOf<UserDb>()
         val directChatsWithDeletedPeers = arrayListOf<Long>()
         val lastMessages = arrayListOf<SceytMessage>()
@@ -506,7 +506,7 @@ internal class PersistenceChannelsLogicImpl(
                 userMessageReactions: List<SceytReaction>?
         ) {
             members?.forEach { member ->
-                links.add(UserChatLink(userId = member.id, chatId = channelId, role = member.role.name))
+                links.add(UserChatLinkEntity(userId = member.id, chatId = channelId, role = member.role.name))
                 users.add(member.toUserDb())
             }
 
@@ -655,7 +655,7 @@ internal class PersistenceChannelsLogicImpl(
 
             channelDao.deleteChannelAndLinks(pendingChannelId)
             channelDao.insertChannelAndLinks(newChannel.toChannelEntity(), newChannel.members?.map {
-                UserChatLink(userId = it.id, chatId = newChannelId, role = it.role.name)
+                UserChatLinkEntity(userId = it.id, chatId = newChannelId, role = it.role.name)
             } ?: emptyList())
             messageDao.updateMessagesChannelId(pendingChannelId, newChannelId)
 
@@ -915,7 +915,7 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success)
             response.data?.let {
                 it.members?.firstOrNull()?.let { sceytMember ->
-                    channelDao.insertUserChatLink(UserChatLink(
+                    channelDao.insertUserChatLink(UserChatLinkEntity(
                         userId = sceytMember.id,
                         chatId = it.id,
                         role = sceytMember.role.name))
@@ -982,7 +982,7 @@ internal class PersistenceChannelsLogicImpl(
             val draftMessageEntity = DraftMessageEntity(channelId, message, System.currentTimeMillis(),
                 replyOrEditMessage?.id, isReply, attributes)
             val links = mentionUsers.map {
-                DraftMessageUserLink(chatId = channelId, userId = it.recipientId)
+                DraftMessageUserLinkEntity(chatId = channelId, userId = it.recipientId)
             }
             draftMessageDao.insertWithUserLinks(draftMessageEntity, links)
             draftMessageEntity.toDraftMessage(mentionUsers.map {

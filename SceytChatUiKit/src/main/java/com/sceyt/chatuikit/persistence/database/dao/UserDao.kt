@@ -6,85 +6,97 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.sceyt.chatuikit.persistence.database.entity.user.USER_METADATA_TABLE
+import com.sceyt.chatuikit.persistence.database.entity.user.USER_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface UserDao {
+internal abstract class UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUser(user: UserEntity)
+    protected abstract suspend fun insertUser(user: UserEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUsers(users: List<UserEntity>)
+    protected abstract suspend fun insertUsers(users: List<UserEntity>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertUsersIgnored(users: List<UserEntity>)
+    abstract suspend fun insertUsersIgnored(users: List<UserEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMetadata(list: List<UserMetadataEntity>)
+    protected abstract suspend fun insertMetadata(list: List<UserMetadataEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    protected abstract suspend fun insertMetadataIgnored(list: List<UserMetadataEntity>)
 
     @Transaction
-    suspend fun insertUserWithMetadata(user: UserDb) {
+    open suspend fun insertUserWithMetadata(user: UserDb) {
         insertUser(user.user)
         insertMetadata(user.metadata)
     }
 
     @Transaction
-    suspend fun insertUsersWithMetadata(users: List<UserDb>, replaceUserOnConflict: Boolean = true) {
+    open suspend fun insertUsersWithMetadata(
+            users: List<UserDb>,
+            replaceUserOnConflict: Boolean = true
+    ) {
         if (users.isEmpty()) return
         if (replaceUserOnConflict) {
             insertUsers(users.map { it.user })
         } else {
             insertUsersIgnored(users.map { it.user })
         }
-        users.flatMap { it.metadata }.takeIf { it.isNotEmpty() }?.let {
-            insertMetadata(it)
+
+        val metadata = users.flatMap { it.metadata }.takeIf { it.isNotEmpty() } ?: return
+        if (replaceUserOnConflict) {
+            insertMetadata(metadata)
+        } else {
+            insertMetadataIgnored(metadata)
         }
     }
 
     @Transaction
-    @Query("select * from users where user_id =:id")
-    suspend fun getUserById(id: String): UserDb?
+    @Query("select * from $USER_TABLE  where user_id =:id")
+    abstract suspend fun getUserById(id: String): UserDb?
 
     @Transaction
-    @Query("select * from users where user_id =:id")
-    fun getUserByIdAsFlow(id: String): Flow<UserDb?>
+    @Query("select * from $USER_TABLE  where user_id =:id")
+    abstract fun getUserByIdAsFlow(id: String): Flow<UserDb?>
 
     @Transaction
-    @Query("select * from users where user_id in (:id)")
-    suspend fun getUsersById(id: List<String>): List<UserDb>
+    @Query("select * from $USER_TABLE  where user_id in (:id)")
+    abstract suspend fun getUsersById(id: List<String>): List<UserDb>
 
     @Query("""
-           select user_id from users where 
+           select user_id from $USER_TABLE  where 
            firstName like '%' || :searchQuery || '%' 
            or lastName like  '%' || :searchQuery || '%'
            or (firstName || ' ' || lastName) like :searchQuery || '%'
            """)
-    suspend fun getUserIdsByDisplayName(searchQuery: String): List<String>
+    abstract suspend fun getUserIdsByDisplayName(searchQuery: String): List<String>
 
     @Transaction
     @Query("""
-           select * from users where user_id in (
-           select user_id from UserMetadata
+           select * from $USER_TABLE  where user_id in (
+           select user_id from $USER_METADATA_TABLE
            where `key` in (:key) and value like '%' || :value || '%')
            """
     )
-    suspend fun searchUsersByMetadata(key: List<String>, value: String): List<UserDb>
+    abstract suspend fun searchUsersByMetadata(key: List<String>, value: String): List<UserDb>
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun updateUser(user: UserEntity)
+    abstract suspend fun updateUser(user: UserEntity)
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun updateUsers(users: List<UserEntity>)
+    abstract suspend fun updateUsers(users: List<UserEntity>)
 
-    @Query("update users set status =:status where user_id =:userId")
-    suspend fun updateUserStatus(userId: String, status: String)
+    @Query("update $USER_TABLE set status =:status where user_id =:userId")
+    abstract suspend fun updateUserStatus(userId: String, status: String)
 
-    @Query("update users set blocked =:blocked where user_id =:userId")
-    suspend fun blockUnBlockUser(userId: String, blocked: Boolean)
+    @Query("update $USER_TABLE set blocked =:blocked where user_id =:userId")
+    abstract suspend fun blockUnBlockUser(userId: String, blocked: Boolean)
 
-    @Query("DELETE FROM users")
-    suspend fun deleteAll()
+    @Query("DELETE from $USER_TABLE ")
+    abstract suspend fun deleteAll()
 }

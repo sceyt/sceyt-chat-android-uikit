@@ -111,14 +111,14 @@ class OutVoiceMessageViewHolder(
             if (diff.replyCountChanged)
                 setReplyCount(binding.tvReplyCount, toReplyLine, item)
 
+            if (diff.replyContainerChanged)
+                setReplyMessageContainer(message, viewReply, false)
+
             if (diff.reactionsChanged || diff.edited)
                 setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
             if (diff.filesChanged)
                 initAttachment()
-
-            if (diff.replyContainerChanged)
-                setReplyMessageContainer(message, viewReply, false)
 
             initVoiceMessage()
         }

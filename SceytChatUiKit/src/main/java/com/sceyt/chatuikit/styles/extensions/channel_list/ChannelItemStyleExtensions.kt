@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.styles.extensions.channel
+package com.sceyt.chatuikit.styles.extensions.channel_list
 
 import android.content.res.TypedArray
 import android.graphics.Typeface

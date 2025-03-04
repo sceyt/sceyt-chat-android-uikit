@@ -98,12 +98,12 @@ class StartChatActivity : AppCompatActivity() {
             overrideTransitions(sceyt_anim_slide_hold, com.sceyt.chatuikit.R.anim.sceyt_anim_slide_out_right, false)
         }
 
-        binding.tvNewGroup.setOnClickListener {
+        binding.layoutNewGroup.setOnClickListener {
             val args = SelectUsersPageArgs(toolbarTitle = MemberTypeEnum.Member.getPageTitle(this))
             selectUsersActivityLauncher.launch(SelectUsersActivity.newIntent(this, args), animOptions)
         }
 
-        binding.tvNewChannel.setOnClickListener {
+        binding.layoutNewChannel.setOnClickListener {
             createConversationLauncher.launch(Intent(this, CreateChannelActivity::class.java), animOptions)
         }
     }
