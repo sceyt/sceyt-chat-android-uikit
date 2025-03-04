@@ -260,8 +260,8 @@ class MessagesAdapter(
         }
     }
 
-    fun setMultiSelectableMode(enables: Boolean) {
-        isMultiSelectableMode = enables
+    fun setMultiSelectableMode(enable: Boolean) {
+        isMultiSelectableMode = enable
     }
 
     fun isMultiSelectableMode() = isMultiSelectableMode
