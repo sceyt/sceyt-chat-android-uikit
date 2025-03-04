@@ -363,6 +363,7 @@ abstract class BaseMessageViewHolder(
         }
     }
 
+    /** Call this method after [setReplyMessageContainer], to calculate [layoutBubble] width correctly. */
     protected open fun setOrUpdateReactions(
             item: MessageListItem.MessageItem,
             rvReactionsViewStub: ViewStub,
