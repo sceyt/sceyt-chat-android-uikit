@@ -12,12 +12,12 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
 
-fun ChanelMemberDb.toSceytMember() = SceytMember(
+internal fun ChanelMemberDb.toSceytMember() = SceytMember(
     role = Role(link.role),
     user = user?.toSceytUser() ?: SceytUser(link.userId)
 )
 
-fun UserDb.toSceytUser() = with(user) {
+internal fun UserDb.toSceytUser() = with(user) {
     SceytUser(
         id = id,
         username = username,
@@ -31,25 +31,25 @@ fun UserDb.toSceytUser() = with(user) {
 }
 
 
-fun UserDb.toUser() = with(user) {
+internal fun UserDb.toUser() = with(user) {
     User(
         id, username, firstName, lastName, avatarURL, metadata.associate { it.key to it.value },
         presence, activityStatus, blocked
     )
 }
 
-fun SceytMember.toUserDb() = UserDb(
+internal fun SceytMember.toUserDb() = UserDb(
     user = user.toUserEntity(),
     metadata = user.metadataMap?.map { (key, value) -> UserMetadataEntity(id, key, value) }.orEmpty()
 )
 
-fun SceytUser.toUserEntity(): UserEntity {
+internal fun SceytUser.toUserEntity(): UserEntity {
     return UserEntity(
         id, username, firstName, lastName, avatarURL, presence, state, blocked
     )
 }
 
-fun User.toUserDb() = UserDb(
+internal fun User.toUserDb() = UserDb(
     user = UserEntity(
         id = id,
         username = username,
@@ -63,7 +63,7 @@ fun User.toUserDb() = UserDb(
     metadata = metadataMap?.map { (key, value) -> UserMetadataEntity(id, key, value) }.orEmpty()
 )
 
-fun SceytUser.toUserDb() = UserDb(
+internal fun SceytUser.toUserDb() = UserDb(
     user = UserEntity(
         id = id,
         username = username,

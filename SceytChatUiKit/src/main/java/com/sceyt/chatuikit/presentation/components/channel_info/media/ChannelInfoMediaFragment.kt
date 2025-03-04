@@ -5,12 +5,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytFragmentChannelInfoMediaBinding
 import com.sceyt.chatuikit.extensions.isLandscape
@@ -33,6 +31,7 @@ import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.di.ChannelInfoMediaViewModelQualifier
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.extensions.channel_info.media.setPageStatesView
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -49,7 +48,8 @@ open class ChannelInfoMediaFragment : Fragment, SceytKoinComponent, HistoryClear
     protected open val mediaType = listOf("image", "video")
     protected open var pageStateView: PageStateView? = null
     protected val viewModel: ChannelAttachmentsViewModel by viewModel(ChannelInfoMediaViewModelQualifier)
-    protected lateinit var infoStyle: ChannelInfoStyle
+    lateinit var infoStyle: ChannelInfoStyle
+        protected set
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -97,10 +97,7 @@ open class ChannelInfoMediaFragment : Fragment, SceytKoinComponent, HistoryClear
 
     private fun addPageStateView() {
         binding?.root?.addView(PageStateView(requireContext()).apply {
-            setEmptyStateView(R.layout.sceyt_empty_state).also {
-                it.findViewById<TextView>(R.id.empty_state_title).text = getString(R.string.sceyt_no_media_items_yet)
-            }
-            setLoadingStateView(R.layout.sceyt_loading_state)
+            setPageStatesView(this)
             pageStateView = this
 
             post {
@@ -172,7 +169,11 @@ open class ChannelInfoMediaFragment : Fragment, SceytKoinComponent, HistoryClear
     }
 
     protected open fun onPageStateChange(pageState: PageState) {
-        pageStateView?.updateState(pageState, mediaAdapter?.itemCount == 0, enableErrorSnackBar = false)
+        pageStateView?.updateState(
+            state = pageState,
+            showLoadingIfNeed = (mediaAdapter?.itemCount ?: 0) == 0,
+            enableErrorSnackBar = false
+        )
     }
 
     protected open fun loadInitialMediaList() {

@@ -40,7 +40,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManager
-import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadDb
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.interactor.AttachmentInteractor
 import com.sceyt.chatuikit.persistence.interactor.ChannelInteractor
@@ -48,7 +47,7 @@ import com.sceyt.chatuikit.persistence.interactor.ChannelMemberInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
-import com.sceyt.chatuikit.persistence.interactor.PersistenceMessageMarkerLogic
+import com.sceyt.chatuikit.persistence.logic.PersistenceMessageMarkerLogic
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
@@ -501,10 +500,6 @@ internal class PersistenceMiddleWareImpl(
     }
 
     override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()
-
-    override suspend fun getAllPayLoadsByMsgTid(tid: Long): List<AttachmentPayLoadDb> {
-        return attachmentsLogic.getAllPayLoadsByMsgTid(tid)
-    }
 
     override suspend fun getPrevAttachments(
             conversationId: Long, lastAttachmentId: Long,

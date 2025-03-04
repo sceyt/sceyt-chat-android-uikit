@@ -16,37 +16,51 @@
         tools:sceytUiSearchableToolbarIconsTint="@color/colorAccent"
         tools:sceytUiSearchableToolbarTitle="@string/sceyt_start_chat" />
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tvNewGroup"
+    <FrameLayout
+        android:id="@+id/layoutNewGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
-        android:drawablePadding="12dp"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="16dp"
-        android:text="@string/sceyt_new_group"
-        android:textColor="@color/sceyt_color_text_primary"
-        android:textSize="@dimen/mediumTextSize"
-        app:drawableLeftCompat="@drawable/sceyt_ic_create_group"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tvNewChannel"
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvNewGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawablePadding="12dp"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="16dp"
+            android:text="@string/sceyt_new_group"
+            android:textColor="@color/sceyt_color_text_primary"
+            android:textSize="@dimen/mediumTextSize"
+            app:drawableLeftCompat="@drawable/sceyt_ic_create_group" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/layoutNewChannel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
-        android:drawablePadding="12dp"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="16dp"
-        android:text="@string/sceyt_new_channel"
-        android:textColor="@color/sceyt_color_text_primary"
-        android:textSize="@dimen/mediumTextSize"
-        app:drawableLeftCompat="@drawable/sceyt_ic_create_channel"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvNewGroup" />
+        app:layout_constraintTop_toBottomOf="@+id/layoutNewGroup">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvNewChannel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawablePadding="12dp"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="16dp"
+            android:text="@string/sceyt_new_channel"
+            android:textColor="@color/sceyt_color_text_primary"
+            android:textSize="@dimen/mediumTextSize"
+            app:drawableLeftCompat="@drawable/sceyt_ic_create_channel" />
+
+    </FrameLayout>
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvUsers"
@@ -61,7 +75,7 @@
         android:textColor="@color/sceyt_color_text_secondary"
         android:textSize="@dimen/mediumTextSize"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvNewChannel" />
+        app:layout_constraintTop_toBottomOf="@+id/layoutNewChannel" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvUsers"

@@ -102,11 +102,11 @@ class OutFileMessageViewHolder(
             if (diff.filesChanged)
                 initAttachment()
 
-            if (diff.reactionsChanged || diff.edited)
-                setOrUpdateReactions(item, rvReactions, viewPoolReactions)
-
             if (diff.replyContainerChanged)
                 setReplyMessageContainer(message, binding.viewReply, false)
+
+            if (diff.reactionsChanged || diff.edited)
+                setOrUpdateReactions(item, rvReactions, viewPoolReactions)
         }
     }
 

@@ -37,6 +37,10 @@ class ShouldShowNotificationUseCase(
     private fun shouldShowOnlineNotification(
             pushData: PushData
     ): Boolean {
+        // Check config
+        if (enableShowNotificationInConfig(pushData).not())
+            return false
+
         val message = pushData.message
         val channel = pushData.channel
 
@@ -51,12 +55,16 @@ class ShouldShowNotificationUseCase(
         if (!pushData.message.incoming && pushData.type != NotificationType.MessageReaction)
             return false
 
-        val config = SceytChatUIKit.config.notificationConfig
-        val isAppInForeground = context.isAppOnForeground()
-        val isChannelOpen = ChannelsCache.currentChannelId == pushData.channel.id && isAppInForeground
+        val isChannelOpen = ChannelsCache.currentChannelId == pushData.channel.id
+                && context.isAppOnForeground()
         return isChannelOpen.not()
-                && config.isPushEnabled
-                && (config.suppressWhenAppIsInForeground.not() || !isAppInForeground)
+    }
+
+    private fun enableShowNotificationInConfig(pushData: PushData): Boolean {
+        val config = SceytChatUIKit.config.notificationConfig
+        val isAppInForeground by lazy { context.isAppOnForeground() }
+        return config.isPushEnabled
                 && config.shouldDisplayNotification(pushData)
+                && (config.suppressWhenAppIsInForeground.not() || !isAppInForeground)
     }
 }

@@ -7,17 +7,21 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 
-@Entity(tableName = "pendingReaction",
+internal const val PENDING_REACTION_TABLE = "sceyt_pending_reaction_table"
+
+@Entity(
+    tableName = PENDING_REACTION_TABLE,
     foreignKeys = [
         ForeignKey(
             entity = MessageEntity::class,
             parentColumns = ["message_id"],
             childColumns = ["messageId"],
             onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE,
             deferred = true
         )],
     indices = [Index("messageId", "reaction_key", unique = true)])
-data class PendingReactionEntity(
+internal data class PendingReactionEntity(
         @ColumnInfo(index = true)
         val messageId: Long,
         @ColumnInfo(name = "reaction_key", index = true)

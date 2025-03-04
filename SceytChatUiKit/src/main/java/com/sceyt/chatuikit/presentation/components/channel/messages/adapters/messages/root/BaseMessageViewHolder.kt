@@ -208,8 +208,11 @@ abstract class BaseMessageViewHolder(
         message.setChatMessageDateAndStatusIcon(messageDate, itemStyle, dateText, isEdited)
     }
 
-    // Invoke this method after invoking setOrUpdateReactions, to calculate the final width of the layout bubble
-    protected open fun setReplyMessageContainer(message: SceytMessage, viewStub: ViewStub, calculateWith: Boolean = true) {
+    protected open fun setReplyMessageContainer(
+            message: SceytMessage,
+            viewStub: ViewStub,
+            calculateWith: Boolean = true
+    ) {
         val parent = message.parentMessage
         if (!message.isReplied || parent == null) {
             viewStub.isVisible = false
@@ -268,23 +271,14 @@ abstract class BaseMessageViewHolder(
             with(root) {
                 if (calculateWith) {
                     (layoutParams as? ConstraintLayout.LayoutParams)?.let { layoutParams ->
-                        layoutParams.matchConstraintMaxWidth = bubbleMaxWidth - marginHorizontal
-                        // Calculate the width of the layout bubble before measuring replyMessageContainer
-                        layoutBubble?.measure(View.MeasureSpec.UNSPECIFIED, 0)
-                        // Set the width LayoutParams.WRAP_CONTENT to layoutParas to measure the real width of replyMessageContainer
-                        layoutParams.width = LayoutParams.WRAP_CONTENT
                         measure(View.MeasureSpec.UNSPECIFIED, 0)
-                        val bubbleMeasuredWidth = min(bubbleMaxWidth, layoutBubble?.measuredWidth
-                                ?: 0)
-                        val minBoundOfWidth = bubbleMeasuredWidth - marginHorizontal
-                        // If the width of replyMessageContainer is bigger than the width of layout bubble,
-                        // set the width of layout bubble, else set the default width of replyMessageContainer
-                        if (measuredWidth >= minBoundOfWidth)
-                            layoutParams.matchConstraintMinWidth = minBoundOfWidth
-                        else {
-                            layoutParams.matchConstraintMinWidth = 0
-                            layoutParams.width = 0
-                        }
+                        // Set the max width of the reply container
+                        val maxWidth = bubbleMaxWidth - marginHorizontal
+                        layoutParams.matchConstraintMaxWidth = maxWidth
+                        // Set the min width of the reply container, to set message bubble width
+                        // as the same as the reply container width, if the message bubble width
+                        // is less than the reply container width
+                        layoutParams.matchConstraintMinWidth = measuredWidth
                     }
                 }
                 isVisible = true
@@ -369,6 +363,7 @@ abstract class BaseMessageViewHolder(
         }
     }
 
+    /** Call this method after [setReplyMessageContainer], to calculate [layoutBubble] width correctly. */
     protected open fun setOrUpdateReactions(
             item: MessageListItem.MessageItem,
             rvReactionsViewStub: ViewStub,
@@ -417,18 +412,21 @@ abstract class BaseMessageViewHolder(
         initWidthsDependReactions(recyclerViewReactions, layoutDetails)
     }
 
-    protected open fun initWidthsDependReactions(rvReactions: ViewGroup?, layoutDetails: ViewGroup?) {
+    protected open fun initWidthsDependReactions(
+            rvReactions: RecyclerView?,
+            layoutDetails: ViewGroup?
+    ) {
         if (layoutDetails == null || rvReactions == null) return
 
         rvReactions.measure(View.MeasureSpec.UNSPECIFIED, 0)
         layoutDetails.measure(View.MeasureSpec.UNSPECIFIED, 0)
-        val margin = dpToPx(8f)
+        val margins = rvReactions.marginHorizontal
 
         when {
-            rvReactions.measuredWidth + margin > layoutDetails.measuredWidth -> {
-                val newWidth = min((rvReactions.measuredWidth + margin), bubbleMaxWidth)
+            rvReactions.measuredWidth + margins > min(bubbleMaxWidth, layoutDetails.measuredWidth) -> {
+                val newWidth = min((rvReactions.measuredWidth + margins), (bubbleMaxWidth - margins))
                 layoutDetails.layoutParams.width = newWidth
-                rvReactions.layoutParams.width = newWidth - margin
+                rvReactions.layoutParams.width = newWidth - margins
             }
 
             rvReactions.measuredWidth < layoutDetails.measuredWidth -> {

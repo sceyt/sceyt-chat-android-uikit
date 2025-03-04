@@ -18,7 +18,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@drawable/sceyt_bg_ripple"
-            android:drawableStart="@drawable/sceyt_ic_members_with_layers"
             android:drawablePadding="16dp"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
@@ -29,6 +28,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            tools:drawableStart="@drawable/sceyt_ic_members_with_layers"
             tools:ignore="UnusedAttribute" />
 
         <com.google.android.material.divider.MaterialDivider
@@ -43,7 +43,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@drawable/sceyt_bg_ripple"
-            android:drawableStart="@drawable/sceyt_ic_admin_with_layers"
             android:drawablePadding="16dp"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
@@ -54,6 +53,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/borderBetweenMembersAndAdmins"
+            tools:drawableStart="@drawable/sceyt_ic_admin_with_layers"
             tools:ignore="UnusedAttribute" />
 
         <com.google.android.material.divider.MaterialDivider
@@ -68,7 +68,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@drawable/sceyt_bg_ripple"
-            android:drawableStart="@drawable/sceyt_ic_search_messages_with_layers"
             android:drawablePadding="16dp"
             android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
@@ -79,6 +78,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/borderBetweenAdminsAndSearch"
+            tools:drawableStart="@drawable/sceyt_ic_search_messages_with_layers"
             tools:ignore="UnusedAttribute" />
 
         <androidx.constraintlayout.widget.Group

@@ -5,7 +5,7 @@ import androidx.room.Relation
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 
-data class PendingMessageStateDb(
+internal data class PendingMessageStateDb(
         @Embedded
         val entity: PendingMessageStateEntity,
 

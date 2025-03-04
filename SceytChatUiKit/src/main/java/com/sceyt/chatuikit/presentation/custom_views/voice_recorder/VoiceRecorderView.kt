@@ -8,6 +8,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.provider.Settings
 import android.util.AttributeSet
@@ -471,6 +473,19 @@ class VoiceRecorderView @JvmOverloads constructor(
         style.slideToCancelTextStyle.apply(tvSlideCancel)
         style.durationTextStyle.apply(tvDuration)
         style.cancelTextStyle.apply(tvCancel)
+        layoutEffect2.background = createMirroredGradientDrawable()
+    }
+
+    private fun createMirroredGradientDrawable(): GradientDrawable {
+        val isRtl = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
+        return GradientDrawable(
+            GradientDrawable.Orientation.LEFT_RIGHT.takeIf { isRtl }
+                    ?: GradientDrawable.Orientation.RIGHT_LEFT,
+            intArrayOf(
+                Color.parseColor("#00FFFFFF"),
+                getCompatColor(R.color.sceyt_color_primary)
+            )
+        )
     }
 
     private fun showPermissionSettingsDialog() {

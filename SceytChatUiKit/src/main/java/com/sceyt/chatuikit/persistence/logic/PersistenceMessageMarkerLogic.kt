@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.persistence.interactor
+package com.sceyt.chatuikit.persistence.logic
 
 import com.sceyt.chatuikit.data.managers.channel.event.MessageMarkerEventData
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData

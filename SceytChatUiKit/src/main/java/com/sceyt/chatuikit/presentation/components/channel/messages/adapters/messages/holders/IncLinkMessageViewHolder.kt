@@ -68,11 +68,11 @@ class IncLinkMessageViewHolder(
                 if (diff.replyCountChanged)
                     setReplyCount(tvReplyCount, toReplyLine, item)
 
-                if (diff.reactionsChanged || diff.edited)
-                    setOrUpdateReactions(item, rvReactions, viewPoolReactions)
-
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, binding.viewReply)
+
+                if (diff.reactionsChanged || diff.edited)
+                    setOrUpdateReactions(item, rvReactions, viewPoolReactions)
 
                 if (item.message.shouldShowAvatarAndName)
                     avatar.setOnClickListener {

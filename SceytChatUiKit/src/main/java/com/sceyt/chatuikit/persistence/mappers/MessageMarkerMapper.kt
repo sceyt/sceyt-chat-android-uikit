@@ -7,16 +7,16 @@ import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerWithUserDb
 
-fun MarkerEntity.toSceytMarker(user: SceytUser) = SceytMarker(messageId, user, name, createdAt)
+internal fun MarkerEntity.toSceytMarker(user: SceytUser) = SceytMarker(messageId, user, name, createdAt)
 
-fun MarkerWithUserDb.toMarker(): SceytMarker {
+internal fun MarkerWithUserDb.toMarker(): SceytMarker {
     return with(entity) {
         val user = user?.toSceytUser() ?: SceytUser(userId)
         SceytMarker(messageId, user, name, createdAt)
     }
 }
 
-fun SceytMarker.toMarkerEntity() = MarkerEntity(messageId, userId, name, createdAt)
+internal fun SceytMarker.toMarkerEntity() = MarkerEntity(messageId, userId, name, createdAt)
 
 fun Marker.toSceytMarker() = SceytMarker(messageId, user.toSceytUser(), name, createdAt)
 

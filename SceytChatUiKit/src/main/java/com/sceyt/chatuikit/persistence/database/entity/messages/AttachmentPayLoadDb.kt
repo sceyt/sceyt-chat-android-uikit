@@ -4,7 +4,7 @@ import androidx.room.Embedded
 import androidx.room.Relation
 import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
 
-data class AttachmentPayLoadDb(
+internal data class AttachmentPayLoadDb(
         @Embedded
         val payLoadEntity: AttachmentPayLoadEntity,
 

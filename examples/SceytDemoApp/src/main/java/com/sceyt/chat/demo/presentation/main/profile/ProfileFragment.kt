@@ -92,7 +92,7 @@ class ProfileFragment : Fragment() {
 
     private fun FragmentProfileBinding.initViews() {
         displayNameDefaultBg = binding.displayName.background
-        ivEdit.isVisible = !userProfileViewModel.isDemoUser()
+        ivEdit.isVisible = !userProfileViewModel.isDemoUser
         switchNotifications.setOnlyClickable()
 
         avatar.setAvatarImageLoadListener {
@@ -126,7 +126,7 @@ class ProfileFragment : Fragment() {
 
     private fun showLogoutDialog() {
         LogoutDialog(requireContext())
-            .setIsDemoUser(userProfileViewModel.isDemoUser())
+            .setIsDemoUser(userProfileViewModel.isDemoUser)
             .setAcceptCallback { deleteUser ->
                 userProfileViewModel.logout(deleteUser) {
                     viewModel.logout()

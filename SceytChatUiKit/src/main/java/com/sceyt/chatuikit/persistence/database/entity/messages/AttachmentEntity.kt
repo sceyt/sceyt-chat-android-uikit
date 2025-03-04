@@ -6,7 +6,10 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+internal const val ATTACHMENT_TABLE = "sceyt_attachment_table"
+
 @Entity(
+    tableName = ATTACHMENT_TABLE,
     foreignKeys = [
         ForeignKey(
             entity = MessageEntity::class,
@@ -18,7 +21,7 @@ import androidx.room.PrimaryKey
     ],
     indices = [Index(value = ["messageTid", "url"], unique = true)]
 )
-data class AttachmentEntity(
+internal data class AttachmentEntity(
         @PrimaryKey(autoGenerate = true)
         val primaryKey: Int = 0,
         @ColumnInfo(index = true)
