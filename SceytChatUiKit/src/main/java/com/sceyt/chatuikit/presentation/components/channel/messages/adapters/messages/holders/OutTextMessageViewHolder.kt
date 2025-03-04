@@ -60,11 +60,11 @@ class OutTextMessageViewHolder(
                 if (diff.replyCountChanged)
                     setReplyCount(tvReplyCount, toReplyLine, item)
 
-                if (diff.reactionsChanged || diff.edited)
-                    setOrUpdateReactions(item, rvReactions, viewPool)
-
                 if (diff.replyContainerChanged)
                     setReplyMessageContainer(message, viewReply)
+
+                if (diff.reactionsChanged || diff.edited)
+                    setOrUpdateReactions(item, rvReactions, viewPool)
             }
         }
     }
