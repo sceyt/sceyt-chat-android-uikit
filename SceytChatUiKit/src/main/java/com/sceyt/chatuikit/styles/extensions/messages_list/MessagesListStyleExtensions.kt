@@ -10,7 +10,9 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.spToPx
 import com.sceyt.chatuikit.styles.common.AvatarStyle
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.CheckboxStyle
+import com.sceyt.chatuikit.styles.common.MessageDeliveryStatusIcons
 import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.messages_list.DateSeparatorStyle
@@ -151,6 +153,108 @@ internal fun MessagesListViewStyle.Builder.buildReactionPickerStyle(
     )
     .build()
 
+
+internal fun MessageItemStyle.Builder.buildIncomingBubbleBackgroundStyle(
+        typedArray: TypedArray,
+) = BackgroundStyle.Builder(typedArray)
+    .setBackgroundColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListIncomingBubbleColor,
+        defValue = context.getCompatColor(R.color.sceyt_color_bg_inc_message)
+    )
+    .setShape(
+        Shape.RoundedCornerShape(radius = dpToPx(18f).toFloat())
+    )
+    .build()
+
+
+internal fun MessageItemStyle.Builder.buildOutgoingBubbleBackgroundStyle(
+        typedArray: TypedArray
+) = BackgroundStyle.Builder(typedArray)
+    .setBackgroundColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListOutgoingBubbleColor,
+        defValue = defaultOutBubbleColor
+    )
+    .setShape(
+        Shape.RoundedCornerShape(radius = dpToPx(18f).toFloat())
+    )
+    .build()
+
+
+//Incoming reply background
+internal fun MessageItemStyle.Builder.buildIncomingReplyBackgroundStyle(
+        typedArray: TypedArray,
+) = BackgroundStyle.Builder(typedArray)
+    .setBackgroundColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListIncomingReplyBackgroundColor,
+        defValue = context.getCompatColor(R.color.sceyt_color_surface_2)
+    )
+    .setShape(
+        Shape.RoundedCornerShape(radius = 5f.dpToPx())
+    )
+    .build()
+
+//Outgoing reply background
+internal fun MessageItemStyle.Builder.buildOutgoingReplyBackgroundStyle(
+        typedArray: TypedArray,
+) = BackgroundStyle.Builder(typedArray)
+    .setBackgroundColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListOutgoingReplyBackgroundColor,
+        defValue = defaultOutDarkColor
+    )
+    .setShape(
+        Shape.RoundedCornerShape(radius = 5f.dpToPx())
+    )
+    .build()
+
+// OutLinkPreviewBackgroundStyle
+internal fun MessageItemStyle.Builder.buildOutgoingLinkPreviewBackgroundStyle(
+        typedArray: TypedArray,
+) = BackgroundStyle.Builder(typedArray)
+    .setBackgroundColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListOutgoingLinkPreviewBackgroundColor,
+        defValue = defaultOutDarkColor
+    )
+    .setShape(
+        Shape.RoundedCornerShape(radius = 8f.dpToPx())
+    )
+    .build()
+
+//ReactionsContainerBackgroundStyle
+internal fun MessageItemStyle.Builder.buildReactionsContainerBackgroundStyle(
+        typedArray: TypedArray,
+) = BackgroundStyle.Builder(typedArray)
+    .setBackgroundColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListReactionsContainerBackgroundColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSections)
+    )
+    .setShape(
+        Shape.RoundedCornerShape(radius = 20f.dpToPx())
+    )
+    .build()
+
+
+// Incoming Link Preview Background
+internal fun MessageItemStyle.Builder.buildIncomingLinkPreviewBackgroundStyle(
+        typedArray: TypedArray,
+) = BackgroundStyle.Builder(typedArray)
+    .setBackgroundColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListIncomingLinkPreviewBackgroundColor,
+        defValue = context.getCompatColor(R.color.sceyt_color_bg_inc_link_preview)
+    )
+    .setShape(
+        Shape.RoundedCornerShape(radius = 5f.dpToPx())
+    )
+    .build()
+
+// Delivery status icons
+internal fun MessageItemStyle.Builder.buildDeliveryStatusIconStyle(
+        typedArray: TypedArray,
+) = MessageDeliveryStatusIcons.Builder(context, typedArray)
+    .setPendingIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusPendingIcon)
+    .setSentIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusSentIcon)
+    .setReceivedIconIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusReceivedIcon)
+    .setDisplayedIconFromStyle(R.styleable.MessagesListView_sceytUiMessagesListMessageDeliveryStatusDisplayedIcon)
+    .build()
 
 /* Item Body text style */
 internal fun MessageItemStyle.Builder.buildBodyTextStyle(

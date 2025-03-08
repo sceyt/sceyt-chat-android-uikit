@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.sceyt.chatuikit.presentation.custom_views.ClipToOutlineConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@id/viewReply"
@@ -12,7 +12,7 @@
 
     <View
         android:id="@+id/view"
-        android:layout_width="2.1dp"
+        android:layout_width="2.8dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -96,4 +96,4 @@
         app:layout_goneMarginStart="8dp"
         tools:text="Waitifor." />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</com.sceyt.chatuikit.presentation.custom_views.ClipToOutlineConstraintLayout>
