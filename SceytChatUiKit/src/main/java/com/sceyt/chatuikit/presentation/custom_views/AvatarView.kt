@@ -34,6 +34,7 @@ import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.applyTo
 import kotlin.math.abs
+import androidx.core.graphics.withTranslation
 
 class AvatarView @JvmOverloads constructor(
         context: Context,
@@ -132,10 +133,9 @@ class AvatarView @JvmOverloads constructor(
         val staticLayout = getStaticLayout(spannable)
 
         val xPos = (width - staticLayout.width) / 2f
-        canvas.save()
-        canvas.translate(xPos, (height - staticLayout.height) / 2f)
-        staticLayout.draw(canvas)
-        canvas.restore()
+        canvas.withTranslation(xPos, (height - staticLayout.height) / 2f) {
+            staticLayout.draw(this)
+        }
     }
 
     private fun drawBackgroundColor(canvas: Canvas, @ColorInt color: Int) {

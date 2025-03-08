@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.channel.input.components
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -20,8 +19,9 @@ import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.CancelLinkPreviewClickListener
 import com.sceyt.chatuikit.shared.utils.ViewUtil
 import com.sceyt.chatuikit.styles.input.MessageInputStyle
+import androidx.core.graphics.drawable.toDrawable
 
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class LinkPreviewView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
@@ -97,7 +97,7 @@ class LinkPreviewView @JvmOverloads constructor(
                     .placeholder(defaultImage)
                     .listener(glideRequestListener { success ->
                         if (success) {
-                            icLinkImage.background = ColorDrawable(Color.TRANSPARENT)
+                            icLinkImage.background = Color.TRANSPARENT.toDrawable()
                         } else {
                             setDefaultStateLinkImage()
                         }
