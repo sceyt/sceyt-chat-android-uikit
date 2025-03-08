@@ -28,7 +28,7 @@ import com.sceyt.chatuikit.styles.input.InputEditMessageStyle
 import com.sceyt.chatuikit.styles.input.InputReplyMessageStyle
 import com.sceyt.chatuikit.styles.input.MessageInputStyle
 
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessageActionsView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,

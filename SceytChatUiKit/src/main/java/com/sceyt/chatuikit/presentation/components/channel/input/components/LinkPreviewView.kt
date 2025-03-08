@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
 import com.sceyt.chatuikit.R
@@ -19,7 +20,6 @@ import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.click.MessageInputClickListeners.CancelLinkPreviewClickListener
 import com.sceyt.chatuikit.shared.utils.ViewUtil
 import com.sceyt.chatuikit.styles.input.MessageInputStyle
-import androidx.core.graphics.drawable.toDrawable
 
 @Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class LinkPreviewView @JvmOverloads constructor(
@@ -48,11 +48,10 @@ class LinkPreviewView @JvmOverloads constructor(
         debounceHelper.cancelLastDebounce()
         showHideAnimator?.cancel()
         with(binding) {
+            setLinkInfo(data)
             if (!root.isVisible || root.height != root.measuredHeight || root.measuredHeight in (0..1)) {
-                root.isVisible = true
                 showHideAnimator = ViewUtil.expandHeight(root, 1, 200)
             }
-            setLinkInfo(data)
         }
     }
 
@@ -81,29 +80,26 @@ class LinkPreviewView @JvmOverloads constructor(
         this.clickListeners = clickListeners
     }
 
-    private fun setLinkInfo(data: LinkPreviewDetails) {
-        with(binding) {
-            tvLinkUrl.text = data.link
+    private fun SceytFragmentLinkPreviewBinding.setLinkInfo(data: LinkPreviewDetails) {
+        tvLinkUrl.text = data.link
+        tvLinkDescription.text = data.description?.trim()
+        setDefaultStateLinkImage()
+        loadLinkImage(data.imageUrl)
+    }
 
-            tvLinkDescription.apply {
-                text = data.description?.trim()
-                isVisible = data.description.isNullOrBlank().not()
-            }
-            setDefaultStateLinkImage()
-            val linkUrl = data.imageUrl
-            if (!linkUrl.isNullOrBlank()) {
-                Glide.with(root.context)
-                    .load(linkUrl)
-                    .placeholder(defaultImage)
-                    .listener(glideRequestListener { success ->
-                        if (success) {
-                            icLinkImage.background = Color.TRANSPARENT.toDrawable()
-                        } else {
-                            setDefaultStateLinkImage()
-                        }
-                    })
-                    .into(icLinkImage)
-            }
+    private fun loadLinkImage(linkUrl: String?) {
+        if (!linkUrl.isNullOrBlank()) {
+            Glide.with(context.applicationContext)
+                .load(linkUrl)
+                .placeholder(defaultImage)
+                .listener(glideRequestListener { success ->
+                    if (success) {
+                        binding.icLinkImage.background = Color.TRANSPARENT.toDrawable()
+                    } else {
+                        setDefaultStateLinkImage()
+                    }
+                })
+                .into(binding.icLinkImage)
         }
     }
 
