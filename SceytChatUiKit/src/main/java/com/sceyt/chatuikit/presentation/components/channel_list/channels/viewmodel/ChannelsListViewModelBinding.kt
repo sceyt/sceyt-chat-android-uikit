@@ -32,7 +32,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-
+@JvmName("bind")
 fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: LifecycleOwner) {
 
     val typingCancelHelper by lazy { TypingCancelHelper() }
@@ -250,6 +250,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
     }
 }
 
+@JvmName("bind")
 fun ChannelsViewModel.bind(searchView: SearchChannelInputView) {
     searchView.setDebouncedTextChangeListener {
         getChannels(0, query = it)
@@ -258,14 +259,4 @@ fun ChannelsViewModel.bind(searchView: SearchChannelInputView) {
     searchView.setOnQuerySubmitListener {
         getChannels(0, query = it)
     }
-}
-
-@Suppress("unused")
-fun bindViewFromJava(viewModel: ChannelsViewModel, channelListView: ChannelListView, lifecycleOwner: LifecycleOwner) {
-    viewModel.bind(channelListView, lifecycleOwner)
-}
-
-@Suppress("unused")
-fun bindSearchViewFromJava(viewModel: ChannelsViewModel, searchView: SearchChannelInputView) {
-    viewModel.bind(searchView)
 }

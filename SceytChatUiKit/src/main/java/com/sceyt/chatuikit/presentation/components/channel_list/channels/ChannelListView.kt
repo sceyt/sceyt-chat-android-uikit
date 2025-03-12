@@ -33,6 +33,7 @@ import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.ChannelListViewStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.setPageStateViews
 
+@Suppress("JoinDeclarationAndAssignment")
 class ChannelListView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
