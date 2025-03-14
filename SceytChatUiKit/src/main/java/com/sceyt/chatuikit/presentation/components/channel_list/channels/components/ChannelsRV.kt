@@ -16,7 +16,6 @@ import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.isFirstItemDisplaying
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
-import com.sceyt.chatuikit.extensions.runWhenReady
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsItemComparatorBy
@@ -63,7 +62,7 @@ class ChannelsRV @JvmOverloads constructor(
             reachToEndListener?.invoke(adapter.getSkip(), adapter.getChannels().lastOrNull()?.channel)
     }
 
-    fun setData(channels: List<ChannelListItem>) = runWhenReady {
+    fun setData(channels: List<ChannelListItem>) = post {
         if (channelsAdapter == null) {
             adapter = ChannelsAdapter(viewHolderFactory)
                 .also { channelsAdapter = it }
