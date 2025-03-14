@@ -257,25 +257,25 @@ class AsyncListDiffer<T : Any>(
 
     private suspend inline fun CoroutineScope.performWithRetry(action: () -> Unit) {
         var attempt = 0
-        val maxAttempts = 1
-        var success = false
+        val maxAttempts = 3
+        var lastException: Exception? = null
 
-        while (isActive && !success && attempt <= maxAttempts) {
-            if (attempt == maxAttempts) {
-                // Do action unsafely if we've reached the max attempts, to handle the exception
+        while (isActive && attempt < maxAttempts) {
+            try {
                 action()
                 return
-            } else {
-                try {
-                    action()
-                    success = true
-                } catch (ex: Exception) {
-                    SceytLog.w(TAG, "Catch Exception. Retry attempt $attempt", ex)
-                    attempt++
+            } catch (ex: Exception) {
+                lastException = ex
+                SceytLog.w(TAG, "Catch Exception. Retry attempt $attempt", ex)
+                attempt++
+                if (attempt < maxAttempts) {
                     delay((attempt * 50L).coerceAtMost(500L)) // Exponential backoff
                 }
             }
         }
+
+        // If we've exhausted all retries, throw the last exception
+        throw lastException ?: RuntimeException("Failed after $maxAttempts attempts")
     }
 
 
