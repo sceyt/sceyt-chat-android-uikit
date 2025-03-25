@@ -1,5 +1,10 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages
 
+import android.R.attr.clipToPadding
+import android.R.attr.paddingBottom
+import android.R.attr.paddingLeft
+import android.R.attr.paddingRight
+import android.R.attr.paddingTop
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -556,7 +561,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             messages.forEachIndexed { index, item ->
                 if (item is MessageItem && item.message.parentMessage?.tid == data.messageTid) {
                     val message = item.message
-                    val updatedItem = item.copy(message = message.copy(parentMessage = message.parentMessage?.copy(
+                    val updatedItem = item.copy(message = message.copy(parentMessage = message.parentMessage.copy(
                         attachments = item.message.parentMessage.attachments?.map { attachment ->
                             if (attachment.url == data.url) {
                                 attachment.copy(filePath = data.filePath)
