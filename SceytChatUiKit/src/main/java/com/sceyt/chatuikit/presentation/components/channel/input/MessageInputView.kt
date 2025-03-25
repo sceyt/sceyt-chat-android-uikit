@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.input
 
+import android.R.attr.text
 import android.content.Context
 import android.text.Editable
 import android.text.TextWatcher
@@ -45,6 +46,7 @@ import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper
+import com.sceyt.chatuikit.media.audio.AudioRecorderHelper.OnRecorderStop
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 import com.sceyt.chatuikit.persistence.lazyVar
@@ -103,6 +105,8 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
+import kotlin.collections.firstOrNull
+import kotlin.collections.map
 
 @Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessageInputView @JvmOverloads constructor(
@@ -363,19 +367,7 @@ class MessageInputView @JvmOverloads constructor(
             }
 
             override fun onRecordingCompleted(shouldShowPreview: Boolean) {
-                audioRecorderHelper.stopRecording { isTooShort, file, duration, amplitudes ->
-                    if (isTooShort) {
-                        finishRecording()
-                        return@stopRecording
-                    }
-                    if (shouldShowPreview) {
-                        showRecordPreview(file, amplitudes, duration)
-                    } else {
-                        finishRecording()
-                        tryToSendRecording(file, amplitudes.toIntArray(), duration)
-                    }
-                    voiceRecorderView?.keepScreenOn = false
-                }
+                audioRecorderHelper.stopRecording(onStopRecordingCompleted(shouldShowPreview))
             }
 
             override fun onRecordingCanceled() {
@@ -384,6 +376,22 @@ class MessageInputView @JvmOverloads constructor(
                 voiceRecorderView?.keepScreenOn = false
             }
         })
+    }
+
+    private fun onStopRecordingCompleted(
+            shouldShowPreview: Boolean
+    ) = OnRecorderStop { isTooShort, file, duration, amplitudes ->
+        if (isTooShort) {
+            finishRecording()
+            return@OnRecorderStop
+        }
+        if (shouldShowPreview) {
+            showRecordPreview(file, amplitudes, duration)
+        } else {
+            finishRecording()
+            tryToSendRecording(file, amplitudes.toIntArray(), duration)
+        }
+        voiceRecorderView?.keepScreenOn = false
     }
 
     private fun showRecordPreview(file: File?, amplitudes: Array<Int>, duration: Int) {
