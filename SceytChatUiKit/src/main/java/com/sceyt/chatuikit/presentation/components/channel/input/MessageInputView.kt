@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.channel.input
 
-import android.R.attr.text
 import android.content.Context
 import android.text.Editable
 import android.text.TextWatcher
@@ -105,8 +104,6 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
-import kotlin.collections.firstOrNull
-import kotlin.collections.map
 
 @Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessageInputView @JvmOverloads constructor(
