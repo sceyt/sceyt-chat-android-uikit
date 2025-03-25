@@ -8,7 +8,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.provider.Settings
@@ -19,12 +18,11 @@ import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MOVE
 import android.view.MotionEvent.ACTION_UP
 import android.view.View
-import android.view.View.OnTouchListener
-import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.view.animation.LinearInterpolator
 import android.view.animation.OvershootInterpolator
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.graphics.toColorInt
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
@@ -209,8 +207,8 @@ class VoiceRecorderView @JvmOverloads constructor(
             imageViewAudio.translationY = 0f
             return
         }
-        if (layoutLock.visibility != View.VISIBLE) {
-            layoutLock.visibility = View.VISIBLE
+        if (layoutLock.visibility != VISIBLE) {
+            layoutLock.visibility = VISIBLE
 
             showRecordingFromDeleteButton()
         }
@@ -231,13 +229,13 @@ class VoiceRecorderView @JvmOverloads constructor(
         layoutLock.translationY = 0f
         imageViewAudio.translationY = 0f
         if (abs(x) < imageAudio.width) {
-            if (layoutLock.visibility != View.VISIBLE) {
-                layoutLock.visibility = View.VISIBLE
+            if (layoutLock.visibility != VISIBLE) {
+                layoutLock.visibility = VISIBLE
                 showRecordingFromDeleteButton()
             }
         } else {
-            if (layoutLock.visibility != View.GONE) {
-                layoutLock.visibility = View.GONE
+            if (layoutLock.visibility != GONE) {
+                layoutLock.visibility = GONE
                 showDeleteRecordButton()
             }
         }
@@ -283,8 +281,8 @@ class VoiceRecorderView @JvmOverloads constructor(
         lastY = 0f
         userBehaviour = UserBehaviour.NONE
         tvSlideCancel.translationX = 0f
-        tvSlideCancel.visibility = View.GONE
-        layoutLock.visibility = View.GONE
+        tvSlideCancel.visibility = GONE
+        layoutLock.visibility = GONE
         layoutLock.translationY = 0f
         icArrowToLock.clearAnimation()
         icLock.clearAnimation()
@@ -294,8 +292,8 @@ class VoiceRecorderView @JvmOverloads constructor(
 
         when (recordingBehaviour) {
             RecordingBehaviour.LOCKED -> {
-                lockViewContainer.visibility = View.VISIBLE
-                tvCancel.visibility = View.VISIBLE
+                lockViewContainer.visibility = VISIBLE
+                tvCancel.visibility = VISIBLE
                 imageViewAudio.animate()
                     .translationX(0f)
                     .translationY(0f)
@@ -338,12 +336,12 @@ class VoiceRecorderView @JvmOverloads constructor(
         }
 
         recordingIndicatorView.clearAnimation()
-        tvDuration.visibility = View.GONE
-        recordingIndicatorView.visibility = View.GONE
-        lockViewContainer.visibility = View.GONE
-        layoutEffect2.visibility = View.GONE
-        layoutEffect1.visibility = View.GONE
-        tvCancel.visibility = View.GONE
+        tvDuration.visibility = GONE
+        recordingIndicatorView.visibility = GONE
+        lockViewContainer.visibility = GONE
+        layoutEffect2.visibility = GONE
+        layoutEffect1.visibility = GONE
+        tvCancel.visibility = GONE
         timerTask?.cancel()
     }
 
@@ -361,12 +359,12 @@ class VoiceRecorderView @JvmOverloads constructor(
             .setDuration(200)
             .setInterpolator(OvershootInterpolator())
             .start()
-        tvDuration.visibility = View.VISIBLE
-        layoutLock.visibility = View.VISIBLE
-        tvSlideCancel.visibility = View.VISIBLE
-        recordingIndicatorView.visibility = View.VISIBLE
-        layoutEffect2.visibility = View.VISIBLE
-        layoutEffect1.visibility = View.VISIBLE
+        tvDuration.visibility = VISIBLE
+        layoutLock.visibility = VISIBLE
+        tvSlideCancel.visibility = VISIBLE
+        recordingIndicatorView.visibility = VISIBLE
+        layoutEffect2.visibility = VISIBLE
+        layoutEffect1.visibility = VISIBLE
         recordingIndicatorView.startAnimation(animBlink)
         icArrowToLock.clearAnimation()
         icLock.clearAnimation()
@@ -477,12 +475,12 @@ class VoiceRecorderView @JvmOverloads constructor(
     }
 
     private fun createMirroredGradientDrawable(): GradientDrawable {
-        val isRtl = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
+        val isRtl = resources.configuration.layoutDirection == LAYOUT_DIRECTION_RTL
         return GradientDrawable(
             GradientDrawable.Orientation.LEFT_RIGHT.takeIf { isRtl }
                     ?: GradientDrawable.Orientation.RIGHT_LEFT,
             intArrayOf(
-                Color.parseColor("#00FFFFFF"),
+                "#00FFFFFF".toColorInt(),
                 getCompatColor(R.color.sceyt_color_primary)
             )
         )
@@ -520,6 +518,6 @@ class VoiceRecorderView @JvmOverloads constructor(
     }
 
     fun setRecorderHeight(height: Int) {
-        binding.recording.updateLayoutParams<ViewGroup.LayoutParams> { this.height = height }
+        binding.recording.updateLayoutParams<LayoutParams> { this.height = height }
     }
 }
