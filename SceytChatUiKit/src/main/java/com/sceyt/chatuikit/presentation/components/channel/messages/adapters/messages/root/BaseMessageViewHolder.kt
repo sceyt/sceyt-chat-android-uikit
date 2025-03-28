@@ -49,7 +49,6 @@ import com.sceyt.chatuikit.extensions.isRtl
 import com.sceyt.chatuikit.extensions.isValidEmail
 import com.sceyt.chatuikit.extensions.marginHorizontal
 import com.sceyt.chatuikit.extensions.screenPortraitWidthPx
-import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
 import com.sceyt.chatuikit.extensions.setDrawableStart
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
@@ -221,9 +220,7 @@ abstract class BaseMessageViewHolder(
         if (viewStub.parent != null)
             SceytRecyclerReplyContainerBinding.bind(viewStub.inflate()).also {
                 replyMessageContainerBinding = it
-                it.viewReply.setBackgroundTint(if (message.incoming)
-                    itemStyle.incomingReplyBackgroundColor else itemStyle.outgoingReplyBackgroundColor)
-                it.applyStyle()
+                it.applyStyle(message.incoming)
             }
         with(replyMessageContainerBinding ?: return) {
             val replyStyle = itemStyle.replyMessageStyle
@@ -299,7 +296,10 @@ abstract class BaseMessageViewHolder(
         }
     }
 
-    protected fun SceytRecyclerReplyContainerBinding.applyStyle() {
+    protected fun SceytRecyclerReplyContainerBinding.applyStyle(incoming: Boolean) {
+        if (incoming)
+            itemStyle.incomingReplyBackgroundStyle.apply(root)
+        else itemStyle.outgoingReplyBackgroundStyle.apply(root)
         itemStyle.replyMessageStyle.titleTextStyle.apply(tvName)
         itemStyle.replyMessageStyle.subtitleTextStyle.apply(tvMessageBody)
         view.setBackgroundColor(itemStyle.replyMessageStyle.borderColor)
@@ -389,7 +389,7 @@ abstract class BaseMessageViewHolder(
         if (rvReactionsViewStub.parent != null)
             rvReactionsViewStub.inflate().also {
                 recyclerViewReactions = it as RecyclerView
-                it.setBackgroundTint(itemStyle.reactionsContainerBackgroundColor)
+                itemStyle.reactionsContainerBackgroundStyle.apply(it)
             }
 
         with(recyclerViewReactions ?: return) {
@@ -561,8 +561,9 @@ abstract class BaseMessageViewHolder(
             tvSenderName: AppCompatTextView? = null,
             avatarView: AvatarView? = null,
     ) {
-        layoutDetails.setBackgroundTint(if (incoming)
-            itemStyle.incomingBubbleColor else itemStyle.outgoingBubbleColor)
+        if (incoming)
+            itemStyle.incomingBubbleBackgroundStyle.apply(layoutDetails)
+        else itemStyle.outgoingBubbleBackgroundStyle.apply(layoutDetails)
 
         applyForwardedStyle(tvForwarded)
         messageBody.applyStyle(itemStyle)

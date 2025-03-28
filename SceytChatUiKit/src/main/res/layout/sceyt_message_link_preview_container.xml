@@ -5,7 +5,6 @@
     android:id="@+id/parentLayout"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:background="@drawable/sceyt_bg_corners_8"
     android:padding="6dp"
     tools:background="#E3E7FF">
 
