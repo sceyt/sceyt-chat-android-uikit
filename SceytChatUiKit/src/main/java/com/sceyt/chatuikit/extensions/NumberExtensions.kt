@@ -78,10 +78,14 @@ fun Long.convertMSIntoHourMinSeconds(): String {
  */
 fun Int.dpToPx(): Int = dpToPxPrecise().roundToInt()
 
+fun Float.dpToPx(): Float = dpToPxPrecise()
+
 /**
  * Uses the display metrics to transform the value of DP to pixels.
  */
 fun Int.dpToPxPrecise(): Float = (this * displayMetrics().density)
+
+fun Float.dpToPxPrecise(): Float = (this * displayMetrics().density)
 
 fun Float.spToPx(): Float {
     return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, this, displayMetrics())

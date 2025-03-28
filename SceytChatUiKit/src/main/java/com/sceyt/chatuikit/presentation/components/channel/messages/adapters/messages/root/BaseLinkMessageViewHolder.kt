@@ -16,7 +16,6 @@ import com.sceyt.chatuikit.databinding.SceytMessageLinkPreviewContainerBinding
 import com.sceyt.chatuikit.extensions.calculateScaleWidthHeight
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.glideRequestListener
-import com.sceyt.chatuikit.extensions.setBackgroundTint
 import com.sceyt.chatuikit.extensions.setTextAndVisibility
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
@@ -71,11 +70,11 @@ abstract class BaseLinkMessageViewHolder(
         if (viewStub.parent != null)
             SceytMessageLinkPreviewContainerBinding.bind(viewStub.inflate()).also {
                 linkPreviewContainerBinding = it
+                it.applyStyle()
                 it.root.isVisible = true
             }
 
         with(linkPreviewContainerBinding ?: return) {
-            applyStyle()
             if (!data.imageUrl.isNullOrBlank()) {
                 setImageSize(previewImage, data)
                 val thumb = message.files?.firstOrNull {
@@ -133,10 +132,10 @@ abstract class BaseLinkMessageViewHolder(
 
     protected open fun SceytMessageLinkPreviewContainerBinding.applyStyle() {
         val linkStyle = style.linkPreviewStyle
-        val color = if ((messageListItem as MessageListItem.MessageItem).message.incoming)
-            style.incomingLinkPreviewBackgroundColor
-        else style.outgoingLinkPreviewBackgroundColor
-        root.setBackgroundTint(color)
+        val backgroundStyle = if ((messageListItem as MessageListItem.MessageItem).message.incoming)
+            style.incomingLinkPreviewBackgroundStyle
+        else style.outgoingLinkPreviewBackgroundStyle
+        backgroundStyle.apply(root)
         linkStyle.titleStyle.apply(tvLinkTitle)
         linkStyle.descriptionStyle.apply(tvLinkDesc)
     }

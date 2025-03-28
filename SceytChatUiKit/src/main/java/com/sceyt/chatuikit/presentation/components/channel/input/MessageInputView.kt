@@ -1,6 +1,8 @@
 package com.sceyt.chatuikit.presentation.components.channel.input
 
+import android.app.Activity
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
@@ -45,6 +47,7 @@ import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper
+import com.sceyt.chatuikit.media.audio.AudioRecorderHelper.OnRecorderStop
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
 import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 import com.sceyt.chatuikit.persistence.lazyVar
@@ -360,30 +363,40 @@ class MessageInputView @JvmOverloads constructor(
                 audioRecorderHelper.startRecording(directoryToSaveRecording) {}
                 binding.layoutInput.isInvisible = true
                 voiceRecorderView?.keepScreenOn = true
+
+                (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
             }
 
             override fun onRecordingCompleted(shouldShowPreview: Boolean) {
-                audioRecorderHelper.stopRecording { isTooShort, file, duration, amplitudes ->
-                    if (isTooShort) {
-                        finishRecording()
-                        return@stopRecording
-                    }
-                    if (shouldShowPreview) {
-                        showRecordPreview(file, amplitudes, duration)
-                    } else {
-                        finishRecording()
-                        tryToSendRecording(file, amplitudes.toIntArray(), duration)
-                    }
-                    voiceRecorderView?.keepScreenOn = false
-                }
+                audioRecorderHelper.stopRecording(onStopRecordingCompleted(shouldShowPreview))
             }
 
             override fun onRecordingCanceled() {
                 audioRecorderHelper.cancelRecording()
                 finishRecording()
                 voiceRecorderView?.keepScreenOn = false
+
+                (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             }
         })
+    }
+
+    private fun onStopRecordingCompleted(
+            shouldShowPreview: Boolean
+    ) = OnRecorderStop { isTooShort, file, duration, amplitudes ->
+        if (isTooShort) {
+            finishRecording()
+            return@OnRecorderStop
+        }
+        if (shouldShowPreview) {
+            showRecordPreview(file, amplitudes, duration)
+        } else {
+            finishRecording()
+            tryToSendRecording(file, amplitudes.toIntArray(), duration)
+        }
+        voiceRecorderView?.keepScreenOn = false
+
+        (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     }
 
     private fun showRecordPreview(file: File?, amplitudes: Array<Int>, duration: Int) {
