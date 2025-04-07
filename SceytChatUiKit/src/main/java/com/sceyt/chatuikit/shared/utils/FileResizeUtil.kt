@@ -5,9 +5,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
-import android.net.Uri
 import android.util.Size
 import androidx.core.graphics.scale
+import androidx.core.net.toUri
 import androidx.exifinterface.media.ExifInterface
 import com.sceyt.chatuikit.extensions.bitmapToByteArray
 import com.sceyt.chatuikit.extensions.getFileSizeMb
@@ -31,7 +31,7 @@ object FileResizeUtil {
     ): File? {
         if (filePath.isBlank()) return null
         return try {
-            val initialSize = getImageDimensionsSize(Uri.parse(filePath))
+            val initialSize = getImageDimensionsSize(filePath)
             if (initialSize.width == -1 || initialSize.height == -1) return null
 
             val inSimpleSize = calculateInSampleSize(initialSize, reqWith, reqHeight)
@@ -91,7 +91,7 @@ object FileResizeUtil {
     fun resizeAndCompressBitmapWithFilePath(filePath: String, reqSize: Int = 800): Bitmap? {
         if (filePath.isBlank()) return null
         return try {
-            val initialSize = getImageDimensionsSize(Uri.parse(filePath))
+            val initialSize = getImageDimensionsSize(filePath)
             if (initialSize.width == -1 || initialSize.height == -1) return null
 
 
@@ -137,19 +137,19 @@ object FileResizeUtil {
         }
     }
 
-    fun getImageDimensionsSize(image: Uri): Size {
-        val input = FileInputStream(image.path)
+    fun getImageDimensionsSize(path: String): Size {
+        val input = FileInputStream(path)
         val options = BitmapFactory.Options()
         options.inJustDecodeBounds = true
         BitmapFactory.decodeStream(input, null, options)
         return Size(options.outWidth, options.outHeight)
     }
 
-    fun getImageSizeOriented(uri: Uri): Size {
+    fun getImageSizeOriented(path: String): Size {
         var size = Size(0, 0)
         try {
-            size = getImageDimensionsSize(uri)
-            val exif = ExifInterface(uri.path ?: return size)
+            size = getImageDimensionsSize(path)
+            val exif = ExifInterface(path)
             when (exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
                 ExifInterface.ORIENTATION_ROTATE_270, ExifInterface.ORIENTATION_ROTATE_90 ->
                     size = Size(size.height, size.width)
@@ -170,6 +170,7 @@ object FileResizeUtil {
                     ?: 0
             Size(width, height)
         } catch (e: Throwable) {
+            print("Error getting video size: ${e.message}")
             null
         } finally {
             metaRetriever.release()
@@ -191,6 +192,7 @@ object FileResizeUtil {
 
             return Size(width, height)
         } catch (e: Throwable) {
+            print("Error getting video size: ${e.message}")
             null
         } finally {
             metaRetriever.release()
@@ -200,7 +202,7 @@ object FileResizeUtil {
     fun getVideoDuration(context: Context, path: String): Long? {
         val retriever = MediaMetadataRetriever()
         val timeInMilliSec: Long? = try {
-            retriever.setDataSource(context, Uri.parse(path))
+            retriever.setDataSource(context, path.toUri())
             val time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
             retriever.release()
             time?.toLongOrNull()
