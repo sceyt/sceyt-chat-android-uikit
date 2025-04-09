@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.persistence.file_transfer
 
-import android.net.Uri
 import android.util.Size
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -202,17 +201,20 @@ object FileTransferHelper : SceytKoinComponent {
         return Pair(fileLoadedSize, fileTotalSize)
     }
 
-    private fun getDimensions(type: String, path: String): Size? {
-        return when (type) {
+    private fun getDimensions(type: String, path: String): Size? = try {
+        when (type) {
             AttachmentTypeEnum.Image.value -> {
-                FileResizeUtil.getImageDimensionsSize(Uri.parse(path))
+                FileResizeUtil.getImageDimensionsSize(path)
             }
 
             AttachmentTypeEnum.Video.value -> {
                 FileResizeUtil.getVideoSize(path)
             }
 
-            else -> return null
+            else -> null
         }
+    } catch (e: Exception) {
+        SceytLog.e(TAG, "Couldn't get dimensions of file $path. Error: ${e.message}")
+        null
     }
 }

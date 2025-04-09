@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.persistence.mappers
 
 import android.content.ContentValues.TAG
 import android.content.Context
-import android.net.Uri
 import android.util.Log
 import android.util.Size
 import com.sceyt.chat.models.attachment.Attachment
@@ -32,7 +31,7 @@ fun createMetadata(currentMetadata: String?, data: Map<String, Any>): String? {
         }
         obj.toString()
     } catch (t: Throwable) {
-        SceytLog.e(TAG, "Could not parse malformed JSON: \"" + currentMetadata.toString() + "\"")
+        SceytLog.e(TAG, "Could not parse malformed JSON: \"$currentMetadata\", error: ${t.message}")
         null
     }
 }
@@ -62,7 +61,7 @@ fun SceytAttachment.getUpsertSizeMetadata(size: Size?): String? {
         }
         return obj.toString()
     } catch (t: Throwable) {
-        Log.e(TAG, "Could not parse malformed JSON: \"" + metadata.toString() + "\"")
+        Log.e(TAG, "Could not parse malformed JSON: \"$metadata\", error: ${t.message}")
         null
     }
 }
@@ -81,7 +80,7 @@ fun getBlurredBytesAndSizeAsString(context: Context, metadata: String?, filePath
             var base64String: String? = null
             when (type) {
                 AttachmentTypeEnum.Image.value -> {
-                    size = FileResizeUtil.getImageSizeOriented(Uri.parse(path))
+                    size = FileResizeUtil.getImageSizeOriented(path)
                     FileResizeUtil.resizeAndCompressBitmapWithFilePath(path, 100)?.let { bm ->
                         val bytes = ThumbHash.rgbaToThumbHash(bm.width, bm.height, BitmapUtil.bitmapToRgba(bm))
                         base64String = bytes.toBase64()
@@ -113,7 +112,7 @@ fun getBlurredBytesAndSizeAsString(context: Context, metadata: String?, filePath
             createMetadata(metadata, data)
         }
     } catch (ex: Exception) {
-        Log.e(TAG, "Couldn't get an blurred image or sizes.")
+        Log.e(TAG, "Couldn't get an blurred image or sizes. Error: ${ex.message}")
         null
     }
 }
@@ -122,7 +121,7 @@ fun SceytAttachment.existThumb(): Boolean {
     return try {
         val jsonObject = JSONObject(metadata ?: return false)
         jsonObject.getString(SceytConstants.Thumb).isNotNullOrBlank()
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
         false
     }
 }
@@ -151,8 +150,8 @@ fun SceytAttachment.getLinkPreviewDetails(): LinkPreviewDetails? {
             imageWidth = width?.toIntOrNull(),
             imageHeight = height?.toIntOrNull(),
             thumb = thumb,
-            hideDetails = hideLinkDetails ?: false)
-    } catch (ex: Exception) {
+            hideDetails = hideLinkDetails == true)
+    } catch (_: Exception) {
         return null
     }
 }
@@ -180,8 +179,8 @@ fun Attachment.getLinkPreviewDetails(): LinkPreviewDetails? {
             imageWidth = width?.toIntOrNull(),
             imageHeight = height?.toIntOrNull(),
             thumb = thumb,
-            hideDetails = hideLinkDetails ?: false)
-    } catch (ex: Exception) {
+            hideDetails = hideLinkDetails == true)
+    } catch (_: Exception) {
         return null
     }
 }
@@ -206,8 +205,8 @@ private fun isHiddenLinkDetails(metadata: String?, type: String): Boolean {
     if (type != AttachmentTypeEnum.Link.value) return false
     try {
         val jsonObject = JSONObject(metadata ?: return false)
-        return jsonObject.getBooleanOrNull(SceytConstants.HideLinkDetails) ?: false
-    } catch (e: Exception) {
+        return jsonObject.getBooleanOrNull(SceytConstants.HideLinkDetails) == true
+    } catch (_: Exception) {
         return false
     }
 }
