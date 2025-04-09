@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.media
 
 import android.content.Context
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Toast
@@ -63,6 +64,9 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     private var currentItem: MediaItem? = null
     private var openedWithAttachment: SceytAttachment? = null
     private var reversed = false
+    private var currentPosition: Int = 0
+    private var isChangingConfiguration = false
+    private var wasPausedBySystem = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,14 +77,41 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         binding.applyStyle()
 
         getDataFromIntent()
+        
+        if (savedInstanceState != null) {
+            currentPosition = savedInstanceState.getInt(KEY_CURRENT_POSITION, 0)
+            wasPausedBySystem = savedInstanceState.getBoolean(KEY_WAS_PAUSED, false)
+        }
+        
         initPageWithData()
         initViews()
         initViewModel()
     }
+    
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        
+        val currentPos = binding.rvMedia.getFirstVisibleItemPosition()
+        outState.putInt(KEY_CURRENT_POSITION, currentPos)
+        
+        isChangingConfiguration = isChangingConfigurations
+    }
+    
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        isChangingConfiguration = true
+    }
 
     override fun onPause() {
         super.onPause()
-        mediaAdapter?.pauseAllVideos()
+        if (!isChangingConfiguration) {
+            mediaAdapter?.pauseAllVideos()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        isChangingConfiguration = false
     }
 
     override fun onDestroy() {
@@ -244,6 +275,12 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
                         }
                     }
                 })
+                
+                if (currentPosition > 0 && currentPosition < newData.size) {
+                    post {
+                        scrollToPosition(currentPosition)
+                    }
+                }
             }
         } else mediaAdapter?.notifyUpdate(newData, binding.rvMedia)
     }
@@ -375,6 +412,8 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         private const val KEY_USER = "KEY_USER"
         private const val KEY_CHANNEL_ID = "KEY_CHANNEL_ID"
         private const val KEY_REVERSED = "KEY_REVERSED"
+        private const val KEY_CURRENT_POSITION = "KEY_CURRENT_POSITION"
+        private const val KEY_WAS_PAUSED = "KEY_WAS_PAUSED"
 
         fun launch(context: Context, attachment: SceytAttachment, from: SceytUser?, channelId: Long, reversed: Boolean = false) {
             context.launchActivity<MediaPreviewActivity> {

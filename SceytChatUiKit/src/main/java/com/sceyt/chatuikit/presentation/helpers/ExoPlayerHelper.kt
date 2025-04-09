@@ -17,6 +17,7 @@ class ExoPlayerHelper(
 
     private lateinit var exoPlayer: ExoPlayer
     private var isSetMediaPath = false
+    private var currentFilePath: String? = null
 
     init {
         initializePlayer()
@@ -24,6 +25,18 @@ class ExoPlayerHelper(
 
     companion object {
         var lastPlayer: ExoPlayer? = null
+
+        private val playbackPositions = mutableMapOf<String, Long>()
+        private val playbackStates = mutableMapOf<String, Boolean>()
+
+        fun savePlaybackState(path: String, position: Long, isPlaying: Boolean) {
+            playbackPositions[path] = position
+            playbackStates[path] = isPlaying
+        }
+
+        fun getSavedPosition(path: String): Long = playbackPositions[path] ?: 0L
+
+        fun wasPlaying(path: String): Boolean = playbackStates[path] ?: false
     }
 
     private fun initializePlayer() {
@@ -37,23 +50,36 @@ class ExoPlayerHelper(
         exoPlayer.addListener(this)
     }
 
-
     fun setMediaPath(url: String?, playVideo: Boolean) {
         if (isSetMediaPath) return
         url?.let {
+            currentFilePath = it
             exoPlayer.setMediaItem(MediaItem.fromUri(it))
             exoPlayer.prepare()
-            exoPlayer.playWhenReady = playVideo
+
+            val savedPosition = getSavedPosition(it)
+            if (savedPosition > 0) {
+                exoPlayer.seekTo(savedPosition)
+            }
+
+            val shouldPlay = if (wasPlaying(it)) true else playVideo
+            exoPlayer.playWhenReady = shouldPlay
             isSetMediaPath = true
         }
     }
 
     fun pausePlayer() {
+        currentFilePath?.let {
+            savePlaybackState(it, exoPlayer.currentPosition, false)
+        }
         exoPlayer.playWhenReady = false
     }
 
     fun resumePlayer() {
         exoPlayer.playWhenReady = true
+        currentFilePath?.let {
+            playbackStates[it] = true
+        }
     }
 
     fun retryPlayer() {
@@ -61,6 +87,9 @@ class ExoPlayerHelper(
     }
 
     fun releasePlayer() {
+        currentFilePath?.let {
+            savePlaybackState(it, exoPlayer.currentPosition, exoPlayer.isPlaying)
+        }
         exoPlayer.release()
     }
 
@@ -86,6 +115,10 @@ class ExoPlayerHelper(
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         super.onIsPlayingChanged(isPlaying)
         playingListener?.invoke(isPlaying)
+
+        currentFilePath?.let {
+            playbackStates[it] = isPlaying
+        }
     }
 
     override fun onPlayerError(error: PlaybackException) {
