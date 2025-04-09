@@ -35,6 +35,7 @@
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".presentation.components.media.MediaPreviewActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:theme="@style/SceytPreviewThemeDark" />
         <activity
             android:name=".presentation.components.forward.ForwardActivity"
