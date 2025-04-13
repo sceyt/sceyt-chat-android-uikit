@@ -58,7 +58,7 @@ internal interface ChannelDao {
             isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
     ): List<ChannelDb>
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("""
       select * from $CHANNEL_TABLE as channel  
@@ -107,17 +107,17 @@ internal interface ChannelDao {
         return getChannelsById(links.map { it.chatId })
     }
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
-    @Query("select * from $CHANNEL_TABLE join $USER_CHAT_LINK_TABLE as link " +
-            "on link.chat_id = $CHANNEL_TABLE.chat_id " +
+    @Query("select * from $CHANNEL_TABLE as channel join $USER_CHAT_LINK_TABLE as link " +
+            "on link.chat_id = channel.chat_id " +
             "where link.user_id =:peerId and type =:channelType")
     suspend fun getChannelByUserAndType(
             peerId: String,
             channelType: String,
     ): ChannelDb?
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("""
     select * from $CHANNEL_TABLE  
@@ -139,7 +139,7 @@ internal interface ChannelDao {
     @Query("select * from $CHANNEL_TABLE  where uri =:uri")
     suspend fun getChannelByUri(uri: String): ChannelDb?
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("select * from $CHANNEL_TABLE  where isSelf = 1")
     suspend fun getSelfChannel(): ChannelDb?
