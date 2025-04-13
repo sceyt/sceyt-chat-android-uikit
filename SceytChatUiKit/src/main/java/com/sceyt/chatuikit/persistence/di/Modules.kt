@@ -76,7 +76,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
             Room.inMemoryDatabaseBuilder(context, SceytDatabase::class.java)
 
         return builder
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(false)
             .addMigrations(DatabaseMigrations.Migration_15_16, DatabaseMigrations.Migration_16_17)
             .allowMainThreadQueries()
             .build()
