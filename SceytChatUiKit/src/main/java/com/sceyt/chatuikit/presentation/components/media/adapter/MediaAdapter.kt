@@ -10,7 +10,6 @@ import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
 import com.sceyt.chatuikit.extensions.keepScreenOn
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
-import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
 
 class MediaAdapter(
         private var attachments: ArrayList<MediaItem>,
@@ -79,25 +78,15 @@ class MediaAdapter(
     }
 
     fun pauseAllVideos() {
-        mediaPlayers.forEachIndexed { index, player ->
-            val filePath = attachments.getOrNull(index)?.attachment?.filePath
-            filePath?.let { path ->
-                ExoPlayerHelper.savePlaybackState(path, player.currentPosition, player.isPlaying)
-            }
-            player.pause()
-        }
+        mediaPlayers.forEach { it.pause() }
+    }
+
+    fun resumeLastVideo() {
+        mediaPlayers.lastOrNull()?.playWhenReady = true
     }
 
     fun releaseAllPlayers() {
-        mediaPlayers.forEachIndexed { index, player ->
-            val filePath = attachments.getOrNull(index)?.attachment?.filePath
-            filePath?.let { path ->
-                ExoPlayerHelper.savePlaybackState(path, player.currentPosition, player.isPlaying)
-            }
-        }
-
         mediaPlayers.forEach { it.release() }
-        mediaPlayers.clear()
     }
 
     fun addMediaPlayer(mediaPlayer: Player?) {

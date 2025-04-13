@@ -195,9 +195,9 @@ class MediaVideoViewHolder(
 
     private fun initPlayerHelper(playVideo: Boolean = shouldPlayVideo()) {
         if (!fileItem.attachment.filePath.isNullOrBlank()) {
-            val filePath = fileItem.attachment.filePath ?: ""
             playerHelper = initPlayer()
-            playerHelper?.setMediaPath(filePath, playVideo)
+            playerHelper?.setMediaPath(fileItem.attachment.filePath, playVideo)
+            if (playVideo) initWakeLock()
         }
     }
 
