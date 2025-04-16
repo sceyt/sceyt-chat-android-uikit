@@ -42,10 +42,6 @@ object FilePathUtil {
                     val fileSize = it.getLong(sizeIndex)
 
                     val directory = File(parentDirToCopy, SceytConstants.CopyFileDirName)
-                    if (!directory.exists()) {
-                        directory.mkdirs()
-                    }
-
                     val file = getUniqueFileDirectory(directory, fileName, fileSize)
 
                     context.contentResolver.openInputStream(uri)?.use { inputStream ->
@@ -59,7 +55,11 @@ object FilePathUtil {
         return null
     }
 
-    private fun getUniqueFileDirectory(rootDir: File, fileName: String, fileSize: Long): File {
+    fun getUniqueFileDirectory(rootDir: File, fileName: String, fileSize: Long): File {
+        // Create the directory if it doesn't exist
+        if (!rootDir.exists() ) {
+            rootDir.mkdirs()
+        }
         val file = File(rootDir, fileName)
         // After adding tid to Attachment, we can check [fileSize] to avoid copying the same file.
         // Now we cant do that because we need unique fileName for each attachment.

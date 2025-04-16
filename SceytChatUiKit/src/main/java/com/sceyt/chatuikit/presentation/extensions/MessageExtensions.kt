@@ -140,7 +140,7 @@ fun SceytAttachment?.getShowName(context: Context): String {
     }
 }
 
-fun SceytAttachment?.checkLoadedFileIsCorrect(loadedFile: File): File? {
+fun SceytAttachment?.isAttachmentExistAndFullyLoaded(loadedFile: File): File? {
     if (this == null) return null
 
     if (loadedFile.exists() && getFileSize(loadedFile.path) == fileSize)
