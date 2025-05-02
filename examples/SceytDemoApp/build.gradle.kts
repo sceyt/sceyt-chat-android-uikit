@@ -58,7 +58,7 @@ android {
             buildConfigField("String", "API_URL", "\"https://us-ohio-api.sceyt.com\"")
             buildConfigField("String", "APP_ID", "\"8lwox2ge93\"")
             buildConfigField("String", "GEN_TOKEN_BASE_URL", "\"https://vd3eaqzjli.execute-api.us-east-2.amazonaws.com\"")
-            buildConfigField("String", "GEN_TOKEN_ENDPOINT", "\"/dev/user/genToken\"")
+            buildConfigField("String", "GEN_TOKEN_ENDPOINT", "\"/chat/token\"")
             buildConfigField("String", "VALIDATION_API_URL", "\"https://ebttn1ks2l.execute-api.us-east-2.amazonaws.com/\"")
         }
 
