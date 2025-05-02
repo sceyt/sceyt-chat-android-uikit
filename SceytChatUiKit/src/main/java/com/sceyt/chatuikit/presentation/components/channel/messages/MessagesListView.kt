@@ -1,10 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages
 
-import android.R.attr.clipToPadding
-import android.R.attr.paddingBottom
-import android.R.attr.paddingLeft
-import android.R.attr.paddingRight
-import android.R.attr.paddingTop
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -41,6 +36,7 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.setClipboard
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.media.audio.AudioFocusHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.differs.diff
@@ -91,8 +87,8 @@ import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoActivity
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.setPageStateViews
+import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -113,6 +109,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
     private var multiselectDestination: Map<Long, SceytMessage>? = null
     private var forceDisabledActions = false
+    private val audioFocusHelper = AudioFocusHelper(context)
     val style: MessagesListViewStyle
     var enabledActions = true
         private set
@@ -149,6 +146,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         if (isInEditMode)
             binding.scrollDownView.isVisible = style.enableScrollDownButton
+
+        audioFocusHelper.setListeners { hasFocus ->
+            if (hasFocus) {
+                AudioPlayerHelper.stopAll()
+            }
+        }
     }
 
     private fun initClickListeners() {

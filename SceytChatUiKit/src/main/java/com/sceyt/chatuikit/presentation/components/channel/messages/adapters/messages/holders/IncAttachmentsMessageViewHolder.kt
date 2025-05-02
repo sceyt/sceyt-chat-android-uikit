@@ -129,7 +129,8 @@ class IncAttachmentsMessageViewHolder(
 
     private fun SceytItemIncAttachmentsMessageBinding.setMessageItemStyle() {
         applyCommonStyle(
-            layoutDetails = layoutDetails, tvForwarded = tvForwarded,
+            layoutDetails = layoutDetails,
+            tvForwarded = tvForwarded,
             messageBody = messageBody,
             tvThreadReplyCount = tvReplyCount,
             toReplyLine = toReplyLine,
