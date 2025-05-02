@@ -9,6 +9,7 @@ class AudioFocusHelper(private val context: Context) {
     private val audioManager: AudioManager by lazy {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
+    private var listener: ((Boolean) -> Unit)? = null
 
     var hasFocus = false
         private set
@@ -16,6 +17,7 @@ class AudioFocusHelper(private val context: Context) {
     private val audioFocusRequestCompat = AudioFocusRequestCompat.Builder(AudioManagerCompat.AUDIOFOCUS_GAIN_TRANSIENT)
         .setOnAudioFocusChangeListener { focusChange ->
             hasFocus = focusChange == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
+            listener?.invoke(hasFocus)
         }
         .build()
 
@@ -30,5 +32,9 @@ class AudioFocusHelper(private val context: Context) {
     fun abandonCallAudioFocusCompat() {
         val result = AudioManagerCompat.abandonAudioFocusRequest(audioManager, audioFocusRequestCompat)
         hasFocus = (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED).not()
+    }
+
+    fun setListeners(onAudioFocusChanged: (Boolean) -> Unit) {
+        listener = onAudioFocusChanged
     }
 }
