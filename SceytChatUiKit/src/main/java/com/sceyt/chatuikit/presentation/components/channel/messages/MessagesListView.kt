@@ -36,6 +36,7 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.setClipboard
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.media.audio.AudioFocusHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.differs.diff
@@ -108,6 +109,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
     private var multiselectDestination: Map<Long, SceytMessage>? = null
     private var forceDisabledActions = false
+    private val audioFocusHelper = AudioFocusHelper(context)
     val style: MessagesListViewStyle
     var enabledActions = true
         private set
@@ -144,6 +146,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         if (isInEditMode)
             binding.scrollDownView.isVisible = style.enableScrollDownButton
+
+        audioFocusHelper.setListeners { hasFocus ->
+            if (hasFocus) {
+                AudioPlayerHelper.stopAll()
+            }
+        }
     }
 
     private fun initClickListeners() {
