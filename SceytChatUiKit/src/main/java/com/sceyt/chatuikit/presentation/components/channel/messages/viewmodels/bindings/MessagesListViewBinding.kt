@@ -374,9 +374,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             if (data.missingMessages.isNotEmpty()) {
                 val items = messagesListView.getData().toMutableList()
-                items.findIndexed { it is MessageItem && it.message.id == data.centerMessageId }?.let {
-                    val index = it.first
-
+                items.findIndexed {
+                    it is MessageItem && it.message.id == data.centerMessageId
+                }?.let { (index) ->
                     val topOffset = messagesListView.getMessagesRecyclerView().getChildTopByPosition(index)
                     val compareMessage = getCompareMessage(LoadNear, data.missingMessages)
 
@@ -390,9 +390,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     withContext(Dispatchers.Main) {
                         messagesListView.setMessagesList(filtered.toList())
 
-                        val position = items.findIndexed { item ->
+                        val (position) = items.findIndexed { item ->
                             item is MessageItem && item.message.id == data.centerMessageId
-                        }?.first ?: return@withContext
+                        } ?: return@withContext
 
                         if (messagesListView.getMessagesRecyclerView().isThePositionVisible(position))
                             messagesListView.scrollToMessage(data.centerMessageId, false, topOffset)
