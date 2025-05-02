@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.push.providers.firebase
 
 import android.content.Context
 import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.common.GoogleApiAvailabilityLight
 import com.google.firebase.messaging.FirebaseMessaging
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.logger.SceytLog
@@ -23,7 +23,7 @@ class FirebasePushServiceProvider : PushDeviceProvider {
      * @return `true` if Firebase is supported; otherwise, `false`.
      */
     override fun isSupported(context: Context): Boolean {
-        val result = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context)
+        val result = GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(context)
         return result == ConnectionResult.SUCCESS
     }
 

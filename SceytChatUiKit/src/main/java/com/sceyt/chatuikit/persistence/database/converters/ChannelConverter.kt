@@ -15,10 +15,10 @@ class ChannelConverter {
     fun intToChannelTypeEnum(value: Int) = value.toEnum<ChannelTypeEnum>()
 
     @TypeConverter
-    fun presenceStateToTnt(value: PresenceState) = value.ordinal
+    fun presenceStateToTnt(value: PresenceState?) = value?.ordinal
 
     @TypeConverter
-    fun intToPresenceState(value: Int) = value.toEnum<PresenceState>()
+    fun intToPresenceState(value: Int?) = value?.toEnum<PresenceState>()
 
     @TypeConverter
     fun userActivityStatusToTnt(value: UserState) = value.ordinal
