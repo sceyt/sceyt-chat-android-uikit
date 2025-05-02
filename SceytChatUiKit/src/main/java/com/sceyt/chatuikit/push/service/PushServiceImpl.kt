@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.push.service
 
+import android.annotation.SuppressLint
 import android.content.Context
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
@@ -49,6 +50,7 @@ internal class PushServiceImpl(
         registerClientPushTokenImpl(device)
     }
 
+    @SuppressLint("ImplicitSamInstance")
     override fun unregisterPushDevice(
             unregisterPushCallback: ((success: Boolean, error: String?) -> Unit)?
     ) {

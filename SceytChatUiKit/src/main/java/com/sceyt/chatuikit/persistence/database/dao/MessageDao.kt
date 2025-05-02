@@ -249,49 +249,49 @@ internal abstract class MessageDao {
         insertUserMarkers(filtered)
     }
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("select * from $MESSAGE_TABLE as message " +
-            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
-            "and range.startId <= :lastMessageId and range.endId >= :lastMessageId " +
+            "join $LOAD_RANGE_TABLE as loadRange on loadRange.channelId = :channelId " +
+            "and loadRange.startId <= :lastMessageId and loadRange.endId >= :lastMessageId " +
             "where message.channelId =:channelId and message_id <:lastMessageId " +
-            "and (message_id >= range.startId and message_id <= range.endId)" +
+            "and (message_id >= loadRange.startId and message_id <= loadRange.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
             "group by message.message_id " +
             "order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("select * from $MESSAGE_TABLE as message " +
-            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
-            "and range.startId <= :lastMessageId and range.endId >= :lastMessageId " +
+            "join $LOAD_RANGE_TABLE as loadRange on loadRange.channelId = :channelId " +
+            "and loadRange.startId <= :lastMessageId and loadRange.endId >= :lastMessageId " +
             "where message.channelId =:channelId and message_id <=:lastMessageId " +
-            "and (message_id >= range.startId and message_id <= range.endId)" +
+            "and (message_id >= loadRange.startId and message_id <= loadRange.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
             "group by message.message_id " +
             "order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessagesInclude(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("select * from $MESSAGE_TABLE as message " +
-            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
-            "and range.startId <= :messageId and range.endId >= :messageId " +
+            "join $LOAD_RANGE_TABLE as loadRange on loadRange.channelId = :channelId " +
+            "and loadRange.startId <= :messageId and loadRange.endId >= :messageId " +
             "where message.channelId =:channelId and message_id >:messageId " +
-            "and (message_id >= range.startId and message_id <= range.endId)" +
+            "and (message_id >= loadRange.startId and message_id <= loadRange.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
             "group by message.message_id " +
             "order by createdAt, tid limit :limit")
     abstract suspend fun getNewestThenMessage(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("select * from $MESSAGE_TABLE as message " +
-            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
-            "and range.startId <= :messageId and range.endId >= :messageId " +
+            "join $LOAD_RANGE_TABLE as loadRange on loadRange.channelId = :channelId " +
+            "and loadRange.startId <= :messageId and loadRange.endId >= :messageId " +
             "where message.channelId =:channelId and message_id >=:messageId " +
-            "and (message_id >= range.startId and message_id <= range.endId)" +
+            "and (message_id >= loadRange.startId and message_id <= loadRange.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
             "group by message.message_id " +
             "order by createdAt, tid limit :limit")
