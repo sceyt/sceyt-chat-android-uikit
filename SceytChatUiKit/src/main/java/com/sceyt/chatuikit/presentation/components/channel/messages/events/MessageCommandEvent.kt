@@ -1,9 +1,8 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.events
 
-import android.view.View
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.components.channel.messages.components.ScrollToDownView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
+import com.sceyt.chatuikit.presentation.components.channel.messages.components.ScrollToDownView
 
 sealed interface MessageCommandEvent {
 
@@ -53,7 +52,6 @@ sealed interface MessageCommandEvent {
     ) : MessageCommandEvent
 
     data class UserClick(
-            val view: View,
             val userId: String
     ) : MessageCommandEvent
 }

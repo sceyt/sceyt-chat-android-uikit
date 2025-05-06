@@ -742,7 +742,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             is MessageCommandEvent.UserClick -> {
-                if (event.userId == SceytChatUIKit.chatUIFacade.myId) return@setMessageCommandEventListener
+                if (event.userId == SceytChatUIKit.chatUIFacade.myId)
+                    return@setMessageCommandEventListener
+
                 viewModelScope.launch(Dispatchers.IO) {
                     val user = userInteractor.getUserFromDbById(event.userId)
                             ?: SceytUser(event.userId)
@@ -752,7 +754,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     ))
                     if (response is SceytResponse.Success)
                         response.data?.let {
-                            ChannelInfoActivity.launch(event.view.context, response.data)
+                            ChannelInfoActivity.launch(messagesListView.context, response.data)
                         }
                 }
             }
