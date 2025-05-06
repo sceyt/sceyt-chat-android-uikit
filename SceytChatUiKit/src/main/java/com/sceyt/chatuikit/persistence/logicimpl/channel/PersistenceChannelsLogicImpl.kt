@@ -310,7 +310,7 @@ internal class PersistenceChannelsLogicImpl(
 
             val response = if (offset == 0)
                 channelsRepository.getChannels(searchQuery, config, SearchChannelParams.default)
-            else channelsRepository.loadMoreChannels()
+            else channelsRepository.loadMoreChannels(searchQuery, config, SearchChannelParams.default)
 
             if (response is SceytResponse.Success) {
                 val channels = response.data ?: arrayListOf()
@@ -376,7 +376,7 @@ internal class PersistenceChannelsLogicImpl(
 
             val response = if (offset == 0)
                 channelsRepository.getChannels(searchQuery, config, SearchChannelParams.default)
-            else channelsRepository.loadMoreChannels()
+            else channelsRepository.loadMoreChannels(searchQuery, config, SearchChannelParams.default)
 
             if (response is SceytResponse.Success) {
                 val channels = response.data ?: arrayListOf()
