@@ -3,7 +3,6 @@ package com.sceyt.chatuikit.presentation.components.channel.header
 import android.animation.LayoutTransition
 import android.app.Activity
 import android.content.Context
-import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.Menu
@@ -14,12 +13,10 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.annotation.MenuRes
 import androidx.appcompat.widget.Toolbar
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.forEach
 import androidx.core.view.isVisible
-import androidx.core.view.marginBottom
 import androidx.core.view.marginLeft
-import androidx.core.view.marginRight
-import androidx.core.view.marginTop
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -153,12 +150,17 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    @Suppress("UNUSED_PARAMETER")
-    private fun setChannelTitle(titleTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
+    @Suppress("unused")
+    private fun setChannelTitle(
+            titleTextView: TextView,
+            channel: SceytChannel,
+            replyMessage: SceytMessage? = null,
+            replyInThread: Boolean = false
+    ) {
         if (replyInThread) {
             with(titleTextView) {
                 text = getString(R.string.sceyt_thread_reply)
-                (layoutParams as MarginLayoutParams).setMargins(binding.avatar.marginLeft, marginTop, marginRight, marginBottom)
+                (layoutParams as? MarginLayoutParams)?.marginStart = binding.avatar.marginLeft
             }
         } else {
             val title = style.titleFormatter.format(context, channel)
@@ -167,7 +169,12 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun setChannelSubTitle(subjectTextView: TextView, channel: SceytChannel, replyMessage: SceytMessage? = null, replyInThread: Boolean = false) {
+    private fun setChannelSubTitle(
+            subjectTextView: TextView,
+            channel: SceytChannel,
+            replyMessage: SceytMessage? = null,
+            replyInThread: Boolean = false
+    ) {
         if (enablePresence.not() || channel.isPeerDeleted() || channel.isSelf) {
             subjectTextView.isVisible = false
             return
@@ -458,20 +465,22 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     override fun onInitToolbarActionsMenu(vararg messages: SceytMessage, menu: Menu) {
+        if (messages.isEmpty()) return
         val isSingleMessage = messages.size == 1
-        val newSelectedMessage = messages.firstOrNull()
+        val fistMessage = messages.first()
+        val existPendingMessages = messages.any { it.deliveryStatus == DeliveryStatus.Pending }
 
-        newSelectedMessage?.let { message ->
-            val isPending = message.deliveryStatus == DeliveryStatus.Pending
-            menu.findItem(R.id.sceyt_reply)?.isVisible = isSingleMessage && !isPending
-            //menu.findItem(R.id.sceyt_reply_in_thread).isVisible = isSingleMessage && !isPending
-            menu.findItem(R.id.sceyt_forward)?.isVisible = !isPending
-            val expiredEditMessage = (System.currentTimeMillis() - message.createdAt) >
-                    SceytChatUIKit.config.messageEditTimeout
-            menu.findItem(R.id.sceyt_edit_message)?.isVisible = isSingleMessage &&
-                    !message.incoming && message.body.isNotNullOrBlank() && !expiredEditMessage
-            menu.findItem(R.id.sceyt_message_info)?.isVisible = isSingleMessage && !message.incoming && !isPending
-            menu.findItem(R.id.sceyt_copy_message)?.isVisible = messages.any { it.body.isNotNullOrBlank() }
+        menu.findItem(R.id.sceyt_reply)?.isVisible = isSingleMessage && !existPendingMessages
+        //menu.findItem(R.id.sceyt_reply_in_thread).isVisible = isSingleMessage && !isPending
+        menu.findItem(R.id.sceyt_forward)?.isVisible = !existPendingMessages
+        val expiredEditMessage = (System.currentTimeMillis() - fistMessage.createdAt) >
+                SceytChatUIKit.config.messageEditTimeout
+        menu.findItem(R.id.sceyt_edit_message)?.isVisible = isSingleMessage &&
+                !fistMessage.incoming && fistMessage.body.isNotNullOrBlank() && !expiredEditMessage
+        menu.findItem(R.id.sceyt_message_info)?.isVisible = isSingleMessage
+                && !fistMessage.incoming && !existPendingMessages
+        menu.findItem(R.id.sceyt_copy_message)?.isVisible = messages.any {
+            it.body.isNotNullOrBlank()
         }
     }
 
@@ -511,7 +520,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     private fun SceytMessagesListHeaderViewBinding.applyStyle() {
         root.setBackgroundColor(style.backgroundColor)
-        toolbarUnderline.background = ColorDrawable(style.underlineColor)
+        toolbarUnderline.background = style.underlineColor.toDrawable()
         toolbarUnderline.isVisible = style.showUnderline
         icBack.setImageDrawable(style.navigationIcon)
         style.titleTextStyle.apply(title)
