@@ -116,12 +116,18 @@ class ChannelsRepositoryImpl : ChannelsRepository {
         }
     }
 
-    override suspend fun loadMoreChannels(): SceytResponse<List<SceytChannel>> {
-        return suspendCancellableCoroutine { continuation ->
-            val query = if (::channelsQuery.isInitialized)
-                channelsQuery
-            else throw IllegalStateException("Channels query is not initialized")
+    override suspend fun loadMoreChannels(
+            query: String,
+            config: ChannelListConfig,
+            params: SearchChannelParams,
+    ): SceytResponse<List<SceytChannel>> {
+        val query = if (::channelsQuery.isInitialized)
+            channelsQuery
+        else {
+            return getChannels(query, config, params)
+        }
 
+        return suspendCancellableCoroutine { continuation ->
             query.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
                     if (channels.isNullOrEmpty())
