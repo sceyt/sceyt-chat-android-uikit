@@ -1,12 +1,12 @@
 package com.sceyt.chatuikit.media.audio
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.media.AudioManager
 import androidx.media3.common.audio.AudioFocusRequestCompat
 import androidx.media3.common.audio.AudioManagerCompat
-import androidx.media3.common.util.UnstableApi
 
-@UnstableApi
+@SuppressLint("UnsafeOptInUsageError")
 class AudioFocusHelper(private val context: Context) {
     private val audioManager: AudioManager by lazy {
         context.getSystemService(Context.AUDIO_SERVICE) as AudioManager

@@ -2,10 +2,10 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.listeners.c
 
 import android.view.View
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.components.channel.messages.components.ScrollToDownView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
+import com.sceyt.chatuikit.presentation.components.channel.messages.components.ScrollToDownView
 
 sealed interface MessageClickListeners {
 
@@ -35,10 +35,6 @@ sealed interface MessageClickListeners {
 
     fun interface ReactionClickListener : MessageClickListeners {
         fun onReactionClick(view: View, item: ReactionItem.Reaction, message: SceytMessage)
-    }
-
-    fun interface ReactionLongClickListener : MessageClickListeners {
-        fun onReactionLongClick(view: View, item: ReactionItem.Reaction, message: SceytMessage)
     }
 
     fun interface AttachmentClickListener : MessageClickListeners {
@@ -84,7 +80,6 @@ sealed interface MessageClickListeners {
             ReplyCountClickListener,
             AddReactionClickListener,
             ReactionClickListener,
-            ReactionLongClickListener,
             AttachmentClickListener,
             AttachmentLongClickListener,
             MentionClickListener,
