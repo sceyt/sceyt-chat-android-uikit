@@ -16,17 +16,23 @@ import android.util.AttributeSet
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.core.content.res.use
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.graphics.withTranslation
 import androidx.core.text.toSpannable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.google.android.material.imageview.ShapeableImageView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getFirstCharIsEmoji
+import com.sceyt.chatuikit.extensions.glideRequestListener
 import com.sceyt.chatuikit.extensions.processEmojiCompat
 import com.sceyt.chatuikit.extensions.roundUp
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
+import com.sceyt.chatuikit.presentation.extensions.applyError
+import com.sceyt.chatuikit.presentation.extensions.applyPlaceHolder
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
 import com.sceyt.chatuikit.styles.common.AvatarStyle
@@ -34,7 +40,6 @@ import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.applyTo
 import kotlin.math.abs
-import androidx.core.graphics.withTranslation
 
 class AvatarView @JvmOverloads constructor(
         context: Context,
@@ -53,6 +58,11 @@ class AvatarView @JvmOverloads constructor(
     private var avatarBackgroundColor: Int = 0
     private var defaultAvatar: DefaultAvatar? = null
     private var initials: CharSequence = ""
+    private var placeholder: AvatarPlaceholder? = null
+    private var errorPlaceholder: AvatarErrorPlaceHolder? = null
+    private val defaultPlaceholder by lazy {
+        context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSecondary).toDrawable()
+    }
 
     init {
         var enableRipple = true
@@ -211,9 +221,10 @@ class AvatarView @JvmOverloads constructor(
                 .load(imageUrl)
                 .override(width)
                 .transition(DrawableTransitionOptions.withCrossFade(100))
-                .error(SceytChatUIKit.theme.colors.backgroundColorSecondary)
-                .placeholder(SceytChatUIKit.theme.colors.backgroundColorSecondary)
-                .listener(com.sceyt.chatuikit.extensions.glideRequestListener {
+                .applyPlaceHolder(placeholder ?: AvatarPlaceholder.FromDrawable(defaultPlaceholder))
+                .applyError(errorPlaceholder
+                        ?: AvatarErrorPlaceHolder.FromDrawable(defaultPlaceholder))
+                .listener(glideRequestListener {
                     avatarLoadCb?.invoke(false)
                 })
                 .into(this)
@@ -293,11 +304,22 @@ class AvatarView @JvmOverloads constructor(
         initShape(shape)
     }
 
-    sealed class DefaultAvatar {
-        data class FromBitmap(val bitmap: Bitmap) : DefaultAvatar()
-        data class FromDrawable(val drawable: Drawable?) : DefaultAvatar()
-        data class FromDrawableRes(@DrawableRes val id: Int) : DefaultAvatar()
-        data class Initials(val name: CharSequence) : DefaultAvatar()
+    sealed interface DefaultAvatar {
+        data class FromBitmap(val bitmap: Bitmap) : DefaultAvatar
+        data class FromDrawable(val drawable: Drawable?) : DefaultAvatar
+        data class FromDrawableRes(@DrawableRes val id: Int) : DefaultAvatar
+        data class Initials(val name: CharSequence) : DefaultAvatar
+    }
+
+    sealed interface AvatarPlaceholder {
+        data class FromDrawable(val drawable: Drawable?) : AvatarPlaceholder
+        data class FromDrawableRes(@DrawableRes val id: Int) : AvatarPlaceholder
+    }
+
+    sealed interface AvatarErrorPlaceHolder {
+        data class FromBitmap(val bitmap: Bitmap) : AvatarErrorPlaceHolder
+        data class FromDrawable(val drawable: Drawable?) : AvatarErrorPlaceHolder
+        data class FromDrawableRes(@DrawableRes val id: Int) : AvatarErrorPlaceHolder
     }
 
     fun appearanceBuilder() = AppearanceBuilder()
@@ -306,12 +328,16 @@ class AvatarView @JvmOverloads constructor(
             val style: AvatarStyle,
             val imageUrl: String?,
             val defaultAvatar: DefaultAvatar?,
+            val placeholder: AvatarPlaceholder?,
+            val errorPlaceholder: AvatarErrorPlaceHolder?
     ) {
 
         fun applyToAvatar() {
             val oldImageUrl = this@AvatarView.imageUrl
             this@AvatarView.imageUrl = imageUrl
             this@AvatarView.defaultAvatar = defaultAvatar
+            this@AvatarView.placeholder = placeholder
+            this@AvatarView.errorPlaceholder = errorPlaceholder
 
             style.apply(this@AvatarView)
             setInitialsIfNeeded(defaultAvatar)
@@ -324,6 +350,8 @@ class AvatarView @JvmOverloads constructor(
     inner class AppearanceBuilder {
         private var imageUrl = this@AvatarView.imageUrl
         private var defaultAvatar = this@AvatarView.defaultAvatar
+        private var placeholder: AvatarPlaceholder? = null
+        private var errorPlaceholder: AvatarErrorPlaceHolder? = null
         private var avatarStyle = AvatarStyle(
             textStyle = this@AvatarView.textStyle,
             shape = this@AvatarView.shape,
@@ -359,10 +387,20 @@ class AvatarView @JvmOverloads constructor(
             defaultAvatar = DefaultAvatar.Initials(name)
         }
 
+        fun setPlaceholder(placeholder: AvatarPlaceholder) = apply {
+            this.placeholder = placeholder
+        }
+
+        fun setErrorPlaceholder(errorPlaceholder: AvatarErrorPlaceHolder) = apply {
+            this.errorPlaceholder = errorPlaceholder
+        }
+
         fun build() = AvatarAppearance(
             style = avatarStyle,
             imageUrl = imageUrl,
-            defaultAvatar = defaultAvatar
+            defaultAvatar = defaultAvatar,
+            placeholder = placeholder,
+            errorPlaceholder = errorPlaceholder
         )
     }
 }
