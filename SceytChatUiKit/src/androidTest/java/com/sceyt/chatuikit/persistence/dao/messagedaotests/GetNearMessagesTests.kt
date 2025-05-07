@@ -177,7 +177,7 @@ class GetNearMessagesTests {
     }
 
     @Test
-    fun loadNearMessages_HasNextIfNewestSizeEqualHalfLimit() = runTest {
+    fun loadNearMessages_HasNotNextIfNewestSizeEqualHalfLimit() = runTest {
         // Given
         val messages = listOf(
             createMessage(1, 1),
@@ -206,7 +206,7 @@ class GetNearMessagesTests {
         Log.d("loadedMessages", "$messageIds")
         Truth.assertThat(messageIds).isEqualTo(listOf(3L, 4L, 5L, 6L))
         Truth.assertThat(loadedMessages.size).isEqualTo(limit)
-        Truth.assertThat(result.hasNext).isTrue()
+        Truth.assertThat(result.hasNext).isFalse()
     }
 
     @Test

@@ -321,8 +321,8 @@ internal abstract class MessageDao {
         if (oldMessages.size < limit && newMessages.size > halfLimit)
             newMessages = newest.take(limit - oldMessages.size)
 
-        val hasPrev = oldest.size >= halfLimit
-        val hasNext = newest.size >= halfLimit
+        val hasPrev = oldest.size > halfLimit
+        val hasNext = newest.size > halfLimit
 
         val data = (oldMessages + newMessages).sortedBy { it.messageEntity.createdAt }
         return LoadNearData(data, hasNext = hasNext, hasPrev)
