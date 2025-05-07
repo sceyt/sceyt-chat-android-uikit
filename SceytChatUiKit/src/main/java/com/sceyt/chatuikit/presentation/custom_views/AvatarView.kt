@@ -82,7 +82,7 @@ class AvatarView @JvmOverloads constructor(
                 defaultAvatarResId != 0 -> defaultAvatarResId.toDefaultAvatar()
                 !name.isNullOrBlank() -> {
                     initials = getInitials(name)
-                    DefaultAvatar.Initials(name)
+                    DefaultAvatar.FromInitials(name)
                 }
 
                 else -> null
@@ -125,7 +125,7 @@ class AvatarView @JvmOverloads constructor(
         if (visibility != VISIBLE) return
         if (imageUrl.isNullOrBlank()) {
             val default = defaultAvatar
-            if (default is DefaultAvatar.Initials) {
+            if (default is DefaultAvatar.FromInitials) {
                 drawInitialsAndBackground(canvas, default)
             } else {
                 drawBackgroundColor(canvas, avatarBackgroundColor)
@@ -255,12 +255,12 @@ class AvatarView @JvmOverloads constructor(
     }
 
     private fun setInitialsIfNeeded(defaultAvatar: DefaultAvatar?) {
-        (defaultAvatar as? DefaultAvatar.Initials)?.let {
+        (defaultAvatar as? DefaultAvatar.FromInitials)?.let {
             initials = getInitials(it.name)
         }
     }
 
-    private fun drawInitialsAndBackground(canvas: Canvas, avatar: DefaultAvatar.Initials) {
+    private fun drawInitialsAndBackground(canvas: Canvas, avatar: DefaultAvatar.FromInitials) {
         val initials = getInitials(avatar.name)
         val color = if (avatarBackgroundColor == 0)
             getAvatarRandomColor(initials) else avatarBackgroundColor
@@ -308,7 +308,7 @@ class AvatarView @JvmOverloads constructor(
         data class FromBitmap(val bitmap: Bitmap) : DefaultAvatar
         data class FromDrawable(val drawable: Drawable?) : DefaultAvatar
         data class FromDrawableRes(@DrawableRes val id: Int) : DefaultAvatar
-        data class Initials(val name: CharSequence) : DefaultAvatar
+        data class FromInitials(val name: CharSequence) : DefaultAvatar
     }
 
     sealed interface AvatarPlaceholder {
@@ -384,7 +384,7 @@ class AvatarView @JvmOverloads constructor(
         }
 
         fun setDefaultAvatar(name: CharSequence) = apply {
-            defaultAvatar = DefaultAvatar.Initials(name)
+            defaultAvatar = DefaultAvatar.FromInitials(name)
         }
 
         fun setPlaceholder(placeholder: AvatarPlaceholder) = apply {
