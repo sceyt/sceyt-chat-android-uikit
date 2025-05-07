@@ -297,7 +297,11 @@ internal abstract class MessageDao {
     abstract suspend fun getNewestThenMessageInclude(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
-    open suspend fun getNearMessages(channelId: Long, messageId: Long, limit: Int): LoadNearData<MessageDb> {
+    open suspend fun getNearMessages(
+            channelId: Long,
+            messageId: Long,
+            limit: Int
+    ): LoadNearData<MessageDb> {
         var oldest = getOldestThenMessagesInclude(channelId, messageId, limit).reversed()
         val includesInOldest = oldest.lastOrNull()?.messageEntity?.id == messageId
 
@@ -306,19 +310,22 @@ internal abstract class MessageDao {
             return LoadNearData(emptyList(), hasNext = false, hasPrev = false)
 
         var newest = getNewestThenMessage(channelId, messageId, limit)
+        val halfLimit = limit / 2
 
-        val newestDiff = max(limit / 2 - newest.size, 0)
+        val newestDiff = max(halfLimit - newest.size, 0)
         val oldestDiff = max((limit.toDouble() / 2).roundUp() - oldest.size, 0)
 
-        var newMessages = newest.take(limit / 2 + oldestDiff)
-        val oldMessages = oldest.takeLast(limit / 2 + newestDiff)
+        var newMessages = newest.take(halfLimit + oldestDiff)
+        val oldMessages = oldest.takeLast(halfLimit + newestDiff)
 
-        if (oldMessages.size < limit && newMessages.size > limit / 2)
+        if (oldMessages.size < limit && newMessages.size > halfLimit)
             newMessages = newest.take(limit - oldMessages.size)
 
-        val hasPrev = oldest.size >= limit / 2
-        val hasNext = newest.size >= limit / 2
-        return LoadNearData((oldMessages + newMessages).sortedBy { it.messageEntity.createdAt }, hasNext = hasNext, hasPrev)
+        val hasPrev = oldest.size >= halfLimit
+        val hasNext = newest.size >= halfLimit
+
+        val data = (oldMessages + newMessages).sortedBy { it.messageEntity.createdAt }
+        return LoadNearData(data, hasNext = hasNext, hasPrev)
     }
 
     @Transaction
