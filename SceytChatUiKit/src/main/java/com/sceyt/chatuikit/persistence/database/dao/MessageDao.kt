@@ -31,7 +31,6 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.REACTION_TOTAL_T
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
-import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.mappers.toAttachmentPayLoad
 import kotlinx.coroutines.flow.Flow
 import kotlin.math.max
@@ -299,21 +298,14 @@ internal abstract class MessageDao {
 
     @Transaction
     open suspend fun getNearMessages(channelId: Long, messageId: Long, limit: Int): LoadNearData<MessageDb> {
-        var newest = getNewestThenMessageInclude(channelId, messageId, limit)
-        val includesInNewest = newest.firstOrNull()?.messageEntity?.id == messageId
-
-        newest = if (includesInNewest) { // Remove first message because because it will include in oldest
-            newest.toArrayList().apply { removeAt(0) }
-        } else emptyList()
-
         var oldest = getOldestThenMessagesInclude(channelId, messageId, limit).reversed()
         val includesInOldest = oldest.lastOrNull()?.messageEntity?.id == messageId
 
+        // If the message not exist then return empty list
         if (!includesInOldest)
-            oldest = emptyList()
-
-        if (!includesInOldest && !includesInNewest)
             return LoadNearData(emptyList(), hasNext = false, hasPrev = false)
+
+        var newest = getNewestThenMessage(channelId, messageId, limit)
 
         val newestDiff = max(limit / 2 - newest.size, 0)
         val oldestDiff = max((limit.toDouble() / 2).roundUp() - oldest.size, 0)
