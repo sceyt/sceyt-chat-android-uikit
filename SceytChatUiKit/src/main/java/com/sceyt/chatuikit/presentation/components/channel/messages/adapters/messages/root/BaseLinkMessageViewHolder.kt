@@ -87,13 +87,9 @@ abstract class BaseLinkMessageViewHolder(
                     .load(data.imageUrl)
                     .override(size.width, size.height)
                     .placeholder(thumb)
-                    .listener(glideRequestListener(
-                        onResourceReady = {
-                            previewImage.isVisible = true
-                        },
-                        onLoadFailed = {
-                            previewImage.isVisible = thumb != null
-                        }))
+                    .listener(glideRequestListener { success ->
+                        previewImage.isVisible = success || thumb != null
+                    })
                     .transition(DrawableTransitionOptions.withCrossFade(100))
                     .into(previewImage)
             } else previewImage.isVisible = false
