@@ -25,7 +25,7 @@ import java.security.MessageDigest
  * are available offline when needed.
  */
 @Suppress("unused")
-internal object AvatarImageLoader {
+object AvatarImageLoader {
     private val scope by lazy { CoroutineScope(Dispatchers.IO + SupervisorJob()) }
     private val messageDigest by lazy { MessageDigest.getInstance("MD5") }
 
@@ -111,6 +111,23 @@ internal object AvatarImageLoader {
         val file = File(cacheDir, fileName)
 
         return if (file.exists()) file else null
+    }
+
+    /**
+     * Gets the file path for an avatar image URL whether it exists or not
+     * This is useful when you need to know where a file would be stored
+     * without checking if it exists.
+     *
+     * @param context Application context
+     * @param imageUrl URL of the avatar
+     * @return The File object representing where the avatar would be cached
+     */
+    fun getFilePathForUrl(context: Context, imageUrl: String?): File? {
+        if (imageUrl.isNullOrBlank()) return null
+
+        val cacheDir = getAvatarCacheDir(context)
+        val fileName = generateFileNameForUrl(imageUrl)
+        return File(cacheDir, fileName)
     }
 
     /**
