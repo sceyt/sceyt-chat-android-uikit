@@ -9,6 +9,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chatuikit.databinding.SceytFragmentPhotoPreviewBinding
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
+import com.sceyt.chatuikit.presentation.helpers.AvatarImageLoader
 import com.sceyt.chatuikit.styles.ImagePreviewStyle
 
 class ImagePreviewActivity : AppCompatActivity() {
@@ -44,9 +45,10 @@ class ImagePreviewActivity : AppCompatActivity() {
 
     private fun setDetails() {
         binding.toolbar.setTitle(toolbarTitle)
-
+        // At first try to load image from cache, if not found, load from URL
+        val model = AvatarImageLoader.getFilePathForUrl(context = this, imageUrl) ?: imageUrl
         Glide.with(this)
-            .load(imageUrl)
+            .load(model)
             .transition(DrawableTransitionOptions.withCrossFade())
             .into(binding.imageView)
     }

@@ -19,20 +19,16 @@ import androidx.core.content.res.use
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.graphics.withTranslation
 import androidx.core.text.toSpannable
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.google.android.material.imageview.ShapeableImageView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getFirstCharIsEmoji
-import com.sceyt.chatuikit.extensions.glideRequestListener
 import com.sceyt.chatuikit.extensions.processEmojiCompat
 import com.sceyt.chatuikit.extensions.roundUp
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
-import com.sceyt.chatuikit.presentation.extensions.applyError
-import com.sceyt.chatuikit.presentation.extensions.applyPlaceHolder
+import com.sceyt.chatuikit.presentation.helpers.AvatarImageLoader
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
 import com.sceyt.chatuikit.styles.common.AvatarStyle
@@ -213,21 +209,20 @@ class AvatarView @JvmOverloads constructor(
         } else StaticLayout(title, textPaint, width, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
     }
 
-    private fun loadAvatarImage(oldImageUrl: String?) {
+    private fun loadAvatarImage(oldImageUrl: String?, preloadForOffline: Boolean = true) {
         if (!imageUrl.isNullOrBlank() && imageUrl != oldImageUrl) {
-            avatarLoadCb?.invoke(true)
-
-            Glide.with(context.applicationContext)
-                .load(imageUrl)
-                .override(width)
-                .transition(DrawableTransitionOptions.withCrossFade(100))
-                .applyPlaceHolder(placeholder ?: AvatarPlaceholder.FromDrawable(defaultPlaceholder))
-                .applyError(errorPlaceholder
-                        ?: AvatarErrorPlaceHolder.FromDrawable(defaultPlaceholder))
-                .listener(glideRequestListener {
-                    avatarLoadCb?.invoke(false)
-                })
-                .into(this)
+            AvatarImageLoader.loadAvatar(
+                context = context.applicationContext,
+                imageUrl = imageUrl,
+                imageView = this,
+                placeholder = placeholder ?: AvatarPlaceholder.FromDrawable(defaultPlaceholder),
+                errorPlaceholder = errorPlaceholder
+                        ?: AvatarErrorPlaceHolder.FromDrawable(defaultPlaceholder),
+                loadCallback = { loading ->
+                    avatarLoadCb?.invoke(loading)
+                },
+                preloadForOffline = preloadForOffline
+            )
         } else {
             avatarLoadCb?.invoke(false)
         }
@@ -269,12 +264,12 @@ class AvatarView @JvmOverloads constructor(
         drawInitials(canvas, initials)
     }
 
-    fun setImageUrl(url: String?) {
+    fun setImageUrl(url: String?, preloadForOffline: Boolean = true) {
         val oldImageUrl = imageUrl
         imageUrl = url
         invalidate()
         setDefaultImageIfNeeded(defaultAvatar)
-        loadAvatarImage(oldImageUrl)
+        loadAvatarImage(oldImageUrl, preloadForOffline)
     }
 
     @Suppress("Unused")
@@ -329,7 +324,8 @@ class AvatarView @JvmOverloads constructor(
             val imageUrl: String?,
             val defaultAvatar: DefaultAvatar?,
             val placeholder: AvatarPlaceholder?,
-            val errorPlaceholder: AvatarErrorPlaceHolder?
+            val errorPlaceholder: AvatarErrorPlaceHolder?,
+            val preloadForOffline: Boolean
     ) {
 
         fun applyToAvatar() {
@@ -342,13 +338,14 @@ class AvatarView @JvmOverloads constructor(
             style.apply(this@AvatarView)
             setInitialsIfNeeded(defaultAvatar)
             setDefaultImageIfNeeded(defaultAvatar)
-            loadAvatarImage(oldImageUrl)
+            loadAvatarImage(oldImageUrl, preloadForOffline)
         }
     }
 
     @Suppress("Unused")
     inner class AppearanceBuilder {
         private var imageUrl = this@AvatarView.imageUrl
+        private var preloadForOffline: Boolean = true
         private var defaultAvatar = this@AvatarView.defaultAvatar
         private var placeholder: AvatarPlaceholder? = null
         private var errorPlaceholder: AvatarErrorPlaceHolder? = null
@@ -364,6 +361,10 @@ class AvatarView @JvmOverloads constructor(
 
         fun setImageUrl(url: String?) = apply {
             imageUrl = url
+        }
+
+        fun setPreloadForOffline(preload: Boolean) = apply {
+            preloadForOffline = preload
         }
 
         fun setDefaultAvatar(avatar: DefaultAvatar) = apply {
@@ -400,7 +401,8 @@ class AvatarView @JvmOverloads constructor(
             imageUrl = imageUrl,
             defaultAvatar = defaultAvatar,
             placeholder = placeholder,
-            errorPlaceholder = errorPlaceholder
+            errorPlaceholder = errorPlaceholder,
+            preloadForOffline = preloadForOffline
         )
     }
 }
