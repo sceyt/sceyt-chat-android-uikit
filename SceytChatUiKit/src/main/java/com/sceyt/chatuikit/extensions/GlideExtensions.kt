@@ -80,7 +80,7 @@ inline fun <reified T : Any> glideCustomTarget(
 
 inline fun <T : Any> glideRequestListener(
         crossinline onLoadFailed: (e: GlideException?) -> Unit = { },
-        crossinline onResourceReady: (T?) -> Unit = { },
+        crossinline onResourceReady: (T, Any, Target<T>?, DataSource, Boolean) -> Unit = { _, _, _, _, _ -> },
         crossinline onFinish: (Boolean) -> Unit = { }): RequestListener<T> {
     return object : RequestListener<T> {
 
@@ -91,7 +91,7 @@ inline fun <T : Any> glideRequestListener(
         }
 
         override fun onResourceReady(resource: T, model: Any, target: Target<T>?, dataSource: DataSource, isFirstResource: Boolean): Boolean {
-            onResourceReady.invoke(resource)
+            onResourceReady.invoke(resource, model, target, dataSource, isFirstResource)
             onFinish.invoke(true)
             return false
         }

@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.fil
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItem
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.styles.channel_info.link.ChannelInfoLinkItemStyle
+import androidx.core.graphics.drawable.toDrawable
 
 
 class LinkViewHolder(
@@ -78,7 +79,7 @@ class LinkViewHolder(
                     .placeholder(style.linkPreviewStyle.placeHolder)
                     .listener(glideRequestListener { success ->
                         if (success) {
-                            icLinkImage.background = ColorDrawable(Color.TRANSPARENT)
+                            icLinkImage.background = Color.TRANSPARENT.toDrawable()
                         } else
                             setDefaultStateLinkImage()
                     })

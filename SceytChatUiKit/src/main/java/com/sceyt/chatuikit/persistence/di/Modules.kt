@@ -140,7 +140,7 @@ internal val coroutineModule = module {
     single {
         CoroutineExceptionHandler { _, throwable ->
             if (BuildConfig.DEBUG)
-                SceytLog.e("Coroutine", "An exception accrued in base CoroutineExceptionHandler", throwable)
+                SceytLog.e("CoroutineExceptionHandler", "An exception accrued in base CoroutineExceptionHandler", throwable)
         }
     }
     single<CoroutineScope> { CoroutineScope(SupervisorJob()) }
