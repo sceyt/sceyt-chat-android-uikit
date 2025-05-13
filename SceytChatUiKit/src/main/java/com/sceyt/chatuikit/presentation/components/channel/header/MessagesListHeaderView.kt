@@ -21,10 +21,12 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.AppBarLayout
+import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -180,6 +182,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             return
         }
         post {
+            if (!ConnectionEventManager.isConnected) return@post
             if (!replyInThread) {
                 val title = style.subtitleFormatter.format(context, channel)
                 setSubTitleText(subjectTextView, title, title.isNotBlank() && !typingUsersHelper.isTyping)
@@ -321,6 +324,27 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     internal fun onPresenceUpdate(user: SceytUser) {
         eventListeners.onPresenceUpdateEvent(user)
+    }
+
+    internal fun onConnectionStateUpdate(state: ConnectionState) = post {
+        if (state == ConnectionState.Connected) {
+            val title = style.subtitleFormatter.format(context, channel)
+            setSubTitleText(
+                textView = binding.subTitle,
+                title = title,
+                visible = title.isNotBlank() && !typingUsersHelper.isTyping
+            )
+            return@post
+        }
+        val title = SceytChatUIKit.formatters.connectionStateTitleFormatter.format(
+            context = context,
+            from = state
+        )
+        setSubTitleText(
+            textView = binding.subTitle,
+            title = title,
+            visible = true
+        )
     }
 
     internal fun setToolbarActionHiddenCallback(callback: () -> Unit) {
