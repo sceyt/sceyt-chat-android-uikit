@@ -328,7 +328,7 @@ internal class PersistenceAttachmentLogicImpl(
         when (response) {
             is SceytResponse.Success -> {
                 if (response.data?.first.isNullOrEmpty()) return SceytResponse.Success(emptyList())
-                val attachments = response.data!!.first
+                val attachments = response.data.first
                 val usersMap = response.data.second
 
                 // Checking maybe all messages is exist in database

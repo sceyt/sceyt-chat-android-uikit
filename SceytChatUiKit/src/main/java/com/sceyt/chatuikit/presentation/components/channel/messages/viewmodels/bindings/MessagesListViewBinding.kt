@@ -35,6 +35,7 @@ import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.centerVisibleItemPosition
@@ -71,7 +72,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlin.collections.set
 
 @JvmName("bind")
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
@@ -642,20 +642,16 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    joinLiveData.observe(lifecycleOwner) {
-        if (it is SceytResponse.Success) {
-            it.data?.let { channel ->
-                checkEnableDisableActions(channel)
-            }
+    joinLiveData.observe(lifecycleOwner) { response ->
+        response.onSuccessNotNull { channel ->
+            checkEnableDisableActions(channel)
         }
     }
 
-    channelLiveData.observe(lifecycleOwner) {
-        if (it is SceytResponse.Success) {
-            it.data?.let { channel ->
-                checkEnableDisableActions(channel)
-                messagesListView.setUnreadCount(channel.newMessageCount)
-            }
+    channelLiveData.observe(lifecycleOwner) { response ->
+        response.onSuccessNotNull { channel ->
+            checkEnableDisableActions(channel)
+            messagesListView.setUnreadCount(channel.newMessageCount)
         }
     }
 
