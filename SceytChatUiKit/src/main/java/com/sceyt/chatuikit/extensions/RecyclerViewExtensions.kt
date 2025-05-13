@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.sceyt.chatuikit.logger.SceytLog
 import kotlin.math.abs
 
 
@@ -238,22 +237,9 @@ fun RecyclerView.smoothSnapToPosition(position: Int, snapMode: Int = LinearSmoot
     layoutManager?.startSmoothScroll(smoothScroller)
 }
 
-fun RecyclerView.runWhenReady(action: () -> Unit) {
-    if (!isComputingLayout)
-        action()
-    else {
-        SceytLog.i("RecyclerViewLogTag", "Computing layout")
-        post {
-            if (isComputingLayout) {
-                runWhenReady(action)
-            } else action()
-        }
-    }
-}
-
 fun DiffUtil.DiffResult.dispatchUpdatesToSafety(recyclerView: RecyclerView) {
     recyclerView.adapter?.let { adapter ->
-        recyclerView.runWhenReady {
+        recyclerView.post {
             dispatchUpdatesTo(adapter)
         }
     }
