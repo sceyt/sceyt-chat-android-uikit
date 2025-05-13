@@ -84,6 +84,7 @@ data class BackgroundStyle(
                 shape != Shape.UnsetShape || borderWidth != UNSET_SIZE ||
                 background != null
 
+    @Suppress("unused")
     internal class Builder(private val typedArray: TypedArray) {
         private var background: Drawable? = null
 

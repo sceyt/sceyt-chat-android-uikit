@@ -278,7 +278,6 @@ class AsyncListDiffer<T : Any>(
         throw lastException ?: RuntimeException("Failed after $maxAttempts attempts")
     }
 
-
     private fun addItemsImpl(
             items: List<T>,
             position: Int = -1,
