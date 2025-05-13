@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
@@ -201,9 +202,9 @@ class ChannelMembersViewModel(
             val response = channelsLogic.findOrCreatePendingChannelByMembers(CreateChannelData(
                 type = ChannelTypeEnum.Direct.value,
                 members = listOf(SceytMember(role = Role(RoleTypeEnum.Owner.value), user = user)),
-            ))
-            if (response is SceytResponse.Success)
-                _findOrCreateChatLiveData.postValue(response.data ?: return@launch)
+            )).onSuccessNotNull { data ->
+                _findOrCreateChatLiveData.postValue(data)
+            }
 
             notifyPageStateWithResponse(response)
         }

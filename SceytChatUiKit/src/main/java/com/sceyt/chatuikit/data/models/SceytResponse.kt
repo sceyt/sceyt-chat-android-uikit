@@ -29,6 +29,18 @@ inline fun <T> SceytResponse<T>.onSuccess(action: (value: T?) -> Unit): SceytRes
 
 @OptIn(ExperimentalContracts::class)
 @SinceKotlin("1.3")
+inline fun <T> SceytResponse<T>.onSuccessNotNull(action: (value: T) -> Unit): SceytResponse<T> {
+    contract {
+        callsInPlace(action, InvocationKind.AT_MOST_ONCE)
+    }
+    if (this is SceytResponse.Success && data != null)
+        action(data)
+
+    return this
+}
+
+@OptIn(ExperimentalContracts::class)
+@SinceKotlin("1.3")
 inline fun <T> SceytResponse<T>.onError(action: (value: SceytException?) -> Unit): SceytResponse<T> {
     contract {
         callsInPlace(action, InvocationKind.AT_MOST_ONCE)

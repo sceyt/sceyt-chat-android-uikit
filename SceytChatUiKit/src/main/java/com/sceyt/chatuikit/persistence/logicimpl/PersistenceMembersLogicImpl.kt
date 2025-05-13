@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.toMember
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
@@ -172,17 +173,14 @@ internal class PersistenceMembersLogicImpl(
     }
 
     override suspend fun changeChannelOwner(channelId: Long, newOwnerId: String): SceytResponse<SceytChannel> {
-        val response = channelsRepository.changeChannelOwner(channelId, newOwnerId)
-
-        if (response is SceytResponse.Success) {
-            response.data?.members?.firstOrNull()?.let { member ->
+        return channelsRepository.changeChannelOwner(channelId, newOwnerId).onSuccess { channel ->
+            channel?.members?.firstOrNull()?.let { member ->
                 memberDao.updateOwner(channelId = channelId, newOwnerId = member.id)
                 channelDao.getChannelById(channelId)?.let {
                     channelsCache.upsertChannel(it.toChannel())
                 }
             }
         }
-        return response
     }
 
     override suspend fun changeChannelMemberRole(channelId: Long, vararg member: SceytMember): SceytResponse<SceytChannel> {

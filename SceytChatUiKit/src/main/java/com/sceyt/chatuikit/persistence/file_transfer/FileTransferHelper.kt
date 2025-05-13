@@ -4,6 +4,7 @@ import android.util.Size
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.TAG
@@ -83,20 +84,19 @@ object FileTransferHelper : SceytKoinComponent {
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
-    fun TransferTask.getDownloadResultCallback() = TransferResultCallback {
-        when (it) {
-            is SceytResponse.Success -> {
+    fun TransferTask.getDownloadResultCallback() = TransferResultCallback { response ->
+        response.fold(
+            onSuccess = { filePath ->
                 val transferData = TransferData(attachment.messageTid, 100f,
-                    TransferState.Downloaded, it.data, attachment.url)
+                    TransferState.Downloaded, filePath, attachment.url)
 
                 attachment = attachment.getUpdatedWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData, attachment.fileSize)
                 scope.launch {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                 }
-            }
-
-            is SceytResponse.Error -> {
+            },
+            onError = { exception ->
                 val transferData = TransferData(
                     attachment.messageTid, attachment.progressPercent ?: 0f,
                     ErrorDownload, null, attachment.url)
@@ -106,9 +106,9 @@ object FileTransferHelper : SceytKoinComponent {
                 scope.launch {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                 }
-                SceytLog.e(this.TAG, "Couldn't download file url:${attachment.url} error:${it.message}")
+                SceytLog.e(this.TAG, "Couldn't download file url:${attachment.url} error:${exception?.message}")
             }
-        }
+        )
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
