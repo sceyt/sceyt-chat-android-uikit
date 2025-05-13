@@ -16,6 +16,7 @@ internal const val ATTACHMENT_PAYLOAD_TABLE = "sceyt_attachment_payload_table"
             parentColumns = ["tid"],
             childColumns = ["messageTid"],
             onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE,
             deferred = true
         )
     ],

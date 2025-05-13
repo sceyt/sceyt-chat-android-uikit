@@ -69,7 +69,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoDeleteMessageEntity::class,
         UserMetadataEntity::class,
     ],
-    version = 20,
+    version = 21,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
@@ -88,6 +88,7 @@ import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
         AutoMigration(from = 17, to = 18, spec = DatabaseMigrations.AutoMigrationSpec17To18::class),
         AutoMigration(from = 18, to = 19, spec = DatabaseMigrations.AutoMigrationSpec18To19::class),
         AutoMigration(from = 19, to = 20),
+        AutoMigration(from = 20, to = 21),
     ])
 
 @TypeConverters(ChannelConverter::class, MessageConverter::class, ListStringConverter::class)

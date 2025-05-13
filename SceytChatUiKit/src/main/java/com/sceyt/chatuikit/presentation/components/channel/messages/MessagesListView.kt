@@ -1,10 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages
 
-import android.R.attr.clipToPadding
-import android.R.attr.paddingBottom
-import android.R.attr.paddingLeft
-import android.R.attr.paddingRight
-import android.R.attr.paddingTop
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -14,7 +9,6 @@ import android.view.View
 import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.appcompat.view.ContextThemeWrapper
-import androidx.appcompat.widget.PopupMenu
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.util.Predicate
 import androidx.core.view.isVisible
@@ -27,6 +21,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
 import com.sceyt.chatuikit.databinding.SceytMessagesListViewBinding
 import com.sceyt.chatuikit.extensions.TAG
@@ -41,6 +36,7 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.setClipboard
 import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.media.audio.AudioFocusHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
 import com.sceyt.chatuikit.persistence.differs.diff
@@ -91,8 +87,8 @@ import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoActivity
 import com.sceyt.chatuikit.presentation.extensions.getUpdateMessage
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.setPageStateViews
+import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -113,6 +109,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     private var onWindowFocusChangeListener: ((Boolean) -> Unit)? = null
     private var multiselectDestination: Map<Long, SceytMessage>? = null
     private var forceDisabledActions = false
+    private val audioFocusHelper = AudioFocusHelper(context)
     val style: MessagesListViewStyle
     var enabledActions = true
         private set
@@ -149,6 +146,12 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
         if (isInEditMode)
             binding.scrollDownView.isVisible = style.enableScrollDownButton
+
+        audioFocusHelper.setListeners { hasFocus ->
+            if (hasFocus) {
+                AudioPlayerHelper.stopAll()
+            }
+        }
     }
 
     private fun initClickListeners() {
@@ -196,12 +199,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             override fun onReactionClick(view: View, item: ReactionItem.Reaction, message: SceytMessage) {
                 checkMaybeInMultiSelectMode(view, message) {
                     clickListeners.onReactionClick(view, item, message)
-                }
-            }
-
-            override fun onReactionLongClick(view: View, item: ReactionItem.Reaction, message: SceytMessage) {
-                checkMaybeInMultiSelectMode(view, message) {
-                    clickListeners.onReactionLongClick(view, item, message)
                 }
             }
 
@@ -311,23 +308,6 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 Handler(Looper.getMainLooper()).postDelayed({ reactionsPopupWindow = null }, 100)
             }
         }
-    }
-
-    private fun showReactionActionsPopup(view: View, reaction: ReactionItem.Reaction, message: SceytMessage) {
-        val popup = PopupMenu(ContextThemeWrapper(context, R.style.SceytPopupMenuStyle), view)
-        popup.inflate(R.menu.sceyt_menu_popup_reacton)
-        val containsSelf = reaction.reaction.containsSelf
-        popup.menu.findItem(R.id.sceyt_add).isVisible = !containsSelf
-        popup.menu.findItem(R.id.sceyt_remove).isVisible = containsSelf
-
-        popup.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.sceyt_add -> reactionClickListeners.onAddReaction(message, reaction.reaction.key)
-                R.id.sceyt_remove -> reactionClickListeners.onRemoveReaction(message, reaction)
-            }
-            false
-        }
-        popup.show()
     }
 
     private fun showMessageActionsPopup(view: View, message: SceytMessage) {
@@ -879,7 +859,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onAvatarClick(view: View, item: MessageItem) {
-        messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(view, item.message.user?.id
+        messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(item.message.user?.id
                 ?: return))
     }
 
@@ -900,17 +880,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         context.getFragmentManager()?.let {
             ReactionsInfoBottomSheetFragment.newInstance(message).also { fragment ->
                 fragment.setClickListener { reaction ->
-                    if (reaction.user?.id == SceytChatUIKit.chatUIFacade.myId)
-                        reactionClickListeners.onRemoveReaction(message,
-                            ReactionItem.Reaction(SceytReactionTotal(reaction.key, containsSelf = true), message.tid, reaction.pending))
+                    reactionClickListeners.onReactionClick(message, reaction)
                 }
             }.show(it, null)
         }
-    }
-
-    override fun onReactionLongClick(view: View, item: ReactionItem.Reaction, message: SceytMessage) {
-        if (enabledActions)
-            showReactionActionsPopup(view, item, message)
     }
 
     override fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage) {
@@ -932,7 +905,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onMentionClick(view: View, userId: String) {
-        messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(view, userId))
+        messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(userId))
     }
 
     override fun onAttachmentLoaderClick(view: View, item: FileListItem, message: SceytMessage) {
@@ -1013,5 +986,23 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onRemoveReaction(message: SceytMessage, reactionItem: ReactionItem.Reaction) {
         reactionEventListener?.invoke(ReactionEvent.RemoveReaction(message, reactionItem.reaction.key))
+    }
+
+    override fun onReactionClick(message: SceytMessage, reaction: SceytReaction) {
+        val userId = reaction.user?.id ?: return
+        if (userId == SceytChatUIKit.chatUIFacade.myId) {
+            onRemoveReaction(
+                message = message,
+                reactionItem = ReactionItem.Reaction(
+                    reaction = SceytReactionTotal(
+                        key = reaction.key, containsSelf = true
+                    ),
+                    messageTid = message.tid,
+                    isPending = reaction.pending
+                )
+            )
+        } else {
+            messageCommandEventListener?.invoke(MessageCommandEvent.UserClick(userId))
+        }
     }
 }

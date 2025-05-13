@@ -23,9 +23,9 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
 class FragmentReactedUsers : Fragment, SceytKoinComponent {
-    constructor() : super()
+    constructor()
 
-    constructor(style: ReactedUserListStyle) : super() {
+    constructor(style: ReactedUserListStyle) {
         this.style = style
     }
 

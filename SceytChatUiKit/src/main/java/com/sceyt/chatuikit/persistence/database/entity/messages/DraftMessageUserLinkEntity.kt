@@ -14,6 +14,7 @@ internal const val DRAFT_MESSAGE_USER_LINK_TABLE = "sceyt_draft_message_user_lin
         parentColumns = ["chatId"],
         childColumns = ["chatId"],
         onDelete = ForeignKey.CASCADE,
+        onUpdate = ForeignKey.CASCADE,
         deferred = true
     )])
 internal data class DraftMessageUserLinkEntity(

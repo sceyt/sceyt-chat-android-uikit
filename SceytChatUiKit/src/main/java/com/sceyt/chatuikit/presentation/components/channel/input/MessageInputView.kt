@@ -1,7 +1,8 @@
 package com.sceyt.chatuikit.presentation.components.channel.input
 
-import android.R.attr.text
+import android.app.Activity
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
@@ -105,8 +106,6 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
-import kotlin.collections.firstOrNull
-import kotlin.collections.map
 
 @Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
 class MessageInputView @JvmOverloads constructor(
@@ -364,6 +363,8 @@ class MessageInputView @JvmOverloads constructor(
                 audioRecorderHelper.startRecording(directoryToSaveRecording) {}
                 binding.layoutInput.isInvisible = true
                 voiceRecorderView?.keepScreenOn = true
+
+                (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
             }
 
             override fun onRecordingCompleted(shouldShowPreview: Boolean) {
@@ -374,6 +375,8 @@ class MessageInputView @JvmOverloads constructor(
                 audioRecorderHelper.cancelRecording()
                 finishRecording()
                 voiceRecorderView?.keepScreenOn = false
+
+                (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             }
         })
     }
@@ -392,6 +395,8 @@ class MessageInputView @JvmOverloads constructor(
             tryToSendRecording(file, amplitudes.toIntArray(), duration)
         }
         voiceRecorderView?.keepScreenOn = false
+
+        (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     }
 
     private fun showRecordPreview(file: File?, amplitudes: Array<Int>, duration: Int) {

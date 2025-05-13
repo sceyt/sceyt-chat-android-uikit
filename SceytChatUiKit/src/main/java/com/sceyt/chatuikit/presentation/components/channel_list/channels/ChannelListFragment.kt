@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.connectivity_change.NetworkMonitor
 import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -66,18 +65,15 @@ class ChannelListFragment : Fragment() {
     }
 
     private fun setupConnectionStatus(state: ConnectionState) {
-        val title = if (!NetworkMonitor.isOnline())
-            getString(R.string.sceyt_waiting_for_network_title)
-        else when (state) {
-            ConnectionState.Failed -> getString(R.string.sceyt_connecting_title)
-            ConnectionState.Disconnected -> getString(R.string.sceyt_connecting_title)
-            ConnectionState.Reconnecting,
-            ConnectionState.Connecting,
-            -> getString(R.string.sceyt_connecting_title)
-
-            ConnectionState.Connected -> getString(R.string.sceyt_chats)
+        if (state == ConnectionState.Connected) {
+            binding.title.text = getString(R.string.sceyt_chats)
+            return
         }
-        binding.title.text = title
+
+        binding.title.text = SceytChatUIKit.formatters.connectionStateTitleFormatter.format(
+            requireContext(),
+            state
+        )
     }
 
     private fun SceytFragmentChannelsBinding.applyStyle() {
