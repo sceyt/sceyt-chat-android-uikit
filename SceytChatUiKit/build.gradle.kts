@@ -31,9 +31,24 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-    
+
     publishing {
         singleVariant("release") {}
+    }
+}
+
+val mockitoAgent = configurations.create("mockitoAgent")
+tasks.withType<Test>().configureEach {
+    // Find the specific byte-buddy-agent JAR from the configuration
+    val byteBuddyAgentJar = mockitoAgent.files.find { it.name.startsWith("byte-buddy-agent") }
+
+    // Ensure the JAR was found before adding the jvmArgs
+    if (byteBuddyAgentJar != null) {
+        @Suppress("USELESS_ELVIS")
+        jvmArgs = (jvmArgs ?: emptyList()) + "-javaagent:${byteBuddyAgentJar.absolutePath}"
+    } else {
+        // Log a warning or error if the byte-buddy-agent JAR is not found
+        logger.warn("Byte-buddy-agent JAR not found in the 'mockitoAgent' configuration.")
     }
 }
 
@@ -96,4 +111,6 @@ dependencies {
     // Needed JUnit version
     testImplementation(libs.koin.test.junit4)
     androidTestImplementation(libs.koin.test.junit4)
+
+    mockitoAgent(libs.mockito.inline)
 }
