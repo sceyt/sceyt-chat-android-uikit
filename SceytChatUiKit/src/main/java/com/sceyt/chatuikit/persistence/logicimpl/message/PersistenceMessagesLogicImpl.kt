@@ -1215,22 +1215,23 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun onMarkerResponse(
             channelId: Long,
             response: SceytResponse<MessageListMarker>,
-            status: String,
+            marker: String,
             vararg ids: Long
     ) {
         when (response) {
             is SceytResponse.Success -> {
                 response.data?.let { data ->
-                    SceytLog.i("onMarkerResponse", "send $status, ${ids.toList()}, in response ${data.messageIds}")
+                    SceytLog.i("onMarkerResponse", "send $marker, ${ids.toList()}, in response ${data.messageIds}, " +
+                            "marker: ${marker}, name: ${data.name}")
                     val responseIds = data.messageIds.toList()
 
-                    status.toDeliveryStatus()?.let { deliveryStatus ->
+                    marker.toDeliveryStatus()?.let { deliveryStatus ->
                         messageDao.updateMessagesStatus(channelId, responseIds, deliveryStatus)
                         val tIds = messageDao.getMessageTIdsByIds(*responseIds.toLongArray())
                         messagesCache.updateMessagesStatus(channelId, deliveryStatus, *tIds.toLongArray())
                     }
 
-                    pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, status)
+                    pendingMarkerDao.deleteMessagesMarkersByStatus(responseIds, marker)
                     myId?.let { userId ->
                         messageDao.insertUserMarkersIfExistMessage(responseIds.map {
                             MarkerEntity(messageId = it, userId = userId, name = data.name)
@@ -1243,7 +1244,7 @@ internal class PersistenceMessagesLogicImpl(
                 // Check if error code is 1301 (TypeNotAllowed), 1228 (TypeBadParam) then delete pending markers
                 val code = response.exception?.code
                 if (code == 1301 || code == 1228)
-                    pendingMarkerDao.deleteMessagesMarkersByStatus(ids.toList(), status)
+                    pendingMarkerDao.deleteMessagesMarkersByStatus(ids.toList(), marker)
             }
         }
     }

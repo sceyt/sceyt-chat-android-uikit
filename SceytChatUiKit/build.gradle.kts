@@ -31,6 +31,10 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    
+    publishing {
+        singleVariant("release") {}
+    }
 }
 
 dependencies {
@@ -47,7 +51,6 @@ dependencies {
     api(libs.glide.transformations)
     api(libs.ion)
     api(libs.firebase.messaging.ktx)
-    api(libs.play.services.base)
     api(libs.lifecycle.process)
     ksp(libs.room.compiler)
     api(libs.room.runtime)

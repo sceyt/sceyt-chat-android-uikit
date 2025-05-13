@@ -3,10 +3,10 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.listeners.c
 import android.view.View
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
-import com.sceyt.chatuikit.presentation.components.channel.messages.components.ScrollToDownView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
+import com.sceyt.chatuikit.presentation.components.channel.messages.components.ScrollToDownView
 
 open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var defaultListeners: MessageClickListeners.ClickListeners? = null
@@ -16,7 +16,6 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var replyMessageContainerClickListener: MessageClickListeners.ReplyMessageContainerClickListener? = null
     private var replyCountClickListener: MessageClickListeners.ReplyCountClickListener? = null
     private var addReactionClickListener: MessageClickListeners.AddReactionClickListener? = null
-    private var reactionLongClickListener: MessageClickListeners.ReactionLongClickListener? = null
     private var reactionClickListener: MessageClickListeners.ReactionClickListener? = null
     private var attachmentClickListener: MessageClickListeners.AttachmentClickListener? = null
     private var attachmentLongClickListener: MessageClickListeners.AttachmentLongClickListener? = null
@@ -66,11 +65,6 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     override fun onReactionClick(view: View, item: ReactionItem.Reaction, message: SceytMessage) {
         defaultListeners?.onReactionClick(view, item, message)
         reactionClickListener?.onReactionClick(view, item, message)
-    }
-
-    override fun onReactionLongClick(view: View, item: ReactionItem.Reaction, message: SceytMessage) {
-        defaultListeners?.onReactionLongClick(view, item, message)
-        reactionLongClickListener?.onReactionLongClick(view, item, message)
     }
 
     override fun onAttachmentClick(view: View, item: FileListItem, message: SceytMessage) {
@@ -123,7 +117,6 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 replyCountClickListener = listener
                 addReactionClickListener = listener
                 reactionClickListener = listener
-                reactionLongClickListener = listener
                 attachmentClickListener = listener
                 attachmentLongClickListener = listener
                 mentionUserClickListener = listener
@@ -162,10 +155,6 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 reactionClickListener = listener
             }
 
-            is MessageClickListeners.ReactionLongClickListener -> {
-                reactionLongClickListener = listener
-            }
-
             is MessageClickListeners.AttachmentClickListener -> {
                 attachmentClickListener = listener
             }
@@ -201,7 +190,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     }
 
     internal fun withDefaultListeners(
-        listener: MessageClickListeners.ClickListeners
+            listener: MessageClickListeners.ClickListeners
     ): MessageClickListenersImpl {
         defaultListeners = listener
         return this

@@ -13,7 +13,8 @@ internal const val AUTO_DELETE_MESSAGES_TABLE = "sceyt_auto_delete_messages_tabl
             entity = MessageEntity::class,
             parentColumns = ["tid"],
             childColumns = ["messageTid"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE,
         )
     ])
 internal class AutoDeleteMessageEntity(

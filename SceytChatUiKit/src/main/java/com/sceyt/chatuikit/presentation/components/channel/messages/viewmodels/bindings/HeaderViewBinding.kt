@@ -2,6 +2,9 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import com.sceyt.chat.models.ConnectionState
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
+import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.persistence.extensions.getPeer
@@ -11,15 +14,19 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.services.SceytPresenceChecker
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 
 @JvmName("bind")
-fun MessageListViewModel.bind(headerView: MessagesListHeaderView,
-                              replyInThreadMessage: SceytMessage?,
-                              lifecycleOwner: LifecycleOwner) {
+fun MessageListViewModel.bind(
+        headerView: MessagesListHeaderView,
+        replyInThreadMessage: SceytMessage?,
+        lifecycleOwner: LifecycleOwner
+) {
 
     messageActionBridge.setHeaderView(headerView)
 
@@ -42,6 +49,17 @@ fun MessageListViewModel.bind(headerView: MessagesListHeaderView,
                 }
             }.launchIn(lifecycleOwner.lifecycleScope)
     }
+
+    ConnectionEventManager.onChangedConnectStatusFlow
+        .stateIn(
+            lifecycleOwner.lifecycleScope,
+            started = SharingStarted.Lazily,
+            initialValue = ConnectionStateData(ConnectionEventManager.connectionState)
+        )
+        .onEach { state ->
+            state.state?.let { headerView.onConnectionStateUpdate(it) }
+        }
+        .launchIn(lifecycleOwner.lifecycleScope)
 
     ChannelsCache.channelUpdatedFlow
         .filter { it.channel.id == channel.id }

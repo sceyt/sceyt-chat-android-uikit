@@ -35,6 +35,7 @@ import com.sceyt.chatuikit.data.models.messages.MarkerType
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.centerVisibleItemPosition
@@ -71,7 +72,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlin.collections.set
 
 @JvmName("bind")
 fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner: LifecycleOwner) {
@@ -374,9 +374,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             if (data.missingMessages.isNotEmpty()) {
                 val items = messagesListView.getData().toMutableList()
-                items.findIndexed { it is MessageItem && it.message.id == data.centerMessageId }?.let {
-                    val index = it.first
-
+                items.findIndexed {
+                    it is MessageItem && it.message.id == data.centerMessageId
+                }?.let { (index) ->
                     val topOffset = messagesListView.getMessagesRecyclerView().getChildTopByPosition(index)
                     val compareMessage = getCompareMessage(LoadNear, data.missingMessages)
 
@@ -390,9 +390,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     withContext(Dispatchers.Main) {
                         messagesListView.setMessagesList(filtered.toList())
 
-                        val position = items.findIndexed { item ->
+                        val (position) = items.findIndexed { item ->
                             item is MessageItem && item.message.id == data.centerMessageId
-                        }?.first ?: return@withContext
+                        } ?: return@withContext
 
                         if (messagesListView.getMessagesRecyclerView().isThePositionVisible(position))
                             messagesListView.scrollToMessage(data.centerMessageId, false, topOffset)
@@ -642,20 +642,16 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    joinLiveData.observe(lifecycleOwner) {
-        if (it is SceytResponse.Success) {
-            it.data?.let { channel ->
-                checkEnableDisableActions(channel)
-            }
+    joinLiveData.observe(lifecycleOwner) { response ->
+        response.onSuccessNotNull { channel ->
+            checkEnableDisableActions(channel)
         }
     }
 
-    channelLiveData.observe(lifecycleOwner) {
-        if (it is SceytResponse.Success) {
-            it.data?.let { channel ->
-                checkEnableDisableActions(channel)
-                messagesListView.setUnreadCount(channel.newMessageCount)
-            }
+    channelLiveData.observe(lifecycleOwner) { response ->
+        response.onSuccessNotNull { channel ->
+            checkEnableDisableActions(channel)
+            messagesListView.setUnreadCount(channel.newMessageCount)
         }
     }
 
@@ -742,7 +738,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             }
 
             is MessageCommandEvent.UserClick -> {
-                if (event.userId == SceytChatUIKit.chatUIFacade.myId) return@setMessageCommandEventListener
+                if (event.userId == SceytChatUIKit.chatUIFacade.myId)
+                    return@setMessageCommandEventListener
+
                 viewModelScope.launch(Dispatchers.IO) {
                     val user = userInteractor.getUserFromDbById(event.userId)
                             ?: SceytUser(event.userId)
@@ -752,7 +750,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                     ))
                     if (response is SceytResponse.Success)
                         response.data?.let {
-                            ChannelInfoActivity.launch(event.view.context, response.data)
+                            ChannelInfoActivity.launch(messagesListView.context, response.data)
                         }
                 }
             }
