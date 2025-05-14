@@ -1,14 +1,55 @@
+import com.sceyt.chat.Config
 import com.sceyt.chat.MainGradlePlugin
+import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("androidx.room")
+    id("com.vanniktech.maven.publish") version "0.28.0"
+    `maven-publish`
 }
 
 apply<MainGradlePlugin>()
-apply(from = "${rootProject.projectDir}/maven-publish/publish-module.gradle")
+
+mavenPublishing {
+    coordinates(
+        groupId = Config.mavenCentralGroup,
+        artifactId = Config.mavenCentralArtifactId,
+        version = Config.mavenCentralVersion
+    )
+
+    pom {
+        name.set(Config.mavenCentralArtifactId)
+        description.set("Sceyt Chat Android UIKit")
+        url.set("https://github.com/sceyt/sceyt-chat-android-uikit")
+
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://github.com/sceyt/sceyt-chat-android-uikit/blob/master/LICENSE")
+            }
+        }
+
+        developers {
+            developer {
+                id.set("maratsct")
+                name.set("Marat Hambikyan")
+                email.set("marat@sceyt.com")
+            }
+        }
+
+        scm {
+            connection.set("scm:git:github.com/sceyt/sceyt-chat-android-uikit.git")
+            developerConnection.set("scm:git:ssh://github.com/sceyt/sceyt-chat-android-uikit.git")
+            url.set("https://github.com/sceyt/sceyt-chat-android-uikit/tree/master")
+        }
+    }
+
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    signAllPublications()
+}
 
 room {
     schemaDirectory("$projectDir/schemas")
@@ -30,10 +71,6 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
-    }
-
-    publishing {
-        singleVariant("release") {}
     }
 }
 
