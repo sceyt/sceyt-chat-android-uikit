@@ -3,7 +3,9 @@ package com.sceyt.chat
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
 import org.gradle.api.Project
+import org.gradle.api.publish.PublishingExtension
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.getByType
 import java.io.File
 import java.util.Properties
 
@@ -48,8 +50,32 @@ fun Project.configureMavenPublishing() {
             }
         }
 
-        publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+        if (Config.mavenCentralVersion.contains("-SNAPSHOT")) {
+            publishSnapshotToMavenCentral()
+        } else {
+            // For release versions, use the Central Portal
+            publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+        }
+
         signAllPublications()
+    }
+}
+
+private fun Project.publishSnapshotToMavenCentral() {
+    // For SNAPSHOT versions, we need to manually add the repository
+    afterEvaluate {
+        // Access the publishing extension after plugins are applied
+        val publishing = project.extensions.getByType<PublishingExtension>()
+        publishing.repositories {
+            maven {
+                name = "sonatypeSnapshot"
+                setUrl("https://central.sonatype.com/repository/maven-snapshots/")
+                credentials {
+                    username = project.findProperty("mavenCentralUsername") as String?
+                    password = project.findProperty("mavenCentralPassword") as String?
+                }
+            }
+        }
     }
 }
 
@@ -83,7 +109,6 @@ private fun copyCredentialsToGradleProperties(project: Project) {
         val propertiesToCopy = listOf(
             "mavenCentralUsername",
             "mavenCentralPassword",
-            "sonatypeStagingProfileId",
             "signing.keyId",
             "signing.password",
             "signing.secretKeyRingFile"

@@ -96,5 +96,4 @@ dependencies {
     // Needed JUnit version
     testImplementation(libs.koin.test.junit4)
     androidTestImplementation(libs.koin.test.junit4)
-
 }
