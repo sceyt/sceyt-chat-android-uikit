@@ -1,55 +1,17 @@
-import com.sceyt.chat.Config
 import com.sceyt.chat.MainGradlePlugin
-import com.vanniktech.maven.publish.SonatypeHost
+import com.sceyt.chat.configureMavenPublishing
+import com.sceyt.chat.configureMockitoAgent
 
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("androidx.room")
-    id("com.vanniktech.maven.publish") version "0.28.0"
-    `maven-publish`
 }
 
 apply<MainGradlePlugin>()
-
-mavenPublishing {
-    coordinates(
-        groupId = Config.mavenCentralGroup,
-        artifactId = Config.mavenCentralArtifactId,
-        version = Config.mavenCentralVersion
-    )
-
-    pom {
-        name.set(Config.mavenCentralArtifactId)
-        description.set("Sceyt Chat Android UIKit")
-        url.set("https://github.com/sceyt/sceyt-chat-android-uikit")
-
-        licenses {
-            license {
-                name.set("MIT License")
-                url.set("https://github.com/sceyt/sceyt-chat-android-uikit/blob/master/LICENSE")
-            }
-        }
-
-        developers {
-            developer {
-                id.set("maratsct")
-                name.set("Marat Hambikyan")
-                email.set("marat@sceyt.com")
-            }
-        }
-
-        scm {
-            connection.set("scm:git:github.com/sceyt/sceyt-chat-android-uikit.git")
-            developerConnection.set("scm:git:ssh://github.com/sceyt/sceyt-chat-android-uikit.git")
-            url.set("https://github.com/sceyt/sceyt-chat-android-uikit/tree/master")
-        }
-    }
-
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
-    signAllPublications()
-}
+configureMavenPublishing()
+val mockitoAgent = configureMockitoAgent()
 
 room {
     schemaDirectory("$projectDir/schemas")
@@ -71,21 +33,6 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
-    }
-}
-
-val mockitoAgent = configurations.create("mockitoAgent")
-tasks.withType<Test>().configureEach {
-    // Find the specific byte-buddy-agent JAR from the configuration
-    val byteBuddyAgentJar = mockitoAgent.files.find { it.name.startsWith("byte-buddy-agent") }
-
-    // Ensure the JAR was found before adding the jvmArgs
-    if (byteBuddyAgentJar != null) {
-        @Suppress("USELESS_ELVIS")
-        jvmArgs = (jvmArgs ?: emptyList()) + "-javaagent:${byteBuddyAgentJar.absolutePath}"
-    } else {
-        // Log a warning or error if the byte-buddy-agent JAR is not found
-        logger.warn("Byte-buddy-agent JAR not found in the 'mockitoAgent' configuration.")
     }
 }
 
@@ -139,8 +86,9 @@ dependencies {
     testImplementation(libs.truth)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockito.core)
-    testImplementation(libs.mockito.inline)
     testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.mockito.inline)
+    mockitoAgent(libs.mockito.inline)
 
     // Koin testing tools
     testImplementation(libs.koin.test)
@@ -149,5 +97,4 @@ dependencies {
     testImplementation(libs.koin.test.junit4)
     androidTestImplementation(libs.koin.test.junit4)
 
-    mockitoAgent(libs.mockito.inline)
 }
