@@ -10,11 +10,11 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.models.SendMessageResult
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
-import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.copyFile
 import com.sceyt.chatuikit.extensions.extractLinks
 import com.sceyt.chatuikit.extensions.getFileSize
+import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.mappers.getAttachmentType
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicInteger
 class ShareViewModel : BaseViewModel(), SceytKoinComponent {
     private val messageInteractor by inject<MessageInteractor>()
     private val application by inject<Application>()
-    val sharedUris = mutableListOf<Uri>()
 
     fun sendTextMessage(vararg channelIds: Long, body: String) = callbackFlow {
         trySend(State.Loading)

@@ -76,7 +76,7 @@ internal fun databaseModule(enableDatabase: Boolean) = module {
             Room.inMemoryDatabaseBuilder(context, SceytDatabase::class.java)
 
         return builder
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .addMigrations(DatabaseMigrations.Migration_15_16, DatabaseMigrations.Migration_16_17)
             .allowMainThreadQueries()
             .build()
@@ -140,7 +140,7 @@ internal val coroutineModule = module {
     single {
         CoroutineExceptionHandler { _, throwable ->
             if (BuildConfig.DEBUG)
-                SceytLog.e("Coroutine", "An exception accrued in base CoroutineExceptionHandler", throwable)
+                SceytLog.e("CoroutineExceptionHandler", "An exception accrued in base CoroutineExceptionHandler", throwable)
         }
     }
     single<CoroutineScope> { CoroutineScope(SupervisorJob()) }

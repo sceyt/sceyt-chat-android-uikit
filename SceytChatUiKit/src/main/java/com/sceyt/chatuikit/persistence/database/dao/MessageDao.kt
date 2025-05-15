@@ -31,7 +31,6 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.REACTION_TOTAL_T
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
-import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.mappers.toAttachmentPayLoad
 import kotlinx.coroutines.flow.Flow
 import kotlin.math.max
@@ -249,84 +248,84 @@ internal abstract class MessageDao {
         insertUserMarkers(filtered)
     }
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("select * from $MESSAGE_TABLE as message " +
-            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
-            "and range.startId <= :lastMessageId and range.endId >= :lastMessageId " +
+            "join $LOAD_RANGE_TABLE as loadRange on loadRange.channelId = :channelId " +
+            "and loadRange.startId <= :lastMessageId and loadRange.endId >= :lastMessageId " +
             "where message.channelId =:channelId and message_id <:lastMessageId " +
-            "and (message_id >= range.startId and message_id <= range.endId)" +
+            "and (message_id >= loadRange.startId and message_id <= loadRange.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
             "group by message.message_id " +
             "order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessages(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("select * from $MESSAGE_TABLE as message " +
-            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
-            "and range.startId <= :lastMessageId and range.endId >= :lastMessageId " +
+            "join $LOAD_RANGE_TABLE as loadRange on loadRange.channelId = :channelId " +
+            "and loadRange.startId <= :lastMessageId and loadRange.endId >= :lastMessageId " +
             "where message.channelId =:channelId and message_id <=:lastMessageId " +
-            "and (message_id >= range.startId and message_id <= range.endId)" +
+            "and (message_id >= loadRange.startId and message_id <= loadRange.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
             "group by message.message_id " +
             "order by createdAt desc, tid desc limit :limit")
     abstract suspend fun getOldestThenMessagesInclude(channelId: Long, lastMessageId: Long, limit: Int): List<MessageDb>
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("select * from $MESSAGE_TABLE as message " +
-            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
-            "and range.startId <= :messageId and range.endId >= :messageId " +
+            "join $LOAD_RANGE_TABLE as loadRange on loadRange.channelId = :channelId " +
+            "and loadRange.startId <= :messageId and loadRange.endId >= :messageId " +
             "where message.channelId =:channelId and message_id >:messageId " +
-            "and (message_id >= range.startId and message_id <= range.endId)" +
+            "and (message_id >= loadRange.startId and message_id <= loadRange.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
             "group by message.message_id " +
             "order by createdAt, tid limit :limit")
     abstract suspend fun getNewestThenMessage(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
+    @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
     @Transaction
     @Query("select * from $MESSAGE_TABLE as message " +
-            "join $LOAD_RANGE_TABLE as range on range.channelId = :channelId " +
-            "and range.startId <= :messageId and range.endId >= :messageId " +
+            "join $LOAD_RANGE_TABLE as loadRange on loadRange.channelId = :channelId " +
+            "and loadRange.startId <= :messageId and loadRange.endId >= :messageId " +
             "where message.channelId =:channelId and message_id >=:messageId " +
-            "and (message_id >= range.startId and message_id <= range.endId)" +
+            "and (message_id >= loadRange.startId and message_id <= loadRange.endId)" +
             "and not unList and deliveryStatus != $PENDING_STATUS " +
             "group by message.message_id " +
             "order by createdAt, tid limit :limit")
     abstract suspend fun getNewestThenMessageInclude(channelId: Long, messageId: Long, limit: Int): List<MessageDb>
 
     @Transaction
-    open suspend fun getNearMessages(channelId: Long, messageId: Long, limit: Int): LoadNearData<MessageDb> {
-        var newest = getNewestThenMessageInclude(channelId, messageId, limit)
-        val includesInNewest = newest.firstOrNull()?.messageEntity?.id == messageId
-
-        newest = if (includesInNewest) { // Remove first message because because it will include in oldest
-            newest.toArrayList().apply { removeAt(0) }
-        } else emptyList()
-
+    open suspend fun getNearMessages(
+            channelId: Long,
+            messageId: Long,
+            limit: Int
+    ): LoadNearData<MessageDb> {
         var oldest = getOldestThenMessagesInclude(channelId, messageId, limit).reversed()
         val includesInOldest = oldest.lastOrNull()?.messageEntity?.id == messageId
 
+        // If the message not exist then return empty list
         if (!includesInOldest)
-            oldest = emptyList()
-
-        if (!includesInOldest && !includesInNewest)
             return LoadNearData(emptyList(), hasNext = false, hasPrev = false)
 
-        val newestDiff = max(limit / 2 - newest.size, 0)
+        var newest = getNewestThenMessage(channelId, messageId, limit)
+        val halfLimit = limit / 2
+
+        val newestDiff = max(halfLimit - newest.size, 0)
         val oldestDiff = max((limit.toDouble() / 2).roundUp() - oldest.size, 0)
 
-        var newMessages = newest.take(limit / 2 + oldestDiff)
-        val oldMessages = oldest.takeLast(limit / 2 + newestDiff)
+        var newMessages = newest.take(halfLimit + oldestDiff)
+        val oldMessages = oldest.takeLast(halfLimit + newestDiff)
 
-        if (oldMessages.size < limit && newMessages.size > limit / 2)
+        if (oldMessages.size < limit && newMessages.size > halfLimit)
             newMessages = newest.take(limit - oldMessages.size)
 
-        val hasPrev = oldest.size >= limit / 2
-        val hasNext = newest.size >= limit / 2
-        return LoadNearData((oldMessages + newMessages).sortedBy { it.messageEntity.createdAt }, hasNext = hasNext, hasPrev)
+        val hasPrev = oldest.size > halfLimit
+        val hasNext = newest.size > halfLimit
+
+        val data = (oldMessages + newMessages).sortedBy { it.messageEntity.createdAt }
+        return LoadNearData(data, hasNext = hasNext, hasPrev)
     }
 
     @Transaction

@@ -10,10 +10,8 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper.buildWithAttributes
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.styles.ChannelItemStyle
@@ -44,7 +42,6 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
         DeliveryStatus.Sent -> icons.sentIcon
         DeliveryStatus.Received -> icons.receivedIcon
         DeliveryStatus.Displayed -> icons.displayedIcon
-        else -> null
     }
     icon?.let {
         decoratedTextView.appearanceBuilder()
@@ -83,10 +80,6 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
         DeliveryStatus.Sent -> icons.sentIcon
         DeliveryStatus.Received -> icons.receivedIcon
         DeliveryStatus.Displayed -> icons.displayedIcon
-        else -> {
-            SceytLog.e(TAG, "Unknown delivery status: $deliveryStatus for message: $id, tid: $tid, body: $body")
-            null
-        }
     }
     icon?.let {
         decoratedTextView.appearanceBuilder()
@@ -140,7 +133,7 @@ fun SceytAttachment?.getShowName(context: Context): String {
     }
 }
 
-fun SceytAttachment?.checkLoadedFileIsCorrect(loadedFile: File): File? {
+fun SceytAttachment?.isAttachmentExistAndFullyLoaded(loadedFile: File): File? {
     if (this == null) return null
 
     if (loadedFile.exists() && getFileSize(loadedFile.path) == fileSize)

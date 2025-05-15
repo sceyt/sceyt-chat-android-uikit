@@ -14,6 +14,7 @@ internal const val MENTION_USER_MESSAGE_LINK_TABLE = "sceyt_mention_user_message
             parentColumns = ["tid"],
             childColumns = ["messageTid"],
             onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE,
             deferred = true
         )
     ], primaryKeys = ["messageTid", "user_id"])
