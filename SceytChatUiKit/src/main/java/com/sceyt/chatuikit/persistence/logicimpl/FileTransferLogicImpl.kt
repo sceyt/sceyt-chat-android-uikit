@@ -35,8 +35,9 @@ import com.sceyt.chatuikit.persistence.file_transfer.TransferTask
 import com.sceyt.chatuikit.persistence.logic.FileTransferLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
-import com.sceyt.chatuikit.presentation.extensions.checkLoadedFileIsCorrect
+import com.sceyt.chatuikit.presentation.extensions.isAttachmentExistAndFullyLoaded
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeHelper
+import com.sceyt.chatuikit.shared.utils.FilePathUtil.getUniqueFileDirectory
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -107,7 +108,7 @@ internal class FileTransferLogicImpl(
             return
         }
         val destFile = getDestinationFile(context, attachment)
-        val file = attachment.checkLoadedFileIsCorrect(destFile)
+        val file = attachment.isAttachmentExistAndFullyLoaded(destFile)
 
         if (file != null) {
             task.downloadCallback?.onResult(SceytResponse.Success(file.path))
@@ -223,7 +224,7 @@ internal class FileTransferLogicImpl(
             PendingDownload, PauseDownload, ErrorDownload -> {
                 pausedTasksMap.remove(attachment.messageTid)
                 val destFile = getDestinationFile(context, attachment)
-                val file = attachment.checkLoadedFileIsCorrect(destFile)
+                val file = attachment.isAttachmentExistAndFullyLoaded(destFile)
 
                 if (file != null) {
                     fileTransferService.findTransferTask(attachment)?.downloadCallback?.onResult(
@@ -488,8 +489,9 @@ internal class FileTransferLogicImpl(
     }
 
     private fun getDestinationFile(context: Context, attachment: SceytAttachment): File {
-        return File(context.getSaveFileLocationRoot(attachment.type),
-            "${attachment.messageTid}_${attachment.name}")
+        val root = context.getSaveFileLocationRoot(attachment.type)
+        val destinationFile = getUniqueFileDirectory(root, attachment.name, attachment.fileSize)
+        return destinationFile
     }
 
     private val SceytAttachment.downloadMapKey: String

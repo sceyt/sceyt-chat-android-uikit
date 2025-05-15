@@ -228,5 +228,6 @@
     <string name="sceyt_channel_name">Channel name</string>
     <string name="sceyt_waiting_for_network_title">Waiting for network…</string>
     <string name="sceyt_connecting_title">Connecting…</string>
+    <string name="sceyt_disconnected_title">Disconnected</string>
     <string name="sceyt_chats">Chats</string>
 </resources>

@@ -1,10 +1,13 @@
 package com.sceyt.chatuikit.persistence.database.dao
 
+import androidx.annotation.VisibleForTesting
 import androidx.room.Dao
+import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import com.sceyt.chatuikit.data.models.LoadNearData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
+import com.sceyt.chatuikit.extensions.roundUp
 import com.sceyt.chatuikit.persistence.database.entity.messages.ATTACHMENT_PAYLOAD_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.ATTACHMENT_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentDb
@@ -12,6 +15,7 @@ import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadDb
 import com.sceyt.chatuikit.persistence.file_transfer.TransferData
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
+import kotlin.math.max
 
 @Dao
 internal abstract class AttachmentDao {
@@ -21,6 +25,11 @@ internal abstract class AttachmentDao {
     abstract suspend fun getOldestThenAttachment(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
 
     @Transaction
+    @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id != 0 and id <= :attachmentId and type in (:types)" +
+            "order by createdAt desc, id desc limit :limit")
+    abstract suspend fun getOldestThenAttachmentInclude(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
+
+    @Transaction
     @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id != 0 and id >:attachmentId and type in (:types)" +
             "order by createdAt, id limit :limit")
     abstract suspend fun getNewestThenAttachment(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
@@ -28,17 +37,39 @@ internal abstract class AttachmentDao {
     @Transaction
     @Query("select * from $ATTACHMENT_TABLE where channelId =:channelId and id >=:attachmentId and type in (:types)" +
             "order by createdAt, id limit :limit")
-    abstract suspend fun getNewestThenMessageInclude(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
+    abstract suspend fun getNewestThenAttachmentInclude(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): List<AttachmentDb>
 
     @Transaction
-    open suspend fun getNearAttachments(channelId: Long, attachmentId: Long, limit: Int, types: List<String>): LoadNearData<AttachmentDb> {
-        val newest = getNewestThenMessageInclude(channelId, attachmentId, limit / 2 + 1, types)
-        val newMessages = newest.take(limit / 1)
+    open suspend fun getNearAttachments(
+            channelId: Long,
+            attachmentId: Long,
+            limit: Int,
+            types: List<String>
+    ): LoadNearData<AttachmentDb> {
+        var oldest = getOldestThenAttachmentInclude(channelId, attachmentId, limit, types).reversed()
+        val includesInOldest = oldest.lastOrNull()?.attachmentEntity?.id == attachmentId
 
-        val oldest = getOldestThenAttachment(channelId, attachmentId, limit - newMessages.size, types).reversed()
-        val hasPrev = oldest.size == limit - newMessages.size
-        val hasNext = newest.size > limit / 2
-        return LoadNearData(oldest + newMessages, hasNext = hasNext, hasPrev)
+        // If the message not exist then return empty list
+        if (!includesInOldest)
+            return LoadNearData(emptyList(), hasNext = false, hasPrev = false)
+
+        var newest = getNewestThenAttachment(channelId, attachmentId, limit, types)
+        val halfLimit = limit / 2
+
+        val newestDiff = max(halfLimit - newest.size, 0)
+        val oldestDiff = max((limit.toDouble() / 2).roundUp() - oldest.size, 0)
+
+        var newAttachments = newest.take(halfLimit + oldestDiff)
+        val oldAttachments = oldest.takeLast(halfLimit + newestDiff)
+
+        if (oldAttachments.size < limit && newAttachments.size > halfLimit)
+            newAttachments = newest.take(limit - oldAttachments.size)
+
+        val hasPrev = oldest.size > halfLimit
+        val hasNext = newest.size > halfLimit
+
+        val data = (oldAttachments + newAttachments).sortedBy { it.attachmentEntity.createdAt }
+        return LoadNearData(data, hasNext = hasNext, hasPrev)
     }
 
     @Transaction
@@ -81,4 +112,8 @@ internal abstract class AttachmentDao {
 
     @Query("update $ATTACHMENT_PAYLOAD_TABLE set filePath =:filePath where messageTid =:msgTid")
     abstract suspend fun updateAttachmentPayLoadFilePathByMsgTid(msgTid: Long, filePath: String?)
+
+    @VisibleForTesting
+    @Insert
+    abstract suspend fun insertAttachments(attachments: List<AttachmentEntity>)
 }

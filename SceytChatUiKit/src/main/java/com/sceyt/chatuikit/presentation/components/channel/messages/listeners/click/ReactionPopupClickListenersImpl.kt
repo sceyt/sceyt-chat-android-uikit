@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages.listeners.click
 
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 
@@ -15,6 +16,7 @@ class ReactionPopupClickListenersImpl : ReactionPopupClickListeners.PopupClickLi
     private var defaultListeners: ReactionPopupClickListeners.PopupClickListeners? = null
     private var addReaction: ReactionPopupClickListeners.AddReaction? = null
     private var removeReactionListener: ReactionPopupClickListeners.RemoveReaction? = null
+    private var reactionClickListener: ReactionPopupClickListeners.ReactionClick? = null
 
     override fun onAddReaction(message: SceytMessage, key: String) {
         defaultListeners?.onAddReaction(message, key)
@@ -26,12 +28,17 @@ class ReactionPopupClickListenersImpl : ReactionPopupClickListeners.PopupClickLi
         removeReactionListener?.onRemoveReaction(message, reactionItem)
     }
 
+    override fun onReactionClick(message: SceytMessage, reaction: SceytReaction) {
+        defaultListeners?.onReactionClick(message, reaction)
+        reactionClickListener?.onReactionClick(message, reaction)
+    }
 
     fun setListener(listener: ReactionPopupClickListeners) {
         when (listener) {
             is ReactionPopupClickListeners.PopupClickListeners -> {
                 addReaction = listener
                 removeReactionListener = listener
+                reactionClickListener = listener
             }
 
             is ReactionPopupClickListeners.AddReaction -> {
@@ -40,6 +47,10 @@ class ReactionPopupClickListenersImpl : ReactionPopupClickListeners.PopupClickLi
 
             is ReactionPopupClickListeners.RemoveReaction -> {
                 removeReactionListener = listener
+            }
+
+            is ReactionPopupClickListeners.ReactionClick -> {
+                reactionClickListener = listener
             }
         }
     }

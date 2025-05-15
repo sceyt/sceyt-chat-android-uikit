@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.formatters
 
+import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -17,6 +18,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageSenderNa
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelListSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelSubtitleFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultConnectionsStateTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultDraftMessageBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMediaDurationFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMentionUserNameFormatter
@@ -179,5 +181,9 @@ class SceytChatUIKitFormatters {
 
     var notificationBodyFormatter: Formatter<PushData> by lazyVar {
         DefaultNotificationBodyFormatter()
+    }
+
+    var connectionStateTitleFormatter : Formatter<ConnectionState> by lazyVar {
+        DefaultConnectionsStateTitleFormatter()
     }
 }

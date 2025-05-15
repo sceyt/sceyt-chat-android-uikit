@@ -12,9 +12,10 @@ object SceytConstants {
     const val HideLinkDetails = "hld"
 
     const val CopyFileDirName = "copied_files"
-    const val ImageFilesDirName = "sceyt_mages"
+    const val ImageFilesDirName = "sceyt_images"
     const val VideoFilesDirName = "sceyt_videos"
     const val FileFilesDirName = "sceyt_files"
+    const val AvatarCacheFilesDirName = "sceyt_avatar_cache"
 
     const val startTypingEvent = "start_typing"
     const val stopTypingEvent = "stop_typing"

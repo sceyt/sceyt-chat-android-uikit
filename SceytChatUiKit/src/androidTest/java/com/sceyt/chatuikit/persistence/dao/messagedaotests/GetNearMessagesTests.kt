@@ -35,7 +35,7 @@ class GetNearMessagesTests {
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), SceytDatabase::class.java)
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(false)
             .allowMainThreadQueries()
             .build()
         messageDao = database.messageDao()
@@ -47,13 +47,14 @@ class GetNearMessagesTests {
         database.close()
     }
 
-    private fun createMessage(tid: Long, id: Long): MessageEntity {
+    private fun createMessage(tid: Long, id: Long, deliveryStatus: DeliveryStatus = DeliveryStatus.Displayed): MessageEntity {
         return MessageEntity(tid, id, channelId, "body", "text", null, id, 0, incoming = false, isTransient = false, silent = false,
-            deliveryStatus = DeliveryStatus.Displayed, state = MessageState.Unmodified, fromId = "1", markerCount = null, mentionedUsersIds = null, parentId = null, replyCount = 0L, displayCount = 0, autoDeleteAt = null, forwardingDetailsDb = null, bodyAttribute = null, unList = false)
+            deliveryStatus = deliveryStatus, state = MessageState.Unmodified, fromId = "1", markerCount = null, mentionedUsersIds = null, parentId = null, replyCount = 0L, displayCount = 0, autoDeleteAt = null, forwardingDetailsDb = null, bodyAttribute = null, unList = false)
     }
 
     @Test
     fun loadNearMessagesShouldReturnMessagesInRange() = runTest {
+        // Given
         val messages = listOf(
             createMessage(1, 1),
             createMessage(2, 2),
@@ -70,22 +71,27 @@ class GetNearMessagesTests {
         messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
+        // When
         val limit = 6
         val result = messageDao.getNearMessages(channelId, 3, limit)
-        // should return 1, 2, 3, 4
         val loadedMessages = result.data
+        val messageIds = loadedMessages.map { it.messageEntity.id }
 
-        Log.d("loadedMessages", "${loadedMessages.map { it.messageEntity.id }}")
-
-        Truth.assertThat(
-            loadedMessages.size == 4
-                    && loadedMessages.maxBy { it.messageEntity.id ?: 0L }.messageEntity.id == 4L
-                    && loadedMessages.minBy { it.messageEntity.id ?: 0L }.messageEntity.id == 1L
-        ).isTrue()
+        // Then
+        Log.d("loadedMessages", "$messageIds")
+        Truth.assertThat(messageIds).isEqualTo(listOf(1L, 2L, 3L, 4L))
+        Truth.assertThat(loadedMessages.size).isEqualTo(4)
+        Truth.assertThat(loadedMessages.maxByOrNull {
+            it.messageEntity.id ?: 0L
+        }?.messageEntity?.id).isEqualTo(4L)
+        Truth.assertThat(loadedMessages.minByOrNull {
+            it.messageEntity.id ?: 0L
+        }?.messageEntity?.id).isEqualTo(1L)
     }
 
     @Test
     fun loadNearMessagesShouldReturnMessagesInRangeCase2() = runTest {
+        // Given
         val messages = listOf(
             createMessage(1, 1),
             createMessage(2, 2),
@@ -102,20 +108,21 @@ class GetNearMessagesTests {
         messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
+        // When
         val limit = 10
         val result = messageDao.getNearMessages(channelId, 5, limit)
-        // should return 3, 4, 5
         val loadedMessages = result.data
+        val messageIds = loadedMessages.map { it.messageEntity.id }
 
-        Log.d("loadedMessages", "${loadedMessages.map { it.messageEntity.id }}")
-        Truth.assertThat(
-            loadedMessages.size == 3
-                    && loadedMessages.map { it.messageEntity.id }.sortedBy { it } == listOf(3L, 4L, 5L)
-        ).isTrue()
+        // Then
+        Log.d("loadedMessages", "$messageIds")
+        Truth.assertThat(messageIds).isEqualTo(listOf(3L, 4L, 5L))
+        Truth.assertThat(loadedMessages.size).isEqualTo(3)
     }
 
     @Test
-    fun loadNearMessagesShouldReturnEmptyIfRangeNotFoundForCurrentMessage_HasNextFalseHasPrevFalse() = runTest {
+    fun loadNearMessagesShouldReturnEmptyIfRangeNotFoundForCurrentMessage() = runTest {
+        // Given
         val messages = listOf(
             createMessage(1, 1),
             createMessage(2, 2),
@@ -127,15 +134,18 @@ class GetNearMessagesTests {
 
         messageDao.upsertMessageEntitiesWithTransaction(messages)
 
-        val loadedMessages = messageDao.getNearMessages(channelId, 6, 10)
+        // When
+        val result = messageDao.getNearMessages(channelId, 6, 10)
 
-        Truth.assertThat(
-            loadedMessages.data.isEmpty() && !loadedMessages.hasPrev && !loadedMessages.hasNext
-        ).isTrue()
+        // Then
+        Truth.assertThat(result.data).isEmpty()
+        Truth.assertThat(result.hasPrev).isFalse()
+        Truth.assertThat(result.hasNext).isFalse()
     }
 
     @Test
-    fun loadNearMessagesShouldNotReturnMessagesOutOfRange_HasNextFalseHasPrevFalse() = runTest {
+    fun loadNearMessagesShouldNotReturnMessagesOutOfRange() = runTest {
+        // Given
         val messages = listOf(
             createMessage(1, 1),
             createMessage(2, 2),
@@ -156,16 +166,19 @@ class GetNearMessagesTests {
         messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
+        // When
         val limit = 4
-        val loadedMessages = messageDao.getNearMessages(channelId, 8, limit)
-        Truth.assertThat(
-            loadedMessages.data.isEmpty() && !loadedMessages.hasPrev && !loadedMessages.hasNext
-        ).isTrue()
+        val result = messageDao.getNearMessages(channelId, 8, limit)
+
+        // Then
+        Truth.assertThat(result.data).isEmpty()
+        Truth.assertThat(result.hasPrev).isFalse()
+        Truth.assertThat(result.hasNext).isFalse()
     }
 
-
     @Test
-    fun loadNearMessages_HasNextIfNewestSizeEqualHalfLimit() = runTest {
+    fun loadNearMessages_HasNotNextIfNewestSizeEqualHalfLimit() = runTest {
+        // Given
         val messages = listOf(
             createMessage(1, 1),
             createMessage(2, 2),
@@ -182,23 +195,23 @@ class GetNearMessagesTests {
         messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
+        // When
         val limit = 4
         val result = messageDao.getNearMessages(channelId, 4, limit)
         // should return  3, 4, 5, 6
         val loadedMessages = result.data
+        val messageIds = loadedMessages.map { it.messageEntity.id }
 
-        Log.d("loadedMessages", "${loadedMessages.map { it.messageEntity.id }}")
-
-        Truth.assertThat(
-            loadedMessages.size == limit
-                    && loadedMessages.maxBy { it.messageEntity.id ?: 0L }.messageEntity.id == 6L
-                    && loadedMessages.minBy { it.messageEntity.id ?: 0L }.messageEntity.id == 3L
-                    && result.hasNext
-        ).isTrue()
+        // Then
+        Log.d("loadedMessages", "$messageIds")
+        Truth.assertThat(messageIds).isEqualTo(listOf(3L, 4L, 5L, 6L))
+        Truth.assertThat(loadedMessages.size).isEqualTo(limit)
+        Truth.assertThat(result.hasNext).isFalse()
     }
 
     @Test
     fun loadNearMessages_HasNextIfNewestSizeBiggerHalfLimit() = runTest {
+        // Given
         val messages = listOf(
             createMessage(1, 1),
             createMessage(2, 2),
@@ -216,23 +229,23 @@ class GetNearMessagesTests {
         messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
+        // When
         val limit = 4
         val result = messageDao.getNearMessages(channelId, 4, limit)
         // should return  3, 4, 5, 6
         val loadedMessages = result.data
+        val messageIds = loadedMessages.map { it.messageEntity.id }
 
-        Log.d("loadedMessages", "${loadedMessages.map { it.messageEntity.id }}")
-
-        Truth.assertThat(
-            loadedMessages.size == limit
-                    && loadedMessages.maxBy { it.messageEntity.id ?: 0L }.messageEntity.id == 6L
-                    && loadedMessages.minBy { it.messageEntity.id ?: 0L }.messageEntity.id == 3L
-                    && result.hasNext
-        ).isTrue()
+        // Then
+        Log.d("loadedMessages", "$messageIds")
+        Truth.assertThat(messageIds).isEqualTo(listOf(3L, 4L, 5L, 6L))
+        Truth.assertThat(loadedMessages.size).isEqualTo(limit)
+        Truth.assertThat(result.hasNext).isTrue()
     }
 
     @Test
     fun loadNearMessages_HasNotNextIfNewestSizeNotBiggerHalfLimit() = runTest {
+        // Given
         val messages = listOf(
             createMessage(1, 1),
             createMessage(2, 2),
@@ -248,18 +261,16 @@ class GetNearMessagesTests {
         messageDao.upsertMessageEntitiesWithTransaction(messages)
         rangeDao.insertAll(range)
 
+        // When
         val limit = 4
         val result = messageDao.getNearMessages(channelId, 4, limit)
-        // should return  2, 3, 4, 5
         val loadedMessages = result.data
+        val messageIds = loadedMessages.map { it.messageEntity.id }
 
-        Log.d("loadedMessages", "${loadedMessages.map { it.messageEntity.id }}")
-
-        Truth.assertThat(
-            loadedMessages.size == limit
-                    && loadedMessages.maxBy { it.messageEntity.id ?: 0L }.messageEntity.id == 5L
-                    && loadedMessages.minBy { it.messageEntity.id ?: 0L }.messageEntity.id == 2L
-                    && !result.hasNext
-        ).isTrue()
+        // Then
+        Log.d("loadedMessages", "$messageIds")
+        Truth.assertThat(messageIds).isEqualTo(listOf(2L, 3L, 4L, 5L))
+        Truth.assertThat(loadedMessages.size).isEqualTo(limit)
+        Truth.assertThat(result.hasNext).isFalse()
     }
 }

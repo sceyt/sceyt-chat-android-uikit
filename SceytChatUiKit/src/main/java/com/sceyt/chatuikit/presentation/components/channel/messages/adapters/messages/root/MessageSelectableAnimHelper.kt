@@ -11,7 +11,6 @@ import androidx.core.view.marginStart
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.extensions.dpToPx
-import com.sceyt.chatuikit.presentation.extensions.isPending
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessagesAdapter
 
@@ -22,9 +21,8 @@ class MessageSelectableAnimHelper(private var viewHolder: RecyclerView.ViewHolde
     fun doOnBind(view: View?, item: MessageListItem) {
         view ?: return
         val message = (item as? MessageListItem.MessageItem)?.message ?: return
-        val isMultiSelectableMode = (viewHolder.bindingAdapter as? MessagesAdapter)?.isMultiSelectableMode()
-                ?: false
-        if (isMultiSelectableMode && !message.isPending()) {
+        val isMultiSelectableMode = (viewHolder.bindingAdapter as? MessagesAdapter)?.isMultiSelectableMode() == true
+        if (isMultiSelectableMode) {
             view.isVisible = true
             setCheckedState(view, message.isSelected)
 

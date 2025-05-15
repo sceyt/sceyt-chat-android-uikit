@@ -81,6 +81,10 @@ class MediaAdapter(
         mediaPlayers.forEach { it.pause() }
     }
 
+    fun resumeLastVideo() {
+        mediaPlayers.lastOrNull()?.playWhenReady = true
+    }
+
     fun releaseAllPlayers() {
         mediaPlayers.forEach { it.release() }
     }

@@ -2,20 +2,19 @@ package com.sceyt.chatuikit.presentation.common
 
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
+import com.sceyt.chatuikit.TestLogger
+import com.sceyt.chatuikit.logger.SceytLog
+import com.sceyt.chatuikit.logger.SceytLogLevel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Before
-import org.junit.FixMethodOrder
 import org.junit.Test
-import org.junit.runners.MethodSorters
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -32,6 +31,9 @@ class AsyncListDifferTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
+
+        // Set the test logger before running tests
+        SceytLog.setLogger(SceytLogLevel.Verbose, TestLogger())
         diffUtil = mock()
         updateCallback = mock()
         listUpdateListener = mock()

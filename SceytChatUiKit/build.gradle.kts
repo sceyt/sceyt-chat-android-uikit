@@ -1,4 +1,6 @@
 import com.sceyt.chat.MainGradlePlugin
+import com.sceyt.chat.configureMavenPublishing
+import com.sceyt.chat.configureMockitoAgent
 
 plugins {
     id("com.android.library")
@@ -8,7 +10,8 @@ plugins {
 }
 
 apply<MainGradlePlugin>()
-apply(from = "${rootProject.projectDir}/maven-publish/publish-module.gradle")
+configureMavenPublishing()
+val mockitoAgent = configureMockitoAgent()
 
 room {
     schemaDirectory("$projectDir/schemas")
@@ -47,7 +50,6 @@ dependencies {
     api(libs.glide.transformations)
     api(libs.ion)
     api(libs.firebase.messaging.ktx)
-    api(libs.play.services.base)
     api(libs.lifecycle.process)
     ksp(libs.room.compiler)
     api(libs.room.runtime)
@@ -84,8 +86,9 @@ dependencies {
     testImplementation(libs.truth)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockito.core)
-    testImplementation(libs.mockito.inline)
     testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.mockito.inline)
+    mockitoAgent(libs.mockito.inline)
 
     // Koin testing tools
     testImplementation(libs.koin.test)

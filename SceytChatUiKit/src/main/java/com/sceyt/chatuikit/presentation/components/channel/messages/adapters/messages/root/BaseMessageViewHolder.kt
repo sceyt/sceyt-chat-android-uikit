@@ -81,7 +81,6 @@ abstract class BaseMessageViewHolder(
     private var replyMessageContainerBinding: SceytRecyclerReplyContainerBinding? = null
     protected var recyclerViewReactions: RecyclerView? = null
     protected lateinit var messageListItem: MessageListItem
-    val isMessageListItemInitialized get() = this::messageListItem.isInitialized
     private var highlightAnim: ValueAnimator? = null
     private val selectableAnimHelper by lazy { MessageSelectableAnimHelper(this) }
     private val px12 by lazy { dpToPx(12f) } // bodyTextView end margins
@@ -370,7 +369,7 @@ abstract class BaseMessageViewHolder(
             viewPool: RecyclerView.RecycledViewPool
     ) {
         val reactions: List<ReactionItem.Reaction>? = item.message.messageReactions?.take(19)
-        val resizeWithDependReactions = layoutBubbleConfig?.second ?: false
+        val resizeWithDependReactions = layoutBubbleConfig?.second == true
         val layoutDetails = if (resizeWithDependReactions) layoutBubble else null
 
         if (reactions.isNullOrEmpty()) {
@@ -553,21 +552,23 @@ abstract class BaseMessageViewHolder(
     }
 
     protected open fun applyCommonStyle(
-            layoutDetails: View,
-            tvForwarded: AppCompatTextView,
-            messageBody: ClickableTextView,
-            tvThreadReplyCount: AppCompatTextView,
-            toReplyLine: ToReplyLineView,
+            layoutDetails: View?,
+            tvForwarded: AppCompatTextView?,
+            messageBody: ClickableTextView?,
+            tvThreadReplyCount: AppCompatTextView?,
+            toReplyLine: ToReplyLineView?,
             tvSenderName: AppCompatTextView? = null,
             avatarView: AvatarView? = null,
     ) {
-        if (incoming)
-            itemStyle.incomingBubbleBackgroundStyle.apply(layoutDetails)
-        else itemStyle.outgoingBubbleBackgroundStyle.apply(layoutDetails)
+        layoutDetails?.let {
+            if (incoming)
+                itemStyle.incomingBubbleBackgroundStyle.apply(layoutDetails)
+            else itemStyle.outgoingBubbleBackgroundStyle.apply(layoutDetails)
+        }
 
-        applyForwardedStyle(tvForwarded)
-        messageBody.applyStyle(itemStyle)
-        itemStyle.threadReplyCountTextStyle.apply(tvThreadReplyCount)
+        tvForwarded?.let { applyForwardedStyle(it) }
+        messageBody?.applyStyle(itemStyle)
+        tvThreadReplyCount?.let { itemStyle.threadReplyCountTextStyle.apply(it) }
         tvSenderName?.let {
             itemStyle.senderNameTextStyle.apply(it)
         }

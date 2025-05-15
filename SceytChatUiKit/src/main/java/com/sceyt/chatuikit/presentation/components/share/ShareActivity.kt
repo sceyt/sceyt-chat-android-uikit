@@ -30,6 +30,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
     protected lateinit var binding: SceytActivityShareBinding
     protected val viewModel: ShareViewModel by viewModels()
     protected var body: String? = null
+    protected val shareUris = mutableSetOf<Uri>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,13 +51,14 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
     }
 
     protected open fun getDataFromIntent() {
+        shareUris.clear()
         when {
             Intent.ACTION_SEND == intent.action -> {
                 if (intent.parcelable<Parcelable>(Intent.EXTRA_STREAM) != null) {
                     val uri = intent.parcelable<Uri>(Intent.EXTRA_STREAM)
                     uri?.let {
                         grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        viewModel.sharedUris.add(uri)
+                        shareUris.add(uri)
                     }
                 } else if (intent.getCharSequenceExtra(Intent.EXTRA_TEXT) != null) {
                     hideInputOnSharingText()
@@ -71,7 +73,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
                         customToastSnackBar(getString(R.string.sceyt_shara_max_item_count))
                     for (uri in uris.take(20)) {
                         grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        viewModel.sharedUris.add(uri)
+                        shareUris.add(uri)
                     }
                 } else finishSharingAction()
             }
@@ -115,7 +117,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
         val messageBody = (binding.messageInput.text ?: "").trim().toString()
         viewModel.sendFilesMessage(
             channelIds = selectedChannels.toLongArray(),
-            uris = viewModel.sharedUris,
+            uris = shareUris.toList(),
             messageBody
         ).onEach {
             when (it) {
@@ -158,7 +160,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
                 sendTextMessage()
             }
 
-            viewModel.sharedUris.isNotEmpty() -> {
+            shareUris.isNotEmpty() -> {
                 sendFilesMessage()
             }
 
@@ -174,6 +176,8 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
     }
 
     companion object {
+
+        @Suppress("unused")
         fun newIntent(context: Context, intent: Intent): Intent {
             return Intent(context, ShareActivity::class.java).apply {
                 action = intent.action

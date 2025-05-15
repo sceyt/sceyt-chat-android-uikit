@@ -38,6 +38,7 @@ import com.sceyt.chatuikit.data.models.channels.SelfChannelMetadata
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.toSha256
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -310,7 +311,7 @@ internal class PersistenceChannelsLogicImpl(
 
             val response = if (offset == 0)
                 channelsRepository.getChannels(searchQuery, config, SearchChannelParams.default)
-            else channelsRepository.loadMoreChannels()
+            else channelsRepository.loadMoreChannels(searchQuery, config, SearchChannelParams.default)
 
             if (response is SceytResponse.Success) {
                 val channels = response.data ?: arrayListOf()
@@ -376,7 +377,7 @@ internal class PersistenceChannelsLogicImpl(
 
             val response = if (offset == 0)
                 channelsRepository.getChannels(searchQuery, config, SearchChannelParams.default)
-            else channelsRepository.loadMoreChannels()
+            else channelsRepository.loadMoreChannels(searchQuery, config, SearchChannelParams.default)
 
             if (response is SceytResponse.Success) {
                 val channels = response.data ?: arrayListOf()
@@ -623,17 +624,12 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel> {
-        val response = channelsRepository.createChannel(createChannelData)
-
-        if (response is SceytResponse.Success) {
-            response.data?.let { channel ->
-                channel.members?.toTypedArray()?.let {
-                    insertChannelWithMembers(channel, *it)
-                    channelsCache.upsertChannel(channel)
-                }
+        return channelsRepository.createChannel(createChannelData).onSuccessNotNull { channel ->
+            channel.members?.toTypedArray()?.let {
+                insertChannelWithMembers(channel, *it)
+                channelsCache.upsertChannel(channel)
             }
         }
-        return response
     }
 
     override suspend fun createNewChannelInsteadOfPendingChannel(channel: SceytChannel): SceytResponse<SceytChannel> {

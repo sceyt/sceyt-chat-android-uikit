@@ -51,7 +51,6 @@ import kotlinx.coroutines.flow.onEach
 import java.io.File
 import java.util.Date
 
-
 open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     lateinit var binding: SceytActivityMediaPreviewBinding
     private val viewModel by viewModels<MediaViewModel>()
@@ -81,6 +80,11 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     override fun onPause() {
         super.onPause()
         mediaAdapter?.pauseAllVideos()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mediaAdapter?.resumeLastVideo()
     }
 
     override fun onDestroy() {

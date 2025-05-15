@@ -37,7 +37,6 @@ class ExoPlayerHelper(
         exoPlayer.addListener(this)
     }
 
-
     fun setMediaPath(url: String?, playVideo: Boolean) {
         if (isSetMediaPath) return
         url?.let {
