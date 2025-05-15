@@ -227,7 +227,7 @@ class AsyncListDiffer<T : Any>(
                     list = null
                     readOnlyList = emptyList()
                     if (countRemoved == 0)
-                        return@launch
+                        return@performWithRetry
                     updateCallback.onRemoved(0, countRemoved)
                     onCurrentListChanged(previousList, commitCallback)
                 }
@@ -255,7 +255,7 @@ class AsyncListDiffer<T : Any>(
         }
     }
 
-    private suspend inline fun CoroutineScope.performWithRetry(action: () -> Unit) {
+    private suspend fun CoroutineScope.performWithRetry(action: suspend () -> Unit) {
         var attempt = 0
         val maxAttempts = 3
         var lastException: Exception? = null
@@ -263,6 +263,8 @@ class AsyncListDiffer<T : Any>(
         while (isActive && attempt < maxAttempts) {
             try {
                 action()
+                return
+            } catch (_: CancellationException) {
                 return
             } catch (ex: Exception) {
                 lastException = ex
@@ -275,7 +277,7 @@ class AsyncListDiffer<T : Any>(
         }
 
         // If we've exhausted all retries, throw the last exception
-        throw lastException ?: RuntimeException("Failed after $maxAttempts attempts")
+        throw lastException ?: RuntimeException("Failed after $attempt attempts")
     }
 
     private fun addItemsImpl(
