@@ -265,6 +265,7 @@ class AsyncListDiffer<T : Any>(
                 action()
                 return
             } catch (_: CancellationException) {
+                // Don't retry on cancellation - just return
                 return
             } catch (ex: Exception) {
                 lastException = ex
@@ -277,7 +278,8 @@ class AsyncListDiffer<T : Any>(
         }
 
         // If we've exhausted all retries, throw the last exception
-        throw lastException ?: RuntimeException("Failed after $attempt attempts")
+        SceytLog.e(TAG, "Failed to perform action after $attempt attempts", lastException)
+        throw lastException ?: RuntimeException("Failed after $maxAttempts attempts")
     }
 
     private fun addItemsImpl(
