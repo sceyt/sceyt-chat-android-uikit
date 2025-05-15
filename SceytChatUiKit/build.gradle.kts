@@ -88,6 +88,7 @@ dependencies {
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.mockito.inline)
+    testImplementation(libs.core.testing)
     mockitoAgent(libs.mockito.inline)
 
     // Koin testing tools
