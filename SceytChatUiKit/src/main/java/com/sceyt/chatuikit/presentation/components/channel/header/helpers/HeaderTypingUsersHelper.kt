@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.presentation.components.channel.header.helpers
 
 import android.content.Context
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.ChatClient
+import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytUser
@@ -20,7 +20,7 @@ class HeaderTypingUsersHelper(
         private val typingTitleFormatter: Formatter<TypingTitleFormatterAttributes>,
         private var typingTextUpdatedListener: (CharSequence) -> Unit,
         private val typingStateUpdated: (Boolean) -> Unit,
-        private val showTypingSequentially: Boolean
+        private val showTypingUsersInSequence: Boolean
 ) {
     private val typingCancelHelper by lazy { TypingCancelHelper() }
     private val _typingUsers by lazy { mutableSetOf<SceytUser>() }
@@ -28,7 +28,7 @@ class HeaderTypingUsersHelper(
     private var updateTypingJob: Job? = null
 
     private fun updateTypingText() {
-        if (!showTypingSequentially) {
+        if (!showTypingUsersInSequence) {
             val title = typingTitleFormatter.format(context, TypingTitleFormatterAttributes(
                 channel = channel,
                 users = typingUsers
@@ -37,20 +37,12 @@ class HeaderTypingUsersHelper(
             return
         }
 
-        when {
-            _typingUsers.isEmpty() -> {
-                updateTypingJob?.cancel()
-            }
-
-            _typingUsers.size == 1 -> {
-                updateTypingJob?.cancel()
-                typingTextUpdatedListener.invoke(initTypingTitle(typingUsers))
-            }
-
-            else -> {
-                if (updateTypingJob == null || updateTypingJob?.isActive?.not() == true)
-                    updateTypingTitleEveryTwoSecond()
-            }
+        if (_typingUsers.isEmpty() || _typingUsers.size == 1) {
+            updateTypingJob?.cancel()
+            typingTextUpdatedListener.invoke(initTypingTitle(typingUsers))
+        } else {
+            if (updateTypingJob == null || updateTypingJob?.isActive?.not() == true)
+                updateTypingTitleEveryTwoSecond()
         }
     }
 
@@ -77,15 +69,15 @@ class HeaderTypingUsersHelper(
     }
 
     private fun setTyping(data: ChannelTypingEventData) {
-        if (data.member.id == ChatClient.getClient().user?.id) return
-        val debounceHelper = debounceHelpers.getOrPut(data.member.id) {
+        if (data.user.id == SceytChatUIKit.currentUserId) return
+        val debounceHelper = debounceHelpers.getOrPut(data.user.id) {
             DebounceHelper(200, context.asComponentActivity().lifecycleScope)
         }
         debounceHelper.submit {
             if (data.typing) {
-                _typingUsers.add(data.member)
+                _typingUsers.add(data.user)
             } else
-                _typingUsers.remove(data.member)
+                _typingUsers.remove(data.user)
 
             updateTypingText()
             setTypingState(_typingUsers.isNotEmpty())
