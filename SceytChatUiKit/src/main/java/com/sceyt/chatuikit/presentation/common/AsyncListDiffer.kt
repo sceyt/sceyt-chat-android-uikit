@@ -277,9 +277,10 @@ class AsyncListDiffer<T : Any>(
             }
         }
 
+        if (!isActive || lastException == null) return
         // If we've exhausted all retries, throw the last exception
         SceytLog.e(TAG, "Failed to perform action after $attempt attempts", lastException)
-        throw lastException ?: RuntimeException("Failed after $maxAttempts attempts")
+        throw lastException
     }
 
     private fun addItemsImpl(
