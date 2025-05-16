@@ -80,7 +80,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private var isReplyInThread: Boolean = false
     private var isGroup = false
     private var enablePresence: Boolean = true
-    private val typingUsersHelper by lazy { initTypingUsersHelper() }
+    private var typingUsersHelper: HeaderTypingUsersHelper? = null
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
     private var toolbarSearchModeChangeListener: ((Boolean) -> Unit)? = null
     private var addedMenu: Menu? = null
@@ -101,10 +101,12 @@ class MessagesListHeaderView @JvmOverloads constructor(
         stateListAnimator = null
         with(binding) {
             applyStyle()
-            layoutToolbarRoot.layoutTransition = LayoutTransition().apply {
+            val animation = LayoutTransition().apply {
                 disableTransitionType(LayoutTransition.DISAPPEARING)
                 setDuration(200)
             }
+            layoutToolbarRoot.layoutTransition = animation
+            layoutSubTitle.layoutTransition = animation
 
             post { subTitle.isSelected = true }
 
@@ -139,7 +141,6 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
         if (!isInEditMode) {
             updatePresenceEveryOneMin()
-            initTypingUsersHelper()
         }
     }
 
@@ -185,11 +186,11 @@ class MessagesListHeaderView @JvmOverloads constructor(
             if (!ConnectionEventManager.isConnected) return@post
             if (!replyInThread) {
                 val title = style.subtitleFormatter.format(context, channel)
-                setSubTitleText(subjectTextView, title, title.isNotBlank() && !typingUsersHelper.isTyping)
+                setSubTitleText(subjectTextView, title, title.isNotBlank() && !isTyping)
             } else {
                 val fullName = replyMessage?.user?.fullName
                 val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
-                setSubTitleText(subjectTextView, subTitleText, !fullName.isNullOrBlank() && !typingUsersHelper.isTyping)
+                setSubTitleText(subjectTextView, subTitleText, !fullName.isNullOrBlank() && !isTyping)
             }
         }
     }
@@ -203,7 +204,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             return
 
         textView.text = title
-        textView.isVisible = !typingUsersHelper.isTyping
+        textView.isVisible = !isTyping
     }
 
     private fun setAvatar(avatar: AvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
@@ -239,6 +240,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
     internal fun setChannel(channel: SceytChannel) {
         this.channel = channel
         isGroup = channel.isGroup
+        if (typingUsersHelper == null)
+            typingUsersHelper = initTypingUsersHelper(channel)
 
         with(binding) {
             uiElementsListeners.onTitle(title, channel, null, false)
@@ -260,27 +263,24 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun initTypingUsersHelper(): HeaderTypingUsersHelper {
+    private fun initTypingUsersHelper(channel: SceytChannel): HeaderTypingUsersHelper {
         return HeaderTypingUsersHelper(context,
-            isGroup = isGroup,
-            typingUserNameFormatter = style.typingUserNameFormatter,
+            channel = channel,
+            typingTitleFormatter = style.typingTitleFormatter,
             typingTextUpdatedListener = {
                 binding.tvTyping.text = it
-
             },
             typingStateUpdated = {
                 setTypingState(it)
-            })
+            },
+            showTypingUsersInSequence = style.showTypingUsersInSequence
+        )
     }
 
     private fun setTypingState(typing: Boolean) {
-        if ((typing && isGroup.not()) || (isGroup && typingUsersHelper.typingUsers.isNotEmpty())) {
-            binding.subTitle.isVisible = false
-            binding.groupTyping.isVisible = true
-        } else {
-            binding.groupTyping.isVisible = false
-            binding.subTitle.isVisible = true
-        }
+        binding.subTitle.isVisible = !typing
+        binding.lottieTyping.isVisible = typing && style.enableTypingIndicator
+        binding.tvTyping.isVisible = typing
     }
 
     private fun setPresenceUpdated(user: SceytUser) {
@@ -290,7 +290,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 channel = channel.copy(members = channel.members?.map {
                     if (it.user.id == user.id) it.copy(user = user.copy()) else it
                 })
-                if (!typingUsersHelper.isTyping)
+                if (!isTyping)
                     uiElementsListeners.onSubTitle(binding.subTitle, channel, replyMessage, isReplyInThread)
             }
         }
@@ -318,7 +318,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    internal fun onTyping(data: ChannelTypingEventData) {
+    internal fun handleTypingEvent(data: ChannelTypingEventData) {
         eventListeners.onTypingEvent(data)
     }
 
@@ -332,7 +332,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             setSubTitleText(
                 textView = binding.subTitle,
                 title = title,
-                visible = title.isNotBlank() && !typingUsersHelper.isTyping
+                visible = title.isNotBlank() && !isTyping
             )
             return@post
         }
@@ -355,8 +355,12 @@ class MessagesListHeaderView @JvmOverloads constructor(
         toolbarSearchModeChangeListener = listener
     }
 
+    val isTyping: Boolean
+        get() = typingUsersHelper?.isTyping == true
+
     @Suppress("unused")
-    fun isTyping() = typingUsersHelper.isTyping
+    val typingUsers: List<SceytUser>
+        get() = typingUsersHelper?.typingUsers.orEmpty()
 
     @Suppress("unused")
     fun getChannel() = if (::channel.isInitialized) channel else null
@@ -401,11 +405,6 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     @Suppress("unused")
-    fun setTypingTextBuilder(builder: (SceytUser) -> String) {
-        typingUsersHelper.setTypingTextBuilder(builder)
-    }
-
-    @Suppress("unused")
     fun invalidateUi() {
         with(binding) {
             uiElementsListeners.onTitle(title, channel, replyMessage, isReplyInThread)
@@ -446,7 +445,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     //Event listeners
     override fun onTypingEvent(data: ChannelTypingEventData) {
-        typingUsersHelper.onTypingEvent(data)
+        typingUsersHelper?.onTypingEvent(data)
     }
 
     override fun onPresenceUpdateEvent(user: SceytUser) {
@@ -546,6 +545,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         root.setBackgroundColor(style.backgroundColor)
         toolbarUnderline.background = style.underlineColor.toDrawable()
         toolbarUnderline.isVisible = style.showUnderline
+        lottieTyping.isVisible = style.enableTypingIndicator
         icBack.setImageDrawable(style.navigationIcon)
         style.titleTextStyle.apply(title)
         style.subTitleStyle.apply(subTitle)
