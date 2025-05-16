@@ -8,6 +8,6 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class ChannelTypingEventData(
         val channel: SceytChannel,
-        val member: SceytUser,
+        val user: SceytUser,
         val typing: Boolean
 ) : Parcelable

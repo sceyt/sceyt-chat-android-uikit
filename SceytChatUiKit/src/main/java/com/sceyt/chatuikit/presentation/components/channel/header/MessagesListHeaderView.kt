@@ -273,7 +273,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             typingStateUpdated = {
                 setTypingState(it)
             },
-            showTypingSequentially = style.showTypingSequentially
+            showTypingUsersInSequence = style.showTypingUsersInSequence
         )
     }
 

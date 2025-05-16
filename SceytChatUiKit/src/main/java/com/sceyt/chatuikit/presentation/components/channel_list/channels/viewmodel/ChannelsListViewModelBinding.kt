@@ -217,7 +217,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
         }.launchIn(viewModelScope)
 
     ChannelEventManager.onChannelTypingEventFlow
-        .filter { it.member.id != SceytChatUIKit.chatUIFacade.myId }
+        .filter { it.user.id != SceytChatUIKit.chatUIFacade.myId }
         .onEach {
             typingCancelHelper.await(it) { data ->
                 channelListView.onTyping(data)

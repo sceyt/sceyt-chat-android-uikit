@@ -37,7 +37,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property underlineColor color of the underline, default is [Colors.borderColor]
  * @property navigationIcon icon for back button, default is [R.drawable.sceyt_ic_arrow_back]
  * @property showUnderline enable underline, default is true
- * @property showTypingSequentially show typing users sequentially, default is true
+ * @property showTypingUsersInSequence Whether to show typing users one at a time in sequence, default is true
  * @property enableTypingIndicator Whether to show a typing animation at the end of the typing users' title. Default is true.
  * @property titleTextStyle style for the title, default is [buildTitleTextStyle]
  * @property subTitleStyle style for the subtitle, default is [buildSubTitleTextStyle]
@@ -54,7 +54,7 @@ data class MessagesListHeaderStyle(
         @ColorInt val underlineColor: Int,
         val navigationIcon: Drawable?,
         val showUnderline: Boolean,
-        val showTypingSequentially: Boolean,
+        val showTypingUsersInSequence: Boolean,
         val enableTypingIndicator: Boolean,
         val titleTextStyle: TextStyle,
         val subTitleStyle: TextStyle,
@@ -114,8 +114,8 @@ data class MessagesListHeaderStyle(
                     R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderShowUnderline, true
                 )
 
-                val showTypingSequentially = array.getBoolean(
-                    R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderShowTypingSequentially,
+                val showTypingUsersInSequence = array.getBoolean(
+                    R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderShowTypingUsersInSequence,
                     true
                 )
 
@@ -129,7 +129,7 @@ data class MessagesListHeaderStyle(
                     underlineColor = underlineColor,
                     navigationIcon = navigationIcon,
                     showUnderline = showUnderline,
-                    showTypingSequentially = showTypingSequentially,
+                    showTypingUsersInSequence = showTypingUsersInSequence,
                     enableTypingIndicator = enableTypingIndicator,
                     titleTextStyle = buildTitleTextStyle(array),
                     subTitleStyle = buildSubTitleTextStyle(array),
