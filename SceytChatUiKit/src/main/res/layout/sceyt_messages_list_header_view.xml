@@ -140,13 +140,6 @@
                         app:lottie_loop="true"
                         app:lottie_rawRes="@raw/sceyt_typing" />
 
-                    <androidx.constraintlayout.widget.Group
-                        android:id="@+id/groupTyping"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:visibility="gone"
-                        app:constraint_referenced_ids="lottieTyping,tvTyping" />
-
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
             </androidx.constraintlayout.widget.ConstraintLayout>

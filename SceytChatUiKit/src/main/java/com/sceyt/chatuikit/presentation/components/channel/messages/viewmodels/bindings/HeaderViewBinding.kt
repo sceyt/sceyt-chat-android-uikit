@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -71,7 +70,7 @@ fun MessageListViewModel.bind(
         .launchIn(lifecycleOwner.lifecycleScope)
 
     onChannelTypingEventFlow.onEach {
-        headerView.onTyping(it)
+        headerView.handleTypingEvent(it)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
