@@ -208,7 +208,7 @@ class MessageListViewModel(
             .filter { it.channelId == channel.id }
 
         onChannelTypingEventFlow = ChannelEventManager.onChannelTypingEventFlow
-            .filter { it.channel.id == channel.id && it.member.id != myId }
+            .filter { it.channel.id == channel.id && it.user.id != myId }
 
         onChannelUpdatedEventFlow = ChannelsCache.channelUpdatedFlow
             .filter { it.channel.id == channel.id }

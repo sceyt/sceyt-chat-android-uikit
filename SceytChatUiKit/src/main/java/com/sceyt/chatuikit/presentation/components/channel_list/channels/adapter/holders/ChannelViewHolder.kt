@@ -230,7 +230,7 @@ open class ChannelViewHolder(
         val data = channel.typingData ?: return
         if (data.typing) {
             val title: SpannableStringBuilder = if (channel.isGroup) {
-                val name = itemStyle.typingUserNameFormatter.format(context, data.member)
+                val name = itemStyle.typingUserNameFormatter.format(context, data.user)
                 SpannableStringBuilder("$name ${context.getString(R.string.sceyt_typing_)}")
             } else
                 SpannableStringBuilder(context.getString(R.string.sceyt_typing_))

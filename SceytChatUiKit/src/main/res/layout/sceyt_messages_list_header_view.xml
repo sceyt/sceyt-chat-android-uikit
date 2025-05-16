@@ -118,6 +118,7 @@
                         android:text="@string/sceyt_typing"
                         android:textColor="@color/sceyt_color_text_secondary"
                         android:textSize="13sp"
+                        android:visibility="gone"
                         app:layout_constrainedWidth="true"
                         app:layout_constraintEnd_toStartOf="@+id/lottieTyping"
                         app:layout_constraintHorizontal_bias="0"
@@ -131,6 +132,7 @@
                         android:layout_height="0dp"
                         android:layout_marginStart="6dp"
                         android:paddingTop="3dp"
+                        android:visibility="gone"
                         app:layout_constraintBottom_toBottomOf="@+id/tvTyping"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintHorizontal_bias="0.5"
@@ -139,13 +141,6 @@
                         app:lottie_autoPlay="true"
                         app:lottie_loop="true"
                         app:lottie_rawRes="@raw/sceyt_typing" />
-
-                    <androidx.constraintlayout.widget.Group
-                        android:id="@+id/groupTyping"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:visibility="gone"
-                        app:constraint_referenced_ids="lottieTyping,tvTyping" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 

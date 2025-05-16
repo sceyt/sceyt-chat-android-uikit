@@ -64,6 +64,9 @@
         <attr name="sceytUiMessagesListHeaderUnderlineColor" format="reference|color" />
         <attr name="sceytUiMessagesListHeaderNavigationIcon" format="reference" />
         <attr name="sceytUiMessagesListHeaderShowUnderline" format="boolean" />
+        <attr name="sceytUiMessagesListHeaderShowTypingUsersInSequence" format="boolean" />
+        <attr name="sceytUiMessagesListHeaderEnableTypingIndicator" format="boolean" />
+
 
         <!-- Message actions menu -->
         <attr name="sceytUiMessagesListHeaderMessageActionsMenu" format="reference" />
