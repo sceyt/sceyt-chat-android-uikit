@@ -13,9 +13,11 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.MessageListViewModel
 import com.sceyt.chatuikit.services.SceytPresenceChecker
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
@@ -69,9 +71,12 @@ fun MessageListViewModel.bind(
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 
-    onChannelTypingEventFlow.onEach {
-        headerView.handleTypingEvent(it)
-    }.launchIn(lifecycleOwner.lifecycleScope)
+    onChannelTypingEventFlow
+        .onEach {
+            headerView.handleTypingEvent(it)
+        }
+        .flowOn(Dispatchers.Main)
+        .launchIn(lifecycleOwner.lifecycleScope)
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
         if (!replyInThread)
