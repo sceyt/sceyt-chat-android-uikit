@@ -53,17 +53,16 @@ inline fun <T> SceytResponse<T>.onError(action: (value: SceytException?) -> Unit
 
 @OptIn(ExperimentalContracts::class)
 @SinceKotlin("1.3")
-inline fun <T> SceytResponse<T>.fold(
-        onSuccess: (value: T?) -> Unit,
-        onError: (value: SceytException?) -> Unit
-): SceytResponse<T> {
+inline fun <R, T> SceytResponse<T>.fold(
+        onSuccess: (value: T?) -> R,
+        onError: (exception: SceytException?) -> R
+): R {
     contract {
         callsInPlace(onSuccess, InvocationKind.AT_MOST_ONCE)
         callsInPlace(onError, InvocationKind.AT_MOST_ONCE)
     }
-    when (this) {
+    return when (this) {
         is SceytResponse.Success -> onSuccess(data)
         is SceytResponse.Error -> onError(exception)
     }
-    return this
 }

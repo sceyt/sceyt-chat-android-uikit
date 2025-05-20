@@ -587,8 +587,8 @@ internal class PersistenceMiddleWareImpl(
         return usersLogic.searchLocaleUserByMetadata(metadataKeys, metadataValue)
     }
 
-    override suspend fun getCurrentUser(): SceytUser? {
-        return usersLogic.getCurrentUser()
+    override suspend fun getCurrentUser(refreshFromServer: Boolean): SceytUser? {
+        return usersLogic.getCurrentUser(refreshFromServer)
     }
 
     override fun getCurrentUserId(): String? {

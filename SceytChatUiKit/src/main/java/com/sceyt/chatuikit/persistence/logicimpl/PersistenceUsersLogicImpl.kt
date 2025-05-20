@@ -7,6 +7,7 @@ import com.sceyt.chat.models.user.UserListQuery
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.fold
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.repositories.getUserId
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -16,6 +17,7 @@ import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.logic.PersistenceChannelsLogic
 import com.sceyt.chatuikit.persistence.logic.PersistenceUsersLogic
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
+import com.sceyt.chatuikit.persistence.mappers.toUser
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.mappers.toUserEntity
 import com.sceyt.chatuikit.persistence.repositories.ProfileRepository
@@ -101,20 +103,33 @@ internal class PersistenceUsersLogicImpl(
         return userDao.searchUsersByMetadata(metadataKeys, metadataValue).map { it.toSceytUser() }
     }
 
-    override suspend fun getCurrentUser(): SceytUser? {
-        val clientUser = ClientWrapper.currentUser
-        if (!clientUser?.id.isNullOrBlank())
-            return clientUser?.toSceytUser()
-
-        return preference.getUserId()?.let {
-            userDao.getUserById(it)?.toSceytUser()
+    override suspend fun getCurrentUser(refreshFromServer: Boolean): SceytUser? {
+        return if (refreshFromServer) {
+            userRepository.getUserById(
+                SceytChatUIKit.currentUserId ?: return null
+            ).fold(
+                onSuccess = { user ->
+                    user?.also {
+                        userDao.insertUserWithMetadata(it.toUserDb())
+                        ClientWrapper.currentUser = it.toUser()
+                    }
+                },
+                onError = { null }
+            )
+        } else {
+            val clientUser = ClientWrapper.currentUser
+            if (!clientUser?.id.isNullOrBlank())
+                clientUser.toSceytUser()
+            else preference.getUserId()?.let {
+                userDao.getUserById(it)?.toSceytUser()
+            }
         }
     }
 
     override fun getCurrentUserId(): String? {
         val clientUser = ClientWrapper.currentUser
         if (!clientUser?.id.isNullOrBlank())
-            return clientUser?.id
+            return clientUser.id
 
         return preference.getUserId()
     }
@@ -160,7 +175,7 @@ internal class PersistenceUsersLogicImpl(
     }
 
     override suspend fun updateStatus(status: String): SceytResponse<Boolean> {
-        val presence = getCurrentUser()?.presence?.state ?: PresenceState.Offline
+        val presence = getCurrentUser(false)?.presence?.state ?: PresenceState.Offline
 
         val response = suspendCancellableCoroutine<SceytResponse<Boolean>> { continuation ->
             ClientWrapper.setPresence(presence, status) {
