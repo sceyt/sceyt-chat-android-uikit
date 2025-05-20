@@ -37,7 +37,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceAttachmentLogic
 import com.sceyt.chatuikit.persistence.mappers.toTransferData
 import com.sceyt.chatuikit.presentation.extensions.isAttachmentExistAndFullyLoaded
 import com.sceyt.chatuikit.shared.media_encoder.VideoTranscodeHelper
-import com.sceyt.chatuikit.shared.utils.FilePathUtil.getUniqueFileDirectory
+import com.sceyt.chatuikit.shared.utils.FilePathUtil.getOrCreateUniqueFileDirectory
 import com.sceyt.chatuikit.shared.utils.FileResizeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -490,7 +490,7 @@ internal class FileTransferLogicImpl(
 
     private fun getDestinationFile(context: Context, attachment: SceytAttachment): File {
         val root = context.getSaveFileLocationRoot(attachment.type)
-        val destinationFile = getUniqueFileDirectory(root, attachment.name, attachment.fileSize)
+        val destinationFile = getOrCreateUniqueFileDirectory(root, attachment.name, attachment.fileSize)
         return destinationFile
     }
 
