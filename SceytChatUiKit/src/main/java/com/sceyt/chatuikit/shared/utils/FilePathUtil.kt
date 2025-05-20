@@ -42,7 +42,7 @@ object FilePathUtil {
                     val fileSize = it.getLong(sizeIndex)
 
                     val directory = File(parentDirToCopy, SceytConstants.CopyFileDirName)
-                    val file = getUniqueFileDirectory(directory, fileName, fileSize)
+                    val file = getOrCreateUniqueFileDirectory(directory, fileName, fileSize)
 
                     context.contentResolver.openInputStream(uri)?.use { inputStream ->
                         copyStreamToFile(inputStream, file)
@@ -55,9 +55,9 @@ object FilePathUtil {
         return null
     }
 
-    fun getUniqueFileDirectory(rootDir: File, fileName: String, fileSize: Long): File {
+    fun getOrCreateUniqueFileDirectory(rootDir: File, fileName: String, fileSize: Long): File {
         // Create the directory if it doesn't exist
-        if (!rootDir.exists() ) {
+        if (!rootDir.exists()) {
             rootDir.mkdirs()
         }
         val file = File(rootDir, fileName)
@@ -65,7 +65,11 @@ object FilePathUtil {
         // Now we cant do that because we need unique fileName for each attachment.
         Log.i(TAG, "getUniqueFileDirectory: file: $file, fileSize: $fileSize")
         if (!file.exists() /*|| file.length() == fileSize*/) {
-            return file
+            runCatching {
+                file.createNewFile()
+            }.onSuccess {
+                return file
+            }
         }
         var counter = 1
         var newRoot = File(rootDir, "/$counter")
