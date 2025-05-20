@@ -55,6 +55,7 @@ object FilePathUtil {
         return null
     }
 
+    @Synchronized
     fun getOrCreateUniqueFileDirectory(rootDir: File, fileName: String, fileSize: Long): File {
         // Create the directory if it doesn't exist
         if (!rootDir.exists()) {
