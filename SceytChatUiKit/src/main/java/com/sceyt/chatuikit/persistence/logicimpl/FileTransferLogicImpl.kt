@@ -47,6 +47,7 @@ import java.io.FileNotFoundException
 import java.util.Collections
 import java.util.LinkedList
 import java.util.Queue
+import java.util.UUID
 import kotlin.math.max
 
 internal class FileTransferLogicImpl(
@@ -490,7 +491,8 @@ internal class FileTransferLogicImpl(
 
     private fun getDestinationFile(context: Context, attachment: SceytAttachment): File {
         val root = context.getSaveFileLocationRoot(attachment.type)
-        val destinationFile = getOrCreateUniqueFileDirectory(root, attachment.name, attachment.fileSize)
+        val fileName = attachment.name.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+        val destinationFile = getOrCreateUniqueFileDirectory(root, fileName, attachment.fileSize)
         return destinationFile
     }
 
