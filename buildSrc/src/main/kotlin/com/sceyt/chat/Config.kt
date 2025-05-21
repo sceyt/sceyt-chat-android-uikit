@@ -12,7 +12,7 @@ object Config {
 
     // const val mavenCentralVersion = "1.8.4"
     // const val mavenCentralVersion = "local"
-    const val mavenCentralVersion = "1.8.404-SNAPSHOT"
+    const val mavenCentralVersion = "1.8.405-SNAPSHOT"
 
 
     /** App version */
