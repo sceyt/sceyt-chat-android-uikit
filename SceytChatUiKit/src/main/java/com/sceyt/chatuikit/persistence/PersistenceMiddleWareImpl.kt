@@ -502,24 +502,33 @@ internal class PersistenceMiddleWareImpl(
     override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()
 
     override suspend fun getPrevAttachments(
-            conversationId: Long, lastAttachmentId: Long,
-            types: List<String>, offset: Int, ignoreDb: Boolean,
+            conversationId: Long,
+            lastAttachmentId: Long,
+            types: List<String>,
+            offset: Int,
+            ignoreDb: Boolean,
             loadKeyData: LoadKeyData,
     ): Flow<PaginationResponse<AttachmentWithUserData>> {
         return attachmentsLogic.getPrevAttachments(conversationId, lastAttachmentId, types, offset, ignoreDb, loadKeyData)
     }
 
     override suspend fun getNextAttachments(
-            conversationId: Long, lastAttachmentId: Long,
-            types: List<String>, offset: Int, ignoreDb: Boolean,
+            conversationId: Long,
+            lastAttachmentId: Long,
+            types: List<String>,
+            offset: Int,
+            ignoreDb: Boolean,
             loadKeyData: LoadKeyData,
     ): Flow<PaginationResponse<AttachmentWithUserData>> {
         return attachmentsLogic.getNextAttachments(conversationId, lastAttachmentId, types, offset, ignoreDb, loadKeyData)
     }
 
     override suspend fun getNearAttachments(
-            conversationId: Long, attachmentId: Long,
-            types: List<String>, offset: Int, ignoreDb: Boolean,
+            conversationId: Long,
+            attachmentId: Long,
+            types: List<String>,
+            offset: Int,
+            ignoreDb: Boolean,
             loadKeyData: LoadKeyData,
     ): Flow<PaginationResponse<AttachmentWithUserData>> {
         return attachmentsLogic.getNearAttachments(conversationId, attachmentId, types, offset, ignoreDb, loadKeyData)
