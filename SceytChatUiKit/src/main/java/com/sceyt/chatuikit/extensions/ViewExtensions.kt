@@ -158,7 +158,7 @@ fun View.setOnLongClickListenerAvailable(clockAvailableData: ClickAvailableData,
     }
 }
 
-fun View.setOnClickListenerDisableClickViewForWhile(disableDuration: Long = 1000, onSafeClick: (View) -> Unit) {
+fun View.setSafeOnClickListener(disableDuration: Long = 1000, onSafeClick: (View) -> Unit) {
     var lastClickTime = 0L
     val lock = Any()
     setOnClickListener { view ->
