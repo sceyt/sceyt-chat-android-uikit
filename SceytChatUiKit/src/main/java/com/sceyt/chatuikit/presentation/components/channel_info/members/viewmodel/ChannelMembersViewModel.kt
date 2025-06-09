@@ -26,10 +26,12 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
 import com.sceyt.chatuikit.presentation.components.channel_info.members.adapter.MemberItem
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class ChannelMembersViewModel(
+        private val channelId: Long,
         private val channelsLogic: PersistenceChannelsLogic,
         private val membersLogic: PersistenceMembersLogic,
 ) : BaseViewModel() {
@@ -60,21 +62,27 @@ class ChannelMembersViewModel(
 
     init {
         viewModelScope.launch {
-            ChannelEventManager.onChannelMembersEventFlow.collect {
-                _channelMemberEventLiveData.postValue(it)
-            }
+            ChannelEventManager.onChannelMembersEventFlow
+                .filter { it.channel.id == channelId }
+                .collect {
+                    _channelMemberEventLiveData.postValue(it)
+                }
         }
 
         viewModelScope.launch {
-            ChannelEventManager.onChannelOwnerChangedEventFlow.collect {
-                _channelOwnerChangedEventLiveData.postValue(it)
-            }
+            ChannelEventManager.onChannelOwnerChangedEventFlow
+                .filter { it.channel.id == channelId }
+                .collect {
+                    _channelOwnerChangedEventLiveData.postValue(it)
+                }
         }
 
         viewModelScope.launch {
-            ChannelEventManager.onChannelEventFlow.collect {
-                _channelEventEventLiveData.postValue(it)
-            }
+            ChannelEventManager.onChannelEventFlow
+                .filter { it.channel?.id == channelId }
+                .collect {
+                    _channelEventEventLiveData.postValue(it)
+                }
         }
     }
 
