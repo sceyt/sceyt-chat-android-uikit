@@ -21,7 +21,7 @@ internal val viewModelModule = module {
     viewModel { params ->
         ChannelsViewModel(params.get())
     }
-    viewModel { ChannelMembersViewModel(get(), get()) }
+    viewModel { parameters -> ChannelMembersViewModel(channelId = parameters.get(), get(), get()) }
     viewModel(qualifier = ChannelInfoMediaViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
     viewModel(qualifier = ChannelInfoFilesViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }
     viewModel(qualifier = ChannelInfoLinksViewModelQualifier) { ChannelAttachmentsViewModel(get(), get(), get()) }

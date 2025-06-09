@@ -3,7 +3,6 @@ package com.sceyt.chat
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.testing.Test
-import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.withType
 
 fun Project.configureMockitoAgent(): Configuration {
@@ -15,7 +14,6 @@ fun Project.configureMockitoAgent(): Configuration {
 
         // Ensure the JAR was found before adding the jvmArgs
         if (byteBuddyAgentJar != null) {
-            @Suppress("USELESS_ELVIS")
             jvmArgs = (jvmArgs ?: emptyList()) + "-javaagent:${byteBuddyAgentJar.absolutePath}"
         } else {
             // Log a warning or error if the byte-buddy-agent JAR is not found
