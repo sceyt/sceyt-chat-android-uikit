@@ -10,6 +10,7 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.data.constants.SceytConstants.SCEYT_WORKER_TAG
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.repositories.getUserId
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.cleaner.DatabaseCleaner
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import com.sceyt.chatuikit.persistence.file_transfer.FileTransferService
@@ -104,6 +105,7 @@ class SceytChatUIFacade(
         databaseCleaner.cleanDatabase()
         preferences.clear()
         channelsCache.clearAll()
+        SceytLog.i(TAG, "UI kit data cleared.")
     }
 
     fun logOut(unregisterPushCallback: ((Result<Boolean>) -> Unit)? = null) = scope.launch {
@@ -127,5 +129,9 @@ class SceytChatUIFacade(
                     continuation.safeResume(Result.failure(Exception(error)))
             }
         }
+    }
+
+    companion object {
+        private val TAG = SceytChatUIFacade::class.java.name
     }
 }
