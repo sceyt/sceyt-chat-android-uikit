@@ -121,14 +121,14 @@ class ChannelsRepositoryImpl : ChannelsRepository {
             config: ChannelListConfig,
             params: SearchChannelParams,
     ): SceytResponse<List<SceytChannel>> {
-        val query = if (::channelsQuery.isInitialized)
+        val channelListQuery = if (::channelsQuery.isInitialized)
             channelsQuery
         else {
             return getChannels(query, config, params)
         }
 
         return suspendCancellableCoroutine { continuation ->
-            query.loadNext(object : ChannelsCallback {
+            channelListQuery.loadNext(object : ChannelsCallback {
                 override fun onResult(channels: MutableList<Channel>?) {
                     if (channels.isNullOrEmpty())
                         continuation.safeResume(SceytResponse.Success(emptyList()))
