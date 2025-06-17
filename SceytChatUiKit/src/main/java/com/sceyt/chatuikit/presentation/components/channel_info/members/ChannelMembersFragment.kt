@@ -57,9 +57,12 @@ import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResul
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.styles.channel_members.ChannelMembersStyle
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
 
 open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoinComponent {
-    protected val viewModel by viewModel<ChannelMembersViewModel>()
+    protected val viewModel by viewModel<ChannelMembersViewModel>(parameters = {
+        parametersOf(requireNotNull(arguments?.parcelable<SceytChannel>(CHANNEL)).id)
+    })
     protected var membersAdapter: ChannelMembersAdapter? = null
     protected var binding: SceytFragmentChannelMembersBinding? = null
         private set

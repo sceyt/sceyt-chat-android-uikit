@@ -136,7 +136,8 @@ fun SceytAttachment?.getShowName(context: Context): String {
 fun SceytAttachment?.isAttachmentExistAndFullyLoaded(loadedFile: File): File? {
     if (this == null) return null
 
-    if (loadedFile.exists() && getFileSize(loadedFile.path) == fileSize)
+    val loadedFileSize by lazy { getFileSize(loadedFile.path) }
+    if (loadedFile.exists() && loadedFileSize != 0L && loadedFileSize == fileSize)
         return loadedFile
 
     return null

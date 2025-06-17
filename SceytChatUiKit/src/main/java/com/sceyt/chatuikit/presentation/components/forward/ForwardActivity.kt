@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivityForwardBinding
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.parcelableArrayList
+import com.sceyt.chatuikit.extensions.setSafeOnClickListener
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
@@ -54,7 +55,7 @@ open class ForwardActivity : ShareableActivity<ForwardStyle>() {
 
         toolbar.setQueryChangeListener(::onSearchQueryChanged)
 
-        btnForward.setOnClickListener {
+        btnForward.setSafeOnClickListener {
             onForwardClick(true)
         }
     }

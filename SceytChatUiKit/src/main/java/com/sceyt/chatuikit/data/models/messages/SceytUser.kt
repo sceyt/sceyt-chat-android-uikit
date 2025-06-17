@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.data.models.messages
 
 import android.os.Parcelable
-import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.UserState
 import kotlinx.parcelize.Parcelize
 
@@ -13,7 +12,7 @@ data class SceytUser(
         val lastName: String,
         val avatarURL: String?,
         val metadataMap: Map<String, String>?,
-        val presence: Presence?,
+        val presence: SceytPresence?,
         val state: UserState,
         val blocked: Boolean
 ) : Parcelable {

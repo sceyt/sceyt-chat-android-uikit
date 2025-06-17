@@ -267,9 +267,9 @@ class AvatarView @JvmOverloads constructor(
     fun setImageUrl(url: String?, preloadForOffline: Boolean = true) {
         val oldImageUrl = imageUrl
         imageUrl = url
-        invalidate()
         setDefaultImageIfNeeded(defaultAvatar)
         loadAvatarImage(oldImageUrl, preloadForOffline)
+        invalidate()
     }
 
     @Suppress("Unused")
@@ -277,6 +277,7 @@ class AvatarView @JvmOverloads constructor(
         defaultAvatar = avatar
         setInitialsIfNeeded(defaultAvatar)
         setDefaultImageIfNeeded(defaultAvatar)
+        invalidate()
     }
 
     fun setAvatarImageLoadListener(cb: (Boolean) -> Unit) {

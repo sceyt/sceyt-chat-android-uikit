@@ -32,7 +32,6 @@ import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.presentation.common.ClickAvailableData
-import com.sceyt.chatuikit.shared.utils.ViewEnabledUtils
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -159,10 +158,17 @@ fun View.setOnLongClickListenerAvailable(clockAvailableData: ClickAvailableData,
     }
 }
 
-fun View.setOnClickListenerDisableClickViewForWhile(disableDuration: Long = 1000, onClickCallBack: (View) -> Unit) {
-    setOnClickListener {
-        ViewEnabledUtils.disableClickViewForWhile(it, disableDuration)
-        onClickCallBack.invoke(it)
+fun View.setSafeOnClickListener(disableDuration: Long = 1000, onSafeClick: (View) -> Unit) {
+    var lastClickTime = 0L
+    val lock = Any()
+    setOnClickListener { view ->
+        val currentTime = System.currentTimeMillis()
+        synchronized(lock) {
+            if (currentTime - lastClickTime >= disableDuration) {
+                lastClickTime = currentTime
+                onSafeClick(view)
+            }
+        }
     }
 }
 
