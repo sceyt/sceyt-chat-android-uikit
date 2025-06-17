@@ -15,6 +15,7 @@ import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.parcelableArrayList
+import com.sceyt.chatuikit.extensions.setSafeOnClickListener
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
@@ -91,7 +92,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
 
         toolbar.setQueryChangeListener(::onSearchQueryChanged)
 
-        btnShare.setOnClickListener {
+        btnShare.setSafeOnClickListener {
             onShareClick()
         }
     }
