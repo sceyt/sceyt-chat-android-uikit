@@ -47,6 +47,7 @@ import com.sceyt.chatuikit.extensions.isEqualsVideoOrImage
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.isRtl
 import com.sceyt.chatuikit.extensions.isValidEmail
+import com.sceyt.chatuikit.extensions.isValidPhoneNumber
 import com.sceyt.chatuikit.extensions.marginHorizontal
 import com.sceyt.chatuikit.extensions.screenPortraitWidthPx
 import com.sceyt.chatuikit.extensions.setBackgroundTintColorRes
@@ -170,15 +171,24 @@ abstract class BaseMessageViewHolder(
             checkLinks: Boolean,
             isLinkViewHolder: Boolean
     ) {
+        var autoLinkMask = 0
+
+        // Add web URLs if it's a link view holder or if links are detected
         if (isLinkViewHolder || (checkLinks && bodyText.extractLinks().isNotEmpty())) {
-            messageBody.autoLinkMask = Linkify.WEB_URLS
-            return
+            autoLinkMask = autoLinkMask or Linkify.WEB_URLS
         }
+
+        // Add email addresses if valid email is detected
         if (bodyText.isValidEmail()) {
-            messageBody.autoLinkMask = Linkify.EMAIL_ADDRESSES
-            return
+            autoLinkMask = autoLinkMask or Linkify.EMAIL_ADDRESSES
         }
-        messageBody.autoLinkMask = 0
+
+        // Add phone numbers if valid phone number is detected
+        if (bodyText.isValidPhoneNumber()) {
+            autoLinkMask = autoLinkMask or Linkify.PHONE_NUMBERS
+        }
+
+        messageBody.autoLinkMask = autoLinkMask
     }
 
     @SuppressLint("SetTextI18n")

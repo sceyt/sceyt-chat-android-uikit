@@ -122,6 +122,23 @@ fun CharSequence?.isValidEmail(): Boolean {
     return emailRegex.matches(this)
 }
 
+fun CharSequence?.isValidPhoneNumber(): Boolean {
+    this ?: return false
+    return Patterns.PHONE.matcher(this).matches()
+}
+
+fun CharSequence?.extractPhones(): Array<String> {
+    if (this.isNullOrBlank()) return emptyArray()
+    val links = ArrayList<String>()
+    val m = Patterns.PHONE.matcher(this)
+    while (m.find()) {
+        val url = m.group()
+        links.add(url)
+    }
+    return links.toTypedArray()
+}
+
+
 fun String?.isRtl(): Boolean {
     if (isNullOrBlank()) return false
     for (char in this) {
