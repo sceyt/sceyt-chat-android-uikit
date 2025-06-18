@@ -75,10 +75,11 @@ class VoiceRecorderView @JvmOverloads constructor(
     private var lockOffset = 0f
     private var isLocked = false
     private var userBehaviour = UserBehaviour.NONE
-    private var recordingListener: RecordingListener? = null
     private var isLayoutDirectionRightToLeft = false
     private var colorAnimation: ValueAnimator? = null
     private lateinit var style: VoiceRecorderViewStyle
+    private var recordingListener: RecordingListener? = null
+    private var isRecordingAllowed: () -> Boolean = { true }
 
     init {
         init()
@@ -136,6 +137,9 @@ class VoiceRecorderView @JvmOverloads constructor(
                     } else {
                         if (!context.checkAndAskPermissions(requestVoicePermissionLauncher, Manifest.permission.RECORD_AUDIO)
                                 || layoutTransition.isRunning)
+                            return@OnTouchListener false
+
+                        if (!isRecordingAllowed())
                             return@OnTouchListener false
 
                         cancelOffset = screenWidthPx() / 2.8f
@@ -515,6 +519,10 @@ class VoiceRecorderView @JvmOverloads constructor(
 
     fun setListener(listener: RecordingListener) {
         recordingListener = listener
+    }
+
+    fun setVoiceRecordingPermissionChecker(isRecordingAllowed: () -> Boolean) {
+        this.isRecordingAllowed = isRecordingAllowed
     }
 
     fun setRecorderHeight(height: Int) {

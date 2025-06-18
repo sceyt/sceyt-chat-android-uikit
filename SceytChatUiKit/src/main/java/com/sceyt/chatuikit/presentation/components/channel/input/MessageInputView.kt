@@ -107,7 +107,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
-@Suppress("MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
+@Suppress("MemberVisibilityCanBePrivate")
 class MessageInputView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
@@ -184,13 +184,13 @@ class MessageInputView @JvmOverloads constructor(
             if (enableVoiceRecord) {
                 // Init SceytVoiceMessageRecorderView outside of post, because it's using permission launcher
                 val voiceRecorderView = VoiceRecorderView(context).also { it.setStyle(style) }
+                this@MessageInputView.voiceRecorderView = voiceRecorderView
                 post {
                     onStateChanged(inputState)
                     (parent as? ViewGroup)?.let { parentView ->
                         val index = parentView.indexOfChild(this@MessageInputView)
                         parentView.addView(voiceRecorderView.apply {
                             setRecordingListener()
-                            this@MessageInputView.voiceRecorderView = this
                             this@MessageInputView.voiceRecorderView?.setRecorderHeight(binding.layoutInput.height)
                             isVisible = canShowRecorderView()
                         }, index + 1, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
@@ -802,6 +802,11 @@ class MessageInputView @JvmOverloads constructor(
     @Suppress("unused")
     fun setEventListener(listener: InputEventsListener) {
         eventListeners.setListener(listener)
+    }
+
+    @Suppress("unused")
+    fun setVoiceRecordingPermissionChecker(isVoiceRecordingAllowed: () -> Boolean) {
+        voiceRecorderView?.setVoiceRecordingPermissionChecker(isVoiceRecordingAllowed)
     }
 
     @Suppress("unused")
