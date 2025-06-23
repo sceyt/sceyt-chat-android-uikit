@@ -19,6 +19,8 @@ object SceytConstants {
 
     const val startTypingEvent = "start_typing"
     const val stopTypingEvent = "stop_typing"
+    const val startRecordingEvent = "start_recording"
+    const val stopRecordingEvent = "stop_recording"
 
     internal const val SCEYT_WORKER_TAG = "sceyt_worker_tag"
 }

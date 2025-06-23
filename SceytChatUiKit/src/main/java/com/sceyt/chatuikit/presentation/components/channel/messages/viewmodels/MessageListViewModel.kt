@@ -10,6 +10,7 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
@@ -67,6 +68,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
+import com.sceyt.chatuikit.presentation.components.channel.input.data.UserActivityState
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
@@ -507,10 +509,23 @@ class MessageListViewModel(
         }
     }
 
-    fun sendTypingEvent(typing: Boolean) {
+    fun sendUserActivityStateEvent(state: UserActivityState) {
         if (channel.pending) return
         viewModelScope.launch(Dispatchers.IO) {
-            messageInteractor.sendTyping(channel.id, typing)
+            val event = when (state) {
+                is UserActivityState.Typing -> {
+                    if (state.typing) {
+                        SceytConstants.startTypingEvent
+                    } else SceytConstants.stopTypingEvent
+                }
+
+                is UserActivityState.Recording -> {
+                    if (state.recording) {
+                        SceytConstants.startRecordingEvent
+                    } else SceytConstants.stopRecordingEvent
+                }
+            }
+            messageInteractor.sendChannelEvent(channel.id, event)
         }
     }
 
