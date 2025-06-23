@@ -15,7 +15,6 @@ import com.sceyt.chat.sceyt_callbacks.MessageCallback
 import com.sceyt.chat.sceyt_callbacks.MessageMarkCallback
 import com.sceyt.chat.sceyt_callbacks.MessagesCallback
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.models.SceytPagingResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.messages.MarkerType
@@ -323,10 +322,7 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
-    override suspend fun sendTyping(channelId: Long, typing: Boolean) {
-        val event = if (typing) {
-            SceytConstants.startTypingEvent
-        } else SceytConstants.stopTypingEvent
+    override suspend fun sendChannelEvent(channelId: Long, event: String) {
         ChannelOperator.build(channelId).sendEvent(event)
     }
 

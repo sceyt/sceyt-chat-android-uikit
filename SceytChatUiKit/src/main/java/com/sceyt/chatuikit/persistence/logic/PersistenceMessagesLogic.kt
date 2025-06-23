@@ -80,6 +80,6 @@ interface PersistenceMessagesLogic {
     suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
     suspend fun attachmentSuccessfullySent(message: SceytMessage)
     suspend fun saveChannelLastMessagesToDb(list: List<SceytMessage>?)
-    suspend fun sendTyping(channelId: Long, typing: Boolean)
+    suspend fun sendChannelEvent(channelId: Long, event: String)
     fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>>
 }

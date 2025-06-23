@@ -40,5 +40,5 @@ interface MessagesRepository {
     suspend fun markMessageAs(channelId: Long, marker: MarkerType, vararg id: Long): SceytResponse<MessageListMarker>
     suspend fun addMessagesMarker(channelId: Long, marker: String, vararg id: Long): SceytResponse<MessageListMarker>
     suspend fun getMessageById(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
-    suspend fun sendTyping(channelId: Long, typing: Boolean)
+    suspend fun sendChannelEvent(channelId: Long, event: String)
 }

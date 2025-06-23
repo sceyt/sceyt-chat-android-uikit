@@ -495,8 +495,8 @@ internal class PersistenceMiddleWareImpl(
         return messagesLogic.getMessageFromDbByTid(messageTid)
     }
 
-    override suspend fun sendTyping(channelId: Long, typing: Boolean) {
-        messagesLogic.sendTyping(channelId, typing)
+    override suspend fun sendChannelEvent(channelId: Long, event: String) {
+        messagesLogic.sendChannelEvent(channelId, event)
     }
 
     override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()

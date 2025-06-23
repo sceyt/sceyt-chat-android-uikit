@@ -16,7 +16,6 @@ import androidx.annotation.DrawableRes
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
-import androidx.core.widget.doAfterTextChanged
 import com.google.gson.Gson
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.Message
@@ -34,6 +33,7 @@ import com.sceyt.chatuikit.databinding.SceytDisableMessageInputBinding
 import com.sceyt.chatuikit.databinding.SceytMessageInputViewBinding
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.customToastSnackBar
+import com.sceyt.chatuikit.extensions.doAfterRealTextChanged
 import com.sceyt.chatuikit.extensions.doSafe
 import com.sceyt.chatuikit.extensions.empty
 import com.sceyt.chatuikit.extensions.getScope
@@ -61,6 +61,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState.Text
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState.Voice
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
+import com.sceyt.chatuikit.presentation.components.channel.input.data.UserActivityState
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.helpers.MessageToSendHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.link.SingleLinkDetailsProvider
@@ -102,7 +103,6 @@ import com.sceyt.chatuikit.styles.input.MessageSearchControlsStyle
 import com.vanniktech.ui.animateToGone
 import com.vanniktech.ui.animateToVisible
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -126,7 +126,7 @@ class MessageInputView @JvmOverloads constructor(
     private var actionListeners: InputActionListeners = InputActionsListenerImpl(this)
     private var selectFileTypePopupClickListeners: ClickListeners = SelectFileTypePopupClickListenersImpl(this)
     private var filePickerHelper: FilePickerHelper? = null
-    private val typingDebounceHelper by lazy { DebounceHelper(100, getScope()) }
+    private val userActivityChangeDebounceHelper by lazy { DebounceHelper(100, getScope()) }
     private var typingTimeoutJob: Job? = null
     private var inputState = Voice
     private var disabledInputByGesture: Boolean = false
@@ -201,7 +201,7 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     private fun addInputTextWatcher() {
-        inputTextWatcher = binding.messageInput.doAfterTextChanged { text ->
+        inputTextWatcher = binding.messageInput.doAfterRealTextChanged { text ->
             onInputChanged(text)
         }
     }
@@ -211,17 +211,31 @@ class MessageInputView @JvmOverloads constructor(
             return
 
         determineInputState()
+        onUserActivityStateChange(UserActivityState.Typing(
+            typing = text.isNullOrBlank().not(),
+            text = text)
+        )
+    }
 
-        typingTimeoutJob?.cancel()
-        typingTimeoutJob = MainScope().launch {
-            delay(2000)
-            actionListeners.sendTyping(false)
+    private fun onUserActivityStateChange(state: UserActivityState) {
+        if (state is UserActivityState.Typing) {
+            typingTimeoutJob?.cancel()
+            if (state.typing) {
+                typingTimeoutJob = getScope().launch {
+                    delay(2000)
+                    actionListeners.sendUserActivity(UserActivityState.Typing(
+                        typing = false,
+                        text = null
+                    ))
+                }
+            }
         }
 
-        typingDebounceHelper.submit {
-            actionListeners.sendTyping(text.isNullOrBlank().not())
+        userActivityChangeDebounceHelper.submit {
+            actionListeners.sendUserActivity(state)
             updateDraftMessage()
-            tryToLoadLinkPreview(text)
+            if (state is UserActivityState.Typing)
+                tryToLoadLinkPreview(state.text)
         }
     }
 
@@ -358,27 +372,38 @@ class MessageInputView @JvmOverloads constructor(
     private fun VoiceRecorderView.setRecordingListener() {
         setListener(object : RecordingListener {
             override fun onRecordingStarted() {
-                val directoryToSaveRecording = context.filesDir.path + "/Audio"
-                AudioPlayerHelper.pauseAll()
-                audioRecorderHelper.startRecording(directoryToSaveRecording) {}
-                binding.layoutInput.isInvisible = true
-                voiceRecorderView?.keepScreenOn = true
-
-                (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
+                this@MessageInputView.onRecordingStarted()
             }
 
             override fun onRecordingCompleted(shouldShowPreview: Boolean) {
                 audioRecorderHelper.stopRecording(onStopRecordingCompleted(shouldShowPreview))
+                onRecordingCompletedOrCanceled()
             }
 
             override fun onRecordingCanceled() {
                 audioRecorderHelper.cancelRecording()
                 finishRecording()
-                voiceRecorderView?.keepScreenOn = false
-
-                (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                onRecordingCompletedOrCanceled()
             }
         })
+    }
+
+    private fun onRecordingStarted() {
+        val directoryToSaveRecording = context.filesDir.path + "/Audio"
+        AudioPlayerHelper.pauseAll()
+        audioRecorderHelper.startRecording(directoryToSaveRecording) {}
+        binding.layoutInput.isInvisible = true
+        voiceRecorderView?.keepScreenOn = true
+        (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
+
+        onUserActivityStateChange(UserActivityState.Recording(recording = true))
+    }
+
+    private fun onRecordingCompletedOrCanceled() {
+        voiceRecorderView?.keepScreenOn = false
+        (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+
+        onUserActivityStateChange(UserActivityState.Recording(recording = false))
     }
 
     private fun onStopRecordingCompleted(
@@ -394,9 +419,6 @@ class MessageInputView @JvmOverloads constructor(
             finishRecording()
             tryToSendRecording(file, amplitudes.toIntArray(), duration)
         }
-        voiceRecorderView?.keepScreenOn = false
-
-        (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     }
 
     private fun showRecordPreview(file: File?, amplitudes: Array<Int>, duration: Int) {
@@ -973,8 +995,8 @@ class MessageInputView @JvmOverloads constructor(
         messageInputActionCallback?.sendEditMessage(message, linkDetails)
     }
 
-    override fun sendTyping(typing: Boolean) {
-        messageInputActionCallback?.sendTyping(typing)
+    override fun sendUserActivity(state: UserActivityState) {
+        messageInputActionCallback?.sendUserActivity(state)
     }
 
     override fun updateDraftMessage(
