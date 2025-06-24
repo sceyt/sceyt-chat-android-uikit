@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.data.managers.channel.handler
 
 import com.sceyt.chat.models.member.Member
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
@@ -16,7 +16,7 @@ sealed interface ChannelEventHandler {
     }
 
     fun interface OnChannelEvent : ChannelEventHandler {
-        fun onChannelEvent(data: ChannelEventData)
+        fun onChannelEvent(event: ChannelActionEvent)
     }
 
     fun interface OnOwnerChanged : ChannelEventHandler {
