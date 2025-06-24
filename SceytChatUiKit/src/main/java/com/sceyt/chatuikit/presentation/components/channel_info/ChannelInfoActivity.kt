@@ -125,11 +125,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             finish()
         }
 
-        viewModel.onChannelLeftLiveData.observe(this) { data ->
-            data.channel?.let {
-                channel = it
-                setChannelDetails(it)
-            }
+        viewModel.onChannelLeftLiveData.observe(this) { event ->
+            channel = event.channel
+            setChannelDetails(channel)
             if (!channel.isPublic())
                 finish()
         }
@@ -425,9 +423,6 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             DirectChatActionsDialog.newInstance(this, channel).apply {
                 setChooseTypeCb(::onDirectChatMoreActionClick)
             }.show()
-    }
-
-    protected open fun onReportClick(channel: SceytChannel) {
     }
 
     protected open fun onDirectChatMoreActionClick(actionsEnum: DirectChatActionsDialog.ActionsEnum) {

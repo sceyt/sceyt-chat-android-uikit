@@ -12,14 +12,13 @@ import com.sceyt.chat.models.user.UserState
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.config.SearchChannelParams
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.ClearedHistory
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Created
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Deleted
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Joined
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Left
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Updated
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.ClearedHistory
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Created
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Deleted
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Joined
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Left
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Updated
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager.awaitToConnectSceyt
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
@@ -107,68 +106,61 @@ internal class PersistenceChannelsLogicImpl(
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
     private val channelsLoadSize get() = SceytChatUIKit.config.queryLimits.channelListQueryLimit
 
-    override suspend fun onChannelEvent(data: ChannelEventData) {
-        when (val event = data.eventType) {
-            is Created -> onChanelAdded(data.channel)
-            is Joined -> onChanelJoined(data.channel)
-            is Deleted -> data.channelId?.let { deleteChannelFromDbAndCache(it) }
+    override suspend fun onChannelEvent(event: ChannelActionEvent) {
+        when (event) {
+            is Created -> onChanelAdded(event.channel)
+            is Joined -> onChanelJoined(event.channel)
+            is Deleted -> deleteChannelFromDbAndCache(event.channelId)
             is Left -> {
                 val leftUsers = event.leftMembers
                 leftUsers.forEach { leftUser ->
-                    data.channelId?.let { channelId ->
-                        if (leftUser.id == myId) {
-                            deleteChannelFromDbAndCache(channelId)
-                            return
-                        } else {
-                            channelDao.deleteUserChatLinks(channelId, leftUser.id)
-                            updateMembersCount(channelId, data.channel?.memberCount?.toInt() ?: 0)
-                        }
+                    if (leftUser.id == myId) {
+                        deleteChannelFromDbAndCache(event.channelId)
+                        return
+                    } else {
+                        channelDao.deleteUserChatLinks(event.channelId, leftUser.id)
+                        updateMembersCount(event.channelId, event.channel.memberCount.toInt())
                     }
                 }
             }
 
             is ClearedHistory -> {
-                data.channelId?.let { channelId ->
-                    clearHistory(channelId)
-                }
+                clearHistory(event.channelId)
             }
 
             is Updated -> {
-                data.channel?.let { sceytChannel ->
-                    val withLastMessage = initPendingLastMessageBeforeInsert(sceytChannel)
-                    channelDao.insertChannel(withLastMessage.toChannelEntity())
-                    val updated = fillChannelsNeededInfo(withLastMessage)
-                    channelsCache.upsertChannel(updated)
+                val withLastMessage = initPendingLastMessageBeforeInsert(event.channel)
+                channelDao.insertChannel(withLastMessage.toChannelEntity())
+                val updated = fillChannelsNeededInfo(withLastMessage)
+                channelsCache.upsertChannel(updated)
+            }
+
+            is ChannelActionEvent.Mute -> {
+                val channelId = event.channelId
+                if (event.muted) {
+                    val time = event.channel.mutedTill ?: 0
+                    channelDao.updateMuteState(channelId, true, time)
+                    channelsCache.updateMuteState(channelId, true, time)
+                } else {
+                    channelDao.updateMuteState(channelId, false)
+                    channelsCache.updateMuteState(channelId, false)
                 }
             }
 
-            is ChannelEventEnum.Mute -> {
-                data.channelId?.let { channelId ->
-                    if (event.muted) {
-                        val time = data.channel?.mutedTill ?: 0
-                        channelDao.updateMuteState(channelId, true, time)
-                        channelsCache.updateMuteState(channelId, true, time)
-                    } else {
-                        channelDao.updateMuteState(channelId, false)
-                        channelsCache.updateMuteState(channelId, false)
-                    }
-                }
-            }
-
-            is ChannelEventEnum.Pin -> onChannelPinStateChange(data.channel)
-            is ChannelEventEnum.MarkedUs -> onChannelMarkedAsReadOrUnread(data.channel)
-            is ChannelEventEnum.Block -> {
+            is ChannelActionEvent.Pin -> onChannelPinStateChange(event.channel)
+            is ChannelActionEvent.MarkedUs -> onChannelMarkedAsReadOrUnread(event.channel)
+            is ChannelActionEvent.Block -> {
                 if (event.blocked)
-                    data.channelId?.let { deleteChannelFromDbAndCache(it) }
+                    deleteChannelFromDbAndCache(event.channelId)
             }
 
-            is ChannelEventEnum.Hide -> {
+            is ChannelActionEvent.Hide -> {
                 if (event.hidden)
-                    data.channelId?.let { deleteChannelFromDbAndCache(it) }
-                else onChanelAdded(data.channel)
+                    deleteChannelFromDbAndCache(event.channelId)
+                else onChanelAdded(event.channel)
             }
 
-            is ChannelEventEnum.Event -> Unit
+            is ChannelActionEvent.Event -> Unit
         }
     }
 

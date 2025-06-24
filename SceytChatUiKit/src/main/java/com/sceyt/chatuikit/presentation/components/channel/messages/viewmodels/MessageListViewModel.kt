@@ -12,7 +12,7 @@ import com.sceyt.chat.models.message.MessageListMarker
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
@@ -172,7 +172,7 @@ class MessageListViewModel(
     // val onOutGoingThreadMessageFlow: Flow<SceytMessage>// todo reply in thread
 
     // Chanel events
-    val onChannelEventFlow: Flow<ChannelEventData>
+    val onChannelEventFlow: Flow<ChannelActionEvent>
     val onChannelTypingEventFlow: Flow<ChannelTypingEventData>
     val onChannelUpdatedEventFlow: Flow<SceytChannel>
 

@@ -15,9 +15,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Joined
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Left
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Joined
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Left
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
@@ -400,8 +400,8 @@ open class ChannelMembersFragment : Fragment(), ChannelUpdateListener, SceytKoin
         viewModel.changeRole(channel.id, *member)
     }
 
-    protected open fun onChannelEvent(eventData: ChannelEventData) {
-        when (val event = eventData.eventType) {
+    protected open fun onChannelEvent(event: ChannelActionEvent) {
+        when (event) {
             is Left -> {
                 event.leftMembers.forEach {
                     removeMember(it.id)

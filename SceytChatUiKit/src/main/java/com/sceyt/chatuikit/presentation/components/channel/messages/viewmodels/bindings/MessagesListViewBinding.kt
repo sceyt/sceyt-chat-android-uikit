@@ -14,9 +14,9 @@ import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.ClearedHistory
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Deleted
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum.Left
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.ClearedHistory
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Deleted
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Left
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
@@ -627,8 +627,8 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    onChannelEventFlow.onEach {
-        when (val event = it.eventType) {
+    onChannelEventFlow.onEach { event ->
+        when (event) {
             is ClearedHistory -> messagesListView.clearData()
             is Left -> {
                 event.leftMembers.forEach { member ->

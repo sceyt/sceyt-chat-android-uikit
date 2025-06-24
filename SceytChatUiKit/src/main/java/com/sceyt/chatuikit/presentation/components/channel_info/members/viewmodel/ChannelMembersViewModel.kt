@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.role.Role
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
@@ -48,8 +48,8 @@ class ChannelMembersViewModel(
     private val _channelOwnerChangedEventLiveData = MutableLiveData<ChannelOwnerChangedEventData>()
     val channelOwnerChangedEventLiveData: LiveData<ChannelOwnerChangedEventData> = _channelOwnerChangedEventLiveData
 
-    private val _channelEventEventLiveData = MutableLiveData<ChannelEventData>()
-    val channelEventEventLiveData: LiveData<ChannelEventData> = _channelEventEventLiveData
+    private val _channelEventEventLiveData = MutableLiveData<ChannelActionEvent>()
+    val channelEventEventLiveData = _channelEventEventLiveData.asLiveData()
 
     private val _channelAddMemberLiveData = MutableLiveData<List<SceytMember>>()
     val channelAddMemberLiveData = _channelAddMemberLiveData.asLiveData()
@@ -79,7 +79,7 @@ class ChannelMembersViewModel(
 
         viewModelScope.launch {
             ChannelEventManager.onChannelEventFlow
-                .filter { it.channel?.id == channelId }
+                .filter { event -> event.channelId == channelId }
                 .collect {
                     _channelEventEventLiveData.postValue(it)
                 }
