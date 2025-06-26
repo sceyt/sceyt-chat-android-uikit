@@ -59,9 +59,9 @@ class ClickableTextView @JvmOverloads constructor(
 
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    getClickableSpan(event)?.let {
+                    /*getClickableSpan(event)?.let {
                         addRippleEffect(spannableString, it)
-                    }
+                    }*/
                 }
 
                 MotionEvent.ACTION_UP -> {
