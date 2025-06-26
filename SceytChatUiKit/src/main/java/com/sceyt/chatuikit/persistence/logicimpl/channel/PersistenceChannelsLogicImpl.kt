@@ -951,6 +951,10 @@ internal class PersistenceChannelsLogicImpl(
         channelsCache.upsertChannel(*channels.map { it.toChannel() }.toTypedArray())
     }
 
+    override suspend fun sendChannelEvent(channelId: Long, event: String) {
+        channelsRepository.sendChannelEvent(channelId, event)
+    }
+
     override suspend fun updateDraftMessage(
             channelId: Long,
             message: String?,

@@ -216,13 +216,14 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
             }
         }.launchIn(viewModelScope)
 
-    ChannelEventManager.onChannelTypingEventFlow
-        .filter { it.user.id != SceytChatUIKit.chatUIFacade.myId }
+    ChannelEventManager.onChannelMemberActivityEventFlow
+        .filter { it.userId != SceytChatUIKit.chatUIFacade.myId }
         .onEach {
-            typingCancelHelper.await(it) { data ->
+            //todo
+         /*   typingCancelHelper.await(it) { data ->
                 channelListView.onTyping(data)
             }
-            channelListView.onTyping(it)
+            channelListView.onTyping(it)*/
         }.launchIn(lifecycleOwner.lifecycleScope)
 
     pageStateLiveData.observe(lifecycleOwner) {

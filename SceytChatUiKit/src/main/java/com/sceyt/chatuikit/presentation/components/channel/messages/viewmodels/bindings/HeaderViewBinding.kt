@@ -71,10 +71,8 @@ fun MessageListViewModel.bind(
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 
-    onChannelTypingEventFlow
-        .onEach {
-            headerView.handleTypingEvent(it)
-        }
+    onChannelMemberActivityEventFlow
+        .onEach(headerView::handleMemberActivityEvent)
         .flowOn(Dispatchers.Main)
         .launchIn(lifecycleOwner.lifecycleScope)
 

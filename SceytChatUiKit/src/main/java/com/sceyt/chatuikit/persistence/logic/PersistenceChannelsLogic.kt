@@ -78,6 +78,7 @@ interface PersistenceChannelsLogic {
     suspend fun updateLastMessageWithLastRead(channelId: Long, message: SceytMessage)
     suspend fun updateLastMessageIfNeeded(channelId: Long, message: SceytMessage?)
     suspend fun blockUnBlockUser(userId: String, block: Boolean)
+    suspend fun sendChannelEvent(channelId: Long, event: String)
     suspend fun updateDraftMessage(
             channelId: Long, message: String?, mentionUsers: List<Mention>,
             styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean,

@@ -52,4 +52,5 @@ interface ChannelsRepository {
     suspend fun pinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun unpinChannel(channelId: Long): SceytResponse<SceytChannel>
     suspend fun join(channelId: Long): SceytResponse<SceytChannel>
+    suspend fun sendChannelEvent(channelId: Long, event: String)
 }

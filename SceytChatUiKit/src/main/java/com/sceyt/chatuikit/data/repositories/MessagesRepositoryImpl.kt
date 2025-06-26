@@ -322,10 +322,6 @@ class MessagesRepositoryImpl : MessagesRepository {
         }
     }
 
-    override suspend fun sendChannelEvent(channelId: Long, event: String) {
-        ChannelOperator.build(channelId).sendEvent(event)
-    }
-
     private val messagesLoadSize get() = SceytChatUIKit.config.queryLimits.messageListQueryLimit
 
     private fun getQuery(conversationId: Long,

@@ -1,12 +1,12 @@
 package com.sceyt.chatuikit.presentation.components.channel.header.listeners.event
 
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 
 sealed interface MessageListHeaderEventsListener {
 
-    fun interface TypingListener : MessageListHeaderEventsListener {
-        fun onTypingEvent(data: ChannelTypingEventData)
+    fun interface MemberActivityListener : MessageListHeaderEventsListener {
+        fun onActivityEvent(event: ChannelMemberActivityEvent)
     }
 
     fun interface PresenceUpdateListener : MessageListHeaderEventsListener {
@@ -14,7 +14,7 @@ sealed interface MessageListHeaderEventsListener {
     }
 
     /** Use this if you want to implement all callbacks */
-    interface EventListeners : TypingListener, PresenceUpdateListener
+    interface EventListeners : MemberActivityListener, PresenceUpdateListener
 }
 
 internal fun MessageListHeaderEventsListener.setListener(listener: MessageListHeaderEventsListener) {

@@ -811,10 +811,6 @@ internal class PersistenceMessagesLogicImpl(
 
     override fun getOnMessageFlow() = onMessageFlow.asSharedFlow()
 
-    override suspend fun sendChannelEvent(channelId: Long, event: String) {
-        messagesRepository.sendChannelEvent(channelId, event)
-    }
-
     private fun loadMessages(
             loadType: LoadType, conversationId: Long, messageId: Long,
             replyInThread: Boolean, offset: Int, limit: Int,

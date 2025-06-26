@@ -13,9 +13,9 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.managers.message.MessageEventManager
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
@@ -173,7 +173,7 @@ class MessageListViewModel(
 
     // Chanel events
     val onChannelEventFlow: Flow<ChannelActionEvent>
-    val onChannelTypingEventFlow: Flow<ChannelTypingEventData>
+    val onChannelMemberActivityEventFlow: Flow<ChannelMemberActivityEvent>
     val onChannelUpdatedEventFlow: Flow<SceytChannel>
 
     //Command events
@@ -209,8 +209,8 @@ class MessageListViewModel(
         onChannelEventFlow = ChannelEventManager.onChannelEventFlow
             .filter { it.channelId == channel.id }
 
-        onChannelTypingEventFlow = ChannelEventManager.onChannelTypingEventFlow
-            .filter { it.channel.id == channel.id && it.user.id != myId }
+        onChannelMemberActivityEventFlow = ChannelEventManager.onChannelMemberActivityEventFlow
+            .filter { it.channelId == channel.id && it.userId != myId }
 
         onChannelUpdatedEventFlow = ChannelsCache.channelUpdatedFlow
             .filter { it.channel.id == channel.id }

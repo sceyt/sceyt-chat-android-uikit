@@ -2,8 +2,8 @@ package com.sceyt.chatuikit.data.managers.channel.handler
 
 import com.sceyt.chat.models.member.Member
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
 import com.sceyt.chatuikit.data.managers.channel.event.MessageMarkerEventData
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
@@ -23,8 +23,8 @@ sealed interface ChannelEventHandler {
         fun onOwnerChanged(channel: SceytChannel, newOwner: Member, oldOwner: Member)
     }
 
-    fun interface OnChannelTypingEvent : ChannelEventHandler {
-        fun onChannelTypingEvent(data: ChannelTypingEventData)
+    fun interface OnChannelMemberActivityEvent : ChannelEventHandler {
+        fun onActivityEvent(event: ChannelMemberActivityEvent)
     }
 
     fun interface OnChangedMembersEvent : ChannelEventHandler {
@@ -40,5 +40,5 @@ sealed interface ChannelEventHandler {
     }
 
     interface AllEvents : OnTotalUnreadChanged, OnChannelEvent, OnOwnerChanged,
-            OnChannelTypingEvent, OnChangedMembersEvent, OnMessageStatusEvent, OnMarkerReceivedEvent
+            OnChannelMemberActivityEvent, OnChangedMembersEvent, OnMessageStatusEvent, OnMarkerReceivedEvent
 }
