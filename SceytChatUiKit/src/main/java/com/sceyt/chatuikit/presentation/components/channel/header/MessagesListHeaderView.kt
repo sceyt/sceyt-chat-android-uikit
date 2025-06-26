@@ -25,7 +25,7 @@ import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -41,7 +41,9 @@ import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderTypingUsersHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ActiveUser
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ActivityState
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderUserActivityChangeHelper
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners.ClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListenersImpl
@@ -80,7 +82,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private var isReplyInThread: Boolean = false
     private var isGroup = false
     private var enablePresence: Boolean = true
-    private var typingUsersHelper: HeaderTypingUsersHelper? = null
+    private var typingUsersHelper: HeaderUserActivityChangeHelper? = null
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
     private var toolbarSearchModeChangeListener: ((Boolean) -> Unit)? = null
     private var addedMenu: Menu? = null
@@ -263,24 +265,33 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun initTypingUsersHelper(channel: SceytChannel): HeaderTypingUsersHelper {
-        return HeaderTypingUsersHelper(context,
+    private fun initTypingUsersHelper(channel: SceytChannel): HeaderUserActivityChangeHelper {
+        return HeaderUserActivityChangeHelper(context,
             channel = channel,
-            typingTitleFormatter = style.typingTitleFormatter,
-            typingTextUpdatedListener = {
+            userActivityTitleFormatter = style.typingTitleFormatter,
+            userActivityTextUpdatedListener = {
                 binding.tvTyping.text = it
             },
-            typingStateUpdated = {
+            activityStateUpdated = {
                 setTypingState(it)
             },
-            showTypingUsersInSequence = style.showTypingUsersInSequence
+            showActiveUsersInSequence = style.showTypingUsersInSequence
         )
     }
 
-    private fun setTypingState(typing: Boolean) {
-        binding.subTitle.isVisible = !typing
-        binding.lottieTyping.isVisible = typing && style.enableTypingIndicator
-        binding.tvTyping.isVisible = typing
+    private fun setTypingState(state: ActivityState) {
+      /*  when(state){
+            ActivityState.Typing -> {
+
+            }
+            ActivityState.Recording -> {
+            }
+            ActivityState.None -> TODO()
+        }*/
+        val active = state != ActivityState.None
+        binding.subTitle.isVisible = !active
+        binding.lottieTyping.isVisible = active && style.enableTypingIndicator
+        binding.tvTyping.isVisible = active
     }
 
     private fun setPresenceUpdated(user: SceytUser) {
@@ -318,8 +329,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    internal fun handleTypingEvent(data: ChannelTypingEventData) {
-        eventListeners.onTypingEvent(data)
+    internal fun handleMemberActivityEvent(data: ChannelMemberActivityEvent) {
+        eventListeners.onActivityEvent(data)
     }
 
     internal fun onPresenceUpdate(user: SceytUser) {
@@ -359,8 +370,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
         get() = typingUsersHelper?.isTyping == true
 
     @Suppress("unused")
-    val typingUsers: List<SceytUser>
-        get() = typingUsersHelper?.typingUsers.orEmpty()
+    val activeUsers: List<ActiveUser>
+        get() = typingUsersHelper?.activeUsers.orEmpty()
 
     @Suppress("unused")
     fun getChannel() = if (::channel.isInitialized) channel else null
@@ -444,8 +455,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     //Event listeners
-    override fun onTypingEvent(data: ChannelTypingEventData) {
-        typingUsersHelper?.onTypingEvent(data)
+    override fun onActivityEvent(event: ChannelMemberActivityEvent) {
+        typingUsersHelper?.onActivityEvent(event)
     }
 
     override fun onPresenceUpdateEvent(user: SceytUser) {

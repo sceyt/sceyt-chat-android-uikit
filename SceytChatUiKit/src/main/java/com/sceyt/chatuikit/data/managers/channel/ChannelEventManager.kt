@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.data.managers.channel
 
+import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelEvent
@@ -10,10 +11,10 @@ import com.sceyt.chat.models.user.User
 import com.sceyt.chat.sceyt_listeners.ChannelListener
 import com.sceyt.chatuikit.data.constants.SceytConstants
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventEnum
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
 import com.sceyt.chatuikit.data.managers.channel.event.MessageMarkerEventData
 import com.sceyt.chatuikit.data.managers.channel.handler.ChannelEventHandler
@@ -60,11 +61,11 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
     val onChannelOwnerChangedEventFlow: SharedFlow<ChannelOwnerChangedEventData> = onChannelOwnerChangedEventFlow_.asSharedFlow()
 
 
-    private val onChannelTypingEventFlow_ = MutableSharedFlow<ChannelTypingEventData>(
+    private val onChannelMemberActivityEventFlow_ = MutableSharedFlow<ChannelMemberActivityEvent>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
-    val onChannelTypingEventFlow: SharedFlow<ChannelTypingEventData> = onChannelTypingEventFlow_.asSharedFlow()
+    val onChannelMemberActivityEventFlow = onChannelMemberActivityEventFlow_.asSharedFlow()
 
 
     private val onMessageStatusFlow_: MutableSharedFlow<MessageStatusChangeData> = MutableSharedFlow(
@@ -180,13 +181,19 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
             }
 
             override fun onMemberStartedTyping(channel: Channel, member: Member) {
-                eventManager.onChannelTypingEvent(ChannelTypingEventData(channel.toSceytUiChannel(),
-                    member.toSceytUser(), true))
+                eventManager.onActivityEvent(ChannelMemberActivityEvent.Typing(
+                    channel = channel.toSceytUiChannel(),
+                    user = member.toSceytUser(),
+                    typing = true
+                ))
             }
 
             override fun onMemberStoppedTyping(channel: Channel, member: Member) {
-                eventManager.onChannelTypingEvent(ChannelTypingEventData(channel.toSceytUiChannel(),
-                    member.toSceytUser(), false))
+                eventManager.onActivityEvent(ChannelMemberActivityEvent.Typing(
+                    channel = channel.toSceytUiChannel(),
+                    user = member.toSceytUser(),
+                    typing = false
+                ))
             }
 
             override fun onChangedMembersRole(channel: Channel?, members: MutableList<Member>?) {
@@ -237,16 +244,36 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
             override fun onChannelEvent(channel: Channel?, event: ChannelEvent?) {
                 channel ?: return
                 event ?: return
-                val typing = when (event.name) {
-                    SceytConstants.startTypingEvent -> true
-                    SceytConstants.stopTypingEvent -> false
+                when (event.name) {
+                    SceytConstants.startTypingEvent -> {
+                        eventManager.onActivityEvent(ChannelMemberActivityEvent.Typing(
+                            channel = channel.toSceytUiChannel(),
+                            user = event.user.toSceytUser(),
+                            typing = true)
+                        )
+                    }
+
+                    SceytConstants.stopTypingEvent -> {
+                        eventManager.onActivityEvent(ChannelMemberActivityEvent.Typing(
+                            channel = channel.toSceytUiChannel(),
+                            user = event.user.toSceytUser(),
+                            typing = false)
+                        )
+                    }
+
+                    SceytConstants.startRecordingEvent -> {
+                        eventManager.onActivityEvent(ChannelMemberActivityEvent.Recording(
+                            channel = channel.toSceytUiChannel(),
+                            user = event.user.toSceytUser(),
+                            recording = true)
+                        )
+                    }
+
                     else -> {
                         eventManager.onChannelEvent(ChannelActionEvent.Event(channel.toSceytUiChannel(), event))
                         return
                     }
                 }
-                eventManager.onChannelTypingEvent(ChannelTypingEventData(channel.toSceytUiChannel(),
-                    event.user.toSceytUser(), typing))
             }
         })
     }
@@ -264,8 +291,8 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
             channel, newOwner.toSceytMember(), oldOwner.toSceytMember()))
     }
 
-    override fun onChannelTypingEvent(data: ChannelTypingEventData) {
-        onChannelTypingEventFlow_.tryEmit(data)
+    override fun onActivityEvent(event: ChannelMemberActivityEvent) {
+        onChannelMemberActivityEventFlow_.tryEmit(event)
     }
 
     override fun onChangedMembersEvent(data: ChannelMembersEventData) {

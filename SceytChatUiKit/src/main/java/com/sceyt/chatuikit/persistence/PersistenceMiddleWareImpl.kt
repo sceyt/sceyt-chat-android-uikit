@@ -496,7 +496,7 @@ internal class PersistenceMiddleWareImpl(
     }
 
     override suspend fun sendChannelEvent(channelId: Long, event: String) {
-        messagesLogic.sendChannelEvent(channelId, event)
+        channelLogic.sendChannelEvent(channelId, event)
     }
 
     override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()

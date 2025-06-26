@@ -1,24 +1,24 @@
 package com.sceyt.chatuikit.presentation.components.channel.header.helpers
 
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
 
 class TypingCancelHelper {
 
     private val debounceHelpers: HashMap<Long, DebounceHelper> by lazy { hashMapOf() }
 
-    fun await(data: ChannelTypingEventData, callBack: (ChannelTypingEventData) -> Unit) {
-        if (data.typing.not()) {
-            debounceHelpers[data.channel.id]?.cancelLastDebounce()
+    fun await(data: ChannelMemberActivityEvent, callBack: (ChannelMemberActivityEvent) -> Unit) {
+        if (data.active.not()) {
+            debounceHelpers[data.channelId]?.cancelLastDebounce()
             return
         }
-        debounceHelpers[data.channel.id]?.submit {
-            callBack.invoke(data.copy(typing = false))
+        debounceHelpers[data.channelId]?.submit {
+            callBack.invoke(data.inverse())
         } ?: run {
             val debounceHelper = DebounceHelper(5000)
-            debounceHelpers[data.channel.id] = debounceHelper
+            debounceHelpers[data.channelId] = debounceHelper
             debounceHelper.submit {
-                callBack.invoke(data.copy(typing = false))
+                callBack.invoke(data.inverse())
             }
         }
     }

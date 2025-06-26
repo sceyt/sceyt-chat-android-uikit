@@ -1,0 +1,140 @@
+package com.sceyt.chatuikit.presentation.components.channel.header.helpers
+
+import android.content.Context
+import androidx.lifecycle.lifecycleScope
+import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
+import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.extensions.asComponentActivity
+import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.formatters.attributes.UserActivityTitleFormatterAttributes
+import com.sceyt.chatuikit.presentation.common.ConcurrentHashSet
+import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+data class ActiveUser(
+        val user: SceytUser,
+        val activity: UserActivityState
+) {
+    override fun equals(other: Any?): Boolean {
+        return other is ActiveUser && other.user.id == user.id
+    }
+
+    override fun hashCode(): Int {
+        return user.id.hashCode()
+    }
+}
+
+enum class UserActivityState {
+    Typing, Recording
+}
+
+enum class ActivityState {
+    Typing, Recording, None
+}
+
+class HeaderUserActivityChangeHelper(
+        private val context: Context,
+        private val channel: SceytChannel,
+        private val userActivityTitleFormatter: Formatter<UserActivityTitleFormatterAttributes>,
+        private var userActivityTextUpdatedListener: (CharSequence) -> Unit,
+        private val activityStateUpdated: (ActivityState) -> Unit,
+        private val showActiveUsersInSequence: Boolean
+) {
+    private val activityCancelHelper by lazy { TypingCancelHelper() }
+    private val _activeUsers by lazy { ConcurrentHashSet<ActiveUser>() }
+    private val debounceHelpers = mutableMapOf<String, DebounceHelper>()
+    private var updateActiveUsersJob: Job? = null
+
+    private fun updateTypingText() {
+        if (!showActiveUsersInSequence) {
+            val title = userActivityTitleFormatter.format(context, UserActivityTitleFormatterAttributes(
+                channel = channel,
+                activeUsers = _activeUsers.toList()
+            ))
+            userActivityTextUpdatedListener.invoke(title)
+            return
+        }
+
+        if (_activeUsers.isEmpty() || _activeUsers.size == 1) {
+            updateActiveUsersJob?.cancel()
+            userActivityTextUpdatedListener.invoke(initTypingTitle(activeUsers))
+        } else {
+            if (updateActiveUsersJob == null || updateActiveUsersJob?.isActive?.not() == true)
+                updateTypingTitleEveryTwoSecond()
+        }
+    }
+
+    private fun updateTypingTitleEveryTwoSecond() {
+        updateActiveUsersJob?.cancel()
+        updateActiveUsersJob = context.asComponentActivity().lifecycleScope.launch {
+            while (true) {
+                //TOdo fix
+                _activeUsers.toList().forEach {
+                    userActivityTextUpdatedListener.invoke(initTypingTitle(listOf(it)))
+                    delay(2000)
+                }
+            }
+        }
+    }
+
+    private fun initTypingTitle(activeUsers: List<ActiveUser>): CharSequence {
+        return userActivityTitleFormatter.format(
+            context = context,
+            from = UserActivityTitleFormatterAttributes(
+                channel = channel,
+                activeUsers = activeUsers
+            )
+        )
+    }
+
+    private fun handleActivity(event: ChannelMemberActivityEvent) {
+        if (event.userId == SceytChatUIKit.currentUserId) return
+        val debounceHelper = debounceHelpers.getOrPut(event.userId) {
+            DebounceHelper(200, context.asComponentActivity().lifecycleScope)
+        }
+        val activeUser = when (event) {
+            is ChannelMemberActivityEvent.Recording -> {
+                ActiveUser(event.user, UserActivityState.Recording)
+            }
+
+            is ChannelMemberActivityEvent.Typing -> {
+                ActiveUser(event.user, UserActivityState.Typing)
+            }
+        }
+        debounceHelper.submit {
+            if (event.active) {
+                _activeUsers.add(activeUser)
+            } else
+                _activeUsers.removeIf { it.user.id == event.userId }
+
+            updateTypingText()
+            setTypingState()
+        }
+    }
+
+    private fun setTypingState() {
+        val state = when {
+            _activeUsers.isEmpty() -> ActivityState.None
+            _activeUsers.any { it.activity == UserActivityState.Typing } -> ActivityState.Typing
+            else -> ActivityState.Recording
+        }
+        activityStateUpdated.invoke(state)
+    }
+
+    fun onActivityEvent(event: ChannelMemberActivityEvent) {
+        activityCancelHelper.await(event) {
+            handleActivity(it)
+        }
+        handleActivity(event)
+    }
+
+    val activeUsers: List<ActiveUser>
+        get() = _activeUsers.toList()
+
+    val isTyping: Boolean
+        get() = _activeUsers.isNotEmpty()
+}
