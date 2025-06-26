@@ -3,25 +3,34 @@ package com.sceyt.chatuikit.presentation.common
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
-import android.text.style.LineBackgroundSpan
+import android.text.style.ReplacementSpan
 
 class RoundedBackgroundSpan(
         private val backgroundColor: Int,
         private val cornerRadius: Float,
-) : LineBackgroundSpan {
+) : ReplacementSpan() {
 
-    private val paint = Paint().apply {
+    private val backgroundPaint = Paint().apply {
         isAntiAlias = true
         color = backgroundColor
+        style = Paint.Style.FILL
     }
 
-    override fun drawBackground(
-            canvas: Canvas, paint: Paint,
-            left: Int, right: Int, top: Int, baseline: Int, bottom: Int,
-            text: CharSequence, start: Int, end: Int, lnum: Int
+    override fun getSize(paint: Paint, text: CharSequence?, start: Int, end: Int, fm: Paint.FontMetricsInt?): Int {
+        return paint.measureText(text, start, end).toInt()
+    }
+
+    override fun draw(
+        canvas: Canvas, text: CharSequence?, start: Int, end: Int,
+        x: Float, top: Int, y: Int, bottom: Int, paint: Paint
     ) {
-        val rect = RectF(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat())
-        // Draw rounded rectangle background only
-        canvas.drawRoundRect(rect, cornerRadius, cornerRadius, this.paint)
+        text ?: return
+
+        val textWidth = paint.measureText(text, start, end)
+
+        val rect = RectF(x, top.toFloat(), x + textWidth, bottom.toFloat())
+        canvas.drawRoundRect(rect, cornerRadius, cornerRadius, backgroundPaint)
+
+        canvas.drawText(text, start, end, x, y.toFloat(), paint)
     }
 }
