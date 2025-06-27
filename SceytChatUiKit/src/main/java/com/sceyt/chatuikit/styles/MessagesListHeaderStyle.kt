@@ -38,7 +38,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property navigationIcon icon for back button, default is [R.drawable.sceyt_ic_arrow_back]
  * @property showUnderline enable underline, default is true
  * @property showTypingUsersInSequence Whether to show typing users one at a time in sequence, default is true
- * @property enableTypingIndicator Whether to show a typing animation at the end of the typing users' title. Default is true.
+ * @property enableUserActivityIndicator Whether to show a typing animation at the end of the typing users' title. Default is true.
  * @property titleTextStyle style for the title, default is [buildTitleTextStyle]
  * @property subTitleStyle style for the subtitle, default is [buildSubTitleTextStyle]
  * @property searchInputStyle style for the search input, default is [buildSearchInputTextStyle]
@@ -55,7 +55,7 @@ data class MessagesListHeaderStyle(
         val navigationIcon: Drawable?,
         val showUnderline: Boolean,
         val showTypingUsersInSequence: Boolean,
-        val enableTypingIndicator: Boolean,
+        val enableUserActivityIndicator: Boolean,
         val titleTextStyle: TextStyle,
         val subTitleStyle: TextStyle,
         val avatarStyle: AvatarStyle,
@@ -130,7 +130,7 @@ data class MessagesListHeaderStyle(
                     navigationIcon = navigationIcon,
                     showUnderline = showUnderline,
                     showTypingUsersInSequence = showTypingUsersInSequence,
-                    enableTypingIndicator = enableTypingIndicator,
+                    enableUserActivityIndicator = enableTypingIndicator,
                     titleTextStyle = buildTitleTextStyle(array),
                     subTitleStyle = buildSubTitleTextStyle(array),
                     avatarStyle = buildAvatarStyle(array),

@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.presentation.common.ConcurrentHashSet
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 data class ActiveUser(
@@ -63,20 +64,30 @@ class HeaderUserActivityChangeHelper(
             updateActiveUsersJob?.cancel()
             userActivityTextUpdatedListener.invoke(initTypingTitle(activeUsers))
         } else {
-            if (updateActiveUsersJob == null || updateActiveUsersJob?.isActive?.not() == true)
-                updateTypingTitleEveryTwoSecond()
+            updateTypingTitleEveryTwoSecond()
         }
     }
 
     private fun updateTypingTitleEveryTwoSecond() {
-        updateActiveUsersJob?.cancel()
+        if (updateActiveUsersJob?.isActive == true) return
         updateActiveUsersJob = context.asComponentActivity().lifecycleScope.launch {
-            while (true) {
-                //TOdo fix
-                _activeUsers.toList().forEach {
+            var index = 0
+            while (isActive) {
+                val users = _activeUsers.toList()
+
+                if (users.isEmpty())
+                    break
+
+                if (index >= users.size)
+                    index = 0
+
+                val currentUser = users.getOrNull(index)
+                currentUser?.let {
                     userActivityTextUpdatedListener.invoke(initTypingTitle(listOf(it)))
-                    delay(2000)
                 }
+
+                index++
+                delay(2000)
             }
         }
     }
@@ -135,6 +146,6 @@ class HeaderUserActivityChangeHelper(
     val activeUsers: List<ActiveUser>
         get() = _activeUsers.toList()
 
-    val isTyping: Boolean
+    val haveUserAction: Boolean
         get() = _activeUsers.isNotEmpty()
 }
