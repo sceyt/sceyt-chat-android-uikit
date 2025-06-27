@@ -45,12 +45,12 @@ class HeaderUserActivityChangeHelper(
         private val activityStateUpdated: (ActivityState) -> Unit,
         private val showActiveUsersInSequence: Boolean
 ) {
-    private val activityCancelHelper by lazy { TypingCancelHelper() }
+    private val userActivityCancelHelper by lazy { UserActivityCancelHelper() }
     private val _activeUsers by lazy { ConcurrentHashSet<ActiveUser>() }
     private val debounceHelpers = mutableMapOf<String, DebounceHelper>()
     private var updateActiveUsersJob: Job? = null
 
-    private fun updateTypingText() {
+    private fun updateUserActivityText() {
         if (!showActiveUsersInSequence) {
             val title = userActivityTitleFormatter.format(context, UserActivityTitleFormatterAttributes(
                 channel = channel,
@@ -62,13 +62,13 @@ class HeaderUserActivityChangeHelper(
 
         if (_activeUsers.isEmpty() || _activeUsers.size == 1) {
             updateActiveUsersJob?.cancel()
-            userActivityTextUpdatedListener.invoke(initTypingTitle(activeUsers))
+            userActivityTextUpdatedListener.invoke(initUserActivityTitle(activeUsers))
         } else {
-            updateTypingTitleEveryTwoSecond()
+            updateUserActivityTitleEveryTwoSecond()
         }
     }
 
-    private fun updateTypingTitleEveryTwoSecond() {
+    private fun updateUserActivityTitleEveryTwoSecond() {
         if (updateActiveUsersJob?.isActive == true) return
         updateActiveUsersJob = context.asComponentActivity().lifecycleScope.launch {
             var index = 0
@@ -83,7 +83,7 @@ class HeaderUserActivityChangeHelper(
 
                 val currentUser = users.getOrNull(index)
                 currentUser?.let {
-                    userActivityTextUpdatedListener.invoke(initTypingTitle(listOf(it)))
+                    userActivityTextUpdatedListener.invoke(initUserActivityTitle(listOf(it)))
                 }
 
                 index++
@@ -92,7 +92,7 @@ class HeaderUserActivityChangeHelper(
         }
     }
 
-    private fun initTypingTitle(activeUsers: List<ActiveUser>): CharSequence {
+    private fun initUserActivityTitle(activeUsers: List<ActiveUser>): CharSequence {
         return userActivityTitleFormatter.format(
             context = context,
             from = UserActivityTitleFormatterAttributes(
@@ -122,12 +122,12 @@ class HeaderUserActivityChangeHelper(
             } else
                 _activeUsers.removeIf { it.user.id == event.userId }
 
-            updateTypingText()
-            setTypingState()
+            updateUserActivityText()
+            setUserActivityState()
         }
     }
 
-    private fun setTypingState() {
+    private fun setUserActivityState() {
         val state = when {
             _activeUsers.isEmpty() -> ActivityState.None
             _activeUsers.any { it.activity == UserActivityState.Typing } -> ActivityState.Typing
@@ -137,7 +137,7 @@ class HeaderUserActivityChangeHelper(
     }
 
     fun onActivityEvent(event: ChannelMemberActivityEvent) {
-        activityCancelHelper.await(event) {
+        userActivityCancelHelper.await(event) {
             handleActivity(it)
         }
         handleActivity(event)

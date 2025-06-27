@@ -3,7 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel.header.helpers
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
 
-class TypingCancelHelper {
+class UserActivityCancelHelper {
 
     private val debounceHelpers: HashMap<Long, DebounceHelper> by lazy { hashMapOf() }
 
