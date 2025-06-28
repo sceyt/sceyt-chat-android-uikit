@@ -1,13 +1,11 @@
 package com.sceyt.chatuikit.presentation.components.channel.header.helpers
 
-import android.content.Context
-import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.models.messages.SceytUser
-import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.presentation.common.ConcurrentHashSet
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -36,7 +34,7 @@ enum class UsersActivityState {
 }
 
 class HeaderUserActivityChangeHelper(
-        private val context: Context,
+        private val scope: CoroutineScope,
         private val activeUsersUpdated: (List<ActiveUser>) -> Unit,
         private val showActiveUsersInSequence: Boolean
 ) {
@@ -47,7 +45,6 @@ class HeaderUserActivityChangeHelper(
 
     private fun updateUserActivityText() {
         if (!showActiveUsersInSequence) {
-            val activeUsers = this.activeUsers
             notifyUpdatesWithActiveUsers(activeUsers)
             return
         }
@@ -62,7 +59,7 @@ class HeaderUserActivityChangeHelper(
 
     private fun updateUserActivityTitleEveryTwoSecond() {
         if (updateActiveUsersJob?.isActive == true) return
-        updateActiveUsersJob = context.asComponentActivity().lifecycleScope.launch {
+        updateActiveUsersJob = scope.launch {
             var index = 0
             while (isActive) {
                 val users = _activeUsers.toList()
@@ -91,7 +88,7 @@ class HeaderUserActivityChangeHelper(
     private fun handleActivity(event: ChannelMemberActivityEvent) {
         if (event.userId == SceytChatUIKit.currentUserId) return
         val debounceHelper = debounceHelpers.computeIfAbsent(event.userId) {
-            DebounceHelper(200, context.asComponentActivity().lifecycleScope)
+            DebounceHelper(200, scope)
         }
         val activeUser = when (event) {
             is ChannelMemberActivityEvent.Recording -> {

@@ -34,6 +34,7 @@ import com.sceyt.chatuikit.databinding.SceytMessagesListHeaderViewBinding
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getScope
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
@@ -269,7 +270,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     private fun initUserActivityChangeHelper(): HeaderUserActivityChangeHelper {
-        return HeaderUserActivityChangeHelper(context,
+        return HeaderUserActivityChangeHelper(
+            scope = getScope(),
             activeUsersUpdated = {
                 binding.tvUserActivity.text = if (it.isEmpty()) ""
                 else initUserActivityTitle(it)
