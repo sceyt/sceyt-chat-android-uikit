@@ -32,7 +32,7 @@ enum class UsersActivityState {
     Typing, Recording, None
 }
 
-class HeaderUserActivityChangeHelper(
+class UserActivityChangeHelper(
         private val scope: CoroutineScope,
         private val activeUsersUpdated: (List<ActiveUser>) -> Unit,
         private val showActiveUsersInSequence: Boolean
@@ -98,11 +98,12 @@ class HeaderUserActivityChangeHelper(
             }
         }
         debounceHelper.submit {
+            // Remove last active user
+            _activeUsers.remove(activeUser)
+
             if (event.active) {
                 _activeUsers.add(activeUser)
-            } else
-                _activeUsers.remove(activeUser)
-
+            }
             updateUserActivityText()
         }
     }
