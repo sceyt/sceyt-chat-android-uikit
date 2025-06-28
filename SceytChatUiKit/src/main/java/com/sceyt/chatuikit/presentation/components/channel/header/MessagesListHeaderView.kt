@@ -477,6 +477,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     //Event listeners
     override fun onActivityEvent(event: ChannelMemberActivityEvent) {
+        if (event.userId == SceytChatUIKit.currentUserId) return
         activityChangeHelper.onActivityEvent(event)
     }
 

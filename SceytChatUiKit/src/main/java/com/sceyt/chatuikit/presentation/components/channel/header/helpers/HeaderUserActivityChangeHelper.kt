@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.channel.header.helpers
 
-import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.presentation.common.ConcurrentHashSet
@@ -86,7 +85,6 @@ class HeaderUserActivityChangeHelper(
     }
 
     private fun handleActivity(event: ChannelMemberActivityEvent) {
-        if (event.userId == SceytChatUIKit.currentUserId) return
         val debounceHelper = debounceHelpers.computeIfAbsent(event.userId) {
             DebounceHelper(200, scope)
         }

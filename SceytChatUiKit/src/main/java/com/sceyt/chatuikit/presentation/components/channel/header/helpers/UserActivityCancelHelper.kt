@@ -15,7 +15,7 @@ class UserActivityCancelHelper {
         }
 
         debounceHelpers.compute(getKey(event)) { _, existingHelper ->
-            val helper = existingHelper ?: DebounceHelper(15000)
+            val helper = existingHelper ?: DebounceHelper(5000)
             helper.submit {
                 callBack.invoke(event.inverse())
             }
