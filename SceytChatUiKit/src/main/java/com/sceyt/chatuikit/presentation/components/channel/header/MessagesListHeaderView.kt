@@ -44,7 +44,7 @@ import com.sceyt.chatuikit.formatters.attributes.UserActivityTitleFormatterAttri
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ActiveUser
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderUserActivityChangeHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.UserActivityChangeHelper
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.UsersActivityState
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners.ClickListeners
@@ -84,10 +84,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private var isReplyInThread: Boolean = false
     private var isGroup = false
     private var enablePresence: Boolean = true
-    private val activityChangeHelper: HeaderUserActivityChangeHelper by lazy {
-        initUserActivityChangeHelper()
-    }
-
+    private val activityChangeHelper by lazy { initUserActivityChangeHelper() }
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
     private var toolbarSearchModeChangeListener: ((Boolean) -> Unit)? = null
     private var addedMenu: Menu? = null
@@ -269,8 +266,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun initUserActivityChangeHelper(): HeaderUserActivityChangeHelper {
-        return HeaderUserActivityChangeHelper(
+    private fun initUserActivityChangeHelper(): UserActivityChangeHelper {
+        return UserActivityChangeHelper(
             scope = getScope(),
             activeUsersUpdated = {
                 binding.tvUserActivity.text = if (it.isEmpty()) ""
