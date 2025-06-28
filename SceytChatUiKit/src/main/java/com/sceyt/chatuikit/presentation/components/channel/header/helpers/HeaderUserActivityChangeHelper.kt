@@ -106,7 +106,7 @@ class HeaderUserActivityChangeHelper(
             if (event.active) {
                 _activeUsers.add(activeUser)
             } else
-                _activeUsers.removeIf { it.user.id == event.userId }
+                _activeUsers.remove(activeUser)
 
             updateUserActivityText()
         }
