@@ -39,11 +39,12 @@ import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.showSoftInput
+import com.sceyt.chatuikit.formatters.attributes.UserActivityTitleFormatterAttributes
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ActiveUser
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ActivityState
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderUserActivityChangeHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.UsersActivityState
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners.ClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListenersImpl
@@ -82,12 +83,16 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private var isReplyInThread: Boolean = false
     private var isGroup = false
     private var enablePresence: Boolean = true
-    private var activityChangeHelper: HeaderUserActivityChangeHelper? = null
+    private val activityChangeHelper: HeaderUserActivityChangeHelper by lazy {
+        initUserActivityChangeHelper()
+    }
+
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
     private var toolbarSearchModeChangeListener: ((Boolean) -> Unit)? = null
     private var addedMenu: Menu? = null
     private var onSearchQueryChangeListener: ((String) -> Unit)? = null
     val style: MessagesListHeaderStyle
+    private var lasUsersActivityState: UsersActivityState? = null
     var isShowingMessageActions = false
         private set
     var isShowingSearchBar = false
@@ -242,8 +247,6 @@ class MessagesListHeaderView @JvmOverloads constructor(
     internal fun setChannel(channel: SceytChannel) {
         this.channel = channel
         isGroup = channel.isGroup
-        if (activityChangeHelper == null)
-            activityChangeHelper = initUserActivityChangeHelper(channel)
 
         with(binding) {
             uiElementsListeners.onTitle(title, channel, null, false)
@@ -265,33 +268,49 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun initUserActivityChangeHelper(channel: SceytChannel): HeaderUserActivityChangeHelper {
+    private fun initUserActivityChangeHelper(): HeaderUserActivityChangeHelper {
         return HeaderUserActivityChangeHelper(context,
-            channel = channel,
-            userActivityTitleFormatter = style.typingTitleFormatter,
-            userActivityTextUpdatedListener = {
-                binding.tvUserActivity.text = it
-            },
-            activityStateUpdated = {
-                setTypingState(it)
+            activeUsersUpdated = {
+                binding.tvUserActivity.text = if (it.isEmpty()) ""
+                else initUserActivityTitle(it)
+                setTypingState(activityChangeHelper.getActivityState(it))
             },
             showActiveUsersInSequence = style.showTypingUsersInSequence
         )
     }
 
-    private fun setTypingState(state: ActivityState) {
-      /*  when(state){
-            ActivityState.Typing -> {
+    private fun initUserActivityTitle(activeUsers: List<ActiveUser>): CharSequence {
+        return style.typingTitleFormatter.format(
+            context = context,
+            from = UserActivityTitleFormatterAttributes(
+                channel = channel,
+                activeUsers = activeUsers
+            )
+        )
+    }
 
-            }
-            ActivityState.Recording -> {
-            }
-            ActivityState.None -> TODO()
-        }*/
-        val active = state != ActivityState.None
+    private fun setTypingState(state: UsersActivityState) {
+        if (lasUsersActivityState == state) return
+        lasUsersActivityState = state
+        val active = state != UsersActivityState.None
         binding.subTitle.isVisible = !active
         binding.lottieUserActivity.isVisible = active && style.enableUserActivityIndicator
         binding.tvUserActivity.isVisible = active
+        when (state) {
+            UsersActivityState.Typing -> {
+                binding.lottieUserActivity.setAnimation(R.raw.sceyt_typing)
+                binding.lottieUserActivity.playAnimation()
+            }
+
+            UsersActivityState.Recording -> {
+                binding.lottieUserActivity.setAnimation(R.raw.sceyt_recording)
+                binding.lottieUserActivity.playAnimation()
+            }
+
+            UsersActivityState.None -> {
+                binding.lottieUserActivity.cancelAnimation()
+            }
+        }
     }
 
     private fun setPresenceUpdated(user: SceytUser) {
@@ -367,11 +386,11 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     val haveUserAction: Boolean
-        get() = activityChangeHelper?.haveUserAction == true
+        get() = activityChangeHelper.haveUserAction
 
     @Suppress("unused")
     val activeUsers: List<ActiveUser>
-        get() = activityChangeHelper?.activeUsers.orEmpty()
+        get() = activityChangeHelper.activeUsers
 
     @Suppress("unused")
     fun getChannel() = if (::channel.isInitialized) channel else null
@@ -456,7 +475,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
 
     //Event listeners
     override fun onActivityEvent(event: ChannelMemberActivityEvent) {
-        activityChangeHelper?.onActivityEvent(event)
+        activityChangeHelper.onActivityEvent(event)
     }
 
     override fun onPresenceUpdateEvent(user: SceytUser) {

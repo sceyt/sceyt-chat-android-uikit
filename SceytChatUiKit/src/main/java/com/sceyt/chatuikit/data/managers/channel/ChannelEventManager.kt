@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.data.managers.channel
 
-import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.channel.Channel
 import com.sceyt.chat.models.channel.ChannelEvent
@@ -266,6 +265,14 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
                             channel = channel.toSceytUiChannel(),
                             user = event.user.toSceytUser(),
                             recording = true)
+                        )
+                    }
+
+                    SceytConstants.stopRecordingEvent -> {
+                        eventManager.onActivityEvent(ChannelMemberActivityEvent.Recording(
+                            channel = channel.toSceytUiChannel(),
+                            user = event.user.toSceytUser(),
+                            recording = false)
                         )
                     }
 
