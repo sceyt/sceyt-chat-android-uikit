@@ -104,6 +104,7 @@ import com.vanniktech.ui.animateToGone
 import com.vanniktech.ui.animateToVisible
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -137,6 +138,7 @@ class MessageInputView @JvmOverloads constructor(
     private val messageToSendHelper by lazy { MessageToSendHelper(context, actionListeners) }
     private val linkDetailsProvider by lazy { SingleLinkDetailsProvider(context, getScope()) }
     private val audioRecorderHelper: AudioRecorderHelper by lazy { AudioRecorderHelper(getScope(), context) }
+    private var recordingUpdateJob: Job? = null
     var enableVoiceRecord = true
         private set
     var enableSendAttachment = true
@@ -397,6 +399,7 @@ class MessageInputView @JvmOverloads constructor(
         (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
 
         onUserActivityStateChange(UserActivityState.Recording(recording = true))
+        startRecordingUpdateJob()
     }
 
     private fun onRecordingCompletedOrCanceled() {
@@ -404,6 +407,23 @@ class MessageInputView @JvmOverloads constructor(
         (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 
         onUserActivityStateChange(UserActivityState.Recording(recording = false))
+        stopRecordingUpdateJob()
+    }
+
+    private fun startRecordingUpdateJob() {
+        if (recordingUpdateJob?.isActive==true)
+            return
+        recordingUpdateJob = getScope().launch {
+            while (isActive) {
+                delay(2000)
+                onUserActivityStateChange(UserActivityState.Recording(recording = true))
+            }
+        }
+    }
+
+    private fun stopRecordingUpdateJob() {
+        recordingUpdateJob?.cancel()
+        recordingUpdateJob = null
     }
 
     private fun onStopRecordingCompleted(

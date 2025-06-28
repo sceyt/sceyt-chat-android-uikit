@@ -4,17 +4,15 @@ import android.content.Context
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
-import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.asComponentActivity
-import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.formatters.attributes.UserActivityTitleFormatterAttributes
 import com.sceyt.chatuikit.presentation.common.ConcurrentHashSet
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 
 data class ActiveUser(
         val user: SceytUser,
@@ -33,36 +31,30 @@ enum class UserActivityState {
     Typing, Recording
 }
 
-enum class ActivityState {
+enum class UsersActivityState {
     Typing, Recording, None
 }
 
 class HeaderUserActivityChangeHelper(
         private val context: Context,
-        private val channel: SceytChannel,
-        private val userActivityTitleFormatter: Formatter<UserActivityTitleFormatterAttributes>,
-        private var userActivityTextUpdatedListener: (CharSequence) -> Unit,
-        private val activityStateUpdated: (ActivityState) -> Unit,
+        private val activeUsersUpdated: (List<ActiveUser>) -> Unit,
         private val showActiveUsersInSequence: Boolean
 ) {
     private val userActivityCancelHelper by lazy { UserActivityCancelHelper() }
     private val _activeUsers by lazy { ConcurrentHashSet<ActiveUser>() }
-    private val debounceHelpers = mutableMapOf<String, DebounceHelper>()
+    private val debounceHelpers = ConcurrentHashMap<String, DebounceHelper>()
     private var updateActiveUsersJob: Job? = null
 
     private fun updateUserActivityText() {
         if (!showActiveUsersInSequence) {
-            val title = userActivityTitleFormatter.format(context, UserActivityTitleFormatterAttributes(
-                channel = channel,
-                activeUsers = _activeUsers.toList()
-            ))
-            userActivityTextUpdatedListener.invoke(title)
+            val activeUsers = this.activeUsers
+            notifyUpdatesWithActiveUsers(activeUsers)
             return
         }
 
         if (_activeUsers.isEmpty() || _activeUsers.size == 1) {
             updateActiveUsersJob?.cancel()
-            userActivityTextUpdatedListener.invoke(initUserActivityTitle(activeUsers))
+            notifyUpdatesWithActiveUsers(activeUsers)
         } else {
             updateUserActivityTitleEveryTwoSecond()
         }
@@ -83,7 +75,7 @@ class HeaderUserActivityChangeHelper(
 
                 val currentUser = users.getOrNull(index)
                 currentUser?.let {
-                    userActivityTextUpdatedListener.invoke(initUserActivityTitle(listOf(it)))
+                    notifyUpdatesWithActiveUsers(listOf(it))
                 }
 
                 index++
@@ -92,19 +84,13 @@ class HeaderUserActivityChangeHelper(
         }
     }
 
-    private fun initUserActivityTitle(activeUsers: List<ActiveUser>): CharSequence {
-        return userActivityTitleFormatter.format(
-            context = context,
-            from = UserActivityTitleFormatterAttributes(
-                channel = channel,
-                activeUsers = activeUsers
-            )
-        )
+    private fun notifyUpdatesWithActiveUsers(activeUsers: List<ActiveUser>) {
+        activeUsersUpdated.invoke(activeUsers)
     }
 
     private fun handleActivity(event: ChannelMemberActivityEvent) {
         if (event.userId == SceytChatUIKit.currentUserId) return
-        val debounceHelper = debounceHelpers.getOrPut(event.userId) {
+        val debounceHelper = debounceHelpers.computeIfAbsent(event.userId) {
             DebounceHelper(200, context.asComponentActivity().lifecycleScope)
         }
         val activeUser = when (event) {
@@ -123,17 +109,7 @@ class HeaderUserActivityChangeHelper(
                 _activeUsers.removeIf { it.user.id == event.userId }
 
             updateUserActivityText()
-            setUserActivityState()
         }
-    }
-
-    private fun setUserActivityState() {
-        val state = when {
-            _activeUsers.isEmpty() -> ActivityState.None
-            _activeUsers.any { it.activity == UserActivityState.Typing } -> ActivityState.Typing
-            else -> ActivityState.Recording
-        }
-        activityStateUpdated.invoke(state)
     }
 
     fun onActivityEvent(event: ChannelMemberActivityEvent) {
@@ -141,6 +117,14 @@ class HeaderUserActivityChangeHelper(
             handleActivity(it)
         }
         handleActivity(event)
+    }
+
+    fun getActivityState(activeUsers: List<ActiveUser>): UsersActivityState {
+        return when {
+            activeUsers.isEmpty() -> UsersActivityState.None
+            activeUsers.any { it.activity == UserActivityState.Typing } -> UsersActivityState.Typing
+            else -> UsersActivityState.Recording
+        }
     }
 
     val activeUsers: List<ActiveUser>
