@@ -242,14 +242,16 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    internal fun setChannel(channel: SceytChannel) {
+    internal fun setChannel(channel: SceytChannel, invalidateUI: Boolean) {
         this.channel = channel
         isGroup = channel.isGroup
 
-        with(binding) {
-            uiElementsListeners.onTitle(title, channel, null, false)
-            uiElementsListeners.onSubTitle(subTitle, channel, null, false)
-            uiElementsListeners.onAvatar(avatar, channel, false)
+        if (invalidateUI) {
+            with(binding) {
+                uiElementsListeners.onTitle(title, channel, null, false)
+                uiElementsListeners.onSubTitle(subTitle, channel, null, false)
+                uiElementsListeners.onAvatar(avatar, channel, false)
+            }
         }
     }
 
