@@ -14,7 +14,7 @@ open class DefaultUserActivityTitleFormatter : Formatter<UserActivityTitleFormat
         if (from.activeUsers.isEmpty()) return ""
         val text = if (from.activeUsers.any { it.activity == UserActivityState.Typing })
             context.getString(R.string.sceyt_typing)
-        else "Recording"
+        else context.getString(R.string.recording)
         return if (from.channel.isGroup) {
             buildString {
                 from.activeUsers.forEachIndexed { index, activeUser ->
