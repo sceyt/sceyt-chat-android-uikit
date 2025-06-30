@@ -127,22 +127,22 @@ internal fun ChannelItemStyle.Builder.buildDraftPrefixTextStyle(
     )
     .build()
 
-internal fun ChannelItemStyle.Builder.buildTypingTextStyle(
+internal fun ChannelItemStyle.Builder.buildUserActivityTextStyle(
         array: TypedArray
 ) = TextStyle.Builder(array)
     .setColor(
-        index = R.styleable.ChannelListView_sceytUiChannelListTypingTextColor,
+        index = R.styleable.ChannelListView_sceytUiChannelListUserActivityTextColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.textSecondaryColor)
     )
     .setSize(
-        index = R.styleable.ChannelListView_sceytUiChannelListTypingTextSize,
+        index = R.styleable.ChannelListView_sceytUiChannelListUserActivityTextSize,
     )
     .setStyle(
-        index = R.styleable.ChannelListView_sceytUiChannelListTypingTextStyle,
+        index = R.styleable.ChannelListView_sceytUiChannelListUserActivityTextStyle,
         defValue = Typeface.ITALIC
     )
     .setFont(
-        index = R.styleable.ChannelListView_sceytUiChannelListTypingTextFont
+        index = R.styleable.ChannelListView_sceytUiChannelListUserActivityTextFont
     )
     .build()
 

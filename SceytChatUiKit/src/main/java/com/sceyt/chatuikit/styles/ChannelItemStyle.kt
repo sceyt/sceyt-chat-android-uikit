@@ -37,7 +37,7 @@ import com.sceyt.chatuikit.styles.extensions.channel_list.buildLastMessageSender
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildLastMessageTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildMentionTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildSubjectTextStyle
-import com.sceyt.chatuikit.styles.extensions.channel_list.buildTypingTextStyle
+import com.sceyt.chatuikit.styles.extensions.channel_list.buildUserActivityTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildUnreadCountMutedTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildUnreadCountTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildUnreadMentionMutedTextStyle
@@ -63,7 +63,7 @@ import java.util.Date
  * @property lastMessageSenderNameTextStyle - Style for sender name, default is [buildLastMessageSenderNameStyle].
  * @property deletedTextStyle - Style for deleted message, default is [buildDeletedTextStyle].
  * @property draftPrefixTextStyle - Style for draft message, default is [buildDraftPrefixTextStyle].
- * @property typingTextStyle - Style for typing message, default is [buildTypingTextStyle].
+ * @property userActivityStateTextStyle - Style for activity state message, default is [buildUserActivityTextStyle].
  * @property unreadCountTextStyle - Style for unread count, default is [buildUnreadCountTextStyle].
  * @property unreadCountMutedStateTextStyle - Style for unread count in muted channel, default is [buildUnreadCountMutedTextStyle].
  * @property mentionTextStyle - Style for mention message, default is [buildMentionTextStyle].
@@ -101,7 +101,7 @@ data class ChannelItemStyle(
         val lastMessageSenderNameTextStyle: TextStyle,
         val deletedTextStyle: TextStyle,
         val draftPrefixTextStyle: TextStyle,
-        val typingTextStyle: TextStyle,
+        val userActivityStateTextStyle: TextStyle,
         val unreadCountTextStyle: TextStyle,
         val unreadCountMutedStateTextStyle: TextStyle,
         val mentionTextStyle: TextStyle,
@@ -189,7 +189,7 @@ data class ChannelItemStyle(
                     lastMessageSenderNameTextStyle = buildLastMessageSenderNameStyle(array),
                     deletedTextStyle = buildDeletedTextStyle(array),
                     draftPrefixTextStyle = buildDraftPrefixTextStyle(array),
-                    typingTextStyle = buildTypingTextStyle(array),
+                    userActivityStateTextStyle = buildUserActivityTextStyle(array),
                     unreadCountTextStyle = buildUnreadCountTextStyle(array),
                     unreadCountMutedStateTextStyle = buildUnreadCountMutedTextStyle(array),
                     mentionTextStyle = buildMentionTextStyle(array),

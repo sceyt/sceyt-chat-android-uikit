@@ -64,7 +64,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property messageSearchControlsStyle Style for the message search controls, default is [buildMessageSearchControlStyle]
  * @property inputCoverStyle Style for the input cover, default is [buildInputCoverStyle]
  * @property mentionUsersListStyle Style for the mention users list, default is [buildMentionUsersListStyle]
- * @property mentionTextStyle Style for the mention user name while typing, default is [buildMentionTextStyle]
+ * @property mentionTextStyle Style for the mention user name, default is [buildMentionTextStyle]
  * @property mentionUserNameFormatter Formatter for the mention user name, default is [SceytChatUIKitFormatters.userNameFormatter]
  * @property draftMessageBodyFormatterAttributes Formatter for the draft message body, default is [SceytChatUIKitFormatters.draftMessageBodyFormatter]
  * */

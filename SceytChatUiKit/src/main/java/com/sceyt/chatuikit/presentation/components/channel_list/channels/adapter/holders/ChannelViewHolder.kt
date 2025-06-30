@@ -88,7 +88,7 @@ open class ChannelViewHolder(
                         setChannelMarkedUsUnread(channel, binding.unreadMessagesCount)
 
                     if (activityStateChanged)
-                        setTypingState(channel, binding.lastMessage)
+                        setUserActivityState(channel, binding.lastMessage)
 
                     if (autoDeleteStateChanged) {
                         setAutoDeleteState(channel, binding.icAutoDeleted)
@@ -228,7 +228,7 @@ open class ChannelViewHolder(
     }
 
     @SuppressLint("SetTextI18n")
-    protected open fun setTypingState(channel: SceytChannel, textView: TextView) {
+    protected open fun setUserActivityState(channel: SceytChannel, textView: TextView) {
         val event = channel.activityEvent ?: return
         if (event.active) {
             val title = SpannableStringBuilder(
@@ -236,7 +236,7 @@ open class ChannelViewHolder(
                     channel = channel,
                     activeUsers = listOf(ActiveUser(user = event.user, activity = event.activity))
                 )))
-            itemStyle.typingTextStyle.apply(context, title)
+            itemStyle.userActivityStateTextStyle.apply(context, title)
             textView.setText(title, TextView.BufferType.SPANNABLE)
         } else setLastMessagedText(channel, textView)
     }

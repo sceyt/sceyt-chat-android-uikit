@@ -276,7 +276,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 else initUserActivityTitle(it)
                 setTypingState(activityChangeHelper.getActivityState(it))
             },
-            showActiveUsersInSequence = style.showTypingUsersInSequence
+            showActiveUsersInSequence = style.showUsersActivityInSequence
         )
     }
 
@@ -295,7 +295,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         lasUsersActivityState = state
         val active = state != UsersActivityState.None
         binding.subTitle.isVisible = !active
-        binding.lottieUserActivity.isVisible = active && style.enableUserActivityIndicator
+        binding.lottieUserActivity.isVisible = active && style.enableUsersActivityIndicator
         binding.tvUserActivity.isVisible = active
         when (state) {
             UsersActivityState.Typing -> {
@@ -577,7 +577,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         root.setBackgroundColor(style.backgroundColor)
         toolbarUnderline.background = style.underlineColor.toDrawable()
         toolbarUnderline.isVisible = style.showUnderline
-        lottieUserActivity.isVisible = style.enableUserActivityIndicator
+        lottieUserActivity.isVisible = style.enableUsersActivityIndicator
         icBack.setImageDrawable(style.navigationIcon)
         style.titleTextStyle.apply(title)
         style.subTitleStyle.apply(subTitle)
