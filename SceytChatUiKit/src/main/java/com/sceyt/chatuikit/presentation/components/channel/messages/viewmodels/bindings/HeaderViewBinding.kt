@@ -38,7 +38,7 @@ fun MessageListViewModel.bind(
     if (replyInThread)
         headerView.setReplyMessage(channel, replyInThreadMessage)
     else
-        headerView.setChannel(channel)
+        headerView.setChannel(channel, true)
 
     val peerId = channel.getPeer()?.id
     if (channel.isDirect()) {
@@ -65,9 +65,7 @@ fun MessageListViewModel.bind(
     ChannelsCache.channelUpdatedFlow
         .filter { it.channel.id == channel.id }
         .onEach {
-            // We handling presence update with SceytPresenceChecker
-            if (it.eventType != ChannelUpdatedType.Presence)
-                headerView.setChannel(it.channel)
+            headerView.setChannel(it.channel, it.eventType != ChannelUpdatedType.Presence)
         }
         .launchIn(lifecycleOwner.lifecycleScope)
 
@@ -78,18 +76,18 @@ fun MessageListViewModel.bind(
 
     onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
         if (!replyInThread)
-            headerView.setChannel(channel)
+            headerView.setChannel(channel, false)
     }
 
     joinLiveData.observe(lifecycleOwner) {
         if (!replyInThread && it is SceytResponse.Success) {
-            headerView.setChannel(it.data ?: return@observe)
+            headerView.setChannel(it.data ?: return@observe, false)
         }
     }
 
     channelLiveData.observe(lifecycleOwner) {
         if (!replyInThread && it is SceytResponse.Success) {
-            headerView.setChannel(it.data ?: return@observe)
+            headerView.setChannel(it.data ?: return@observe, true)
         }
     }
 }
