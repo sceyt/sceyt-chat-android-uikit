@@ -224,7 +224,7 @@ class MessageInputView @JvmOverloads constructor(
             typingTimeoutJob?.cancel()
             if (state.typing) {
                 typingTimeoutJob = getScope().launch {
-                    delay(2000)
+                    delay(1000)
                     actionListeners.sendUserActivity(InputUserActivity.Typing(
                         typing = false,
                         text = null
