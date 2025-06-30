@@ -104,15 +104,15 @@
         </attr>
         <attr name="sceytUiChannelListDraftTextFont" format="reference" />
 
-        <!-- Channel typing text style -->
-        <attr name="sceytUiChannelListTypingTextColor" format="reference|color" />
-        <attr name="sceytUiChannelListTypingTextSize" format="dimension" />
-        <attr name="sceytUiChannelListTypingTextStyle">
+        <!-- Channel user activity text style -->
+        <attr name="sceytUiChannelListUserActivityTextColor" format="reference|color" />
+        <attr name="sceytUiChannelListUserActivityTextSize" format="dimension" />
+        <attr name="sceytUiChannelListUserActivityTextStyle">
             <flag name="normal" value="0" />
             <flag name="bold" value="1" />
             <flag name="italic" value="2" />
         </attr>
-        <attr name="sceytUiChannelListTypingTextFont" format="reference" />
+        <attr name="sceytUiChannelListUserActivityTextFont" format="reference" />
 
         <!-- Channel unread count text style -->
         <attr name="sceytUiChannelListUnreadCountBackgroundColor" format="reference|color" />

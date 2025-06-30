@@ -36,15 +36,15 @@ import com.sceyt.chatuikit.theme.Colors
  * @property underlineColor color of the underline, default is [Colors.borderColor]
  * @property navigationIcon icon for back button, default is [R.drawable.sceyt_ic_arrow_back]
  * @property showUnderline enable underline, default is true
- * @property showTypingUsersInSequence Whether to show typing users one at a time in sequence, default is true
- * @property enableUserActivityIndicator Whether to show a typing animation at the end of the typing users' title. Default is true.
+ * @property showUsersActivityInSequence Whether to show users activity one at a time in sequence, default is true
+ * @property enableUsersActivityIndicator Whether to show a user activity animation at the end of the active users' title. Default is true.
  * @property titleTextStyle style for the title, default is [buildTitleTextStyle]
  * @property subTitleStyle style for the subtitle, default is [buildSubTitleTextStyle]
  * @property searchInputStyle style for the search input, default is [buildSearchInputTextStyle]
  * @property messageActionsMenuStyle style for the toolbar menu, default is [buildMessageActionsMenuStyle]
  * @property titleFormatter formatter for the channel title, default is [SceytChatUIKitFormatters.channelNameFormatter]
  * @property subtitleFormatter formatter for the channel subtitle, default is [SceytChatUIKitFormatters.channelSubtitleFormatter]
- * @property userActivityTitleFormatter formatter for the typing title, default is [SceytChatUIKitFormatters.userActivityTitleFormatter]
+ * @property userActivityTitleFormatter formatter for the user activity title, default is [SceytChatUIKitFormatters.userActivityTitleFormatter]
  * @property channelAvatarRenderer renderer for the channel avatar, default is [SceytChatUIKitRenderers.channelAvatarRenderer]
  * */
 data class MessagesListHeaderStyle(
@@ -52,8 +52,8 @@ data class MessagesListHeaderStyle(
         @ColorInt val underlineColor: Int,
         val navigationIcon: Drawable?,
         val showUnderline: Boolean,
-        val showTypingUsersInSequence: Boolean,
-        val enableUserActivityIndicator: Boolean,
+        val showUsersActivityInSequence: Boolean,
+        val enableUsersActivityIndicator: Boolean,
         val titleTextStyle: TextStyle,
         val subTitleStyle: TextStyle,
         val avatarStyle: AvatarStyle,
@@ -111,13 +111,13 @@ data class MessagesListHeaderStyle(
                     R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderShowUnderline, true
                 )
 
-                val showTypingUsersInSequence = array.getBoolean(
-                    R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderShowTypingUsersInSequence,
+                val showUsersActivityInSequence = array.getBoolean(
+                    R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderShowUsersActivityInSequence,
                     true
                 )
 
-                val enableTypingIndicator = array.getBoolean(
-                    R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderEnableTypingIndicator,
+                val enableUsersActivityIndicator = array.getBoolean(
+                    R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderEnableUsersActivityIndicator,
                     true
                 )
 
@@ -126,8 +126,8 @@ data class MessagesListHeaderStyle(
                     underlineColor = underlineColor,
                     navigationIcon = navigationIcon,
                     showUnderline = showUnderline,
-                    showTypingUsersInSequence = showTypingUsersInSequence,
-                    enableUserActivityIndicator = enableTypingIndicator,
+                    showUsersActivityInSequence = showUsersActivityInSequence,
+                    enableUsersActivityIndicator = enableUsersActivityIndicator,
                     titleTextStyle = buildTitleTextStyle(array),
                     subTitleStyle = buildSubTitleTextStyle(array),
                     avatarStyle = buildAvatarStyle(array),
