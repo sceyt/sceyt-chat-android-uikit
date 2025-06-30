@@ -9,7 +9,7 @@ import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.UserListQuery
 import com.sceyt.chatuikit.config.ChannelListConfig
 import com.sceyt.chatuikit.data.managers.channel.ChannelEventManager
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMembersEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelOwnerChangedEventData
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
@@ -108,8 +108,8 @@ internal class PersistenceMiddleWareImpl(
     }
 
 
-    private fun onChannelEvent(data: ChannelEventData) {
-        scope.launch(Dispatchers.IO) { channelLogic.onChannelEvent(data) }
+    private fun onChannelEvent(event: ChannelActionEvent) {
+        scope.launch(Dispatchers.IO) { channelLogic.onChannelEvent(event) }
     }
 
     private fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
@@ -495,8 +495,8 @@ internal class PersistenceMiddleWareImpl(
         return messagesLogic.getMessageFromDbByTid(messageTid)
     }
 
-    override suspend fun sendTyping(channelId: Long, typing: Boolean) {
-        messagesLogic.sendTyping(channelId, typing)
+    override suspend fun sendChannelEvent(channelId: Long, event: String) {
+        channelLogic.sendChannelEvent(channelId, event)
     }
 
     override fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>> = messagesLogic.getOnMessageFlow()

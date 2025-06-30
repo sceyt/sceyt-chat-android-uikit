@@ -1,6 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.header.listeners.event
 
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 
@@ -13,12 +13,12 @@ open class MessageListHeaderEventsListenerImpl : MessageListHeaderEventsListener
     }
 
     private var defaultListeners: MessageListHeaderEventsListener.EventListeners? = null
-    private var typingListener: MessageListHeaderEventsListener.TypingListener? = null
+    private var memberActivityListener: MessageListHeaderEventsListener.MemberActivityListener? = null
     private var presenceUpdateListener: MessageListHeaderEventsListener.PresenceUpdateListener? = null
 
-    override fun onTypingEvent(data: ChannelTypingEventData) {
-        defaultListeners?.onTypingEvent(data)
-        typingListener?.onTypingEvent(data)
+    override fun onActivityEvent(event: ChannelMemberActivityEvent) {
+        defaultListeners?.onActivityEvent(event)
+        memberActivityListener?.onActivityEvent(event)
     }
 
     override fun onPresenceUpdateEvent(user: SceytUser) {
@@ -29,12 +29,12 @@ open class MessageListHeaderEventsListenerImpl : MessageListHeaderEventsListener
     fun setListener(listener: MessageListHeaderEventsListener) {
         when (listener) {
             is MessageListHeaderEventsListener.EventListeners -> {
-                typingListener = listener
+                memberActivityListener = listener
                 presenceUpdateListener = listener
             }
 
-            is MessageListHeaderEventsListener.TypingListener -> {
-                typingListener = listener
+            is MessageListHeaderEventsListener.MemberActivityListener -> {
+                memberActivityListener = listener
             }
 
             is MessageListHeaderEventsListener.PresenceUpdateListener -> {
