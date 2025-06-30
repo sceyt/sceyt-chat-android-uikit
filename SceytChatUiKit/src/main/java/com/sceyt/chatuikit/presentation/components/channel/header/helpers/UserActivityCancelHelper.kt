@@ -8,7 +8,7 @@ class UserActivityCancelHelper {
 
     private val debounceHelpers: ConcurrentHashMap<Long, DebounceHelper> by lazy { ConcurrentHashMap() }
 
-    fun await(event: ChannelMemberActivityEvent, callBack: (ChannelMemberActivityEvent) -> Unit) {
+    fun await(event: ChannelMemberActivityEvent, callback: (ChannelMemberActivityEvent) -> Unit) {
         if (!event.active) {
             debounceHelpers[getKey(event)]?.cancelLastDebounce()
             return
@@ -17,7 +17,7 @@ class UserActivityCancelHelper {
         debounceHelpers.compute(getKey(event)) { _, existingHelper ->
             val helper = existingHelper ?: DebounceHelper(5000)
             helper.submit {
-                callBack.invoke(event.inverse())
+                callback.invoke(event.inverse())
             }
             helper
         }
@@ -25,8 +25,8 @@ class UserActivityCancelHelper {
 
     private fun getKey(event: ChannelMemberActivityEvent): Long {
         return when (event) {
-            is ChannelMemberActivityEvent.Typing -> event.channelId.plus(1)
-            is ChannelMemberActivityEvent.Recording -> event.channelId.plus(2)
+            is ChannelMemberActivityEvent.Typing -> event.channelId + event.userId.hashCode() + 1L
+            is ChannelMemberActivityEvent.Recording -> event.channelId + event.userId.hashCode() + 2L
         }
     }
 }
