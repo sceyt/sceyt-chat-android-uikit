@@ -6,13 +6,13 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.attributes.UserActivityTitleFormatterAttributes
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.UserActivityState
+import com.sceyt.chatuikit.presentation.components.channel.input.data.UserActivity
 
 open class DefaultUserActivityTitleFormatter : Formatter<UserActivityTitleFormatterAttributes> {
 
     override fun format(context: Context, from: UserActivityTitleFormatterAttributes): String {
         if (from.activeUsers.isEmpty()) return ""
-        val text = if (from.activeUsers.any { it.activity == UserActivityState.Typing })
+        val text = if (from.activeUsers.any { it.activity == UserActivity.Typing })
             context.getString(R.string.sceyt_typing)
         else context.getString(R.string.recording)
         return if (from.channel.isGroup) {
@@ -29,7 +29,7 @@ open class DefaultUserActivityTitleFormatter : Formatter<UserActivityTitleFormat
     }
 
     private fun getFormattedName(context: Context, user: SceytUser): CharSequence {
-        return SceytChatUIKit.formatters.typingUserNameFormatter.format(context, user).take(10)
+        return SceytChatUIKit.formatters.activityUserNameFormatter.format(context, user).take(10)
     }
 }
 

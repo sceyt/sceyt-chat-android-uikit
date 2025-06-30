@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoFileSubtitleFor
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoVoiceSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageSenderNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelListSubtitleFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelListUserActivityTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultConnectionsStateTitleFormatter
@@ -65,12 +66,16 @@ class SceytChatUIKitFormatters {
         DefaultMentionUserNameFormatter()
     }
 
-    var typingUserNameFormatter: Formatter<SceytUser> by lazyVar {
+    var activityUserNameFormatter: Formatter<SceytUser> by lazyVar {
         DefaultUserShortNameFormatter()
     }
 
     var userActivityTitleFormatter: Formatter<UserActivityTitleFormatterAttributes> by lazyVar {
         DefaultUserActivityTitleFormatter()
+    }
+
+    var channelUserActivityTitleFormatter: Formatter<UserActivityTitleFormatterAttributes> by lazyVar {
+        DefaultChannelListUserActivityTitleFormatter()
     }
 
     var reactedUserNameFormatter: Formatter<SceytUser> by lazyVar {

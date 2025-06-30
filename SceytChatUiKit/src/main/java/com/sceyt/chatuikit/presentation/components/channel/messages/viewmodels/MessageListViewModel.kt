@@ -68,7 +68,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
-import com.sceyt.chatuikit.presentation.components.channel.input.data.UserActivityState
+import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserActivity
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
@@ -509,17 +509,17 @@ class MessageListViewModel(
         }
     }
 
-    fun sendUserActivityStateEvent(state: UserActivityState) {
+    fun sendUserActivityStateEvent(state: InputUserActivity) {
         if (channel.pending) return
         viewModelScope.launch(Dispatchers.IO) {
             val event = when (state) {
-                is UserActivityState.Typing -> {
+                is InputUserActivity.Typing -> {
                     if (state.typing) {
                         SceytConstants.startTypingEvent
                     } else SceytConstants.stopTypingEvent
                 }
 
-                is UserActivityState.Recording -> {
+                is InputUserActivity.Recording -> {
                     if (state.recording) {
                         SceytConstants.startRecordingEvent
                     } else SceytConstants.stopRecordingEvent

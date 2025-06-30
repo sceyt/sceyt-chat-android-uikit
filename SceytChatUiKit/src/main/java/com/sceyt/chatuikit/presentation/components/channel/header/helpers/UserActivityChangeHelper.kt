@@ -3,16 +3,13 @@ package com.sceyt.chatuikit.presentation.components.channel.header.helpers
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.presentation.common.ConcurrentHashSet
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.components.channel.input.data.UserActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
-
-enum class UserActivityState {
-    Typing, Recording
-}
 
 enum class UsersActivityState {
     Typing, Recording, None
@@ -75,15 +72,8 @@ class UserActivityChangeHelper(
             DebounceHelper(200, scope)
         }
         debounceHelper.submit {
-            val activeUser = when (event) {
-                is ChannelMemberActivityEvent.Recording -> {
-                    ActiveUser(event.user, UserActivityState.Recording)
-                }
+            val activeUser = ActiveUser(event.user, event.activity)
 
-                is ChannelMemberActivityEvent.Typing -> {
-                    ActiveUser(event.user, UserActivityState.Typing)
-                }
-            }
             // Remove last active user
             _activeUsers.remove(activeUser)
 
@@ -104,7 +94,7 @@ class UserActivityChangeHelper(
     fun getActivityState(activeUsers: List<ActiveUser>): UsersActivityState {
         return when {
             activeUsers.isEmpty() -> UsersActivityState.None
-            activeUsers.any { it.activity == UserActivityState.Typing } -> UsersActivityState.Typing
+            activeUsers.any { it.activity == UserActivity.Typing } -> UsersActivityState.Typing
             else -> UsersActivityState.Recording
         }
     }

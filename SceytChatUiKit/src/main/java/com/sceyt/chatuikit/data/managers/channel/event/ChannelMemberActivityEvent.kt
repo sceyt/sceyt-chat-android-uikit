@@ -1,31 +1,24 @@
 package com.sceyt.chatuikit.data.managers.channel.event
 
+import android.os.Parcelable
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.presentation.components.channel.input.data.UserActivity
+import kotlinx.parcelize.Parcelize
 
-sealed class ChannelMemberActivityEvent(
-        val channelId: Long,
-        val userId: String,
-        val active: Boolean
-) {
+@Parcelize
+data class ChannelMemberActivityEvent(
+        val channel: SceytChannel,
+        val user: SceytUser,
+        val activity: UserActivity,
+        val active: Boolean,
+) : Parcelable {
 
-    data class Typing(
-            val channel: SceytChannel,
-            val user: SceytUser,
-            val typing: Boolean,
-    ) : ChannelMemberActivityEvent(channel.id, user.id, typing)
+    val userId get() = user.id
 
-    data class Recording(
-            val channel: SceytChannel,
-            val user: SceytUser,
-            val recording: Boolean,
-    ) : ChannelMemberActivityEvent(channel.id, user.id, recording)
-
+    val channelId get() = channel.id
 
     fun inverse(): ChannelMemberActivityEvent {
-        return when (this) {
-            is Typing -> copy(typing = !typing)
-            is Recording -> copy(recording = !recording)
-        }
+        return copy(active = !active)
     }
 }

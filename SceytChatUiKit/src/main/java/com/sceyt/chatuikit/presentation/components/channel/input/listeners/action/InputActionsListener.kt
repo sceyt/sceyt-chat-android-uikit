@@ -4,7 +4,7 @@ import android.text.Editable
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.components.channel.input.data.UserActivityState
+import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserActivity
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 
@@ -23,7 +23,7 @@ sealed interface InputActionsListener {
     }
 
     fun interface UserActivityListener : InputActionsListener {
-        fun sendUserActivity(state: UserActivityState)
+        fun sendUserActivity(state: InputUserActivity)
     }
 
     fun interface UpdateDraftMessageListener {

@@ -17,7 +17,7 @@ data class ChannelDiff(
         val markedUsUnreadChanged: Boolean,
         val lastReadMsdChanged: Boolean,
         val peerBlockedChanged: Boolean,
-        val typingStateChanged: Boolean,
+        val activityStateChanged: Boolean,
         val membersChanged: Boolean,
         val metadataUpdated: Boolean,
         val urlUpdated: Boolean,
@@ -27,7 +27,7 @@ data class ChannelDiff(
     fun hasDifference(): Boolean {
         return subjectChanged || avatarViewChanged || lastMessageChanged || lastMessageStatusChanged ||
                 unreadCountChanged || muteStateChanged || presenceStateChanged || markedUsUnreadChanged ||
-                lastReadMsdChanged || peerBlockedChanged || typingStateChanged || membersChanged ||
+                lastReadMsdChanged || peerBlockedChanged || activityStateChanged || membersChanged ||
                 metadataUpdated || urlUpdated || pinStateChanged || autoDeleteStateChanged
     }
 
@@ -43,7 +43,7 @@ data class ChannelDiff(
             markedUsUnreadChanged = true,
             lastReadMsdChanged = true,
             peerBlockedChanged = true,
-            typingStateChanged = true,
+            activityStateChanged = true,
             membersChanged = true,
             metadataUpdated = true,
             urlUpdated = true,
@@ -62,7 +62,7 @@ data class ChannelDiff(
             markedUsUnreadChanged = false,
             lastReadMsdChanged = false,
             peerBlockedChanged = false,
-            typingStateChanged = false,
+            activityStateChanged = false,
             membersChanged = false,
             metadataUpdated = false,
             urlUpdated = false,
@@ -94,7 +94,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
         markedUsUnreadChanged = unread != other.unread,
         lastReadMsdChanged = lastDisplayedMessageId != other.lastDisplayedMessageId,
         peerBlockedChanged = peerBlockedChanged,
-        typingStateChanged = typingData != other.typingData,
+        activityStateChanged = activityEvent != other.activityEvent,
         membersChanged = membersCountChanged || members != other.members,
         metadataUpdated = metadata != other.metadata,
         urlUpdated = uri != other.uri,

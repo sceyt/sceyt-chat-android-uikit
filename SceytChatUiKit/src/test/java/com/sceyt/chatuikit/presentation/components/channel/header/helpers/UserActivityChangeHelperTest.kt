@@ -5,6 +5,7 @@ import com.google.common.truth.Truth.assertThat
 import com.sceyt.chatuikit.createChannel
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.models.messages.SceytUser
+import com.sceyt.chatuikit.presentation.components.channel.input.data.UserActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -57,9 +58,10 @@ class UserActivityChangeHelperTest {
     fun `when typing event is received, should add active user`() = scope.runTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = false)
-        val typingEvent = ChannelMemberActivityEvent.Typing(
+        val typingEvent = ChannelMemberActivityEvent(
             testChannel,
             testUser1,
+            UserActivity.Typing,
             true
         )
 
@@ -70,16 +72,17 @@ class UserActivityChangeHelperTest {
         // Then
         assertThat(capturedActiveUsers).hasSize(1)
         assertThat(capturedActiveUsers.first().user.id).isEqualTo(testUser1.id)
-        assertThat(capturedActiveUsers.first().activity).isEqualTo(UserActivityState.Typing)
+        assertThat(capturedActiveUsers.first().activity).isEqualTo(UserActivity.Typing)
     }
 
     @Test
     fun `when recording event is received, should add active user`() = scope.runTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = false)
-        val recordingEvent = ChannelMemberActivityEvent.Recording(
+        val recordingEvent = ChannelMemberActivityEvent(
             testChannel,
             testUser1,
+            UserActivity.Recording,
             true
         )
 
@@ -90,21 +93,23 @@ class UserActivityChangeHelperTest {
         // Then
         assertThat(capturedActiveUsers).hasSize(1)
         assertThat(capturedActiveUsers.first().user.id).isEqualTo(testUser1.id)
-        assertThat(capturedActiveUsers.first().activity).isEqualTo(UserActivityState.Recording)
+        assertThat(capturedActiveUsers.first().activity).isEqualTo(UserActivity.Recording)
     }
 
     @Test
     fun `when stop event is received, should remove active user`() = scope.runTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = false)
-        val startEvent = ChannelMemberActivityEvent.Typing(
+        val startEvent = ChannelMemberActivityEvent(
             testChannel,
             testUser1,
+            UserActivity.Typing,
             true
         )
-        val stopEvent = ChannelMemberActivityEvent.Typing(
+        val stopEvent = ChannelMemberActivityEvent(
             testChannel,
             testUser1,
+            UserActivity.Typing,
             false
         )
 
@@ -122,9 +127,10 @@ class UserActivityChangeHelperTest {
     fun `auto cancel should work after 5 seconds`() = scope.runTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = false)
-        val typingEvent = ChannelMemberActivityEvent.Typing(
+        val typingEvent = ChannelMemberActivityEvent(
             testChannel,
             testUser1,
+            UserActivity.Typing,
             true
         )
 
@@ -147,8 +153,8 @@ class UserActivityChangeHelperTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = false)
         val typingUsers = listOf(
-            ActiveUser(testUser1, UserActivityState.Typing),
-            ActiveUser(testUser2, UserActivityState.Recording)
+            ActiveUser(testUser1, UserActivity.Typing),
+            ActiveUser(testUser2, UserActivity.Recording)
         )
 
         // When
@@ -163,8 +169,8 @@ class UserActivityChangeHelperTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = false)
         val recordingUsers = listOf(
-            ActiveUser(testUser1, UserActivityState.Recording),
-            ActiveUser(testUser2, UserActivityState.Recording)
+            ActiveUser(testUser1, UserActivity.Recording),
+            ActiveUser(testUser2, UserActivity.Recording)
         )
 
         // When
@@ -190,7 +196,7 @@ class UserActivityChangeHelperTest {
     fun `sequence mode should show single user immediately`() = scope.runTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = true)
-        val event = ChannelMemberActivityEvent.Typing(testChannel, testUser1, true)
+        val event = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Typing, true)
 
         // When
         helper.onActivityEvent(event)
@@ -205,8 +211,8 @@ class UserActivityChangeHelperTest {
     fun `sequence mode should cycle through multiple users`() = scope.runTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = true)
-        val event1 = ChannelMemberActivityEvent.Typing(testChannel, testUser1, true)
-        val event2 = ChannelMemberActivityEvent.Recording(testChannel, testUser2, true)
+        val event1 = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Typing, true)
+        val event2 = ChannelMemberActivityEvent(testChannel, testUser2, UserActivity.Recording, true)
 
         var callbackCount = 0
         val callbackHelper = createHelper(showActiveUsersInSequence = true) { users ->
@@ -231,9 +237,9 @@ class UserActivityChangeHelperTest {
     @Test
     fun `equal active users should be based on user id`() {
         // Given
-        val user1Typing = ActiveUser(testUser1, UserActivityState.Typing)
-        val user1Recording = ActiveUser(testUser1, UserActivityState.Recording)
-        val user2Typing = ActiveUser(testUser2, UserActivityState.Typing)
+        val user1Typing = ActiveUser(testUser1, UserActivity.Typing)
+        val user1Recording = ActiveUser(testUser1, UserActivity.Recording)
+        val user2Typing = ActiveUser(testUser2, UserActivity.Typing)
 
         // When & Then
         assertThat(user1Typing).isEqualTo(user1Recording) // Same user ID
@@ -245,8 +251,8 @@ class UserActivityChangeHelperTest {
     fun `multiple events from same user should update activity state`() = scope.runTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = false)
-        val typingEvent = ChannelMemberActivityEvent.Typing(testChannel, testUser1, true)
-        val recordingEvent = ChannelMemberActivityEvent.Recording(testChannel, testUser1, true)
+        val typingEvent = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Typing, true)
+        val recordingEvent = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Recording, true)
 
         // When
         helper.onActivityEvent(typingEvent)
@@ -254,22 +260,22 @@ class UserActivityChangeHelperTest {
 
         // Verify typing state
         assertThat(helper.activeUsers).hasSize(1)
-        assertThat(helper.activeUsers.first().activity).isEqualTo(UserActivityState.Typing)
+        assertThat(helper.activeUsers.first().activity).isEqualTo(UserActivity.Typing)
 
         helper.onActivityEvent(recordingEvent)
         advanceTimeBy(300)
 
         // Then - Should update to recording (same user, different activity)
         assertThat(helper.activeUsers).hasSize(1)
-        assertThat(helper.activeUsers.first().activity).isEqualTo(UserActivityState.Recording)
+        assertThat(helper.activeUsers.first().activity).isEqualTo(UserActivity.Recording)
     }
 
     @Test
     fun `should handle multiple users simultaneously`() = scope.runTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = false)
-        val event1 = ChannelMemberActivityEvent.Typing(testChannel, testUser1, true)
-        val event2 = ChannelMemberActivityEvent.Recording(testChannel, testUser2, true)
+        val event1 = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Typing, true)
+        val event2 = ChannelMemberActivityEvent(testChannel, testUser2, UserActivity.Recording, true)
 
         // When
         helper.onActivityEvent(event1)
@@ -288,8 +294,8 @@ class UserActivityChangeHelperTest {
     fun `should handle rapid start stop events correctly`() = scope.runTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = false)
-        val startEvent = ChannelMemberActivityEvent.Typing(testChannel, testUser1, true)
-        val stopEvent = ChannelMemberActivityEvent.Typing(testChannel, testUser1, false)
+        val startEvent = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Typing, true)
+        val stopEvent = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Typing, false)
 
         // When - Rapid fire events
         helper.onActivityEvent(startEvent)
@@ -313,34 +319,34 @@ class UserActivityChangeHelperTest {
         }
 
         // When - User starts typing
-        val typingEvent = ChannelMemberActivityEvent.Typing(testChannel, testUser1, true)
+        val typingEvent = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Typing, true)
         callbackHelper.onActivityEvent(typingEvent)
         advanceTimeBy(300) // Wait for debounce
 
         // Then - Should show typing
         assertThat(capturedActiveUsers).hasSize(1)
-        assertThat(capturedActiveUsers.first().activity).isEqualTo(UserActivityState.Typing)
+        assertThat(capturedActiveUsers.first().activity).isEqualTo(UserActivity.Typing)
         val typingCallbacks = callbackInvocations
 
         // When - Same user switches to recording
-        val recordingEvent = ChannelMemberActivityEvent.Recording(testChannel, testUser1, true)
+        val recordingEvent = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Recording, true)
         callbackHelper.onActivityEvent(recordingEvent)
         advanceTimeBy(300) // Wait for debounce
 
         // Then - Should show recording and trigger callback
         assertThat(capturedActiveUsers).hasSize(1)
-        assertThat(capturedActiveUsers.first().activity).isEqualTo(UserActivityState.Recording)
+        assertThat(capturedActiveUsers.first().activity).isEqualTo(UserActivity.Recording)
         assertThat(capturedActiveUsers.first().user.id).isEqualTo(testUser1.id)
         assertThat(callbackInvocations).isGreaterThan(typingCallbacks)
 
         // When - User switches back to typing
-        val typingEvent2 = ChannelMemberActivityEvent.Typing(testChannel, testUser1, true)
+        val typingEvent2 = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Typing, true)
         callbackHelper.onActivityEvent(typingEvent2)
         advanceTimeBy(300) // Wait for debounce
 
         // Then - Should show typing again
         assertThat(capturedActiveUsers).hasSize(1)
-        assertThat(capturedActiveUsers.first().activity).isEqualTo(UserActivityState.Typing)
+        assertThat(capturedActiveUsers.first().activity).isEqualTo(UserActivity.Typing)
         assertThat(capturedActiveUsers.first().user.id).isEqualTo(testUser1.id)
     }
 
@@ -348,24 +354,24 @@ class UserActivityChangeHelperTest {
     fun `when same user rapidly switches activity states, should handle debouncing correctly`() = scope.runTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = false)
-        val typingEvent = ChannelMemberActivityEvent.Typing(testChannel, testUser1, true)
-        val recordingEvent = ChannelMemberActivityEvent.Recording(testChannel, testUser1, true)
+        val typingEvent = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Typing, true)
+        val recordingEvent = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Recording, true)
 
         // When - Rapid activity switches without waiting for debounce
         helper.onActivityEvent(typingEvent)
         helper.onActivityEvent(recordingEvent)
         helper.onActivityEvent(typingEvent)
         helper.onActivityEvent(recordingEvent)
-        
+
         // Then - Before debounce, should not update callback yet
         assertThat(capturedActiveUsers).isEmpty()
-        
+
         // When - Wait for debounce
         advanceTimeBy(300)
-        
+
         // Then - Should show final state (recording)
         assertThat(capturedActiveUsers).hasSize(1)
-        assertThat(capturedActiveUsers.first().activity).isEqualTo(UserActivityState.Recording)
+        assertThat(capturedActiveUsers.first().activity).isEqualTo(UserActivity.Recording)
         assertThat(capturedActiveUsers.first().user.id).isEqualTo(testUser1.id)
     }
 
@@ -378,8 +384,8 @@ class UserActivityChangeHelperTest {
             capturedActiveUsers = users
             callbackInvocations++
         }
-        
-        val typingEvent = ChannelMemberActivityEvent.Typing(testChannel, testUser1, true)
+
+        val typingEvent = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Typing, true)
 
         // When - Start typing
         callbackHelper.onActivityEvent(typingEvent)
@@ -404,7 +410,7 @@ class UserActivityChangeHelperTest {
     fun `auto cancel should reset when user activity is renewed`() = scope.runTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = false)
-        val typingEvent = ChannelMemberActivityEvent.Typing(testChannel, testUser1, true)
+        val typingEvent = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Typing, true)
 
         // When - Start typing
         helper.onActivityEvent(typingEvent)
@@ -415,26 +421,26 @@ class UserActivityChangeHelperTest {
 
         // When - Wait 3 seconds (before auto-cancel)
         advanceTimeBy(3000)
-        
+
         // Then - User should still be active
         assertThat(helper.activeUsers).hasSize(1)
-        
+
         // When - User types again (renews activity)
         helper.onActivityEvent(typingEvent)
         advanceTimeBy(300)
-        
+
         // Then - User should still be active
         assertThat(helper.activeUsers).hasSize(1)
-        
+
         // When - Wait another 3 seconds (total 6+ seconds from first event, but only 3 from renewal)
         advanceTimeBy(3000)
-        
+
         // Then - User should still be active (auto-cancel timer was reset)
         assertThat(helper.activeUsers).hasSize(1)
-        
+
         // When - Wait for full auto-cancel period from renewal
         advanceTimeBy(2300) // 5.3 seconds from renewal
-        
+
         // Then - Now user should be auto-removed
         assertThat(helper.activeUsers).isEmpty()
     }
@@ -443,34 +449,34 @@ class UserActivityChangeHelperTest {
     fun `auto cancel should work independently for multiple users`() = scope.runTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = false)
-        val typingEvent1 = ChannelMemberActivityEvent.Typing(testChannel, testUser1, true)
-        val recordingEvent2 = ChannelMemberActivityEvent.Recording(testChannel, testUser2, true)
+        val typingEvent1 = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Typing, true)
+        val recordingEvent2 = ChannelMemberActivityEvent(testChannel, testUser2, UserActivity.Recording, true)
 
         // When - Start both users' activities
         helper.onActivityEvent(typingEvent1)
         advanceTimeBy(300)
-        
+
         // Then - First user should be active
         assertThat(helper.activeUsers).hasSize(1)
-        
+
         // When - Add second user 2 seconds later
         advanceTimeBy(2000)
         helper.onActivityEvent(recordingEvent2)
         advanceTimeBy(300)
-        
+
         // Then - Both users should be active
         assertThat(helper.activeUsers).hasSize(2)
-        
+
         // When - Wait 3.5 more seconds (total 5.8 seconds for user1, 3.8 for user2)
         advanceTimeBy(3500)
-        
+
         // Then - First user should be auto-cancelled, second should remain
         assertThat(helper.activeUsers).hasSize(1)
         assertThat(helper.activeUsers.first().user.id).isEqualTo(testUser2.id)
-        
+
         // When - Wait 2 more seconds (total 5.8 seconds for user2)
         advanceTimeBy(2000)
-        
+
         // Then - Second user should also be auto-cancelled
         assertThat(helper.activeUsers).isEmpty()
     }
@@ -479,8 +485,8 @@ class UserActivityChangeHelperTest {
     fun `multiple activity state changes should preserve user count correctly`() = scope.runTest {
         // Given
         helper = createHelper(showActiveUsersInSequence = false)
-        val typingEvent = ChannelMemberActivityEvent.Typing(testChannel, testUser1, true)
-        val recordingEvent = ChannelMemberActivityEvent.Recording(testChannel, testUser1, true)
+        val typingEvent = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Typing, true)
+        val recordingEvent = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Recording, true)
 
         // When - User starts typing
         helper.onActivityEvent(typingEvent)
@@ -496,11 +502,11 @@ class UserActivityChangeHelperTest {
 
         // Then - Should still have 1 active user (same user, different activity)
         assertThat(helper.activeUsers).hasSize(1)
-        assertThat(helper.activeUsers.first().activity).isEqualTo(UserActivityState.Recording)
+        assertThat(helper.activeUsers.first().activity).isEqualTo(UserActivity.Recording)
         assertThat(helper.haveUserAction).isTrue()
 
         // When - User stops recording
-        val stopRecordingEvent = ChannelMemberActivityEvent.Recording(testChannel, testUser1, false)
+        val stopRecordingEvent = ChannelMemberActivityEvent(testChannel, testUser1, UserActivity.Recording, false)
         helper.onActivityEvent(stopRecordingEvent)
         advanceTimeBy(300)
 
