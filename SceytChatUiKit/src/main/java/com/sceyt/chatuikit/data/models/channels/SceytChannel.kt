@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.data.models.channels
 
 import android.os.Parcelable
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.models.messages.PendingReactionData
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
@@ -46,7 +46,7 @@ data class SceytChannel(
         val pendingReactions: List<PendingReactionData>?,
         val pending: Boolean,
         val draftMessage: DraftMessage?,
-        val typingData: ChannelTypingEventData? = null
+        val activityEvent: ChannelMemberActivityEvent? = null
 ) : Parcelable {
 
     val iconUrl: String?

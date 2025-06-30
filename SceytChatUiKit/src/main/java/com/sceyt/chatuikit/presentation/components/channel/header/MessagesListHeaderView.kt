@@ -281,7 +281,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     private fun initUserActivityTitle(activeUsers: List<ActiveUser>): CharSequence {
-        return style.typingTitleFormatter.format(
+        return style.userActivityTitleFormatter.format(
             context = context,
             from = UserActivityTitleFormatterAttributes(
                 channel = channel,

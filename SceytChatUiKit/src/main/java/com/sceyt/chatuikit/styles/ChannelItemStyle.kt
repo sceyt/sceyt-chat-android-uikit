@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.UserActivityTitleFormatterAttributes
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.renderers.AvatarRenderer
@@ -74,7 +75,7 @@ import java.util.Date
  * @property lastMessageSenderNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.channelLastMessageSenderNameFormatter].
  * @property mentionUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.mentionUserNameFormatter].
  * @property reactedUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.reactedUserNameFormatter].
- * @property typingUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.typingUserNameFormatter].
+ * @property userActivityTitleFormatter - Formatter for activity title, default is [SceytChatUIKitFormatters.channelUserActivityTitleFormatter].
  * @property unreadCountFormatter - Formatter for unread count, default is [SceytChatUIKitFormatters.unreadCountFormatter].
  * @property lastMessageBodyFormatter - Formatter for last message body, default is [SceytChatUIKitFormatters.channelLastMessageBodyFormatter].
  * @property draftMessageBodyFormatter - Formatter for draft message body, default is [SceytChatUIKitFormatters.draftMessageBodyFormatter].
@@ -113,7 +114,7 @@ data class ChannelItemStyle(
         val lastMessageSenderNameFormatter: Formatter<SceytChannel>,
         val mentionUserNameFormatter: Formatter<SceytUser>,
         val reactedUserNameFormatter: Formatter<SceytUser>,
-        val typingUserNameFormatter: Formatter<SceytUser>,
+        val userActivityTitleFormatter: Formatter<UserActivityTitleFormatterAttributes>,
         val unreadCountFormatter: Formatter<Long>,
         val lastMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
         val draftMessageBodyFormatter: Formatter<DraftMessageBodyFormatterAttributes>,
@@ -200,7 +201,7 @@ data class ChannelItemStyle(
                     lastMessageSenderNameFormatter = SceytChatUIKit.formatters.channelLastMessageSenderNameFormatter,
                     mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
                     reactedUserNameFormatter = SceytChatUIKit.formatters.reactedUserNameFormatter,
-                    typingUserNameFormatter = SceytChatUIKit.formatters.typingUserNameFormatter,
+                    userActivityTitleFormatter = SceytChatUIKit.formatters.channelUserActivityTitleFormatter,
                     unreadCountFormatter = SceytChatUIKit.formatters.unreadCountFormatter,
                     lastMessageBodyFormatter = SceytChatUIKit.formatters.channelLastMessageBodyFormatter,
                     draftMessageBodyFormatter = SceytChatUIKit.formatters.draftMessageBodyFormatter,

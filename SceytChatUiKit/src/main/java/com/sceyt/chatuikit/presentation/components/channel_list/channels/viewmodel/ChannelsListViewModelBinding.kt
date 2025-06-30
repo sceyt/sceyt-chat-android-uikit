@@ -219,11 +219,10 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
     ChannelEventManager.onChannelMemberActivityEventFlow
         .filter { it.userId != SceytChatUIKit.chatUIFacade.myId }
         .onEach {
-            //todo
-         /*   typingCancelHelper.await(it) { data ->
-                channelListView.onTyping(data)
+            userActivityCancelHelper.await(it) { event ->
+                channelListView.onUserActivity(event)
             }
-            channelListView.onTyping(it)*/
+            channelListView.onUserActivity(it)
         }.launchIn(lifecycleOwner.lifecycleScope)
 
     pageStateLiveData.observe(lifecycleOwner) {

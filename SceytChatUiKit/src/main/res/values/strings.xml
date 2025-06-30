@@ -231,4 +231,5 @@
     <string name="sceyt_disconnected_title">Disconnected</string>
     <string name="sceyt_chats">Chats</string>
     <string name="recording">recording</string>
+    <string name="recording_">recording…</string>
 </resources>

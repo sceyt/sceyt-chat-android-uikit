@@ -8,13 +8,13 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.attributes.UserActivityTitleFormatterAttributes
 import com.sceyt.chatuikit.presentation.components.channel.input.data.UserActivity
 
-open class DefaultUserActivityTitleFormatter : Formatter<UserActivityTitleFormatterAttributes> {
+open class DefaultChannelListUserActivityTitleFormatter : Formatter<UserActivityTitleFormatterAttributes> {
 
     override fun format(context: Context, from: UserActivityTitleFormatterAttributes): String {
         if (from.activeUsers.isEmpty()) return ""
         val text = if (from.activeUsers.any { it.activity == UserActivity.Typing })
-            context.getString(R.string.sceyt_typing)
-        else context.getString(R.string.recording)
+            context.getString(R.string.sceyt_typing_)
+        else context.getString(R.string.recording_)
         return if (from.channel.isGroup) {
             buildString {
                 from.activeUsers.forEachIndexed { index, activeUser ->

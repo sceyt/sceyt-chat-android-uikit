@@ -24,6 +24,7 @@ import com.sceyt.chatuikit.data.toSceytMember
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
+import com.sceyt.chatuikit.presentation.components.channel.input.data.UserActivity
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -180,18 +181,20 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
             }
 
             override fun onMemberStartedTyping(channel: Channel, member: Member) {
-                eventManager.onActivityEvent(ChannelMemberActivityEvent.Typing(
+                eventManager.onActivityEvent(ChannelMemberActivityEvent(
                     channel = channel.toSceytUiChannel(),
                     user = member.toSceytUser(),
-                    typing = true
+                    activity = UserActivity.Typing,
+                    active = true
                 ))
             }
 
             override fun onMemberStoppedTyping(channel: Channel, member: Member) {
-                eventManager.onActivityEvent(ChannelMemberActivityEvent.Typing(
+                eventManager.onActivityEvent(ChannelMemberActivityEvent(
                     channel = channel.toSceytUiChannel(),
                     user = member.toSceytUser(),
-                    typing = false
+                    activity = UserActivity.Typing,
+                    active = false
                 ))
             }
 
@@ -245,35 +248,39 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
                 event ?: return
                 when (event.name) {
                     SceytConstants.startTypingEvent -> {
-                        eventManager.onActivityEvent(ChannelMemberActivityEvent.Typing(
+                        eventManager.onActivityEvent(ChannelMemberActivityEvent(
                             channel = channel.toSceytUiChannel(),
                             user = event.user.toSceytUser(),
-                            typing = true)
-                        )
+                            activity = UserActivity.Typing,
+                            active = true
+                        ))
                     }
 
                     SceytConstants.stopTypingEvent -> {
-                        eventManager.onActivityEvent(ChannelMemberActivityEvent.Typing(
+                        eventManager.onActivityEvent(ChannelMemberActivityEvent(
                             channel = channel.toSceytUiChannel(),
                             user = event.user.toSceytUser(),
-                            typing = false)
-                        )
+                            activity = UserActivity.Typing,
+                            active = false
+                        ))
                     }
 
                     SceytConstants.startRecordingEvent -> {
-                        eventManager.onActivityEvent(ChannelMemberActivityEvent.Recording(
+                        eventManager.onActivityEvent(ChannelMemberActivityEvent(
                             channel = channel.toSceytUiChannel(),
                             user = event.user.toSceytUser(),
-                            recording = true)
-                        )
+                            activity = UserActivity.Recording,
+                            active = true
+                        ))
                     }
 
                     SceytConstants.stopRecordingEvent -> {
-                        eventManager.onActivityEvent(ChannelMemberActivityEvent.Recording(
+                        eventManager.onActivityEvent(ChannelMemberActivityEvent(
                             channel = channel.toSceytUiChannel(),
                             user = event.user.toSceytUser(),
-                            recording = false)
-                        )
+                            activity = UserActivity.Recording,
+                            active = false
+                        ))
                     }
 
                     else -> {
