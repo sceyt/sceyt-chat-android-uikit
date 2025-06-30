@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
-import com.sceyt.chatuikit.formatters.attributes.TypingTitleFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.UserActivityTitleFormatterAttributes
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
@@ -38,7 +38,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property navigationIcon icon for back button, default is [R.drawable.sceyt_ic_arrow_back]
  * @property showUnderline enable underline, default is true
  * @property showTypingUsersInSequence Whether to show typing users one at a time in sequence, default is true
- * @property enableTypingIndicator Whether to show a typing animation at the end of the typing users' title. Default is true.
+ * @property enableUserActivityIndicator Whether to show a typing animation at the end of the typing users' title. Default is true.
  * @property titleTextStyle style for the title, default is [buildTitleTextStyle]
  * @property subTitleStyle style for the subtitle, default is [buildSubTitleTextStyle]
  * @property searchInputStyle style for the search input, default is [buildSearchInputTextStyle]
@@ -46,7 +46,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property titleFormatter formatter for the channel title, default is [SceytChatUIKitFormatters.channelNameFormatter]
  * @property subtitleFormatter formatter for the channel subtitle, default is [SceytChatUIKitFormatters.channelSubtitleFormatter]
  * @property typingUserNameFormatter formatter for the typing users, default is [SceytChatUIKitFormatters.userShortNameFormatter]
- * @property typingTitleFormatter formatter for the typing title, default is [SceytChatUIKitFormatters.typingTitleFormatter]
+ * @property typingTitleFormatter formatter for the typing title, default is [SceytChatUIKitFormatters.userActivityTitleFormatter]
  * @property channelAvatarRenderer renderer for the channel avatar, default is [SceytChatUIKitRenderers.channelAvatarRenderer]
  * */
 data class MessagesListHeaderStyle(
@@ -55,7 +55,7 @@ data class MessagesListHeaderStyle(
         val navigationIcon: Drawable?,
         val showUnderline: Boolean,
         val showTypingUsersInSequence: Boolean,
-        val enableTypingIndicator: Boolean,
+        val enableUserActivityIndicator: Boolean,
         val titleTextStyle: TextStyle,
         val subTitleStyle: TextStyle,
         val avatarStyle: AvatarStyle,
@@ -64,7 +64,7 @@ data class MessagesListHeaderStyle(
         val titleFormatter: Formatter<SceytChannel>,
         val subtitleFormatter: Formatter<SceytChannel>,
         val typingUserNameFormatter: Formatter<SceytUser>,
-        val typingTitleFormatter: Formatter<TypingTitleFormatterAttributes>,
+        val typingTitleFormatter: Formatter<UserActivityTitleFormatterAttributes>,
         val channelAvatarRenderer: AvatarRenderer<SceytChannel>
 ) {
 
@@ -130,7 +130,7 @@ data class MessagesListHeaderStyle(
                     navigationIcon = navigationIcon,
                     showUnderline = showUnderline,
                     showTypingUsersInSequence = showTypingUsersInSequence,
-                    enableTypingIndicator = enableTypingIndicator,
+                    enableUserActivityIndicator = enableTypingIndicator,
                     titleTextStyle = buildTitleTextStyle(array),
                     subTitleStyle = buildSubTitleTextStyle(array),
                     avatarStyle = buildAvatarStyle(array),
@@ -139,7 +139,7 @@ data class MessagesListHeaderStyle(
                     titleFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                     subtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter,
                     typingUserNameFormatter = SceytChatUIKit.formatters.typingUserNameFormatter,
-                    typingTitleFormatter = SceytChatUIKit.formatters.typingTitleFormatter,
+                    typingTitleFormatter = SceytChatUIKit.formatters.userActivityTitleFormatter,
                     channelAvatarRenderer = SceytChatUIKit.renderers.channelAvatarRenderer
                 ).let {
                     (styleCustomizers[viewId] ?: styleCustomizer).apply(context, it)

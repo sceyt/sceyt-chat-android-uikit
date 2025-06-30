@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.TypingCancelHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.UserActivityCancelHelper
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem.ChannelItem
@@ -35,7 +35,7 @@ import kotlinx.coroutines.withContext
 @JvmName("bind")
 fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: LifecycleOwner) {
 
-    val typingCancelHelper by lazy { TypingCancelHelper() }
+    val userActivityCancelHelper by lazy { UserActivityCancelHelper() }
     var needSubmitOnResume: List<ChannelListItem>? = null
     val mutexUpdateList = Mutex()
 
@@ -216,13 +216,14 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
             }
         }.launchIn(viewModelScope)
 
-    ChannelEventManager.onChannelTypingEventFlow
-        .filter { it.user.id != SceytChatUIKit.chatUIFacade.myId }
+    ChannelEventManager.onChannelMemberActivityEventFlow
+        .filter { it.userId != SceytChatUIKit.chatUIFacade.myId }
         .onEach {
-            typingCancelHelper.await(it) { data ->
+            //todo
+         /*   typingCancelHelper.await(it) { data ->
                 channelListView.onTyping(data)
             }
-            channelListView.onTyping(it)
+            channelListView.onTyping(it)*/
         }.launchIn(lifecycleOwner.lifecycleScope)
 
     pageStateLiveData.observe(lifecycleOwner) {

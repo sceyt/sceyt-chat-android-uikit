@@ -79,6 +79,6 @@ interface MessageInteractor {
     suspend fun getMessageFromServerById(channelId: Long, messageId: Long): SceytResponse<SceytMessage>
     suspend fun getMessageFromDbById(messageId: Long): SceytMessage?
     suspend fun getMessageFromDbByTid(messageTid: Long): SceytMessage?
-    suspend fun sendTyping(channelId: Long, typing: Boolean)
+    suspend fun sendChannelEvent(channelId: Long, event: String)
     fun getOnMessageFlow(): SharedFlow<Pair<SceytChannel, SceytMessage>>
 }
