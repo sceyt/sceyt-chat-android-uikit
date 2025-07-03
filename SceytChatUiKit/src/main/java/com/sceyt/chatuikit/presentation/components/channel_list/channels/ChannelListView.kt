@@ -125,7 +125,7 @@ class ChannelListView @JvmOverloads constructor(
         )
     }
 
-    internal fun onUserActivity(event: ChannelMemberActivityEvent) {
+    internal fun onChannelEvent(event: ChannelMemberActivityEvent) {
         channelsRV.updateChannel(
             predicate = { (it as? ChannelListItem.ChannelItem)?.channel?.id == event.channelId },
             newItem = ChannelListItem.ChannelItem(event.channel.copy(activityEvent = event)),

@@ -1,5 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.channel.input.data
 
-enum class UserActivity {
+enum class ChannelEventEnum {
     Typing, Recording
 }
