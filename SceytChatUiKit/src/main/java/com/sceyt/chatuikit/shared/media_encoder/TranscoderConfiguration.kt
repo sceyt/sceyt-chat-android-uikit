@@ -1,8 +1,7 @@
 package com.sceyt.chatuikit.shared.media_encoder
 
-import com.abedelazizshe.lightcompressorlibrary.VideoQuality
 
-data class CustomConfiguration(
+data class TranscoderConfiguration(
         var quality: VideoQuality = VideoQuality.MEDIUM,
         var frameRate: Int? = null,
         var isMinBitrateCheckEnabled: Boolean = true,
@@ -10,3 +9,7 @@ data class CustomConfiguration(
         var videoBitrateCoefficient: Float? = null,
         var disableAudio: Boolean = false
 )
+
+enum class VideoQuality {
+    VERY_HIGH, HIGH, MEDIUM, LOW, VERY_LOW
+}

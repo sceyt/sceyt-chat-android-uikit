@@ -9,11 +9,6 @@ import android.media.MediaMuxer
 import android.net.Uri
 import android.os.Build
 import android.util.Log
-import com.abedelazizshe.lightcompressorlibrary.CompressionProgressListener
-import com.abedelazizshe.lightcompressorlibrary.utils.StreamableVideo
-import com.abedelazizshe.lightcompressorlibrary.video.InputSurface
-import com.abedelazizshe.lightcompressorlibrary.video.OutputSurface
-import com.abedelazizshe.lightcompressorlibrary.video.Result
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.shared.media_encoder.CompressorUtils.findTrack
 import com.sceyt.chatuikit.shared.media_encoder.CompressorUtils.generateWidthAndHeight
@@ -24,26 +19,20 @@ import com.sceyt.chatuikit.shared.media_encoder.CompressorUtils.printException
 import com.sceyt.chatuikit.shared.media_encoder.CompressorUtils.setOutputFileParameters
 import com.sceyt.chatuikit.shared.media_encoder.CompressorUtils.validateInputs
 import com.sceyt.chatuikit.shared.media_encoder.transcoder.CallbackBasedTranscoder
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import com.sceyt.chatuikit.shared.media_encoder.transcoder.InputSurface
+import com.sceyt.chatuikit.shared.media_encoder.transcoder.OutputSurface
+import com.sceyt.chatuikit.shared.media_encoder.transcoder.StreamableVideo
 import java.io.File
 import java.nio.ByteBuffer
-import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 
-/**
- * Created by AbedElaziz Shehadeh on 27 Jan, 2020
- * elaziz.shehadeh@gmail.com
- */
-object CustomCompressor : CoroutineScope {
+object CustomCompressor {
 
     // 1.5Mbps
     private const val MIN_BITRATE = 1500000
 
     // H.264 Advanced Video Coding
     private const val MIME_TYPE = "video/avc"
-    private const val MEDIACODEC_TIMEOUT_DEFAULT = 1L
 
     // MediaExtractor extracts encoded media data from the source
     private lateinit var extractor: MediaExtractor
@@ -72,10 +61,10 @@ object CustomCompressor : CoroutineScope {
             srcPath: String?,
             destination: String,
             streamableFile: String?,
-            configuration: CustomConfiguration,
+            configuration: TranscoderConfiguration,
             listener: CompressionProgressListener,
             startCompressingListener: () -> Unit,
-    ): Result {
+    ): Result<Boolean> {
 
         extractor = MediaExtractor()
         compressionProgressListener = listener
@@ -83,10 +72,7 @@ object CustomCompressor : CoroutineScope {
         val mediaMetadataRetriever = MediaMetadataRetriever()
 
         validateInputs(context, srcUri, srcPath)?.let {
-            return Result(
-                success = false,
-                failureMessage = it
-            )
+            return Result.failure(Exception(it))
         }
 
         if (context != null && srcUri != null && srcPath == null) {
@@ -95,10 +81,7 @@ object CustomCompressor : CoroutineScope {
                 mediaMetadataRetriever.setDataSource(context, srcUri)
             } catch (exception: Exception) {
                 printException(exception)
-                return Result(
-                    success = false,
-                    failureMessage = "${exception.message}"
-                )
+                return Result.failure(exception)
             }
 
             extractor.setDataSource(context, srcUri, null)
@@ -107,38 +90,25 @@ object CustomCompressor : CoroutineScope {
                 mediaMetadataRetriever.setDataSource(srcPath)
             } catch (exception: Exception) {
                 printException(exception)
-                return Result(
-                    success = false,
-                    failureMessage = "${exception.message}"
-                )
+                return Result.failure(exception)
             }
 
             val file = File(srcPath!!)
-            if (!file.canRead()) return Result(
-                success = false,
-                failureMessage = "The source file cannot be accessed!"
-            )
-
+            if (!file.canRead())
+                return Result.failure(Exception("The source file cannot be accessed!"))
             try {
                 extractor.setDataSource(file.toString())
             } catch (ex: Exception) {
                 printException(ex)
-                return Result(
-                    success = false,
-                    failureMessage = "${ex.message}"
-                )
+                return Result.failure(ex)
             }
         }
 
-        val height = prepareVideoHeight(mediaMetadataRetriever) ?: return Result(
-            success = false,
-            failureMessage = "Failed to get video height"
-        )
+        val height = prepareVideoHeight(mediaMetadataRetriever)
+                ?: return Result.failure(Exception("Failed to get video height"))
 
-        val width: Double = prepareVideoWidth(mediaMetadataRetriever) ?: return Result(
-            success = false,
-            failureMessage = "Failed to get video width"
-        )
+        val width: Double = prepareVideoWidth(mediaMetadataRetriever)
+                ?: return Result.failure(Exception("Failed to get video width"))
 
         val rotationData =
                 mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
@@ -152,10 +122,7 @@ object CustomCompressor : CoroutineScope {
 
         if (rotationData.isNullOrEmpty() || bitrateData.isNullOrEmpty() || durationData.isNullOrEmpty()) {
             // Exit execution
-            return Result(
-                success = false,
-                failureMessage = "Failed to extract video meta-data, please try again"
-            )
+            return Result.failure(Exception("Failed to extract video meta-data, please try again"))
         }
 
         rotation = rotationData.toInt()
@@ -166,7 +133,7 @@ object CustomCompressor : CoroutineScope {
         // Note: this is an experimental value
         if (configuration.isMinBitrateCheckEnabled && bitrate <= MIN_BITRATE) {
             Log.i("CompressorUtil", "Ignore compressing: INVALID_BITRATE = $bitrate")
-            return Result(success = false, failureMessage = INVALID_BITRATE)
+            return Result.failure(Exception(INVALID_BITRATE))
         }
 
         if (width <= 480 || height <= 480) {
@@ -174,10 +141,8 @@ object CustomCompressor : CoroutineScope {
                 "CompressorUtil",
                 "Ignore compressing: Video ratio is too small to resize width = $width, height = $height"
             )
-            return Result(
-                success = false,
-                failureMessage = "Video ratio is too small to resize width = $width, height = $height"
-            )
+            return Result.failure(
+                Exception("Video ratio is too small to resize width = $width, height = $height"))
         }
 
         // Video min bitrate, and resolution is acceptable, start compressing
@@ -234,7 +199,7 @@ object CustomCompressor : CoroutineScope {
             streamableFile: String?,
             frameRate: Int?,
             disableAudio: Boolean
-    ): Result {
+    ): Result<Boolean> {
 
         if (newWidth != 0 && newHeight != 0) {
 
@@ -317,206 +282,12 @@ object CustomCompressor : CoroutineScope {
 
                         compressionProgressListener.onProgressCancelled()
 
-                        return Result(
-                            success = false,
-                            failureMessage = "The compression has stopped!"
-                        )
+                        return Result.failure(Exception("The compression has stopped!"))
                     }
-
-//                    var inputDone = false
-//                    var outputDone = false
-//
-//                    var videoTrackIndex = -5
-//
-//                    inputSurface = InputSurface(encoder.createInputSurface())
-//                    inputSurface.makeCurrent()
-//                    //Move to executing state
-//                    encoder.start()
-//
-//                    outputSurface = OutputSurface()
-//
-//                    decoder = prepareDecoder(inputFormat, outputSurface)
-//
-//                    //Move to executing state
-//                    decoder.start()
-//
-//                    while (!outputDone) {
-//                        if (!inputDone) {
-//
-//                            ++frameIndex
-//
-//                            val index = extractor.sampleTrackIndex
-//
-//                            if (index == videoIndex) {
-//                                inputBufferIndex =
-//                                        decoder.dequeueInputBuffer(MEDIACODEC_TIMEOUT_DEFAULT)
-//                                if (inputBufferIndex >= 0) {
-//                                    inputBuffer = decoder.getInputBuffer(inputBufferIndex)
-//                                    chunkSize = extractor.readSampleData(inputBuffer!!, 0)
-//
-//                                    if (chunkSize < 0) {
-//                                        decoder.queueInputBuffer(
-//                                            inputBufferIndex,
-//                                            0,
-//                                            0,
-//                                            0L,
-//                                            MediaCodec.BUFFER_FLAG_END_OF_STREAM
-//                                        )
-//                                        inputDone = true
-//                                    } else {
-//                                        decoder.queueInputBuffer(
-//                                            inputBufferIndex,
-//                                            0,
-//                                            chunkSize,
-//                                            extractor.sampleTime,
-//                                            0
-//                                        )
-//                                        extractor.advance()
-//                                    }
-//                                }
-//
-//                            } else if (index == -1) { //end of file
-//                                inputBufferIndex =
-//                                        decoder.dequeueInputBuffer(MEDIACODEC_TIMEOUT_DEFAULT)
-//                                if (inputBufferIndex >= 0) {
-//                                    decoder.queueInputBuffer(
-//                                        inputBufferIndex,
-//                                        0,
-//                                        0,
-//                                        0L,
-//                                        MediaCodec.BUFFER_FLAG_END_OF_STREAM
-//                                    )
-//                                    inputDone = true
-//                                }
-//                            }
-//                        }
-//
-//                        var decoderOutputAvailable = true
-//                        var encoderOutputAvailable = true
-//
-//                        var encoderStatus: Int
-//                        var encodedData: ByteBuffer?
-//                        var doRender: Boolean
-//
-//                        loop@ while (decoderOutputAvailable || encoderOutputAvailable) {
-//
-//                            if (!isRunning) {
-//                                compressionProgressListener.onProgressCancelled()
-//                                return Result(
-//                                    success = false,
-//                                    failureMessage = "The compression has stopped!"
-//                                )
-//                            }
-//
-//                            //Encoder
-//                            encoderStatus =
-//                                    encoder.dequeueOutputBuffer(bufferInfo, MEDIACODEC_TIMEOUT_DEFAULT)
-//
-//                            when {
-//                                encoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER -> encoderOutputAvailable =
-//                                        false
-//
-//                                encoderStatus == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
-//                                    val newFormat = encoder.outputFormat
-//                                    if (videoTrackIndex == -5)
-//                                        videoTrackIndex = mediaMuxer.addTrack(newFormat, false)
-//                                }
-//
-//                                encoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> {
-//                                    // ignore this status
-//                                }
-//
-//                                encoderStatus < 0 -> throw RuntimeException("unexpected result from encoder.dequeueOutputBuffer: $encoderStatus")
-//                                else -> {
-//                                    encodedData = encoder.getOutputBuffer(encoderStatus)
-//                                            ?: throw RuntimeException("encoderOutputBuffer $encoderStatus was null")
-//
-//                                    if (bufferInfo.size > 1) {
-//                                        if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == 0) {
-//                                            mediaMuxer.writeSampleData(
-//                                                videoTrackIndex,
-//                                                encodedData, bufferInfo, false
-//                                            )
-//                                        }
-//
-//                                    }
-//
-//                                    outputDone =
-//                                            bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
-//                                    encoder.releaseOutputBuffer(encoderStatus, false)
-//                                }
-//                            }
-//                            if (encoderStatus != MediaCodec.INFO_TRY_AGAIN_LATER) continue@loop
-//
-//                            //Decoder
-//                            val decoderStatus =
-//                                    decoder.dequeueOutputBuffer(bufferInfo, MEDIACODEC_TIMEOUT_DEFAULT)
-//                            when {
-//                                decoderStatus == MediaCodec.INFO_TRY_AGAIN_LATER -> decoderOutputAvailable =
-//                                        false
-//
-//                                decoderStatus == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED -> {
-//                                    // ignore this status
-//                                }
-//
-//                                decoderStatus == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> {
-//                                    // ignore this status
-//                                }
-//
-//                                decoderStatus < 0 -> throw RuntimeException("unexpected result from decoder.dequeueOutputBuffer: $decoderStatus")
-//                                else -> {
-//                                    doRender = bufferInfo.size != 0
-//
-//                                    if (doRender) {
-//                                        var errorWait = false
-//                                        try {
-//                                            outputSurface.awaitNewImage()
-//                                        } catch (e: Exception) {
-//                                            errorWait = true
-//                                            Log.e(
-//                                                "Compressor",
-//                                                e.message ?: "Compression failed at swapping buffer"
-//                                            )
-//                                        }
-//
-//                                        if (!errorWait) {
-//                                            outputSurface.drawImage()
-//
-//                                            inputSurface.setPresentationTime(bufferInfo.presentationTimeUs * 1000)
-//                                            inputSurface.swapBuffers()
-//
-//                                            //Notify progress every 50 frames
-//                                            if (frameIndex % 50 == 0L) {
-//                                                launch {
-//                                                    compressionProgressListener.onProgressChanged(bufferInfo.presentationTimeUs.toFloat() / duration.toFloat() * 100)
-//                                                }
-//                                            }
-//
-//                                        }
-//                                    }
-//                                    decoder.releaseOutputBuffer(decoderStatus, doRender)
-//
-//                                    if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-//                                        decoderOutputAvailable = false
-//                                        encoder.signalEndOfInputStream()
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-
                 } catch (exception: Exception) {
                     printException(exception)
-                    return Result(success = false, failureMessage = exception.message)
+                    return Result.failure(exception)
                 }
-
-//                dispose(
-//                    videoIndex,
-//                    decoder,
-//                    encoder,
-//                    inputSurface,
-//                    outputSurface,
-//                )
 
                 extractor.unselectTrack(videoIndex)
 
@@ -551,10 +322,10 @@ object CustomCompressor : CoroutineScope {
                     printException(e)
                 }
             }
-            return Result(success = true, failureMessage = null)
+            return Result.success(true)
         }
 
-        return Result(success = false, failureMessage = "Something went wrong, please try again")
+        return Result.failure(Exception("Something went wrong, please try again"))
     }
 
     private fun processAudio(
@@ -684,7 +455,4 @@ object CustomCompressor : CoroutineScope {
         inputSurface.release()
         outputSurface.release()
     }
-
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Default + SupervisorJob()
 }

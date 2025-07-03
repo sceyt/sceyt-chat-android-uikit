@@ -2,10 +2,6 @@ package com.sceyt.chatuikit.shared.media_encoder
 
 import android.content.Context
 import android.net.Uri
-import com.abedelazizshe.lightcompressorlibrary.CompressionListener
-import com.abedelazizshe.lightcompressorlibrary.CompressionProgressListener
-import com.abedelazizshe.lightcompressorlibrary.config.Configuration
-import com.abedelazizshe.lightcompressorlibrary.video.Result
 import com.sceyt.chatuikit.shared.media_encoder.CustomCompressor.compressVideo
 import com.sceyt.chatuikit.shared.media_encoder.CustomCompressor.isRunning
 import kotlinx.coroutines.*
@@ -32,13 +28,13 @@ object CustomVideoCompressor : CoroutineScope {
      * [CompressionListener.onProgress], [CompressionListener.onFailure], [CompressionListener.onSuccess]
      * and if the compression was [CompressionListener.onCancelled]
      * @param [configureWith] to allow add video compression configuration that could be:
-     * [Configuration.quality] to allow choosing a video quality that can be [VideoQuality.LOW],
+     * [TranscoderConfiguration.quality] to allow choosing a video quality that can be [VideoQuality.LOW],
      * [VideoQuality.MEDIUM], [VideoQuality.HIGH], and [VideoQuality.VERY_HIGH].
      * This defaults to [VideoQuality.MEDIUM]
-     * [Configuration.isMinBitrateCheckEnabled] to determine if the checking for a minimum bitrate threshold
+     * [TranscoderConfiguration.isMinBitrateCheckEnabled] to determine if the checking for a minimum bitrate threshold
      * before compression is enabled or not. This default to `true`
-     * [Configuration.videoBitrate] which is a custom bitrate for the video. You might consider setting
-     * [Configuration.isMinBitrateCheckEnabled] to `false` if your bitrate is less than 2000000.
+     * [TranscoderConfiguration.videoBitrate] which is a custom bitrate for the video. You might consider setting
+     * [TranscoderConfiguration.isMinBitrateCheckEnabled] to `false` if your bitrate is less than 2000000.
      */
     @JvmStatic
     @JvmOverloads
@@ -49,7 +45,7 @@ object CustomVideoCompressor : CoroutineScope {
             destPath: String,
             streamableFile: String? = null,
             listener: CompressionListener,
-            configureWith: CustomConfiguration,
+            configureWith: TranscoderConfiguration,
     ) {
         job = doVideoCompression(
             context,
@@ -78,7 +74,7 @@ object CustomVideoCompressor : CoroutineScope {
             srcPath: String?,
             destPath: String,
             streamableFile: String? = null,
-            configuration: CustomConfiguration,
+            configuration: TranscoderConfiguration,
             listener: CompressionListener,
     ) = launch {
         isRunning = true
@@ -93,12 +89,11 @@ object CustomVideoCompressor : CoroutineScope {
         )
 
         // Runs in Main(UI) Thread
-        if (result.success) {
+        if (result.isSuccess) {
             listener.onSuccess()
         } else {
-            listener.onFailure(result.failureMessage ?: "An error has occurred!")
+            listener.onFailure(result.exceptionOrNull()?.message ?: "An error has occurred!")
         }
-
     }
 
     private suspend fun startCompression(
@@ -107,9 +102,9 @@ object CustomVideoCompressor : CoroutineScope {
             srcPath: String?,
             destPath: String,
             streamableFile: String? = null,
-            configuration: CustomConfiguration,
+            configuration: TranscoderConfiguration,
             listener: CompressionListener,
-    ): Result = withContext(Dispatchers.IO) {
+    ): Result<Boolean> = withContext(Dispatchers.IO) {
         return@withContext compressVideo(
             context,
             srcUri,
