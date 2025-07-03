@@ -2,10 +2,10 @@ package com.sceyt.chatuikit.presentation.components.channel.header.helpers
 
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
-import com.sceyt.chatuikit.presentation.components.channel.input.data.UserActivity
+import com.sceyt.chatuikit.presentation.components.channel.input.data.ChannelEventEnum
 import java.util.concurrent.ConcurrentHashMap
 
-class UserActivityCancelHelper {
+class ChannelEventCancelHelper {
 
     private val debounceHelpers: ConcurrentHashMap<Long, DebounceHelper> by lazy { ConcurrentHashMap() }
 
@@ -26,8 +26,8 @@ class UserActivityCancelHelper {
 
     private fun getKey(event: ChannelMemberActivityEvent): Long {
         return when (event.activity) {
-            UserActivity.Typing -> event.channelId + event.userId.hashCode() + 1L
-            UserActivity.Recording -> event.channelId + event.userId.hashCode() + 2L
+            ChannelEventEnum.Typing -> event.channelId + event.userId.hashCode() + 1L
+            ChannelEventEnum.Recording -> event.channelId + event.userId.hashCode() + 2L
         }
     }
 }

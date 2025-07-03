@@ -22,7 +22,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
-import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserActivity
+import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
@@ -184,8 +184,8 @@ fun MessageListViewModel.bind(
             upsertLinkPreviewData(linkDetails)
         }
 
-        override fun sendUserActivity(state: InputUserActivity) {
-            sendUserActivityStateEvent(state)
+        override fun sendChannelEvent(action: InputUserAction) {
+            this@bind.sendChannelEvent(action)
         }
 
         override fun updateDraftMessage(

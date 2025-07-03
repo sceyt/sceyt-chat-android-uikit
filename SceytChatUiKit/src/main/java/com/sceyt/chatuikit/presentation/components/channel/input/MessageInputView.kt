@@ -61,7 +61,7 @@ import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState.Text
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState.Voice
 import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
-import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserActivity
+import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.helpers.MessageToSendHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.link.SingleLinkDetailsProvider
@@ -127,7 +127,7 @@ class MessageInputView @JvmOverloads constructor(
     private var actionListeners: InputActionListeners = InputActionsListenerImpl(this)
     private var selectFileTypePopupClickListeners: ClickListeners = SelectFileTypePopupClickListenersImpl(this)
     private var filePickerHelper: FilePickerHelper? = null
-    private val userActivityChangeDebounceHelper by lazy { DebounceHelper(100, getScope()) }
+    private val channelEventDebounceHelper by lazy { DebounceHelper(100, getScope()) }
     private var typingTimeoutJob: Job? = null
     private var inputState = Voice
     private var disabledInputByGesture: Boolean = false
@@ -213,19 +213,19 @@ class MessageInputView @JvmOverloads constructor(
             return
 
         determineInputState()
-        onUserActivityStateChange(InputUserActivity.Typing(
+        onUserActionStateChange(InputUserAction.Typing(
             typing = text.isNullOrBlank().not(),
             text = text)
         )
     }
 
-    private fun onUserActivityStateChange(state: InputUserActivity) {
-        if (state is InputUserActivity.Typing) {
+    private fun onUserActionStateChange(state: InputUserAction) {
+        if (state is InputUserAction.Typing) {
             typingTimeoutJob?.cancel()
             if (state.typing) {
                 typingTimeoutJob = getScope().launch {
                     delay(2000)
-                    actionListeners.sendUserActivity(InputUserActivity.Typing(
+                    actionListeners.sendChannelEvent(InputUserAction.Typing(
                         typing = false,
                         text = null
                     ))
@@ -233,10 +233,10 @@ class MessageInputView @JvmOverloads constructor(
             }
         }
 
-        userActivityChangeDebounceHelper.submit {
-            actionListeners.sendUserActivity(state)
+        channelEventDebounceHelper.submit {
+            actionListeners.sendChannelEvent(state)
             updateDraftMessage()
-            if (state is InputUserActivity.Typing)
+            if (state is InputUserAction.Typing)
                 tryToLoadLinkPreview(state.text)
         }
     }
@@ -398,7 +398,7 @@ class MessageInputView @JvmOverloads constructor(
         voiceRecorderView?.keepScreenOn = true
         (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
 
-        onUserActivityStateChange(InputUserActivity.Recording(recording = true))
+        onUserActionStateChange(InputUserAction.Recording(recording = true))
         startRecordingUpdateJob()
     }
 
@@ -406,7 +406,7 @@ class MessageInputView @JvmOverloads constructor(
         voiceRecorderView?.keepScreenOn = false
         (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 
-        onUserActivityStateChange(InputUserActivity.Recording(recording = false))
+        onUserActionStateChange(InputUserAction.Recording(recording = false))
         stopRecordingUpdateJob()
     }
 
@@ -416,7 +416,7 @@ class MessageInputView @JvmOverloads constructor(
         recordingUpdateJob = getScope().launch {
             while (isActive) {
                 delay(1000)
-                onUserActivityStateChange(InputUserActivity.Recording(recording = true))
+                onUserActionStateChange(InputUserAction.Recording(recording = true))
             }
         }
     }
@@ -1015,8 +1015,8 @@ class MessageInputView @JvmOverloads constructor(
         messageInputActionCallback?.sendEditMessage(message, linkDetails)
     }
 
-    override fun sendUserActivity(state: InputUserActivity) {
-        messageInputActionCallback?.sendUserActivity(state)
+    override fun sendChannelEvent(state: InputUserAction) {
+        messageInputActionCallback?.sendChannelEvent(state)
     }
 
     override fun updateDraftMessage(

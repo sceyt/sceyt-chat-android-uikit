@@ -40,12 +40,12 @@ import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.showSoftInput
-import com.sceyt.chatuikit.formatters.attributes.UserActivityTitleFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ActiveUser
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.UserActivityChangeHelper
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.UsersActivityState
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventChangeHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventState
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners.ClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListenersImpl
@@ -84,13 +84,13 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private var isReplyInThread: Boolean = false
     private var isGroup = false
     private var enablePresence: Boolean = true
-    private val activityChangeHelper by lazy { initUserActivityChangeHelper() }
+    private val channelEventChangeHelper by lazy { initChannelEventChangeHelper() }
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
     private var toolbarSearchModeChangeListener: ((Boolean) -> Unit)? = null
     private var addedMenu: Menu? = null
     private var onSearchQueryChangeListener: ((String) -> Unit)? = null
     val style: MessagesListHeaderStyle
-    private var lasUsersActivityState: UsersActivityState? = null
+    private var lastChannelEventState: ChannelEventState? = null
     var isShowingMessageActions = false
         private set
     var isShowingSearchBar = false
@@ -268,48 +268,48 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun initUserActivityChangeHelper(): UserActivityChangeHelper {
-        return UserActivityChangeHelper(
+    private fun initChannelEventChangeHelper(): ChannelEventChangeHelper {
+        return ChannelEventChangeHelper(
             scope = getScope(),
             activeUsersUpdated = {
-                binding.tvUserActivity.text = if (it.isEmpty()) ""
-                else initUserActivityTitle(it)
-                setTypingState(activityChangeHelper.getActivityState(it))
+                binding.tvChannelEvent.text = if (it.isEmpty()) ""
+                else initChannelEventTitle(it)
+                setTypingState(channelEventChangeHelper.getChannelEventState(it))
             },
-            showActiveUsersInSequence = style.showUsersActivityInSequence
+            showChannelEventsInSequence = style.showChannelEventsInSequence
         )
     }
 
-    private fun initUserActivityTitle(activeUsers: List<ActiveUser>): CharSequence {
-        return style.userActivityTitleFormatter.format(
+    private fun initChannelEventTitle(channelEventData: List<ChannelEventData>): CharSequence {
+        return style.channelEventTitleFormatter.format(
             context = context,
-            from = UserActivityTitleFormatterAttributes(
+            from = ChannelEventTitleFormatterAttributes(
                 channel = channel,
-                activeUsers = activeUsers
+                users = channelEventData
             )
         )
     }
 
-    private fun setTypingState(state: UsersActivityState) {
-        if (lasUsersActivityState == state) return
-        lasUsersActivityState = state
-        val active = state != UsersActivityState.None
+    private fun setTypingState(state: ChannelEventState) {
+        if (lastChannelEventState == state) return
+        lastChannelEventState = state
+        val active = state != ChannelEventState.None
         binding.subTitle.isVisible = !active
-        binding.lottieUserActivity.isVisible = active && style.enableUsersActivityIndicator
-        binding.tvUserActivity.isVisible = active
+        binding.lottieChannelEvent.isVisible = active && style.enableChannelEventIndicator
+        binding.tvChannelEvent.isVisible = active
         when (state) {
-            UsersActivityState.Typing -> {
-                binding.lottieUserActivity.setAnimation(R.raw.sceyt_typing)
-                binding.lottieUserActivity.playAnimation()
+            ChannelEventState.Typing -> {
+                binding.lottieChannelEvent.setAnimation(R.raw.sceyt_typing)
+                binding.lottieChannelEvent.playAnimation()
             }
 
-            UsersActivityState.Recording -> {
-                binding.lottieUserActivity.setAnimation(R.raw.sceyt_recording)
-                binding.lottieUserActivity.playAnimation()
+            ChannelEventState.Recording -> {
+                binding.lottieChannelEvent.setAnimation(R.raw.sceyt_recording)
+                binding.lottieChannelEvent.playAnimation()
             }
 
-            UsersActivityState.None -> {
-                binding.lottieUserActivity.cancelAnimation()
+            ChannelEventState.None -> {
+                binding.lottieChannelEvent.cancelAnimation()
             }
         }
     }
@@ -387,11 +387,11 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     val haveUserAction: Boolean
-        get() = activityChangeHelper.haveUserAction
+        get() = channelEventChangeHelper.haveUserAction
 
     @Suppress("unused")
-    val activeUsers: List<ActiveUser>
-        get() = activityChangeHelper.activeUsers
+    val channelEventData: List<ChannelEventData>
+        get() = channelEventChangeHelper.channelEventData
 
     @Suppress("unused")
     fun getChannel() = if (::channel.isInitialized) channel else null
@@ -477,7 +477,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
     //Event listeners
     override fun onActivityEvent(event: ChannelMemberActivityEvent) {
         if (event.userId == SceytChatUIKit.currentUserId) return
-        activityChangeHelper.onActivityEvent(event)
+        channelEventChangeHelper.onActivityEvent(event)
     }
 
     override fun onPresenceUpdateEvent(user: SceytUser) {
@@ -577,7 +577,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         root.setBackgroundColor(style.backgroundColor)
         toolbarUnderline.background = style.underlineColor.toDrawable()
         toolbarUnderline.isVisible = style.showUnderline
-        lottieUserActivity.isVisible = style.enableUsersActivityIndicator
+        lottieChannelEvent.isVisible = style.enableChannelEventIndicator
         icBack.setImageDrawable(style.navigationIcon)
         style.titleTextStyle.apply(title)
         style.subTitleStyle.apply(subTitle)

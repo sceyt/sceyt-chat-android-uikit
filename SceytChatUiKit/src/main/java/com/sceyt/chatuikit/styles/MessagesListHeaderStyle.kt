@@ -14,7 +14,7 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
-import com.sceyt.chatuikit.formatters.attributes.UserActivityTitleFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
@@ -36,15 +36,15 @@ import com.sceyt.chatuikit.theme.Colors
  * @property underlineColor color of the underline, default is [Colors.borderColor]
  * @property navigationIcon icon for back button, default is [R.drawable.sceyt_ic_arrow_back]
  * @property showUnderline enable underline, default is true
- * @property showUsersActivityInSequence Whether to show users activity one at a time in sequence, default is true
- * @property enableUsersActivityIndicator Whether to show a user activity animation at the end of the active users' title. Default is true.
+ * @property showChannelEventsInSequence Whether to show users activity one at a time in sequence, default is true
+ * @property enableChannelEventIndicator Whether to show a user activity animation at the end of the active users' title. Default is true.
  * @property titleTextStyle style for the title, default is [buildTitleTextStyle]
  * @property subTitleStyle style for the subtitle, default is [buildSubTitleTextStyle]
  * @property searchInputStyle style for the search input, default is [buildSearchInputTextStyle]
  * @property messageActionsMenuStyle style for the toolbar menu, default is [buildMessageActionsMenuStyle]
  * @property titleFormatter formatter for the channel title, default is [SceytChatUIKitFormatters.channelNameFormatter]
  * @property subtitleFormatter formatter for the channel subtitle, default is [SceytChatUIKitFormatters.channelSubtitleFormatter]
- * @property userActivityTitleFormatter formatter for the user activity title, default is [SceytChatUIKitFormatters.userActivityTitleFormatter]
+ * @property channelEventTitleFormatter formatter for the channel event title, default is [SceytChatUIKitFormatters.channelEventTitleFormatter]
  * @property channelAvatarRenderer renderer for the channel avatar, default is [SceytChatUIKitRenderers.channelAvatarRenderer]
  * */
 data class MessagesListHeaderStyle(
@@ -52,8 +52,8 @@ data class MessagesListHeaderStyle(
         @ColorInt val underlineColor: Int,
         val navigationIcon: Drawable?,
         val showUnderline: Boolean,
-        val showUsersActivityInSequence: Boolean,
-        val enableUsersActivityIndicator: Boolean,
+        val showChannelEventsInSequence: Boolean,
+        val enableChannelEventIndicator: Boolean,
         val titleTextStyle: TextStyle,
         val subTitleStyle: TextStyle,
         val avatarStyle: AvatarStyle,
@@ -61,7 +61,7 @@ data class MessagesListHeaderStyle(
         val messageActionsMenuStyle: MenuStyle,
         val titleFormatter: Formatter<SceytChannel>,
         val subtitleFormatter: Formatter<SceytChannel>,
-        val userActivityTitleFormatter: Formatter<UserActivityTitleFormatterAttributes>,
+        val channelEventTitleFormatter: Formatter<ChannelEventTitleFormatterAttributes>,
         val channelAvatarRenderer: AvatarRenderer<SceytChannel>
 ) {
 
@@ -112,12 +112,12 @@ data class MessagesListHeaderStyle(
                 )
 
                 val showUsersActivityInSequence = array.getBoolean(
-                    R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderShowUsersActivityInSequence,
+                    R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderShowChannelEventsInSequence,
                     true
                 )
 
-                val enableUsersActivityIndicator = array.getBoolean(
-                    R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderEnableUsersActivityIndicator,
+                val enableChannelEventIndicator = array.getBoolean(
+                    R.styleable.MessagesListHeaderView_sceytUiMessagesListHeaderEnableChannelEventIndicator,
                     true
                 )
 
@@ -126,8 +126,8 @@ data class MessagesListHeaderStyle(
                     underlineColor = underlineColor,
                     navigationIcon = navigationIcon,
                     showUnderline = showUnderline,
-                    showUsersActivityInSequence = showUsersActivityInSequence,
-                    enableUsersActivityIndicator = enableUsersActivityIndicator,
+                    showChannelEventsInSequence = showUsersActivityInSequence,
+                    enableChannelEventIndicator = enableChannelEventIndicator,
                     titleTextStyle = buildTitleTextStyle(array),
                     subTitleStyle = buildSubTitleTextStyle(array),
                     avatarStyle = buildAvatarStyle(array),
@@ -135,7 +135,7 @@ data class MessagesListHeaderStyle(
                     messageActionsMenuStyle = buildMessageActionsMenuStyle(array),
                     titleFormatter = SceytChatUIKit.formatters.channelNameFormatter,
                     subtitleFormatter = SceytChatUIKit.formatters.channelSubtitleFormatter,
-                    userActivityTitleFormatter = SceytChatUIKit.formatters.userActivityTitleFormatter,
+                    channelEventTitleFormatter = SceytChatUIKit.formatters.channelEventTitleFormatter,
                     channelAvatarRenderer = SceytChatUIKit.renderers.channelAvatarRenderer
                 ).let {
                     (styleCustomizers[viewId] ?: styleCustomizer).apply(context, it)

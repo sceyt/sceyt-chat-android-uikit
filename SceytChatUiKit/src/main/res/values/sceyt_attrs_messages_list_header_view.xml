@@ -64,8 +64,8 @@
         <attr name="sceytUiMessagesListHeaderUnderlineColor" format="reference|color" />
         <attr name="sceytUiMessagesListHeaderNavigationIcon" format="reference" />
         <attr name="sceytUiMessagesListHeaderShowUnderline" format="boolean" />
-        <attr name="sceytUiMessagesListHeaderShowUsersActivityInSequence" format="boolean" />
-        <attr name="sceytUiMessagesListHeaderEnableUsersActivityIndicator" format="boolean" />
+        <attr name="sceytUiMessagesListHeaderShowChannelEventsInSequence" format="boolean" />
+        <attr name="sceytUiMessagesListHeaderEnableChannelEventIndicator" format="boolean" />
 
 
         <!-- Message actions menu -->

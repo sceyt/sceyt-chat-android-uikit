@@ -110,7 +110,7 @@
                         tools:text="SubTitle" />
 
                     <androidx.appcompat.widget.AppCompatTextView
-                        android:id="@+id/tvUserActivity"
+                        android:id="@+id/tvChannelEvent"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:ellipsize="middle"
@@ -120,24 +120,24 @@
                         android:textSize="13sp"
                         android:visibility="gone"
                         app:layout_constrainedWidth="true"
-                        app:layout_constraintEnd_toStartOf="@+id/lottieUserActivity"
+                        app:layout_constraintEnd_toStartOf="@+id/lottieChannelEvent"
                         app:layout_constraintHorizontal_bias="0"
                         app:layout_constraintHorizontal_chainStyle="packed"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
                     <com.airbnb.lottie.LottieAnimationView
-                        android:id="@+id/lottieUserActivity"
+                        android:id="@+id/lottieChannelEvent"
                         android:layout_width="20dp"
                         android:layout_height="0dp"
                         android:layout_marginStart="6dp"
                         android:paddingTop="3dp"
                         android:visibility="gone"
-                        app:layout_constraintBottom_toBottomOf="@+id/tvUserActivity"
+                        app:layout_constraintBottom_toBottomOf="@+id/tvChannelEvent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintHorizontal_bias="0.5"
-                        app:layout_constraintStart_toEndOf="@+id/tvUserActivity"
-                        app:layout_constraintTop_toTopOf="@+id/tvUserActivity"
+                        app:layout_constraintStart_toEndOf="@+id/tvChannelEvent"
+                        app:layout_constraintTop_toTopOf="@+id/tvChannelEvent"
                         app:lottie_loop="true" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>

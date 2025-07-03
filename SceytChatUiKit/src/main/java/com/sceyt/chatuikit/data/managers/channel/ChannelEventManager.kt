@@ -24,7 +24,7 @@ import com.sceyt.chatuikit.data.toSceytMember
 import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.persistence.mappers.toSceytUiChannel
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
-import com.sceyt.chatuikit.presentation.components.channel.input.data.UserActivity
+import com.sceyt.chatuikit.presentation.components.channel.input.data.ChannelEventEnum
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -184,7 +184,7 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
                 eventManager.onActivityEvent(ChannelMemberActivityEvent(
                     channel = channel.toSceytUiChannel(),
                     user = member.toSceytUser(),
-                    activity = UserActivity.Typing,
+                    activity = ChannelEventEnum.Typing,
                     active = true
                 ))
             }
@@ -193,7 +193,7 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
                 eventManager.onActivityEvent(ChannelMemberActivityEvent(
                     channel = channel.toSceytUiChannel(),
                     user = member.toSceytUser(),
-                    activity = UserActivity.Typing,
+                    activity = ChannelEventEnum.Typing,
                     active = false
                 ))
             }
@@ -251,7 +251,7 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
                         eventManager.onActivityEvent(ChannelMemberActivityEvent(
                             channel = channel.toSceytUiChannel(),
                             user = event.user.toSceytUser(),
-                            activity = UserActivity.Typing,
+                            activity = ChannelEventEnum.Typing,
                             active = true
                         ))
                     }
@@ -260,7 +260,7 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
                         eventManager.onActivityEvent(ChannelMemberActivityEvent(
                             channel = channel.toSceytUiChannel(),
                             user = event.user.toSceytUser(),
-                            activity = UserActivity.Typing,
+                            activity = ChannelEventEnum.Typing,
                             active = false
                         ))
                     }
@@ -269,7 +269,7 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
                         eventManager.onActivityEvent(ChannelMemberActivityEvent(
                             channel = channel.toSceytUiChannel(),
                             user = event.user.toSceytUser(),
-                            activity = UserActivity.Recording,
+                            activity = ChannelEventEnum.Recording,
                             active = true
                         ))
                     }
@@ -278,7 +278,7 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
                         eventManager.onActivityEvent(ChannelMemberActivityEvent(
                             channel = channel.toSceytUiChannel(),
                             user = event.user.toSceytUser(),
-                            activity = UserActivity.Recording,
+                            activity = ChannelEventEnum.Recording,
                             active = false
                         ))
                     }

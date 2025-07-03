@@ -15,11 +15,11 @@ import com.sceyt.chatuikit.extensions.extractLinksWithPositions
 import com.sceyt.chatuikit.extensions.setOnClickListenerAvailable
 import com.sceyt.chatuikit.extensions.setOnLongClickListenerAvailable
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
-import com.sceyt.chatuikit.formatters.attributes.UserActivityTitleFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ActiveUser
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
@@ -88,7 +88,7 @@ open class ChannelViewHolder(
                         setChannelMarkedUsUnread(channel, binding.unreadMessagesCount)
 
                     if (activityStateChanged)
-                        setUserActivityState(channel, binding.lastMessage)
+                        setChannelEventTitle(channel, binding.lastMessage)
 
                     if (autoDeleteStateChanged) {
                         setAutoDeleteState(channel, binding.icAutoDeleted)
@@ -228,15 +228,15 @@ open class ChannelViewHolder(
     }
 
     @SuppressLint("SetTextI18n")
-    protected open fun setUserActivityState(channel: SceytChannel, textView: TextView) {
+    protected open fun setChannelEventTitle(channel: SceytChannel, textView: TextView) {
         val event = channel.activityEvent ?: return
         if (event.active) {
             val title = SpannableStringBuilder(
-                itemStyle.userActivityTitleFormatter.format(context, UserActivityTitleFormatterAttributes(
+                itemStyle.channelEventTitleFormatter.format(context, ChannelEventTitleFormatterAttributes(
                     channel = channel,
-                    activeUsers = listOf(ActiveUser(user = event.user, activity = event.activity))
+                    users = listOf(ChannelEventData(user = event.user, activity = event.activity))
                 )))
-            itemStyle.userActivityStateTextStyle.apply(context, title)
+            itemStyle.channelEventTextStyle.apply(context, title)
             textView.setText(title, TextView.BufferType.SPANNABLE)
         } else setLastMessagedText(channel, textView)
     }

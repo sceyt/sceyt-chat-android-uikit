@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.UserActivityCancelHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventCancelHelper
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem.ChannelItem
@@ -35,7 +35,7 @@ import kotlinx.coroutines.withContext
 @JvmName("bind")
 fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: LifecycleOwner) {
 
-    val userActivityCancelHelper by lazy { UserActivityCancelHelper() }
+    val channelEventCancelHelper by lazy { ChannelEventCancelHelper() }
     var needSubmitOnResume: List<ChannelListItem>? = null
     val mutexUpdateList = Mutex()
 
@@ -219,10 +219,10 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
     ChannelEventManager.onChannelMemberActivityEventFlow
         .filter { it.userId != SceytChatUIKit.chatUIFacade.myId }
         .onEach {
-            userActivityCancelHelper.await(it) { event ->
-                channelListView.onUserActivity(event)
+            channelEventCancelHelper.await(it) { event ->
+                channelListView.onChannelEvent(event)
             }
-            channelListView.onUserActivity(it)
+            channelListView.onChannelEvent(it)
         }.launchIn(lifecycleOwner.lifecycleScope)
 
     pageStateLiveData.observe(lifecycleOwner) {
