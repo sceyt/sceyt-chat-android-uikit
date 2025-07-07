@@ -9,6 +9,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytActivityChannelBinding
+import com.sceyt.chatuikit.extensions.applyInsets
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
@@ -28,6 +29,7 @@ open class ChannelActivity : AppCompatActivity() {
             .also { binding = it }
             .root)
 
+        binding.root.applyInsets()
         statusBarIconsColorWithBackground(
             statusBarColor = SceytChatUIKit.theme.colors.statusBarColor,
             navigationBarColor = SceytChatUIKit.theme.colors.primaryColor)

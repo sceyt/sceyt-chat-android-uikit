@@ -112,4 +112,11 @@ class DebounceHelper {
     fun shutdown() {
         scope.cancel()
     }
+
+    /**
+     * Checks if a job is running.
+     * */
+    fun isRunning(): Boolean {
+        return job?.isActive ?: false
+    }
 }

@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytActivityShareBinding
+import com.sceyt.chatuikit.extensions.applyInsets
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.parcelable
@@ -40,6 +41,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
             .also { binding = it }
             .root)
 
+        binding.root.applyInsets()
         statusBarIconsColorWithBackground()
 
         getDataFromIntent()

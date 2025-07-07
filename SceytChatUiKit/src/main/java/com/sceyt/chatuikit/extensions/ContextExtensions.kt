@@ -36,6 +36,7 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
+import androidx.core.net.toUri
 
 
 fun Context.getCompatColor(@ColorRes colorId: Int) = ContextCompat.getColor(this, colorId)
@@ -244,11 +245,15 @@ internal fun Context?.getFragmentManager(): FragmentManager? {
 fun Context.openLink(url: String?) {
     if (url.isNullOrBlank()) return
     try {
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(URLUtil.guessUrl(url))))
+        startActivity(Intent(Intent.ACTION_VIEW, URLUtil.guessUrl(url).toUri()))
     } catch (_: Exception) {
     }
 }
 
-
-
-
+fun Context.wrapContextWithThemeMode(dark: Boolean): Context {
+    val config = Configuration(resources.configuration).apply {
+        uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
+                if (dark) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
+    }
+    return createConfigurationContext(config)
+}

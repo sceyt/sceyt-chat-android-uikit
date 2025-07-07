@@ -19,6 +19,7 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytActivityCreateGroupBinding
+import com.sceyt.chatuikit.extensions.applyInsets
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.hideSoftInput
 import com.sceyt.chatuikit.extensions.launchActivity
@@ -60,6 +61,7 @@ class CreateGroupActivity : AppCompatActivity() {
             .root)
 
         binding.applyStyle()
+        binding.root.applyInsets()
         statusBarIconsColorWithBackground()
 
         getDataFromIntent()

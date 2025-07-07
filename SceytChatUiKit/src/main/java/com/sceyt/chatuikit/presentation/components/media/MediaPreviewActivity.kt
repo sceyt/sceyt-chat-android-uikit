@@ -25,6 +25,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivityMediaPreviewBinding
+import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
 import com.sceyt.chatuikit.extensions.checkAndAskPermissions
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getFileUriWithProvider
@@ -37,6 +38,7 @@ import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.parcelable
 import com.sceyt.chatuikit.extensions.saveToGallery
+import com.sceyt.chatuikit.extensions.wrapContextWithThemeMode
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
@@ -300,7 +302,7 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
     }
 
     protected open fun showActionsDialog(file: MediaItem) {
-        ActionDialog(this) {
+        ActionDialog(wrapContextWithThemeMode(true)) {
             when (it) {
                 ActionDialog.Action.Save -> {
                     fileToSaveAfterPermission = file

@@ -1,7 +1,6 @@
 package com.sceyt.chat
 
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import com.vanniktech.maven.publish.SonatypeHost
 import org.gradle.api.Project
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.kotlin.dsl.configure
@@ -54,7 +53,7 @@ fun Project.configureMavenPublishing() {
             publishSnapshotToMavenCentral()
         } else {
             // For release versions, use the Central Portal
-            publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+            publishToMavenCentral()
         }
 
         signAllPublications()

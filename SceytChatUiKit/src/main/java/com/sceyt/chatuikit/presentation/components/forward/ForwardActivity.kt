@@ -7,6 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytActivityForwardBinding
+import com.sceyt.chatuikit.extensions.applyInsets
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.parcelableArrayList
 import com.sceyt.chatuikit.extensions.setSafeOnClickListener
@@ -31,6 +32,7 @@ open class ForwardActivity : ShareableActivity<ForwardStyle>() {
             .also { binding = it }
             .root)
 
+        binding.root.applyInsets()
         statusBarIconsColorWithBackground()
 
         getDataFromIntent()

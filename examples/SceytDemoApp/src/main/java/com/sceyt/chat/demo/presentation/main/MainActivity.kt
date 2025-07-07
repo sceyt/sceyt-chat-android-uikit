@@ -4,17 +4,18 @@ import android.Manifest
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.addCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.toColorInt
 import androidx.lifecycle.lifecycleScope
 import com.sceyt.chat.demo.R
 import com.sceyt.chat.demo.databinding.ActivityMainBinding
-import com.sceyt.chat.demo.presentation.welcome.create.CreateAccountViewModel
 import com.sceyt.chat.demo.presentation.main.adapters.MainViewPagerAdapter
 import com.sceyt.chat.demo.presentation.main.profile.ProfileFragment
+import com.sceyt.chat.demo.presentation.welcome.create.CreateAccountViewModel
 import com.sceyt.chatuikit.SceytChatUIKit
+import com.sceyt.chatuikit.extensions.applyInsets
 import com.sceyt.chatuikit.extensions.customToastSnackBar
-import com.sceyt.chatuikit.extensions.requestPermissionsSafety
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListFragment
 import com.sceyt.chatuikit.presentation.root.PageState
@@ -31,6 +32,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.root.applyInsets()
+        binding.bottomNavigationView.setOnApplyWindowInsetsListener(null)
         statusBarIconsColorWithBackground()
 
         setPagerAdapter()
@@ -92,6 +95,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            requestPermissionsSafety(Manifest.permission.POST_NOTIFICATIONS, requestCode = 100)
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()) { }
 }
