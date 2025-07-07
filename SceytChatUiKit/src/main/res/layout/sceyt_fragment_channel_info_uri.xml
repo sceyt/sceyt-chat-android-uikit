@@ -24,11 +24,12 @@
         tools:ignore="UnusedAttribute"
         tools:text="uri" />
 
-    <Space
-        android:id="@+id/space"
+    <View
+        android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@+id/uri"
+        tools:background="@color/sceyt_color_background_secondary"
         tools:layout_height="16dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

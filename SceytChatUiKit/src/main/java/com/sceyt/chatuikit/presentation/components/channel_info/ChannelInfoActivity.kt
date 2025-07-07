@@ -656,7 +656,6 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     protected open fun applyStyle() {
         with(binding ?: return) {
             root.setBackgroundColor(style.backgroundColor)
-            coordinatorLayout.setBackgroundColor(style.dividerColor)
             viewTopTabLayout.setBackgroundColor(style.borderColor)
             with(style.tabBarStyle) {
                 underlineTab.setBackgroundColor(bottomBorderColor)

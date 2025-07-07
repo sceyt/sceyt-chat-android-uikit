@@ -29,36 +29,20 @@ fun Activity.statusBarIconsColorWithBackground(
         @ColorRes statusBarColor: Int = SceytChatUIKit.theme.colors.statusBarColor,
         @ColorRes navigationBarColor: Int = SceytChatUIKit.theme.colors.primaryColor
 ) {
-    // For API 35+, edge-to-edge is enforced and status bar color is deprecated
-    // Only set colors for versions before API 35
-    if (SDK_INT < 35) {
-        window.statusBarColor = getCompatColor(statusBarColor)
-        if (isDark)
-            window.navigationBarColor = getCompatColor(navigationBarColor)
-    } else {
-        // For API 35+, use transparent bars as required by edge-to-edge
-        window.statusBarColor = Color.TRANSPARENT
-        window.navigationBarColor = Color.TRANSPARENT
-    }
 
-    // Set icon colors for all versions
+    window.statusBarColor = getCompatColor(statusBarColor)
+    if (isDark)
+        window.navigationBarColor = getCompatColor(navigationBarColor)
+
     if (SDK_INT >= M) {
         if (SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.setSystemBarsAppearance(
                 if (isDark) 0 else WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
                 WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
             )
-            // Also set navigation bar icons
-            window.insetsController?.setSystemBarsAppearance(
-                if (isDark) 0 else WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
-                WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
-            )
         } else {
             val wic = WindowInsetsControllerCompat(window, window.decorView)
             wic.isAppearanceLightStatusBars = !isDark
-            if (SDK_INT >= Build.VERSION_CODES.O) {
-                wic.isAppearanceLightNavigationBars = !isDark
-            }
         }
     }
 }

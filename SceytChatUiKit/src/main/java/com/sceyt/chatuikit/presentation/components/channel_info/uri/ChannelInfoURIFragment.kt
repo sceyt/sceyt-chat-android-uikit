@@ -88,7 +88,8 @@ open class ChannelInfoURIFragment : Fragment(), ChannelUpdateListener, ChannelIn
             setDrawableStart(style.uriIcon)
             style.titleTextStyle.apply(this)
         }
-        space.layoutParams.height = infoStyle.spaceBetweenSections
+        divider.layoutParams.height = infoStyle.spaceBetweenSections
+        divider.setBackgroundColor(infoStyle.dividerColor)
     }
 
     companion object {
