@@ -44,7 +44,7 @@ fun View.applyInsets(
         applyLeftInsets: Boolean = true,
         applyRightInsets: Boolean = true,
         applyLandscapeRoundedCorners: Boolean = true,
-        onApplying: (Int, Int, Int, Int) -> Unit = { _, _, _, _ -> },
+        onAppliedRoundedCorners: (Int, Int, Int, Int) -> Unit = { _, _, _, _ -> },
 ) = ViewCompat.setOnApplyWindowInsetsListener(this) { view, windowInsets ->
     val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or
             WindowInsetsCompat.Type.displayCutout())
@@ -57,8 +57,6 @@ fun View.applyInsets(
     if (left == 0 && top == 0 && right == 0 && bottom == 0)
         return@setOnApplyWindowInsetsListener windowInsets
 
-    onApplying(left, top, right, bottom)
-
     if (applyTopInsets || applyBottomInsets)
         view.setPaddings(top = top, bottom = bottom)
 
@@ -67,6 +65,7 @@ fun View.applyInsets(
 
     if (context.isLandscape() && applyLandscapeRoundedCorners && SDK_INT >= Build.VERSION_CODES.S) {
         view.applyRoundedCorners(windowInsets.toWindowInsets())
+        onAppliedRoundedCorners(left, top, right, bottom)
     }
     windowInsets
 }
