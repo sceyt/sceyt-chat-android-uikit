@@ -29,6 +29,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivityChannelInfoBinding
 import com.sceyt.chatuikit.extensions.TAG_NAME
+import com.sceyt.chatuikit.extensions.applyInsets
 import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.findIndexed
@@ -91,6 +92,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         super.onCreate(savedInstanceState)
         style = ChannelInfoStyle.Builder(this, null).build()
         setActivityContentView()
+        binding?.root?.applyInsets()
         statusBarIconsColorWithBackground()
 
         getBundleArguments()
@@ -654,6 +656,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     protected open fun applyStyle() {
         with(binding ?: return) {
             root.setBackgroundColor(style.backgroundColor)
+            coordinatorLayout.setBackgroundColor(style.dividerColor)
             viewTopTabLayout.setBackgroundColor(style.borderColor)
             with(style.tabBarStyle) {
                 underlineTab.setBackgroundColor(bottomBorderColor)

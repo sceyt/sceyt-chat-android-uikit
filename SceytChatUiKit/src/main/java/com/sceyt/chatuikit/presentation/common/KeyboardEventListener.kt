@@ -4,7 +4,7 @@ import android.view.ViewTreeObserver
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.sceyt.chatuikit.extensions.getRootView
+import com.sceyt.chatuikit.extensions.getContentView
 import com.sceyt.chatuikit.extensions.isKeyboardOpen
 
 
@@ -34,7 +34,7 @@ class KeyboardEventListener(
     }
 
     private fun registerKeyboardListener() {
-        activity.getRootView().viewTreeObserver.addOnGlobalLayoutListener(listener)
+        activity.getContentView().viewTreeObserver.addOnGlobalLayoutListener(listener)
     }
 
     private fun dispatchKeyboardEvent(isOpen: Boolean) {
@@ -45,7 +45,7 @@ class KeyboardEventListener(
     }
 
     private fun unregisterKeyboardListener() {
-        activity.getRootView().viewTreeObserver.removeOnGlobalLayoutListener(listener)
+        activity.getContentView().viewTreeObserver.removeOnGlobalLayoutListener(listener)
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
