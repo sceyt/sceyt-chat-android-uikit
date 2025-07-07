@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.extensions
 
-
+import android.app.Activity
+import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.Path
 import android.os.Build
@@ -11,16 +12,39 @@ import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import android.view.WindowInsets
 import androidx.annotation.RequiresApi
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
+
+fun Activity.applyInsetsAndWindowColor(
+        rootView: View,
+        applyTopInsets: Boolean = true,
+        applyBottomInsets: Boolean = true,
+        applyLeftInsets: Boolean = true,
+        applyRightInsets: Boolean = true,
+        applyLandscapeRoundedCorners: Boolean = true,
+        windowColor: Int = Color.BLACK
+) {
+    rootView.applyInsets(
+        applyTopInsets = applyTopInsets,
+        applyBottomInsets = applyBottomInsets,
+        applyLeftInsets = applyLeftInsets,
+        applyRightInsets = applyRightInsets,
+        applyLandscapeRoundedCorners = applyLandscapeRoundedCorners
+    ) { _, _, _, _ ->
+        window.setBackgroundDrawable(windowColor.toDrawable())
+    }
+}
+
 
 fun View.applyInsets(
         applyTopInsets: Boolean = true,
         applyBottomInsets: Boolean = true,
         applyLeftInsets: Boolean = true,
         applyRightInsets: Boolean = true,
-        applyLandscapeRoundedCorners: Boolean = true
+        applyLandscapeRoundedCorners: Boolean = true,
+        onApplying: (Int, Int, Int, Int) -> Unit = { _, _, _, _ -> },
 ) = ViewCompat.setOnApplyWindowInsetsListener(this) { view, windowInsets ->
     val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or
             WindowInsetsCompat.Type.displayCutout())
@@ -29,6 +53,11 @@ fun View.applyInsets(
     val top = if (applyTopInsets) insets.top else 0
     val right = if (applyRightInsets) insets.right else 0
     val bottom = if (applyBottomInsets) insets.bottom else 0
+
+    if (left == 0 && top == 0 && right == 0 && bottom == 0)
+        return@setOnApplyWindowInsetsListener windowInsets
+
+    onApplying(left, top, right, bottom)
 
     if (applyTopInsets || applyBottomInsets)
         view.setPaddings(top = top, bottom = bottom)
