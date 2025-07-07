@@ -14,7 +14,7 @@ import com.sceyt.chat.demo.presentation.main.adapters.MainViewPagerAdapter
 import com.sceyt.chat.demo.presentation.main.profile.ProfileFragment
 import com.sceyt.chat.demo.presentation.welcome.create.CreateAccountViewModel
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.extensions.applyInsets
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListFragment
@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.root.applyInsets()
+        applyInsetsAndWindowColor(binding.root)
         binding.bottomNavigationView.setOnApplyWindowInsetsListener(null)
         statusBarIconsColorWithBackground()
 

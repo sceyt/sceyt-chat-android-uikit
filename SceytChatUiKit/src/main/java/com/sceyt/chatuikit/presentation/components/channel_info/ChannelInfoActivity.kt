@@ -29,7 +29,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivityChannelInfoBinding
 import com.sceyt.chatuikit.extensions.TAG_NAME
-import com.sceyt.chatuikit.extensions.applyInsets
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.findIndexed
@@ -92,7 +92,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         super.onCreate(savedInstanceState)
         style = ChannelInfoStyle.Builder(this, null).build()
         setActivityContentView()
-        binding?.root?.applyInsets()
+        binding?.let { applyInsetsAndWindowColor(it.root) }
         statusBarIconsColorWithBackground()
 
         getBundleArguments()

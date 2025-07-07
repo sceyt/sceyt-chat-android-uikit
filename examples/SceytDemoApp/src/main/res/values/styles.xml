@@ -10,7 +10,7 @@
         <item name="colorControlNormal">@color/sceyt_color_primary</item>
         <item name="windowActionModeOverlay">false</item>
         <item name="windowActionBar">false</item>
-        <item name="android:windowBackground">@color/black</item>
+        <item name="android:windowBackground">@color/sceyt_color_background</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:statusBarColor">@color/sceyt_color_status_bar</item>
         <item name="windowNoTitle">true</item>

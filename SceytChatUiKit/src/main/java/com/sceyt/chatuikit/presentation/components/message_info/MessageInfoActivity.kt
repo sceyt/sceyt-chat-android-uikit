@@ -8,7 +8,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.ActivityMessageInfoBinding
-import com.sceyt.chatuikit.extensions.applyInsets
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
@@ -22,7 +22,7 @@ open class MessageInfoActivity : AppCompatActivity() {
         binding = ActivityMessageInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.root.applyInsets()
+        applyInsetsAndWindowColor(binding.root)
         statusBarIconsColorWithBackground(
             statusBarColor = SceytChatUIKit.theme.colors.statusBarColor,
             navigationBarColor = SceytChatUIKit.theme.colors.primaryColor
