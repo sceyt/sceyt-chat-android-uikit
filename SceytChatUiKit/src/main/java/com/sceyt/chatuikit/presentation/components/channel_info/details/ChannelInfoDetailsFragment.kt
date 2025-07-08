@@ -112,7 +112,8 @@ open class ChannelInfoDetailsFragment : Fragment(), ChannelUpdateListener, Chann
         style.subtitleTextStyle.apply(tvSubtitle)
         style.avatarStyle.apply(avatar)
         dividerTop.dividerColor = infoStyle.borderColor
-        space.layoutParams.height = infoStyle.spaceBetweenSections
+        divider.layoutParams.height = infoStyle.spaceBetweenSections
+        divider.setBackgroundColor(infoStyle.dividerColor)
     }
 
     companion object {

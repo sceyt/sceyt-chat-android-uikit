@@ -62,7 +62,6 @@ dependencies {
     api(libs.flexbox)
     api(libs.sdp.android)
     api(libs.ssp.android)
-    api(libs.light.compressor)
     api(libs.work.runtime.ktx)
     api(libs.waveformSeekBar)
     api(libs.photo.view)
@@ -89,6 +88,7 @@ dependencies {
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.mockito.inline)
     testImplementation(libs.core.testing)
+    testImplementation(libs.robolectric)
     mockitoAgent(libs.mockito.inline)
 
     // Koin testing tools

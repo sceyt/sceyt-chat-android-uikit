@@ -1,9 +1,7 @@
 package com.sceyt.chatuikit.shared.media_encoder
 
 import android.app.Application
-import android.net.Uri
-import com.abedelazizshe.lightcompressorlibrary.CompressionListener
-import com.abedelazizshe.lightcompressorlibrary.VideoQuality
+import androidx.core.net.toUri
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.shared.media_encoder.TranscodeResultEnum.Cancelled
@@ -19,7 +17,7 @@ import kotlin.coroutines.resume
 
 object VideoTranscodeHelper : SceytKoinComponent {
     private val application by inject<Application>()
-    private var pendingTranscodeQue: ConcurrentLinkedQueue<PendingTranscodeData> = ConcurrentLinkedQueue()
+    private var pendingTranscodeQue = ConcurrentLinkedQueue<PendingTranscodeData>()
 
     @Volatile
     private var currentTranscodePath: String? = null
@@ -65,9 +63,9 @@ object VideoTranscodeHelper : SceytKoinComponent {
             currentTranscodePath = filePath
             CustomVideoCompressor.start(
                 context = application,
-                srcUri = Uri.parse(filePath),
+                srcUri = filePath.toUri(),
                 destPath = destination.absolutePath,
-                configureWith = CustomConfiguration(
+                configureWith = TranscoderConfiguration(
                     quality = quality,
                     isMinBitrateCheckEnabled = true,
                     disableAudio = false,

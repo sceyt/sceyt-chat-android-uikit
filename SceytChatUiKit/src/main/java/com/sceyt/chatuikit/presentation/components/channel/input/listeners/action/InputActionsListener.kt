@@ -4,6 +4,7 @@ import android.text.Editable
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.data.models.messages.LinkPreviewDetails
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
+import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 
@@ -21,8 +22,8 @@ sealed interface InputActionsListener {
         fun sendEditMessage(message: SceytMessage, linkDetails: LinkPreviewDetails?)
     }
 
-    fun interface TypingListener : InputActionsListener {
-        fun sendTyping(typing: Boolean)
+    fun interface ChannelEventListener : InputActionsListener {
+        fun sendChannelEvent(state: InputUserAction)
     }
 
     fun interface UpdateDraftMessageListener {
@@ -33,7 +34,7 @@ sealed interface InputActionsListener {
 
     /** Use this if you want to implement all callbacks */
     interface InputActionListeners : SendMessageListener, SendMessagesListener,
-            SendEditMessageListener, TypingListener, UpdateDraftMessageListener
+            SendEditMessageListener, ChannelEventListener, UpdateDraftMessageListener
 }
 
 internal fun InputActionsListener.setListener(listener: InputActionsListener) {

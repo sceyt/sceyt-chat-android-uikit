@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.extensions
 
 import android.Manifest
-import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
@@ -11,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 
-@TargetApi(Build.VERSION_CODES.M)
 fun Activity.requestPermissionsSafety(vararg permissions: String, requestCode: Int) {
     if (permissions.isEmpty()) return
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -19,7 +17,6 @@ fun Activity.requestPermissionsSafety(vararg permissions: String, requestCode: I
     }
 }
 
-@TargetApi(Build.VERSION_CODES.M)
 fun Context.hasPermissions(vararg permission: String): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
     for (per in permission) {
@@ -29,7 +26,6 @@ fun Context.hasPermissions(vararg permission: String): Boolean {
     return true
 }
 
-@TargetApi(Build.VERSION_CODES.M)
 fun Fragment.hasPermissions(vararg permission: String): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
     for (per in permission) {
@@ -39,14 +35,12 @@ fun Fragment.hasPermissions(vararg permission: String): Boolean {
     return true
 }
 
-@TargetApi(Build.VERSION_CODES.M)
 fun Context.permissionIgnored(permission: String): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
     if (hasPermissions(permission)) return false
     return !asActivity().shouldShowRequestPermissionRationale(permission)
 }
 
-@TargetApi(Build.VERSION_CODES.M)
 fun Context.oneOfPermissionsIgnored(vararg permission: String): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
     if (hasPermissions(*permission)) return false
@@ -57,7 +51,6 @@ fun Context.oneOfPermissionsIgnored(vararg permission: String): Boolean {
     return false
 }
 
-@TargetApi(Build.VERSION_CODES.M)
 fun Context.hasOneOfPermissions(vararg permission: String): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
     for (per in permission) {
@@ -67,7 +60,6 @@ fun Context.hasOneOfPermissions(vararg permission: String): Boolean {
     return false
 }
 
-@TargetApi(Build.VERSION_CODES.M)
 fun Fragment.requestPermissionsSafety(permissions: Array<String>, requestCode: Int) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         ActivityCompat.requestPermissions(requireActivity(), permissions, requestCode)
@@ -88,7 +80,10 @@ fun Activity.checkHasOneOfAndPermissionsOrAsk(activityResultLauncher: ActivityRe
     }
 }
 
-fun Context.checkAndAskPermissions(activityResultLauncher: ActivityResultLauncher<String>?, vararg permissions: String): Boolean {
+fun Context.checkAndAskPermissions(
+        activityResultLauncher: ActivityResultLauncher<String>?,
+        vararg permissions: String
+): Boolean {
     return if (hasPermissions(*permissions)) {
         true
     } else {
@@ -104,7 +99,6 @@ fun Context.checkAndAskPermissions(activityResultLauncher: ActivityResultLaunche
     }
 }
 
-@TargetApi(Build.VERSION_CODES.M)
 fun Context.checkDeniedOneOfPermissions(vararg permissions: String): Boolean {
     if (this !is AppCompatActivity) return false
     for (permission in permissions) {

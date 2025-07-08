@@ -28,6 +28,7 @@ import androidx.annotation.StringRes
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
@@ -244,11 +245,7 @@ internal fun Context?.getFragmentManager(): FragmentManager? {
 fun Context.openLink(url: String?) {
     if (url.isNullOrBlank()) return
     try {
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(URLUtil.guessUrl(url))))
+        startActivity(Intent(Intent.ACTION_VIEW, URLUtil.guessUrl(url).toUri()))
     } catch (_: Exception) {
     }
 }
-
-
-
-

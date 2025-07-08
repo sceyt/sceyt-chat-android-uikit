@@ -25,6 +25,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentWithUserData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivityMediaPreviewBinding
+import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
 import com.sceyt.chatuikit.extensions.checkAndAskPermissions
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.getFileUriWithProvider
@@ -136,7 +137,11 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
 
     private fun initViews() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        binding.toolbar.applySystemWindowInsetsPadding(applyTop = true)
+        binding.toolbar.applySystemWindowInsetsPadding(
+            applyTop = true,
+            applyRight = true,
+            applyLeft = true
+        )
 
         binding.root.post { toggleFullScreen(false) }
 

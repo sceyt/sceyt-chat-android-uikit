@@ -7,7 +7,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
-import com.sceyt.chatuikit.formatters.attributes.TypingTitleFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultAttachmentSizeFormatter
@@ -17,6 +17,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoFileSubtitleFor
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelInfoVoiceSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelLastMessageSenderNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelListSubtitleFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelListChannelEventTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelSubtitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultConnectionsStateTitleFormatter
@@ -32,7 +33,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultMessageMarkerDateFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultMessageViewCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationTitleFormatter
-import com.sceyt.chatuikit.formatters.defaults.DefaultTypingTitleFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelEventTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserAndNotesNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
@@ -65,12 +66,16 @@ class SceytChatUIKitFormatters {
         DefaultMentionUserNameFormatter()
     }
 
-    var typingUserNameFormatter: Formatter<SceytUser> by lazyVar {
+    var channelEventUserNameFormatter: Formatter<SceytUser> by lazyVar {
         DefaultUserShortNameFormatter()
     }
 
-    var typingTitleFormatter: Formatter<TypingTitleFormatterAttributes> by lazyVar {
-        DefaultTypingTitleFormatter()
+    var channelEventTitleFormatter: Formatter<ChannelEventTitleFormatterAttributes> by lazyVar {
+        DefaultChannelEventTitleFormatter()
+    }
+
+    var channelListChannelEventTitleFormatter: Formatter<ChannelEventTitleFormatterAttributes> by lazyVar {
+        DefaultChannelListChannelEventTitleFormatter()
     }
 
     var reactedUserNameFormatter: Formatter<SceytUser> by lazyVar {

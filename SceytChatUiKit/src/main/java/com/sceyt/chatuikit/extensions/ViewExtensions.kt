@@ -1,20 +1,19 @@
 package com.sceyt.chatuikit.extensions
 
 import android.annotation.SuppressLint
-import android.content.Context
+import android.app.Activity
 import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.text.InputType
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.ProgressBar
@@ -37,7 +36,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.min
 import kotlin.math.roundToInt
 
 fun View.addPaddings(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 0) {
@@ -77,19 +75,6 @@ fun dpToPxAsFloat(dp: Float): Float {
 fun View.screenWidthPx() = resources.displayMetrics.widthPixels
 
 fun View.screenHeightPx() = resources.displayMetrics.heightPixels
-
-fun Context.screenWidthPx() = resources.displayMetrics.widthPixels
-
-fun Context.screenHeightPx() = resources.displayMetrics.heightPixels
-
-fun Context.screenPortraitWidthPx() = min(screenWidthPx(), screenHeightPx())
-
-fun Fragment.screenHeightPx() = resources.displayMetrics.heightPixels
-
-fun EditText.setMultiLineCapSentencesAndSendAction() {
-    imeOptions = EditorInfo.IME_ACTION_SEND
-    setRawInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_MULTI_LINE)
-}
 
 fun View.delayOnLifecycle(
         delayMillis: Long,
@@ -253,4 +238,10 @@ private fun isViewInHierarchy(view: View, parent: View): Boolean {
 
 fun View.getScope(): LifecycleCoroutineScope {
     return (findViewTreeLifecycleOwner() ?: context.asComponentActivity()).lifecycleScope
+}
+
+
+fun View.hideSoftInput() {
+    val inputMethodManager = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+    inputMethodManager.hideSoftInputFromWindow(windowToken, 0)
 }

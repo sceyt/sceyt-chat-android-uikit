@@ -2,7 +2,6 @@
 package com.sceyt.chatuikit.shared.media_encoder.transcoder;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
@@ -17,7 +16,7 @@ import android.os.Message;
 import android.util.Log;
 import android.view.Surface;
 
-import com.abedelazizshe.lightcompressorlibrary.video.Mp4Movie;
+import androidx.annotation.RequiresApi;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +38,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * MediaMuxer.
  */
 @SuppressLint("ObsoleteSdkInt")
-@TargetApi(18)
+@RequiresApi(18)
 public class CallbackBasedTranscoder {
 
     private static final String TAG = CallbackBasedTranscoder.class.getSimpleName();
@@ -1047,10 +1046,6 @@ public class CallbackBasedTranscoder {
      * <p>The muxer is not started as it needs to be started only after all streams have been added.
      */
     private MediaMuxer createMuxer() throws Exception {
-        Mp4Movie movie = new Mp4Movie();
-        movie.setCacheFile(new File(mOutputFile));
-        movie.setRotation(mVideoRotation);
-
         return new MediaMuxer(mOutputFile, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
     }
 

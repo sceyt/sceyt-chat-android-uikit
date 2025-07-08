@@ -29,6 +29,7 @@ import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivityChannelInfoBinding
 import com.sceyt.chatuikit.extensions.TAG_NAME
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.createIntent
 import com.sceyt.chatuikit.extensions.customToastSnackBar
 import com.sceyt.chatuikit.extensions.findIndexed
@@ -91,6 +92,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         super.onCreate(savedInstanceState)
         style = ChannelInfoStyle.Builder(this, null).build()
         setActivityContentView()
+        binding?.let { applyInsetsAndWindowColor(it.root) }
         statusBarIconsColorWithBackground()
 
         getBundleArguments()
@@ -125,11 +127,9 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             finish()
         }
 
-        viewModel.onChannelLeftLiveData.observe(this) { data ->
-            data.channel?.let {
-                channel = it
-                setChannelDetails(it)
-            }
+        viewModel.onChannelLeftLiveData.observe(this) { event ->
+            channel = event.channel
+            setChannelDetails(channel)
             if (!channel.isPublic())
                 finish()
         }
@@ -425,9 +425,6 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             DirectChatActionsDialog.newInstance(this, channel).apply {
                 setChooseTypeCb(::onDirectChatMoreActionClick)
             }.show()
-    }
-
-    protected open fun onReportClick(channel: SceytChannel) {
     }
 
     protected open fun onDirectChatMoreActionClick(actionsEnum: DirectChatActionsDialog.ActionsEnum) {

@@ -15,9 +15,11 @@ import com.sceyt.chatuikit.extensions.extractLinksWithPositions
 import com.sceyt.chatuikit.extensions.setOnClickListenerAvailable
 import com.sceyt.chatuikit.extensions.setOnLongClickListenerAvailable
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
@@ -85,8 +87,8 @@ open class ChannelViewHolder(
                     if (markedUsUnreadChanged)
                         setChannelMarkedUsUnread(channel, binding.unreadMessagesCount)
 
-                    if (typingStateChanged)
-                        setTypingState(channel, binding.lastMessage)
+                    if (activityStateChanged)
+                        setChannelEventTitle(channel, binding.lastMessage)
 
                     if (autoDeleteStateChanged) {
                         setAutoDeleteState(channel, binding.icAutoDeleted)
@@ -226,15 +228,15 @@ open class ChannelViewHolder(
     }
 
     @SuppressLint("SetTextI18n")
-    protected open fun setTypingState(channel: SceytChannel, textView: TextView) {
-        val data = channel.typingData ?: return
-        if (data.typing) {
-            val title: SpannableStringBuilder = if (channel.isGroup) {
-                val name = itemStyle.typingUserNameFormatter.format(context, data.user)
-                SpannableStringBuilder("$name ${context.getString(R.string.sceyt_typing_)}")
-            } else
-                SpannableStringBuilder(context.getString(R.string.sceyt_typing_))
-            itemStyle.typingTextStyle.apply(context, title)
+    protected open fun setChannelEventTitle(channel: SceytChannel, textView: TextView) {
+        val event = channel.activityEvent ?: return
+        if (event.active) {
+            val title = SpannableStringBuilder(
+                itemStyle.channelEventTitleFormatter.format(context, ChannelEventTitleFormatterAttributes(
+                    channel = channel,
+                    users = listOf(ChannelEventData(user = event.user, activity = event.activity))
+                )))
+            itemStyle.channelEventTextStyle.apply(context, title)
             textView.setText(title, TextView.BufferType.SPANNABLE)
         } else setLastMessagedText(channel, textView)
     }

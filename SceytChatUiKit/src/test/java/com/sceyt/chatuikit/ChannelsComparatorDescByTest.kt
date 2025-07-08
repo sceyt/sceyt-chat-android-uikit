@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit
 
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.truth.Truth
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chat.models.message.DeliveryStatus
@@ -106,7 +107,8 @@ class ChannelsComparatorDescByTest {
     }
 }
 
-private fun createChannel(id: Long, pinnedAt: Long, createdAt: Long, lastMessage: SceytMessage? = null) = SceytChannel(
+@VisibleForTesting
+fun createChannel(id: Long, pinnedAt: Long, createdAt: Long, lastMessage: SceytMessage? = null) = SceytChannel(
     id = id,
     parentChannelId = 0,
     uri = null,

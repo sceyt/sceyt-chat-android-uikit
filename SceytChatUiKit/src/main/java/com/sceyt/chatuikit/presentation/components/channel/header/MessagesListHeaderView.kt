@@ -25,7 +25,7 @@ import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
@@ -34,14 +34,18 @@ import com.sceyt.chatuikit.databinding.SceytMessagesListHeaderViewBinding
 import com.sceyt.chatuikit.extensions.asActivity
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.extensions.getScope
 import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.showSoftInput
+import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.HeaderTypingUsersHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventChangeHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventState
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners.ClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListenersImpl
@@ -80,12 +84,13 @@ class MessagesListHeaderView @JvmOverloads constructor(
     private var isReplyInThread: Boolean = false
     private var isGroup = false
     private var enablePresence: Boolean = true
-    private var typingUsersHelper: HeaderTypingUsersHelper? = null
+    private val channelEventChangeHelper by lazy { initChannelEventChangeHelper() }
     private var toolbarActionsHiddenCallback: (() -> Unit)? = null
     private var toolbarSearchModeChangeListener: ((Boolean) -> Unit)? = null
     private var addedMenu: Menu? = null
     private var onSearchQueryChangeListener: ((String) -> Unit)? = null
     val style: MessagesListHeaderStyle
+    private var lastChannelEventState: ChannelEventState? = null
     var isShowingMessageActions = false
         private set
     var isShowingSearchBar = false
@@ -186,11 +191,11 @@ class MessagesListHeaderView @JvmOverloads constructor(
             if (!ConnectionEventManager.isConnected) return@post
             if (!replyInThread) {
                 val title = style.subtitleFormatter.format(context, channel)
-                setSubTitleText(subjectTextView, title, title.isNotBlank() && !isTyping)
+                setSubTitleText(subjectTextView, title, title.isNotBlank() && !haveUserAction)
             } else {
                 val fullName = replyMessage?.user?.fullName
                 val subTitleText = String.format(getString(R.string.sceyt_with), fullName)
-                setSubTitleText(subjectTextView, subTitleText, !fullName.isNullOrBlank() && !isTyping)
+                setSubTitleText(subjectTextView, subTitleText, !fullName.isNullOrBlank() && !haveUserAction)
             }
         }
     }
@@ -204,7 +209,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             return
 
         textView.text = title
-        textView.isVisible = !isTyping
+        textView.isVisible = !haveUserAction
     }
 
     private fun setAvatar(avatar: AvatarView, channel: SceytChannel, replyInThread: Boolean = false) {
@@ -237,16 +242,16 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    internal fun setChannel(channel: SceytChannel) {
+    internal fun setChannel(channel: SceytChannel, invalidateUI: Boolean) {
         this.channel = channel
         isGroup = channel.isGroup
-        if (typingUsersHelper == null)
-            typingUsersHelper = initTypingUsersHelper(channel)
 
-        with(binding) {
-            uiElementsListeners.onTitle(title, channel, null, false)
-            uiElementsListeners.onSubTitle(subTitle, channel, null, false)
-            uiElementsListeners.onAvatar(avatar, channel, false)
+        if (invalidateUI) {
+            with(binding) {
+                uiElementsListeners.onTitle(title, channel, null, false)
+                uiElementsListeners.onSubTitle(subTitle, channel, null, false)
+                uiElementsListeners.onAvatar(avatar, channel, false)
+            }
         }
     }
 
@@ -263,24 +268,50 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    private fun initTypingUsersHelper(channel: SceytChannel): HeaderTypingUsersHelper {
-        return HeaderTypingUsersHelper(context,
-            channel = channel,
-            typingTitleFormatter = style.typingTitleFormatter,
-            typingTextUpdatedListener = {
-                binding.tvTyping.text = it
+    private fun initChannelEventChangeHelper(): ChannelEventChangeHelper {
+        return ChannelEventChangeHelper(
+            scope = getScope(),
+            activeUsersUpdated = {
+                binding.tvChannelEvent.text = if (it.isEmpty()) ""
+                else initChannelEventTitle(it)
+                setTypingState(channelEventChangeHelper.getChannelEventState(it))
             },
-            typingStateUpdated = {
-                setTypingState(it)
-            },
-            showTypingUsersInSequence = style.showTypingUsersInSequence
+            showChannelEventsInSequence = style.showChannelEventsInSequence
         )
     }
 
-    private fun setTypingState(typing: Boolean) {
-        binding.subTitle.isVisible = !typing
-        binding.lottieTyping.isVisible = typing && style.enableTypingIndicator
-        binding.tvTyping.isVisible = typing
+    private fun initChannelEventTitle(channelEventData: List<ChannelEventData>): CharSequence {
+        return style.channelEventTitleFormatter.format(
+            context = context,
+            from = ChannelEventTitleFormatterAttributes(
+                channel = channel,
+                users = channelEventData
+            )
+        )
+    }
+
+    private fun setTypingState(state: ChannelEventState) {
+        if (lastChannelEventState == state) return
+        lastChannelEventState = state
+        val active = state != ChannelEventState.None
+        binding.subTitle.isVisible = !active
+        binding.lottieChannelEvent.isVisible = active && style.enableChannelEventIndicator
+        binding.tvChannelEvent.isVisible = active
+        when (state) {
+            ChannelEventState.Typing -> {
+                binding.lottieChannelEvent.setAnimation(R.raw.sceyt_typing)
+                binding.lottieChannelEvent.playAnimation()
+            }
+
+            ChannelEventState.Recording -> {
+                binding.lottieChannelEvent.setAnimation(R.raw.sceyt_recording)
+                binding.lottieChannelEvent.playAnimation()
+            }
+
+            ChannelEventState.None -> {
+                binding.lottieChannelEvent.cancelAnimation()
+            }
+        }
     }
 
     private fun setPresenceUpdated(user: SceytUser) {
@@ -290,7 +321,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
                 channel = channel.copy(members = channel.members?.map {
                     if (it.user.id == user.id) it.copy(user = user.copy()) else it
                 })
-                if (!isTyping)
+                if (!haveUserAction)
                     uiElementsListeners.onSubTitle(binding.subTitle, channel, replyMessage, isReplyInThread)
             }
         }
@@ -318,8 +349,8 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    internal fun handleTypingEvent(data: ChannelTypingEventData) {
-        eventListeners.onTypingEvent(data)
+    internal fun handleMemberActivityEvent(data: ChannelMemberActivityEvent) {
+        eventListeners.onActivityEvent(data)
     }
 
     internal fun onPresenceUpdate(user: SceytUser) {
@@ -332,7 +363,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             setSubTitleText(
                 textView = binding.subTitle,
                 title = title,
-                visible = title.isNotBlank() && !isTyping
+                visible = title.isNotBlank() && !haveUserAction
             )
             return@post
         }
@@ -355,12 +386,12 @@ class MessagesListHeaderView @JvmOverloads constructor(
         toolbarSearchModeChangeListener = listener
     }
 
-    val isTyping: Boolean
-        get() = typingUsersHelper?.isTyping == true
+    val haveUserAction: Boolean
+        get() = channelEventChangeHelper.haveUserAction
 
     @Suppress("unused")
-    val typingUsers: List<SceytUser>
-        get() = typingUsersHelper?.typingUsers.orEmpty()
+    val channelEventData: List<ChannelEventData>
+        get() = channelEventChangeHelper.channelEventData
 
     @Suppress("unused")
     fun getChannel() = if (::channel.isInitialized) channel else null
@@ -444,8 +475,9 @@ class MessagesListHeaderView @JvmOverloads constructor(
     }
 
     //Event listeners
-    override fun onTypingEvent(data: ChannelTypingEventData) {
-        typingUsersHelper?.onTypingEvent(data)
+    override fun onActivityEvent(event: ChannelMemberActivityEvent) {
+        if (event.userId == SceytChatUIKit.currentUserId) return
+        channelEventChangeHelper.onActivityEvent(event)
     }
 
     override fun onPresenceUpdateEvent(user: SceytUser) {
@@ -545,7 +577,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         root.setBackgroundColor(style.backgroundColor)
         toolbarUnderline.background = style.underlineColor.toDrawable()
         toolbarUnderline.isVisible = style.showUnderline
-        lottieTyping.isVisible = style.enableTypingIndicator
+        lottieChannelEvent.isVisible = style.enableChannelEventIndicator
         icBack.setImageDrawable(style.navigationIcon)
         style.titleTextStyle.apply(title)
         style.subTitleStyle.apply(subTitle)

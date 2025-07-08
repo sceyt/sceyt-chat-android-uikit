@@ -113,7 +113,8 @@ open class ChannelInfoSettingsFragment : Fragment(), ChannelUpdateListener, Chan
         }
 
         border.dividerColor = infoStyle.borderColor
-        space.layoutParams.height = infoStyle.spaceBetweenSections
+        divider.layoutParams.height = infoStyle.spaceBetweenSections
+        divider.setBackgroundColor(infoStyle.dividerColor)
     }
 
     companion object {

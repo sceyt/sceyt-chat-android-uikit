@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.data.repositories
 
+import android.util.Log
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.models.SearchQueryOperator
@@ -589,6 +590,11 @@ class ChannelsRepositoryImpl : ChannelsRepository {
                 }
             })
         }
+    }
+
+    override suspend fun sendChannelEvent(channelId: Long, event: String) {
+        ChannelOperator.build(channelId).sendEvent(event)
+        Log.i("sdfsdf", "sendChannelEvent: $event")
     }
 
     private fun createChannelListQuery(
