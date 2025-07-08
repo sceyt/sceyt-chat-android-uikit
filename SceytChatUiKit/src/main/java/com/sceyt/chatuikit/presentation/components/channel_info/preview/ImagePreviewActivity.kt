@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.sceyt.chatuikit.databinding.SceytFragmentPhotoPreviewBinding
+import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.helpers.AvatarImageLoader
@@ -33,6 +34,7 @@ class ImagePreviewActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
+        binding.toolbar.applySystemWindowInsetsPadding(applyTop = true)
         binding.toolbar.setNavigationClickListener {
             finish()
         }

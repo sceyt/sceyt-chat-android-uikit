@@ -21,6 +21,7 @@ import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.renderers.AvatarRenderer
@@ -36,7 +37,7 @@ import com.sceyt.chatuikit.styles.extensions.channel_list.buildLastMessageSender
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildLastMessageTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildMentionTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildSubjectTextStyle
-import com.sceyt.chatuikit.styles.extensions.channel_list.buildTypingTextStyle
+import com.sceyt.chatuikit.styles.extensions.channel_list.buildChannelEventTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildUnreadCountMutedTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildUnreadCountTextStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.buildUnreadMentionMutedTextStyle
@@ -62,7 +63,7 @@ import java.util.Date
  * @property lastMessageSenderNameTextStyle - Style for sender name, default is [buildLastMessageSenderNameStyle].
  * @property deletedTextStyle - Style for deleted message, default is [buildDeletedTextStyle].
  * @property draftPrefixTextStyle - Style for draft message, default is [buildDraftPrefixTextStyle].
- * @property typingTextStyle - Style for typing message, default is [buildTypingTextStyle].
+ * @property channelEventTextStyle - Style for activity state message, default is [buildChannelEventTextStyle].
  * @property unreadCountTextStyle - Style for unread count, default is [buildUnreadCountTextStyle].
  * @property unreadCountMutedStateTextStyle - Style for unread count in muted channel, default is [buildUnreadCountMutedTextStyle].
  * @property mentionTextStyle - Style for mention message, default is [buildMentionTextStyle].
@@ -74,7 +75,7 @@ import java.util.Date
  * @property lastMessageSenderNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.channelLastMessageSenderNameFormatter].
  * @property mentionUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.mentionUserNameFormatter].
  * @property reactedUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.reactedUserNameFormatter].
- * @property typingUserNameFormatter - Formatter for user name, default is [SceytChatUIKitFormatters.typingUserNameFormatter].
+ * @property channelEventTitleFormatter - Formatter for activity title, default is [SceytChatUIKitFormatters.channelListChannelEventTitleFormatter].
  * @property unreadCountFormatter - Formatter for unread count, default is [SceytChatUIKitFormatters.unreadCountFormatter].
  * @property lastMessageBodyFormatter - Formatter for last message body, default is [SceytChatUIKitFormatters.channelLastMessageBodyFormatter].
  * @property draftMessageBodyFormatter - Formatter for draft message body, default is [SceytChatUIKitFormatters.draftMessageBodyFormatter].
@@ -100,7 +101,7 @@ data class ChannelItemStyle(
         val lastMessageSenderNameTextStyle: TextStyle,
         val deletedTextStyle: TextStyle,
         val draftPrefixTextStyle: TextStyle,
-        val typingTextStyle: TextStyle,
+        val channelEventTextStyle: TextStyle,
         val unreadCountTextStyle: TextStyle,
         val unreadCountMutedStateTextStyle: TextStyle,
         val mentionTextStyle: TextStyle,
@@ -113,7 +114,7 @@ data class ChannelItemStyle(
         val lastMessageSenderNameFormatter: Formatter<SceytChannel>,
         val mentionUserNameFormatter: Formatter<SceytUser>,
         val reactedUserNameFormatter: Formatter<SceytUser>,
-        val typingUserNameFormatter: Formatter<SceytUser>,
+        val channelEventTitleFormatter: Formatter<ChannelEventTitleFormatterAttributes>,
         val unreadCountFormatter: Formatter<Long>,
         val lastMessageBodyFormatter: Formatter<MessageBodyFormatterAttributes>,
         val draftMessageBodyFormatter: Formatter<DraftMessageBodyFormatterAttributes>,
@@ -188,7 +189,7 @@ data class ChannelItemStyle(
                     lastMessageSenderNameTextStyle = buildLastMessageSenderNameStyle(array),
                     deletedTextStyle = buildDeletedTextStyle(array),
                     draftPrefixTextStyle = buildDraftPrefixTextStyle(array),
-                    typingTextStyle = buildTypingTextStyle(array),
+                    channelEventTextStyle = buildChannelEventTextStyle(array),
                     unreadCountTextStyle = buildUnreadCountTextStyle(array),
                     unreadCountMutedStateTextStyle = buildUnreadCountMutedTextStyle(array),
                     mentionTextStyle = buildMentionTextStyle(array),
@@ -200,7 +201,7 @@ data class ChannelItemStyle(
                     lastMessageSenderNameFormatter = SceytChatUIKit.formatters.channelLastMessageSenderNameFormatter,
                     mentionUserNameFormatter = SceytChatUIKit.formatters.mentionUserNameFormatter,
                     reactedUserNameFormatter = SceytChatUIKit.formatters.reactedUserNameFormatter,
-                    typingUserNameFormatter = SceytChatUIKit.formatters.typingUserNameFormatter,
+                    channelEventTitleFormatter = SceytChatUIKit.formatters.channelListChannelEventTitleFormatter,
                     unreadCountFormatter = SceytChatUIKit.formatters.unreadCountFormatter,
                     lastMessageBodyFormatter = SceytChatUIKit.formatters.channelLastMessageBodyFormatter,
                     draftMessageBodyFormatter = SceytChatUIKit.formatters.draftMessageBodyFormatter,

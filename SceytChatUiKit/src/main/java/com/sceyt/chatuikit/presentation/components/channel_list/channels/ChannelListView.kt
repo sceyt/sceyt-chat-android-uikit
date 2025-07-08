@@ -9,7 +9,7 @@ import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelTypingEventData
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytChannelListViewBinding
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
@@ -125,11 +125,11 @@ class ChannelListView @JvmOverloads constructor(
         )
     }
 
-    internal fun onTyping(data: ChannelTypingEventData) {
+    internal fun onChannelEvent(event: ChannelMemberActivityEvent) {
         channelsRV.updateChannel(
-            predicate = { (it as? ChannelListItem.ChannelItem)?.channel?.id == data.channel.id },
-            newItem = ChannelListItem.ChannelItem(data.channel.copy(typingData = data)),
-            payloads = ChannelDiff.DEFAULT_FALSE.copy(typingStateChanged = true)
+            predicate = { (it as? ChannelListItem.ChannelItem)?.channel?.id == event.channelId },
+            newItem = ChannelListItem.ChannelItem(event.channel.copy(activityEvent = event)),
+            payloads = ChannelDiff.DEFAULT_FALSE.copy(activityStateChanged = true)
         )
     }
 

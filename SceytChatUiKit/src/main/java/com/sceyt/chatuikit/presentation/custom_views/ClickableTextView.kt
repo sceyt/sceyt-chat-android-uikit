@@ -46,6 +46,10 @@ class ClickableTextView @JvmOverloads constructor(
             spannableString?.let { removeRippleEffect(it) }
             doOnLongClick?.invoke(this@ClickableTextView)
         }
+
+        override fun onDown(e: MotionEvent): Boolean {
+            return true
+        }
     })
 
     @SuppressLint("ClickableViewAccessibility")
@@ -58,6 +62,10 @@ class ClickableTextView @JvmOverloads constructor(
                     getClickableSpan(event)?.let {
                         addRippleEffect(spannableString, it)
                     }
+                }
+
+                MotionEvent.ACTION_UP -> {
+                    removeRippleEffect(spannableString)
                 }
 
                 MotionEvent.ACTION_CANCEL -> {
@@ -92,7 +100,9 @@ class ClickableTextView @JvmOverloads constructor(
             // Create and apply rounded background span for ripple effect
             pressedSpanBackgroundSpan = RoundedBackgroundSpan(
                 backgroundColor = rippleColor,
-                cornerRadius = cornerRadius
+                cornerRadius = cornerRadius,
+                spanStart = spanStart,
+                spanEnd = spanEnd
             )
             spannableString.setSpan(
                 pressedSpanBackgroundSpan,
@@ -121,5 +131,17 @@ class ClickableTextView @JvmOverloads constructor(
     fun applyStyle(itemStyle: MessageItemStyle) {
         itemStyle.bodyTextStyle.apply(this)
         setLinkTextColor(itemStyle.linkTextColor)
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        (text as? SpannableString)?.let { removeRippleEffect(it) }
+    }
+
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        super.onWindowFocusChanged(hasWindowFocus)
+        if (!hasWindowFocus) {
+            (text as? SpannableString)?.let { removeRippleEffect(it) }
+        }
     }
 }

@@ -227,7 +227,7 @@ class AsyncListDiffer<T : Any>(
                     list = null
                     readOnlyList = emptyList()
                     if (countRemoved == 0)
-                        return@performWithRetry
+                        return@launch
                     updateCallback.onRemoved(0, countRemoved)
                     onCurrentListChanged(previousList, commitCallback)
                 }
@@ -255,7 +255,7 @@ class AsyncListDiffer<T : Any>(
         }
     }
 
-    private suspend fun CoroutineScope.performWithRetry(action: suspend () -> Unit) {
+    private suspend inline fun CoroutineScope.performWithRetry(action: () -> Unit) {
         var attempt = 0
         val maxAttempts = 3
         var lastException: Exception? = null
@@ -264,15 +264,16 @@ class AsyncListDiffer<T : Any>(
             try {
                 action()
                 return
-            } catch (_: CancellationException) {
-                // Don't retry on cancellation - just return
-                return
+            } catch (e: CancellationException) {
+                // If the coroutine is cancelled, we exit immediately
+                SceytLog.w(TAG, "Coroutine was cancelled during retry attempt $attempt", e)
+                throw e
             } catch (ex: Exception) {
                 lastException = ex
                 SceytLog.w(TAG, "Catch Exception. Retry attempt $attempt", ex)
                 attempt++
                 if (attempt < maxAttempts) {
-                    delay((attempt * 50L).coerceAtMost(500L)) // Exponential backoff
+                    delay((attempt * 100L).coerceAtMost(500L)) // Exponential backoff
                 }
             }
         }

@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelEventEnum
+import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytMember
@@ -22,6 +22,7 @@ import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.isDeleted
 import com.sceyt.chatuikit.presentation.common.SceytDialog
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
+import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.listeners.MessageInputActionCallback
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
@@ -120,9 +121,9 @@ fun MessageListViewModel.bind(
         messageInputView.checkIsParticipant(channel)
     }
 
-    onChannelEventFlow.onEach {
-        when (val event = it.eventType) {
-            is ChannelEventEnum.Left -> {
+    onChannelEventFlow.onEach { event ->
+        when (event) {
+            is ChannelActionEvent.Left -> {
                 if (channel.isPublic()) {
                     event.leftMembers.forEach { member ->
                         if (member.id == SceytChatUIKit.chatUIFacade.myId)
@@ -131,7 +132,7 @@ fun MessageListViewModel.bind(
                 }
             }
 
-            is ChannelEventEnum.Joined -> {
+            is ChannelActionEvent.Joined -> {
                 if (channel.isPublic()) {
                     event.joinedMembers.forEach { member ->
                         if (member.id == SceytChatUIKit.chatUIFacade.myId)
@@ -183,8 +184,8 @@ fun MessageListViewModel.bind(
             upsertLinkPreviewData(linkDetails)
         }
 
-        override fun sendTyping(typing: Boolean) {
-            sendTypingEvent(typing)
+        override fun sendChannelEvent(action: InputUserAction) {
+            this@bind.sendChannelEvent(action)
         }
 
         override fun updateDraftMessage(

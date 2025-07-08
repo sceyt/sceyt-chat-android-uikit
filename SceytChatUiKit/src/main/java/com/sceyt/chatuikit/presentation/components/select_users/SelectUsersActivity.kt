@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytActivitySelectUsersBinding
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.parcelable
@@ -44,6 +45,7 @@ open class SelectUsersActivity : AppCompatActivity() {
             .root)
 
         binding.applyStyle()
+        applyInsetsAndWindowColor(binding.root)
         statusBarIconsColorWithBackground()
 
         initViewModel()

@@ -12,6 +12,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.DefaultTimeBar
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytMediaItemVideoBinding
+import com.sceyt.chatuikit.extensions.applySystemWindowInsetsMargin
 import com.sceyt.chatuikit.extensions.doSafe
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
@@ -35,7 +36,6 @@ import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.components.media.OnMediaClickCallback
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
-import com.sceyt.chatuikit.presentation.components.media.applySystemWindowInsetsMargin
 import com.sceyt.chatuikit.presentation.custom_views.PlayPauseImage
 import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
 import com.sceyt.chatuikit.styles.MediaPreviewStyle
