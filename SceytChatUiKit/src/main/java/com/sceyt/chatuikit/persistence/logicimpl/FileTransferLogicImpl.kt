@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.FileChecksumData
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
@@ -91,7 +92,10 @@ internal class FileTransferLogicImpl(
                 if (it.isSuccess) {
                     it.getOrNull()?.let { path ->
                         task.updateFileLocationCallback?.onUpdateFileLocation(path)
-                        uploadAttachment = uploadAttachment.copy(filePath = path)
+                        uploadAttachment = uploadAttachment.copy(
+                            filePath = path,
+                            fileSize = getFileSize(path)
+                        )
                     }
                 } else SceytLog.i("resizeResult", "Couldn't resize sharing file with reason ${it.exceptionOrNull()}")
 
@@ -319,7 +323,10 @@ internal class FileTransferLogicImpl(
             if (it.isSuccess) {
                 it.getOrNull()?.let { path ->
                     transferTask.updateFileLocationCallback?.onUpdateFileLocation(path)
-                    uploadAttachment = uploadAttachment.copy(filePath = path)
+                    uploadAttachment = uploadAttachment.copy(
+                        filePath = path,
+                        fileSize = getFileSize(path)
+                    )
                 }
             } else SceytLog.i("resizeResult", "Couldn't resize file with reason ${it.exceptionOrNull()}")
 

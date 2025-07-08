@@ -112,17 +112,18 @@ object FileTransferHelper : SceytKoinComponent {
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
-    fun TransferTask.getUploadResultCallback() = TransferResultCallback { result ->
-        when (result) {
+    fun TransferTask.getUploadResultCallback() = TransferResultCallback { response ->
+        val result: Result<SceytAttachment> = when (response) {
             is SceytResponse.Success -> {
                 val transferData = TransferData(attachment.messageTid, 100f,
-                    Uploaded, attachment.filePath, result.data.toString())
+                    Uploaded, attachment.filePath, response.data.toString())
 
                 attachment = attachment.getUpdatedWithTransferData(transferData)
                 emitAttachmentTransferUpdate(transferData, attachment.fileSize)
                 scope.launch {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                 }
+                Result.success(attachment)
             }
 
             is SceytResponse.Error -> {
@@ -135,11 +136,12 @@ object FileTransferHelper : SceytKoinComponent {
                 scope.launch {
                     attachmentLogic.updateAttachmentWithTransferData(transferData)
                 }
-                SceytLog.e(this.TAG, "Couldn't upload file " + result.message.toString())
+                SceytLog.e(this.TAG, "Couldn't upload file " + response.message.toString())
+                Result.failure(Throwable(response.message.orEmpty()))
             }
         }
-        fileTransferService.findTransferTask(attachment)?.onCompletionListeners?.values?.forEach {
-            it.invoke((result is SceytResponse.Success), result.data)
+        fileTransferService.findTransferTask(attachment)?.onCompletionListeners?.forEach {
+            it.value.invoke(result)
         }
     }
 

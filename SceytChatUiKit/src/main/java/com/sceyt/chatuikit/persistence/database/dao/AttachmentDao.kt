@@ -46,14 +46,14 @@ internal abstract class AttachmentDao {
             limit: Int,
             types: List<String>
     ): LoadNearData<AttachmentDb> {
-        var oldest = getOldestThenAttachmentInclude(channelId, attachmentId, limit, types).reversed()
+        val oldest = getOldestThenAttachmentInclude(channelId, attachmentId, limit, types).reversed()
         val includesInOldest = oldest.lastOrNull()?.attachmentEntity?.id == attachmentId
 
         // If the message not exist then return empty list
         if (!includesInOldest)
             return LoadNearData(emptyList(), hasNext = false, hasPrev = false)
 
-        var newest = getNewestThenAttachment(channelId, attachmentId, limit, types)
+        val newest = getNewestThenAttachment(channelId, attachmentId, limit, types)
         val halfLimit = limit / 2
 
         val newestDiff = max(halfLimit - newest.size, 0)
@@ -107,8 +107,13 @@ internal abstract class AttachmentDao {
 
     @Query("update $ATTACHMENT_TABLE set filePath =:filePath, fileSize =:fileSize, metadata =:metadata " +
             "where messageTid =:msgTid and type !=:ignoreType")
-    abstract suspend fun updateAttachmentFilePathByMsgTid(msgTid: Long, filePath: String?, fileSize: Long,
-                                                          metadata: String?, ignoreType: String = AttachmentTypeEnum.Link.value)
+    abstract suspend fun updateAttachmentFilePathByMsgTid(
+            msgTid: Long,
+            filePath: String?,
+            fileSize: Long,
+            metadata: String?,
+            ignoreType: String = AttachmentTypeEnum.Link.value
+    )
 
     @Query("update $ATTACHMENT_PAYLOAD_TABLE set filePath =:filePath where messageTid =:msgTid")
     abstract suspend fun updateAttachmentPayLoadFilePathByMsgTid(msgTid: Long, filePath: String?)
