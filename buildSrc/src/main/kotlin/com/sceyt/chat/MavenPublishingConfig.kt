@@ -53,7 +53,7 @@ fun Project.configureMavenPublishing() {
             publishSnapshotToMavenCentral()
         } else {
             // For release versions, use the Central Portal
-            publishToMavenCentral()
+            publishToMavenCentral(true)
         }
 
         signAllPublications()
