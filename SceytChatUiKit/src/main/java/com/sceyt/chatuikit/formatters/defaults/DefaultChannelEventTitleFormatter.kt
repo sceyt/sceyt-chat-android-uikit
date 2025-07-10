@@ -29,7 +29,7 @@ open class DefaultChannelEventTitleFormatter : Formatter<ChannelEventTitleFormat
     }
 
     private fun getFormattedName(context: Context, user: SceytUser): CharSequence {
-        return SceytChatUIKit.formatters.channelEventUserNameFormatter.format(context, user).take(10)
+        return SceytChatUIKit.formatters.channelEventUserNameFormatter.format(context, user)
     }
 }
 

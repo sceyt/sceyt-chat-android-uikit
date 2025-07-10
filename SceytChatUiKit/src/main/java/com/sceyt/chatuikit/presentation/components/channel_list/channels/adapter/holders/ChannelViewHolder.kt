@@ -14,8 +14,8 @@ import com.sceyt.chatuikit.databinding.SceytItemChannelBinding
 import com.sceyt.chatuikit.extensions.extractLinksWithPositions
 import com.sceyt.chatuikit.extensions.setOnClickListenerAvailable
 import com.sceyt.chatuikit.extensions.setOnLongClickListenerAvailable
-import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
 import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
+import com.sceyt.chatuikit.formatters.attributes.ChannelItemSubtitleFormatterAttributes
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isDirect
@@ -153,7 +153,7 @@ open class ChannelViewHolder(
 
     protected open fun setAvatar(
             channel: SceytChannel,
-            avatarView: AvatarView
+            avatarView: AvatarView,
     ) {
         itemStyle.channelAvatarRenderer.render(
             context = context,
@@ -165,7 +165,7 @@ open class ChannelViewHolder(
 
     protected open fun setLastMessageStatusAndDate(
             channel: SceytChannel,
-            decoratedTextView: DecoratedTextView
+            decoratedTextView: DecoratedTextView,
     ) {
         val data = getDateData(channel)
         val shouldShowStatus = data.second
@@ -179,7 +179,7 @@ open class ChannelViewHolder(
 
     protected open fun setPresenceState(
             channel: SceytChannel,
-            indicatorView: PresenceStateIndicatorView
+            indicatorView: PresenceStateIndicatorView,
     ) {
         val state = channel.getPeer()?.user?.presence?.state ?: PresenceState.Offline
         val showState = !channel.isSelf && channel.isDirect() && state == PresenceState.Online
@@ -227,18 +227,26 @@ open class ChannelViewHolder(
         } else icMention.isVisible = false
     }
 
-    @SuppressLint("SetTextI18n")
     protected open fun setChannelEventTitle(channel: SceytChannel, textView: TextView) {
-        val event = channel.activityEvent ?: return
-        if (event.active) {
-            val title = SpannableStringBuilder(
-                itemStyle.channelEventTitleFormatter.format(context, ChannelEventTitleFormatterAttributes(
-                    channel = channel,
-                    users = listOf(ChannelEventData(user = event.user, activity = event.activity))
-                )))
+        val events = channel.events
+        if (!events.isNullOrEmpty()) {
+            val title = SpannableStringBuilder(initChannelEventTitle(channel, events))
             itemStyle.channelEventTextStyle.apply(context, title)
             textView.setText(title, TextView.BufferType.SPANNABLE)
         } else setLastMessagedText(channel, textView)
+    }
+
+    protected open fun initChannelEventTitle(
+            channel: SceytChannel,
+            channelEventData: List<ChannelEventData>,
+    ): CharSequence {
+        return itemStyle.channelEventTitleFormatter.format(
+            context = context,
+            from = ChannelEventTitleFormatterAttributes(
+                channel = channel,
+                users = channelEventData
+            )
+        )
     }
 
     protected open fun getDateData(channel: SceytChannel?): Pair<CharSequence, Boolean> {

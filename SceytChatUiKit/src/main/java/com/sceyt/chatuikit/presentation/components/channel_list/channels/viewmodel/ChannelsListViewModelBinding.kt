@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventCancelHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventChangeHelper
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem.ChannelItem
@@ -31,13 +31,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
 @JvmName("bind")
 fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: LifecycleOwner) {
-
-    val channelEventCancelHelper by lazy { ChannelEventCancelHelper() }
     var needSubmitOnResume: List<ChannelListItem>? = null
     val mutexUpdateList = Mutex()
+    val lifecycleScope = lifecycleOwner.lifecycleScope
+    val channelEventChangeHelpersMap by lazy { ConcurrentHashMap<Long, ChannelEventChangeHelper>() }
 
     fun getUpdateAfterOnResumeData(): List<ChannelListItem> {
         return (needSubmitOnResume.takeIf { !it.isNullOrEmpty() }
@@ -51,13 +52,13 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
             if (needSubmitOnResume.isNullOrEmpty())
                 return@repeatOnLifecycle
 
-            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            lifecycleScope.launch(Dispatchers.Default) {
                 mutexUpdateList.withLock {
                     val newData = needSubmitOnResume?.sortedWith(ChannelsItemComparatorBy(config.order))
                     needSubmitOnResume = null
                     if (newData != null) {
                         withContext(Dispatchers.Main) {
-                            channelListView.setChannelsList(newData)
+                            channelListView.setChannelsList(lifecycleScope, newData)
                         }
                     }
                 }
@@ -67,9 +68,16 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
 
     fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytChannel>) {
         if (response.offset == 0) {
-            channelListView.setChannelsList(mapToChannelItem(data = response.data, hasNext = response.hasNext))
-        } else
-            channelListView.addNewChannels(mapToChannelItem(data = response.data, hasNext = response.hasNext))
+            channelListView.setChannelsList(
+                scope = lifecycleScope,
+                channels = mapToChannelItem(data = response.data, hasNext = response.hasNext)
+            )
+        } else {
+            channelListView.addNewChannels(
+                scope = lifecycleScope,
+                channels = mapToChannelItem(data = response.data, hasNext = response.hasNext)
+            )
+        }
     }
 
     fun initPaginationServerResponse(response: PaginationResponse.ServerResponse<SceytChannel>) {
@@ -77,7 +85,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
             is SceytResponse.Success -> {
                 if (response.hasDiff) {
                     val newChannels = mapToChannelItem(data = response.cacheData, hasNext = response.hasNext)
-                    channelListView.setChannelsList(newChannels)
+                    channelListView.setChannelsList(lifecycleScope, newChannels)
                 } else {
                     if (!hasNextDb) channelListView.hideLoadingMore()
                 }
@@ -95,11 +103,21 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
         }
     }
 
-    loadChannelsFlow.onEach(::initChannelsResponse).launchIn(lifecycleOwner.lifecycleScope)
+    fun initChannelEventChangeHelper(channelId: Long): ChannelEventChangeHelper {
+        return ChannelEventChangeHelper(
+            scope = lifecycleScope,
+            activeUsersUpdated = { events ->
+                channelListView.onChannelEvents(channelId, events)
+            },
+            showChannelEventsInSequence = false
+        )
+    }
+
+    loadChannelsFlow.onEach(::initChannelsResponse).launchIn(lifecycleScope)
 
     ChannelsCache.channelsDeletedFlow.onEach { channelIds ->
         if (!lifecycleOwner.isResumed()) {
-            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            lifecycleScope.launch(Dispatchers.Default) {
                 mutexUpdateList.withLock {
                     needSubmitOnResume = getUpdateAfterOnResumeData().filter {
                         (it as? ChannelItem)?.channel?.id !in channelIds
@@ -115,7 +133,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
 
     ChannelsCache.channelUpdatedFlow.onEach { data ->
         if (!lifecycleOwner.isResumed()) {
-            lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            lifecycleScope.launch(Dispatchers.Default) {
                 mutexUpdateList.withLock {
                     needSubmitOnResume = getUpdateAfterOnResumeData().map {
                         if (it is ChannelItem && it.channel.id == data.channel.id) {
@@ -128,7 +146,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
             val isCanceled = channelListView.cancelLastSort()
             channelListView.channelUpdated(data.channel) {
                 if (data.diff.lastMessageChanged || data.needSorting || isCanceled)
-                    channelListView.sortChannelsBy(SceytChatUIKit.config.channelListOrder)
+                    channelListView.sortChannelsBy(lifecycleScope, SceytChatUIKit.config.channelListOrder)
 
                 SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body} draft:${data.channel.draftMessage?.body}  unreadCount ${data.channel.newMessageCount}" +
                         " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${data.diff.hasDifference()} lastMessageChanged: ${data.diff.lastMessageChanged} needSorting: ${data.needSorting}")
@@ -137,7 +155,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
     }.launchIn(viewModelScope)
 
     ChannelsCache.channelReactionMsgLoadedFlow.onEach { data ->
-        lifecycleOwner.lifecycleScope.launch {
+        lifecycleScope.launch {
             channelListView.channelUpdatedWithDiff(data, ChannelDiff.DEFAULT_FALSE.copy(lastMessageChanged = true))
         }
     }.launchIn(viewModelScope)
@@ -146,7 +164,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
         .filter { config.isValidForConfig(it) }
         .onEach {
             if (!lifecycleOwner.isResumed()) {
-                lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                lifecycleScope.launch(Dispatchers.Default) {
                     mutexUpdateList.withLock {
                         val newData = getUpdateAfterOnResumeData().toMutableList()
                         if (newData.none { item -> (item as? ChannelItem)?.channel?.id == it.id }) {
@@ -156,7 +174,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
                     }
                 }
             } else {
-                channelListView.addNewChannelAndSort(config.order, ChannelItem(it))
+                channelListView.addNewChannelAndSort(lifecycleScope, config.order, ChannelItem(it))
             }
         }
         .launchIn(viewModelScope)
@@ -165,7 +183,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
         .filter { config.isValidForConfig(it.second) }
         .onEach { (pendingChannelId, newChannel) ->
             if (!lifecycleOwner.isResumed()) {
-                lifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+                lifecycleScope.launch(Dispatchers.Default) {
                     mutexUpdateList.withLock {
                         val newData = getUpdateAfterOnResumeData().toMutableList()
                         newData.removeAll { (it as? ChannelItem)?.channel?.id == pendingChannelId }
@@ -181,7 +199,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
 
     ChannelsCache.channelDraftMessageChangesFlow.onEach { channel ->
         if (!lifecycleOwner.isResumed()) {
-            lifecycleOwner.lifecycleScope.launch {
+            lifecycleScope.launch {
                 mutexUpdateList.withLock {
                     needSubmitOnResume = getUpdateAfterOnResumeData().map {
                         if (it is ChannelItem && it.channel.id == channel.id) {
@@ -197,14 +215,14 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
 
     ChannelsCache.newChannelsOnSync
         .onEach { (_, channels) ->
-            lifecycleOwner.lifecycleScope.launch {
+            lifecycleScope.launch {
                 if (lifecycleOwner.isResumed()) {
                     val loadedChannels = channelListView.getData()?.mapNotNull {
                         (it as? ChannelItem)?.channel
                     } ?: emptyList()
                     val dataToSubmit = initDataOnNewChannelsOnSync(loadedChannels, channels)
                             ?: return@launch
-                    channelListView.setChannelsList(dataToSubmit)
+                    channelListView.setChannelsList(lifecycleScope, dataToSubmit)
                 } else {
                     mutexUpdateList.withLock {
                         val data = getUpdateAfterOnResumeData().mapNotNull {
@@ -218,12 +236,11 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
 
     ChannelEventManager.onChannelMemberActivityEventFlow
         .filter { it.userId != SceytChatUIKit.chatUIFacade.myId }
-        .onEach {
-            channelEventCancelHelper.await(it) { event ->
-                channelListView.onChannelEvent(event)
-            }
-            channelListView.onChannelEvent(it)
-        }.launchIn(lifecycleOwner.lifecycleScope)
+        .onEach { event ->
+            channelEventChangeHelpersMap.computeIfAbsent(event.channelId) { channelId ->
+                initChannelEventChangeHelper(channelId)
+            }.onActivityEvent(event)
+        }.launchIn(lifecycleScope)
 
     pageStateLiveData.observe(lifecycleOwner) {
         channelListView.updateStateView(it)

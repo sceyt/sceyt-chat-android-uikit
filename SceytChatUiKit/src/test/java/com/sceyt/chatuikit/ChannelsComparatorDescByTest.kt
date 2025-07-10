@@ -140,7 +140,8 @@ fun createChannel(id: Long, pinnedAt: Long, createdAt: Long, lastMessage: SceytM
     newReactions = null,
     pendingReactions = null,
     pending = false,
-    draftMessage = null
+    draftMessage = null,
+    events = null
 )
 
 private fun createMessage(createdAt: Long): SceytMessage {

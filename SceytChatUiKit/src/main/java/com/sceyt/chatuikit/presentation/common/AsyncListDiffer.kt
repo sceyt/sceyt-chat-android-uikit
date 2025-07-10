@@ -29,6 +29,7 @@ class AsyncListDiffer<T : Any>(
         private val diffCallback: DiffUtil.ItemCallback<T>,
         private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
         private val backgroundDispatcher: CoroutineDispatcher = Dispatchers.Default,
+        private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + backgroundDispatcher)
 ) {
 
     private val mutex = Mutex()
@@ -36,13 +37,13 @@ class AsyncListDiffer<T : Any>(
     constructor(
             adapter: RecyclerView.Adapter<*>,
             diffCallback: DiffUtil.ItemCallback<T>,
-    ) : this(AdapterListUpdateCallback(adapter), diffCallback)
+            scope: CoroutineScope
+    ) : this(AdapterListUpdateCallback(adapter), diffCallback, scope = scope)
 
 
     private var list: List<T>? = null
     private var readOnlyList: List<T> = emptyList()
     private val listeners = mutableListOf<ListListener<T>>()
-    private val coroutineScope = CoroutineScope(SupervisorJob() + backgroundDispatcher)
     private var lastSubmitJob: Job? = null
 
     @Volatile
@@ -76,7 +77,7 @@ class AsyncListDiffer<T : Any>(
             newItem: T,
             payloads: Any? = null,
             commitCallback: (() -> Unit)? = null,
-    ) = coroutineScope.launch {
+    ) = scope.launch {
         mutex.withLock {
             waitForSubmitJob()
             val previousList = readOnlyList
@@ -98,7 +99,7 @@ class AsyncListDiffer<T : Any>(
     fun removeItem(
             commitCallback: (() -> Unit)? = null,
             predicate: (T) -> Boolean,
-    ) = coroutineScope.launch {
+    ) = scope.launch {
         mutex.withLock {
             waitForSubmitJob()
             val previousList = readOnlyList
@@ -212,7 +213,7 @@ class AsyncListDiffer<T : Any>(
     ) {
         lastSubmitJob?.cancel()
         lastOperationsJob?.cancel()
-        lastSubmitJob = coroutineScope.launch {
+        lastSubmitJob = scope.launch {
             val previousList = readOnlyList
             if (newList === list) {
                 // Same list, nothing to do
@@ -288,7 +289,7 @@ class AsyncListDiffer<T : Any>(
             items: List<T>,
             position: Int = -1,
             commitCallback: (() -> Unit)? = null,
-    ) = coroutineScope.launch {
+    ) = scope.launch {
         mutex.withLock {
             if (items.isEmpty()) return@withLock
             waitForSubmitJob()

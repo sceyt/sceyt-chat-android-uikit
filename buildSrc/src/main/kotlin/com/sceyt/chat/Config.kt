@@ -4,18 +4,18 @@ package com.sceyt.chat
 object Config {
     const val compileSdk = 36
     const val targetSdk = 35
-    const val minSdk = 21
+    const val minSdk = 24
 
     /** MavenCentral */
     const val mavenCentralGroup = "com.sceyt"
     const val mavenCentralArtifactId = "sceyt-chat-android-uikit"
 
-    const val mavenCentralVersion = "1.8.6"
+    const val mavenCentralVersion = "1.8.7"
     // const val mavenCentralVersion = "local"
     //const val mavenCentralVersion = "1.8.511-SNAPSHOT"
 
 
     /** App version */
-    const val versionCode = 33
-    const val versionName = "1.0.14"
+    const val versionCode = 34
+    const val versionName = "1.0.15"
 }
