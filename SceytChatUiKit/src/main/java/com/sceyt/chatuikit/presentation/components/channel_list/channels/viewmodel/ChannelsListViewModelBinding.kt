@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventCancelHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventChangeHelper
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.ChannelListView
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem.ChannelItem
@@ -31,14 +31,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
 @JvmName("bind")
 fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: LifecycleOwner) {
-
-    val channelEventCancelHelper by lazy { ChannelEventCancelHelper() }
     var needSubmitOnResume: List<ChannelListItem>? = null
     val mutexUpdateList = Mutex()
     val lifecycleScope = lifecycleOwner.lifecycleScope
+    val channelEventChangeHelpersMap by lazy { ConcurrentHashMap<Long, ChannelEventChangeHelper>() }
 
     fun getUpdateAfterOnResumeData(): List<ChannelListItem> {
         return (needSubmitOnResume.takeIf { !it.isNullOrEmpty() }
@@ -101,6 +101,16 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
             is PaginationResponse.ServerResponse -> initPaginationServerResponse(response)
             else -> return
         }
+    }
+
+    fun initChannelEventChangeHelper(channelId: Long): ChannelEventChangeHelper {
+        return ChannelEventChangeHelper(
+            scope = lifecycleScope,
+            activeUsersUpdated = { events ->
+                channelListView.onChannelEvents(channelId, events)
+            },
+            showChannelEventsInSequence = false
+        )
     }
 
     loadChannelsFlow.onEach(::initChannelsResponse).launchIn(lifecycleScope)
@@ -226,11 +236,10 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
 
     ChannelEventManager.onChannelMemberActivityEventFlow
         .filter { it.userId != SceytChatUIKit.chatUIFacade.myId }
-        .onEach {
-            channelEventCancelHelper.await(it) { event ->
-                channelListView.onChannelEvent(event)
-            }
-            channelListView.onChannelEvent(it)
+        .onEach { event ->
+            channelEventChangeHelpersMap.computeIfAbsent(event.channelId) { channelId ->
+                initChannelEventChangeHelper(channelId)
+            }.onActivityEvent(event)
         }.launchIn(lifecycleScope)
 
     pageStateLiveData.observe(lifecycleOwner) {

@@ -10,7 +10,6 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.awaitAnimationEnd
-import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.isFirstItemDisplaying
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
@@ -100,12 +99,10 @@ class ChannelsRV @JvmOverloads constructor(
         return channelsAdapter?.currentList
     }
 
-    fun getChannelIndexed(channelId: Long): Pair<Int, ChannelListItem.ChannelItem>? {
-        return channelsAdapter?.currentList?.findIndexed {
+    fun getChannelItem(channelId: Long): ChannelListItem.ChannelItem? {
+        return channelsAdapter?.currentList?.firstOrNull {
             it is ChannelListItem.ChannelItem && it.channel.id == channelId
-        }?.let { (index, item) ->
-            index to item as ChannelListItem.ChannelItem
-        }
+        } as? ChannelListItem.ChannelItem
     }
 
     fun updateChannel(
@@ -145,7 +142,7 @@ class ChannelsRV @JvmOverloads constructor(
 
     fun sortBy(
             scope: LifecycleCoroutineScope,
-            sortChannelsBy: ChannelListOrder = SceytChatUIKit.config.channelListOrder
+            sortChannelsBy: ChannelListOrder = SceytChatUIKit.config.channelListOrder,
     ) {
         sortAndUpdate(scope, sortChannelsBy, channelsAdapter?.currentList ?: return)
     }
@@ -153,7 +150,7 @@ class ChannelsRV @JvmOverloads constructor(
     fun sortByAndSetNewData(
             scope: LifecycleCoroutineScope,
             sortChannelsBy: ChannelListOrder,
-            data: List<ChannelListItem>
+            data: List<ChannelListItem>,
     ) {
         sortAndUpdate(scope, sortChannelsBy, data)
     }
@@ -171,7 +168,7 @@ class ChannelsRV @JvmOverloads constructor(
     private fun sortAndUpdate(
             scope: LifecycleCoroutineScope,
             sortChannelsBy: ChannelListOrder,
-            data: List<ChannelListItem>
+            data: List<ChannelListItem>,
     ) {
         val sortedList = data.sortedWith(ChannelsItemComparatorBy(sortChannelsBy))
         awaitAnimationEnd {

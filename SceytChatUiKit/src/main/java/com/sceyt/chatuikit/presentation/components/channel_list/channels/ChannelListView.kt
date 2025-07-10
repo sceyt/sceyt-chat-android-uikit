@@ -10,12 +10,12 @@ import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytChannelListViewBinding
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.ChannelViewHolderFactory
@@ -130,11 +130,11 @@ class ChannelListView @JvmOverloads constructor(
         )
     }
 
-    internal fun onChannelEvent(event: ChannelMemberActivityEvent) {
+    internal fun onChannelEvents(channelId: Long, events: List<ChannelEventData>) {
+        val channel = channelsRV.getChannelItem(channelId)?.channel ?: return
         channelsRV.updateChannel(
-            predicate = { (it as? ChannelListItem.ChannelItem)?.channel?.id == event.channelId },
-            newItem = ChannelListItem.ChannelItem(event.channel.copy(activityEvent = event)),
-            payloads = ChannelDiff.DEFAULT_FALSE.copy(activityStateChanged = true)
+            predicate = { (it as? ChannelListItem.ChannelItem)?.channel?.id == channelId },
+            newItem = ChannelListItem.ChannelItem(channel.copy(events = events))
         )
     }
 
