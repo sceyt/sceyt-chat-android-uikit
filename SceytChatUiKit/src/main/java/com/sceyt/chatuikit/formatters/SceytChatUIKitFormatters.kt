@@ -34,6 +34,7 @@ import com.sceyt.chatuikit.formatters.defaults.DefaultMessageViewCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationBodyFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultNotificationTitleFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultChannelEventTitleFormatter
+import com.sceyt.chatuikit.formatters.defaults.DefaultChannelEventUserNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUnreadCountFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserAndNotesNameFormatter
 import com.sceyt.chatuikit.formatters.defaults.DefaultUserNameFormatter
@@ -67,7 +68,7 @@ class SceytChatUIKitFormatters {
     }
 
     var channelEventUserNameFormatter: Formatter<SceytUser> by lazyVar {
-        DefaultUserShortNameFormatter()
+        DefaultChannelEventUserNameFormatter()
     }
 
     var channelEventTitleFormatter: Formatter<ChannelEventTitleFormatterAttributes> by lazyVar {
