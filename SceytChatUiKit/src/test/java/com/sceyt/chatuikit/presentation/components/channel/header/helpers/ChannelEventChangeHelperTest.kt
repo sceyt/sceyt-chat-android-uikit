@@ -24,7 +24,7 @@ import org.robolectric.RobolectricTestRunner
 
 @ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
-class ChannelEventEnumChangeHelperTest {
+class ChannelEventChangeHelperTest {
 
     @get:Rule
     val instantTaskExecutorRule = InstantTaskExecutorRule()
@@ -151,14 +151,13 @@ class ChannelEventEnumChangeHelperTest {
     @Test
     fun `getChannelEventState should return correct state for typing users`() {
         // Given
-        helper = createHelper(showActiveUsersInSequence = false)
         val typingUsers = listOf(
             ChannelEventData(testUser1, ChannelEventEnum.Typing),
             ChannelEventData(testUser2, ChannelEventEnum.Recording)
         )
 
         // When
-        val state = helper.getChannelEventState(typingUsers)
+        val state = ChannelEventChangeHelper.getChannelEventState(typingUsers)
 
         // Then - Typing takes precedence over Recording
         assertThat(state).isEqualTo(ChannelEventState.Typing)
@@ -167,14 +166,13 @@ class ChannelEventEnumChangeHelperTest {
     @Test
     fun `getChannelEventState should return recording when only recording users`() {
         // Given
-        helper = createHelper(showActiveUsersInSequence = false)
         val recordingUsers = listOf(
             ChannelEventData(testUser1, ChannelEventEnum.Recording),
             ChannelEventData(testUser2, ChannelEventEnum.Recording)
         )
 
         // When
-        val state = helper.getChannelEventState(recordingUsers)
+        val state = ChannelEventChangeHelper.getChannelEventState(recordingUsers)
 
         // Then
         assertThat(state).isEqualTo(ChannelEventState.Recording)
@@ -182,11 +180,8 @@ class ChannelEventEnumChangeHelperTest {
 
     @Test
     fun `getChannelEventState should return none when no active users`() {
-        // Given
-        helper = createHelper(showActiveUsersInSequence = false)
-
         // When
-        val state = helper.getChannelEventState(emptyList())
+        val state = ChannelEventChangeHelper.getChannelEventState(emptyList())
 
         // Then
         assertThat(state).isEqualTo(ChannelEventState.None)
@@ -517,7 +512,7 @@ class ChannelEventEnumChangeHelperTest {
 
     private fun createHelper(
             showActiveUsersInSequence: Boolean,
-            callback: (List<ChannelEventData>) -> Unit = activeUsersCallback
+            callback: (List<ChannelEventData>) -> Unit = activeUsersCallback,
     ): ChannelEventChangeHelper {
         return ChannelEventChangeHelper(
             scope = scope,

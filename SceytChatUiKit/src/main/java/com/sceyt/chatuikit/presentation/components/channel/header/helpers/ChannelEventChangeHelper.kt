@@ -18,7 +18,7 @@ enum class ChannelEventState {
 class ChannelEventChangeHelper(
         private val scope: CoroutineScope,
         private val activeUsersUpdated: (List<ChannelEventData>) -> Unit,
-        private val showChannelEventsInSequence: Boolean
+        private val showChannelEventsInSequence: Boolean,
 ) {
     private val channelEventCancelHelper by lazy { ChannelEventCancelHelper() }
     private val _channelEventData by lazy { ConcurrentHashSet<ChannelEventData>() }
@@ -91,17 +91,21 @@ class ChannelEventChangeHelper(
         handleActivity(event)
     }
 
-    fun getChannelEventState(channelEventData: List<ChannelEventData>): ChannelEventState {
-        return when {
-            channelEventData.isEmpty() -> ChannelEventState.None
-            channelEventData.any { it.activity == ChannelEventEnum.Typing } -> ChannelEventState.Typing
-            else -> ChannelEventState.Recording
-        }
-    }
-
     val channelEventData: List<ChannelEventData>
         get() = _channelEventData.toList()
 
     val haveUserAction: Boolean
         get() = _channelEventData.isNotEmpty()
+
+
+    companion object {
+
+        fun getChannelEventState(events: List<ChannelEventData>): ChannelEventState {
+            return when {
+                events.isEmpty() -> ChannelEventState.None
+                events.any { it.activity == ChannelEventEnum.Typing } -> ChannelEventState.Typing
+                else -> ChannelEventState.Recording
+            }
+        }
+    }
 }

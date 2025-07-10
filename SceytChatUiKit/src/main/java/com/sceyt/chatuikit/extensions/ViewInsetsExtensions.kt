@@ -24,7 +24,7 @@ fun Activity.applyInsetsAndWindowColor(
         applyLeftInsets: Boolean = true,
         applyRightInsets: Boolean = true,
         applyLandscapeRoundedCorners: Boolean = true,
-        windowColor: Int = Color.BLACK
+        windowColor: Int = Color.BLACK,
 ) {
     rootView.applyInsets(
         applyTopInsets = applyTopInsets,
@@ -47,7 +47,7 @@ fun View.applyInsets(
         onAppliedRoundedCorners: (Int, Int, Int, Int) -> Unit = { _, _, _, _ -> },
 ) = ViewCompat.setOnApplyWindowInsetsListener(this) { view, windowInsets ->
     val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or
-            WindowInsetsCompat.Type.displayCutout())
+            WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.ime())
 
     val left = if (applyLeftInsets) insets.left else 0
     val top = if (applyTopInsets) insets.top else 0
@@ -125,7 +125,7 @@ fun View.applySystemWindowInsetsMargin(
         applyTop: Boolean = false,
         applyRight: Boolean = false,
         applyBottom: Boolean = false,
-        userDefaultMargins: Boolean = true
+        userDefaultMargins: Boolean = true,
 ) {
     doOnApplyWindowInsets { view, insets, _, margin ->
         val left = if (applyLeft) insets.getInsets(WindowInsetsCompat.Type.systemBars()).left else 0

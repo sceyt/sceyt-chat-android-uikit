@@ -6,15 +6,16 @@ import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chat.models.channel.ChannelListQuery.ChannelListOrder
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.data.managers.channel.event.ChannelMemberActivityEvent
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytChannelListViewBinding
 import com.sceyt.chatuikit.persistence.differs.ChannelDiff
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
 import com.sceyt.chatuikit.presentation.components.channel.messages.ChannelActivity
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.ChannelViewHolderFactory
@@ -47,7 +48,7 @@ class ChannelListView @JvmOverloads constructor(
     private var clickListeners: ChannelClickListeners.ClickListeners = ChannelClickListenersImpl(this)
     private var popupClickListeners: ChannelPopupClickListeners.PopupClickListeners = ChannelPopupClickListenersImpl(this)
     private var channelCommandEventListener: ((ChannelEvent) -> Unit)? = null
-    private val debounceHelper by lazy { DebounceHelper(300, this) }
+    private var debounceHelper: DebounceHelper? = null
     val style: ChannelListViewStyle
 
     init {
@@ -79,22 +80,26 @@ class ChannelListView @JvmOverloads constructor(
         channelsRV.setChannelListener(defaultClickListeners)
     }
 
-    internal fun setChannelsList(channels: List<ChannelListItem>) {
-        channelsRV.setData(channels)
+    internal fun setChannelsList(scope: LifecycleCoroutineScope, channels: List<ChannelListItem>) {
+        channelsRV.setData(scope, channels)
         if (channels.isNotEmpty())
             updateStateView(state = PageState.Nothing)
     }
 
-    internal fun addNewChannels(channels: List<ChannelListItem>) {
-        channelsRV.addNewChannels(channels)
+    internal fun addNewChannels(scope: LifecycleCoroutineScope, channels: List<ChannelListItem>) {
+        channelsRV.addNewChannels(scope, channels)
     }
 
-    internal fun addNewChannelAndSort(order: ChannelListOrder, channelItem: ChannelListItem.ChannelItem) {
+    internal fun addNewChannelAndSort(
+            scope: LifecycleCoroutineScope,
+            order: ChannelListOrder,
+            channelItem: ChannelListItem.ChannelItem,
+    ) {
         channelsRV.getData()?.let {
             if (it.contains(channelItem)) return
             val newData = it.plus(channelItem)
-            channelsRV.sortByAndSetNewData(order, newData)
-        } ?: channelsRV.setData(listOf(channelItem))
+            channelsRV.sortByAndSetNewData(scope, order, newData)
+        } ?: channelsRV.setData(scope, listOf(channelItem))
 
         binding.pageStateView.updateState(PageState.Nothing)
     }
@@ -125,11 +130,11 @@ class ChannelListView @JvmOverloads constructor(
         )
     }
 
-    internal fun onChannelEvent(event: ChannelMemberActivityEvent) {
+    internal fun onChannelEvents(channelId: Long, events: List<ChannelEventData>) {
+        val channel = channelsRV.getChannelItem(channelId)?.channel ?: return
         channelsRV.updateChannel(
-            predicate = { (it as? ChannelListItem.ChannelItem)?.channel?.id == event.channelId },
-            newItem = ChannelListItem.ChannelItem(event.channel.copy(activityEvent = event)),
-            payloads = ChannelDiff.DEFAULT_FALSE.copy(activityStateChanged = true)
+            predicate = { (it as? ChannelListItem.ChannelItem)?.channel?.id == channelId },
+            newItem = ChannelListItem.ChannelItem(channel.copy(events = events))
         )
     }
 
@@ -206,15 +211,18 @@ class ChannelListView @JvmOverloads constructor(
         channelsRV.hideLoadingMore()
     }
 
-    fun sortChannelsBy(sortBy: ChannelListOrder) {
-        debounceHelper.submitForceIfNotRunning { channelsRV.sortBy(sortBy) }
+    fun sortChannelsBy(scope: LifecycleCoroutineScope, sortBy: ChannelListOrder) {
+        if (debounceHelper == null)
+            debounceHelper = DebounceHelper(300, scope)
+
+        debounceHelper?.submitForceIfNotRunning { channelsRV.sortBy(scope, sortBy) }
     }
 
     /**
      * Cancel last sort channels job.
      * */
     fun cancelLastSort(): Boolean {
-        return debounceHelper.cancelLastDebounce()
+        return debounceHelper?.cancelLastDebounce() ?: false
     }
 
     /**

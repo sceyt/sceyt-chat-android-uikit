@@ -1,6 +1,5 @@
 package com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 
-import android.annotation.SuppressLint
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -10,10 +9,12 @@ import com.sceyt.chatuikit.presentation.common.AsyncListDiffer
 import com.sceyt.chatuikit.presentation.common.ClickAvailableData
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.BaseChannelViewHolder
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.ChannelViewHolderFactory
+import kotlinx.coroutines.CoroutineScope
 
 
 class ChannelsAdapter(
-        private var viewHolderFactory: ChannelViewHolderFactory,
+        scope: CoroutineScope,
+        private val viewHolderFactory: ChannelViewHolderFactory,
 ) : RecyclerView.Adapter<BaseChannelViewHolder>() {
 
     companion object {
@@ -39,7 +40,7 @@ class ChannelsAdapter(
         }
     }
 
-    private val differ = AsyncListDiffer(this, DIFF_CALLBACK)
+    private val differ = AsyncListDiffer(adapter = this, diffCallback = DIFF_CALLBACK, scope = scope)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseChannelViewHolder {
         return viewHolderFactory.createViewHolder(parent, viewType)
@@ -50,8 +51,7 @@ class ChannelsAdapter(
     }
 
     override fun onBindViewHolder(holder: BaseChannelViewHolder, position: Int, payloads: MutableList<Any>) {
-        val diff = payloads.find { it is ChannelDiff } as? ChannelDiff
-                ?: ChannelDiff.DEFAULT
+        val diff = payloads.find { it is ChannelDiff } as? ChannelDiff ?: ChannelDiff.DEFAULT
         holder.bind(item = currentList[position], diff)
     }
 
@@ -82,7 +82,6 @@ class ChannelsAdapter(
         differ.submitList(channels, commitCallback)
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     fun addList(items: List<ChannelListItem>) {
         removeLoading {
             val filteredItems = items.minus(currentList.toSet())

@@ -39,12 +39,13 @@ import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
+import com.sceyt.chatuikit.extensions.setPaddings
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventChangeHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventState
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners.ClickListeners
@@ -158,12 +159,12 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    @Suppress("unused")
+    @Suppress("unused", "UNUSED_PARAMETER")
     private fun setChannelTitle(
             titleTextView: TextView,
             channel: SceytChannel,
             replyMessage: SceytMessage? = null,
-            replyInThread: Boolean = false
+            replyInThread: Boolean = false,
     ) {
         if (replyInThread) {
             with(titleTextView) {
@@ -181,7 +182,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             subjectTextView: TextView,
             channel: SceytChannel,
             replyMessage: SceytMessage? = null,
-            replyInThread: Boolean = false
+            replyInThread: Boolean = false,
     ) {
         if (enablePresence.not() || channel.isPeerDeleted() || channel.isSelf) {
             subjectTextView.isVisible = false
@@ -274,7 +275,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             activeUsersUpdated = {
                 binding.tvChannelEvent.text = if (it.isEmpty()) ""
                 else initChannelEventTitle(it)
-                setTypingState(channelEventChangeHelper.getChannelEventState(it))
+                setTypingState(ChannelEventChangeHelper.getChannelEventState(it))
             },
             showChannelEventsInSequence = style.showChannelEventsInSequence
         )
@@ -295,21 +296,23 @@ class MessagesListHeaderView @JvmOverloads constructor(
         lastChannelEventState = state
         val active = state != ChannelEventState.None
         binding.subTitle.isVisible = !active
-        binding.lottieChannelEvent.isVisible = active && style.enableChannelEventIndicator
-        binding.tvChannelEvent.isVisible = active
-        when (state) {
-            ChannelEventState.Typing -> {
-                binding.lottieChannelEvent.setAnimation(R.raw.sceyt_typing)
-                binding.lottieChannelEvent.playAnimation()
-            }
+        binding.layoutChannelEvent.isVisible = active
+        with(binding.lottieChannelEvent) {
+            isVisible = style.enableChannelEventIndicator
+            if (style.enableChannelEventIndicator) {
+                when (state) {
+                    ChannelEventState.Typing -> {
+                        setAnimation(R.raw.sceyt_typing)
+                        playAnimation()
+                    }
 
-            ChannelEventState.Recording -> {
-                binding.lottieChannelEvent.setAnimation(R.raw.sceyt_recording)
-                binding.lottieChannelEvent.playAnimation()
-            }
+                    ChannelEventState.Recording -> {
+                        setAnimation(R.raw.sceyt_recording)
+                        playAnimation()
+                    }
 
-            ChannelEventState.None -> {
-                binding.lottieChannelEvent.cancelAnimation()
+                    ChannelEventState.None -> cancelAnimation()
+                }
             }
         }
     }
@@ -451,6 +454,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             setOnMenuItemClickListener(listener)
             addedMenu = menu
         }
+        binding.layoutToolbarDetails.setPaddings(right = 0)
     }
 
     @Suppress("unused")
@@ -489,7 +493,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             titleTextView: TextView,
             channel: SceytChannel,
             replyMessage: SceytMessage?,
-            replyInThread: Boolean
+            replyInThread: Boolean,
     ) {
         setChannelTitle(titleTextView, channel, replyMessage, replyInThread)
     }
@@ -498,7 +502,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             subjectTextView: TextView,
             channel: SceytChannel,
             replyMessage: SceytMessage?,
-            replyInThread: Boolean
+            replyInThread: Boolean,
     ) {
         setChannelSubTitle(subjectTextView, channel, replyMessage, replyInThread)
     }
