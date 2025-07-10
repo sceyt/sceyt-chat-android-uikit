@@ -39,6 +39,7 @@ import com.sceyt.chatuikit.extensions.getString
 import com.sceyt.chatuikit.extensions.hideKeyboard
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
+import com.sceyt.chatuikit.extensions.setPaddings
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.persistence.extensions.getPeer
@@ -158,7 +159,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
         }
     }
 
-    @Suppress("unused")
+    @Suppress("unused", "UNUSED_PARAMETER")
     private fun setChannelTitle(
             titleTextView: TextView,
             channel: SceytChannel,
@@ -451,6 +452,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             setOnMenuItemClickListener(listener)
             addedMenu = menu
         }
+        binding.layoutToolbarDetails.setPaddings(right = 0)
     }
 
     @Suppress("unused")
