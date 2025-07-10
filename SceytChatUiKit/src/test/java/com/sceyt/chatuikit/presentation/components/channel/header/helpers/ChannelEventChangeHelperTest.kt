@@ -24,7 +24,7 @@ import org.robolectric.RobolectricTestRunner
 
 @ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
-class ChannelEventEnumChangeHelperTest {
+class ChannelEventChangeHelperTest {
 
     @get:Rule
     val instantTaskExecutorRule = InstantTaskExecutorRule()
