@@ -4,7 +4,7 @@ package com.sceyt.chat
 object Config {
     const val compileSdk = 36
     const val targetSdk = 35
-    const val minSdk = 21
+    const val minSdk = 24
 
     /** MavenCentral */
     const val mavenCentralGroup = "com.sceyt"
