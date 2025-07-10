@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.onSuccess
+import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.toMember
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.database.dao.ChannelDao
@@ -38,7 +39,8 @@ internal class PersistenceMembersLogicImpl(
         private val messageDao: MessageDao,
         private val memberDao: MemberDao,
         private val usersDao: UserDao,
-        private val channelsCache: ChannelsCache) : PersistenceMembersLogic, SceytKoinComponent {
+        private val channelsCache: ChannelsCache,
+) : PersistenceMembersLogic, SceytKoinComponent {
 
     private val channelMembersLoadSize get() = SceytChatUIKit.config.queryLimits.channelMemberListQueryLimit
 
@@ -154,8 +156,11 @@ internal class PersistenceMembersLogicImpl(
         channelDao.insertUserChatLinks(links)
     }
 
-    private suspend fun getRemovedItemsAndDeleteFromDb(channelId: Long, dbMembers: List<SceytMember>,
-                                                       serverResponse: List<SceytMember>?): List<SceytMember> {
+    private suspend fun getRemovedItemsAndDeleteFromDb(
+            channelId: Long,
+            dbMembers: List<SceytMember>,
+            serverResponse: List<SceytMember>?,
+    ): List<SceytMember> {
         serverResponse ?: return emptyList()
         val removedItems: List<SceytMember> = dbMembers.minus(serverResponse.toSet())
         if (removedItems.isNotEmpty()) {
@@ -184,43 +189,47 @@ internal class PersistenceMembersLogicImpl(
     }
 
     override suspend fun changeChannelMemberRole(channelId: Long, vararg member: SceytMember): SceytResponse<SceytChannel> {
-        val response = channelsRepository.changeChannelMemberRole(channelId, *member.map {
-            it.toMember()
-        }.toTypedArray())
-
-        if (response is SceytResponse.Success) {
-            response.data?.members?.let { members ->
-                channelDao.insertUserChatLinks(members.map { sceytMember ->
-                    UserChatLinkEntity(
-                        userId = sceytMember.id,
-                        chatId = channelId,
-                        role = sceytMember.role.name
-                    )
-                })
-            }
+        val response = channelsRepository.changeChannelMemberRole(
+            channelId = channelId,
+            member = member.map { it.toMember() }.toTypedArray()
+        )
+        response.onSuccessNotNull {
+            onChannelMemberEvent(
+                ChannelMembersEventData(
+                    channel = it,
+                    members = member.toList(),
+                    eventType = ChannelMembersEventEnum.Role
+                )
+            )
         }
+
         return response
     }
 
     override suspend fun addMembersToChannel(channelId: Long, members: List<SceytMember>): SceytResponse<SceytChannel> {
         val response = channelsRepository.addMembersToChannel(channelId, members.map { it.toMember() })
-
-        if (response is SceytResponse.Success) {
-            usersDao.insertUsersWithMetadata(members.map { it.toUserDb() })
-            channelDao.insertUserChatLinks(members.map {
-                UserChatLinkEntity(userId = it.id, chatId = channelId, role = it.role.name)
-            })
-            response.data?.let { channelsCache.updateMembersCount(it) }
+        response.onSuccessNotNull { channel ->
+            channel.members?.let { addedMembers ->
+                onChannelMemberEvent(ChannelMembersEventData(
+                    channel = channel,
+                    members = addedMembers,
+                    eventType = ChannelMembersEventEnum.Added
+                ))
+            }
         }
         return response
     }
 
     override suspend fun blockAndDeleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel> {
         val response = channelsRepository.blockAndDeleteMember(channelId, memberId)
-
-        if (response is SceytResponse.Success) {
-            channelDao.deleteUserChatLinks(channelId, memberId)
-            response.data?.let { channelsCache.updateMembersCount(it) }
+        response.onSuccessNotNull {channel->
+            channel.members?.let { addedMembers ->
+                onChannelMemberEvent(ChannelMembersEventData(
+                    channel = channel,
+                    members = addedMembers,
+                    eventType = ChannelMembersEventEnum.Kicked
+                ))
+            }
         }
 
         return response
@@ -229,9 +238,14 @@ internal class PersistenceMembersLogicImpl(
     override suspend fun deleteMember(channelId: Long, memberId: String): SceytResponse<SceytChannel> {
         val response = channelsRepository.deleteMember(channelId, memberId)
 
-        if (response is SceytResponse.Success) {
-            channelDao.deleteUserChatLinks(channelId, memberId)
-            response.data?.let { channelsCache.updateMembersCount(it) }
+        response.onSuccessNotNull {channel->
+            channel.members?.let { addedMembers ->
+                onChannelMemberEvent(ChannelMembersEventData(
+                    channel = channel,
+                    members = addedMembers,
+                    eventType = ChannelMembersEventEnum.Kicked
+                ))
+            }
         }
 
         return response
