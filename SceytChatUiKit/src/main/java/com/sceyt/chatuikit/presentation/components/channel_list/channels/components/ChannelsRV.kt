@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.awaitAnimationEnd
+import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.isFirstItemDisplaying
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
@@ -103,6 +104,14 @@ class ChannelsRV @JvmOverloads constructor(
         return channelsAdapter?.currentList?.firstOrNull {
             it is ChannelListItem.ChannelItem && it.channel.id == channelId
         } as? ChannelListItem.ChannelItem
+    }
+
+    fun getChannelItemIndexed(channelId: Long): Pair<Int, ChannelListItem.ChannelItem>? {
+        return channelsAdapter?.currentList?.findIndexed {
+            it is ChannelListItem.ChannelItem && it.channel.id == channelId
+        }?.let { (index, item) ->
+            index to item as ChannelListItem.ChannelItem
+        }
     }
 
     fun updateChannel(
