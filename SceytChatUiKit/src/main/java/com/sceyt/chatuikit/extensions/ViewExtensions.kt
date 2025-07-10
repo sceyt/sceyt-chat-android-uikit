@@ -22,8 +22,12 @@ import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.appcompat.widget.SwitchCompat
+import androidx.core.view.marginBottom
 import androidx.core.view.marginEnd
+import androidx.core.view.marginLeft
+import androidx.core.view.marginRight
 import androidx.core.view.marginStart
+import androidx.core.view.marginTop
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleCoroutineScope
@@ -42,11 +46,21 @@ fun View.addPaddings(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 
     setPadding(paddingLeft + left, paddingTop + top, paddingRight + right, paddingBottom + bottom)
 }
 
-fun View.setPaddings(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 0) {
+fun View.setPaddings(
+        left: Int = paddingLeft,
+        top: Int = paddingTop,
+        right: Int = paddingRight,
+        bottom: Int = paddingBottom,
+) {
     setPadding(left, top, right, bottom)
 }
 
-fun View.setMargins(left: Int = 0, top: Int = 0, right: Int = 0, bottom: Int = 0) {
+fun View.setMargins(
+        left: Int = marginLeft,
+        top: Int = marginTop,
+        right: Int = marginRight,
+        bottom: Int = marginBottom,
+) {
     (layoutParams as? ViewGroup.MarginLayoutParams)?.let {
         it.setMargins(left, top, right, bottom)
         layoutParams = it
@@ -79,7 +93,7 @@ fun View.screenHeightPx() = resources.displayMetrics.heightPixels
 fun View.delayOnLifecycle(
         delayMillis: Long,
         dispatcher: CoroutineDispatcher = Dispatchers.Main,
-        block: () -> Unit
+        block: () -> Unit,
 ): Job? = findViewTreeLifecycleOwner()?.let { lifecycleOwner ->
     lifecycleOwner.lifecycle.coroutineScope.launch(dispatcher) {
         delay(delayMillis)
@@ -89,7 +103,7 @@ fun View.delayOnLifecycle(
 
 fun View.invokeSuspendInLifecycle(
         dispatcher: CoroutineDispatcher = Dispatchers.Main,
-        block: suspend () -> Unit
+        block: suspend () -> Unit,
 ): Job? = findViewTreeLifecycleOwner()?.let { lifecycleOwner ->
     lifecycleOwner.lifecycle.coroutineScope.launch(dispatcher) {
         block()
