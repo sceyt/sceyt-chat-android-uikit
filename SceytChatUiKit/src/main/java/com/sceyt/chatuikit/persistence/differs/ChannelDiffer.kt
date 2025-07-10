@@ -94,7 +94,7 @@ fun SceytChannel.diff(other: SceytChannel): ChannelDiff {
         markedUsUnreadChanged = unread != other.unread,
         lastReadMsdChanged = lastDisplayedMessageId != other.lastDisplayedMessageId,
         peerBlockedChanged = peerBlockedChanged,
-        activityStateChanged = activityEvent != other.activityEvent,
+        activityStateChanged = events.equalsIgnoreNull(other.events),
         membersChanged = membersCountChanged || members != other.members,
         metadataUpdated = metadata != other.metadata,
         urlUpdated = uri != other.uri,

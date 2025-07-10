@@ -43,8 +43,8 @@ import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttributes
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
-import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventChangeHelper
+import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventData
 import com.sceyt.chatuikit.presentation.components.channel.header.helpers.ChannelEventState
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners
 import com.sceyt.chatuikit.presentation.components.channel.header.listeners.click.MessageListHeaderClickListeners.ClickListeners
@@ -163,7 +163,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             titleTextView: TextView,
             channel: SceytChannel,
             replyMessage: SceytMessage? = null,
-            replyInThread: Boolean = false
+            replyInThread: Boolean = false,
     ) {
         if (replyInThread) {
             with(titleTextView) {
@@ -181,7 +181,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             subjectTextView: TextView,
             channel: SceytChannel,
             replyMessage: SceytMessage? = null,
-            replyInThread: Boolean = false
+            replyInThread: Boolean = false,
     ) {
         if (enablePresence.not() || channel.isPeerDeleted() || channel.isSelf) {
             subjectTextView.isVisible = false
@@ -274,7 +274,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             activeUsersUpdated = {
                 binding.tvChannelEvent.text = if (it.isEmpty()) ""
                 else initChannelEventTitle(it)
-                setTypingState(channelEventChangeHelper.getChannelEventState(it))
+                setTypingState(ChannelEventChangeHelper.getChannelEventState(it))
             },
             showChannelEventsInSequence = style.showChannelEventsInSequence
         )
@@ -489,7 +489,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             titleTextView: TextView,
             channel: SceytChannel,
             replyMessage: SceytMessage?,
-            replyInThread: Boolean
+            replyInThread: Boolean,
     ) {
         setChannelTitle(titleTextView, channel, replyMessage, replyInThread)
     }
@@ -498,7 +498,7 @@ class MessagesListHeaderView @JvmOverloads constructor(
             subjectTextView: TextView,
             channel: SceytChannel,
             replyMessage: SceytMessage?,
-            replyInThread: Boolean
+            replyInThread: Boolean,
     ) {
         setChannelSubTitle(subjectTextView, channel, replyMessage, replyInThread)
     }

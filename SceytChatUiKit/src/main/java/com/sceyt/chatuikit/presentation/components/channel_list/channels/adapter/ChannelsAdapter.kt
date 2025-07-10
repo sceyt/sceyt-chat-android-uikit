@@ -14,7 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 
 class ChannelsAdapter(
         scope: CoroutineScope,
-        private var viewHolderFactory: ChannelViewHolderFactory,
+        private val viewHolderFactory: ChannelViewHolderFactory,
 ) : RecyclerView.Adapter<BaseChannelViewHolder>() {
 
     companion object {
