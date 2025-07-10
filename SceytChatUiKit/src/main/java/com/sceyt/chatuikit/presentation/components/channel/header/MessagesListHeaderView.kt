@@ -296,21 +296,23 @@ class MessagesListHeaderView @JvmOverloads constructor(
         lastChannelEventState = state
         val active = state != ChannelEventState.None
         binding.subTitle.isVisible = !active
-        binding.lottieChannelEvent.isVisible = active && style.enableChannelEventIndicator
-        binding.tvChannelEvent.isVisible = active
-        when (state) {
-            ChannelEventState.Typing -> {
-                binding.lottieChannelEvent.setAnimation(R.raw.sceyt_typing)
-                binding.lottieChannelEvent.playAnimation()
-            }
+        binding.layoutChannelEvent.isVisible = active
+        with(binding.lottieChannelEvent) {
+            isVisible = style.enableChannelEventIndicator
+            if (style.enableChannelEventIndicator) {
+                when (state) {
+                    ChannelEventState.Typing -> {
+                        setAnimation(R.raw.sceyt_typing)
+                        playAnimation()
+                    }
 
-            ChannelEventState.Recording -> {
-                binding.lottieChannelEvent.setAnimation(R.raw.sceyt_recording)
-                binding.lottieChannelEvent.playAnimation()
-            }
+                    ChannelEventState.Recording -> {
+                        setAnimation(R.raw.sceyt_recording)
+                        playAnimation()
+                    }
 
-            ChannelEventState.None -> {
-                binding.lottieChannelEvent.cancelAnimation()
+                    ChannelEventState.None -> cancelAnimation()
+                }
             }
         }
     }
