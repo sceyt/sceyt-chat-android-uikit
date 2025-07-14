@@ -5,6 +5,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.graphics.toColorInt
@@ -21,9 +22,11 @@ import kotlin.math.abs
 import kotlin.math.min
 
 
-class MessageSwipeController(context: Context,
-                             private val style: MessageItemStyle,
-                             private val swipeControllerActions: SwipeControllerActions) : Callback() {
+class MessageSwipeController(
+        context: Context,
+        private val style: MessageItemStyle,
+        private val swipeControllerActions: SwipeControllerActions,
+) : Callback() {
 
     private var imageDrawable: Drawable? = null
     private lateinit var shareRound: Drawable
@@ -33,6 +36,7 @@ class MessageSwipeController(context: Context,
     private var dX: Float = 0f
     private var maxAcceptableExpand = context.screenWidthPx() * 0.22
     private var enableSwipe: Boolean = true
+    private var hasTriggeredHapticFeedback = false
 
     override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
         mView = viewHolder.itemView
@@ -59,8 +63,10 @@ class MessageSwipeController(context: Context,
         return super.convertToAbsoluteDirection(flags, layoutDirection)
     }
 
-    override fun onChildDraw(c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
-                             dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean) {
+    override fun onChildDraw(
+            c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
+            dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean,
+    ) {
 
 
         if ((viewHolder as? BaseMessageViewHolder)?.enableReply != true || !enableSwipe) return
@@ -86,9 +92,18 @@ class MessageSwipeController(context: Context,
     private fun setTouchListener(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
         recyclerView.setOnTouchListener { _, event ->
             swipeBack = event.action == MotionEvent.ACTION_CANCEL || event.action == MotionEvent.ACTION_UP
-            if (swipeBack) {
-                if (abs(mView.translationX) >= maxAcceptableExpand * 0.85)
-                    swipeControllerActions.showReplyUI(viewHolder.bindingAdapterPosition)
+            val richThreshold = abs(mView.translationX) >= maxAcceptableExpand * 0.85
+            if (swipeBack && richThreshold) {
+                swipeControllerActions.showReplyUI(viewHolder.bindingAdapterPosition)
+            }
+
+            if (!hasTriggeredHapticFeedback) {
+                if (richThreshold) {
+                    mView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                    hasTriggeredHapticFeedback = true
+                }
+            } else if (!richThreshold) {
+                hasTriggeredHapticFeedback = false
             }
             false
         }
