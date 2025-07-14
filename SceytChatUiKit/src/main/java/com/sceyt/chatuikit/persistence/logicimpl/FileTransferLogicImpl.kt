@@ -56,7 +56,7 @@ internal class FileTransferLogicImpl(
         private val attachmentLogic: PersistenceAttachmentLogic,
 ) : FileTransferLogic, SceytKoinComponent {
     private val fileTransferService: FileTransferService by inject()
-    private val transferUtility by lazy { FileTransferUtility(context) }
+    private val transferUtility by lazy { FileTransferUtility() }
     private var downloadingUrlMap = hashMapOf<String, String>()
     private var thumbPaths = hashMapOf<String, ThumbPathsData>()
     private var preparingThumbsMap = hashMapOf<Long, Long>()

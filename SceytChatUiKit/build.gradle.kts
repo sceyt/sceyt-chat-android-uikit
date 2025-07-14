@@ -48,7 +48,7 @@ dependencies {
     api(libs.lifecycle.livedata.ktx)
     api(libs.glide)
     api(libs.glide.transformations)
-    api(libs.ion)
+    api(libs.okhttp)
     api(libs.firebase.messaging.ktx)
     api(libs.lifecycle.process)
     ksp(libs.room.compiler)
