@@ -10,6 +10,7 @@ import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.extensions.asComponentActivity
 import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafety
+import com.sceyt.chatuikit.extensions.dispatchUpdatesToSafetySuspend
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.persistence.differs.MessageDiff
@@ -165,7 +166,7 @@ class MessagesAdapter(
                 productDiffResult = DiffUtil.calculateDiff(myDiffUtil, true)
             }
             withContext(Dispatchers.Main) {
-                productDiffResult.dispatchUpdatesToSafety(recyclerView)
+                productDiffResult.dispatchUpdatesToSafetySuspend(recyclerView)
                 this@MessagesAdapter.messages = SyncArrayList(messages)
             }
         }

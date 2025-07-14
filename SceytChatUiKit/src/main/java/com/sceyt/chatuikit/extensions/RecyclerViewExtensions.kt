@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.math.abs
 
 
@@ -192,8 +193,10 @@ fun RecyclerView.awaitToScrollFinish(position: Int, delay: Boolean = false, call
 }
 
 
-inline fun RecyclerView.addRVScrollListener(crossinline onScrollStateChanged: (recyclerView: RecyclerView, newState: Int) -> Unit = { _, _ -> },
-                                            crossinline onScrolled: (recyclerView: RecyclerView, dx: Int, dy: Int) -> Unit = { _, _, _ -> }) {
+inline fun RecyclerView.addRVScrollListener(
+        crossinline onScrollStateChanged: (recyclerView: RecyclerView, newState: Int) -> Unit = { _, _ -> },
+        crossinline onScrolled: (recyclerView: RecyclerView, dx: Int, dy: Int) -> Unit = { _, _, _ -> },
+) {
     addOnScrollListener(object : RecyclerView.OnScrollListener() {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             super.onScrollStateChanged(recyclerView, newState)
@@ -242,6 +245,19 @@ fun DiffUtil.DiffResult.dispatchUpdatesToSafety(recyclerView: RecyclerView) {
         recyclerView.post {
             dispatchUpdatesTo(adapter)
         }
+    }
+}
+
+suspend fun DiffUtil.DiffResult.dispatchUpdatesToSafetySuspend(
+        recyclerView: RecyclerView,
+) = suspendCancellableCoroutine {
+    recyclerView.adapter?.let { adapter ->
+        recyclerView.post {
+            dispatchUpdatesTo(adapter)
+            it.resumeWith(Result.success(Unit))
+        }
+    } ?: run {
+        it.resumeWith(Result.success(Unit))
     }
 }
 
