@@ -141,12 +141,16 @@ class ChannelsCache {
         }
     }
 
-    fun upsertChannel(vararg channel: SceytChannel) {
+    fun upsertChannel(channel: SceytChannel) {
+        upsertChannels(listOf(channel) )
+    }
+
+    fun upsertChannels(channels: List<SceytChannel>) {
         synchronized(lock) {
-            channel.forEach {
-                cachedData.keys.filter { config -> config.isValidForConfig(it) }.forEach { config ->
-                    upsertChannelImpl(config, it)
-                }
+            channels.forEach { channel ->
+                cachedData.keys
+                    .filter { it.isValidForConfig(channel) }
+                    .forEach { upsertChannelImpl(it, channel) }
             }
         }
     }
