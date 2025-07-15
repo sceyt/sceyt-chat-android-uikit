@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.viewModels
 import androidx.annotation.CallSuper
@@ -90,6 +91,7 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     @CallSuper
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         style = ChannelInfoStyle.Builder(this, null).build()
         setActivityContentView()
         binding?.let { applyInsetsAndWindowColor(it.root) }
