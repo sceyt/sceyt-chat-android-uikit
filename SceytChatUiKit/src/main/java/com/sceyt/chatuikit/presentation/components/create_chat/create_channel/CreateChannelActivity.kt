@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.create_chat.create_channel
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -38,6 +39,7 @@ class CreateChannelActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         style = CreateChannelStyle.Builder(this, null).build()
         setContentView(SceytActivityCreateChannelBinding.inflate(layoutInflater)
             .also { binding = it }
