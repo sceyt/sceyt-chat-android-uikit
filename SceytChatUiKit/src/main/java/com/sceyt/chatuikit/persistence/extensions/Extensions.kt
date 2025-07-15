@@ -10,7 +10,7 @@ import kotlin.coroutines.resume
 inline fun <reified T : Enum<T>> Int.toEnum(): T = enumValues<T>()[this]
 
 fun String?.equalsIgnoreNull(other: String?): Boolean {
-    return (this?.trim() ?: "") == (other?.trim() ?: "")
+    return this.orEmpty().trim() == other.orEmpty().trim()
 }
 
 fun <T> List<T>?.equalsIgnoreNull(other: List<T>?): Boolean {
@@ -39,9 +39,9 @@ fun <T> MutableLiveData<T>.asLiveData(): LiveData<T> {
 }
 
 fun <T> broadcastSharedFlow(
-    replay: Int = 0,
-    extraBufferCapacity: Int = 1,
-    onBufferOverflow: BufferOverflow = BufferOverflow.DROP_OLDEST
+        replay: Int = 0,
+        extraBufferCapacity: Int = 1,
+        onBufferOverflow: BufferOverflow = BufferOverflow.DROP_OLDEST,
 ) = MutableSharedFlow<T>(
     replay = replay,
     extraBufferCapacity = extraBufferCapacity,
