@@ -13,6 +13,8 @@ import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 
@@ -34,7 +36,8 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
     private val _logOutLiveData = MutableLiveData<Boolean>()
     val logOutLiveData: LiveData<Boolean> = _logOutLiveData
 
-    fun getCurrentUserAsFlow() = userInteractor.getCurrentUserAsFlow()
+    val currentUserAsFlow = userInteractor.getCurrentUserAsFlow()
+        .shareIn(viewModelScope, SharingStarted.Lazily, 1)
 
     fun updateProfile(
             firstName: String?,
@@ -42,7 +45,7 @@ class ProfileViewModel : BaseViewModel(), SceytKoinComponent {
             username: String,
             avatarUrl: String?,
             shouldUploadAvatar: Boolean,
-            metadataMap: Map<String, String>?
+            metadataMap: Map<String, String>?,
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             var newUrl = avatarUrl
