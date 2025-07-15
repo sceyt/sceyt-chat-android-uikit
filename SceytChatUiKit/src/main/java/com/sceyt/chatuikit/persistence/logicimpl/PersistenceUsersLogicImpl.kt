@@ -98,7 +98,7 @@ internal class PersistenceUsersLogicImpl(
 
     override suspend fun searchLocaleUserByMetadata(
             metadataKeys: List<String>,
-            metadataValue: String
+            metadataValue: String,
     ): List<SceytUser> {
         return userDao.searchUsersByMetadata(metadataKeys, metadataValue).map { it.toSceytUser() }
     }
@@ -152,7 +152,7 @@ internal class PersistenceUsersLogicImpl(
             firstName: String?,
             lastName: String?,
             avatarUri: String?,
-            metadataMap: Map<String, String>?
+            metadataMap: Map<String, String>?,
     ): SceytResponse<SceytUser> {
         val request = User.setProfileRequest().apply {
             avatarUri?.let { uri ->

@@ -47,7 +47,7 @@ class ProfileFragment : Fragment() {
     override fun onCreateView(
             inflater: LayoutInflater,
             container: ViewGroup?,
-            savedInstanceState: Bundle?
+            savedInstanceState: Bundle?,
     ): View {
         return FragmentProfileBinding.inflate(inflater, container, false).also {
             binding = it
@@ -64,7 +64,7 @@ class ProfileFragment : Fragment() {
     }
 
     private fun initViewModel() {
-        viewModel.getCurrentUserAsFlow()
+        viewModel.currentUserAsFlow
             .onEach(::setUserDetails)
             .launchIn(lifecycleScope)
 
@@ -136,15 +136,14 @@ class ProfileFragment : Fragment() {
     }
 
     private fun setUserDetails(user: SceytUser?) {
+        user ?: return
         currentUser = user
-        avatarUrl = user?.avatarURL
-        user?.apply {
-            binding.avatar.setUserAvatar(user)
-            var displayName = fullName.trim()
-            if (displayName.isBlank())
-                displayName = "@${user.id}"
-            binding.displayName.text = displayName
-        }
+        avatarUrl = user.avatarURL
+        binding.avatar.setUserAvatar(user)
+        var displayName = user.fullName.trim()
+        if (displayName.isBlank())
+            displayName = "@${user.id}"
+        binding.displayName.text = displayName
     }
 
     private fun setUpThemeSwitch() {
