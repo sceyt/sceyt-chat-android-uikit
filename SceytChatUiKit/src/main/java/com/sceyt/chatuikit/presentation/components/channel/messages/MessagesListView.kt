@@ -493,11 +493,16 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         binding.pageStateView.updateState(state, messagesRV.isEmpty(), enableErrorSnackBar = enableErrorSnackBar)
     }
 
-    internal suspend fun updateProgress(data: TransferData, updateRecycler: Boolean) {
+    internal suspend fun updateProgress(
+            data: TransferData,
+            updateRecyclerView: Boolean,
+    ) = withContext(Dispatchers.Default) {
         val messages = ArrayList(messagesRV.getData())
-        messages.findIndexed { item -> item is MessageItem && item.message.tid == data.messageTid }?.let { (index, item) ->
-            val message = (item as? MessageItem)?.message ?: return
-            val attachments = message.attachments?.toMutableList() ?: return
+        messages.findIndexed { item ->
+            item is MessageItem && item.message.tid == data.messageTid
+        }?.let { (index, item) ->
+            val message = (item as? MessageItem)?.message ?: return@withContext
+            val attachments = message.attachments?.toMutableList() ?: return@withContext
 
             val predicate: (SceytAttachment) -> Boolean = when (data.state) {
                 Uploading, PendingUpload, PauseUpload, Uploaded, Preparing, WaitingToUpload -> { attachment ->
@@ -516,7 +521,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 if (data.thumbData?.key == ThumbFor.MessagesLisView.value) {
                     foundAttachmentFile?.updateThumbPath(data.filePath)
                 }
-                return
+                return@withContext
             } else {
                 for ((attachmentIndex, sceytAttachment) in attachments.withIndex()) {
                     if (predicate(sceytAttachment)) {
@@ -530,7 +535,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 }
             }
 
-            if (updateRecycler)
+            if (updateRecyclerView)
                 withContext(Dispatchers.Main) {
                     updateItem(index, item, MessageDiff.DEFAULT_FALSE.copy(filesChanged = true))
                 }
@@ -541,7 +546,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
             messages.forEachIndexed { index, item ->
                 if (item is MessageItem && item.message.parentMessage?.tid == data.messageTid) {
                     val message = item.message
-                    val updatedItem = item.copy(message = message.copy(parentMessage = message.parentMessage.copy(
+                    val updatedItem = item.copy(message = message.copy(parentMessage = message.parentMessage?.copy(
                         attachments = item.message.parentMessage.attachments?.map { attachment ->
                             if (attachment.url == data.url) {
                                 attachment.copy(filePath = data.filePath)
@@ -680,59 +685,53 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.getViewHolderFactory().setNeedMediaDataCallback(callBack)
     }
 
-    fun scrollToMessage(msgId: Long, highlight: Boolean, offset: Int = 0, awaitToScroll: ((Boolean) -> Unit)? = null) {
-        safeScrollTo {
-            messagesRV.getData().findIndexed { it is MessageItem && it.message.id == msgId }?.let {
-                val (position, item) = it
-                item.highligh = highlight
-                (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
-
-                if (highlight || awaitToScroll != null) {
-                    messagesRV.awaitToScrollFinish(position, callback = {
-                        if (highlight)
-                            (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMessageViewHolder)?.highlight()
-                        awaitToScroll?.invoke(true)
-                    })
-                }
+    fun scrollToMessage(
+            msgId: Long,
+            highlight: Boolean,
+            offset: Int = 0,
+            awaitToScroll: ((Boolean) -> Unit)? = null,
+    ) = safeScrollTo {
+        messagesRV.getData()
+            .indexOfFirst { it is MessageItem && it.message.id == msgId }
+            .takeIf { it != -1 }?.let { index ->
+                scrollToPosition(index, highlight, offset, awaitToScroll)
             } ?: run { awaitToScroll?.invoke(false) }
+    }
+
+    fun scrollToPosition(
+            position: Int,
+            highlight: Boolean,
+            offset: Int = 0,
+            awaitToScroll: ((Boolean) -> Unit)? = null,
+    ) = safeScrollTo {
+        (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
+
+        if (highlight || awaitToScroll != null) {
+            messagesRV.awaitToScrollFinish(position, callback = {
+                if (highlight)
+                    (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMessageViewHolder)?.highlight()
+                awaitToScroll?.invoke(true)
+            })
         }
     }
 
-    fun scrollToPosition(position: Int, highlight: Boolean, offset: Int = 0, awaitToScroll: ((Boolean) -> Unit)? = null) {
-        safeScrollTo {
-            (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(position, offset)
-
-            if (highlight || awaitToScroll != null) {
-                messagesRV.awaitToScrollFinish(position, callback = {
-                    if (highlight)
-                        (messagesRV.findViewHolderForAdapterPosition(position) as? BaseMessageViewHolder)?.highlight()
-                    awaitToScroll?.invoke(true)
-                })
+    fun scrollToUnReadMessage() = safeScrollTo {
+        messagesRV.getData()
+            .indexOfLast { it is MessageListItem.UnreadMessagesSeparatorItem }
+            .takeIf { it != -1 }?.let { index ->
+                scrollToPosition(index, false)
             }
-        }
     }
 
-    fun scrollToUnReadMessage() {
-        safeScrollTo {
-            messagesRV.getData().findIndexed { it is MessageListItem.UnreadMessagesSeparatorItem }?.let {
-                (messagesRV.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(it.first, 0)
-            }
-        }
+    fun scrollToLastMessage() = safeScrollTo {
+        messagesRV.scrollToPosition(messagesRV.getData().size - 1)
     }
 
-    fun scrollToLastMessage() {
-        safeScrollTo {
-            messagesRV.scrollToPosition(messagesRV.getData().size - 1)
-        }
-    }
-
-    private fun safeScrollTo(scrollTo: () -> Unit) {
-        MessagesAdapter.awaitUpdating {
-            try {
-                scrollTo()
-            } catch (e: Exception) {
-                messagesRV.awaitAnimationEnd { scrollTo() }
-            }
+    private fun safeScrollTo(block: () -> Unit) = MessagesAdapter.awaitUpdating {
+        try {
+            block()
+        } catch (e: Exception) {
+            messagesRV.awaitAnimationEnd { block() }
         }
     }
 

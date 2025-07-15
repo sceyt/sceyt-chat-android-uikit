@@ -1,7 +1,5 @@
 package com.sceyt.chatuikit.persistence.logicimpl
 
-import android.content.Context
-import com.koushikdutta.ion.Ion
 import com.sceyt.chat.ChatClient
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_callbacks.ProgressCallback
@@ -21,11 +19,10 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
 
-class FileTransferUtility(
-        private val context: Context,
-) {
+class FileTransferUtility {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val uploadJobs = hashMapOf<Long, Job>()
+    private val downloader = OkHttpDownloader()
 
     fun uploadFile(
             attachment: SceytAttachment,
@@ -68,7 +65,6 @@ class FileTransferUtility(
         uploadJobs[attachment.messageTid] = job
     }
 
-
     fun pauseUpload(attachment: SceytAttachment) {
         uploadJobs[attachment.messageTid]?.cancel()
     }
@@ -84,29 +80,14 @@ class FileTransferUtility(
             onProgress: (Float) -> Unit,
             onResult: (SceytResponse<String>) -> Unit,
     ) {
-        Ion.with(context)
-            .load(attachment.url)
-            .progress { downloaded, total ->
-                val progress = ((downloaded / total.toFloat())) * 100
-                onProgress(progress)
-            }
-            .group(attachment.url)
-            .write(destFile)
-            .setCallback { e, result ->
-                if (result == null && e != null) {
-                    onResult(SceytResponse.Error(SceytException(0, e.message)))
-                } else
-                    onResult(SceytResponse.Success(result.path))
-            }
+        downloader.downloadFile(attachment, destFile, onProgress, onResult)
     }
 
-
     fun pauseDownload(attachment: SceytAttachment) {
-        Ion.getDefault(context).cancelAll(attachment.url)
+        downloader.pauseDownload(attachment)
     }
 
     fun resumeDownload(attachment: SceytAttachment): Boolean {
-        // not implemented
-        return false
+        return downloader.resumeDownload(attachment)
     }
 }

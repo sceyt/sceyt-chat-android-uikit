@@ -52,7 +52,7 @@ internal class PushServiceImpl(
 
     @SuppressLint("ImplicitSamInstance")
     override fun unregisterPushDevice(
-            unregisterPushCallback: ((success: Boolean, error: String?) -> Unit)?
+            unregisterPushCallback: ((success: Boolean, error: String?) -> Unit)?,
     ) {
         ChatClient.getClient().unregisterPushToken(object : ActionCallback {
             override fun onSuccess() {
@@ -81,6 +81,7 @@ internal class PushServiceImpl(
     }
 
     private fun registerClientPushTokenImpl(device: PushDevice) {
+        preferences.setBoolean(KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION, false)
         ChatClient.getClient().registerPushToken(device.token, device.service.stingValue(), object : ActionCallback {
             override fun onSuccess() {
                 preferences.setBoolean(KEY_SUBSCRIBED_FOR_PUSH_NOTIFICATION, true)

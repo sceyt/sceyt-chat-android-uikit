@@ -15,7 +15,6 @@ fragmentKtx = "1.8.8"
 glide = "4.16.0"
 glideTransformations = "4.3.0"
 gson = "2.13.1"
-ion = "3.1.0"
 jsoup = "1.21.1"
 junit = "4.13.2"
 junitKtx = "1.2.1"
@@ -29,13 +28,13 @@ media3Exoplayer = "1.7.1"
 mockitoCore = "5.18.0"
 mockitoInline = "5.2.0"
 mockitoKotlin = "5.4.0"
-okhttp = "5.0.0"
+okhttp = "5.0.0-alpha.14"
 okio = "3.15.0"
 photoview = "2.3.0"
 recyclerview = "1.4.0"
 robolectric = "4.15.1"
 room = "2.7.2"
-sceytChatAndroidSdk = "1.7.2"
+sceytChatAndroidSdk = "1.7.3"
 sdpAndroid = "1.1.1"
 sspAndroid = "1.1.1"
 truth = "1.4.4"
@@ -66,7 +65,6 @@ fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragm
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 glide-transformations = { module = "jp.wasabeef:glide-transformations", version.ref = "glideTransformations" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
-ion = { module = "com.koushikdutta.ion:ion", version.ref = "ion" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 junit = { module = "junit:junit", version.ref = "junit" }
 junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "junitKtx" }
