@@ -6,8 +6,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.sceyt.chat.models.user.UserState
 import com.sceyt.chatuikit.data.models.messages.SceytPresence
-
-internal const val USER_TABLE = "sceyt_user_table"
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_TABLE
 
 @Entity(tableName = USER_TABLE)
 internal data class UserEntity(

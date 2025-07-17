@@ -1,7 +1,7 @@
 package com.sceyt.chatuikit.persistence.database.dao
 
 import androidx.room.*
-import com.sceyt.chatuikit.persistence.database.entity.channel.CHAT_USER_REACTION_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.CHAT_USER_REACTION_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChatUserReactionDb
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChatUserReactionEntity
 

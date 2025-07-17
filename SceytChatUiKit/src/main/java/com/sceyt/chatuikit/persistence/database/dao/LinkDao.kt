@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.sceyt.chatuikit.persistence.database.entity.link.LINK_DETAILS_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LINK_DETAILS_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
 
 @Dao

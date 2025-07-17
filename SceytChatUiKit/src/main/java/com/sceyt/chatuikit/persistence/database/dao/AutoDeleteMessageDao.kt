@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.persistence.database.dao
 
 import androidx.room.Dao
 import androidx.room.Query
-import com.sceyt.chatuikit.persistence.database.entity.messages.AUTO_DELETE_MESSAGES_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.AUTO_DELETE_MESSAGES_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.AutoDeleteMessageEntity
 
 @Dao

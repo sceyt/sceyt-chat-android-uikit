@@ -78,7 +78,7 @@ class SceytChatUIFacade(
 
     fun updateToken(
             token: String,
-            listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null
+            listener: ((success: Boolean, errorMessage: String?) -> Unit)? = null,
     ) {
         ChatClient.updateToken(token, object : ActionCallback {
             override fun onSuccess() {
@@ -122,11 +122,8 @@ class SceytChatUIFacade(
 
     private suspend fun unregisterFirebaseToken(): Result<Boolean> = withContext(Dispatchers.IO) {
         suspendCancellableCoroutine { continuation ->
-            FirebaseMessagingDelegate.unregisterFirebaseToken { success, error ->
-                if (success) {
-                    continuation.safeResume(Result.success(true))
-                } else
-                    continuation.safeResume(Result.failure(Exception(error)))
+            FirebaseMessagingDelegate.unregisterFirebaseToken { result ->
+                continuation.safeResume(result)
             }
         }
     }

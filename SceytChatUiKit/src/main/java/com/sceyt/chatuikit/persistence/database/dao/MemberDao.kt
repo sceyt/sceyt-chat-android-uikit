@@ -5,9 +5,9 @@ import androidx.room.Query
 import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_CHAT_LINK_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChanelMemberDb
-import com.sceyt.chatuikit.persistence.database.entity.channel.USER_CHAT_LINK_TABLE
-import com.sceyt.chatuikit.persistence.database.entity.user.USER_TABLE
 
 @Dao
 internal interface MemberDao {

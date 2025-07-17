@@ -2,8 +2,7 @@ package com.sceyt.chatuikit.persistence.database.entity.link
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-
-internal const val LINK_DETAILS_TABLE = "sceyt_link_details_table"
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LINK_DETAILS_TABLE
 
 @Entity(tableName = LINK_DETAILS_TABLE)
 internal data class LinkDetailsEntity(

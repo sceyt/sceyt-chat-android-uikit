@@ -2,6 +2,7 @@ package com.sceyt.chat.demo.presentation.welcome
 
 import android.content.Context
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import com.sceyt.chat.demo.databinding.ActivityWelcomeBinding
@@ -15,6 +16,7 @@ class WelcomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         binding = ActivityWelcomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
         statusBarIconsColorWithBackground()

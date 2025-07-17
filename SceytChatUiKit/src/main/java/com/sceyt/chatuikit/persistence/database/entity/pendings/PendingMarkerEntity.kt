@@ -4,9 +4,8 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_MARKER_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
-
-internal const val PENDING_MARKER_TABLE = "sceyt_pending_marker_table"
 
 @Entity(
     tableName = PENDING_MARKER_TABLE,
