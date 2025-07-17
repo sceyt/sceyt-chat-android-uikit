@@ -2,8 +2,7 @@ package com.sceyt.chatuikit.persistence.database.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-
-internal const val FILE_CHECKSUM_TABLE = "sceyt_file_checksum_table"
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.FILE_CHECKSUM_TABLE
 
 @Entity(tableName = FILE_CHECKSUM_TABLE)
 internal data class FileChecksumEntity(

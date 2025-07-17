@@ -3,8 +3,7 @@ package com.sceyt.chatuikit.persistence.database.entity.messages
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
-
-internal const val AUTO_DELETE_MESSAGES_TABLE = "sceyt_auto_delete_messages_table"
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.AUTO_DELETE_MESSAGES_TABLE
 
 @Entity(
     tableName = AUTO_DELETE_MESSAGES_TABLE,

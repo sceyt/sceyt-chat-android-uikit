@@ -3,8 +3,7 @@ package com.sceyt.chatuikit.persistence.database.entity.messages
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.sceyt.chat.models.message.BodyAttribute
-
-internal const val DRAFT_MESSAGE_TABLE = "sceyt_draft_message_table"
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.DRAFT_MESSAGE_TABLE
 
 @Entity(tableName = DRAFT_MESSAGE_TABLE)
 internal data class DraftMessageEntity(

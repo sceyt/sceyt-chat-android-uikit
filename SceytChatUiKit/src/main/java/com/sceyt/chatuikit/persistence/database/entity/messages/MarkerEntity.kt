@@ -3,8 +3,7 @@ package com.sceyt.chatuikit.persistence.database.entity.messages
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-
-internal const val MARKER_TABLE = "sceyt_marker_table"
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MARKER_TABLE
 
 @Entity(
     tableName = MARKER_TABLE,

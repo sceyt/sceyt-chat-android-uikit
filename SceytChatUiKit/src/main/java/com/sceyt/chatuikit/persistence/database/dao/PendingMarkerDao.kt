@@ -2,7 +2,7 @@ package com.sceyt.chatuikit.persistence.database.dao
 
 import androidx.room.Dao
 import androidx.room.Query
-import com.sceyt.chatuikit.persistence.database.entity.pendings.PENDING_MARKER_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_MARKER_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
 
 @Dao

@@ -14,20 +14,20 @@ import com.sceyt.chat.models.message.DeliveryStatus.Sent
 import com.sceyt.chatuikit.data.models.LoadNearData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.roundUp
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_PAYLOAD_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LOAD_RANGE_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.REACTION_TOTAL_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.link.LinkDetailsEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.ATTACHMENT_PAYLOAD_TABLE
-import com.sceyt.chatuikit.persistence.database.entity.messages.ATTACHMENT_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AutoDeleteMessageEntity
-import com.sceyt.chatuikit.persistence.database.entity.messages.LOAD_RANGE_TABLE
-import com.sceyt.chatuikit.persistence.database.entity.messages.MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.MarkerEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MentionUserMessageLinkEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageIdAndTid
-import com.sceyt.chatuikit.persistence.database.entity.messages.REACTION_TOTAL_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
 import com.sceyt.chatuikit.persistence.database.entity.pendings.PendingMarkerEntity
@@ -302,14 +302,14 @@ internal abstract class MessageDao {
             messageId: Long,
             limit: Int
     ): LoadNearData<MessageDb> {
-        var oldest = getOldestThenMessagesInclude(channelId, messageId, limit).reversed()
+        val oldest = getOldestThenMessagesInclude(channelId, messageId, limit).reversed()
         val includesInOldest = oldest.lastOrNull()?.messageEntity?.id == messageId
 
         // If the message not exist then return empty list
         if (!includesInOldest)
             return LoadNearData(emptyList(), hasNext = false, hasPrev = false)
 
-        var newest = getNewestThenMessage(channelId, messageId, limit)
+        val newest = getNewestThenMessage(channelId, messageId, limit)
         val halfLimit = limit / 2
 
         val newestDiff = max(halfLimit - newest.size, 0)

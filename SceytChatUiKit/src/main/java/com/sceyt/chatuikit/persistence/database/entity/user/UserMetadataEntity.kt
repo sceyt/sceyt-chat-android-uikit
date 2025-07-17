@@ -3,8 +3,7 @@ package com.sceyt.chatuikit.persistence.database.entity.user
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-
-internal const val USER_METADATA_TABLE = "sceyt_user_metadata_table"
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_METADATA_TABLE
 
 @Entity(
     tableName = USER_METADATA_TABLE,

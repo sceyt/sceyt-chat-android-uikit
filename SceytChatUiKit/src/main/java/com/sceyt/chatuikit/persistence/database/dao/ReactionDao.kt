@@ -6,9 +6,9 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import com.sceyt.chatuikit.persistence.database.entity.messages.MESSAGE_TABLE
-import com.sceyt.chatuikit.persistence.database.entity.messages.REACTION_TABLE
-import com.sceyt.chatuikit.persistence.database.entity.messages.REACTION_TOTAL_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.REACTION_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.REACTION_TOTAL_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.ReactionTotalEntity
