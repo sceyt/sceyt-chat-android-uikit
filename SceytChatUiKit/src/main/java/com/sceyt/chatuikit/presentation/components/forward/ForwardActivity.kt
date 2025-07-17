@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.presentation.components.forward
 
 import android.content.Context
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
@@ -27,7 +28,7 @@ open class ForwardActivity : ShareableActivity<ForwardStyle>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        enableEdgeToEdge()
         setContentView(SceytActivityForwardBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)

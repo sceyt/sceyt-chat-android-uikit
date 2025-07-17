@@ -11,10 +11,10 @@ import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
-import com.sceyt.chatuikit.persistence.database.entity.channel.CHANNEL_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.CHANNEL_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_CHAT_LINK_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelDb
 import com.sceyt.chatuikit.persistence.database.entity.channel.ChannelEntity
-import com.sceyt.chatuikit.persistence.database.entity.channel.USER_CHAT_LINK_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.channel.UserChatLinkEntity
 import kotlinx.coroutines.flow.Flow
 

@@ -2,6 +2,7 @@ package com.sceyt.chatuikit.presentation.components.message_info
 
 import android.content.Context
 import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commit
 import com.sceyt.chatuikit.R
@@ -19,6 +20,7 @@ open class MessageInfoActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         binding = ActivityMessageInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

@@ -9,8 +9,7 @@ import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MarkerTotal
 import com.sceyt.chat.models.message.MessageState
-
-internal const val MESSAGE_TABLE = "sceyt_message_table"
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.MESSAGE_TABLE
 
 @Entity(
     tableName = MESSAGE_TABLE,

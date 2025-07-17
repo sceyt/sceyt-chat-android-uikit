@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManager
 import com.sceyt.chatuikit.notifications.managers.RealtimeNotificationManagerImpl
 import com.sceyt.chatuikit.persistence.PersistenceMiddleWareImpl
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.SCEYT_CHAT_UI_KIT_DATABASE_NAME
 import com.sceyt.chatuikit.persistence.database.DatabaseMigrations
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
 import com.sceyt.chatuikit.persistence.database.cleaner.DatabaseCleaner
@@ -57,13 +58,11 @@ import org.koin.dsl.module
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
-const val SCEYT_CHAT_UI_KIT_DATABASE_NAME = "sceyt_ui_kit_database"
-
 internal val appModules = module {
     single { SceytSyncManager(get(), get()) }
     single<FileTransferService> { FileTransferServiceImpl(get(), get()) }
     single<MessageLoadRangeUpdater> { MessageLoadRangeUpdater(get()) }
-    single<PushService> { PushServiceImpl(get(), get(), get(), get()) }
+    single<PushService> { PushServiceImpl(get(), get(), get()) }
     single<RealtimeNotificationManager> { RealtimeNotificationManagerImpl(get(), get()) }
 }
 

@@ -4,8 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-
-internal const val LOAD_RANGE_TABLE = "sceyt_load_range_table"
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LOAD_RANGE_TABLE
 
 @Entity(
     tableName = LOAD_RANGE_TABLE,

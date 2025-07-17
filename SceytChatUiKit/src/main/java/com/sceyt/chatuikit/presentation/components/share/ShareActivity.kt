@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
@@ -36,7 +37,7 @@ open class ShareActivity : ShareableActivity<ShareStyle>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        enableEdgeToEdge()
         setContentView(SceytActivityShareBinding.inflate(layoutInflater)
             .also { binding = it }
             .root)

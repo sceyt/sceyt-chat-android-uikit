@@ -8,8 +8,8 @@ import androidx.room.Transaction
 import com.sceyt.chatuikit.data.models.LoadNearData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.roundUp
-import com.sceyt.chatuikit.persistence.database.entity.messages.ATTACHMENT_PAYLOAD_TABLE
-import com.sceyt.chatuikit.persistence.database.entity.messages.ATTACHMENT_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_PAYLOAD_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.AttachmentPayLoadDb
