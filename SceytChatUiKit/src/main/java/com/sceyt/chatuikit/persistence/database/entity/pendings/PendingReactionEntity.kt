@@ -5,9 +5,8 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.PENDING_REACTION_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.MessageEntity
-
-internal const val PENDING_REACTION_TABLE = "sceyt_pending_reaction_table"
 
 @Entity(
     tableName = PENDING_REACTION_TABLE,

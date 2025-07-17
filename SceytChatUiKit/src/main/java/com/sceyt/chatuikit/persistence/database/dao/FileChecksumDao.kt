@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.sceyt.chatuikit.persistence.database.entity.FILE_CHECKSUM_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.FILE_CHECKSUM_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.FileChecksumEntity
 
 @Dao

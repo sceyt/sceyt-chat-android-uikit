@@ -6,8 +6,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import com.sceyt.chatuikit.persistence.database.entity.user.USER_METADATA_TABLE
-import com.sceyt.chatuikit.persistence.database.entity.user.USER_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_METADATA_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.USER_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.user.UserDb
 import com.sceyt.chatuikit.persistence.database.entity.user.UserEntity
 import com.sceyt.chatuikit.persistence.database.entity.user.UserMetadataEntity
@@ -86,9 +86,6 @@ internal abstract class UserDao {
     abstract suspend fun searchUsersByMetadata(key: List<String>, value: String): List<UserDb>
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun updateUser(user: UserEntity)
-
-    @Update(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun updateUsers(users: List<UserEntity>)
 
     @Query("update $USER_TABLE set status =:status where user_id =:userId")
@@ -96,7 +93,4 @@ internal abstract class UserDao {
 
     @Query("update $USER_TABLE set blocked =:blocked where user_id =:userId")
     abstract suspend fun blockUnBlockUser(userId: String, blocked: Boolean)
-
-    @Query("DELETE from $USER_TABLE ")
-    abstract suspend fun deleteAll()
 }

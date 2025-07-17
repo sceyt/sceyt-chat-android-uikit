@@ -5,8 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-
-internal const val ATTACHMENT_TABLE = "sceyt_attachment_table"
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_TABLE
 
 @Entity(
     tableName = ATTACHMENT_TABLE,

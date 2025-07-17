@@ -4,9 +4,8 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_PAYLOAD_TABLE
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
-
-internal const val ATTACHMENT_PAYLOAD_TABLE = "sceyt_attachment_payload_table"
 
 @Entity(
     tableName = ATTACHMENT_PAYLOAD_TABLE,

@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.sceyt.chatuikit.persistence.database.entity.messages.LOAD_RANGE_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LOAD_RANGE_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.LoadRangeEntity
 
 @Dao

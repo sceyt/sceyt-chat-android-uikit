@@ -5,8 +5,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.sceyt.chatuikit.persistence.database.entity.channel.CHANNEL_TABLE
-import com.sceyt.chatuikit.persistence.database.entity.messages.DRAFT_MESSAGE_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.CHANNEL_TABLE
+import com.sceyt.chatuikit.persistence.database.DatabaseConstants.DRAFT_MESSAGE_TABLE
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageUserLinkEntity
