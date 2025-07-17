@@ -14,9 +14,7 @@ object FirebaseMessagingDelegate : MessagingDelegate() {
     }
 
     @JvmStatic
-    fun unregisterFirebaseToken(
-            unregisterPushCallback: ((success: Boolean, error: String?) -> Unit)? = null
-    ) {
+    fun unregisterFirebaseToken(unregisterPushCallback: ((Result<Boolean>) -> Unit)? = null) {
         pushService.unregisterPushDevice(unregisterPushCallback)
     }
 

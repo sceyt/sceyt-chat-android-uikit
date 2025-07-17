@@ -62,7 +62,7 @@ internal val appModules = module {
     single { SceytSyncManager(get(), get()) }
     single<FileTransferService> { FileTransferServiceImpl(get(), get()) }
     single<MessageLoadRangeUpdater> { MessageLoadRangeUpdater(get()) }
-    single<PushService> { PushServiceImpl(get(), get(), get(), get()) }
+    single<PushService> { PushServiceImpl(get(), get(), get()) }
     single<RealtimeNotificationManager> { RealtimeNotificationManagerImpl(get(), get()) }
 }
 
