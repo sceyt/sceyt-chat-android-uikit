@@ -132,6 +132,9 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
     }.launchIn(viewModelScope)
 
     ChannelsCache.channelUpdatedFlow.onEach { data ->
+        SceytLog.i("ChannelUpdatedTag", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body} draft:${data.channel.draftMessage?.body}  unreadCount ${data.channel.newMessageCount}" +
+                " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${data.diff.hasDifference()} lastMessageChanged: ${data.diff.lastMessageChanged} needSorting: ${data.needSorting}")
+
         if (!lifecycleOwner.isResumed()) {
             lifecycleScope.launch(Dispatchers.Default) {
                 mutexUpdateList.withLock {
@@ -147,9 +150,6 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
             channelListView.channelUpdated(data.channel) {
                 if (data.diff.lastMessageChanged || data.needSorting || isCanceled)
                     channelListView.sortChannelsBy(lifecycleScope, SceytChatUIKit.config.channelListOrder)
-
-                SceytLog.i("ChannelsCache", "viewModel: id: ${data.channel.id}  body: ${data.channel.lastMessage?.body} draft:${data.channel.draftMessage?.body}  unreadCount ${data.channel.newMessageCount}" +
-                        " isResumed ${lifecycleOwner.isResumed()} hasDifference: ${data.diff.hasDifference()} lastMessageChanged: ${data.diff.lastMessageChanged} needSorting: ${data.needSorting}")
             }
         }
     }.launchIn(viewModelScope)
