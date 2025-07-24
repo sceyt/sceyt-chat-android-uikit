@@ -8,7 +8,6 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
@@ -96,9 +95,7 @@ class AvatarView @JvmOverloads constructor(
 
         if (enableRipple) {
             val ripple = context.getCompatDrawable(R.drawable.sceyt_bg_ripple_circle)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                foreground = ripple
-            } else background = ripple
+            foreground = ripple
         }
 
         initPaints()
@@ -195,18 +192,16 @@ class AvatarView @JvmOverloads constructor(
     private fun getAvatarRandomColor(initials: CharSequence): Int {
         val colors = if (isInEditMode)
             listOf(1) else SceytChatUIKit.config.defaultAvatarBackgroundColors.getColors(context)
-        return colors[abs(initials.hashCode()) % colors.size]
+        return colors[abs(initials.toString().hashCode()) % colors.size]
     }
 
-    @Suppress("DEPRECATION")
     private fun getStaticLayout(title: CharSequence): StaticLayout {
         val width = Layout.getDesiredWidth(title, textPaint).roundUp()
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            StaticLayout.Builder.obtain(title, 0, title.length, textPaint, width)
-                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-                .setLineSpacing(0f, 1f)
-                .setIncludePad(false).build()
-        } else StaticLayout(title, textPaint, width, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false)
+        return StaticLayout.Builder.obtain(title, 0, title.length, textPaint, width)
+            .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+            .setLineSpacing(0f, 1f)
+            .setIncludePad(false)
+            .build()
     }
 
     private fun loadAvatarImage(oldImageUrl: String?, preloadForOffline: Boolean = true) {
@@ -326,7 +321,7 @@ class AvatarView @JvmOverloads constructor(
             val defaultAvatar: DefaultAvatar?,
             val placeholder: AvatarPlaceholder?,
             val errorPlaceholder: AvatarErrorPlaceHolder?,
-            val preloadForOffline: Boolean
+            val preloadForOffline: Boolean,
     ) {
 
         fun applyToAvatar() {
