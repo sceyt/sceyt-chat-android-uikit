@@ -1,6 +1,7 @@
 package com.sceyt.chatuikit.persistence
 
 import androidx.sqlite.db.SimpleSQLiteQuery
+import com.sceyt.chat.models.Types
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageListMarker
@@ -78,7 +79,7 @@ internal class PersistenceMiddleWareImpl(
         private val membersLogic: PersistenceMembersLogic,
         private val usersLogic: PersistenceUsersLogic,
         private val connectionLogic: PersistenceConnectionLogic,
-        private val realtimeNotificationManager: RealtimeNotificationManager
+        private val realtimeNotificationManager: RealtimeNotificationManager,
 ) : ChannelMemberInteractor, MessageInteractor, ChannelInteractor,
         UserInteractor, AttachmentInteractor, MessageMarkerInteractor,
         MessageReactionInteractor, SceytKoinComponent {
@@ -233,7 +234,7 @@ internal class PersistenceMiddleWareImpl(
     }
 
     override suspend fun findOrCreatePendingChannelByMembers(
-            data: CreateChannelData
+            data: CreateChannelData,
     ): SceytResponse<SceytChannel> {
         return channelLogic.findOrCreatePendingChannelByMembers(data)
     }
@@ -396,6 +397,15 @@ internal class PersistenceMiddleWareImpl(
             query: String,
     ): SceytPagingResponse<List<SceytMessage>> {
         return messagesLogic.searchMessages(conversationId, replyInThread, query)
+    }
+
+    override suspend fun getUnreadMentions(
+            conversationId: Long,
+            direction: Types.Direction,
+            messageId: Long,
+            limit: Int,
+    ): SceytPagingResponse<List<Long>> {
+        return messagesLogic.getUnreadMentions(conversationId, direction, messageId, limit)
     }
 
     override suspend fun loadNextSearchMessages(): SceytPagingResponse<List<SceytMessage>> {
@@ -591,7 +601,7 @@ internal class PersistenceMiddleWareImpl(
 
     override suspend fun searchLocaleUserByMetadata(
             metadataKeys: List<String>,
-            metadataValue: String
+            metadataValue: String,
     ): List<SceytUser> {
         return usersLogic.searchLocaleUserByMetadata(metadataKeys, metadataValue)
     }

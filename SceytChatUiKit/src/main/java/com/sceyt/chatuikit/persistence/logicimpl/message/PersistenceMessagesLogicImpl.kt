@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.persistence.logicimpl.message
 import android.content.Context
 import androidx.work.await
 import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.models.Types
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.DeleteMessageType.DeleteForEveryone
 import com.sceyt.chat.models.message.DeleteMessageType.DeleteForMe
@@ -245,6 +246,15 @@ internal class PersistenceMessagesLogicImpl(
         return@withContext messagesRepository.searchMessages(conversationId, replyInThread, query)
     }
 
+    override suspend fun getUnreadMentions(
+            conversationId: Long,
+            direction: Types.Direction,
+            messageId: Long,
+            limit: Int,
+    ): SceytPagingResponse<List<Long>> = withContext(dispatcherIO) {
+        return@withContext messagesRepository.getUnreadMentions(conversationId, direction, messageId, limit)
+    }
+
     override suspend fun loadNextSearchMessages(): SceytPagingResponse<List<SceytMessage>> = withContext(dispatcherIO) {
         return@withContext messagesRepository.loadNextSearchMessages()
     }
@@ -402,7 +412,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun createNewChannelInsteadOfPendingChannel(
-            pendingChannel: SceytChannel
+            pendingChannel: SceytChannel,
     ): SceytResponse<SceytChannel> {
         val response = persistenceChannelsLogic.createNewChannelInsteadOfPendingChannel(pendingChannel)
         if (response is SceytResponse.Success) {
@@ -449,7 +459,7 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun sendMessageWithUploadedAttachments(
             channelId: Long,
-            message: Message
+            message: Message,
     ): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
         val channel = channelCache.getOneOf(channelId)
                 ?: persistenceChannelsLogic.getChannelFromDb(channelId)
@@ -847,7 +857,7 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun updateMessageLoadRange(
             messageId: Long,
             channelId: Long,
-            response: SceytResponse<List<SceytMessage>>
+            response: SceytResponse<List<SceytMessage>>,
     ) {
         val data = (response as? SceytResponse.Success)?.data ?: return
         if (data.isEmpty()) return
@@ -1088,7 +1098,7 @@ internal class PersistenceMessagesLogicImpl(
             list: List<SceytMessage>?,
             includeParents: Boolean = true,
             unListAll: Boolean = false,
-            replaceUserOnConflict: Boolean = true
+            replaceUserOnConflict: Boolean = true,
     ): List<SceytMessage> {
         if (list.isNullOrEmpty()) return emptyList()
         val pendingStates = pendingMessageStateDao.getAll()
@@ -1212,7 +1222,7 @@ internal class PersistenceMessagesLogicImpl(
             channelId: Long,
             response: SceytResponse<MessageListMarker>,
             marker: String,
-            vararg ids: Long
+            vararg ids: Long,
     ) {
         when (response) {
             is SceytResponse.Success -> {

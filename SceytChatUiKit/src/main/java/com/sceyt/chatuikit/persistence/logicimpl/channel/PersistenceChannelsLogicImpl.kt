@@ -83,11 +83,13 @@ import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
 import com.sceyt.chatuikit.presentation.extensions.isHardDeleted
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.services.SceytPresenceChecker
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 internal class PersistenceChannelsLogicImpl(
@@ -841,8 +843,10 @@ internal class PersistenceChannelsLogicImpl(
         return channelDao.getChannelByUserAndType(peerId, ChannelTypeEnum.Direct.value)?.toChannel()
     }
 
-    override suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel> {
-        return channelsRepository.getChannel(channelId)
+    override suspend fun getChannelFromServer(
+            channelId: Long,
+    ): SceytResponse<SceytChannel> = withContext(Dispatchers.IO) {
+        return@withContext channelsRepository.getChannel(channelId)
             .onSuccessNotNull { channel ->
                 val lastMessage = getChannelPendingLastMessage(channel)
                 channel.copy(lastMessage = lastMessage).toChannelEntity().let {
@@ -855,7 +859,7 @@ internal class PersistenceChannelsLogicImpl(
             .onError {
                 getChannelFromDb(channelId)?.let {
                     if (it.pending)
-                        return SceytResponse.Success(it)
+                        return@withContext SceytResponse.Success(it)
                 }
             }
     }

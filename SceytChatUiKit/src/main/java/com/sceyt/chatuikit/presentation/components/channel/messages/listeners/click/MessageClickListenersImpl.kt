@@ -6,7 +6,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesList
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.components.ScrollToDownView
 
 open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var defaultListeners: MessageClickListeners.ClickListeners? = null
@@ -24,6 +23,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
     private var linkClickListener: MessageClickListeners.LinkClickListener? = null
     private var linkDetailsClickListener: MessageClickListeners.LinkDetailsClickListener? = null
     private var scrollToDownClickListener: MessageClickListeners.ScrollToDownClickListener? = null
+    private var scrollToUnreadMentionClickListener: MessageClickListeners.ScrollToUnreadMentionClickListener? = null
     private var multiSelectClickListener: MessageClickListeners.MultiSelectClickListener? = null
 
     constructor()
@@ -97,9 +97,14 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
         linkDetailsClickListener?.onLinkDetailsClick(view, item)
     }
 
-    override fun onScrollToDownClick(view: ScrollToDownView) {
+    override fun onScrollToDownClick(view: View) {
         defaultListeners?.onScrollToDownClick(view)
         scrollToDownClickListener?.onScrollToDownClick(view)
+    }
+
+    override fun onScrollToUnreadMentionClick(view: View) {
+        defaultListeners?.onScrollToUnreadMentionClick(view)
+        scrollToUnreadMentionClickListener?.onScrollToUnreadMentionClick(view)
     }
 
     override fun onMultiSelectClick(view: View, message: SceytMessage) {
@@ -123,6 +128,7 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
                 linkClickListener = listener
                 linkDetailsClickListener = listener
                 scrollToDownClickListener = listener
+                scrollToUnreadMentionClickListener = listener
                 attachmentLoaderClickListener = listener
                 multiSelectClickListener = listener
             }
@@ -181,6 +187,10 @@ open class MessageClickListenersImpl : MessageClickListeners.ClickListeners {
 
             is MessageClickListeners.ScrollToDownClickListener -> {
                 scrollToDownClickListener = listener
+            }
+
+            is MessageClickListeners.ScrollToUnreadMentionClickListener -> {
+                scrollToUnreadMentionClickListener = listener
             }
 
             is MessageClickListeners.MultiSelectClickListener -> {
