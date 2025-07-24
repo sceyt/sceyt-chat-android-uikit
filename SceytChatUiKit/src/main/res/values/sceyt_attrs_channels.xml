@@ -148,27 +148,12 @@
         <attr name="sceytUiChannelListMentionTextFont" format="reference" />
 
 
-        <!-- Channel unread mention text style -->
+        <!-- Channel unread mention icon style -->
+        <attr name="sceytUiChannelListUnreadMentionIcon" format="reference" />
         <attr name="sceytUiChannelListUnreadMentionBackgroundColor" format="reference|color" />
-        <attr name="sceytUiChannelListUnreadMentionTextColor" format="reference|color" />
-        <attr name="sceytUiChannelListUnreadMentionTextSize" format="dimension" />
-        <attr name="sceytUiChannelListUnreadMentionTextFont" format="reference" />
-        <attr name="sceytUiChannelListUnreadMentionTextStyle">
-            <flag name="normal" value="0" />
-            <flag name="bold" value="1" />
-            <flag name="italic" value="2" />
-        </attr>
 
-        <!-- Channel unread mention muted text style  -->
+        <!-- Channel unread mention muted icon style  -->
         <attr name="sceytUiChannelListUnreadMentionMutedStateBackgroundColor" format="reference|color" />
-        <attr name="sceytUiChannelListUnreadMentionMutedStateTextColor" format="reference|color" />
-        <attr name="sceytUiChannelListUnreadMentionMutedStateTextSize" format="dimension" />
-        <attr name="sceytUiChannelListUnreadMentionMutedTextFont" format="reference" />
-        <attr name="sceytUiChannelListUnreadMentionMutedStateTextStyle">
-            <flag name="normal" value="0" />
-            <flag name="bold" value="1" />
-            <flag name="italic" value="2" />
-        </attr>
 
         <!-- Channel avatar style  -->
         <attr name="sceytUiChannelListAvatarBackgroundColor" format="reference|color" />

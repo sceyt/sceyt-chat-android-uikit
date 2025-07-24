@@ -64,7 +64,7 @@ open class ChannelViewHolder(
 
                 // this ui states is changed more often, and to avoid wrong ui states we need to set them every time
                 setUnreadCount(channel, binding.unreadMessagesCount)
-                setMentionUserSymbol(channel, binding.icMention)
+                setUnreadMentions(channel, binding.icMention)
                 setLastMessageStatusAndDate(channel, binding.dateStatus)
                 setLastMessagedText(channel, binding.lastMessage)
                 setPresenceState(channel, binding.onlineState)
@@ -217,14 +217,14 @@ open class ChannelViewHolder(
         textView.isVisible = channel.unread
     }
 
-    protected open fun setMentionUserSymbol(channel: SceytChannel, icMention: TextView) {
+    protected open fun setUnreadMentions(channel: SceytChannel, imageView: ImageView) {
         val showMention = channel.newMentionCount > 0 && channel.newMessageCount > 0
         if (showMention) {
-            icMention.isVisible = true
+            imageView.isVisible = true
             if (channel.muted)
-                itemStyle.unreadMentionMutedStateTextStyle.apply(icMention)
-            else itemStyle.unreadMentionTextStyle.apply(icMention)
-        } else icMention.isVisible = false
+                itemStyle.unreadMentionMutedStateBackgroundStyle.apply(imageView)
+            else itemStyle.unreadMentionBackgroundStyle.apply(imageView)
+        } else imageView.isVisible = false
     }
 
     protected open fun setChannelEventTitle(channel: SceytChannel, textView: TextView) {
@@ -279,6 +279,7 @@ open class ChannelViewHolder(
         viewPinned.setBackgroundColor(itemStyle.pinnedChannelBackgroundColor)
         divider.setBackgroundColor(itemStyle.dividerColor)
         icAutoDeleted.setImageDrawable(itemStyle.autoDeletedChannelIcon)
+        icMention.setImageDrawable(itemStyle.unreadMentionIcon)
         dateStatus.appearanceBuilder()
             .setLeadingIconSize(itemStyle.deliveryStatusIndicatorSize)
             .setTextStyle(itemStyle.dateTextStyle)
