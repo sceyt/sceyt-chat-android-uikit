@@ -7,7 +7,7 @@
     tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
     <FrameLayout
-        android:id="@+id/layoutScrollToBottom"
+        android:id="@+id/layoutScrollTo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
@@ -20,7 +20,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/icScrollToBottom"
+            android:id="@+id/icScrollTo"
             android:layout_width="42dp"
             android:layout_height="42dp"
             android:background="@drawable/sceyt_bg_circle_with_stroke"
@@ -48,7 +48,7 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/layoutScrollToBottom"
+        app:layout_constraintTop_toTopOf="@+id/layoutScrollTo"
         tools:text="9"
         tools:visibility="visible" />
 

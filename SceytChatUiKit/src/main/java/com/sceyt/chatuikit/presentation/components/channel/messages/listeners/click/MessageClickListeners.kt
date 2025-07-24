@@ -5,7 +5,6 @@ import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
-import com.sceyt.chatuikit.presentation.components.channel.messages.components.ScrollToDownView
 
 sealed interface MessageClickListeners {
 
@@ -62,7 +61,11 @@ sealed interface MessageClickListeners {
     }
 
     fun interface ScrollToDownClickListener : MessageClickListeners {
-        fun onScrollToDownClick(view: ScrollToDownView)
+        fun onScrollToDownClick(view: View)
+    }
+
+    fun interface ScrollToUnreadMentionClickListener : MessageClickListeners {
+        fun onScrollToUnreadMentionClick(view: View)
     }
 
     fun interface MultiSelectClickListener : MessageClickListeners {
@@ -84,6 +87,7 @@ sealed interface MessageClickListeners {
             AttachmentLongClickListener,
             MentionClickListener,
             ScrollToDownClickListener,
+            ScrollToUnreadMentionClickListener,
             AttachmentLoaderClickListener,
             MultiSelectClickListener
 }
