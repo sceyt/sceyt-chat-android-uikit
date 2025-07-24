@@ -218,8 +218,7 @@ open class ChannelViewHolder(
     }
 
     protected open fun setUnreadMentions(channel: SceytChannel, imageView: ImageView) {
-        val showMention = channel.newMentionCount > 0 && channel.newMessageCount > 0
-        if (showMention) {
+        if (channel.newMentionCount > 0) {
             imageView.isVisible = true
             if (channel.muted)
                 itemStyle.unreadMentionMutedStateBackgroundStyle.apply(imageView)
