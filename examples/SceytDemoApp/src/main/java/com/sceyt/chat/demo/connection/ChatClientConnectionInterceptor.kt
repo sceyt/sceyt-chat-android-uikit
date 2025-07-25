@@ -20,7 +20,7 @@ class ChatClientConnectionInterceptor(
     suspend fun getChatToken(userId: String): String? {
         val wasLocked = mutex.isLocked
         return mutex.withLock {
-            if (!wasLocked) {
+            if (!wasLocked && ongoingRequest != null) {
                 // Previous request finished and we're starting fresh batch
                 SceytLog.i(TAG, "$TAG getChatToken clearing old cached result for freshness")
                 ongoingRequest = null
