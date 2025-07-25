@@ -5,7 +5,7 @@ import com.sceyt.chat.models.ConnectionState
 import com.sceyt.chat.models.SceytException
 import com.sceyt.chat.sceyt_listeners.ClientListener
 import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
-import com.sceyt.chatuikit.extensions.TAG
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.extensions.safeResume
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,6 +23,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 object ConnectionEventManager {
+    private const val TAG = "ConnectionEventManager"
+
     val connectionState: ConnectionState
         get() = getConnectionStateIfInitialized()
 
@@ -46,6 +48,7 @@ object ConnectionEventManager {
     init {
         ChatClient.getClient().addClientListener(TAG, object : ClientListener {
             override fun onConnectionStateChanged(state: ConnectionState?, exception: SceytException?) {
+                SceytLog.i(TAG, "onConnectionStateChanged, state: $state, exception: $exception")
                 onChangedConnectStatusFlow_.tryEmit(ConnectionStateData(state, exception))
             }
 
