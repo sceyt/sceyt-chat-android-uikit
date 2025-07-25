@@ -38,7 +38,7 @@ class ChatClientConnectionInterceptor(
 
             SceytLog.i(TAG, "$TAG getChatToken starting new request")
             coroutineScope {
-                ongoingRequest = async { getSceytToken(userId) }
+                ongoingRequest = async { getSceytTokenImpl(userId) }
 
                 return@coroutineScope ongoingRequest?.await()?.fold(
                     onSuccess = {
@@ -53,7 +53,7 @@ class ChatClientConnectionInterceptor(
         }
     }
 
-    private suspend fun getSceytToken(userId: String): Result<String> {
+    private suspend fun getSceytTokenImpl(userId: String): Result<String> {
         SceytLog.i(TAG, "$TAG try to get Sceyt token")
         val result = connectionRepo.getSceytToken(userId)
 
