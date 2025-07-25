@@ -20,7 +20,7 @@ class ChatClientConnectionInterceptor(
     suspend fun getChatToken(userId: String): String? {
         val wasLocked = mutex.isLocked
         return mutex.withLock {
-            if (!wasLocked) {
+            if (!wasLocked && ongoingRequest != null) {
                 // Previous request finished and we're starting fresh batch
                 SceytLog.i(TAG, "$TAG getChatToken clearing old cached result for freshness")
                 ongoingRequest = null
@@ -38,7 +38,7 @@ class ChatClientConnectionInterceptor(
 
             SceytLog.i(TAG, "$TAG getChatToken starting new request")
             coroutineScope {
-                ongoingRequest = async { getSceytToken(userId) }
+                ongoingRequest = async { getSceytTokenImpl(userId) }
 
                 return@coroutineScope ongoingRequest?.await()?.fold(
                     onSuccess = {
@@ -53,7 +53,7 @@ class ChatClientConnectionInterceptor(
         }
     }
 
-    private suspend fun getSceytToken(userId: String): Result<String> {
+    private suspend fun getSceytTokenImpl(userId: String): Result<String> {
         SceytLog.i(TAG, "$TAG try to get Sceyt token")
         val result = connectionRepo.getSceytToken(userId)
 
