@@ -74,20 +74,9 @@ fun MessageListViewModel.bind(
         .flowOn(Dispatchers.Main)
         .launchIn(lifecycleOwner.lifecycleScope)
 
-    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
-        if (!replyInThread)
-            headerView.setChannel(channel, false)
-    }
-
     joinLiveData.observe(lifecycleOwner) {
         if (!replyInThread && it is SceytResponse.Success) {
             headerView.setChannel(it.data ?: return@observe, false)
-        }
-    }
-
-    channelLiveData.observe(lifecycleOwner) {
-        if (!replyInThread && it is SceytResponse.Success) {
-            headerView.setChannel(it.data ?: return@observe, true)
         }
     }
 }

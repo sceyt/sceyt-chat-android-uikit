@@ -83,11 +83,13 @@ import com.sceyt.chatuikit.presentation.extensions.isDeletedOrHardDeleted
 import com.sceyt.chatuikit.presentation.extensions.isHardDeleted
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.services.SceytPresenceChecker
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
 
 internal class PersistenceChannelsLogicImpl(
@@ -130,7 +132,7 @@ internal class PersistenceChannelsLogicImpl(
             }
 
             is Updated -> {
-                val lastMessage = getChannelPendingLastMessage(event.channel)
+                val lastMessage = getChannelCurrentLastMessage(event.channel)
                 val channel = event.channel.copy(lastMessage = lastMessage)
                 channelDao.insertChannel(channel.toChannelEntity())
                 getAndUpdateCashedChannel(channel.id)
@@ -276,6 +278,7 @@ internal class PersistenceChannelsLogicImpl(
             message.userReactions?.mapNotNull { it.user?.toUserDb() }?.let { userList ->
                 users = users.plus(userList)
             }
+            messageLogic.saveChannelLastMessagesToDb(listOf(message))
         }
         usersDao.insertUsersWithMetadata(users)
         channelDao.insertChannelAndLinks(channel.toChannelEntity(), members.map {
@@ -621,7 +624,7 @@ internal class PersistenceChannelsLogicImpl(
     override suspend fun createChannel(createChannelData: CreateChannelData): SceytResponse<SceytChannel> {
         return channelsRepository.createChannel(createChannelData).onSuccessNotNull { channel ->
             channel.members?.toTypedArray()?.let {
-                val lastMessage = getChannelPendingLastMessage(channel)
+                val lastMessage = getChannelCurrentLastMessage(channel)
                 val updated = channel.copy(lastMessage = lastMessage)
                 insertChannelWithMembers(updated, *it)
                 channelsCache.upsertChannel(updated)
@@ -841,12 +844,14 @@ internal class PersistenceChannelsLogicImpl(
         return channelDao.getChannelByUserAndType(peerId, ChannelTypeEnum.Direct.value)?.toChannel()
     }
 
-    override suspend fun getChannelFromServer(channelId: Long): SceytResponse<SceytChannel> {
-        return channelsRepository.getChannel(channelId)
+    override suspend fun getChannelFromServer(
+            channelId: Long,
+    ): SceytResponse<SceytChannel> = withContext(Dispatchers.IO) {
+        return@withContext channelsRepository.getChannel(channelId)
             .onSuccessNotNull { channel ->
-                val lastMessage = getChannelPendingLastMessage(channel)
+                val lastMessage = getChannelCurrentLastMessage(channel)
                 channel.copy(lastMessage = lastMessage).toChannelEntity().let {
-                    channelDao.insertChannel(it)
+                    insertChannelWithMembers(channel, *channel.members?.toTypedArray().orEmpty())
                     getAndUpdateCashedChannel(channelId)?.let { updatedChannel ->
                         messageLogic.onSyncedChannels(arrayListOf(updatedChannel))
                     }
@@ -855,7 +860,7 @@ internal class PersistenceChannelsLogicImpl(
             .onError {
                 getChannelFromDb(channelId)?.let {
                     if (it.pending)
-                        return SceytResponse.Success(it)
+                        return@withContext SceytResponse.Success(it)
                 }
             }
     }
@@ -899,19 +904,13 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     override suspend fun join(channelId: Long): SceytResponse<SceytChannel> {
-        val response = channelsRepository.join(channelId)
-
-        if (response is SceytResponse.Success)
-            response.data?.let {
-                it.members?.firstOrNull()?.let { sceytMember ->
-                    channelDao.insertUserChatLink(UserChatLinkEntity(
-                        userId = sceytMember.id,
-                        chatId = it.id,
-                        role = sceytMember.role.name))
-
-                    channelsCache.upsertChannel(it)
-                }
-            }
+        val response = channelsRepository.join(channelId).onSuccessNotNull {
+            insertChannelWithMembers(
+                channel = it,
+                members = it.members?.toTypedArray().orEmpty()
+            )
+            channelsCache.upsertChannel(it)
+        }
 
         return response
     }
@@ -1030,7 +1029,7 @@ internal class PersistenceChannelsLogicImpl(
         return mutableList
     }
 
-    private suspend fun getChannelPendingLastMessage(channel: SceytChannel): SceytMessage? {
+    private suspend fun getChannelCurrentLastMessage(channel: SceytChannel): SceytMessage? {
         val messageTid = channelDao.getChannelLastMessageTid(channel.id)
                 ?: return channel.lastMessage
 
