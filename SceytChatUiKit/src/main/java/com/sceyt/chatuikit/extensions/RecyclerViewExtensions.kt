@@ -166,11 +166,9 @@ fun RecyclerView.addPagerSnapHelper() {
         PagerSnapHelper().attachToRecyclerView(this)
 }
 
-fun RecyclerView.awaitToScrollFinish(position: Int, delay: Boolean = false, callback: (Int) -> Unit) {
+fun RecyclerView.awaitToScrollFinish(position: Int, callback: (Int) -> Unit) {
     if (!checkIsNotVisibleItem(position)) {
-        if (delay)
-            Handler(Looper.getMainLooper()).postDelayed({ callback.invoke(scrollState) }, 100)
-        else callback.invoke(scrollState)
+        callback.invoke(scrollState)
     } else {
         addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {

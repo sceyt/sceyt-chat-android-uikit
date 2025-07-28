@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.extensions
 
+import android.animation.LayoutTransition
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.res.ColorStateList
@@ -258,4 +259,14 @@ fun View.getScope(): LifecycleCoroutineScope {
 fun View.hideSoftInput() {
     val inputMethodManager = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
     inputMethodManager.hideSoftInputFromWindow(windowToken, 0)
+}
+
+fun ViewGroup.setLayoutTransition(
+        duration: Long = 200,
+        type: Int = LayoutTransition.DISAPPEARING,
+) {
+    layoutTransition = LayoutTransition().apply {
+        disableTransitionType(type)
+        setDuration(duration)
+    }
 }

@@ -9,13 +9,36 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.sceyt.chatuikit.presentation.components.channel.messages.components.ScrollToDownView
-        android:id="@+id/scrollDownView"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutUnreadCounts"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.sceyt.chatuikit.presentation.custom_views.ScrollerView
+            android:id="@+id/scrollToUnredMentionView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/scrollDownView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:sceytUiScrollerIcon="@drawable/sceyt_ic_mention"
+            tools:sceytUiScrollerUnreadCount="1"
+            tools:visibility="visible" />
+
+        <com.sceyt.chatuikit.presentation.custom_views.ScrollerView
+            android:id="@+id/scrollDownView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:sceytUiScrollerIcon="@drawable/sceyt_ic_arrow_down"
+            tools:sceytUiScrollerUnreadCount="1"
+            tools:visibility="visible" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.sceyt.chatuikit.presentation.custom_views.PageStateView
         android:id="@+id/pageStateView"

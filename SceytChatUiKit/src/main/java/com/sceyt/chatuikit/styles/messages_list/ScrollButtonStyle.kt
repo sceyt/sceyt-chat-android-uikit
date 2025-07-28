@@ -10,14 +10,14 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
-data class ScrollDownButtonStyle(
+data class ScrollButtonStyle(
         @ColorInt val backgroundColor: Int,
         val icon: Drawable?,
         val unreadCountTextStyle: TextStyle,
         val unreadCountFormatter: Formatter<Long>
 ) {
     companion object {
-        var styleCustomizer = StyleCustomizer<ScrollDownButtonStyle> { _, style -> style }
+        var styleCustomizer = StyleCustomizer<ScrollButtonStyle> { _, style -> style }
     }
 
     internal class Builder(
@@ -41,7 +41,7 @@ data class ScrollDownButtonStyle(
             this.unreadCountTextStyle = unreadCountTextStyle
         }
 
-        fun build() = ScrollDownButtonStyle(
+        fun build() = ScrollButtonStyle(
             backgroundColor = backgroundColor,
             icon = icon,
             unreadCountTextStyle = unreadCountTextStyle,

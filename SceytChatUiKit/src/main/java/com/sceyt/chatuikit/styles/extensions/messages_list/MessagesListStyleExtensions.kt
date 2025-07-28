@@ -18,7 +18,7 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.messages_list.DateSeparatorStyle
 import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import com.sceyt.chatuikit.styles.messages_list.ReactionPickerStyle
-import com.sceyt.chatuikit.styles.messages_list.ScrollDownButtonStyle
+import com.sceyt.chatuikit.styles.messages_list.ScrollButtonStyle
 import com.sceyt.chatuikit.styles.messages_list.UnreadMessagesSeparatorStyle
 import com.sceyt.chatuikit.styles.messages_list.item.LinkPreviewStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
@@ -43,9 +43,28 @@ internal fun MessagesListViewStyle.Builder.buildScrollDownTextStyle(
     .build()
 
 
+internal fun MessagesListViewStyle.Builder.buildScrollUnreadMentionTextStyle(
+        typedArray: TypedArray,
+) = TextStyle.Builder(typedArray)
+    .setBackgroundColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListScrollUnreadMentionButtonUnreadCountTextBackgroundColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
+    )
+    .setColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListScrollUnreadMentionButtonUnreadCountTextColor,
+        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor))
+    .setSize(
+        index = R.styleable.MessagesListView_sceytUiMessagesListScrollUnreadMentionButtonUnreadCountTextSize
+    )
+    .setFont(
+        index = R.styleable.MessagesListView_sceytUiMessagesListScrollUnreadMentionButtonUnreadCountTextFont
+    )
+    .build()
+
+
 internal fun MessagesListViewStyle.Builder.buildScrollDownButtonStyle(
         typedArray: TypedArray,
-) = ScrollDownButtonStyle.Builder(context, typedArray)
+) = ScrollButtonStyle.Builder(context, typedArray)
     .backgroundColor(
         index = R.styleable.MessagesListView_sceytUiMessagesListScrollDownButtonBackgroundColor
     )
@@ -57,6 +76,22 @@ internal fun MessagesListViewStyle.Builder.buildScrollDownButtonStyle(
     )
 
     .unreadCountTextStyle(buildScrollDownTextStyle(typedArray))
+    .build()
+
+internal fun MessagesListViewStyle.Builder.buildScrollUnreadMentionButtonStyle(
+        typedArray: TypedArray,
+) = ScrollButtonStyle.Builder(context, typedArray)
+    .backgroundColor(
+        index = R.styleable.MessagesListView_sceytUiMessagesListScrollUnreadMentionButtonBackgroundColor
+    )
+    .icon(
+        index = R.styleable.MessagesListView_sceytUiMessagesListScrollUnreadMentionButtonIcon,
+        defValue = context.getCompatDrawable(R.drawable.sceyt_ic_mention).applyTint(
+            context.getCompatColor(SceytChatUIKit.theme.colors.iconSecondaryColor)
+        )
+    )
+
+    .unreadCountTextStyle(buildScrollUnreadMentionTextStyle(typedArray))
     .build()
 
 // DateSeparatorStyle

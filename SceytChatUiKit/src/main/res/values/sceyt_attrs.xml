@@ -128,6 +128,22 @@
 
     </declare-styleable>
 
+    <declare-styleable name="ScrollerView">
+        <attr name="sceytUiScrollerIcon" format="reference" />
+        <attr name="sceytUiScrollerBackgroundColor" format="color|reference" />
+        <attr name="sceytUiScrollerTextBackgroundColor" format="color|reference" />
+        <attr name="sceytUiScrollerTextColor" format="color|reference" />
+        <attr name="sceytUiScrollerTextSize" format="dimension" />
+        <attr name="sceytUiScrollerTextFont" format="reference" />
+        <attr name="sceytUiScrollerTextStyle" format="enum">
+            <enum name="normal" value="0" />
+            <enum name="bold" value="1" />
+            <enum name="italic" value="2" />
+        </attr>
+        <attr name="sceytUiScrollerUnreadCount" format="integer" />
+        <attr name="sceytUiScrollerChangeVisibilityWithAnim" format="boolean" />
+    </declare-styleable>
+
     <declare-styleable name="CustomToolbar">
         <attr name="sceytUiToolbarTitle" format="string" localization="suggested" />
         <attr name="sceytUiToolbarSubtitle" format="string" localization="suggested" />

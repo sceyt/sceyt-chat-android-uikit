@@ -44,7 +44,7 @@ class MediaVideoViewHolder(
         private val binding: SceytMediaItemVideoBinding,
         private val style: MediaPreviewStyle,
         private val clickListeners: (MediaItem) -> Unit,
-        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit
+        private val needMediaDataCallback: (NeedMediaInfoData) -> Unit,
 ) : BaseFileViewHolder<MediaItem>(binding.root, needMediaDataCallback) {
     private var playerHelper: ExoPlayerHelper? = null
     private var videoController: ConstraintLayout? = null
@@ -76,7 +76,7 @@ class MediaVideoViewHolder(
         var isPlayingBeforePause = false
         binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)?.let { videoTimeContainer ->
             with(videoTimeContainer) {
-                applySystemWindowInsetsMargin(applyBottom = true, userDefaultMargins = false)
+                applySystemWindowInsetsMargin(applyBottom = true, applyRight = true, userDefaultMargins = false)
                 findViewById<DefaultTimeBar>(R.id.exo_progress)?.setOnTouchListener { _, event ->
                     when (event.action) {
                         MotionEvent.ACTION_DOWN -> {
@@ -105,7 +105,6 @@ class MediaVideoViewHolder(
     }
 
     private fun setPlayingState() {
-        videoController?.applySystemWindowInsetsMargin(applyBottom = true, userDefaultMargins = false)
         videoController?.isVisible = ((context as? MediaPreviewActivity)?.isVisibleToolbar()
                 ?: true)
         initPlayerHelper()
