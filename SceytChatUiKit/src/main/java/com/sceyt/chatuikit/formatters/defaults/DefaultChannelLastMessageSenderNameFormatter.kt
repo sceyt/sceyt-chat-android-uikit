@@ -14,7 +14,7 @@ open class DefaultChannelLastMessageSenderNameFormatter : Formatter<SceytChannel
             message.incoming -> {
                 val sender = from.lastMessage.user
                 val userFirstName = sender?.let {
-                    SceytChatUIKit.formatters.userShortNameFormatter.format(context, it)
+                    SceytChatUIKit.formatters.userNameFormatter.format(context, it)
                 }
                 if (from.isGroup && !userFirstName.isNullOrBlank()) {
                     "${userFirstName}: "
