@@ -140,7 +140,8 @@ open class MediaPreviewActivity : AppCompatActivity(), OnMediaClickCallback {
         binding.toolbar.applySystemWindowInsetsPadding(
             applyTop = true,
             applyRight = true,
-            applyLeft = true
+            applyLeft = true,
+            applyBottom = false
         )
 
         binding.root.post { toggleFullScreen(false) }
