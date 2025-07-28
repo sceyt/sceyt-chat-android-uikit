@@ -40,7 +40,6 @@ import com.sceyt.chatuikit.data.models.messages.MarkerType.Received
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.repositories.getUserId
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.toDeliveryStatus
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -1176,6 +1175,7 @@ internal class PersistenceMessagesLogicImpl(
             channelId: Long, marker: MarkerType,
             vararg ids: Long,
     ): List<SceytResponse<MessageListMarker>> = withContext(dispatcherIO) {
+        SceytLog.i(TAG, "Mark messages as marker: ${marker.value}, ids: ${ids.toList()}")
         val responseList = mutableListOf<SceytResponse<MessageListMarker>>()
         ids.toList().chunked(50).forEach {
             val typedArray = it.toLongArray()
@@ -1227,8 +1227,8 @@ internal class PersistenceMessagesLogicImpl(
         when (response) {
             is SceytResponse.Success -> {
                 response.data?.let { data ->
-                    SceytLog.i("onMarkerResponse", "send $marker, ${ids.toList()}, in response ${data.messageIds}, " +
-                            "marker: ${marker}, name: ${data.name}")
+                    SceytLog.i(TAG, "$marker marker successfully added to messages: ${ids.toList()}, in response ${data.messageIds}, " +
+                            "name: ${data.name}")
                     val responseIds = data.messageIds.toList()
 
                     marker.toDeliveryStatus()?.let { deliveryStatus ->
@@ -1249,9 +1249,14 @@ internal class PersistenceMessagesLogicImpl(
             is SceytResponse.Error -> {
                 // Check if error code is 1301 (TypeNotAllowed), 1228 (TypeBadParam) then delete pending markers
                 val code = response.exception?.code
+                SceytLog.i(TAG, "Error adding $marker marker to messages:${ids.toList()}, error:${response.exception?.message}, code: $code")
                 if (code == 1301 || code == 1228)
                     pendingMarkerDao.deleteMessagesMarkersByStatus(ids.toList(), marker)
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "PersistenceMessagesLogic"
     }
 }
