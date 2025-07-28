@@ -8,6 +8,7 @@ import androidx.fragment.app.commit
 import com.sceyt.chat.demo.databinding.ActivityWelcomeBinding
 import com.sceyt.chat.demo.presentation.welcome.create.CreateAccountFragment
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 
@@ -19,6 +20,7 @@ class WelcomeActivity : AppCompatActivity() {
         enableEdgeToEdge()
         binding = ActivityWelcomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        applyInsetsAndWindowColor(binding.root)
         statusBarIconsColorWithBackground()
     }
 
