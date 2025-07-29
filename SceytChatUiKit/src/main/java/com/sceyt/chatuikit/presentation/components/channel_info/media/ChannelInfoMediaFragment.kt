@@ -30,35 +30,23 @@ import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.di.ChannelInfoMediaViewModelQualifier
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.channel_info.media.ChannelInfoMediaStyle
 import com.sceyt.chatuikit.styles.extensions.channel_info.media.setPageStatesView
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-open class ChannelInfoMediaFragment : Fragment, SceytKoinComponent, HistoryClearedListener {
-    constructor() : super()
-
-    constructor(infoStyle: ChannelInfoStyle) : super() {
-        this.infoStyle = infoStyle
-    }
-
+open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, HistoryClearedListener {
     protected lateinit var channel: SceytChannel
     protected var binding: SceytFragmentChannelInfoMediaBinding? = null
     protected open var mediaAdapter: ChannelMediaAdapter? = null
     protected open val mediaType = listOf("image", "video")
     protected open var pageStateView: PageStateView? = null
     protected val viewModel: ChannelAttachmentsViewModel by viewModel(ChannelInfoMediaViewModelQualifier)
-    lateinit var infoStyle: ChannelInfoStyle
-        protected set
+    protected lateinit var mediaStyle: ChannelInfoMediaStyle
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        // Keep the style in the view model.
-        // If the style is not initialized it will be taken from the view model.
-        if (::infoStyle.isInitialized)
-            viewModel.infoStyle = infoStyle
-        else
-            infoStyle = viewModel.infoStyle
+        mediaStyle = ChannelInfoMediaStyle.Builder(context, attributeSet = null).build()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -89,7 +77,7 @@ open class ChannelInfoMediaFragment : Fragment, SceytKoinComponent, HistoryClear
         }
 
         lifecycleScope.launch {
-            viewModel.loadMoreFilesFlow.collect(::onMoreMediaList)
+            viewModel.loadMoreAttachmentsFlow.collect(::onMoreMediaList)
         }
 
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
@@ -97,7 +85,7 @@ open class ChannelInfoMediaFragment : Fragment, SceytKoinComponent, HistoryClear
 
     private fun addPageStateView() {
         binding?.root?.addView(PageStateView(requireContext()).apply {
-            setPageStatesView(this)
+            setPageStatesView(mediaStyle)
             pageStateView = this
 
             post {
@@ -112,7 +100,9 @@ open class ChannelInfoMediaFragment : Fragment, SceytKoinComponent, HistoryClear
     protected open fun onInitialMediaList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
             val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(
-                requireContext(), infoStyle, infoStyle.mediaStyle.dateSeparatorStyle).also {
+                context = requireContext(),
+                mediaStyleProvider = { mediaStyle },
+                dateSeparatorStyle = mediaStyle.dateSeparatorStyle).also {
 
                 it.setNeedMediaDataCallback { data ->
                     viewModel.needMediaInfo(data)
@@ -199,7 +189,7 @@ open class ChannelInfoMediaFragment : Fragment, SceytKoinComponent, HistoryClear
     }
 
     private fun SceytFragmentChannelInfoMediaBinding.applyStyle() {
-        root.setBackgroundColor(infoStyle.mediaStyle.backgroundColor)
+        root.setBackgroundColor(mediaStyle.backgroundColor)
     }
 
     companion object {
@@ -207,11 +197,8 @@ open class ChannelInfoMediaFragment : Fragment, SceytKoinComponent, HistoryClear
 
         fun newInstance(
                 channel: SceytChannel,
-                infoStyle: ChannelInfoStyle
-        ) = ChannelInfoMediaFragment(infoStyle).apply {
-            setBundleArguments {
-                putParcelable(CHANNEL, channel)
-            }
+        ) = ChannelInfoMediaFragment().setBundleArguments {
+            putParcelable(CHANNEL, channel)
         }
     }
 }

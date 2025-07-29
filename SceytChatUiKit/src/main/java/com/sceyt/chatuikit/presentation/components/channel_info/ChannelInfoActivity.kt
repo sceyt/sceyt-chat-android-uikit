@@ -609,13 +609,13 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
     protected open fun getChannelMembersFragment(channel: SceytChannel, memberType: MemberTypeEnum): Fragment? =
             ChannelMembersFragment.newInstance(channel, memberType)
 
-    protected open fun getChannelMediaFragment(channel: SceytChannel): Fragment? = ChannelInfoMediaFragment.newInstance(channel, style)
+    protected open fun getChannelMediaFragment(channel: SceytChannel): Fragment? = ChannelInfoMediaFragment.newInstance(channel)
 
-    protected open fun getChannelFilesFragment(channel: SceytChannel): Fragment? = ChannelInfoFilesFragment.newInstance(channel, style)
+    protected open fun getChannelFilesFragment(channel: SceytChannel): Fragment? = ChannelInfoFilesFragment.newInstance(channel)
 
-    protected open fun getChannelLinksFragment(channel: SceytChannel): Fragment? = ChannelInfoLinksFragment.newInstance(channel, style)
+    protected open fun getChannelLinksFragment(channel: SceytChannel): Fragment? = ChannelInfoLinksFragment.newInstance(channel)
 
-    protected open fun getChannelVoiceFragment(channel: SceytChannel): Fragment? = ChannelInfoVoiceFragment.newInstance(channel, style)
+    protected open fun getChannelVoiceFragment(channel: SceytChannel): Fragment? = ChannelInfoVoiceFragment.newInstance(channel)
 
     protected open fun getEditChannelFragment(channel: SceytChannel): Fragment? = EditChannelFragment.newInstance(channel)
 
