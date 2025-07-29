@@ -16,6 +16,7 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
+import com.sceyt.chatuikit.presentation.style.SceytComponentStyle
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.renderers.AvatarRenderer
@@ -168,8 +169,8 @@ data class MessageItemStyle(
         val attachmentFileSizeFormatter: Formatter<SceytAttachment>,
         val attachmentIconProvider: VisualProvider<SceytAttachment, Drawable?>,
         val senderNameColorProvider: VisualProvider<SceytUser, Int>,
-        val userAvatarRenderer: AvatarRenderer<SceytUser>
-) {
+        val userAvatarRenderer: AvatarRenderer<SceytUser>,
+) : SceytComponentStyle() {
 
     companion object {
         @JvmField
@@ -178,7 +179,7 @@ data class MessageItemStyle(
 
     internal class Builder(
             internal val context: Context,
-            private val attrs: AttributeSet?
+            private val attrs: AttributeSet?,
     ) {
         private val accentColor = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
         private val bgColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)

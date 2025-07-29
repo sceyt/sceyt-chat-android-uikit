@@ -28,6 +28,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.di.ChannelInfoVoiceViewModelQualifier
 import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.presentation.style.StyleRegistry
 import com.sceyt.chatuikit.styles.channel_info.voice.ChannelInfoVoiceStyle
 import com.sceyt.chatuikit.styles.extensions.channel_info.voice.setPageStatesView
 import kotlinx.coroutines.launch
@@ -44,7 +45,11 @@ open class ChannelInfoVoiceFragment : Fragment(), SceytKoinComponent, HistoryCle
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        voiceStyle = ChannelInfoVoiceStyle.Builder(context, attributeSet = null).build()
+        val styleId = arguments?.getString(STYLE_ID_KEY)
+
+        voiceStyle = StyleRegistry.getOrDefault(styleId) {
+            ChannelInfoVoiceStyle.Builder(context, null).build()
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -165,11 +170,14 @@ open class ChannelInfoVoiceFragment : Fragment(), SceytKoinComponent, HistoryCle
 
     companion object {
         const val CHANNEL = "CHANNEL"
+        private const val STYLE_ID_KEY = "STYLE_ID_KEY"
 
         fun newInstance(
                 channel: SceytChannel,
+                styleId: String,
         ) = ChannelInfoVoiceFragment().setBundleArguments {
             putParcelable(CHANNEL, channel)
+            putString(STYLE_ID_KEY, styleId)
         }
     }
 }

@@ -29,6 +29,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.di.ChannelInfoFilesViewModelQualifier
 import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.presentation.style.StyleRegistry
 import com.sceyt.chatuikit.styles.channel_info.files.ChannelInfoFilesStyle
 import com.sceyt.chatuikit.styles.extensions.channel_info.files.setPageStatesView
 import kotlinx.coroutines.flow.filterNot
@@ -46,7 +47,11 @@ open class ChannelInfoFilesFragment : Fragment(), SceytKoinComponent, HistoryCle
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        filesStyle = ChannelInfoFilesStyle.Builder(context, attributeSet = null).build()
+        val styleId = arguments?.getString(STYLE_ID_KEY)
+
+        filesStyle = StyleRegistry.getOrDefault(styleId) {
+            ChannelInfoFilesStyle.Builder(context, null).build()
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -171,11 +176,14 @@ open class ChannelInfoFilesFragment : Fragment(), SceytKoinComponent, HistoryCle
 
     companion object {
         const val CHANNEL = "CHANNEL"
+        private const val STYLE_ID_KEY = "STYLE_ID_KEY"
 
         fun newInstance(
                 channel: SceytChannel,
+                styleId: String,
         ) = ChannelInfoFilesFragment().setBundleArguments {
             putParcelable(CHANNEL, channel)
+            putString(STYLE_ID_KEY, styleId)
         }
     }
 }
