@@ -94,6 +94,8 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         style = ChannelInfoStyle.Builder(this, null).build()
+        registerAllStyles()
+        
         setActivityContentView()
         binding?.let { applyInsetsAndWindowColor(it.root) }
         statusBarIconsColorWithBackground()
@@ -109,6 +111,14 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
         viewModel.observeToChannelUpdate(channel.id)
         viewModel.onChannelEvent(channel.id)
         observeUserUpdateIfNeeded()
+    }
+
+    /** Register all sub-styles to survive configuration changes */
+    private fun registerAllStyles() {
+        StyleRegistry.register(style.mediaStyle)
+        StyleRegistry.register(style.filesStyle)
+        StyleRegistry.register(style.linkStyle)
+        StyleRegistry.register(style.voiceStyle)
     }
 
     private fun getBundleArguments() {
@@ -611,22 +621,18 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
             ChannelMembersFragment.newInstance(channel, memberType)
 
     protected open fun getChannelMediaFragment(channel: SceytChannel): Fragment? {
-        StyleRegistry.register(style.mediaStyle)
         return ChannelInfoMediaFragment.newInstance(channel, style.mediaStyle.styleId)
     }
 
     protected open fun getChannelFilesFragment(channel: SceytChannel): Fragment? {
-        StyleRegistry.register(style.filesStyle)
         return ChannelInfoFilesFragment.newInstance(channel, style.filesStyle.styleId)
     }
 
     protected open fun getChannelLinksFragment(channel: SceytChannel): Fragment? {
-        StyleRegistry.register(style.linkStyle)
         return ChannelInfoLinksFragment.newInstance(channel, style.linkStyle.styleId)
     }
 
     protected open fun getChannelVoiceFragment(channel: SceytChannel): Fragment? {
-        StyleRegistry.register(style.voiceStyle)
         return ChannelInfoVoiceFragment.newInstance(channel, style.voiceStyle.styleId)
     }
 
@@ -682,9 +688,12 @@ open class ChannelInfoActivity : AppCompatActivity(), SceytKoinComponent {
 
     override fun onDestroy() {
         super.onDestroy()
+        // Clean up all registered styles
         StyleRegistry.unregister(
-            style.mediaStyle.styleId, style.filesStyle.styleId,
-            style.linkStyle.styleId, style.voiceStyle.styleId
+            style.mediaStyle.styleId, 
+            style.filesStyle.styleId,
+            style.linkStyle.styleId, 
+            style.voiceStyle.styleId
         )
     }
 
