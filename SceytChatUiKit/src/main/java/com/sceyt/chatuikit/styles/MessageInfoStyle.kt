@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoFragment
+import com.sceyt.chatuikit.presentation.style.SceytComponentStyle
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.renderers.AvatarRenderer
@@ -62,7 +63,7 @@ data class MessageInfoStyle(
         val messageDateFormatter: Formatter<Date>,
         val attachmentSizeFormatter: Formatter<SceytAttachment>,
         val markerTitleProvider: VisualProvider<MarkerType, String>,
-) {
+) : SceytComponentStyle() {
 
     companion object {
         var styleCustomizer = StyleCustomizer<MessageInfoStyle> { _, style -> style }

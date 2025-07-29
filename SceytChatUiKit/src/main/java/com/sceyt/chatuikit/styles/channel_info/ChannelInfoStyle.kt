@@ -8,6 +8,10 @@ import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.styles.StyleCustomizer
+import com.sceyt.chatuikit.styles.channel_info.files.ChannelInfoFilesStyle
+import com.sceyt.chatuikit.styles.channel_info.link.ChannelInfoLinkStyle
+import com.sceyt.chatuikit.styles.channel_info.media.ChannelInfoMediaStyle
+import com.sceyt.chatuikit.styles.channel_info.voice.ChannelInfoVoiceStyle
 import com.sceyt.chatuikit.theme.Colors
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
@@ -24,6 +28,10 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property settingsStyle - style for the settings section
  * @property optionsStyle - style for the options section
  * @property tabBarStyle - style for the tab bar
+ * @property mediaStyle - style for the media section
+ * @property filesStyle - style for the files section
+ * @property voiceStyle - style for the voice section
+ * @property linkStyle - style for the link section
  * */
 data class ChannelInfoStyle(
         @ColorInt val backgroundColor: Int,
@@ -37,6 +45,10 @@ data class ChannelInfoStyle(
         val settingsStyle: ChannelInfoSettingsStyle,
         val optionsStyle: ChannelInfoOptionsStyle,
         val tabBarStyle: ChannelInfoTabBarStyle,
+        val mediaStyle: ChannelInfoMediaStyle,
+        val filesStyle: ChannelInfoFilesStyle,
+        val voiceStyle: ChannelInfoVoiceStyle,
+        val linkStyle: ChannelInfoLinkStyle,
 ) {
 
     companion object {
@@ -60,6 +72,10 @@ data class ChannelInfoStyle(
             val settingsStyle = ChannelInfoSettingsStyle.Builder(context, attributeSet).build()
             val optionsStyle = ChannelInfoOptionsStyle.Builder(context, attributeSet).build()
             val tabBarStyle = ChannelInfoTabBarStyle.Builder(context, attributeSet).build()
+            val mediaStyle = ChannelInfoMediaStyle.Builder(context, attributeSet).build()
+            val filesStyle = ChannelInfoFilesStyle.Builder(context, attributeSet).build()
+            val voiceStyle = ChannelInfoVoiceStyle.Builder(context, attributeSet).build()
+            val linkStyle = ChannelInfoLinkStyle.Builder(context, attributeSet).build()
 
             return ChannelInfoStyle(
                 backgroundColor = backgroundColor,
@@ -73,6 +89,10 @@ data class ChannelInfoStyle(
                 settingsStyle = settingsStyle,
                 optionsStyle = optionsStyle,
                 tabBarStyle = tabBarStyle,
+                mediaStyle = mediaStyle,
+                filesStyle = filesStyle,
+                voiceStyle = voiceStyle,
+                linkStyle = linkStyle,
             ).let { styleCustomizer.apply(context, it) }
         }
     }

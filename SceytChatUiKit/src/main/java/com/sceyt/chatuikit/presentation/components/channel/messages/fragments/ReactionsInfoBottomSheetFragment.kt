@@ -27,6 +27,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.ad
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.ReactionHeaderItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.ReactionsHeaderAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.ViewPagerAdapterReactedUsers
+import com.sceyt.chatuikit.presentation.style.StyleRegistry
 import com.sceyt.chatuikit.styles.reactions_info.ReactionsInfoStyle
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
@@ -177,7 +178,9 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
     }
 
     private fun createReactedUsersFragment(key: String, messageId: Long): FragmentReactedUsers {
-        return FragmentReactedUsers.newInstance(messageId, key, style.reactedUserListStyle).apply {
+        val style = style.reactedUserListStyle
+        StyleRegistry.register(style)
+        return FragmentReactedUsers.newInstance(messageId, key, style.styleId).apply {
             setClickListener {
                 reactionClick?.invoke(it)
                 dismissSafety()
@@ -194,15 +197,18 @@ class ReactionsInfoBottomSheetFragment : BottomSheetDialogFragment() {
         divider.dividerColor = style.dividerColor
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        StyleRegistry.unregister(style.reactedUserListStyle.styleId)
+    }
+
     companion object {
         private const val MESSAGE_KEY = "messageKey"
 
         fun newInstance(message: SceytMessage): ReactionsInfoBottomSheetFragment {
-            val fragment = ReactionsInfoBottomSheetFragment()
-            fragment.setBundleArguments {
+            return ReactionsInfoBottomSheetFragment().setBundleArguments {
                 putParcelable(MESSAGE_KEY, message)
             }
-            return fragment
         }
     }
 }

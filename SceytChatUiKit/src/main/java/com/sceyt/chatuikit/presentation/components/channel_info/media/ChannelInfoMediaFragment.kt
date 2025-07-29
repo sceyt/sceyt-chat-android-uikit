@@ -30,6 +30,7 @@ import com.sceyt.chatuikit.presentation.components.media.MediaPreviewActivity
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.di.ChannelInfoMediaViewModelQualifier
 import com.sceyt.chatuikit.presentation.root.PageState
+import com.sceyt.chatuikit.presentation.style.StyleRegistry
 import com.sceyt.chatuikit.styles.channel_info.media.ChannelInfoMediaStyle
 import com.sceyt.chatuikit.styles.extensions.channel_info.media.setPageStatesView
 import kotlinx.coroutines.launch
@@ -46,7 +47,11 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, HistoryCle
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        mediaStyle = ChannelInfoMediaStyle.Builder(context, attributeSet = null).build()
+        val styleId = arguments?.getString(STYLE_ID_KEY)
+
+        mediaStyle = StyleRegistry.getOrDefault(styleId) {
+            ChannelInfoMediaStyle.Builder(context, null).build()
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -194,11 +199,14 @@ open class ChannelInfoMediaFragment : Fragment(), SceytKoinComponent, HistoryCle
 
     companion object {
         const val CHANNEL = "CHANNEL"
+        private const val STYLE_ID_KEY = "STYLE_ID_KEY"
 
         fun newInstance(
                 channel: SceytChannel,
+                styleId: String,
         ) = ChannelInfoMediaFragment().setBundleArguments {
             putParcelable(CHANNEL, channel)
+            putString(STYLE_ID_KEY, styleId)
         }
     }
 }

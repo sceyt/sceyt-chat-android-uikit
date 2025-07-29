@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel_info.media.ChannelInfoMediaFragment
+import com.sceyt.chatuikit.presentation.style.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoDateSeparatorStyle
 import com.sceyt.chatuikit.theme.Colors
@@ -28,7 +29,7 @@ data class ChannelInfoVoiceStyle(
         val emptyStateTitle: String,
         val dateSeparatorStyle: ChannelInfoDateSeparatorStyle,
         val itemStyle: ChannelInfoVoiceItemStyle,
-) {
+) : SceytComponentStyle() {
 
     companion object {
         var styleCustomizer = StyleCustomizer<ChannelInfoVoiceStyle> { _, style -> style }
@@ -36,7 +37,7 @@ data class ChannelInfoVoiceStyle(
 
     internal class Builder(
             private val context: Context,
-            private val attributeSet: AttributeSet?
+            private val attributeSet: AttributeSet?,
     ) {
         fun build(): ChannelInfoVoiceStyle {
             val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)

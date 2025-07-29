@@ -26,7 +26,6 @@ import com.sceyt.chatuikit.persistence.interactor.MessageInteractor
 import com.sceyt.chatuikit.persistence.interactor.MessageMarkerInteractor
 import com.sceyt.chatuikit.persistence.mappers.isLink
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
-import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.BufferOverflow
@@ -64,7 +63,6 @@ class MessageInfoViewModel(
     private val fileTransferService: FileTransferService by inject()
     private val application: Application by inject()
     private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
-    lateinit var messageItemStyle: MessageItemStyle
 
     private val _uiState = MutableStateFlow<UIState>(UIState.Loading)
     val uiState = _uiState.asStateFlow()
