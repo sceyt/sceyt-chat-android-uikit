@@ -63,9 +63,7 @@ open class MessageInfoActivity : AppCompatActivity() {
                 context: Context,
                 message: SceytMessage,
                 itemStyle: MessageItemStyle,
-        ) {
-            launch(context, message.id, message.channelId, itemStyle)
-        }
+        ) = launch(context, message.id, message.channelId, itemStyle)
 
         fun launch(
                 context: Context,

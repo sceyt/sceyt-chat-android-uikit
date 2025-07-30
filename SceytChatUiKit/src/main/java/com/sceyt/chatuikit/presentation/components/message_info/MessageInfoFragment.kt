@@ -249,11 +249,7 @@ open class MessageInfoFragment : Fragment() {
         fun newInstance(
                 message: SceytMessage,
                 messageItemStyleId: String,
-        ) = MessageInfoFragment().setBundleArguments {
-            putLong(KEY_MESSAGE_ID, message.id)
-            putLong(KEY_CHANNEL_ID, message.channelId)
-            putString(STYLE_ID_KEY, messageItemStyleId)
-        }
+        ) = newInstance(message.id, message.channelId, messageItemStyleId)
 
         fun newInstance(
                 messageId: Long,
