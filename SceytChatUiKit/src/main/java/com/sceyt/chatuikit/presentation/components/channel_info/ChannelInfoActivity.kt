@@ -74,7 +74,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.voice.ChannelInf
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.dialogs.ChannelActionConfirmationWithDialog
 import com.sceyt.chatuikit.presentation.components.edit_channel.EditChannelFragment
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.presentation.style.StyleRegistry
+import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.services.SceytPresenceChecker.PresenceUser
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 

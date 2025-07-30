@@ -27,7 +27,7 @@ import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.PresenceStateIndicatorView
 import com.sceyt.chatuikit.presentation.extensions.setChannelMessageDateAndStatusIcon
-import com.sceyt.chatuikit.styles.ChannelItemStyle
+import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 import java.util.Date
 
 open class ChannelViewHolder(

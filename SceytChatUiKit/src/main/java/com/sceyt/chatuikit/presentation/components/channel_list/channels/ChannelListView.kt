@@ -31,7 +31,7 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.listene
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.popups.ChannelActionsPopup
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.ChannelListViewStyle
+import com.sceyt.chatuikit.styles.channel.ChannelListViewStyle
 import com.sceyt.chatuikit.styles.extensions.channel_list.setPageStateViews
 
 @Suppress("JoinDeclarationAndAssignment")

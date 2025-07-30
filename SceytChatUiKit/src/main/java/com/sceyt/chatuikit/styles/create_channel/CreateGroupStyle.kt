@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.styles
+package com.sceyt.chatuikit.styles.create_channel
 
 import android.content.Context
 import android.graphics.drawable.Drawable
@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.UserFormatter
 import com.sceyt.chatuikit.presentation.components.create_chat.create_group.CreateGroupActivity
 import com.sceyt.chatuikit.renderers.UserAvatarRenderer
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.ListItemStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle

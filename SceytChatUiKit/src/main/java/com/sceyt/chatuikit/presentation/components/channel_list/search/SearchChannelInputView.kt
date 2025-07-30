@@ -24,7 +24,7 @@ import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.SearchInputEventListeners.EventListeners
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.SearchInputEventListenersImpl
 import com.sceyt.chatuikit.presentation.components.channel_list.search.listeners.event.setListener
-import com.sceyt.chatuikit.styles.SearchChannelInputStyle
+import com.sceyt.chatuikit.styles.search.SearchChannelInputStyle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

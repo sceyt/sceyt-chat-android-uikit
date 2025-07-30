@@ -9,8 +9,8 @@ import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.styles.ForwardChannelItemStyle
-import com.sceyt.chatuikit.styles.ForwardStyle
+import com.sceyt.chatuikit.styles.forward.ForwardChannelItemStyle
+import com.sceyt.chatuikit.styles.forward.ForwardStyle
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.CheckboxStyle

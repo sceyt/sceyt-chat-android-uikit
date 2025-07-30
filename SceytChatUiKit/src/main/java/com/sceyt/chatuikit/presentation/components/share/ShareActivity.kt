@@ -25,7 +25,7 @@ import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewMode
 import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewModel.State.Finish
 import com.sceyt.chatuikit.presentation.components.share.viewmodel.ShareViewModel.State.Loading
 import com.sceyt.chatuikit.presentation.components.shareable.ShareableActivity
-import com.sceyt.chatuikit.styles.ShareStyle
+import com.sceyt.chatuikit.styles.share.ShareStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 

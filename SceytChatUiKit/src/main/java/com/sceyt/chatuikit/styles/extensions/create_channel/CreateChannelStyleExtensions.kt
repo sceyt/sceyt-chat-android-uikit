@@ -8,8 +8,8 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.styles.CreateChannelStyle
-import com.sceyt.chatuikit.styles.ImageCropperStyle
+import com.sceyt.chatuikit.styles.create_channel.CreateChannelStyle
+import com.sceyt.chatuikit.styles.cropper.ImageCropperStyle
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.HintStyle

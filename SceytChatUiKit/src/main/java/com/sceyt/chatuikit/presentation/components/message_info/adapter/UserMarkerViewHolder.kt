@@ -4,7 +4,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.databinding.SceytItemUserMarkerBinding
-import com.sceyt.chatuikit.styles.MessageInfoItemStyle
+import com.sceyt.chatuikit.styles.messages_list.MessageInfoItemStyle
 import java.util.Date
 
 class UserMarkerViewHolder(
