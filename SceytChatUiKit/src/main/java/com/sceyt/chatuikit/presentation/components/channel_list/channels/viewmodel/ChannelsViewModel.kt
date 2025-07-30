@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmo
 import androidx.lifecycle.viewModelScope
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.sceyt.chatuikit.config.ChannelListConfig
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -31,7 +32,6 @@ class ChannelsViewModel(
 ) : BaseViewModel(), SceytKoinComponent {
     private val channelInteractor: ChannelInteractor by inject()
     private var getChannelsJog: Job? = null
-    val selectedChannels = mutableSetOf<Long>()
 
     var searchQuery = ""
         private set
@@ -43,6 +43,7 @@ class ChannelsViewModel(
             offset: Int,
             query: String = searchQuery,
             loadKey: LoadKeyData? = null,
+            onlyMine: Boolean = true,
             ignoreDatabase: Boolean = false,
     ) {
         searchQuery = query
@@ -52,9 +53,15 @@ class ChannelsViewModel(
 
         getChannelsJog?.cancel()
         getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.loadChannels(offset, query, loadKey, ignoreDatabase, config).collect {
-                initPaginationResponse(it)
-            }
+            ConnectionEventManager.awaitToConnectSceyt()
+            channelInteractor.loadChannels(
+                offset = offset,
+                searchQuery = query,
+                loadKey = loadKey,
+                onlyMine = onlyMine,
+                ignoreDb = ignoreDatabase,
+                config = config
+            ).collect(::initPaginationResponse)
         }
     }
 
@@ -87,9 +94,7 @@ class ChannelsViewModel(
                 ignoreDb = ignoreDatabase,
                 loadKey = loadKey,
                 directChatType = directChatType
-            ).collect {
-                initPaginationResponse(it)
-            }
+            ).collect(::initPaginationResponse)
         }
     }
 

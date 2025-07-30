@@ -166,12 +166,20 @@ internal class PersistenceMiddleWareImpl(
     }
 
     override suspend fun loadChannels(
-            offset: Int, searchQuery: String, loadKey: LoadKeyData?,
+            offset: Int,
+            searchQuery: String,
+            loadKey: LoadKeyData?,
+            onlyMine: Boolean,
             ignoreDb: Boolean,
             config: ChannelListConfig,
-    ): Flow<PaginationResponse<SceytChannel>> {
-        return channelLogic.loadChannels(offset, searchQuery, loadKey, ignoreDb, config)
-    }
+    ) = channelLogic.loadChannels(
+        offset = offset,
+        searchQuery = searchQuery,
+        loadKey = loadKey,
+        onlyMine = onlyMine,
+        ignoreDb = ignoreDb,
+        config = config
+    )
 
     override suspend fun searchChannelsWithUserIds(
             offset: Int,
@@ -183,19 +191,17 @@ internal class PersistenceMiddleWareImpl(
             ignoreDb: Boolean,
             loadKey: LoadKeyData?,
             directChatType: String,
-    ): Flow<PaginationResponse<SceytChannel>> {
-        return channelLogic.searchChannelsWithUserIds(
-            offset = offset,
-            searchQuery = searchQuery,
-            userIds = userIds,
-            config = config,
-            includeSearchByUserDisplayName = includeSearchByUserDisplayName,
-            onlyMine = onlyMine,
-            ignoreDb = ignoreDb,
-            loadKey = loadKey,
-            directChatType = directChatType,
-        )
-    }
+    ) = channelLogic.searchChannelsWithUserIds(
+        offset = offset,
+        searchQuery = searchQuery,
+        userIds = userIds,
+        config = config,
+        includeSearchByUserDisplayName = includeSearchByUserDisplayName,
+        onlyMine = onlyMine,
+        ignoreDb = ignoreDb,
+        loadKey = loadKey,
+        directChatType = directChatType,
+    )
 
     override suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel> {
         return channelLogic.getChannelsBySQLiteQuery(query)
