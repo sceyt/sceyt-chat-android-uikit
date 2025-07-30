@@ -14,6 +14,11 @@ object StyleRegistry {
     /** Get style by ID, returns null if not found */
     operator fun get(id: String): SceytComponentStyle? = styles[id]
 
+    /** Register style with given ID */
+    operator fun set(id: String, style: SceytComponentStyle) {
+        styles[id] = style
+    }
+
     /** Get style with type safety, returns null if not found or wrong type */
     inline fun <reified T : SceytComponentStyle> getTyped(id: String?): T? {
         id ?: return null
@@ -38,8 +43,8 @@ object StyleRegistry {
     }
 
     /** Register style (alternative to operator function) */
-    fun register(style: SceytComponentStyle) {
-        styles[style.styleId] = style
+    fun register(style: SceytComponentStyle, id: String = style.styleId) {
+        this[id] = style
     }
 
     /** Remove styles from registry */
