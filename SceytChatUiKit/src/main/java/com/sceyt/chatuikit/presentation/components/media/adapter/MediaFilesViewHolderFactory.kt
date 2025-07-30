@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.holders.BaseFileViewHolder
 import com.sceyt.chatuikit.presentation.components.media.adapter.holders.MediaImageViewHolder
 import com.sceyt.chatuikit.presentation.components.media.adapter.holders.MediaVideoViewHolder
-import com.sceyt.chatuikit.styles.MediaPreviewStyle
+import com.sceyt.chatuikit.styles.preview.MediaPreviewStyle
 
 open class MediaFilesViewHolderFactory(
         context: Context,

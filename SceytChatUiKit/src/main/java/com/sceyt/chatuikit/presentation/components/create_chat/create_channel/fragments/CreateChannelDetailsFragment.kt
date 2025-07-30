@@ -32,8 +32,8 @@ import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.CreateC
 import com.sceyt.chatuikit.presentation.components.create_chat.viewmodel.URIValidation
 import com.sceyt.chatuikit.providers.defaults.URIValidationType
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
-import com.sceyt.chatuikit.styles.CreateChannelStyle
-import com.sceyt.chatuikit.styles.ImageCropperStyle
+import com.sceyt.chatuikit.styles.create_channel.CreateChannelStyle
+import com.sceyt.chatuikit.styles.cropper.ImageCropperStyle
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.yalantis.ucrop.UCrop
 import java.io.File

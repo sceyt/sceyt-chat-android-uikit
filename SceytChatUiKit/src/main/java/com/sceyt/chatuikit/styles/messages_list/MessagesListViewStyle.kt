@@ -12,8 +12,9 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel.messages.MessagesListView
-import com.sceyt.chatuikit.styles.MessagesListHeaderStyle.Companion.styleCustomizer
-import com.sceyt.chatuikit.styles.SearchChannelInputStyle.Companion.styleCustomizer
+import com.sceyt.chatuikit.styles.SceytComponentStyle
+import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle.Companion.styleCustomizer
+import com.sceyt.chatuikit.styles.search.SearchChannelInputStyle.Companion.styleCustomizer
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildDateSeparatorStyle
 import com.sceyt.chatuikit.styles.extensions.messages_list.buildReactionPickerStyle
@@ -54,7 +55,8 @@ data class MessagesListViewStyle(
         val reactionPickerStyle: ReactionPickerStyle,
         val enableScrollDownButton: Boolean,
         val enableDateSeparator: Boolean,
-) {
+) : SceytComponentStyle() {
+
     companion object {
         @JvmField
         var styleCustomizer = StyleCustomizer<MessagesListViewStyle> { _, style -> style }
@@ -78,7 +80,7 @@ data class MessagesListViewStyle(
 
     internal class Builder(
             internal val context: Context,
-            private val attrs: AttributeSet?
+            private val attrs: AttributeSet?,
     ) {
         fun build(): MessagesListViewStyle {
             context.obtainStyledAttributes(attrs, R.styleable.MessagesListView).use { array ->

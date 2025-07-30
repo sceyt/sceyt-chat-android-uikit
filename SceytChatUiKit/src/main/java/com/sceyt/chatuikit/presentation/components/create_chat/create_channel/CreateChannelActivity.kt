@@ -28,7 +28,7 @@ import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersActiv
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersPageArgs
 import com.sceyt.chatuikit.presentation.components.select_users.SelectUsersResult
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.CreateChannelStyle
+import com.sceyt.chatuikit.styles.create_channel.CreateChannelStyle
 import kotlinx.coroutines.launch
 
 class CreateChannelActivity : AppCompatActivity() {

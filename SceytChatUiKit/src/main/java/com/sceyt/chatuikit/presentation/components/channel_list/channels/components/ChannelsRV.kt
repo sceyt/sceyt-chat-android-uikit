@@ -18,7 +18,7 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsItemComparatorBy
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.holders.ChannelViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.listeners.click.ChannelClickListeners
-import com.sceyt.chatuikit.styles.ChannelListViewStyle
+import com.sceyt.chatuikit.styles.channel.ChannelListViewStyle
 
 class ChannelsRV @JvmOverloads constructor(
         context: Context,

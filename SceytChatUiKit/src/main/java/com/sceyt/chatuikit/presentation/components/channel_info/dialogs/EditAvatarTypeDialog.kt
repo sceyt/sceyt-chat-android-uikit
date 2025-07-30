@@ -9,7 +9,7 @@ import android.view.WindowManager
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytDialogEditAvatarTypeBinding
-import com.sceyt.chatuikit.styles.DialogStyle
+import com.sceyt.chatuikit.styles.common.DialogStyle
 
 class EditAvatarTypeDialog(
         context: Context,

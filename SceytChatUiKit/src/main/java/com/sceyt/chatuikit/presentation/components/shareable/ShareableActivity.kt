@@ -24,7 +24,7 @@ import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmod
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModelFactory
 import com.sceyt.chatuikit.presentation.components.shareable.adapter.ShareableChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.shareable.adapter.holders.ShareableChannelViewHolderFactory
-import com.sceyt.chatuikit.styles.ShareablePageStyle
+import com.sceyt.chatuikit.styles.share.ShareablePageStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch

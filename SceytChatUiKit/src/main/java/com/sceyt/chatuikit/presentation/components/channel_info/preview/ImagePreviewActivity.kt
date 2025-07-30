@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
 import com.sceyt.chatuikit.presentation.helpers.AvatarImageLoader
-import com.sceyt.chatuikit.styles.ImagePreviewStyle
+import com.sceyt.chatuikit.styles.preview.ImagePreviewStyle
 
 class ImagePreviewActivity : AppCompatActivity() {
     private lateinit var binding: SceytFragmentPhotoPreviewBinding

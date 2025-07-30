@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.styles
+package com.sceyt.chatuikit.styles.preview
 
 import android.content.Context
 import android.util.AttributeSet
@@ -6,6 +6,7 @@ import androidx.annotation.ColorInt
 import androidx.core.content.res.use
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.getCompatColor
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
 import com.sceyt.chatuikit.styles.extensions.image_preview.buildToolbarStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme

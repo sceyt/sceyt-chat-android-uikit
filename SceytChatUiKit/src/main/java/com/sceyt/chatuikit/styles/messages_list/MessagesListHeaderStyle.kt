@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.styles
+package com.sceyt.chatuikit.styles.messages_list
 
 import android.content.Context
 import android.graphics.drawable.Drawable
@@ -18,7 +18,8 @@ import com.sceyt.chatuikit.formatters.attributes.ChannelEventTitleFormatterAttri
 import com.sceyt.chatuikit.presentation.components.channel.header.MessagesListHeaderView
 import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.renderers.SceytChatUIKitRenderers
-import com.sceyt.chatuikit.styles.MessagesListHeaderStyle.Companion.styleCustomizer
+import com.sceyt.chatuikit.styles.StyleCustomizer
+import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle.Companion.styleCustomizer
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.MenuStyle
 import com.sceyt.chatuikit.styles.common.SearchInputStyle

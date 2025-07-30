@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.styles
+package com.sceyt.chatuikit.styles.messages_list
 
 import android.content.Context
 import androidx.annotation.ColorInt
@@ -16,6 +16,8 @@ import com.sceyt.chatuikit.presentation.components.message_info.MessageInfoFragm
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.renderers.AvatarRenderer
+import com.sceyt.chatuikit.styles.SceytComponentStyle
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.ListItemStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
@@ -62,7 +64,7 @@ data class MessageInfoStyle(
         val messageDateFormatter: Formatter<Date>,
         val attachmentSizeFormatter: Formatter<SceytAttachment>,
         val markerTitleProvider: VisualProvider<MarkerType, String>,
-) {
+) : SceytComponentStyle() {
 
     companion object {
         var styleCustomizer = StyleCustomizer<MessageInfoStyle> { _, style -> style }
