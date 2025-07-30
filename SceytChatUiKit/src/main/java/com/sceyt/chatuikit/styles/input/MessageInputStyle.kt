@@ -16,8 +16,8 @@ import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.presentation.components.channel.input.MessageInputView
-import com.sceyt.chatuikit.styles.MessagesListHeaderStyle.Companion.styleCustomizer
-import com.sceyt.chatuikit.styles.SearchChannelInputStyle.Companion.styleCustomizer
+import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle.Companion.styleCustomizer
+import com.sceyt.chatuikit.styles.search.SearchChannelInputStyle.Companion.styleCustomizer
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.TextInputStyle

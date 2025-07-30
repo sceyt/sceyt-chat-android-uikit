@@ -26,8 +26,8 @@ import com.sceyt.chatuikit.presentation.components.message_info.adapter.UserMark
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.MessageInfoViewModel
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.MessageInfoViewModelFactory
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.UIState
-import com.sceyt.chatuikit.presentation.style.StyleRegistry
-import com.sceyt.chatuikit.styles.MessageInfoStyle
+import com.sceyt.chatuikit.styles.StyleRegistry
+import com.sceyt.chatuikit.styles.messages_list.MessageInfoStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach

@@ -62,7 +62,7 @@ import com.sceyt.chatuikit.presentation.components.channel.header.listeners.ui.s
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel_info.ChannelInfoActivity
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView
-import com.sceyt.chatuikit.styles.MessagesListHeaderStyle
+import com.sceyt.chatuikit.styles.messages_list.MessagesListHeaderStyle
 import com.sceyt.chatuikit.styles.common.MenuStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive

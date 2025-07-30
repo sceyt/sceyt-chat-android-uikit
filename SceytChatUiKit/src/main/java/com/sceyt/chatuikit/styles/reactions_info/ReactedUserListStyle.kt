@@ -8,7 +8,7 @@ import androidx.core.content.res.use
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.formatters.Formatter
-import com.sceyt.chatuikit.presentation.style.SceytComponentStyle
+import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.renderers.AvatarRenderer
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ListItemStyle

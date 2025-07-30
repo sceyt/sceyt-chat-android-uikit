@@ -13,7 +13,7 @@ import com.sceyt.chatuikit.extensions.applyInsetsAndWindowColor
 import com.sceyt.chatuikit.extensions.launchActivity
 import com.sceyt.chatuikit.extensions.overrideTransitions
 import com.sceyt.chatuikit.extensions.statusBarIconsColorWithBackground
-import com.sceyt.chatuikit.presentation.style.StyleRegistry
+import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 
 open class MessageInfoActivity : AppCompatActivity() {

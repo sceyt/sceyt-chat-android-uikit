@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.presentation.style
+package com.sceyt.chatuikit.styles
 
 import java.util.concurrent.ConcurrentHashMap
 

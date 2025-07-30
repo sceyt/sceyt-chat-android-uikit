@@ -28,7 +28,7 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.di.ChannelInfoVoiceViewModelQualifier
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.presentation.style.StyleRegistry
+import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.channel_info.voice.ChannelInfoVoiceStyle
 import com.sceyt.chatuikit.styles.extensions.channel_info.voice.setPageStatesView
 import kotlinx.coroutines.launch

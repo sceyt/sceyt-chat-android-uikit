@@ -7,7 +7,7 @@ import androidx.core.content.res.use
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.ReactionsInfoBottomSheetFragment
-import com.sceyt.chatuikit.presentation.style.SceytComponentStyle
+import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.extensions.reaction_info.buildBackgroundStyle

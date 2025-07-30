@@ -28,7 +28,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.ad
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.ReactionHeaderItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.ReactionsHeaderAdapter
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.ViewPagerAdapterReactedUsers
-import com.sceyt.chatuikit.presentation.style.StyleRegistry
+import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.reactions_info.ReactionsInfoStyle
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn

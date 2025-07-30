@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.formatters.SceytChatUIKitFormatters
 import com.sceyt.chatuikit.formatters.attributes.MessageBodyFormatterAttributes
-import com.sceyt.chatuikit.presentation.style.SceytComponentStyle
+import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.providers.SceytChatUIKitProviders
 import com.sceyt.chatuikit.providers.VisualProvider
 import com.sceyt.chatuikit.renderers.AvatarRenderer

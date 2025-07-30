@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.styles
+package com.sceyt.chatuikit.styles.cropper
 
 import android.content.Context
 import android.graphics.Color
@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.withAlpha
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.yalantis.ucrop.UCrop
 
 data class ImageCropperStyle(

@@ -39,8 +39,8 @@ import com.sceyt.chatuikit.presentation.components.startchat.adapters.UsersAdapt
 import com.sceyt.chatuikit.presentation.components.startchat.adapters.holders.UserViewHolderFactory
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
-import com.sceyt.chatuikit.styles.CreateGroupStyle
-import com.sceyt.chatuikit.styles.ImageCropperStyle
+import com.sceyt.chatuikit.styles.create_channel.CreateGroupStyle
+import com.sceyt.chatuikit.styles.cropper.ImageCropperStyle
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.launch

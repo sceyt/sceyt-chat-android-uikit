@@ -7,7 +7,7 @@ import androidx.annotation.LayoutRes
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.presentation.style.SceytComponentStyle
+import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoDateSeparatorStyle
 import com.sceyt.chatuikit.theme.Colors

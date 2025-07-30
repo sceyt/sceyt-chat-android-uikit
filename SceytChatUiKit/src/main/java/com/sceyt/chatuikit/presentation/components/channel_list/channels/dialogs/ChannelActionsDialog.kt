@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.databinding.SceytDialogChannelActionsBinding
 import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
-import com.sceyt.chatuikit.styles.DialogStyle
+import com.sceyt.chatuikit.styles.common.DialogStyle
 
 open class ChannelActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogChannelActionsBinding

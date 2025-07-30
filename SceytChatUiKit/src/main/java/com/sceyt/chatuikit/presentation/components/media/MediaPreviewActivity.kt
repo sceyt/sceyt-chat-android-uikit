@@ -46,7 +46,7 @@ import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItemType
 import com.sceyt.chatuikit.presentation.components.media.dialogs.ActionDialog
 import com.sceyt.chatuikit.presentation.components.media.viewmodel.MediaViewModel
-import com.sceyt.chatuikit.styles.MediaPreviewStyle
+import com.sceyt.chatuikit.styles.preview.MediaPreviewStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.io.File

@@ -8,8 +8,8 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.styles.StartChatStyle
-import com.sceyt.chatuikit.styles.StartChatUsersItemStyle
+import com.sceyt.chatuikit.styles.create_channel.StartChatStyle
+import com.sceyt.chatuikit.styles.create_channel.StartChatUsersItemStyle
 import com.sceyt.chatuikit.styles.common.HintStyle
 import com.sceyt.chatuikit.styles.common.SearchInputStyle
 import com.sceyt.chatuikit.styles.common.SearchToolbarStyle
