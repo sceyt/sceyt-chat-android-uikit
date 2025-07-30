@@ -57,7 +57,7 @@ data class ChannelInfoStyle(
 
     internal class Builder(
             private val context: Context,
-            private val attributeSet: AttributeSet?
+            private val attributeSet: AttributeSet?,
     ) {
 
         fun build(): ChannelInfoStyle {

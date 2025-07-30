@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.styles
+package com.sceyt.chatuikit.styles.forward
 
 import android.content.Context
 import android.util.AttributeSet
@@ -10,12 +10,14 @@ import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.presentation.components.forward.ForwardActivity
 import com.sceyt.chatuikit.renderers.AvatarRenderer
+import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.ButtonStyle
 import com.sceyt.chatuikit.styles.common.SearchToolbarStyle
 import com.sceyt.chatuikit.styles.common.SelectableListItemStyle
 import com.sceyt.chatuikit.styles.extensions.forward.buildActionButtonStyle
 import com.sceyt.chatuikit.styles.extensions.forward.buildChannelItemStyle
 import com.sceyt.chatuikit.styles.extensions.forward.buildSearchToolbarStyle
+import com.sceyt.chatuikit.styles.share.ShareablePageStyle
 import com.sceyt.chatuikit.theme.Colors
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 

@@ -7,7 +7,7 @@ import androidx.annotation.StringRes
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytDialogViewBinding
 import com.sceyt.chatuikit.extensions.dismissSafety
-import com.sceyt.chatuikit.styles.DialogStyle
+import com.sceyt.chatuikit.styles.common.DialogStyle
 
 class SceytDialog(context: Context) : Dialog(context, R.style.SceytDialogStyle) {
     private val binding by lazy { SceytDialogViewBinding.inflate(layoutInflater) }

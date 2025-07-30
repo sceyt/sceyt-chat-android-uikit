@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.databinding.SceytItemUserMarkerBinding
-import com.sceyt.chatuikit.styles.MessageInfoItemStyle
+import com.sceyt.chatuikit.styles.messages_list.MessageInfoItemStyle
 
 class UserMarkerAdapter(
         private val itemStyle: MessageInfoItemStyle,

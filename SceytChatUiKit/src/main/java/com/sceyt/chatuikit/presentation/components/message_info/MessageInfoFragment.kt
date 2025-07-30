@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytMarker
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.databinding.SceytFragmentMessageInfoBinding
 import com.sceyt.chatuikit.extensions.customToastSnackBar
-import com.sceyt.chatuikit.extensions.setBundleArgumentsAs
+import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.FileListItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.files.openFile
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.messages.MessageInfoViewProvider
@@ -26,20 +26,15 @@ import com.sceyt.chatuikit.presentation.components.message_info.adapter.UserMark
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.MessageInfoViewModel
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.MessageInfoViewModelFactory
 import com.sceyt.chatuikit.presentation.components.message_info.viewmodel.UIState
-import com.sceyt.chatuikit.styles.MessageInfoStyle
+import com.sceyt.chatuikit.styles.StyleRegistry
+import com.sceyt.chatuikit.styles.messages_list.MessageInfoStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.util.Date
 
 @Suppress("MemberVisibilityCanBePrivate")
-open class MessageInfoFragment : Fragment {
-    constructor() : super()
-
-    constructor(messageItemStyle: MessageItemStyle) : super() {
-        this.messageItemStyle = messageItemStyle
-    }
-
+open class MessageInfoFragment : Fragment() {
     protected var binding: SceytFragmentMessageInfoBinding? = null
     protected var messageId: Long = 0
     protected var channelId: Long = 0
@@ -54,13 +49,9 @@ open class MessageInfoFragment : Fragment {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        // Keep the style in the view model.
-        // If the style is not initialized it will be taken from the view model.
-        if (::messageItemStyle.isInitialized)
-            viewModel.messageItemStyle = messageItemStyle
-        else
-            messageItemStyle = viewModel.messageItemStyle
-
+        messageItemStyle = StyleRegistry.getOrDefault(arguments?.getString(STYLE_ID_KEY)) {
+            MessageItemStyle.Builder(context, null).build()
+        }
         style = MessageInfoStyle.Builder(context, messageItemStyle).build()
     }
 
@@ -251,24 +242,23 @@ open class MessageInfoFragment : Fragment {
     }
 
     companion object {
-        const val KEY_MESSAGE_ID = "key_message_id"
-        const val KEY_CHANNEL_ID = "key_channel_id"
+        private const val KEY_MESSAGE_ID = "key_message_id"
+        private const val KEY_CHANNEL_ID = "key_channel_id"
+        private const val STYLE_ID_KEY = "STYLE_ID_KEY"
 
         fun newInstance(
                 message: SceytMessage,
-                messageItemStyle: MessageItemStyle
-        ) = MessageInfoFragment(messageItemStyle).setBundleArgumentsAs<MessageInfoFragment> {
-            putLong(KEY_MESSAGE_ID, message.id)
-            putLong(KEY_CHANNEL_ID, message.channelId)
-        }
+                messageItemStyleId: String,
+        ) = newInstance(message.id, message.channelId, messageItemStyleId)
 
         fun newInstance(
                 messageId: Long,
                 channelId: Long,
-                messageItemStyle: MessageItemStyle
-        ) = MessageInfoFragment(messageItemStyle).setBundleArgumentsAs<MessageInfoFragment> {
+                messageItemStyleId: String?,
+        ) = MessageInfoFragment().setBundleArguments {
             putLong(KEY_MESSAGE_ID, messageId)
             putLong(KEY_CHANNEL_ID, channelId)
+            putString(STYLE_ID_KEY, messageItemStyleId)
         }
     }
 }

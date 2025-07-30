@@ -7,7 +7,7 @@ import android.view.LayoutInflater
 import androidx.core.view.isVisible
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytDialogDeleteMessageBinding
-import com.sceyt.chatuikit.styles.DialogStyle
+import com.sceyt.chatuikit.styles.common.DialogStyle
 
 open class DeleteMessageDialog(context: Context) : Dialog(context, R.style.SceytDialogStyle) {
     private lateinit var binding: SceytDialogDeleteMessageBinding

@@ -21,7 +21,7 @@ import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.components.channel_info.dialogs.EditAvatarTypeDialog
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
-import com.sceyt.chatuikit.styles.ImageCropperStyle
+import com.sceyt.chatuikit.styles.cropper.ImageCropperStyle
 import com.vanniktech.ui.hideKeyboard
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.flow.launchIn

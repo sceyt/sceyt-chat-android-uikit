@@ -38,7 +38,7 @@ import com.sceyt.chatuikit.presentation.components.media.adapter.MediaAdapter
 import com.sceyt.chatuikit.presentation.components.media.adapter.MediaItem
 import com.sceyt.chatuikit.presentation.custom_views.PlayPauseImage
 import com.sceyt.chatuikit.presentation.helpers.ExoPlayerHelper
-import com.sceyt.chatuikit.styles.MediaPreviewStyle
+import com.sceyt.chatuikit.styles.preview.MediaPreviewStyle
 
 class MediaVideoViewHolder(
         private val binding: SceytMediaItemVideoBinding,
