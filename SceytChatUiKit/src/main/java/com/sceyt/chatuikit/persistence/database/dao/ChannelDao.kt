@@ -40,7 +40,7 @@ internal interface ChannelDao {
     @Transaction
     @Query("""
         select * from $CHANNEL_TABLE 
-            where userRole !=:ignoreRole 
+            where (case when :onlyMine then userRole <> '' else 1 end) 
             and (not pending or lastMessageTid != 0) 
             and (:isEmptyTypes = 1 or type in (:types)) 
             order by 
@@ -54,7 +54,7 @@ internal interface ChannelDao {
             offset: Int,
             types: List<String>,
             orderByLastMessage: Boolean,
-            ignoreRole: String = RoleTypeEnum.None.value,
+            onlyMine: Boolean,
             isEmptyTypes: Int = if (types.isEmpty()) 1 else 0,
     ): List<ChannelDb>
 

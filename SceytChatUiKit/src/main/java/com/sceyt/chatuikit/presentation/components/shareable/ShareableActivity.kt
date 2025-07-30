@@ -20,18 +20,18 @@ import com.sceyt.chatuikit.persistence.extensions.isPeerBlocked
 import com.sceyt.chatuikit.persistence.extensions.isPeerDeleted
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModel
-import com.sceyt.chatuikit.presentation.components.channel_list.channels.viewmodel.ChannelsViewModelFactory
 import com.sceyt.chatuikit.presentation.components.shareable.adapter.ShareableChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.shareable.adapter.holders.ShareableChannelViewHolderFactory
+import com.sceyt.chatuikit.presentation.components.shareable.viewmodel.ShareableViewModel
+import com.sceyt.chatuikit.presentation.components.shareable.viewmodel.ShareableViewModelFactory
 import com.sceyt.chatuikit.styles.share.ShareablePageStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity(), SceytKoinComponent {
-    protected val channelsViewModel: ChannelsViewModel by viewModels(factoryProducer = {
-        provideChannelsViewModelFactory()
+    protected val shareableViewModel: ShareableViewModel by viewModels(factoryProducer = {
+        provideViewModelFactory()
     })
     protected var channelsAdapter: ShareableChannelsAdapter? = null
     protected lateinit var style: Style
@@ -42,27 +42,27 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
 
         style = initStyle()
         initViewModel()
-        channelsViewModel.getChannels(0)
+        shareableViewModel.getChannels(0)
     }
 
     protected abstract fun initStyle(): Style
 
     private fun initViewModel() {
-        channelsViewModel.loadChannelsFlow.onEach(::initChannelsResponse).launchIn(lifecycleScope)
+        shareableViewModel.loadChannelsFlow.onEach(::initChannelsResponse).launchIn(lifecycleScope)
     }
 
     protected open suspend fun initChannelsResponse(response: PaginationResponse<SceytChannel>) {
-        lifecycleScope.launch {
-            if (response is PaginationResponse.DBResponse)
-                initPaginationDbResponse(response)
-        }
+        if (response is PaginationResponse.DBResponse)
+            initPaginationDbResponse(response)
     }
 
     protected open suspend fun initPaginationDbResponse(response: PaginationResponse.DBResponse<SceytChannel>) {
         val filteredData = filterOnlyAppropriateChannels(response.data)
-        val data = channelsViewModel.mapToChannelItem(data = filteredData,
+        val data = shareableViewModel.mapToChannelItem(
+            data = filteredData,
             hasNext = response.hasNext,
-            includeDirectChannelsWithDeletedPeers = false)
+            includeDirectChannelsWithDeletedPeers = false
+        )
         if (response.offset == 0) {
             setChannelsList(data)
         } else addNewChannels(data)
@@ -83,9 +83,9 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
                         addOnScrollListener(object : RecyclerView.OnScrollListener() {
                             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                                 super.onScrolled(recyclerView, dx, dy)
-                                if (adapter is ShareableChannelsAdapter && isLastItemDisplaying() && channelsViewModel.canLoadNext())
-                                    channelsViewModel.getChannels(channelsAdapter?.getSkip()
-                                            ?: 0, channelsViewModel.searchQuery,
+                                if (adapter is ShareableChannelsAdapter && isLastItemDisplaying() && shareableViewModel.canLoadNext())
+                                    shareableViewModel.getChannels(channelsAdapter?.getSkip()
+                                            ?: 0, shareableViewModel.searchQuery,
                                         LoadKeyData(value = channelsAdapter?.getChannels()?.lastOrNull()?.channel?.id
                                                 ?: 0))
                             }
@@ -102,12 +102,11 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
     }
 
     protected open fun filterOnlyAppropriateChannels(data: List<SceytChannel>): List<SceytChannel> {
-        val filtered = data.filter {
-            ((it.isPublic() && (it.userRole != RoleTypeEnum.Owner.value &&
-                    it.userRole != RoleTypeEnum.Admin.value)) || ((it.isPeerDeleted() || it.isPeerBlocked())))
+        return data.filterNot { channel ->
+            channel.isPeerDeleted() || channel.isPeerBlocked() ||
+                    (channel.isPublic() && channel.userRole != RoleTypeEnum.Owner.value
+                            && channel.userRole != RoleTypeEnum.Admin.value)
         }
-
-        return data.minus(filtered.toSet())
     }
 
     private fun setSelectedItems(data: List<ChannelListItem>) {
@@ -120,8 +119,8 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
         return ShareableChannelViewHolderFactory(this, style)
     }
 
-    protected open fun provideChannelsViewModelFactory(): ChannelsViewModelFactory {
-        return ChannelsViewModelFactory()
+    protected open fun provideViewModelFactory(): ShareableViewModelFactory {
+        return ShareableViewModelFactory()
     }
 
     @CallSuper
@@ -142,10 +141,10 @@ abstract class ShareableActivity<Style : ShareablePageStyle> : AppCompatActivity
     }
 
     protected open fun onSearchQueryChanged(query: String) {
-        channelsViewModel.getChannels(0, query)
+        shareableViewModel.getChannels(0, query)
     }
 
-    protected open val selectedChannels get() = channelsViewModel.selectedChannels
+    protected open val selectedChannels get() = shareableViewModel.selectedChannels
 
     protected open fun finishSharingAction() {
         val intent = packageManager.getLaunchIntentForPackage(packageName)
