@@ -54,7 +54,9 @@ internal fun SceytMessage.toMessageDb(unList: Boolean): MessageDb {
         messageEntity = toMessageEntity(unList),
         from = user?.toUserDb(),
         parent = parentMessage?.toParentMessageEntity(),
-        attachments = attachments?.map { it.toAttachmentDb(id, tid, channelId) },
+        attachments = attachments?.map {
+            it.toAttachmentDb(messageId = id, messageTid = tid, channelId = channelId)
+        },
         userMarkers = userMarkers?.map { it.toMarkerEntity() },
         reactions = userReactions?.map { it.toReactionDb() },
         reactionsTotals = reactionTotals?.map { it.toReactionTotalEntity(id) }?.toMutableList(),
@@ -114,14 +116,20 @@ internal fun ParentMessageDb.toSceytMessage(): SceytMessage {
 }
 
 internal fun SceytMessage.toParentMessageEntity(): ParentMessageDb {
-    return ParentMessageDb(toMessageEntity(true), user?.toUserDb(), attachments?.map {
-        it.toAttachmentDb(id, getTid(id, tid, incoming), channelId)
-    }, null)
+    val messageTid = getTid(id, tid, incoming)
+    return ParentMessageDb(
+        messageEntity = toMessageEntity(unList = true),
+        from = user?.toUserDb(),
+        attachments = attachments?.map {
+            it.toAttachmentDb(messageId = id, messageTid = messageTid, channelId = channelId)
+        },
+        mentionedUsers = null
+    )
 }
 
 private fun MessageEntity.parentMessageToSceytMessage(
         attachments: Array<SceytAttachment>?,
-        from: SceytUser?, mentionedUsers: List<SceytUser>?
+        from: SceytUser?, mentionedUsers: List<SceytUser>?,
 ) = SceytMessage(
     id = id ?: 0,
     tid = tid,
@@ -286,7 +294,7 @@ internal fun DraftMessageDb.toDraftMessage() = DraftMessage(
 
 internal fun DraftMessageEntity.toDraftMessage(
         mentionUsers: List<SceytUser>?,
-        replyMessage: SceytMessage?
+        replyMessage: SceytMessage?,
 ) = DraftMessage(
     chatId = chatId,
     body = message,

@@ -55,13 +55,16 @@ internal abstract class MessageDao {
     open suspend fun insertMessagesIgnored(messagesDb: List<MessageDb>) {
         if (messagesDb.isEmpty()) return
 
-        val entities = messagesDb.map { it.messageEntity }
-        val rowIds = insertMany(entities)
-        val insertedMessages = rowIds.mapIndexedNotNull { index, rowId ->
-            if (rowId != -1L) messagesDb.firstOrNull { it.messageEntity.tid == entities[index].tid } else null
-        }
+        val messageEntities = messagesDb.map { it.messageEntity }
+        val rowIds = insertMany(messageEntities)
 
-        insertMessagesPayloads(insertedMessages)
+        val insertedMessages = messagesDb
+            .zip(rowIds)
+            .mapNotNull { (msgDb, rowId) -> if (rowId != -1L) msgDb else null }
+
+        if (insertedMessages.isNotEmpty()) {
+            insertMessagesPayloads(insertedMessages)
+        }
     }
 
     @Transaction

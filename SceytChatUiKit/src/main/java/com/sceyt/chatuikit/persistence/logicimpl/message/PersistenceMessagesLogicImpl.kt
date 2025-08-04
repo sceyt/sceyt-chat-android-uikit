@@ -1132,11 +1132,11 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
 
+        userDao.insertUsersWithMetadata(usersDb.toList(), replaceUserOnConflict)
         messageDao.upsertMessages(messagesDb)
         if (parentMessagesDb.isNotEmpty())
             messageDao.insertMessagesIgnored(parentMessagesDb)
 
-        userDao.insertUsersWithMetadata(usersDb.toList(), replaceUserOnConflict)
         return mutableList
     }
 
