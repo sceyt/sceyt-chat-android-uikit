@@ -22,7 +22,7 @@ internal abstract class UserDao {
     protected abstract suspend fun insertUsers(users: List<UserEntity>)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    abstract suspend fun insertUsersIgnored(users: List<UserEntity>)
+    protected abstract suspend fun insertUsersIgnored(users: List<UserEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insertMetadata(list: List<UserMetadataEntity>)
