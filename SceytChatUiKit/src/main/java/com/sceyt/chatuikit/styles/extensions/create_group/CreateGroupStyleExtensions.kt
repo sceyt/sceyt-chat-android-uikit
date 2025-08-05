@@ -8,8 +8,8 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.applyTint
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
-import com.sceyt.chatuikit.styles.CreateGroupStyle
-import com.sceyt.chatuikit.styles.CreateGroupStyleUserItemStyle
+import com.sceyt.chatuikit.styles.create_channel.CreateGroupStyle
+import com.sceyt.chatuikit.styles.create_channel.CreateGroupStyleUserItemStyle
 import com.sceyt.chatuikit.styles.common.AvatarStyle
 import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.ButtonStyle

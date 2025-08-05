@@ -1,4 +1,5 @@
 import com.sceyt.chat.Config
+import com.sceyt.chat.configureMockitoAgent
 
 plugins {
     id("com.android.application")
@@ -114,4 +115,22 @@ dependencies {
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.messaging.ktx)
+
+
+    // Instrumented Unit Tests
+    androidTestImplementation(libs.junit.ktx)
+    androidTestImplementation(libs.core.testing)
+    androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.mockito.core)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.truth)
+    testImplementation(libs.junit)
+    testImplementation(libs.truth)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.mockito.inline)
+    testImplementation(libs.core.testing)
+    testImplementation(libs.robolectric)
+    configureMockitoAgent()(libs.mockito.inline)
 }

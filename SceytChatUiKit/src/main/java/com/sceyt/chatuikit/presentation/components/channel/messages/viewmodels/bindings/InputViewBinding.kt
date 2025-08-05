@@ -96,12 +96,6 @@ fun MessageListViewModel.bind(
             customToastSnackBar(messageInputView, it.errorMessage.toString())
     }
 
-    channelLiveData.observe(lifecycleOwner) {
-        if (it is SceytResponse.Success) {
-            messageInputView.checkIsParticipant(channel)
-        }
-    }
-
     joinLiveData.observe(lifecycleOwner) {
         when (it) {
             is SceytResponse.Success -> messageInputView.joinSuccess()
@@ -115,10 +109,6 @@ fun MessageListViewModel.bind(
 
     onReplyMessageCommandLiveData.observe(lifecycleOwner) {
         messageInputView.replyMessage(it, false)
-    }
-
-    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
-        messageInputView.checkIsParticipant(channel)
     }
 
     onChannelEventFlow.onEach { event ->

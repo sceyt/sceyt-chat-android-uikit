@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.config.IntervalOption
 import com.sceyt.chatuikit.databinding.SceytDialogAutoDeleteBinding
 import com.sceyt.chatuikit.presentation.common.IntervalOptionsAdapter
-import com.sceyt.chatuikit.styles.DialogStyle
+import com.sceyt.chatuikit.styles.common.DialogStyle
 
 class AutoDeleteDialog(
         context: Context,

@@ -6,8 +6,9 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.spToPx
-import com.sceyt.chatuikit.styles.ChannelItemStyle
+import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 import com.sceyt.chatuikit.styles.common.AvatarStyle
+import com.sceyt.chatuikit.styles.common.BackgroundStyle
 import com.sceyt.chatuikit.styles.common.Shape
 import com.sceyt.chatuikit.styles.common.TextStyle
 
@@ -213,51 +214,25 @@ internal fun ChannelItemStyle.Builder.buildMentionTextStyle(
     .build()
 
 
-internal fun ChannelItemStyle.Builder.buildUnreadMentionTextStyle(
+internal fun ChannelItemStyle.Builder.buildUnreadMentionBackgroundStyle(
         array: TypedArray
-) = TextStyle.Builder(array)
+) = BackgroundStyle.Builder(array)
     .setBackgroundColor(
         index = R.styleable.ChannelListView_sceytUiChannelListUnreadMentionBackgroundColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.accentColor)
     )
-    .setColor(
-        index = R.styleable.ChannelListView_sceytUiChannelListUnreadMentionTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
-    )
-    .setSize(
-        index = R.styleable.ChannelListView_sceytUiChannelListUnreadMentionTextSize,
-    )
-    .setStyle(
-        index = R.styleable.ChannelListView_sceytUiChannelListUnreadMentionTextStyle,
-        defValue = Typeface.BOLD
-    )
-    .setFont(
-        index = R.styleable.ChannelListView_sceytUiChannelListUnreadMentionTextFont
-    )
+    .setShape(Shape.Circle)
     .build()
 
 
-internal fun ChannelItemStyle.Builder.buildUnreadMentionMutedTextStyle(
+internal fun ChannelItemStyle.Builder.buildUnreadMentionMutedBackgroundStyle(
         array: TypedArray
-) = TextStyle.Builder(array)
+) = BackgroundStyle.Builder(array)
     .setBackgroundColor(
         index = R.styleable.ChannelListView_sceytUiChannelListUnreadMentionMutedStateBackgroundColor,
         defValue = context.getCompatColor(SceytChatUIKit.theme.colors.surface3Color)
     )
-    .setColor(
-        index = R.styleable.ChannelListView_sceytUiChannelListUnreadMentionMutedStateTextColor,
-        defValue = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor)
-    )
-    .setSize(
-        index = R.styleable.ChannelListView_sceytUiChannelListUnreadMentionMutedStateTextSize,
-    )
-    .setStyle(
-        index = R.styleable.ChannelListView_sceytUiChannelListUnreadMentionMutedStateTextStyle,
-        defValue = Typeface.NORMAL
-    )
-    .setFont(
-        index = R.styleable.ChannelListView_sceytUiChannelListUnreadMentionMutedTextFont
-    )
+    .setShape(Shape.Circle)
     .build()
 
 

@@ -1,5 +1,6 @@
 package com.sceyt.chatuikit.presentation.components.channel.messages
 
+import android.animation.LayoutTransition
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
@@ -35,6 +36,7 @@ import com.sceyt.chatuikit.extensions.isLastCompletelyItemDisplaying
 import com.sceyt.chatuikit.extensions.maybeComponentActivity
 import com.sceyt.chatuikit.extensions.openLink
 import com.sceyt.chatuikit.extensions.setClipboard
+import com.sceyt.chatuikit.extensions.setLayoutTransition
 import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.media.audio.AudioFocusHelper
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
@@ -63,7 +65,6 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.mes
 import com.sceyt.chatuikit.presentation.components.channel.messages.adapters.reactions.ReactionItem
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.EmojiPickerBottomSheetFragment
 import com.sceyt.chatuikit.presentation.components.channel.messages.components.MessagesRV
-import com.sceyt.chatuikit.presentation.components.channel.messages.components.ScrollToDownView
 import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.DeleteMessageDialog
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.MessageCommandEvent
 import com.sceyt.chatuikit.presentation.components.channel.messages.events.ReactionEvent
@@ -92,7 +93,7 @@ import com.sceyt.chatuikit.styles.messages_list.MessagesListViewStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-@Suppress("Unused", "MemberVisibilityCanBePrivate", "JoinDeclarationAndAssignment")
+@Suppress("Unused", "MemberVisibilityCanBePrivate")
 class MessagesListView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : ConstraintLayout(context, attrs, defStyleAttr), ClickListeners,
         ActionsViewClickListeners, PopupClickListeners {
@@ -123,8 +124,10 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         if (background == null)
             setBackgroundColor(style.backgroundColor)
 
-        binding.scrollDownView.setStyle(style.scrollDownButtonStyle)
+        binding.layoutUnreadCounts.setLayoutTransition(200, LayoutTransition.DISAPPEARING)
         setPageStateViews()
+        binding.scrollDownView.setStyle(style.scrollDownButtonStyle)
+        binding.scrollToUnredMentionView.setStyle(style.scrollUnreadMentionButtonStyle)
 
         messagesRV = binding.rvMessages.also { it.setStyle(style) }
         messagesRV.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom)
@@ -240,14 +243,22 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
                 clickListeners.onMultiSelectClick(view, message)
             }
 
-            override fun onScrollToDownClick(view: ScrollToDownView) {
+            override fun onScrollToDownClick(view: View) {
                 clickListeners.onScrollToDownClick(view)
+            }
+
+            override fun onScrollToUnreadMentionClick(view: View) {
+                clickListeners.onScrollToUnreadMentionClick(view)
             }
         }
         messagesRV.setMessageListener(defaultClickListeners)
 
         binding.scrollDownView.setOnClickListener {
-            clickListeners.onScrollToDownClick(it as ScrollToDownView)
+            clickListeners.onScrollToDownClick(it)
+        }
+
+        binding.scrollToUnredMentionView.setOnClickListener {
+            clickListeners.onScrollToUnreadMentionClick(it)
         }
     }
 
@@ -641,8 +652,13 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
         messagesRV.deleteAllMessagesBefore(predicate)
     }
 
-    internal fun setUnreadCount(unreadCount: Long) {
+    internal fun setUnreadMessagesCount(unreadCount: Long) {
         binding.scrollDownView.setUnreadCount(unreadCount)
+    }
+
+    internal fun setUnreadMentionsCount(unreadCount: Long) {
+        binding.scrollToUnredMentionView.setUnreadCount(unreadCount)
+        binding.scrollToUnredMentionView.isVisible = unreadCount > 0
     }
 
     internal fun setOnWindowFocusChangeListener(listener: (Boolean) -> Unit) {
@@ -686,16 +702,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     fun scrollToMessage(
-            msgId: Long,
+            messageId: Long,
             highlight: Boolean,
             offset: Int = 0,
             awaitToScroll: ((Boolean) -> Unit)? = null,
-    ) = safeScrollTo {
-        messagesRV.getData()
-            .indexOfFirst { it is MessageItem && it.message.id == msgId }
-            .takeIf { it != -1 }?.let { index ->
-                scrollToPosition(index, highlight, offset, awaitToScroll)
-            } ?: run { awaitToScroll?.invoke(false) }
+            doIfNotFound: (() -> Unit)? = null,
+    ) {
+        getMessageIndexedById(messageId)?.let { (position, _) ->
+            scrollToPosition(position, highlight, offset, awaitToScroll)
+        } ?: doIfNotFound?.invoke()
     }
 
     fun scrollToPosition(
@@ -854,7 +869,7 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
 
     override fun onMessageLongClick(view: View, item: MessageItem) {
         if (enabledActions)
-            messageCommandEventListener?.invoke(MessageCommandEvent.OnMultiselectEvent(item.message))
+            messageCommandEventListener?.invoke(MessageCommandEvent.MultiselectEvent(item.message))
     }
 
     override fun onAvatarClick(view: View, item: MessageItem) {
@@ -924,11 +939,15 @@ class MessagesListView @JvmOverloads constructor(context: Context, attrs: Attrib
     }
 
     override fun onMultiSelectClick(view: View, message: SceytMessage) {
-        messageCommandEventListener?.invoke(MessageCommandEvent.OnMultiselectEvent(message))
+        messageCommandEventListener?.invoke(MessageCommandEvent.MultiselectEvent(message))
     }
 
-    override fun onScrollToDownClick(view: ScrollToDownView) {
-        messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToDown(view))
+    override fun onScrollToDownClick(view: View) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToDown)
+    }
+
+    override fun onScrollToUnreadMentionClick(view: View) {
+        messageCommandEventListener?.invoke(MessageCommandEvent.ScrollToUnreadMention)
     }
 
 

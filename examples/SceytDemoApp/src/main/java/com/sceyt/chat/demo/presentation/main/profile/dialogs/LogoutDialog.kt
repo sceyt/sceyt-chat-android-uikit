@@ -7,7 +7,7 @@ import android.view.LayoutInflater
 import androidx.core.view.isVisible
 import com.sceyt.chat.demo.databinding.LogoutDialogBinding
 import com.sceyt.chatuikit.R
-import com.sceyt.chatuikit.styles.DialogStyle
+import com.sceyt.chatuikit.styles.common.DialogStyle
 
 open class LogoutDialog(context: Context) : Dialog(context, R.style.SceytDialogStyle) {
     private lateinit var binding: LogoutDialogBinding

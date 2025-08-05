@@ -37,8 +37,8 @@ import com.sceyt.chatuikit.presentation.components.edit_channel.viewmodel.EditCh
 import com.sceyt.chatuikit.presentation.root.PageState
 import com.sceyt.chatuikit.providers.defaults.URIValidationType
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
-import com.sceyt.chatuikit.styles.EditChannelStyle
-import com.sceyt.chatuikit.styles.ImageCropperStyle
+import com.sceyt.chatuikit.styles.edit.EditChannelStyle
+import com.sceyt.chatuikit.styles.cropper.ImageCropperStyle
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

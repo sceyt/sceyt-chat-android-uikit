@@ -180,24 +180,6 @@ object ChannelEventManager : ChannelEventHandler.AllEvents {
                 eventManager.onOwnerChanged(channel.toSceytUiChannel(), newOwner, oldOwner)
             }
 
-            override fun onMemberStartedTyping(channel: Channel, member: Member) {
-                eventManager.onActivityEvent(ChannelMemberActivityEvent(
-                    channel = channel.toSceytUiChannel(),
-                    user = member.toSceytUser(),
-                    activity = ChannelEventEnum.Typing,
-                    active = true
-                ))
-            }
-
-            override fun onMemberStoppedTyping(channel: Channel, member: Member) {
-                eventManager.onActivityEvent(ChannelMemberActivityEvent(
-                    channel = channel.toSceytUiChannel(),
-                    user = member.toSceytUser(),
-                    activity = ChannelEventEnum.Typing,
-                    active = false
-                ))
-            }
-
             override fun onChangedMembersRole(channel: Channel?, members: MutableList<Member>?) {
                 if (channel == null || members == null) return
                 eventManager.onChangedMembersEvent(ChannelMembersEventData(channel.toSceytUiChannel(),

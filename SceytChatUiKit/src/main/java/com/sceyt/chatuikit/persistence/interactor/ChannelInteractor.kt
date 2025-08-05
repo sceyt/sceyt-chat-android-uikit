@@ -20,6 +20,7 @@ interface ChannelInteractor {
             offset: Int,
             searchQuery: String,
             loadKey: LoadKeyData?,
+            onlyMine: Boolean,
             ignoreDb: Boolean,
             config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>>

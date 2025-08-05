@@ -25,7 +25,7 @@ import com.sceyt.chatuikit.presentation.components.select_users.adapters.Selecte
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.UserItem
 import com.sceyt.chatuikit.presentation.components.select_users.adapters.holders.SelectableUserViewHolderFactory
 import com.sceyt.chatuikit.presentation.components.select_users.viewmodel.UsersViewModel
-import com.sceyt.chatuikit.styles.SelectUsersStyle
+import com.sceyt.chatuikit.styles.select_users.SelectUsersStyle
 import kotlinx.parcelize.Parcelize
 
 open class SelectUsersActivity : AppCompatActivity() {

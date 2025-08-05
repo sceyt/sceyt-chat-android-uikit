@@ -8,6 +8,7 @@ import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.presentation.components.channel_info.files.ChannelInfoFilesFragment
+import com.sceyt.chatuikit.styles.SceytComponentStyle
 import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoDateSeparatorStyle
 import com.sceyt.chatuikit.theme.Colors
@@ -27,15 +28,16 @@ data class ChannelInfoFilesStyle(
         @LayoutRes val loadingState: Int,
         val emptyStateTitle: String,
         val dateSeparatorStyle: ChannelInfoDateSeparatorStyle,
-        val itemStyle: ChannelInfoFileItemStyle
-) {
+        val itemStyle: ChannelInfoFileItemStyle,
+) : SceytComponentStyle() {
+
     companion object {
         var styleCustomizer = StyleCustomizer<ChannelInfoFilesStyle> { _, style -> style }
     }
 
     internal class Builder(
             private val context: Context,
-            private val attributeSet: AttributeSet?
+            private val attributeSet: AttributeSet?,
     ) {
         fun build(): ChannelInfoFilesStyle {
             val backgroundColor = context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColor)

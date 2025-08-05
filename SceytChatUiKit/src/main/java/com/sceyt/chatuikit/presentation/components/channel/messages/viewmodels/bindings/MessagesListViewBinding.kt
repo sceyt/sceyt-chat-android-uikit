@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.components.channel.messages.viewmodels.
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.Observer
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -50,7 +49,7 @@ import com.sceyt.chatuikit.persistence.extensions.checkIsMemberInChannel
 import com.sceyt.chatuikit.persistence.extensions.getPeer
 import com.sceyt.chatuikit.persistence.extensions.isPublic
 import com.sceyt.chatuikit.persistence.extensions.safeResume
-import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper.onTransferUpdatedLiveData
+import com.sceyt.chatuikit.persistence.file_transfer.FileTransferHelper
 import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.logicimpl.message.MessagesCache
@@ -107,12 +106,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    messagesListView.setOnWindowFocusChangeListener { hasFocus ->
-        if (hasFocus)
-            ChannelsCache.currentChannelId = channel.id
-        else ChannelsCache.currentChannelId = null
-    }
-
     if (channel.unread)
         markChannelAsRead(channel.id)
 
@@ -133,10 +126,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         loadNearMessages(pinnedLastReadMessageId, LoadKeyData(key = LoadKeyType.ScrollToUnreadMessage.longValue), false)
     }
 
-    messagesListView.setUnreadCount(channel.newMessageCount)
-
-    messagesListView.setNeedDownloadListener {
-        needMediaInfo(it)
+    fun setUnreadCounts(channel: SceytChannel) {
+        messagesListView.setUnreadMessagesCount(channel.newMessageCount)
+        messagesListView.setUnreadMentionsCount(channel.newMentionCount)
     }
 
     fun checkEnableDisableActions(channel: SceytChannel) {
@@ -146,6 +138,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
     }
 
     checkEnableDisableActions(channel)
+    setUnreadCounts(channel)
 
     suspend fun getCompareMessage(
             loadType: PaginationResponse.LoadType,
@@ -192,10 +185,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 messagesListView.scrollToMessage(loadKey.value, true, 200)
             }
 
-            LoadKeyType.ScrollToSearchMessageBy.longValue -> {
+            LoadKeyType.ScrollToMessageBy.longValue -> {
                 messagesListView.scrollToMessage(loadKey.value, true, 200) {
                     if (response is PaginationResponse.ServerResponse)
-                        isSearchingMessageToScroll.set(false)
+                        isPreparingToScrollToMessage.set(false)
                 }
             }
         }
@@ -274,9 +267,9 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             is SceytResponse.Error -> {
                 checkToHildeLoadingMoreItemByLoadType(response.loadType)
 
-                // set isSearchingMessageToScroll value to false, to enable jumping to next search message
-                if (response.loadKey?.value == LoadKeyType.ScrollToSearchMessageBy.longValue)
-                    isSearchingMessageToScroll.set(false)
+                // set isSearchingMessageToScroll value to false, to enable jumping to next message
+                if (response.loadKey?.value == LoadKeyType.ScrollToMessageBy.longValue)
+                    isPreparingToScrollToMessage.set(false)
             }
         }
     }
@@ -298,6 +291,19 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
             lastSyncCenterOffsetId = item.message.id
             syncCenteredMessage(messageId = item.message.id)
         }
+    }
+
+    fun onMessageDisplayed(message: SceytMessage) {
+        if (!message.incoming || message.userMarkers?.any { it.name == MarkerType.Displayed.value } == true)
+            return
+
+        if (lifecycleOwner.isResumed()) {
+            pendingDisplayMsgIds.add(message.id)
+            sendDisplayedHelper.submit {
+                markMessageAsRead(*(pendingDisplayMsgIds).toLongArray())
+                pendingDisplayMsgIds.clear()
+            }
+        } else pendingDisplayMsgIds.add(message.id)
     }
 
     ChannelsCache.channelsDeletedFlow
@@ -421,78 +427,94 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         .launchIn(lifecycleOwner.lifecycleScope)
 
     onChannelUpdatedEventFlow.onEach { channel ->
-        messagesListView.setUnreadCount(channel.newMessageCount)
+        setUnreadCounts(channel)
         checkEnableDisableActions(channel)
         if (channel.lastMessage == null)
             messagesListView.clearData()
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    onScrollToLastMessageLiveData.observe(lifecycleOwner) {
+    onScrollToLastMessageLiveData.observe(lifecycleOwner) { lastMessage ->
         viewModelScope.launch(Dispatchers.Default) {
-            channel.lastMessage?.id?.let { lastMsgId ->
-                messagesListView.getMessageIndexedById(lastMsgId)?.let {
-                    withContext(Dispatchers.Main) {
-                        messagesListView.scrollToLastMessage()
-                        lifecycleOwner.lifecycleScope.launch {
-                            delay(200)
-                            syncNearCenterVisibleMessageIfNeeded()
-                        }
+            val lastMsgId = lastMessage?.id ?: return@launch
+            messagesListView.getMessageIndexedById(lastMsgId)?.let {
+                withContext(Dispatchers.Main) {
+                    messagesListView.scrollToLastMessage()
+                    lifecycleOwner.lifecycleScope.launch {
+                        delay(200)
+                        syncNearCenterVisibleMessageIfNeeded()
                     }
-                } ?: run {
-                    loadPrevMessages(lastMsgId, 0, LoadKeyData(key = LoadKeyType.ScrollToLastMessage.longValue))
-                    markChannelAsRead(channel.id)
                 }
+            } ?: run {
+                loadPrevMessages(lastMsgId, 0, LoadKeyData(key = LoadKeyType.ScrollToLastMessage.longValue))
+                markChannelAsRead(channel.id)
             }
         }
     }
 
     onScrollToReplyMessageLiveData.observe(lifecycleOwner) {
         val messageId = it.id
-        viewModelScope.launch(Dispatchers.Default) {
-            messagesListView.getMessageIndexedById(messageId)?.let {
-                withContext(Dispatchers.Main) {
-                    it.second.highligh = true
-                    messagesListView.scrollToPosition(it.first, true, 200)
-                }
-            } ?: run {
+        messagesListView.scrollToMessage(
+            messageId = messageId,
+            offset = 200,
+            highlight = true,
+            doIfNotFound = {
                 loadNearMessages(messageId, LoadKeyData(
                     key = LoadKeyType.ScrollToReplyMessage.longValue,
                     value = messageId), false)
             }
-        }
+        )
     }
 
-    onScrollToSearchMessageLiveData.observe(lifecycleOwner) {
-        val messageId = it.id
-        scrollToSearchMessageJob?.cancel()
-        scrollToSearchMessageJob = viewModelScope.launch(Dispatchers.Default) {
-            messagesListView.getMessageIndexedById(messageId)?.let {
-                withContext(Dispatchers.Main) {
-                    it.second.highligh = true
-                    messagesListView.scrollToPosition(it.first, true, 200)
-                    isSearchingMessageToScroll.set(false)
-                }
-            } ?: run {
+    onScrollToSearchMessageLiveData.observe(lifecycleOwner) { message ->
+        val messageId = message.id
+        messagesListView.scrollToMessage(
+            messageId = message.id,
+            offset = 200,
+            highlight = true,
+            awaitToScroll = {
+                isPreparingToScrollToMessage.set(false)
+            },
+            doIfNotFound = {
                 loadNearMessages(messageId, LoadKeyData(
-                    key = LoadKeyType.ScrollToSearchMessageBy.longValue,
-                    value = messageId), false)
+                    key = LoadKeyType.ScrollToMessageBy.longValue,
+                    value = messageId
+                ), false)
             }
-        }
+        )
     }
 
-    messageMarkerLiveData.observe(lifecycleOwner, Observer {
+    onScrollToUnredMentionMessageLiveData.observe(lifecycleOwner) {
+        messagesListView.scrollToMessage(
+            messageId = it,
+            offset = 200,
+            highlight = true,
+            awaitToScroll = {
+                isPreparingToScrollToMessage.set(false)
+            },
+            doIfNotFound = {
+                loadNearMessages(it, LoadKeyData(
+                    key = LoadKeyType.ScrollToMessageBy.longValue,
+                    value = it), false)
+            }
+        )
+        pendingDisplayMsgIds.add(it)
+    }
+
+    messageMarkerLiveData.observe(lifecycleOwner) {
         it.forEach { response ->
             if (response is SceytResponse.Success) {
-                val data = response.data ?: return@Observer
+                val data = response.data ?: return@observe
                 viewModelScope.launch(Dispatchers.Default) {
                     val user = SceytChatUIKit.currentUser ?: return@launch
                     val messages = messagesListView.getData()
                     messages.forEachIndexed { index, listItem ->
                         (listItem as? MessageItem)?.message?.let { message ->
                             if (data.messageIds.contains(message.id)) {
-                                val updatedItem = listItem.copy(message = message.copy(userMarkers = message.userMarkers?.toMutableSet()?.apply {
-                                    add(SceytMarker(message.id, user, data.name, data.createdAt))
-                                }?.toList()))
+                                val updatedMessage = message.copy(
+                                    userMarkers = message.userMarkers.orEmpty()
+                                        .plus(SceytMarker(message.id, user, data.name, data.createdAt))
+                                )
+                                val updatedItem = listItem.copy(message = updatedMessage)
                                 messagesListView.updateItemAt(index, updatedItem)
                             }
                         }
@@ -500,7 +522,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 }
             }
         }
-    })
+    }
 
     suspend fun onMessage(message: SceytMessage) {
         if (hasNext || hasNextDb) return
@@ -576,25 +598,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         onMessageUpdated(data)
     }.launchIn(lifecycleOwner.lifecycleScope)
 
-    onChannelMemberAddedOrKickedLiveData.observe(lifecycleOwner) {
-        checkEnableDisableActions(it)
-    }
-
-    fun onMessageDisplayed(messageItem: MessageItem) {
-        val message = messageItem.message
-        if (!message.incoming || message.userMarkers?.any { it.name == MarkerType.Displayed.value } == true)
-            return
-
-        if (lifecycleOwner.isResumed()) {
-            pendingDisplayMsgIds.add(message.id)
-            sendDisplayedHelper.submit {
-                markMessageAsRead(*(pendingDisplayMsgIds).toLongArray())
-                pendingDisplayMsgIds.clear()
-            }
-        } else pendingDisplayMsgIds.add(message.id)
-    }
-
-
     fun onVocePlaying(message: SceytMessage) {
         if (message.userMarkers?.any { it.name == MarkerType.Played.value } == true)
             return
@@ -612,7 +615,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
           messagesListView.newReplyMessage(it.parentMessage?.id)
       }.launchIn(lifecycleOwner.lifecycleScope)
   */
-    onTransferUpdatedLiveData.asFlow().onEach {
+    FileTransferHelper.onTransferUpdatedLiveData.asFlow().onEach {
         viewModelScope.launch(Dispatchers.Default) {
             if (lifecycleOwner.isResumed()) {
                 messagesListView.updateProgress(it, false)
@@ -648,13 +651,6 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
-    channelLiveData.observe(lifecycleOwner) { response ->
-        response.onSuccessNotNull { channel ->
-            checkEnableDisableActions(channel)
-            messagesListView.setUnreadCount(channel.newMessageCount)
-        }
-    }
-
     pageStateLiveData.observe(lifecycleOwner) {
         if (it is PageState.StateError && messagesListView.getData().isEmpty())
             messagesListView.updateViewState(PageState.StateEmpty())
@@ -686,7 +682,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 prepareToShowSearchMessage(event)
             }
 
-            is MessageCommandEvent.OnMultiselectEvent -> {
+            is MessageCommandEvent.MultiselectEvent -> {
                 val wasSelected = selectedMessagesMap.containsKey(event.message.tid)
                 val maxCount = SceytChatUIKit.config.messageMultiselectLimit
 
@@ -714,7 +710,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
                 }
             }
 
-            is MessageCommandEvent.OnCancelMultiselectEvent -> {
+            is MessageCommandEvent.CancelMultiselectEvent -> {
                 selectedMessagesMap.clear()
                 messagesListView.cancelMultiSelectMode()
             }
@@ -725,6 +721,10 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
             is MessageCommandEvent.ScrollToDown -> {
                 prepareToScrollToNewMessage()
+            }
+
+            is MessageCommandEvent.ScrollToUnreadMention -> {
+                prepareToScrollToUnreadMention()
             }
 
             is MessageCommandEvent.ScrollToReplyMessage -> {
@@ -761,6 +761,16 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
         }
     }
 
+    messagesListView.setOnWindowFocusChangeListener { hasFocus ->
+        if (hasFocus)
+            ChannelsCache.currentChannelId = channel.id
+        else ChannelsCache.currentChannelId = null
+    }
+
+    messagesListView.setNeedDownloadListener {
+        needMediaInfo(it)
+    }
+
     messagesListView.setMessageReactionsEventListener {
         onReactionEvent(it)
     }
@@ -792,7 +802,7 @@ fun MessageListViewModel.bind(messagesListView: MessagesListView, lifecycleOwner
 
     messagesListView.setMessageDisplayedListener {
         if (it is MessageItem)
-            onMessageDisplayed(it)
+            onMessageDisplayed(it.message)
     }
 
     messagesListView.setVoicePlayPauseListener { _, message, playing ->

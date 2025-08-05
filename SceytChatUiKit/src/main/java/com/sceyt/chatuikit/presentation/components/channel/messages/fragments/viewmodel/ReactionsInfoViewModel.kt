@@ -10,7 +10,6 @@ import com.sceyt.chatuikit.persistence.extensions.toArrayList
 import com.sceyt.chatuikit.persistence.logic.PersistenceReactionsLogic
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.adapters.ReactedUserItem
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
-import com.sceyt.chatuikit.styles.reactions_info.ReactedUserListStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -24,8 +23,6 @@ class ReactionsInfoViewModel(
 ) : BaseViewModel() {
     private val _loadReactIonsLiveData = MutableLiveData<PaginationResponse<SceytReaction>>()
     val loadReactionsLiveData: LiveData<PaginationResponse<SceytReaction>> = _loadReactIonsLiveData
-
-    lateinit var style: ReactedUserListStyle
 
     fun getReactions(offset: Int, loadKey: LoadKeyData? = null, ignoreDb: Boolean = false) {
         setPagingLoadingStarted(PaginationResponse.LoadType.LoadNext, ignoreDatabase = ignoreDb)
@@ -43,7 +40,7 @@ class ReactionsInfoViewModel(
 
     suspend fun initDbResponse(
             response: PaginationResponse.DBResponse<SceytReaction>,
-            cashedList: List<ReactedUserItem>?
+            cashedList: List<ReactedUserItem>?,
     ): List<ReactedUserItem> {
         return withContext(Dispatchers.IO) {
             val currentList = arrayListOf<SceytReaction>()
@@ -63,7 +60,7 @@ class ReactionsInfoViewModel(
     }
 
     suspend fun initServerResponse(
-            response: PaginationResponse.ServerResponse<SceytReaction>
+            response: PaginationResponse.ServerResponse<SceytReaction>,
     ): List<ReactedUserItem> {
         return withContext(Dispatchers.IO) {
             val data = initResponseData(response.cacheData, response.hasNext)

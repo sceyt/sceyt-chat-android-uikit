@@ -134,21 +134,19 @@
         app:srcCompat="@drawable/sceyt_ic_pin_filled"
         tools:visibility="visible" />
 
-    <androidx.appcompat.widget.AppCompatTextView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icMention"
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:layout_marginTop="5dp"
         android:layout_marginEnd="8dp"
         android:background="@drawable/sceyt_bg_circle"
-        android:gravity="center_horizontal"
-        android:includeFontPadding="false"
-        android:text="\@"
-        android:textColor="@color/sceyt_color_on_primary"
+        android:tint="@color/design_default_color_on_primary"
         android:visibility="gone"
+        android:padding="3dp"
         app:layout_constraintEnd_toStartOf="@+id/unreadMessagesCount"
         app:layout_constraintTop_toBottomOf="@+id/dateStatus"
-        tools:ignore="HardcodedText"
+        app:srcCompat="@drawable/sceyt_ic_mention"
         tools:visibility="visible" />
 
     <androidx.appcompat.widget.AppCompatTextView

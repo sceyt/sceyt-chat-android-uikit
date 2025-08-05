@@ -27,7 +27,7 @@ import com.sceyt.chatuikit.presentation.custom_views.AvatarView
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.presentation.custom_views.PresenceStateIndicatorView
 import com.sceyt.chatuikit.presentation.extensions.setChannelMessageDateAndStatusIcon
-import com.sceyt.chatuikit.styles.ChannelItemStyle
+import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 import java.util.Date
 
 open class ChannelViewHolder(
@@ -64,7 +64,7 @@ open class ChannelViewHolder(
 
                 // this ui states is changed more often, and to avoid wrong ui states we need to set them every time
                 setUnreadCount(channel, binding.unreadMessagesCount)
-                setMentionUserSymbol(channel, binding.icMention)
+                setUnreadMentions(channel, binding.icMention)
                 setLastMessageStatusAndDate(channel, binding.dateStatus)
                 setLastMessagedText(channel, binding.lastMessage)
                 setPresenceState(channel, binding.onlineState)
@@ -217,14 +217,13 @@ open class ChannelViewHolder(
         textView.isVisible = channel.unread
     }
 
-    protected open fun setMentionUserSymbol(channel: SceytChannel, icMention: TextView) {
-        val showMention = channel.newMentionCount > 0 && channel.newMessageCount > 0
-        if (showMention) {
-            icMention.isVisible = true
+    protected open fun setUnreadMentions(channel: SceytChannel, imageView: ImageView) {
+        if (channel.newMentionCount > 0) {
+            imageView.isVisible = true
             if (channel.muted)
-                itemStyle.unreadMentionMutedStateTextStyle.apply(icMention)
-            else itemStyle.unreadMentionTextStyle.apply(icMention)
-        } else icMention.isVisible = false
+                itemStyle.unreadMentionMutedStateBackgroundStyle.apply(imageView)
+            else itemStyle.unreadMentionBackgroundStyle.apply(imageView)
+        } else imageView.isVisible = false
     }
 
     protected open fun setChannelEventTitle(channel: SceytChannel, textView: TextView) {
@@ -279,6 +278,7 @@ open class ChannelViewHolder(
         viewPinned.setBackgroundColor(itemStyle.pinnedChannelBackgroundColor)
         divider.setBackgroundColor(itemStyle.dividerColor)
         icAutoDeleted.setImageDrawable(itemStyle.autoDeletedChannelIcon)
+        icMention.setImageDrawable(itemStyle.unreadMentionIcon)
         dateStatus.appearanceBuilder()
             .setLeadingIconSize(itemStyle.deliveryStatusIndicatorSize)
             .setTextStyle(itemStyle.dateTextStyle)
