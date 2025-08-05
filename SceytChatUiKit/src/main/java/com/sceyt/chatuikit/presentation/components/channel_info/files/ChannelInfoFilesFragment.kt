@@ -29,37 +29,29 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.viewmodel.
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.presentation.di.ChannelInfoFilesViewModelQualifier
 import com.sceyt.chatuikit.presentation.root.PageState
-import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.StyleRegistry
+import com.sceyt.chatuikit.styles.channel_info.files.ChannelInfoFilesStyle
 import com.sceyt.chatuikit.styles.extensions.channel_info.files.setPageStatesView
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-@Suppress("MemberVisibilityCanBePrivate")
-open class ChannelInfoFilesFragment : Fragment, SceytKoinComponent, HistoryClearedListener {
-    constructor() : super()
-
-    constructor(infoStyle: ChannelInfoStyle) : super() {
-        this.infoStyle = infoStyle
-    }
-
+open class ChannelInfoFilesFragment : Fragment(), SceytKoinComponent, HistoryClearedListener {
     protected lateinit var channel: SceytChannel
     protected var binding: SceytFragmentChannelInfoFilesBinding? = null
     protected var mediaAdapter: ChannelMediaAdapter? = null
     protected var pageStateView: PageStateView? = null
     protected val mediaType = listOf(AttachmentTypeEnum.File.value)
     protected val viewModel: ChannelAttachmentsViewModel by viewModel(ChannelInfoFilesViewModelQualifier)
-    lateinit var infoStyle: ChannelInfoStyle
-        protected set
+    protected lateinit var filesStyle: ChannelInfoFilesStyle
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        // Keep the style in the view model.
-        // If the style is not initialized it will be taken from the view model.
-        if (::infoStyle.isInitialized)
-            viewModel.infoStyle = infoStyle
-        else
-            infoStyle = viewModel.infoStyle
+        val styleId = arguments?.getString(STYLE_ID_KEY)
+
+        filesStyle = StyleRegistry.getOrDefault(styleId) {
+            ChannelInfoFilesStyle.Builder(context, null).build()
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -90,7 +82,7 @@ open class ChannelInfoFilesFragment : Fragment, SceytKoinComponent, HistoryClear
         }
 
         lifecycleScope.launch {
-            viewModel.loadMoreFilesFlow.filterNot { it.isEmpty() }.collect(::onMoreFilesList)
+            viewModel.loadMoreAttachmentsFlow.filterNot { it.isEmpty() }.collect(::onMoreFilesList)
         }
 
         viewModel.pageStateLiveData.observe(viewLifecycleOwner, ::onPageStateChange)
@@ -99,7 +91,10 @@ open class ChannelInfoFilesFragment : Fragment, SceytKoinComponent, HistoryClear
     open fun onInitialFilesList(list: List<ChannelFileItem>) {
         if (mediaAdapter == null) {
             val adapter = ChannelMediaAdapter(SyncArrayList(list), ChannelAttachmentViewHolderFactory(
-                requireContext(), infoStyle, infoStyle.filesStyle.dateSeparatorStyle).also {
+                context = requireContext(),
+                filesStyleProvider = { filesStyle },
+                dateSeparatorStyle = filesStyle.dateSeparatorStyle
+            ).also {
                 it.setClickListener(AttachmentClickListeners.AttachmentClickListener { _, item ->
                     item.attachment.openFile(requireContext())
                 })
@@ -153,7 +148,7 @@ open class ChannelInfoFilesFragment : Fragment, SceytKoinComponent, HistoryClear
 
     private fun addPageStateView() {
         binding?.root?.addView(PageStateView(requireContext()).apply {
-            setPageStatesView(this)
+            setPageStatesView(filesStyle)
             pageStateView = this
 
             post {
@@ -176,19 +171,19 @@ open class ChannelInfoFilesFragment : Fragment, SceytKoinComponent, HistoryClear
     }
 
     private fun SceytFragmentChannelInfoFilesBinding.applyStyle() {
-        root.setBackgroundColor(infoStyle.filesStyle.backgroundColor)
+        root.setBackgroundColor(filesStyle.backgroundColor)
     }
 
     companion object {
         const val CHANNEL = "CHANNEL"
+        private const val STYLE_ID_KEY = "STYLE_ID_KEY"
 
         fun newInstance(
                 channel: SceytChannel,
-                infoStyle: ChannelInfoStyle
-        ) = ChannelInfoFilesFragment(infoStyle).apply {
-            setBundleArguments {
-                putParcelable(CHANNEL, channel)
-            }
+                styleId: String,
+        ) = ChannelInfoFilesFragment().setBundleArguments {
+            putParcelable(CHANNEL, channel)
+            putString(STYLE_ID_KEY, styleId)
         }
     }
 }

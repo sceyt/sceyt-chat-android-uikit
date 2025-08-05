@@ -3,6 +3,7 @@ package com.sceyt.chatuikit.persistence.logicimpl.message
 import android.content.Context
 import androidx.work.await
 import com.sceyt.chat.models.SceytException
+import com.sceyt.chat.models.Types
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.DeleteMessageType.DeleteForEveryone
 import com.sceyt.chat.models.message.DeleteMessageType.DeleteForMe
@@ -39,7 +40,6 @@ import com.sceyt.chatuikit.data.models.messages.MarkerType.Received
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.repositories.getUserId
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.isNotNullOrBlank
 import com.sceyt.chatuikit.extensions.toDeliveryStatus
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -245,6 +245,15 @@ internal class PersistenceMessagesLogicImpl(
         return@withContext messagesRepository.searchMessages(conversationId, replyInThread, query)
     }
 
+    override suspend fun getUnreadMentions(
+            conversationId: Long,
+            direction: Types.Direction,
+            messageId: Long,
+            limit: Int,
+    ): SceytPagingResponse<List<Long>> = withContext(dispatcherIO) {
+        return@withContext messagesRepository.getUnreadMentions(conversationId, direction, messageId, limit)
+    }
+
     override suspend fun loadNextSearchMessages(): SceytPagingResponse<List<SceytMessage>> = withContext(dispatcherIO) {
         return@withContext messagesRepository.loadNextSearchMessages()
     }
@@ -402,7 +411,7 @@ internal class PersistenceMessagesLogicImpl(
     }
 
     private suspend fun createNewChannelInsteadOfPendingChannel(
-            pendingChannel: SceytChannel
+            pendingChannel: SceytChannel,
     ): SceytResponse<SceytChannel> {
         val response = persistenceChannelsLogic.createNewChannelInsteadOfPendingChannel(pendingChannel)
         if (response is SceytResponse.Success) {
@@ -449,7 +458,7 @@ internal class PersistenceMessagesLogicImpl(
 
     override suspend fun sendMessageWithUploadedAttachments(
             channelId: Long,
-            message: Message
+            message: Message,
     ): SceytResponse<SceytMessage> = withContext(dispatcherIO) {
         val channel = channelCache.getOneOf(channelId)
                 ?: persistenceChannelsLogic.getChannelFromDb(channelId)
@@ -847,7 +856,7 @@ internal class PersistenceMessagesLogicImpl(
     private suspend fun updateMessageLoadRange(
             messageId: Long,
             channelId: Long,
-            response: SceytResponse<List<SceytMessage>>
+            response: SceytResponse<List<SceytMessage>>,
     ) {
         val data = (response as? SceytResponse.Success)?.data ?: return
         if (data.isEmpty()) return
@@ -1088,7 +1097,7 @@ internal class PersistenceMessagesLogicImpl(
             list: List<SceytMessage>?,
             includeParents: Boolean = true,
             unListAll: Boolean = false,
-            replaceUserOnConflict: Boolean = true
+            replaceUserOnConflict: Boolean = true,
     ): List<SceytMessage> {
         if (list.isNullOrEmpty()) return emptyList()
         val pendingStates = pendingMessageStateDao.getAll()
@@ -1123,11 +1132,11 @@ internal class PersistenceMessagesLogicImpl(
             }
         }
 
+        userDao.insertUsersWithMetadata(usersDb.toList(), replaceUserOnConflict)
         messageDao.upsertMessages(messagesDb)
         if (parentMessagesDb.isNotEmpty())
             messageDao.insertMessagesIgnored(parentMessagesDb)
 
-        userDao.insertUsersWithMetadata(usersDb.toList(), replaceUserOnConflict)
         return mutableList
     }
 
@@ -1166,6 +1175,7 @@ internal class PersistenceMessagesLogicImpl(
             channelId: Long, marker: MarkerType,
             vararg ids: Long,
     ): List<SceytResponse<MessageListMarker>> = withContext(dispatcherIO) {
+        SceytLog.i(TAG, "Mark messages as marker: ${marker.value}, ids: ${ids.toList()}")
         val responseList = mutableListOf<SceytResponse<MessageListMarker>>()
         ids.toList().chunked(50).forEach {
             val typedArray = it.toLongArray()
@@ -1212,13 +1222,13 @@ internal class PersistenceMessagesLogicImpl(
             channelId: Long,
             response: SceytResponse<MessageListMarker>,
             marker: String,
-            vararg ids: Long
+            vararg ids: Long,
     ) {
         when (response) {
             is SceytResponse.Success -> {
                 response.data?.let { data ->
-                    SceytLog.i("onMarkerResponse", "send $marker, ${ids.toList()}, in response ${data.messageIds}, " +
-                            "marker: ${marker}, name: ${data.name}")
+                    SceytLog.i(TAG, "$marker marker successfully added to messages: ${ids.toList()}, in response ${data.messageIds}, " +
+                            "name: ${data.name}")
                     val responseIds = data.messageIds.toList()
 
                     marker.toDeliveryStatus()?.let { deliveryStatus ->
@@ -1239,9 +1249,14 @@ internal class PersistenceMessagesLogicImpl(
             is SceytResponse.Error -> {
                 // Check if error code is 1301 (TypeNotAllowed), 1228 (TypeBadParam) then delete pending markers
                 val code = response.exception?.code
+                SceytLog.i(TAG, "Error adding $marker marker to messages:${ids.toList()}, error:${response.exception?.message}, code: $code")
                 if (code == 1301 || code == 1228)
                     pendingMarkerDao.deleteMessagesMarkersByStatus(ids.toList(), marker)
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "PersistenceMessagesLogic"
     }
 }

@@ -29,7 +29,6 @@ import com.sceyt.chatuikit.presentation.components.channel_info.ChannelFileItemT
 import com.sceyt.chatuikit.presentation.root.BaseViewModel
 import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
-import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -45,17 +44,16 @@ class ChannelAttachmentsViewModel(
 ) : BaseViewModel() {
     private val linkPreviewHelper by lazy { LinkPreviewHelper(application, viewModelScope) }
     private val needToUpdateTransferAfterOnResume = hashMapOf<Long, TransferData>()
-    lateinit var infoStyle: ChannelInfoStyle
 
     private val _filesFlow = MutableSharedFlow<List<ChannelFileItem>>(
         extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val filesFlow: SharedFlow<List<ChannelFileItem>> = _filesFlow
 
-    private val _loadMoreFilesFlow = MutableSharedFlow<List<ChannelFileItem>>(
+    private val _loadMoreAttachmentsFlow = MutableSharedFlow<List<ChannelFileItem>>(
         extraBufferCapacity = 5,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val loadMoreFilesFlow: SharedFlow<List<ChannelFileItem>> = _loadMoreFilesFlow
+    val loadMoreAttachmentsFlow: SharedFlow<List<ChannelFileItem>> = _loadMoreAttachmentsFlow
 
     private val _linkPreviewLiveData = MutableLiveData<LinkPreviewDetails>()
     val linkPreviewLiveData = _linkPreviewLiveData.asLiveData()
@@ -98,7 +96,7 @@ class ChannelAttachmentsViewModel(
         val data = mapToFileListItem(response.data, response.hasPrev)
         if (response.offset == 0) {
             _filesFlow.tryEmit(data)
-        } else _loadMoreFilesFlow.tryEmit(data)
+        } else _loadMoreAttachmentsFlow.tryEmit(data)
 
         notifyPageStateWithResponse(SceytResponse.Success(null), response.offset > 0, response.data.isEmpty())
     }
@@ -111,12 +109,12 @@ class ChannelAttachmentsViewModel(
                         hasPrev = response.hasPrev)
                     _filesFlow.tryEmit(newMessages)
                 } else if (response.hasPrev.not())
-                    _loadMoreFilesFlow.tryEmit(emptyList())
+                    _loadMoreAttachmentsFlow.tryEmit(emptyList())
             }
 
             is SceytResponse.Error -> {
                 if (hasNextDb.not())
-                    _loadMoreFilesFlow.tryEmit(emptyList())
+                    _loadMoreAttachmentsFlow.tryEmit(emptyList())
             }
         }
         notifyPageStateWithResponse(response.data, response.offset > 0, response.cacheData.isEmpty())

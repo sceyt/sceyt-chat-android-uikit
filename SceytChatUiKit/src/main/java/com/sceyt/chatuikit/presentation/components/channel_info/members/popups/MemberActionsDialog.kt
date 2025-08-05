@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.databinding.SceytDialogMembrerActionsBinding
 import com.sceyt.chatuikit.koin.SceytKoinComponent
-import com.sceyt.chatuikit.styles.DialogStyle
+import com.sceyt.chatuikit.styles.common.DialogStyle
 
 class MemberActionsDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95), SceytKoinComponent {
     private lateinit var binding: SceytDialogMembrerActionsBinding

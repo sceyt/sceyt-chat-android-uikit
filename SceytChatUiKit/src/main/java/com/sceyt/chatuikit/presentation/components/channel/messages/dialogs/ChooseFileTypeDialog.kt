@@ -9,7 +9,7 @@ import android.view.WindowManager
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytDialogChooseFileTypeBinding
 import com.sceyt.chatuikit.shared.helpers.picker.PickType
-import com.sceyt.chatuikit.styles.DialogStyle
+import com.sceyt.chatuikit.styles.common.DialogStyle
 
 class ChooseFileTypeDialog(context: Context) : Dialog(context, R.style.SceytDialogNoTitle95) {
     private lateinit var binding: SceytDialogChooseFileTypeBinding

@@ -1,11 +1,8 @@
 package com.sceyt.chatuikit.extensions
 
-import android.os.Handler
-import android.os.Looper
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
-import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.math.abs
@@ -49,13 +46,6 @@ fun RecyclerView.isFirstItemDisplaying(): Boolean {
         }
     }
     return false
-}
-
-
-fun RecyclerView.needLoadMore(limit: Int, dy: Int): Boolean {
-    if (adapter?.itemCount == 0 || dy > 0) return false
-    val firstVisibleItemPosition = ((layoutManager) as LinearLayoutManager).findFirstVisibleItemPosition()
-    return firstVisibleItemPosition != RecyclerView.NO_POSITION && firstVisibleItemPosition < limit
 }
 
 fun RecyclerView.isFirstCompletelyItemDisplaying(): Boolean {
@@ -160,17 +150,9 @@ fun RecyclerView.awaitAnimationEnd(callback: () -> Unit) {
     }
 }
 
-
-fun RecyclerView.addPagerSnapHelper() {
-    if (onFlingListener == null)
-        PagerSnapHelper().attachToRecyclerView(this)
-}
-
-fun RecyclerView.awaitToScrollFinish(position: Int, delay: Boolean = false, callback: (Int) -> Unit) {
+fun RecyclerView.awaitToScrollFinish(position: Int, callback: (Int) -> Unit) {
     if (!checkIsNotVisibleItem(position)) {
-        if (delay)
-            Handler(Looper.getMainLooper()).postDelayed({ callback.invoke(scrollState) }, 100)
-        else callback.invoke(scrollState)
+        callback.invoke(scrollState)
     } else {
         addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -192,7 +174,6 @@ fun RecyclerView.awaitToScrollFinish(position: Int, delay: Boolean = false, call
     }
 }
 
-
 inline fun RecyclerView.addRVScrollListener(
         crossinline onScrollStateChanged: (recyclerView: RecyclerView, newState: Int) -> Unit = { _, _ -> },
         crossinline onScrolled: (recyclerView: RecyclerView, dx: Int, dy: Int) -> Unit = { _, _, _ -> },
@@ -210,25 +191,6 @@ inline fun RecyclerView.addRVScrollListener(
             onScrolled(recyclerView, dx, dy)
         }
     })
-}
-
-fun RecyclerView.getLinearLayoutManager(): LinearLayoutManager {
-    return layoutManager as LinearLayoutManager
-}
-
-fun RecyclerView.ViewHolder.bindPosition(cb: (Int) -> Unit) {
-    bindingAdapterPosition.let {
-        if (it != RecyclerView.NO_POSITION)
-            cb.invoke(it)
-    }
-}
-
-fun RecyclerView.notifyItemChangedSafety(position: Int, payload: Any?) {
-    try {
-        adapter?.notifyItemChanged(position, payload)
-    } catch (ex: Exception) {
-        println(ex.message)
-    }
 }
 
 fun RecyclerView.smoothSnapToPosition(position: Int, snapMode: Int = LinearSmoothScroller.SNAP_TO_START) {

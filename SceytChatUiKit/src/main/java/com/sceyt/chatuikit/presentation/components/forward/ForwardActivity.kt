@@ -17,7 +17,7 @@ import com.sceyt.chatuikit.presentation.common.SceytLoader
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.forward.viewmodel.ForwardViewModel
 import com.sceyt.chatuikit.presentation.components.shareable.ShareableActivity
-import com.sceyt.chatuikit.styles.ForwardStyle
+import com.sceyt.chatuikit.styles.forward.ForwardStyle
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 

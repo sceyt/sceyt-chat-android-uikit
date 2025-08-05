@@ -22,7 +22,7 @@ internal class MessageActionBridge {
     fun setHeaderView(headerView: MessagesListHeaderView) {
         this.headerView = headerView
         headerView.setToolbarActionHiddenCallback {
-            messagesListView?.getMessageCommandEventListener()?.invoke(MessageCommandEvent.OnCancelMultiselectEvent)
+            messagesListView?.getMessageCommandEventListener()?.invoke(MessageCommandEvent.CancelMultiselectEvent)
             inputView?.getEventListeners()?.onMultiselectModeListener(false)
         }
 

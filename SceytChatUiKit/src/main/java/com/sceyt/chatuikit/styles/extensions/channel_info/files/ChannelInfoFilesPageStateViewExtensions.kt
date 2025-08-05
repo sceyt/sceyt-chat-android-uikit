@@ -7,21 +7,18 @@ import com.sceyt.chatuikit.databinding.SceytEmptyStateBinding
 import com.sceyt.chatuikit.databinding.SceytPageLoadingStateBinding
 import com.sceyt.chatuikit.extensions.setProgressColor
 import com.sceyt.chatuikit.extensions.setTextColorRes
-import com.sceyt.chatuikit.presentation.components.channel_info.files.ChannelInfoFilesFragment
 import com.sceyt.chatuikit.presentation.custom_views.PageStateView
 import com.sceyt.chatuikit.styles.channel_info.files.ChannelInfoFilesStyle
 
-internal fun ChannelInfoFilesFragment.setPageStatesView(
-        pageStateView: PageStateView
+internal fun PageStateView.setPageStatesView(
+        filesStyle: ChannelInfoFilesStyle,
 ) {
-    with(pageStateView) {
-        setEmptyState(infoStyle.filesStyle)
-        setLoadingState(infoStyle.filesStyle.loadingState)
-    }
+    setEmptyState(filesStyle)
+    setLoadingState(filesStyle.loadingState)
 }
 
 private fun PageStateView.setEmptyState(
-        style: ChannelInfoFilesStyle
+        style: ChannelInfoFilesStyle,
 ) {
     if (style.emptyState == R.layout.sceyt_empty_state) {
         setEmptyStateView(
@@ -36,7 +33,7 @@ private fun PageStateView.setEmptyState(
 
 
 private fun PageStateView.setLoadingState(
-        @LayoutRes layoutResId: Int
+        @LayoutRes layoutResId: Int,
 ) {
     if (layoutResId == R.layout.sceyt_page_loading_state) {
         setLoadingStateView(

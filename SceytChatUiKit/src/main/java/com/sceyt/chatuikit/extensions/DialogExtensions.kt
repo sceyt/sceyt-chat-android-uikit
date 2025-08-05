@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.extensions
 
 import android.app.Dialog
-import android.os.Bundle
 import androidx.fragment.app.DialogFragment
 
 fun DialogFragment.dismissSafety() {
@@ -57,9 +56,4 @@ fun Dialog?.isNullOrNotShowing(): Boolean {
 
 fun Dialog?.isShowing(): Boolean {
     return this?.isShowing ?: return false
-}
-
-fun DialogFragment.setBundleArguments(init: Bundle.() -> Unit = {}): DialogFragment {
-    arguments = Bundle().apply { init() }
-    return this
 }

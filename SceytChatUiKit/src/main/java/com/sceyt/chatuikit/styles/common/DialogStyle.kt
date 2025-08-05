@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.styles
+package com.sceyt.chatuikit.styles.common
 
 import android.content.Context
 import com.sceyt.chatuikit.R
@@ -6,11 +6,7 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.createColorState
 import com.sceyt.chatuikit.extensions.dpToPx
 import com.sceyt.chatuikit.extensions.getCompatColor
-import com.sceyt.chatuikit.styles.common.BackgroundStyle
-import com.sceyt.chatuikit.styles.common.ButtonStyle
-import com.sceyt.chatuikit.styles.common.CheckboxStyle
-import com.sceyt.chatuikit.styles.common.Shape
-import com.sceyt.chatuikit.styles.common.TextStyle
+import com.sceyt.chatuikit.styles.StyleCustomizer
 
 data class DialogStyle(
         val backgroundStyle: BackgroundStyle,

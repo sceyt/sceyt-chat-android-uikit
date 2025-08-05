@@ -14,7 +14,7 @@ import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.formatters.Formatter
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper.buildWithAttributes
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
-import com.sceyt.chatuikit.styles.ChannelItemStyle
+import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
 import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 import java.io.File

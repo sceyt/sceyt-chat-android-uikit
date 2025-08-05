@@ -9,4 +9,5 @@ data class QueryLimits(
         @IntRange(1, 50) val messageListQueryLimit: Int = 50,
         @IntRange(1, 50) val attachmentListQueryLimit: Int = 20,
         @IntRange(1, 50) val reactionListQueryLimit: Int = 30,
+        @IntRange(1, 50) val unreadMentionsListQueryLimit: Int = 30,
 )

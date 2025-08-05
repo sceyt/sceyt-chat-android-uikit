@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.styles
+package com.sceyt.chatuikit.styles.share
 
 import androidx.annotation.ColorInt
 import com.sceyt.chatuikit.data.models.channels.SceytChannel

@@ -12,23 +12,19 @@ import androidx.recyclerview.widget.RecyclerView
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.databinding.SceytFragmentReactedUsersBinding
+import com.sceyt.chatuikit.extensions.addRVScrollListener
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
 import com.sceyt.chatuikit.extensions.setBundleArguments
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.messages.fragments.viewmodel.ReactionsInfoViewModel
+import com.sceyt.chatuikit.styles.StyleRegistry
 import com.sceyt.chatuikit.styles.reactions_info.ReactedUserListStyle
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 
-class FragmentReactedUsers : Fragment, SceytKoinComponent {
-    constructor()
-
-    constructor(style: ReactedUserListStyle) {
-        this.style = style
-    }
-
+class FragmentReactedUsers : Fragment(), SceytKoinComponent {
     private lateinit var binding: SceytFragmentReactedUsersBinding
     private val viewModel: ReactionsInfoViewModel by viewModel(parameters = {
         parametersOf(
@@ -44,12 +40,11 @@ class FragmentReactedUsers : Fragment, SceytKoinComponent {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        // Keep the style in the view model.
-        // If the style is not initialized it will be taken from the view model.
-        if (::style.isInitialized)
-            viewModel.style = style
-        else
-            style = viewModel.style
+        val styleId = arguments?.getString(STYLE_ID_KEY)
+
+        style = StyleRegistry.getOrDefault(styleId) {
+            ReactedUserListStyle.Builder(context, null).build()
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -105,16 +100,13 @@ class FragmentReactedUsers : Fragment, SceytKoinComponent {
                     moveDuration = 100
                 }
 
-                addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                        super.onScrolled(recyclerView, dx, dy)
-                        if (isLastItemDisplaying()) {
-                            loafMoreDebounce.submit {
-                                if (!viewModel.canLoadNext()) return@submit
+                addRVScrollListener(onScrolled = { _: RecyclerView, _: Int, _: Int ->
+                    if (isLastItemDisplaying()) {
+                        loafMoreDebounce.submit {
+                            if (!viewModel.canLoadNext()) return@submit
 
-                                val offset = usersAdapter?.getSkip() ?: 0
-                                viewModel.getReactions(offset)
-                            }
+                            val offset = usersAdapter?.getSkip() ?: 0
+                            viewModel.getReactions(offset)
                         }
                     }
                 })
@@ -147,16 +139,16 @@ class FragmentReactedUsers : Fragment, SceytKoinComponent {
     companion object {
         private const val REACTIONS_KEY = "REACTIONS_KEY"
         private const val MESSAGE_ID_KEY = "MESSAGE_ID_KEY"
+        private const val STYLE_ID_KEY = "STYLE_ID_KEY"
 
         fun newInstance(
                 messageId: Long,
                 key: String,
-                style: ReactedUserListStyle
-        ) = FragmentReactedUsers(style).apply {
-            setBundleArguments {
-                putString(REACTIONS_KEY, key)
-                putLong(MESSAGE_ID_KEY, messageId)
-            }
+                styleId: String,
+        ) = FragmentReactedUsers().setBundleArguments {
+            putString(REACTIONS_KEY, key)
+            putLong(MESSAGE_ID_KEY, messageId)
+            putString(STYLE_ID_KEY, styleId)
         }
     }
 }

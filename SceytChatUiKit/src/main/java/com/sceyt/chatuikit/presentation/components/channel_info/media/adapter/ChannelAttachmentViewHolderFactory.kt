@@ -25,11 +25,17 @@ import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.ho
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListeners
 import com.sceyt.chatuikit.presentation.components.channel_info.media.adapter.listeners.AttachmentClickListenersImpl
 import com.sceyt.chatuikit.styles.channel_info.ChannelInfoDateSeparatorStyle
-import com.sceyt.chatuikit.styles.channel_info.ChannelInfoStyle
+import com.sceyt.chatuikit.styles.channel_info.files.ChannelInfoFilesStyle
+import com.sceyt.chatuikit.styles.channel_info.link.ChannelInfoLinkStyle
+import com.sceyt.chatuikit.styles.channel_info.media.ChannelInfoMediaStyle
+import com.sceyt.chatuikit.styles.channel_info.voice.ChannelInfoVoiceStyle
 
 open class ChannelAttachmentViewHolderFactory(
         context: Context,
-        val style: ChannelInfoStyle,
+        val mediaStyleProvider: () -> ChannelInfoMediaStyle = { throw RuntimeException("Media style not provided") },
+        val filesStyleProvider: () -> ChannelInfoFilesStyle = { throw RuntimeException("Files style not provided") },
+        val voiceStyleProvider: () -> ChannelInfoVoiceStyle = { throw RuntimeException("Voice style not provided") },
+        val linkStyleProvider: () -> ChannelInfoLinkStyle = { throw RuntimeException("Link style not provided") },
         val dateSeparatorStyle: ChannelInfoDateSeparatorStyle,
 ) {
     protected val layoutInflater = LayoutInflater.from(context)
@@ -53,32 +59,42 @@ open class ChannelAttachmentViewHolderFactory(
 
     open fun createImageViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         return ImageViewHolder(
-            SceytItemChannelImageBinding.inflate(layoutInflater, parent, false),
-            style.mediaStyle.itemStyle, clickListeners, needMediaDataCallback = needMediaDataCallback)
+            binding = SceytItemChannelImageBinding.inflate(layoutInflater, parent, false),
+            style = mediaStyleProvider().itemStyle,
+            clickListeners = clickListeners,
+            needMediaDataCallback = needMediaDataCallback)
     }
 
     open fun createVideoViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         return VideoViewHolder(
-            SceytItemChannelVideoBinding.inflate(layoutInflater, parent, false),
-            style.mediaStyle.itemStyle, clickListeners, needMediaDataCallback = needMediaDataCallback)
+            binding = SceytItemChannelVideoBinding.inflate(layoutInflater, parent, false),
+            style = mediaStyleProvider().itemStyle,
+            clickListeners = clickListeners,
+            needMediaDataCallback = needMediaDataCallback)
     }
 
     open fun createFileViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         return FileViewHolder(
-            SceytItemChannelFileBinding.inflate(layoutInflater, parent, false),
-            style.filesStyle.itemStyle, clickListeners, needMediaDataCallback = needMediaDataCallback)
+            binding = SceytItemChannelFileBinding.inflate(layoutInflater, parent, false),
+            style = filesStyleProvider().itemStyle,
+            clickListeners = clickListeners,
+            needMediaDataCallback = needMediaDataCallback)
     }
 
     open fun createVoiceViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         return VoiceViewHolder(
-            SceytItemChannelVoiceBinding.inflate(layoutInflater, parent, false),
-            style.voiceStyle.itemStyle, clickListeners, needMediaDataCallback = needMediaDataCallback)
+            binding = SceytItemChannelVoiceBinding.inflate(layoutInflater, parent, false),
+            style = voiceStyleProvider().itemStyle,
+            clickListener = clickListeners,
+            needMediaDataCallback = needMediaDataCallback)
     }
 
     open fun createLinkViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
         return LinkViewHolder(
-            SceytItemChannelLinkBinding.inflate(layoutInflater, parent, false),
-            style.linkStyle.itemStyle, clickListeners, needMediaDataCallback)
+            binding = SceytItemChannelLinkBinding.inflate(layoutInflater, parent, false),
+            style = linkStyleProvider().itemStyle,
+            clickListener = clickListeners,
+            needMediaDataCallback = needMediaDataCallback)
     }
 
     open fun createMediaDateViewHolder(parent: ViewGroup): BaseFileViewHolder<ChannelFileItem> {
