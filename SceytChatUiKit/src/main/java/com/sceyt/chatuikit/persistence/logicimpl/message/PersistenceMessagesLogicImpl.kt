@@ -1133,11 +1133,18 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         userDao.insertUsersWithMetadata(usersDb.toList(), replaceUserOnConflict)
-        messageDao.upsertMessages(messagesDb)
+        val forceUpdatedList = messageDao.upsertMessages(messagesDb)
+        if (forceUpdatedList.isNotEmpty()) {
+            messagesCache.deleteAllMessagesWhere {
+                return@deleteAllMessagesWhere forceUpdatedList.any { entity ->
+                    it.channelId == entity.channelId && (it.tid == entity.tid || it.id == entity.id)
+                }
+            }
+        }
         if (parentMessagesDb.isNotEmpty())
             messageDao.insertMessagesIgnored(parentMessagesDb)
 
-        return mutableList
+        return mutableList.toList()
     }
 
     private fun updateMessageStatesWithPendingStates(message: SceytMessage, pendingStates: List<PendingMessageStateEntity>): SceytMessage? {
