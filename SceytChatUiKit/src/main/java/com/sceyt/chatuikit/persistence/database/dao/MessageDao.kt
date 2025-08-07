@@ -56,7 +56,7 @@ internal abstract class MessageDao {
         if (messagesDb.isEmpty()) return
 
         val messageEntities = messagesDb.map { it.messageEntity }
-        val rowIds = insertMany(messageEntities)
+        val rowIds = insertManyIgnored(messageEntities)
 
         val insertedMessages = messagesDb
             .zip(rowIds)
@@ -69,7 +69,7 @@ internal abstract class MessageDao {
 
     @Transaction
     open suspend fun insertMessageIgnored(messagesDb: MessageDb) {
-        val rowId = insert(messagesDb.messageEntity)
+        val rowId = insertIgnored(messagesDb.messageEntity)
         if (rowId != -1L)
             insertMessagesPayloads(listOf(messagesDb))
     }
@@ -109,40 +109,40 @@ internal abstract class MessageDao {
     }
 
     private suspend fun upsertMessageEntity(messageEntity: MessageEntity) {
-        val rowId = insert(messageEntity)
+        val rowId = insertIgnored(messageEntity)
         if (rowId == -1L) {
-            updateMessage(messageEntity)
+            updateMessageIgnored(messageEntity)
         }
     }
 
     private suspend fun upsertMessageEntities(messageEntities: List<MessageEntity>) {
-        val rowIds = insertMany(messageEntities)
+        val rowIds = insertManyIgnored(messageEntities)
         val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
             if (rowId == -1L) messageEntities[index] else null
         }
-        updateMessages(entitiesToUpdate)
+        updateMessagesIgnored(entitiesToUpdate)
     }
 
     @Transaction
     open suspend fun upsertMessageEntitiesWithTransaction(messageEntities: List<MessageEntity>) {
-        val rowIds = insertMany(messageEntities)
+        val rowIds = insertManyIgnored(messageEntities)
         val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
             if (rowId == -1L) messageEntities[index] else null
         }
-        updateMessages(entitiesToUpdate)
+        updateMessagesIgnored(entitiesToUpdate)
     }
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    protected abstract suspend fun insert(messages: MessageEntity): Long
+    protected abstract suspend fun insertIgnored(messages: MessageEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    protected abstract suspend fun insertMany(messages: List<MessageEntity>): List<Long>
+    protected abstract suspend fun insertManyIgnored(messages: List<MessageEntity>): List<Long>
 
-    @Update(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun updateMessage(messageEntity: MessageEntity)
+    @Update(onConflict = OnConflictStrategy.IGNORE)
+    abstract suspend fun updateMessageIgnored(messageEntity: MessageEntity): Int
 
-    @Update(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun updateMessages(messageEntity: List<MessageEntity>)
+    @Update(onConflict = OnConflictStrategy.IGNORE)
+    abstract suspend fun updateMessagesIgnored(messageEntity: List<MessageEntity>): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     protected abstract suspend fun insertAttachments(attachments: List<AttachmentEntity>)
@@ -303,7 +303,7 @@ internal abstract class MessageDao {
     open suspend fun getNearMessages(
             channelId: Long,
             messageId: Long,
-            limit: Int
+            limit: Int,
     ): LoadNearData<MessageDb> {
         val oldest = getOldestThenMessagesInclude(channelId, messageId, limit).reversed()
         val includesInOldest = oldest.lastOrNull()?.messageEntity?.id == messageId

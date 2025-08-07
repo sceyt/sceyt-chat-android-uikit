@@ -4,6 +4,6 @@ import com.sceyt.chatuikit.data.managers.connection.event.ConnectionStateData
 import kotlinx.coroutines.flow.Flow
 
 interface PersistenceConnectionLogic {
-    fun onChangedConnectStatus(state: ConnectionStateData)
+    suspend fun onChangedConnectStatus(state: ConnectionStateData)
     val allPendingEventsSentFlow: Flow<Unit>
 }
