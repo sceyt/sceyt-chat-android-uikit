@@ -134,8 +134,7 @@ internal class PersistenceChannelsLogicImpl(
             is Updated -> {
                 val lastMessage = getChannelCurrentLastMessage(event.channel)
                 val channel = event.channel.copy(lastMessage = lastMessage)
-                channelDao.insertChannel(channel.toChannelEntity())
-                getAndUpdateCashedChannel(channel.id)
+                upsertChannelDbAndCache(channel)
             }
 
             is ChannelActionEvent.Mute -> {
