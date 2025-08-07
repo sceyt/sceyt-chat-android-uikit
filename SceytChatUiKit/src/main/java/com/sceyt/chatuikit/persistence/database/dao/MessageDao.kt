@@ -14,6 +14,7 @@ import com.sceyt.chat.models.message.DeliveryStatus.Sent
 import com.sceyt.chatuikit.data.models.LoadNearData
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.extensions.roundUp
+import com.sceyt.chatuikit.logger.SceytLog
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_PAYLOAD_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.ATTACHMENT_TABLE
 import com.sceyt.chatuikit.persistence.database.DatabaseConstants.LOAD_RANGE_TABLE
@@ -39,16 +40,18 @@ import kotlin.math.max
 internal abstract class MessageDao {
 
     @Transaction
-    open suspend fun upsertMessage(messageDb: MessageDb) {
-        upsertMessageEntity(messageDb.messageEntity)
+    open suspend fun upsertMessage(messageDb: MessageDb): Boolean {
+        val forceUpdated = upsertMessageEntity(messageDb.messageEntity)
         insertMessagesPayloads(listOf(messageDb))
+        return forceUpdated
     }
 
     @Transaction
-    open suspend fun upsertMessages(messagesDb: List<MessageDb>) {
-        if (messagesDb.isEmpty()) return
-        upsertMessageEntities(messagesDb.map { it.messageEntity })
+    open suspend fun upsertMessages(messagesDb: List<MessageDb>): List<MessageEntity> {
+        if (messagesDb.isEmpty()) return emptyList()
+        val forceUpdatedList = upsertMessageEntities(messagesDb.map { it.messageEntity })
         insertMessagesPayloads(messagesDb)
+        return forceUpdatedList
     }
 
     @Transaction
@@ -108,19 +111,48 @@ internal abstract class MessageDao {
         insertAutoDeleteMessage(*messages.toTypedArray())
     }
 
-    private suspend fun upsertMessageEntity(messageEntity: MessageEntity) {
+    /**
+     * Upsert message entity.
+     * If message exist then update it.
+     * If message not exist then insert it.
+     * @param messageEntity message entity to upsert
+     * @return true if message force inserted
+     * */
+    private suspend fun upsertMessageEntity(messageEntity: MessageEntity): Boolean {
         val rowId = insertIgnored(messageEntity)
         if (rowId == -1L) {
-            updateMessageIgnored(messageEntity)
+            val updated = updateMessageIgnored(messageEntity) == 1
+            if (!updated) {
+                insert(messageEntity)
+                SceytLog.d(TAG, "Upsert conflict: message (ID=${messageEntity.id}) failed to update, force inserted.")
+                return true
+            }
         }
+        return false
     }
 
-    private suspend fun upsertMessageEntities(messageEntities: List<MessageEntity>) {
+    /**
+     * Upsert messages entities.
+     * If message exist then update it.
+     * If message not exist then insert it.
+     * @param messageEntities list of message entities
+     * @return list of force inserted message entities
+     * */
+    private suspend fun upsertMessageEntities(
+            messageEntities: List<MessageEntity>,
+    ): List<MessageEntity> {
         val rowIds = insertManyIgnored(messageEntities)
         val entitiesToUpdate = rowIds.mapIndexedNotNull { index, rowId ->
             if (rowId == -1L) messageEntities[index] else null
         }
-        updateMessagesIgnored(entitiesToUpdate)
+        val count = updateMessagesIgnored(entitiesToUpdate)
+        if (count != entitiesToUpdate.size) {
+            insertMany(entitiesToUpdate)
+            SceytLog.d(TAG, "Upsert conflict detected: ${entitiesToUpdate.size - count} messages failed to update. " +
+                    "Force inserted ${entitiesToUpdate.size} messages.")
+            return entitiesToUpdate
+        }
+        return emptyList()
     }
 
     @Transaction
@@ -132,11 +164,17 @@ internal abstract class MessageDao {
         updateMessagesIgnored(entitiesToUpdate)
     }
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    protected abstract suspend fun insert(messages: MessageEntity): Long
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     protected abstract suspend fun insertIgnored(messages: MessageEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     protected abstract suspend fun insertManyIgnored(messages: List<MessageEntity>): List<Long>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    protected abstract suspend fun insertMany(messages: List<MessageEntity>): List<Long>
 
     @Update(onConflict = OnConflictStrategy.IGNORE)
     abstract suspend fun updateMessageIgnored(messageEntity: MessageEntity): Int
@@ -462,6 +500,7 @@ internal abstract class MessageDao {
     abstract fun deleteAllReactionTotalsByMessageId(messageId: List<Long>)
 
     private companion object {
+        private const val TAG = "MessageDao"
         private const val SQLITE_MAX_VARIABLE_NUMBER: Int = 999
         private const val PENDING_STATUS = 0
     }
