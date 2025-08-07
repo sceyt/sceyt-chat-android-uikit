@@ -23,7 +23,7 @@ chat into your Android application with minimal coding.
 
 ## Requirements
 Minimal Android SDK version:
--  API 21 (Android 5.0, "Lollipop") or later.
+-  API 24 (Android 7.0, "Nougat") or later.
 
 ## Installation
 1. Add the following line to the `build.gradle` file for your project:
