@@ -20,6 +20,7 @@ import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Joined
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Left
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelActionEvent.Updated
 import com.sceyt.chatuikit.data.managers.channel.event.ChannelUnreadCountUpdatedEventData
+import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.managers.message.event.MessageStatusChangeData
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
@@ -291,6 +292,7 @@ internal class PersistenceChannelsLogicImpl(
             loadKey: LoadKeyData?,
             onlyMine: Boolean,
             ignoreDb: Boolean,
+            awaitForConnection: Boolean,
             config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>> {
         return callbackFlow {
@@ -305,6 +307,9 @@ internal class PersistenceChannelsLogicImpl(
                 channelsCache.addAll(config, dbChannels, false)
                 ChatReactionMessagesCache.getNeededMessages(dbChannels)
             }
+
+            if (awaitForConnection)
+                ConnectionEventManager.awaitToConnectSceyt()
 
             val response = if (offset == 0)
                 channelsRepository.getChannels(searchQuery, config, SearchChannelParams.default)

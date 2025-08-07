@@ -171,6 +171,7 @@ internal class PersistenceMiddleWareImpl(
             loadKey: LoadKeyData?,
             onlyMine: Boolean,
             ignoreDb: Boolean,
+            awaitForConnection: Boolean,
             config: ChannelListConfig,
     ) = channelLogic.loadChannels(
         offset = offset,
@@ -178,6 +179,7 @@ internal class PersistenceMiddleWareImpl(
         loadKey = loadKey,
         onlyMine = onlyMine,
         ignoreDb = ignoreDb,
+        awaitForConnection = awaitForConnection,
         config = config
     )
 
