@@ -190,12 +190,12 @@ internal class PersistenceMessagesLogicImpl(
                 val selfReactions = reactionDao.getSelfReactionsByMessageId(message.id, myId.toString())
                 val updateMsg = message.copy(userReactions = selfReactions.map { it.toSceytReaction() })
                 messagesCache.messageUpdated(updateMsg.channelId, updateMsg)
-                messageDao.updateMessage(updateMsg.toMessageEntity(false))
+                messageDao.updateMessageIgnored(updateMsg.toMessageEntity(false))
             }
 
             MessageState.Deleted -> {
                 messagesCache.messageUpdated(message.channelId, message)
-                messageDao.updateMessage(message.toMessageEntity(false))
+                messageDao.updateMessageIgnored(message.toMessageEntity(false))
                 deletedPayloads(message.id, message.tid)
             }
 
