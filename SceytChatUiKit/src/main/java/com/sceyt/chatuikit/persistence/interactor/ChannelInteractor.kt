@@ -22,6 +22,7 @@ interface ChannelInteractor {
             loadKey: LoadKeyData?,
             onlyMine: Boolean,
             ignoreDb: Boolean,
+            awaitForConnection: Boolean,
             config: ChannelListConfig,
     ): Flow<PaginationResponse<SceytChannel>>
 
