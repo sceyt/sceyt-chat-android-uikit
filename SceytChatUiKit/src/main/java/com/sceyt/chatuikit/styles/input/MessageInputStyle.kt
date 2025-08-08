@@ -69,9 +69,9 @@ import com.sceyt.chatuikit.theme.Colors
  * @property draftMessageBodyFormatterAttributes Formatter for the draft message body, default is [SceytChatUIKitFormatters.draftMessageBodyFormatter]
  * */
 data class MessageInputStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val dividerColor: Int,
-        @ColorInt val sendIconBackgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val dividerColor: Int,
+        @param:ColorInt val sendIconBackgroundColor: Int,
         val attachmentIcon: Drawable?,
         val sendMessageIcon: Drawable?,
         val voiceRecordIcon: Drawable?,

@@ -36,7 +36,7 @@ class MessageLoadRangeUpdaterTest {
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), SceytDatabase::class.java)
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(true)
             .allowMainThreadQueries()
             .build()
 

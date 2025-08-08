@@ -22,7 +22,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property reactedUserListStyle Style for the list of users who reacted to a message.
  * */
 data class ReactionsInfoStyle(
-        @ColorInt val dividerColor: Int,
+        @param:ColorInt val dividerColor: Int,
         val backgroundStyle: BackgroundStyle,
         val headerItemStyle: ReactionsInfoHeaderItemStyle,
         val reactedUserListStyle: ReactedUserListStyle,

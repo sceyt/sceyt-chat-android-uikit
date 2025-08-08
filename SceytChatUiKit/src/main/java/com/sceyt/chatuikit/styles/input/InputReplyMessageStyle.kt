@@ -16,7 +16,7 @@ import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class InputReplyMessageStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val replyIcon: Drawable?,
         val titleTextStyle: TextStyle,
         val senderNameTextStyle: TextStyle,

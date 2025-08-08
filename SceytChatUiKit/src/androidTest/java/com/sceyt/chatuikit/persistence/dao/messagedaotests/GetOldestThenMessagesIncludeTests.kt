@@ -35,7 +35,7 @@ class GetOldestThenMessagesIncludeTests{
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), SceytDatabase::class.java)
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(true)
             .allowMainThreadQueries()
             .build()
         messageDao = database.messageDao()

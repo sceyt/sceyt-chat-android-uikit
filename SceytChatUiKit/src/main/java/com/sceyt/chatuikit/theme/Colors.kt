@@ -4,54 +4,54 @@ import androidx.annotation.ColorRes
 import com.sceyt.chatuikit.R
 
 data class Colors(
-        @ColorRes
+        @param:ColorRes
         val primaryColor: Int = R.color.sceyt_color_primary,
-        @ColorRes
+        @param:ColorRes
         val statusBarColor: Int = R.color.sceyt_color_status_bar,
-        @ColorRes
+        @param:ColorRes
         val accentColor: Int = R.color.sceyt_color_accent,
-        @ColorRes
+        @param:ColorRes
         val accentColor2: Int = R.color.sceyt_color_accent_2,
-        @ColorRes
+        @param:ColorRes
         val accentColor3: Int = R.color.sceyt_color_accent_3,
-        @ColorRes
+        @param:ColorRes
         val accentColor4: Int = R.color.sceyt_color_accent_4,
-        @ColorRes
+        @param:ColorRes
         val accentColor5: Int = R.color.sceyt_color_accent_5,
-        @ColorRes
+        @param:ColorRes
         val onPrimaryColor: Int = R.color.sceyt_color_on_primary,
-        @ColorRes
+        @param:ColorRes
         val backgroundColor: Int = R.color.sceyt_color_background,
-        @ColorRes
+        @param:ColorRes
         val backgroundColorSecondary: Int = R.color.sceyt_color_background_secondary,
-        @ColorRes
+        @param:ColorRes
         val backgroundColorSections: Int = R.color.sceyt_color_background_sections,
-        @ColorRes
+        @param:ColorRes
         val surface1Color: Int = R.color.sceyt_color_surface_1,
-        @ColorRes
+        @param:ColorRes
         val surface2Color: Int = R.color.sceyt_color_surface_2,
-        @ColorRes
+        @param:ColorRes
         val surface3Color: Int = R.color.sceyt_color_surface_3,
-        @ColorRes
+        @param:ColorRes
         val overlayBackgroundColor: Int = R.color.sceyt_color_overlay_background,
-        @ColorRes
+        @param:ColorRes
         val overlayBackground2Color: Int = R.color.sceyt_color_overlay_background_2,
-        @ColorRes
+        @param:ColorRes
         val borderColor: Int = R.color.sceyt_color_border,
-        @ColorRes
+        @param:ColorRes
         val iconSecondaryColor: Int = R.color.sceyt_color_icon_secondary,
-        @ColorRes
+        @param:ColorRes
         val iconInactiveColor: Int = R.color.sceyt_color_icon_inactive,
-        @ColorRes
+        @param:ColorRes
         val textPrimaryColor: Int = R.color.sceyt_color_text_primary,
-        @ColorRes
+        @param:ColorRes
         val textSecondaryColor: Int = R.color.sceyt_color_text_secondary,
-        @ColorRes
+        @param:ColorRes
         val textFootnoteColor: Int = R.color.sceyt_color_text_footnote,
-        @ColorRes
+        @param:ColorRes
         val warningColor: Int = R.color.sceyt_color_warning,
-        @ColorRes
+        @param:ColorRes
         val successColor: Int = R.color.sceyt_color_green,
-        @ColorRes
-        val attentionColor: Int = R.color.sceyt_color_attention
+        @param:ColorRes
+        val attentionColor: Int = R.color.sceyt_color_attention,
 )

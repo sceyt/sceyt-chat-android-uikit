@@ -298,19 +298,19 @@ class AvatarView @JvmOverloads constructor(
     sealed interface DefaultAvatar {
         data class FromBitmap(val bitmap: Bitmap) : DefaultAvatar
         data class FromDrawable(val drawable: Drawable?) : DefaultAvatar
-        data class FromDrawableRes(@DrawableRes val id: Int) : DefaultAvatar
+        data class FromDrawableRes(@param:DrawableRes val id: Int) : DefaultAvatar
         data class FromInitials(val name: CharSequence) : DefaultAvatar
     }
 
     sealed interface AvatarPlaceholder {
         data class FromDrawable(val drawable: Drawable?) : AvatarPlaceholder
-        data class FromDrawableRes(@DrawableRes val id: Int) : AvatarPlaceholder
+        data class FromDrawableRes(@param:DrawableRes val id: Int) : AvatarPlaceholder
     }
 
     sealed interface AvatarErrorPlaceHolder {
         data class FromBitmap(val bitmap: Bitmap) : AvatarErrorPlaceHolder
         data class FromDrawable(val drawable: Drawable?) : AvatarErrorPlaceHolder
-        data class FromDrawableRes(@DrawableRes val id: Int) : AvatarErrorPlaceHolder
+        data class FromDrawableRes(@param:DrawableRes val id: Int) : AvatarErrorPlaceHolder
     }
 
     fun appearanceBuilder() = AppearanceBuilder()

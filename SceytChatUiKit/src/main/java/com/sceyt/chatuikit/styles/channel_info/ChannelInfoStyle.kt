@@ -34,10 +34,10 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property linkStyle - style for the link section
  * */
 data class ChannelInfoStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val borderColor: Int,
-        @ColorInt val dividerColor: Int,
-        @Px var spaceBetweenSections: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val borderColor: Int,
+        @param:ColorInt val dividerColor: Int,
+        @param:Px var spaceBetweenSections: Int,
         val toolBarStyle: ChannelInfoToolBarStyle,
         val detailsStyle: ChannelInfoDetailStyle,
         val descriptionStyle: ChannelInfoDescriptionStyle,

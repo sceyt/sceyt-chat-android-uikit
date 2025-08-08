@@ -49,8 +49,8 @@ import com.sceyt.chatuikit.theme.Colors
  * @property channelAvatarRenderer renderer for the channel avatar, default is [SceytChatUIKitRenderers.channelAvatarRenderer]
  * */
 data class MessagesListHeaderStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val underlineColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val underlineColor: Int,
         val navigationIcon: Drawable?,
         val showUnderline: Boolean,
         val showChannelEventsInSequence: Boolean,

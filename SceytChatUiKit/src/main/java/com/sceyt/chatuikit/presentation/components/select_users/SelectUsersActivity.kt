@@ -202,7 +202,7 @@ open class SelectUsersActivity : AppCompatActivity() {
 data class SelectUsersPageArgs(
         val toolbarTitle: String? = null,
         val actionButtonAlwaysEnable: Boolean = false,
-        @DrawableRes val actionButtonIcon: Int = R.drawable.sceyt_ic_arrow_next,
+        @param:DrawableRes val actionButtonIcon: Int = R.drawable.sceyt_ic_arrow_next,
 ) : Parcelable
 
 

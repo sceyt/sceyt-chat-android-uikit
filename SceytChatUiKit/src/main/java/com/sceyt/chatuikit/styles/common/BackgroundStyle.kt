@@ -15,9 +15,9 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_SIZE
 
 data class BackgroundStyle(
         val background: Drawable? = null,
-        @ColorInt val backgroundColor: Int = UNSET_COLOR,
-        @ColorInt val borderColor: Int = UNSET_COLOR,
-        @Px val borderWidth: Int = UNSET_SIZE,
+        @param:ColorInt val backgroundColor: Int = UNSET_COLOR,
+        @param:ColorInt val borderColor: Int = UNSET_COLOR,
+        @param:Px val borderWidth: Int = UNSET_SIZE,
         val shape: Shape = Shape.UnsetShape,
 ) {
 

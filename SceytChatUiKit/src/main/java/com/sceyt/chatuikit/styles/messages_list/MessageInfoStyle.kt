@@ -48,9 +48,9 @@ typealias MessageInfoItemStyle = ListItemStyle<Formatter<SceytUser>, Formatter<D
  * @property markerTitleProvider Provider for the marker title, default is [SceytChatUIKitProviders.markerTitleProvider]
  * */
 data class MessageInfoStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val toolbarColor: Int,
-        @ColorInt val borderColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val toolbarColor: Int,
+        @param:ColorInt val borderColor: Int,
         val toolbarTitle: String,
         val sentLabelText: String,
         val sizeLabelText: String,

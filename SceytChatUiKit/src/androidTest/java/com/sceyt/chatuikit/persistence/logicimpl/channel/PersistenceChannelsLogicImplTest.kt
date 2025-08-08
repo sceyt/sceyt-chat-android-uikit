@@ -63,7 +63,7 @@ class PersistenceChannelsLogicImplTest : SceytKoinComponent {
         )
 
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), SceytDatabase::class.java)
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(true)
             .allowMainThreadQueries()
             .build()
         channelDao = database.channelDao()

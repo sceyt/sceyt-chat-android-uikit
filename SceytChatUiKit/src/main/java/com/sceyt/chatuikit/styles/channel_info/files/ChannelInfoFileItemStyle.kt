@@ -29,7 +29,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property iconProvider - provider for file icon
  *  */
 data class ChannelInfoFileItemStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val fileNameTextStyle: TextStyle,
         val subtitleTextStyle: TextStyle,
         val mediaLoaderStyle: MediaLoaderStyle,

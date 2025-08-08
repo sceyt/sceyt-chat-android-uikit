@@ -11,7 +11,7 @@ import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class ScrollButtonStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val icon: Drawable?,
         val unreadCountTextStyle: TextStyle,
         val unreadCountFormatter: Formatter<Long>
