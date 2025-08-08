@@ -28,7 +28,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property mediaDurationFormatter Formatter for the media duration.
  * */
 data class MediaPickerItemStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val videoDurationIcon: Drawable?,
         val brokenMediaPlaceHolder: Drawable?,
         val videoDurationTextStyle: TextStyle,

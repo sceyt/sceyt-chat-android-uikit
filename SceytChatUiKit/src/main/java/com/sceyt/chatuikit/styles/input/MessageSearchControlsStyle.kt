@@ -10,7 +10,7 @@ import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class MessageSearchControlsStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val previousIcon: Drawable?,
         val nextIcon: Drawable?,
         val resultTextStyle: TextStyle

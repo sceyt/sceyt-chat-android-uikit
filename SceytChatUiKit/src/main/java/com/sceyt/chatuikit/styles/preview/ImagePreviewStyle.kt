@@ -12,7 +12,7 @@ import com.sceyt.chatuikit.styles.extensions.image_preview.buildToolbarStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 data class ImagePreviewStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val toolbarStyle: ToolbarStyle,
 ) {
     companion object {

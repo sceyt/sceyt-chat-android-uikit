@@ -14,7 +14,7 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.common.ToolbarStyle
 
 data class ChannelMembersStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val addMembersIcon: Drawable?,
         val addMemberTextStyle: TextStyle,
         val toolbarStyle: ToolbarStyle,

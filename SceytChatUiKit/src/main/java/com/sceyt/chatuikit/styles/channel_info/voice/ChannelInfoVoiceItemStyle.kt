@@ -32,7 +32,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property subtitleFormatter - formatter for date
  * */
 data class ChannelInfoVoiceItemStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val playIcon: Drawable?,
         val pauseIcon: Drawable?,
         val userNameTextStyle: TextStyle,

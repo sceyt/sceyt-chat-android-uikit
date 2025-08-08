@@ -9,11 +9,11 @@ import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 data class ChannelInfoTabBarStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val indicatorColor: Int,
-        @ColorInt val bottomBorderColor: Int,
-        @ColorInt val textColor: Int,
-        @ColorInt val selectedTextColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val indicatorColor: Int,
+        @param:ColorInt val bottomBorderColor: Int,
+        @param:ColorInt val textColor: Int,
+        @param:ColorInt val selectedTextColor: Int,
 ) {
     companion object {
         var styleCustomizer = StyleCustomizer<ChannelInfoTabBarStyle> { _, style -> style }

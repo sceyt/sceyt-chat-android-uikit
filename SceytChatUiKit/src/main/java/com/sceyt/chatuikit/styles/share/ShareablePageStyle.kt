@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.styles.common.SearchToolbarStyle
 import com.sceyt.chatuikit.styles.common.SelectableListItemStyle
 
 abstract class ShareablePageStyle(
-        @ColorInt open val backgroundColor: Int,
+        @param:ColorInt open val backgroundColor: Int,
         open val searchToolbarStyle: SearchToolbarStyle,
         open val actionButtonStyle: ButtonStyle,
         open val channelItemStyle: SelectableListItemStyle<

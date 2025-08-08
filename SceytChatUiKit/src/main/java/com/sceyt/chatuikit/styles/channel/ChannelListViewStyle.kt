@@ -25,11 +25,11 @@ import com.sceyt.chatuikit.theme.Colors
  * @property itemStyle - Style for channel item.
  * */
 data class ChannelListViewStyle(
-        @ColorInt val backgroundColor: Int,
-        @LayoutRes val emptyState: Int,
-        @LayoutRes val emptySearchState: Int,
-        @LayoutRes val loadingState: Int,
-        @StyleRes val popupStyle: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:LayoutRes val emptyState: Int,
+        @param:LayoutRes val emptySearchState: Int,
+        @param:LayoutRes val loadingState: Int,
+        @param:StyleRes val popupStyle: Int,
         val showChannelActionAsPopup: Boolean,
         val itemStyle: ChannelItemStyle
 ) {

@@ -38,7 +38,7 @@ typealias SelectedUsersListItemStyle = SelectedListItemStyle<Formatter<SceytUser
  * @param selectedItemStyle Style for the selected items. Default is [buildSelectedItemStyle].
  * */
 data class SelectUsersStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val separatorText: String,
         val separatorTextStyle: TextStyle,
         val toolbarStyle: SearchToolbarStyle,

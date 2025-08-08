@@ -43,7 +43,7 @@ typealias StartChatUsersItemStyle = ListItemStyle<Formatter<SceytUser>, Formatte
  * @param itemStyle Style for the items in the list. Default is [buildItemStyle].
  * */
 data class StartChatStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val createChannelIcon: Drawable?,
         val createGroupIcon: Drawable?,
         val toolbarTitle: String,

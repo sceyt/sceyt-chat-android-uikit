@@ -1,6 +1,7 @@
 import com.sceyt.chat.MainGradlePlugin
 import com.sceyt.chat.configureMavenPublishing
 import com.sceyt.chat.configureMockitoAgent
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.library")
@@ -31,8 +32,10 @@ android {
         buildConfig = true
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
     }
 }
 

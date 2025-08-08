@@ -13,8 +13,8 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.styles.messages_list.item.AudioWaveformStyle
 
 data class VoiceRecordPlaybackViewStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val playerBackgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val playerBackgroundColor: Int,
         val closeIcon: Drawable?,
         val playIcon: Drawable?,
         val pauseIcon: Drawable?,
