@@ -159,7 +159,12 @@ fun CharSequence?.processEmojiCompat(): CharSequence? {
     }
 }
 
-fun CharSequence?.processEmojiCompat(start: Int, end: Int, maxCount: Int, @EmojiCompat.ReplaceStrategy strategy: Int): CharSequence? {
+fun CharSequence?.processEmojiCompat(
+        start: Int,
+        end: Int,
+        maxCount: Int,
+        @EmojiCompat.ReplaceStrategy strategy: Int,
+): CharSequence? {
     return try {
         EmojiCompat.get().process(this, start, end, maxCount, strategy)
     } catch (e: Exception) {
