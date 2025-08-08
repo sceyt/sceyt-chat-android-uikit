@@ -13,6 +13,7 @@ import com.sceyt.chatuikit.extensions.awaitAnimationEnd
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.isFirstItemDisplaying
 import com.sceyt.chatuikit.extensions.isLastItemDisplaying
+import com.sceyt.chatuikit.persistence.lazyVar
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelListItem
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsAdapter
 import com.sceyt.chatuikit.presentation.components.channel_list.channels.adapter.ChannelsItemComparatorBy
@@ -26,9 +27,12 @@ class ChannelsRV @JvmOverloads constructor(
         defStyleAttr: Int = 0,
 ) : RecyclerView(context, attrs, defStyleAttr) {
 
+    private lateinit var channelListStyle: ChannelListViewStyle
     private var channelsAdapter: ChannelsAdapter? = null
     private var reachToEndListener: ((offset: Int, lastChannel: SceytChannel?) -> Unit)? = null
-    private var viewHolderFactory = ChannelViewHolderFactory(context)
+    private var channelViewHolderFactory: ChannelViewHolderFactory by lazyVar {
+        ChannelViewHolderFactory(context, channelListStyle.itemStyle)
+    }
 
     init {
         init()
@@ -59,8 +63,9 @@ class ChannelsRV @JvmOverloads constructor(
 
     fun setData(scope: LifecycleCoroutineScope, channels: List<ChannelListItem>) = post {
         if (channelsAdapter == null) {
-            adapter = ChannelsAdapter(scope, viewHolderFactory)
-                .also { channelsAdapter = it }
+            adapter = ChannelsAdapter(scope, channelViewHolderFactory).also {
+                channelsAdapter = it
+            }
             channelsAdapter?.notifyUpdate(channels)
         } else {
             val needScrollUp = isFirstItemDisplaying()
@@ -106,6 +111,7 @@ class ChannelsRV @JvmOverloads constructor(
         } as? ChannelListItem.ChannelItem
     }
 
+    @Suppress("unused")
     fun getChannelItemIndexed(channelId: Long): Pair<Int, ChannelListItem.ChannelItem>? {
         return channelsAdapter?.currentList?.findIndexed {
             it is ChannelListItem.ChannelItem && it.channel.id == channelId
@@ -134,7 +140,7 @@ class ChannelsRV @JvmOverloads constructor(
      * Note: Call this function before initialising channels adapter.*/
     fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
         check(channelsAdapter == null) { "Adapter was already initialized, please set ChannelViewHolderFactory first" }
-        viewHolderFactory = factory
+        channelViewHolderFactory = factory
     }
 
     fun setReachToEndListeners(listener: (offset: Int, lastChannel: SceytChannel?) -> Unit) {
@@ -142,11 +148,11 @@ class ChannelsRV @JvmOverloads constructor(
     }
 
     fun setAttachDetachListeners(listener: (ChannelListItem?, attached: Boolean) -> Unit) {
-        viewHolderFactory.setChannelAttachDetachListener(listener)
+        channelViewHolderFactory.setChannelAttachDetachListener(listener)
     }
 
     fun setChannelListener(listener: ChannelClickListeners) {
-        viewHolderFactory.setChannelListener(listener)
+        channelViewHolderFactory.setChannelListener(listener)
     }
 
     fun sortBy(
@@ -168,10 +174,11 @@ class ChannelsRV @JvmOverloads constructor(
         channelsAdapter?.removeLoading()
     }
 
-    fun getViewHolderFactory() = viewHolderFactory
+    @Suppress("unused")
+    fun getViewHolderFactory() = channelViewHolderFactory
 
-    internal fun setStyle(channelStyle: ChannelListViewStyle) {
-        viewHolderFactory.setStyle(channelStyle)
+    internal fun setStyle(style: ChannelListViewStyle) {
+        channelListStyle = style
     }
 
     private fun sortAndUpdate(
