@@ -9,6 +9,7 @@ import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.text.Layout
+import android.text.SpannableStringBuilder
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
@@ -171,22 +172,32 @@ class AvatarView @JvmOverloads constructor(
 
     private fun getInitials(title: CharSequence): CharSequence {
         if (title.isBlank()) return ""
-        val strings = title.trim().split(" ").filter { it.isNotBlank() }
-        if (strings.isEmpty()) return ""
-        val data = if (isInEditMode)
-            Pair(strings[0].take(1), true) else strings[0].getFirstCharIsEmoji()
-        val firstChar = data.first
-        val isEmoji = data.second
-        if (isEmoji)
-            return if (isInEditMode)
-                firstChar else firstChar.processEmojiCompat() ?: title.take(1)
+        val words = title.trim().split(" ").filter { it.isNotBlank() }
+        if (words.isEmpty()) return ""
 
-        val text = if (strings.size > 1) {
-            val secondChar = strings[1].getFirstCharIsEmoji().first
-            "${firstChar}${secondChar}".uppercase()
-        } else firstChar.toString().uppercase()
+        val (firstChar, isFirstEmoji) = if (isInEditMode) {
+            Pair(words[0].take(1), true)
+        } else {
+            words[0].getFirstCharIsEmoji()
+        }
 
-        return if (isInEditMode) text else text.processEmojiCompat() ?: title.take(1)
+        if (isFirstEmoji) {
+            return if (isInEditMode) {
+                firstChar
+            } else {
+                firstChar.processEmojiCompat() ?: title.take(1)
+            }
+        }
+
+        val initials = if (words.size > 1) {
+            val (secondChar, isSecondEmoji) = words[1].getFirstCharIsEmoji()
+            val second = if (isSecondEmoji) secondChar else secondChar.toString().uppercase()
+            SpannableStringBuilder().append(firstChar.toString().uppercase()).append(second)
+        } else {
+            firstChar.toString().uppercase()
+        }
+
+        return initials
     }
 
     private fun getAvatarRandomColor(initials: CharSequence): Int {
