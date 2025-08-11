@@ -261,7 +261,7 @@ class AvatarView @JvmOverloads constructor(
     private fun drawInitialsAndBackground(canvas: Canvas, avatar: DefaultAvatar.FromInitials) {
         val initials = getInitials(avatar.name)
         val color = if (avatarBackgroundColor == 0)
-            getAvatarRandomColor(initials) else avatarBackgroundColor
+            getAvatarRandomColor(avatar.name) else avatarBackgroundColor
 
         drawBackgroundColor(canvas, color)
         drawInitials(canvas, initials)
