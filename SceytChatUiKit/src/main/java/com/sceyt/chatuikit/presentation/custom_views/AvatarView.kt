@@ -25,8 +25,8 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getFirstCharIsEmoji
-import com.sceyt.chatuikit.extensions.processEmojiCompat
 import com.sceyt.chatuikit.extensions.roundUp
+import com.sceyt.chatuikit.presentation.common.EmojiProcessor
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
 import com.sceyt.chatuikit.presentation.helpers.AvatarImageLoader
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
@@ -59,6 +59,7 @@ class AvatarView @JvmOverloads constructor(
     private val defaultPlaceholder by lazy {
         context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSecondary).toDrawable()
     }
+    private val emojiProcessor by lazy { EmojiProcessor() }
 
     init {
         var enableRipple = true
@@ -171,33 +172,29 @@ class AvatarView @JvmOverloads constructor(
     }
 
     private fun getInitials(title: CharSequence): CharSequence {
+        val text = extractInitials(title)
+        initials = emojiProcessor.processEmojiSafe(text) { processed ->
+            initials = processed
+            postInvalidate()
+        }
+        return initials
+    }
+
+    private fun extractInitials(title: CharSequence): CharSequence {
         if (title.isBlank()) return ""
         val words = title.trim().split(" ").filter { it.isNotBlank() }
         if (words.isEmpty()) return ""
 
-        val (firstChar, isFirstEmoji) = if (isInEditMode) {
-            Pair(words[0].take(1), true)
-        } else {
-            words[0].getFirstCharIsEmoji()
-        }
+        val (firstChar, firstIsEmoji) = words[0].getFirstCharIsEmoji()
+        if (firstIsEmoji) return firstChar
 
-        if (isFirstEmoji) {
-            return if (isInEditMode) {
-                firstChar
-            } else {
-                firstChar.processEmojiCompat() ?: title.take(1)
-            }
+        if (words.size > 1) {
+            val (secondChar, secondIsEmoji) = words[1].getFirstCharIsEmoji()
+            return SpannableStringBuilder()
+                .append(firstChar.toString().uppercase())
+                .append(if (secondIsEmoji) secondChar else secondChar.toString().uppercase())
         }
-
-        val initials = if (words.size > 1) {
-            val (secondChar, isSecondEmoji) = words[1].getFirstCharIsEmoji()
-            val second = if (isSecondEmoji) secondChar else secondChar.toString().uppercase()
-            SpannableStringBuilder().append(firstChar.toString().uppercase()).append(second)
-        } else {
-            firstChar.toString().uppercase()
-        }
-
-        return initials
+        return firstChar.toString().uppercase()
     }
 
     private fun getAvatarRandomColor(initials: CharSequence): Int {
@@ -294,6 +291,11 @@ class AvatarView @JvmOverloads constructor(
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val measuredWidth = measuredWidth
         setMeasuredDimension(measuredWidth, measuredWidth)
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        emojiProcessor.unregister()
     }
 
     fun applyStyle(style: AvatarStyle) {
