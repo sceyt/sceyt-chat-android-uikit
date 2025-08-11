@@ -135,19 +135,22 @@ fun String?.isRtl(): Boolean {
     return false
 }
 
-fun String?.getFirstCharIsEmoji(): Pair<CharSequence, Boolean> {
-    if (isNullOrBlank()) return Pair("", false)
-    val processed = processEmojiCompat(0, length - 1, 1, EmojiCompat.REPLACE_STRATEGY_ALL)
-    return if (processed is Spannable) {
-        val emojiSpans = processed.getSpans(0, processed.length - 1, EmojiSpan::class.java)
-        val emojiSpan = emojiSpans.firstOrNull() ?: Pair(take(1), false)
-        val spanStart = processed.getSpanStart(emojiSpan)
-        if (spanStart > 0)
-            return Pair(take(1), false)
+fun CharSequence?.getFirstCharIsEmoji(): Pair<CharSequence, Boolean> {
+    if (isNullOrBlank()) return "" to false
 
-        val spanEnd = processed.getSpanEnd(emojiSpan)
-        return Pair(processed.subSequence(spanStart, spanEnd), true)
-    } else Pair(take(1), false)
+    val processed = processEmojiCompat(0, length, 1, EmojiCompat.REPLACE_STRATEGY_ALL)
+    if (processed is Spannable) {
+        val emojiSpans = processed.getSpans(0, processed.length, EmojiSpan::class.java)
+        val firstEmojiSpan = emojiSpans.firstOrNull() ?: return take(1) to false
+
+        val spanStart = processed.getSpanStart(firstEmojiSpan)
+        if (spanStart != 0) return take(1) to false
+
+        val spanEnd = processed.getSpanEnd(firstEmojiSpan)
+        return processed.subSequence(spanStart, spanEnd) to true
+    }
+
+    return take(1) to false
 }
 
 fun CharSequence?.processEmojiCompat(): CharSequence? {
