@@ -24,6 +24,7 @@ import com.sceyt.chatuikit.persistence.logic.PersistenceMembersLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
 import com.sceyt.chatuikit.persistence.mappers.toChannel
 import com.sceyt.chatuikit.persistence.mappers.toChannelEntity
+import com.sceyt.chatuikit.persistence.mappers.toMessageDb
 import com.sceyt.chatuikit.persistence.mappers.toSceytMember
 import com.sceyt.chatuikit.persistence.mappers.toUserDb
 import com.sceyt.chatuikit.persistence.repositories.ChannelsRepository
@@ -59,6 +60,9 @@ internal class PersistenceMembersLogicImpl(
                     channelDao.insertUserChatLinks(userChatLinks)
                 } ?: run {
                     channelDao.insertChannelAndLinks(data.channel.toChannelEntity(), userChatLinks)
+                    data.channel.lastMessage?.toMessageDb(false)?.let {
+                        messageDao.upsertMessage(it)
+                    }
                 }
                 getAndUpdateCashedChannel(chatId)
             }
