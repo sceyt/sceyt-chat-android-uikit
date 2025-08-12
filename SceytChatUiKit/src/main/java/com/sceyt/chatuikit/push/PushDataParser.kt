@@ -4,11 +4,13 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.channel.Channel
+import com.sceyt.chat.models.member.Member
 import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.ForwardingDetails
 import com.sceyt.chat.models.message.Message
 import com.sceyt.chat.models.message.MessageState
+import com.sceyt.chat.models.role.Role
 import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
@@ -100,9 +102,30 @@ object PushDataParser {
             val fName = userJsonObject.getString("first_name")
             val lName = userJsonObject.getString("last_name")
             val presence = userJsonObject.getString("presence_status")
-            User(id, username, fName, lName, "", null,
-                Presence(PresenceState.Online, presence, 0),
-                UserState.Active, false)
+            User(
+                /* id = */ id,
+                /* username = */ username,
+                /* firstName = */ fName,
+                /* lastName = */ lName,
+                /* avatarURL = */ "",
+                /* metadataMap = */ null,
+                /* presence = */ Presence(PresenceState.Online, presence, 0),
+                /* state = */ UserState.Active,
+                /* blocked = */ false
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun getMember(payload: Map<String, String>): Member? {
+        val userJson = payload[KEY_USER] ?: return null
+        return try {
+            val userJsonObject = JSONObject(userJson)
+            val user = getUser(payload) ?: return null
+            val role = userJsonObject.getString("role") ?: return null
+            Member(Role(role), user)
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -119,10 +142,37 @@ object PushDataParser {
             val subject = channelJsonObject.getString("subject")
             val meta = channelJsonObject.getString("metadata")
             val membersCount = channelJsonObject.getLong("members_count")
-            val channel = Channel(id, 0, uri, type, subject, null, meta, 0, 0,
-                0, membersCount, null, "", false, 0, 0,
-                0, false, false, false, 0, 0, 0,
-                0L, 0L, null, emptyArray(), emptyArray(), emptyArray())
+            val members = listOfNotNull(getMember(payload))
+            val channel = Channel(
+                /* id = */ id,
+                /* parentChannelId = */ 0,
+                /* uri = */ uri,
+                /* type = */ type,
+                /* subject = */ subject,
+                /* avatarUrl = */ null,
+                /* metadata = */ meta,
+                /* createdAt = */ 0,
+                /* updatedAt = */ 0,
+                /* messagesClearedAt = */ 0,
+                /* memberCount = */ membersCount,
+                /* createdBy = */ null,
+                /* userRole = */ "",
+                /* unread = */ false,
+                /* newMessageCount = */ 0,
+                /* newMentionCount = */ 0,
+                /* newReactedMessageCount = */ 0,
+                /* hidden = */ false,
+                /* archived = */ false,
+                /* muted = */ false,
+                /* mutedTill = */ 0,
+                /* pinnedAt = */ 0,
+                /* lastReceivedMessageId = */ 0,
+                /* lastDisplayedMessageId = */ 0L,
+                /* messageRetentionPeriod = */ 0L,
+                /* lastMessage = */ null,
+                /* messages = */ emptyArray(),
+                /* members = */ members.toTypedArray(),
+                /* newReactions = */ emptyArray())
             channel
         } catch (e: Exception) {
             e.printStackTrace()
