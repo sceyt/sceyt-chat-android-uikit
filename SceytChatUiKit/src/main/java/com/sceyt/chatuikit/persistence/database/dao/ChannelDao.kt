@@ -20,15 +20,28 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 internal abstract class ChannelDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertChannel(channel: ChannelEntity): Long
+    protected abstract suspend fun insert(channel: ChannelEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    protected abstract suspend fun insertMany(channels: List<ChannelEntity>): List<Long>
 
     @Transaction
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertChannelsAndLinks(channels: List<ChannelEntity>, userChatLinks: List<UserChatLinkEntity>)
+    open suspend fun insertChannelsAndLinks(
+            channels: List<ChannelEntity>,
+            userChatLinks: List<UserChatLinkEntity>,
+    ) {
+        insertMany(channels)
+        insertUserChatLinks(userChatLinks)
+    }
 
     @Transaction
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract fun insertChannelAndLinks(channels: ChannelEntity, userChatLinks: List<UserChatLinkEntity>)
+    open suspend fun insertChannelAndLinks(
+            channel: ChannelEntity,
+            userChatLinks: List<UserChatLinkEntity>,
+    ) {
+        insert(channel)
+        insertUserChatLinks(userChatLinks)
+    }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract fun insertUserChatLinks(userChatLinks: List<UserChatLinkEntity>): List<Long>

@@ -39,6 +39,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
+import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.extensions.toSha256
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -179,11 +180,10 @@ internal class PersistenceChannelsLogicImpl(
     }
 
     private suspend fun onChanelAdded(channel: SceytChannel?) {
-        channel?.let {
-            val members = it.members ?: return
-            insertChannelWithMembers(channel, members)
-            channelsCache.upsertChannel(channel)
-        }
+        channel ?: return
+        val members = channel.members?.takeIf { it.isNotEmpty() } ?: return
+        insertChannelWithMembers(channel, members)
+        channelsCache.upsertChannel(channel)
     }
 
     override suspend fun onChannelUnreadCountUpdatedEvent(data: ChannelUnreadCountUpdatedEventData) {
@@ -221,7 +221,7 @@ internal class PersistenceChannelsLogicImpl(
             }
         } else {
             // Insert channel from push data
-            channelDao.insertChannel(dataChannel.toChannelEntity())
+            insertChannelWithMembers(channel = dataChannel)
         }
         getAndUpdateCashedChannel(dataChannel.id)
     }
@@ -275,6 +275,9 @@ internal class PersistenceChannelsLogicImpl(
             channel: SceytChannel,
             members: List<SceytMember> = channel.members.orEmpty(),
     ) {
+        if (members.isEmpty()) {
+            SceytLog.w(TAG, "Warning insertChannelWithMembers members is empty ${channel.id}")
+        }
         var users = members.map { it.toUserDb() }
         channel.lastMessage?.let { message ->
             message.userReactions?.mapNotNull { it.user?.toUserDb() }?.let { userList ->
