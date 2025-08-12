@@ -39,8 +39,8 @@ import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.data.models.onError
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
-import com.sceyt.chatuikit.extensions.TAG
 import com.sceyt.chatuikit.extensions.findIndexed
+import com.sceyt.chatuikit.extensions.getPrintableStackTrace
 import com.sceyt.chatuikit.extensions.toSha256
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.logger.SceytLog
@@ -105,6 +105,10 @@ internal class PersistenceChannelsLogicImpl(
         private val pendingReactionDao: PendingReactionDao,
         private val channelsCache: ChannelsCache,
 ) : PersistenceChannelsLogic, SceytKoinComponent {
+
+    companion object {
+        private const val TAG = "PersistenceChannelsLogic"
+    }
 
     private val messageLogic: PersistenceMessagesLogic by inject()
     private val myId: String? get() = SceytChatUIKit.chatUIFacade.myId
@@ -276,7 +280,7 @@ internal class PersistenceChannelsLogicImpl(
             members: List<SceytMember> = channel.members.orEmpty(),
     ) {
         if (members.isEmpty()) {
-            SceytLog.w(TAG, "Warning insertChannelWithMembers members is empty ${channel.id}")
+            SceytLog.w(TAG, "Warning insert Channel with empty members ${channel.id}, trace: \n ${getPrintableStackTrace()}")
         }
         var users = members.map { it.toUserDb() }
         channel.lastMessage?.let { message ->
@@ -440,14 +444,14 @@ internal class PersistenceChannelsLogicImpl(
                             if (newChannels.isNotEmpty()) {
                                 channelsCache.newChannelsOnSync(config, newChannels)
                             }
-                            SceytLog.i("syncChannelsResult",
-                                "deletedChannelsIds: ${deletedChannelIds.map { it }}," +
-                                        " newChannelsCount: ${newChannelsIds.size} " +
-                                        " syncedChannelsCount: ${syncedChannels.size} ")
+                            SceytLog.i(TAG, "syncChannelsResult:" +
+                                    " deletedChannelsIds: ${deletedChannelIds.map { it }}," +
+                                    " newChannelsCount: ${newChannelsIds.size} " +
+                                    " syncedChannelsCount: ${syncedChannels.size} ")
                         } else {
                             val ids = channelDao.getAllChannelIdsByTypes(config.types)
                             deleteChannelsFromDbAndCache(ids)
-                            SceytLog.i("syncChannelsResult", "syncedChannels is empty, " +
+                            SceytLog.i(TAG, "syncChannelsResult: syncedChannels is empty, " +
                                     "clear all channels. To be deleted size: ${ids.size}")
                         }
                         trySend(response)
@@ -457,7 +461,7 @@ internal class PersistenceChannelsLogicImpl(
                     is GetAllChannelsResponse.Error -> {
                         trySend(response)
                         channel.close()
-                        SceytLog.e("syncChannelsResult", "syncChannels error: ${response.error}")
+                        SceytLog.e(TAG, "syncChannelsResult: syncChannels error: ${response.error}")
                     }
                 }
             }

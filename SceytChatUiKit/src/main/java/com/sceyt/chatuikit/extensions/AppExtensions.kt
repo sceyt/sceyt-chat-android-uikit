@@ -115,3 +115,11 @@ inline fun doSafe(action: () -> Unit) {
         e.printStackTrace()
     }
 }
+
+fun getPrintableStackTrace() = buildString {
+    appendLine("--------- Stack trace ---------")
+    for (ste in Thread.currentThread().stackTrace) {
+        appendLine(ste.toString())
+    }
+    appendLine("-------------------------------")
+}

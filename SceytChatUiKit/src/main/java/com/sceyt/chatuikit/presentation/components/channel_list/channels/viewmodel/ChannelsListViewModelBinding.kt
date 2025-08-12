@@ -42,7 +42,7 @@ fun ChannelsViewModel.bind(channelListView: ChannelListView, lifecycleOwner: Lif
 
     fun getUpdateAfterOnResumeData(): List<ChannelListItem> {
         return (needSubmitOnResume.takeIf { !it.isNullOrEmpty() }
-                ?: channelListView.getData()) ?: mutableListOf()
+                ?: channelListView.getData()).orEmpty()
     }
 
     getChannels(0, query = searchQuery)
