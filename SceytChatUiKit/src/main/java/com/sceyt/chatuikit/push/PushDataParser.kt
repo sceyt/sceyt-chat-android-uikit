@@ -15,6 +15,7 @@ import com.sceyt.chat.models.user.Presence
 import com.sceyt.chat.models.user.PresenceState
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.models.user.UserState
+import com.sceyt.chatuikit.data.models.channels.RoleTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.extensions.getStringOrNull
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
@@ -156,7 +157,7 @@ object PushDataParser {
                 /* messagesClearedAt = */ 0,
                 /* memberCount = */ membersCount,
                 /* createdBy = */ null,
-                /* userRole = */ "",
+                /* userRole = */ RoleTypeEnum.Member.value, // Todo we should receive the role from the server.
                 /* unread = */ false,
                 /* newMessageCount = */ 0,
                 /* newMentionCount = */ 0,
