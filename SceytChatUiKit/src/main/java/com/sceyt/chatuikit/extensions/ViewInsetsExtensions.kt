@@ -63,9 +63,15 @@ fun View.applyInsets(
     if (applyLeftInsets || applyRightInsets)
         view.setMargins(left = left, right = right)
 
-    if (context.isLandscape() && applyLandscapeRoundedCorners && SDK_INT >= Build.VERSION_CODES.S) {
+    if (!applyLandscapeRoundedCorners || SDK_INT < Build.VERSION_CODES.S) {
+        return@setOnApplyWindowInsetsListener windowInsets
+    }
+
+    if (context.isLandscape() && context.isSurfaceRotationRightToLeft()) {
         view.applyRoundedCorners(windowInsets.toWindowInsets())
         onAppliedRoundedCorners(left, top, right, bottom)
+    } else {
+        outlineProvider = ViewOutlineProvider.BACKGROUND
     }
     windowInsets
 }
