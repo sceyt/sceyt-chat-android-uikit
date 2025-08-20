@@ -73,6 +73,7 @@ internal fun AttachmentDb.toSdkAttachment(upload: Boolean): Attachment {
         return Attachment.Builder(if (isLink) "" else filePath ?: "", url ?: "", type)
             .setMetadata(metadata ?: "")
             .setName(name)
+            .setFileSize(fileSize)
             .setUpload(upload)
             .build()
     }
