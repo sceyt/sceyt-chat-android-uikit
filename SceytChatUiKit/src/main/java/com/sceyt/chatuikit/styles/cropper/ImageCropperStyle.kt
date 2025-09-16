@@ -15,7 +15,6 @@ data class ImageCropperStyle(
         @param:ColorInt val backgroundColor: Int,
         @param:ColorInt val toolbarColor: Int,
         @param:ColorInt val toolbarIconsColor: Int,
-        @param:ColorInt val statusBarColor: Int,
         @param:ColorInt val maskColor: Int,
         @param:DrawableRes val cancelIcon: Int,
         @param:DrawableRes val confirmIcon: Int,
@@ -31,7 +30,6 @@ data class ImageCropperStyle(
             cancelIcon = R.drawable.sceyt_ic_arrow_back,
             confirmIcon = R.drawable.sceyt_ic_save,
             toolbarTitle = context.getString(R.string.sceyt_move_and_scale),
-            statusBarColor = Color.BLACK,
             toolbarColor = Color.BLACK,
             toolbarIconsColor = context.getCompatColor(SceytChatUIKit.theme.colors.onPrimaryColor),
         ).let { styleCustomizer.apply(context, it) }
@@ -39,7 +37,6 @@ data class ImageCropperStyle(
 
     fun createOptions() = UCrop.Options().apply {
         setToolbarColor(toolbarColor)
-        setStatusBarColor(statusBarColor)
         setRootViewBackgroundColor(backgroundColor)
         setDimmedLayerColor(maskColor)
         setToolbarCropDrawable(confirmIcon)
