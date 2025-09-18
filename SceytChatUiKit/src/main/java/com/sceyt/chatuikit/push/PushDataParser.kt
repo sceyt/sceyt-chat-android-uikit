@@ -20,6 +20,7 @@ import com.sceyt.chatuikit.data.models.messages.SceytReaction
 import com.sceyt.chatuikit.extensions.getStringOrNull
 import com.sceyt.chatuikit.persistence.mappers.toSceytUser
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
+import org.json.JSONArray
 import org.json.JSONObject
 
 object PushDataParser {
@@ -27,8 +28,14 @@ object PushDataParser {
     private const val KEY_MESSAGE = "message"
     private const val KEY_USER = "user"
     private const val KEY_REACTION = "reaction"
+    private const val KEY_MENTIONED_USERS = "mentions"
+    private const val KEY_ATTACHMENTS = "attachments"
 
-    fun getMessage(payload: Map<String, String>, channelId: Long?, user: User?): Message? {
+    fun getMessage(
+            payload: Map<String, String>,
+            channelId: Long?,
+            user: User?,
+    ): Message? {
         channelId ?: return null
         return try {
             val messageJson = payload[KEY_MESSAGE]
@@ -49,15 +56,36 @@ object PushDataParser {
             val bodyAttributes = getBodyAttributesFromJson(messageJsonObject)
             val createdAt = DateTimeUtil.convertStringToDate(createdAtString, DateTimeUtil.SERVER_DATE_PATTERN)
 
-            val attachmentArray = ArrayList<Attachment>()
-            val attachments = messageJsonObject.getJSONArray("attachments")
+            val attachmentArray = mutableListOf<Attachment>()
+            val attachments = messageJsonObject.getJSONArray(KEY_ATTACHMENTS)
             for (i in 0 until attachments.length()) {
-                when (val value: Any = attachments[i]) {
+                when (val attachment = attachments[i]) {
                     is JSONObject -> {
-                        getAttachment(value)?.let { attachmentArray.add(it) }
+                        attachment.getAttachmentFromJSON()?.let {
+                            attachmentArray.add(it)
+                        }
                     }
                 }
             }
+
+            val mentionUsersArray by lazy { mutableListOf<User>() }
+            val mentionedUsersJson = payload[KEY_MENTIONED_USERS]
+            if (mentionedUsersJson != null) {
+                runCatching {
+                    JSONArray(mentionedUsersJson)
+                }.onSuccess { mentionedUsers ->
+                    for (i in 0 until mentionedUsers.length()) {
+                        when (val value = mentionedUsers[i]) {
+                            is JSONObject -> {
+                                value.getUserFromJSON()?.let {
+                                    mentionUsersArray.add(it)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             val parentMessage = if (parentMessageIdString != null)
                 Message(parentMessageIdString, channelId, MessageState.Unmodified) else null
             val messageId = messageIdString.toLongOrNull() ?: return null
@@ -81,7 +109,7 @@ object PushDataParser {
                 /* reactionTotal = */ null,
                 /* markerTotals = */ null,
                 /* userMarkers = */ null,
-                /* mentionedUsers = */ null,
+                /* mentionedUsers = */ mentionUsersArray.toTypedArray(),
                 /* parentMessage = */ parentMessage,
                 /* replyCount = */ 0,
                 /* displayCount = */ 0,
@@ -98,22 +126,7 @@ object PushDataParser {
         val userJson = payload[KEY_USER] ?: return null
         return try {
             val userJsonObject = JSONObject(userJson)
-            val id = userJsonObject.getString("id")
-            val username = userJsonObject.getStringOrNull("username") ?: ""
-            val fName = userJsonObject.getString("first_name")
-            val lName = userJsonObject.getString("last_name")
-            val presence = userJsonObject.getString("presence_status")
-            User(
-                /* id = */ id,
-                /* username = */ username,
-                /* firstName = */ fName,
-                /* lastName = */ lName,
-                /* avatarURL = */ "",
-                /* metadataMap = */ null,
-                /* presence = */ Presence(PresenceState.Online, presence, 0),
-                /* state = */ UserState.Active,
-                /* blocked = */ false
-            )
+            userJsonObject.getUserFromJSON()
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -198,14 +211,13 @@ object PushDataParser {
         }
     }
 
-    fun getAttachment(attachment: JSONObject?): Attachment? {
+    fun JSONObject.getAttachmentFromJSON(): Attachment? {
         return try {
-            attachment ?: return null
-            val data = attachment.getString("data")
-            val name = attachment.getString("name")
-            val type = attachment.getString("type")
-            val metadata = attachment.getString("metadata")
-            val size = attachment.getString("size").toLongOrNull() ?: return null
+            val data = getString("data")
+            val name = getString("name")
+            val type = getString("type")
+            val metadata = getString("metadata")
+            val size = getString("size").toLongOrNull() ?: return null
             Attachment.Builder("", data, type)
                 .setFileSize(size)
                 .setName(name)
@@ -214,6 +226,28 @@ object PushDataParser {
             e.printStackTrace()
             null
         }
+    }
+
+    fun JSONObject.getUserFromJSON(): User? = try {
+        val id = getString("id")
+        val username = getStringOrNull("username") ?: ""
+        val fName = getString("first_name")
+        val lName = getString("last_name")
+        val presence = getStringOrNull("presence_status")
+        User(
+            /* id = */ id,
+            /* username = */ username,
+            /* firstName = */ fName,
+            /* lastName = */ lName,
+            /* avatarURL = */ "",
+            /* metadataMap = */ null,
+            /* presence = */ Presence(PresenceState.Online, presence.orEmpty(), 0),
+            /* state = */ UserState.Active,
+            /* blocked = */ false
+        )
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 
     private fun getDeliveryStatusFromJson(jsonObject: JSONObject): DeliveryStatus {
