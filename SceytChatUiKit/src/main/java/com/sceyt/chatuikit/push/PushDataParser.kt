@@ -115,7 +115,9 @@ object PushDataParser {
                 /* displayCount = */ 0,
                 /* autoDeleteAt = */ 0,
                 /* forwardingDetails = */ forwardingDetails,
-                /* bodyAttributes = */ bodyAttributes.toTypedArray())
+                /* bodyAttributes = */ bodyAttributes.toTypedArray(),
+                /* disableMentionsCount = */ false
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             null
