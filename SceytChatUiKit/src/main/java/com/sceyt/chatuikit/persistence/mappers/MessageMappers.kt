@@ -39,7 +39,8 @@ internal fun SceytMessage.toMessageEntity(unList: Boolean) = MessageEntity(
     autoDeleteAt = autoDeleteAt,
     forwardingDetailsDb = forwardingDetails?.toForwardingDetailsDb(),
     unList = unList,
-    bodyAttribute = bodyAttributes
+    bodyAttribute = bodyAttributes,
+    disableMentionsCount = disableMentionsCount
 )
 
 fun getTid(msgId: Long, tid: Long, incoming: Boolean): Long {
@@ -100,7 +101,8 @@ internal fun MessageDb.toSceytMessage(): SceytMessage {
             autoDeleteAt = autoDeleteAt,
             forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toSceytUser()),
             pendingReactions = pendingReactions?.map { it.toReactionData() },
-            bodyAttributes = bodyAttribute
+            bodyAttributes = bodyAttribute,
+            disableMentionsCount = disableMentionsCount
         )
     }
 }
@@ -157,7 +159,8 @@ private fun MessageEntity.parentMessageToSceytMessage(
     autoDeleteAt = autoDeleteAt,
     forwardingDetails = forwardingDetailsDb?.toForwardingDetails(channelId, null),
     pendingReactions = null,
-    bodyAttributes = bodyAttribute
+    bodyAttributes = bodyAttribute,
+    disableMentionsCount = disableMentionsCount
 )
 
 internal fun MessageDb.toMessage(): Message {
@@ -188,7 +191,8 @@ internal fun MessageDb.toMessage(): Message {
             displayCount,
             autoDeleteAt ?: 0L,
             forwardingDetailsDb?.toForwardingDetails(channelId, forwardingUser?.toSceytUser()),
-            bodyAttribute?.toTypedArray()
+            bodyAttribute?.toTypedArray(),
+            disableMentionsCount
         )
     }
 }
@@ -235,6 +239,7 @@ fun Message.toSceytUiMessage(isGroup: Boolean? = null): SceytMessage {
         forwardingDetails = forwardingDetails,
         pendingReactions = null,
         bodyAttributes = bodyAttributes?.toList(),
+        disableMentionsCount = disableMentionsCount,
         isGroup = isGroup ?: false
     )
 }
@@ -266,7 +271,9 @@ fun SceytMessage.toMessage(): Message {
         displayCount,
         autoDeleteAt ?: 0L,
         forwardingDetails,
-        bodyAttributes?.toTypedArray())
+        bodyAttributes?.toTypedArray(),
+        disableMentionsCount
+    )
 }
 
 internal fun ForwardingDetails.toForwardingDetailsDb() = ForwardingDetailsDb(
