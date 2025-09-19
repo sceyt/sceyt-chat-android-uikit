@@ -40,6 +40,7 @@ class ForwardViewModel : BaseViewModel(), SceytKoinComponent {
                     .setBodyAttributes(it.bodyAttributes?.toTypedArray() ?: emptyArray())
                     .setMentionedUserIds(it.mentionedUsers?.map { user -> user.id }?.toTypedArray()
                             ?: arrayOf())
+                    .setDisableMentionsCount(it.disableMentionsCount)
                     //.setReplyInThread(it.replyInThread)
                     .build()
 
