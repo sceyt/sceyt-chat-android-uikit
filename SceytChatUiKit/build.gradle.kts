@@ -1,6 +1,7 @@
 import com.sceyt.chat.MainGradlePlugin
 import com.sceyt.chat.configureMavenPublishing
 import com.sceyt.chat.configureMockitoAgent
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.library")
@@ -31,8 +32,10 @@ android {
         buildConfig = true
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
     }
 }
 
@@ -51,6 +54,7 @@ dependencies {
     api(libs.okhttp)
     api(libs.firebase.messaging.ktx)
     api(libs.lifecycle.process)
+    api(libs.documentfile)
     ksp(libs.room.compiler)
     api(libs.room.runtime)
     api(libs.room.ktx)
@@ -69,10 +73,7 @@ dependencies {
     api(libs.emoji.google)
     api(libs.libphonenumber)
     api(libs.ucrop)
-
-    // Overriding the version of the library
-    implementation(libs.gson)
-    implementation(libs.okio)
+    api(libs.gson)
 
     // Instrumented Unit Tests
     androidTestImplementation(libs.junit.ktx)

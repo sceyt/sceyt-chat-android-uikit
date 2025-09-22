@@ -40,7 +40,7 @@ internal class PersistenceConnectionLogicImpl(
         private var preference: SceytSharedPreference,
         private val usersDao: UserDao,
         private val usersRepository: UsersRepository,
-        private val pushService: PushService
+        private val pushService: PushService,
 ) : PersistenceConnectionLogic, SceytKoinComponent {
 
     private val messageLogic: PersistenceMessagesLogic by inject()
@@ -58,7 +58,7 @@ internal class PersistenceConnectionLogicImpl(
 
     init {
         if (ConnectionEventManager.connectionState == ConnectionState.Connected)
-            scope.launch(Dispatchers.IO) {
+            scope.launch {
                 onChangedConnectStatus(ConnectionStateData(ConnectionState.Connected))
             }
 
@@ -70,17 +70,15 @@ internal class PersistenceConnectionLogicImpl(
         }
     }
 
-    override fun onChangedConnectStatus(state: ConnectionStateData) {
+    override suspend fun onChangedConnectStatus(state: ConnectionStateData) {
         if (state.state == ConnectionState.Connected) {
-            scope.launch {
-                SceytPresenceChecker.startPresenceCheck()
-                pushService.ensurePushTokenRegistered()
-                insertCurrentUser()
-                if (isAppOnForeground())
-                    setUserPresence()
-            }
+            SceytPresenceChecker.startPresenceCheck()
+            pushService.ensurePushTokenRegistered()
+            insertCurrentUser()
+            if (isAppOnForeground())
+                setUserPresence()
 
-            scope.launch(Dispatchers.IO) {
+            withContext(Dispatchers.IO) {
                 messageLogic.sendAllPendingMarkers()
                 messageLogic.sendAllPendingMessages()
                 messageLogic.sendAllPendingMessageStateUpdates()
@@ -117,7 +115,7 @@ internal class PersistenceConnectionLogicImpl(
 
     private suspend fun setUserPresenceWithRetry(
             retryCount: Int = 0,
-            delayMs: Long = INITIAL_RETRY_DELAY_MS
+            delayMs: Long = INITIAL_RETRY_DELAY_MS,
     ) {
         val state = SceytChatUIKit.config.presenceConfig.defaultPresenceState
         SceytChatUIKit.chatUIFacade.userInteractor.setPresenceState(state).onError { exception ->

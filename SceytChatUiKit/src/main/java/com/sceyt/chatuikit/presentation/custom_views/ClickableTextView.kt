@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
 class ClickableTextView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+        defStyleAttr: Int = 0,
 ) : AppCompatTextView(context, attrs, defStyleAttr) {
     private var doOnLongClick: ((View) -> Unit)? = null
     private var doOnClickWhenNoLink: ((View) -> Unit)? = null
@@ -85,6 +85,7 @@ class ClickableTextView @JvmOverloads constructor(
         val spannableString = text as? SpannableString ?: return null
         val x = (event.x + scrollX).toInt()
         val y = (event.y + scrollY).toInt()
+        val layout = layout ?: return null
         val line = layout.getLineForVertical(y)
         val off = layout.getOffsetForHorizontal(line, x.toFloat())
         val links = spannableString.getSpans(off, off, ClickableSpan::class.java)

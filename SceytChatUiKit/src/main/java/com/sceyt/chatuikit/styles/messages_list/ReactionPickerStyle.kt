@@ -8,9 +8,9 @@ import androidx.annotation.StyleableRes
 import com.sceyt.chatuikit.styles.StyleCustomizer
 
 data class ReactionPickerStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val moreBackgroundColor: Int,
-        @ColorInt val selectedBackgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val moreBackgroundColor: Int,
+        @param:ColorInt val selectedBackgroundColor: Int,
         val moreIcon: Drawable?,
 ) {
     companion object {

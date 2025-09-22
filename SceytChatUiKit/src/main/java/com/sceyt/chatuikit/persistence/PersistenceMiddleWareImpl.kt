@@ -157,7 +157,7 @@ internal class PersistenceMiddleWareImpl(
     }
 
     private fun onChangedConnectStatus(data: ConnectionStateData) {
-        scope.launch(Dispatchers.IO) { connectionLogic.onChangedConnectStatus(data) }
+        scope.launch { connectionLogic.onChangedConnectStatus(data) }
     }
 
     private fun onPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>) {
@@ -171,6 +171,7 @@ internal class PersistenceMiddleWareImpl(
             loadKey: LoadKeyData?,
             onlyMine: Boolean,
             ignoreDb: Boolean,
+            awaitForConnection: Boolean,
             config: ChannelListConfig,
     ) = channelLogic.loadChannels(
         offset = offset,
@@ -178,6 +179,7 @@ internal class PersistenceMiddleWareImpl(
         loadKey = loadKey,
         onlyMine = onlyMine,
         ignoreDb = ignoreDb,
+        awaitForConnection = awaitForConnection,
         config = config
     )
 

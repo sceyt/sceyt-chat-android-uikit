@@ -2,7 +2,6 @@ package com.sceyt.chatuikit.presentation.components.shareable.viewmodel
 
 import androidx.lifecycle.viewModelScope
 import com.sceyt.chatuikit.config.ChannelListConfig
-import com.sceyt.chatuikit.data.managers.connection.ConnectionEventManager
 import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
@@ -47,13 +46,13 @@ class ShareableViewModel(
 
         getChannelsJog?.cancel()
         getChannelsJog = viewModelScope.launch(Dispatchers.IO) {
-            ConnectionEventManager.awaitToConnectSceyt()
             channelInteractor.loadChannels(
                 offset = offset,
                 searchQuery = query,
                 loadKey = loadKey,
                 onlyMine = onlyMine,
                 ignoreDb = ignoreDatabase,
+                awaitForConnection = true,
                 config = config
             ).collect(::initPaginationResponse)
         }

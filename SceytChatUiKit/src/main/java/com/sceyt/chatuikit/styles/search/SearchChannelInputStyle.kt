@@ -20,7 +20,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property searchInputStyle Style for the search input, default is [buildSearchInputStyle].
  * */
 data class SearchChannelInputStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val searchInputStyle: SearchInputStyle
 ) {
 

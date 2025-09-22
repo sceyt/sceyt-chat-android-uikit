@@ -34,7 +34,7 @@ typealias ForwardChannelItemStyle = SelectableListItemStyle<
  * @property channelItemStyle Style for the channel item, default is [buildChannelItemStyle].
  * */
 data class ForwardStyle(
-        @ColorInt override val backgroundColor: Int,
+        @param:ColorInt override val backgroundColor: Int,
         override val searchToolbarStyle: SearchToolbarStyle,
         override val actionButtonStyle: ButtonStyle,
         override val channelItemStyle: ForwardChannelItemStyle,

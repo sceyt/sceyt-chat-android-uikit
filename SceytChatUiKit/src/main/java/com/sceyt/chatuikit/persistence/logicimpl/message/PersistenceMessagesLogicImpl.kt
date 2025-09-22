@@ -190,12 +190,12 @@ internal class PersistenceMessagesLogicImpl(
                 val selfReactions = reactionDao.getSelfReactionsByMessageId(message.id, myId.toString())
                 val updateMsg = message.copy(userReactions = selfReactions.map { it.toSceytReaction() })
                 messagesCache.messageUpdated(updateMsg.channelId, updateMsg)
-                messageDao.updateMessage(updateMsg.toMessageEntity(false))
+                messageDao.updateMessageIgnored(updateMsg.toMessageEntity(false))
             }
 
             MessageState.Deleted -> {
                 messagesCache.messageUpdated(message.channelId, message)
-                messageDao.updateMessage(message.toMessageEntity(false))
+                messageDao.updateMessageIgnored(message.toMessageEntity(false))
                 deletedPayloads(message.id, message.tid)
             }
 
@@ -1133,11 +1133,18 @@ internal class PersistenceMessagesLogicImpl(
         }
 
         userDao.insertUsersWithMetadata(usersDb.toList(), replaceUserOnConflict)
-        messageDao.upsertMessages(messagesDb)
+        val forceUpdatedList = messageDao.upsertMessages(messagesDb)
+        if (forceUpdatedList.isNotEmpty()) {
+            messagesCache.deleteAllMessagesWhere {
+                return@deleteAllMessagesWhere forceUpdatedList.any { entity ->
+                    it.channelId == entity.channelId && (it.tid == entity.tid || it.id == entity.id)
+                }
+            }
+        }
         if (parentMessagesDb.isNotEmpty())
             messageDao.insertMessagesIgnored(parentMessagesDb)
 
-        return mutableList
+        return mutableList.toList()
     }
 
     private fun updateMessageStatesWithPendingStates(message: SceytMessage, pendingStates: List<PendingMessageStateEntity>): SceytMessage? {

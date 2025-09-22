@@ -41,12 +41,12 @@ import com.sceyt.chatuikit.styles.messages_list.item.MessageItemStyle
  * @property messageItemStyle Style for the message item view
  **/
 data class MessagesListViewStyle(
-        @ColorInt val backgroundColor: Int,
-        @LayoutRes val emptyState: Int,
-        @LayoutRes val emptyStateForSelfChannel: Int,
-        @LayoutRes val loadingState: Int,
-        @Dimension val sameSenderMessageDistance: Int,
-        @Dimension val differentSenderMessageDistance: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:LayoutRes val emptyState: Int,
+        @param:LayoutRes val emptyStateForSelfChannel: Int,
+        @param:LayoutRes val loadingState: Int,
+        @param:Dimension val sameSenderMessageDistance: Int,
+        @param:Dimension val differentSenderMessageDistance: Int,
         val messageItemStyle: MessageItemStyle,
         val scrollDownButtonStyle: ScrollButtonStyle,
         val scrollUnreadMentionButtonStyle: ScrollButtonStyle,

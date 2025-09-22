@@ -22,7 +22,7 @@ typealias ReactedUserItemStyle = ListItemStyle<Formatter<SceytUser>, Formatter<S
  * @property itemStyle Style for the user item in the list, default is [buildUserItemStyle].
  * */
 data class ReactedUserListStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val itemStyle: ReactedUserItemStyle,
 ) : SceytComponentStyle() {
 

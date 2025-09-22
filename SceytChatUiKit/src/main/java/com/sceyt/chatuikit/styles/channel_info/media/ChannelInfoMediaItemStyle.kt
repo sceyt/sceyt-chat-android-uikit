@@ -22,7 +22,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property durationFormatter - formatter for duration
  * */
 data class ChannelInfoMediaItemStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val videoDurationIcon: Drawable?,
         val videoDurationTextStyle: TextStyle,
         val durationFormatter: Formatter<Long>

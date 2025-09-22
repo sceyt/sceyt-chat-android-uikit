@@ -62,9 +62,11 @@ class MessagesCache {
      * @param checkDifference if true check differences and add payloads, otherwise only put to cash.
      * @param checkDiffAndNotifyUpdate if true then will emit message update event, when detected
      * message change. */
-    fun addAll(channelId: Long, list: List<SceytMessage>,
-               checkDifference: Boolean,
-               checkDiffAndNotifyUpdate: Boolean): Boolean {
+    fun addAll(
+            channelId: Long, list: List<SceytMessage>,
+            checkDifference: Boolean,
+            checkDiffAndNotifyUpdate: Boolean,
+    ): Boolean {
 
         synchronized(lock) {
             return if (checkDifference)
@@ -175,6 +177,14 @@ class MessagesCache {
         }
     }
 
+    fun deleteAllMessagesWhere(predicate: (SceytMessage) -> Boolean) {
+        synchronized(lock) {
+            cachedMessages.forEach { (_, map) ->
+                map.removeAllIf(predicate)
+            }
+        }
+    }
+
     fun upsertMessages(channelId: Long, vararg message: SceytMessage) {
         synchronized(lock) {
             message.forEach {
@@ -252,9 +262,11 @@ class MessagesCache {
         return updatedMessage.copy(pendingReactions = pendingReactions.toList())
     }
 
-    private fun getUpdatedAttachmentsWithPayLoads(payloadData: List<AttachmentPayLoadData>?,
-                                                  attachmentsLinkDetails: List<LinkPreviewDetails>?,
-                                                  message: SceytMessage): List<SceytAttachment>? {
+    private fun getUpdatedAttachmentsWithPayLoads(
+            payloadData: List<AttachmentPayLoadData>?,
+            attachmentsLinkDetails: List<LinkPreviewDetails>?,
+            message: SceytMessage,
+    ): List<SceytAttachment>? {
         val updateAttachments = message.attachments?.toMutableList() ?: return null
         val updateLinkDetails = attachmentsLinkDetails?.run { ArrayList(this) }
         payloadData?.filter { payLoad -> payLoad.messageTid == message.tid }?.let { data ->
@@ -310,10 +322,12 @@ class MessagesCache {
         return payloads
     }
 
-    private fun putAndCheckHasDiff(channelId: Long,
-                                   includeNotExistToDiff: Boolean,
-                                   checkDiffAndNotifyUpdate: Boolean,
-                                   vararg messages: SceytMessage): Boolean {
+    private fun putAndCheckHasDiff(
+            channelId: Long,
+            includeNotExistToDiff: Boolean,
+            checkDiffAndNotifyUpdate: Boolean,
+            vararg messages: SceytMessage,
+    ): Boolean {
         var detectedDiff = false
         messages.forEach {
             val updateMessage = initMessagePayLoads(channelId, it)
@@ -332,8 +346,10 @@ class MessagesCache {
         return detectedDiff
     }
 
-    private fun updateAllAttachments(predicate: (SceytAttachment) -> Boolean,
-                                     updater: SceytAttachment.() -> SceytAttachment) {
+    private fun updateAllAttachments(
+            predicate: (SceytAttachment) -> Boolean,
+            updater: SceytAttachment.() -> SceytAttachment,
+    ) {
         cachedMessages.values.forEach { messageHashMap ->
             for ((key, value) in messageHashMap.entries) {
                 val newAttachments = value.attachments?.toMutableList()?.apply {

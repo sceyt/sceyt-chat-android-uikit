@@ -4,12 +4,15 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Parcelable
 import android.os.PowerManager
+import android.view.Surface
 import android.view.View
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.core.content.IntentCompat
 import androidx.core.os.BundleCompat
@@ -96,6 +99,21 @@ fun Context.isLandscape(): Boolean {
     return resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
 
+fun Context.isSurfaceRotationRightToLeft(): Boolean {
+    val rotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        display.rotation
+    } else {
+        @Suppress("DEPRECATION")
+        (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.rotation
+    }
+
+    return when (rotation) {
+        Surface.ROTATION_90 -> true
+        Surface.ROTATION_270 -> false
+        else -> false
+    }
+}
+
 @Suppress("DEPRECATION")
 fun Context.keepScreenOn(): PowerManager.WakeLock {
     return (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
@@ -114,4 +132,12 @@ inline fun doSafe(action: () -> Unit) {
     } catch (e: Exception) {
         e.printStackTrace()
     }
+}
+
+fun getPrintableStackTrace() = buildString {
+    appendLine("--------- Stack trace ---------")
+    for (ste in Thread.currentThread().stackTrace) {
+        appendLine(ste.toString())
+    }
+    appendLine("-------------------------------")
 }

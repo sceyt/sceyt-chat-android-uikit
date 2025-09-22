@@ -27,7 +27,7 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property itemStyle Style for the media item.
  * */
 data class MediaPickerStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val titleText: String,
         val titleTextStyle: TextStyle,
         val countTextStyle: TextStyle,

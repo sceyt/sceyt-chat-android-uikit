@@ -21,7 +21,7 @@ import com.sceyt.chatuikit.theme.Colors
  * @property linkPreviewStyle - style for link preview
  * */
 data class ChannelInfoLinkItemStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val linkTextStyle: TextStyle,
         val linkPreviewStyle: LinkPreviewStyle,
 ) {

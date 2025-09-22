@@ -22,6 +22,12 @@ abstract class MessagingDelegate : SceytKoinComponent {
         val message = PushDataParser.getMessage(payload, channel.id, user)?.toSceytUiMessage()
                 ?: return null
         val reaction = PushDataParser.getReaction(payload, message.id, user)
-        return PushData(type, channel, message, user.toSceytUser(), reaction)
+        return PushData(
+            type = type,
+            channel = channel.copy(lastMessage = message),
+            message = message,
+            user = user.toSceytUser(),
+            reaction = reaction
+        )
     }
 }

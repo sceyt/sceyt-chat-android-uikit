@@ -42,11 +42,11 @@ import java.util.Date
  * */
 
 data class MediaPreviewStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val videoControllerBackgroundColor: Int,
-        @ColorInt val trackColor: Int,
-        @ColorInt val progressColor: Int,
-        @ColorInt val thumbColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val videoControllerBackgroundColor: Int,
+        @param:ColorInt val trackColor: Int,
+        @param:ColorInt val progressColor: Int,
+        @param:ColorInt val thumbColor: Int,
         val pauseIcon: Drawable?,
         val playIcon: Drawable?,
         val timelineTextStyle: TextStyle,

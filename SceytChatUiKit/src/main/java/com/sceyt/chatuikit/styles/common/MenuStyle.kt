@@ -11,9 +11,9 @@ import com.sceyt.chatuikit.styles.StyleConstants.UNSET_RESOURCE
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_STYLE
 
 data class MenuStyle(
-        @StyleRes val popupTheme: Int = UNSET_STYLE,
-        @StyleRes val titleAppearance: Int = UNSET_STYLE,
-        @MenuRes val menuRes: Int = UNSET_RESOURCE,
+        @param:StyleRes val popupTheme: Int = UNSET_STYLE,
+        @param:StyleRes val titleAppearance: Int = UNSET_STYLE,
+        @param:MenuRes val menuRes: Int = UNSET_RESOURCE,
         val overFlowIcon: Drawable? = null,
         val menuCustomizer: Menu.() -> Unit = {},
 ) {

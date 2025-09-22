@@ -8,9 +8,9 @@ import com.sceyt.chatuikit.presentation.custom_views.CircularProgressView
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
 
 data class MediaLoaderStyle(
-        @ColorInt val backgroundColor: Int = UNSET_COLOR,
-        @ColorInt val progressColor: Int = UNSET_COLOR,
-        @ColorInt val trackColor: Int = UNSET_COLOR,
+        @param:ColorInt val backgroundColor: Int = UNSET_COLOR,
+        @param:ColorInt val progressColor: Int = UNSET_COLOR,
+        @param:ColorInt val trackColor: Int = UNSET_COLOR,
         val cancelIcon: Drawable? = null,
         val uploadIcon: Drawable? = null,
         val downloadIcon: Drawable? = null
