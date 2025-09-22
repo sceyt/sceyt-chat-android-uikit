@@ -1,7 +1,6 @@
 package com.sceyt.chatuikit.media.audio
 
 import android.content.Context
-import com.google.gson.GsonBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -12,24 +11,30 @@ import java.util.concurrent.Executors
 
 class AudioRecorderHelper(
         private val scope: CoroutineScope,
-        private val context: Context
+        private val context: Context,
 ) {
     private val recorderDispatcher = Executors.newSingleThreadScheduledExecutor().asCoroutineDispatcher()
     private var audioFile: File? = null
     private var currentRecorder: AudioRecorder? = null
-    private val serializer = GsonBuilder().create()
     private val audioFocusHelper: AudioFocusHelper by lazy { AudioFocusHelper(context) }
 
-    fun startRecording(directoryToSaveFile: String, onRecorderStart: OnRecorderStart? = null) {
+    fun startRecording(
+            directoryToSaveFile: String,
+            onRecorderStart: OnRecorderStart? = null,
+            onRecordReachedMaxDurationListener: ReachedMaxDurationListener? = null,
+    ) {
         scope.launch(recorderDispatcher) {
             audioFocusHelper.requestAudioFocusCompat()
             val audioFile = FileManager.createFile(AudioRecorderImpl.AUDIO_FORMAT, directoryToSaveFile).also {
                 this@AudioRecorderHelper.audioFile = it
             }
             val recorder = AudioRecorderImpl(context, audioFile).also { currentRecorder = it }
-            val started = recorder.startRecording(32000, null)
-            withContext(Dispatchers.Main) {
-                onRecorderStart?.onStart(started)
+            val started = recorder.startRecording(onRecordReachedMaxDurationListener)
+
+            onRecorderStart?.let { listener ->
+                withContext(Dispatchers.Main) {
+                    listener.onStart(started)
+                }
             }
         }
     }
@@ -66,12 +71,6 @@ class AudioRecorderHelper(
 
     val currentDuration: Int
         get() = currentRecorder?.getRecordingDuration() ?: 0
-
-    val jsonAmplitudes: String
-        get() {
-            val amps = currentAmplitudes
-            return serializer.toJson(amps, Array<Int>::class.java)
-        }
 
     fun interface OnRecorderStart {
         fun onStart(started: Boolean)

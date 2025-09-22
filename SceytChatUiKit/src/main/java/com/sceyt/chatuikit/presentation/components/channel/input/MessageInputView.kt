@@ -393,7 +393,12 @@ class MessageInputView @JvmOverloads constructor(
     private fun onRecordingStarted() {
         val directoryToSaveRecording = context.filesDir.path + "/Audio"
         AudioPlayerHelper.pauseAll()
-        audioRecorderHelper.startRecording(directoryToSaveRecording) {}
+        audioRecorderHelper.startRecording(
+            directoryToSaveFile = directoryToSaveRecording,
+            onRecordReachedMaxDurationListener = {
+                stopRecordAndShowPreviewIfExist()
+            }
+        )
         binding.layoutInput.isInvisible = true
         voiceRecorderView?.keepScreenOn = true
         (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
@@ -411,7 +416,7 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     private fun startRecordingUpdateJob() {
-        if (recordingUpdateJob?.isActive==true)
+        if (recordingUpdateJob?.isActive == true)
             return
         recordingUpdateJob = getScope().launch {
             while (isActive) {
@@ -427,7 +432,7 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     private fun onStopRecordingCompleted(
-            shouldShowPreview: Boolean
+            shouldShowPreview: Boolean,
     ) = OnRecorderStop { isTooShort, file, duration, amplitudes ->
         if (isTooShort) {
             finishRecording()
@@ -805,6 +810,11 @@ class MessageInputView @JvmOverloads constructor(
     @SuppressWarnings("WeakerAccess")
     fun stopRecording() {
         voiceRecorderView?.forceStopRecording()
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    fun stopRecordAndShowPreviewIfExist() {
+        voiceRecorderView?.stopRecordAndShowPreviewIfNeeded()
     }
 
     fun isEmpty() = binding.messageInput.text.isNullOrBlank() && allAttachments.isEmpty()

@@ -54,7 +54,7 @@ import kotlin.math.abs
 class VoiceRecorderView @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+        defStyleAttr: Int = 0,
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
     private lateinit var binding: SceytRecordViewBinding
     private val animBlink by lazy { AnimationUtils.loadAnimation(context, R.anim.sceyt_anim_blink) }
@@ -256,7 +256,7 @@ class VoiceRecorderView @JvmOverloads constructor(
         binding.stopRecording(RecordingBehaviour.CANCELED)
     }
 
-    private fun stopRecordAndShowPreviewIfNeeded() {
+    fun stopRecordAndShowPreviewIfNeeded() {
         if (isRecording) {
             isLocked = false
             binding.stopRecording(RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW)
@@ -314,7 +314,10 @@ class VoiceRecorderView @JvmOverloads constructor(
                 recordingListener?.onRecordingCanceled()
             }
 
-            RecordingBehaviour.RELEASED, RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW, RecordingBehaviour.LOCK_DONE_SEND_IMMEDIATELY -> {
+            RecordingBehaviour.RELEASED,
+            RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW,
+            RecordingBehaviour.LOCK_DONE_SEND_IMMEDIATELY,
+                -> {
                 isRecording = false
                 moveToInitialState()
                 val shouldShowPreview = recordingBehaviour == RecordingBehaviour.LOCK_DONE_SHOW_PREVIEW
