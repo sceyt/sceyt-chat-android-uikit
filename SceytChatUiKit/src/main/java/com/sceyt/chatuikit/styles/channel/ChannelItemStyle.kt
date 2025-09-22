@@ -90,10 +90,10 @@ import java.util.Date
  * @property channelAvatarRenderer - Renderer for channel avatar, default is [SceytChatUIKitRenderers.channelAvatarRenderer].
  * */
 data class ChannelItemStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val pinnedChannelBackgroundColor: Int,
-        @ColorInt val dividerColor: Int,
-        @ColorInt val linkTextColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val pinnedChannelBackgroundColor: Int,
+        @param:ColorInt val dividerColor: Int,
+        @param:ColorInt val linkTextColor: Int,
         val mutedIcon: Drawable?,
         val pinIcon: Drawable?,
         val autoDeletedChannelIcon: Drawable?,

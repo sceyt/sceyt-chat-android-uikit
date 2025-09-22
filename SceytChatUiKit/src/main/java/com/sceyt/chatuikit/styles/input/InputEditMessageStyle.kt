@@ -15,7 +15,7 @@ import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class InputEditMessageStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val editIcon: Drawable?,
         val titleTextStyle: TextStyle,
         val bodyTextStyle: TextStyle,

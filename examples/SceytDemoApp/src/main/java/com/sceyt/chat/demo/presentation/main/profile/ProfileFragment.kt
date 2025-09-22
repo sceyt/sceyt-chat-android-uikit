@@ -35,7 +35,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ProfileFragment : Fragment() {
     private lateinit var binding: FragmentProfileBinding
-    private lateinit var displayNameDefaultBg: Drawable
+    private var displayNameDefaultBg: Drawable? = null
     private val viewModel by viewModels<ProfileViewModel>()
     private val userProfileViewModel: UserProfileViewModel by viewModel()
     private val preference by inject<AppSharedPreference>()

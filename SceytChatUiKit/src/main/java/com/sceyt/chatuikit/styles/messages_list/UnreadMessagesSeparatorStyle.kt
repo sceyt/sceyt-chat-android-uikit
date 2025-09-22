@@ -9,7 +9,7 @@ import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class UnreadMessagesSeparatorStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val unreadText: String,
         val textStyle: TextStyle,
 ) {

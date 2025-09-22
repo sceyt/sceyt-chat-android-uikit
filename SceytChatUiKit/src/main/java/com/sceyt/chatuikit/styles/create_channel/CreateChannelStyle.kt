@@ -41,9 +41,9 @@ import com.sceyt.chatuikit.theme.Colors
  * @param actionButtonStyle Style for the action button. Default is [buildActionButtonStyle].
  * */
 data class CreateChannelStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val avatarBackgroundColor: Int,
-        @ColorInt val dividerColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val avatarBackgroundColor: Int,
+        @param:ColorInt val dividerColor: Int,
         val avatarDefaultIcon: Drawable?,
         val captionTextStyle: TextStyle,
         val toolbarStyle: ToolbarStyle,

@@ -16,8 +16,8 @@ import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class ReplyMessageStyle(
-        @ColorInt val borderColor: Int,
-        @ColorInt val voiceDurationColor: Int,
+        @param:ColorInt val borderColor: Int,
+        @param:ColorInt val voiceDurationColor: Int,
         val titleTextStyle: TextStyle,
         val subtitleTextStyle: TextStyle,
         val deletedMessageTextStyle: TextStyle,

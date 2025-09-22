@@ -9,6 +9,7 @@ import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.text.Layout
+import android.text.SpannableStringBuilder
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
@@ -24,8 +25,8 @@ import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.extensions.getCompatColor
 import com.sceyt.chatuikit.extensions.getCompatDrawable
 import com.sceyt.chatuikit.extensions.getFirstCharIsEmoji
-import com.sceyt.chatuikit.extensions.processEmojiCompat
 import com.sceyt.chatuikit.extensions.roundUp
+import com.sceyt.chatuikit.presentation.common.EmojiProcessor
 import com.sceyt.chatuikit.presentation.custom_views.AvatarView.DefaultAvatar
 import com.sceyt.chatuikit.presentation.helpers.AvatarImageLoader
 import com.sceyt.chatuikit.styles.StyleConstants.UNSET_COLOR
@@ -58,6 +59,7 @@ class AvatarView @JvmOverloads constructor(
     private val defaultPlaceholder by lazy {
         context.getCompatColor(SceytChatUIKit.theme.colors.backgroundColorSecondary).toDrawable()
     }
+    private val emojiProcessor by lazy { EmojiProcessor() }
 
     init {
         var enableRipple = true
@@ -170,23 +172,29 @@ class AvatarView @JvmOverloads constructor(
     }
 
     private fun getInitials(title: CharSequence): CharSequence {
+        val text = extractInitials(title)
+        initials = emojiProcessor.processEmojiSafe(text) { processed ->
+            initials = processed
+            postInvalidate()
+        }
+        return initials
+    }
+
+    private fun extractInitials(title: CharSequence): CharSequence {
         if (title.isBlank()) return ""
-        val strings = title.trim().split(" ").filter { it.isNotBlank() }
-        if (strings.isEmpty()) return ""
-        val data = if (isInEditMode)
-            Pair(strings[0].take(1), true) else strings[0].getFirstCharIsEmoji()
-        val firstChar = data.first
-        val isEmoji = data.second
-        if (isEmoji)
-            return if (isInEditMode)
-                firstChar else firstChar.processEmojiCompat() ?: title.take(1)
+        val words = title.trim().split(" ").filter { it.isNotBlank() }
+        if (words.isEmpty()) return ""
 
-        val text = if (strings.size > 1) {
-            val secondChar = strings[1].getFirstCharIsEmoji().first
-            "${firstChar}${secondChar}".uppercase()
-        } else firstChar.toString().uppercase()
+        val (firstChar, firstIsEmoji) = words[0].getFirstCharIsEmoji()
+        if (firstIsEmoji) return firstChar
 
-        return if (isInEditMode) text else text.processEmojiCompat() ?: title.take(1)
+        if (words.size > 1) {
+            val (secondChar, secondIsEmoji) = words[1].getFirstCharIsEmoji()
+            return SpannableStringBuilder()
+                .append(firstChar.toString().uppercase())
+                .append(if (secondIsEmoji) secondChar else secondChar.toString().uppercase())
+        }
+        return firstChar.toString().uppercase()
     }
 
     private fun getAvatarRandomColor(initials: CharSequence): Int {
@@ -253,7 +261,7 @@ class AvatarView @JvmOverloads constructor(
     private fun drawInitialsAndBackground(canvas: Canvas, avatar: DefaultAvatar.FromInitials) {
         val initials = getInitials(avatar.name)
         val color = if (avatarBackgroundColor == 0)
-            getAvatarRandomColor(initials) else avatarBackgroundColor
+            getAvatarRandomColor(avatar.name) else avatarBackgroundColor
 
         drawBackgroundColor(canvas, color)
         drawInitials(canvas, initials)
@@ -285,6 +293,11 @@ class AvatarView @JvmOverloads constructor(
         setMeasuredDimension(measuredWidth, measuredWidth)
     }
 
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        emojiProcessor.unregister()
+    }
+
     fun applyStyle(style: AvatarStyle) {
         textStyle = style.textStyle
 
@@ -298,19 +311,19 @@ class AvatarView @JvmOverloads constructor(
     sealed interface DefaultAvatar {
         data class FromBitmap(val bitmap: Bitmap) : DefaultAvatar
         data class FromDrawable(val drawable: Drawable?) : DefaultAvatar
-        data class FromDrawableRes(@DrawableRes val id: Int) : DefaultAvatar
+        data class FromDrawableRes(@param:DrawableRes val id: Int) : DefaultAvatar
         data class FromInitials(val name: CharSequence) : DefaultAvatar
     }
 
     sealed interface AvatarPlaceholder {
         data class FromDrawable(val drawable: Drawable?) : AvatarPlaceholder
-        data class FromDrawableRes(@DrawableRes val id: Int) : AvatarPlaceholder
+        data class FromDrawableRes(@param:DrawableRes val id: Int) : AvatarPlaceholder
     }
 
     sealed interface AvatarErrorPlaceHolder {
         data class FromBitmap(val bitmap: Bitmap) : AvatarErrorPlaceHolder
         data class FromDrawable(val drawable: Drawable?) : AvatarErrorPlaceHolder
-        data class FromDrawableRes(@DrawableRes val id: Int) : AvatarErrorPlaceHolder
+        data class FromDrawableRes(@param:DrawableRes val id: Int) : AvatarErrorPlaceHolder
     }
 
     fun appearanceBuilder() = AppearanceBuilder()

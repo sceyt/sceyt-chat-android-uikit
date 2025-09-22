@@ -9,8 +9,8 @@ import com.sceyt.chatuikit.styles.StyleCustomizer
 import com.sceyt.chatuikit.styles.common.TextStyle
 
 data class InputCoverStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val dividerColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val dividerColor: Int,
         val textStyle: TextStyle,
 ) {
     companion object {

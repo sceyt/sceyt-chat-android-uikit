@@ -44,7 +44,9 @@ internal data class MessageEntity(
         @Embedded
         val forwardingDetailsDb: ForwardingDetailsDb?,
         val bodyAttribute: List<BodyAttribute>?,
+        @ColumnInfo(defaultValue = "0")
+        val disableMentionsCount: Boolean,
         @ColumnInfo(index = true)
         // This flag is used to ignore getting this message, when querying get channel messages
-        val unList: Boolean
+        val unList: Boolean,
 )

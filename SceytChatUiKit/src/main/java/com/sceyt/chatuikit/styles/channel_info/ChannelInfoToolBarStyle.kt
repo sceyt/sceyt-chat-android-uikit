@@ -18,7 +18,7 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 data class ChannelInfoToolBarStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val expandedStateTitle: String,
         val navigationIcon: Drawable?,
         val editIcon: Drawable?,

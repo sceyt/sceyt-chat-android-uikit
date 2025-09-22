@@ -14,7 +14,7 @@ import com.sceyt.chatuikit.styles.common.TextStyle
 import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
 
 data class ChannelInfoSettingsStyle(
-        @ColorInt val backgroundColor: Int,
+        @param:ColorInt val backgroundColor: Int,
         val notificationsIcon: Drawable?,
         val autoDeleteMessagesIcon: Drawable?,
         val notificationsTitleText: String,

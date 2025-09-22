@@ -38,8 +38,8 @@ import com.sceyt.chatuikit.theme.SceytChatUIKitTheme
  * @property uriValidationStyle Style for the uri validation
  * */
 data class EditChannelStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val dividerColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val dividerColor: Int,
         val avatarPlaceholder: Drawable?,
         val toolbarTitle: String,
         val toolbarStyle: ToolbarStyle,

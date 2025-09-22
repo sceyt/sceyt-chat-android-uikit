@@ -40,6 +40,7 @@ data class SceytMessage(
         val forwardingDetails: ForwardingDetails?,
         val pendingReactions: List<PendingReactionData>?,
         val bodyAttributes: List<BodyAttribute>?,
+        val disableMentionsCount: Boolean,
     // Local properties
         val shouldShowAvatarAndName: Boolean = false,
         val disabledShowAvatarAndName: Boolean = false,

@@ -228,6 +228,7 @@ class ChannelListView @JvmOverloads constructor(
     /**
      * @param listener Channel click listeners, to listen click events.
      */
+    @Suppress("unused")
     fun setChannelClickListener(listener: ChannelClickListeners) {
         clickListeners.setListener(listener)
     }
@@ -235,6 +236,7 @@ class ChannelListView @JvmOverloads constructor(
     /**
      * @param listener The custom channel click listeners.
      */
+    @Suppress("unused")
     fun setCustomChannelClickListeners(listener: ChannelClickListeners.ClickListeners) {
         clickListeners = (listener as? ChannelClickListenersImpl)?.withDefaultListeners(this)
                 ?: listener
@@ -244,6 +246,7 @@ class ChannelListView @JvmOverloads constructor(
      * User this method to set your custom popup click listeners.
      * @param listener is the custom listener.
      */
+    @Suppress("unused")
     fun setCustomChannelPopupClickListener(listener: ChannelPopupClickListeners.PopupClickListeners) {
         popupClickListeners = (listener as? ChannelPopupClickListenersImpl)?.withDefaultListeners(this)
                 ?: listener
@@ -254,10 +257,10 @@ class ChannelListView @JvmOverloads constructor(
      * which is extended from [ChannelViewHolderFactory].
      * @param factory custom view holder factory, extended from [ChannelViewHolderFactory].
      */
+    @Suppress("unused")
     fun setViewHolderFactory(factory: ChannelViewHolderFactory) {
         channelsRV.setViewHolderFactory(factory.apply {
             setChannelListener(defaultClickListeners)
-            setStyle(style)
         })
     }
 
@@ -265,6 +268,7 @@ class ChannelListView @JvmOverloads constructor(
      * Returns the inner [RecyclerView] that is used to display a list of channel list items.
      * @return The inner [RecyclerView] with channels.
      */
+    @Suppress("unused")
     fun getChannelsRv() = channelsRV
 
     /**

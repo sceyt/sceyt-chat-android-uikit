@@ -14,11 +14,13 @@ data class MessageDiff(
         val reactionsChanged: Boolean,
         val showAvatarAndNameChanged: Boolean,
         val filesChanged: Boolean,
-        val selectionChanged: Boolean
+        val selectionChanged: Boolean,
+        val metadataChanged: Boolean,
 ) {
     fun hasDifference(): Boolean {
         return edited || bodyChanged || statusChanged || avatarChanged || nameChanged || replyCountChanged
-                || replyContainerChanged || reactionsChanged || showAvatarAndNameChanged || filesChanged || selectionChanged
+                || replyContainerChanged || reactionsChanged || showAvatarAndNameChanged || filesChanged
+                || selectionChanged || metadataChanged
     }
 
     companion object {
@@ -33,7 +35,8 @@ data class MessageDiff(
             reactionsChanged = true,
             showAvatarAndNameChanged = true,
             filesChanged = true,
-            selectionChanged = true
+            selectionChanged = true,
+            metadataChanged = true
         )
         val DEFAULT_FALSE = MessageDiff(
             edited = false,
@@ -46,7 +49,8 @@ data class MessageDiff(
             reactionsChanged = false,
             showAvatarAndNameChanged = false,
             filesChanged = false,
-            selectionChanged = false
+            selectionChanged = false,
+            metadataChanged = false
         )
     }
 
@@ -72,7 +76,8 @@ fun SceytMessage.diff(other: SceytMessage): MessageDiff {
         showAvatarAndNameChanged = shouldShowAvatarAndName != other.shouldShowAvatarAndName
                 || disabledShowAvatarAndName != other.disabledShowAvatarAndName,
         filesChanged = attachments?.size != other.attachments?.size,
-        selectionChanged = isSelected != other.isSelected
+        selectionChanged = isSelected != other.isSelected,
+        metadataChanged = metadata != other.metadata
     )
 }
 
@@ -90,6 +95,7 @@ fun SceytMessage.diffContent(other: SceytMessage): MessageDiff {
                 ?: other.reactionTotals.isNullOrEmpty().not(),
         showAvatarAndNameChanged = false,
         filesChanged = attachments?.size != other.attachments?.size,
-        selectionChanged = isSelected != other.isSelected
+        selectionChanged = isSelected != other.isSelected,
+        metadataChanged = metadata != other.metadata
     )
 }

@@ -44,9 +44,9 @@ typealias CreateGroupStyleUserItemStyle = ListItemStyle<UserFormatter, UserForma
  * @param userItemStyle Style for the user item. Default is [buildUserItemStyle].
  * */
 data class CreateGroupStyle(
-        @ColorInt val backgroundColor: Int,
-        @ColorInt val avatarBackgroundColor: Int,
-        @ColorInt val dividerColor: Int,
+        @param:ColorInt val backgroundColor: Int,
+        @param:ColorInt val avatarBackgroundColor: Int,
+        @param:ColorInt val dividerColor: Int,
         val avatarDefaultIcon: Drawable?,
         val separatorText: String,
         val separatorTextStyle: TextStyle,
