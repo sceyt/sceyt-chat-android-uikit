@@ -440,14 +440,16 @@ class MessageListViewModel(
     }
 
     private fun checkMaybeHaveUnreadMentionOnNewMessage(message: SceytMessage) {
-        if (!message.incoming || message.displayCount.toInt() == 0) return
+        if (!message.incoming || message.displayCount.toInt() == 0 || message.disableMentionsCount)
+            return
+
         if (message.mentionedUsers?.any { it.id == SceytChatUIKit.currentUserId } == true) {
             unreadMentionState = unreadMentionState.copy(
                 messageIds = unreadMentionState.messageIds.plus(message.id)
             )
 
             updateChannel {
-                copy(newMentionCount = newMentionCount +  1)
+                copy(newMentionCount = newMentionCount + 1)
             }
         }
     }
