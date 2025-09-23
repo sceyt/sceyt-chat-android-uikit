@@ -582,8 +582,7 @@ internal class PersistenceChannelsLogicImpl(
                 channelsCache.addPendingChannel(channelDb.toChannel())
             return SceytResponse.Success(channelDb.toChannel())
         }
-        val channelId = members.map { it.id }.toSet().sorted().joinToString(separator = "$").toSha256()
-        return createPendingChannelAndSave(data.copy(metadata = metadata), channelId)
+        return createPendingChannelAndSave(data.copy(metadata = metadata))
     }
 
     override suspend fun findOrCreatePendingChannelByUri(
@@ -601,13 +600,11 @@ internal class PersistenceChannelsLogicImpl(
         if (response is SceytResponse.Success && response.data != null) {
             return SceytResponse.Success(response.data)
         }
-        val channelId = data.uri.toSha256()
-        return createPendingChannelAndSave(data, channelId)
+        return createPendingChannelAndSave(data)
     }
 
     private suspend fun createPendingChannelAndSave(
             data: CreateChannelData,
-            channelId: Long,
     ): SceytResponse<SceytChannel> {
         val fail = SceytResponse.Error<SceytChannel>(SceytException(0, "Failed to create direct channel myId is null"))
         val myId = myId ?: return fail
@@ -622,6 +619,13 @@ internal class PersistenceChannelsLogicImpl(
                 user = currentUser
             ))
         }
+
+        val channelId = if (data.uri.isNotBlank()) {
+            data.uri.toSha256()
+        } else {
+            members.map { it.id }.toSet().sorted().joinToString(separator = "$").toSha256()
+        }
+
         val channel = createPendingChannel(
             channelId = channelId,
             createdBy = currentUser,
