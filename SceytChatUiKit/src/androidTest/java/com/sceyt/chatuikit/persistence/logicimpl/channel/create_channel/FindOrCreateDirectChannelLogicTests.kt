@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.google.common.truth.Truth
+import com.google.gson.Gson
 import com.sceyt.chat.models.user.User
 import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
@@ -15,6 +16,7 @@ import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
+import com.sceyt.chatuikit.data.models.channels.SelfChannelMetadata
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinComponent
 import com.sceyt.chatuikit.persistence.database.SceytDatabase
@@ -514,14 +516,14 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         Truth.assertThat(directChannelFromDb.id).isEqualTo(secondChannel.id)
     }
 
-      /**
+    /**
      * Helper method to verify that a channel is correctly stored in the database
      * and matches the expected CreateChannelData
      */
     private suspend fun verifyChannelInDatabase(
             channel: SceytChannel,
             expectedData: CreateChannelData,
-            shouldBePending: Boolean = true
+            shouldBePending: Boolean = true,
     ) {
         val channelFromDb = channelLogic.getChannelFromDb(channel.id)
         Truth.assertThat(channelFromDb).isNotNull()
@@ -531,32 +533,36 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
             Truth.assertThat(type).isEqualTo(expectedData.type)
             Truth.assertThat(subject.orEmpty()).isEqualTo(expectedData.subject)
             Truth.assertThat(avatarUrl.orEmpty()).isEqualTo(expectedData.avatarUrl)
-            //Truth.assertThat(metadata).isEqualTo(expectedData.metadata)
+            if (channel.isSelf) {
+                Truth.assertThat(metadata).isEqualTo(Gson().toJson(SelfChannelMetadata(1)))
+            } else {
+                Truth.assertThat(metadata).isEqualTo(expectedData.metadata)
+            }
             Truth.assertThat(uri.orEmpty()).isEqualTo(expectedData.uri)
             Truth.assertThat(pending).isEqualTo(shouldBePending)
 
-             // Verify members if provided
-             if (expectedData.members.isNotEmpty()) {
-                 // The logic automatically adds current user as member if not present
-                 val expectedMemberIds = expectedData.members.map { it.user.id }.toMutableSet()
-                 if (!expectedMemberIds.contains(currentUser.id)) {
-                     expectedMemberIds.add(currentUser.id)
-                 }
+            // Verify members if provided
+            if (expectedData.members.isNotEmpty()) {
+                // The logic automatically adds current user as member if not present
+                val expectedMemberIds = expectedData.members.map { it.user.id }.toMutableSet()
+                if (!expectedMemberIds.contains(currentUser.id)) {
+                    expectedMemberIds.add(currentUser.id)
+                }
 
-                 val actualMemberIds = members?.map { it.id }?.toSet() ?: emptySet()
-                 Truth.assertThat(actualMemberIds).isEqualTo(expectedMemberIds)
+                val actualMemberIds = members?.map { it.id }?.toSet() ?: emptySet()
+                Truth.assertThat(actualMemberIds).isEqualTo(expectedMemberIds)
 
-                 // Verify member roles for explicitly provided members
-                 expectedData.members.forEach { expectedMember ->
-                     val actualMember = members?.find { it.id == expectedMember.user.id }
-                     Truth.assertThat(actualMember).isNotNull()
-                     Truth.assertThat(actualMember!!.role.name).isEqualTo(expectedMember.role.name)
-                 }
+                // Verify member roles for explicitly provided members
+                expectedData.members.forEach { expectedMember ->
+                    val actualMember = members?.find { it.id == expectedMember.user.id }
+                    Truth.assertThat(actualMember).isNotNull()
+                    Truth.assertThat(actualMember!!.role.name).isEqualTo(expectedMember.role.name)
+                }
 
-                 // Verify current user is present (automatically added if not in original list)
-                 val currentUserMember = members?.find { it.id == currentUser.id }
-                 Truth.assertThat(currentUserMember).isNotNull()
-             }
+                // Verify current user is present (automatically added if not in original list)
+                val currentUserMember = members?.find { it.id == currentUser.id }
+                Truth.assertThat(currentUserMember).isNotNull()
+            }
         }
 
         // Additional verification for direct channels
