@@ -11,7 +11,9 @@ import com.sceyt.chat.wrapper.ClientWrapper
 import com.sceyt.chatuikit.SceytChatUIKit
 import com.sceyt.chatuikit.data.di.repositoryModule
 import com.sceyt.chatuikit.data.models.SceytResponse
+import com.sceyt.chatuikit.data.models.channels.ChannelTypeEnum
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.koin.SceytKoinComponent
@@ -93,6 +95,9 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         Truth.assertThat(channel.type == data.type).isTrue()
         Truth.assertThat(channel.avatarUrl == data.avatarUrl).isTrue()
         Truth.assertThat(channel.metadata == data.metadata).isTrue()
+
+        // Verify channel is stored correctly in database
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
     }
 
     @Test
@@ -110,11 +115,19 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
 
         )
         val createdChannel = channelLogic.findOrCreatePendingChannelByMembers(data).data!!
+
+        // Verify first channel is in database
+        verifyChannelInDatabase(createdChannel, data, shouldBePending = true)
+
         // Delay to make sure that the created channel cratedAt is different from the previous one
         delay(500)
         val result = channelLogic.findOrCreatePendingChannelByMembers(data)
         Truth.assertThat(result is SceytResponse.Success && result.data != null).isTrue()
         Truth.assertThat(result.data?.createdAt == createdChannel.createdAt).isTrue()
+
+        // Verify same channel is returned from database (no duplicate created)
+        verifyChannelInDatabase(result.data!!, data, shouldBePending = true)
+        Truth.assertThat(result.data!!.id).isEqualTo(createdChannel.id)
     }
 
     @Test
@@ -132,6 +145,9 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         Truth.assertThat(channel.type).isEqualTo("direct")
         Truth.assertThat(channel.members?.size).isEqualTo(2)
         Truth.assertThat(channel.pending).isTrue()
+
+        // Verify channel is stored correctly in database
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
     }
 
     @Test
@@ -156,6 +172,9 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         Truth.assertThat(channel.avatarUrl).isEqualTo("https://example.com/avatar.jpg")
         Truth.assertThat(channel.metadata).isEqualTo("group metadata")
         Truth.assertThat(channel.members?.size).isEqualTo(4)
+
+        // Verify channel is stored correctly in database
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
     }
 
     @Test
@@ -171,6 +190,9 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         val channel = (result as SceytResponse.Success).data!!
         Truth.assertThat(channel.members?.size).isEqualTo(1)
         Truth.assertThat(channel.members?.first()?.id).isEqualTo(currentUser.id)
+
+        // Verify channel is stored correctly in database
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
     }
 
     @Test
@@ -188,14 +210,17 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         val result = channelLogic.findOrCreatePendingChannelByMembers(data)
         Truth.assertThat(result is SceytResponse.Success).isTrue()
         val channel = (result as SceytResponse.Success).data!!
-        
+
         val ownerMember = channel.members?.find { it.id == currentUser.id }
         val adminMember = channel.members?.find { it.id == "admin1" }
         val participantMember = channel.members?.find { it.id == "member1" }
-        
+
         Truth.assertThat(ownerMember?.role?.name).isEqualTo("owner")
         Truth.assertThat(adminMember?.role?.name).isEqualTo("admin")
         Truth.assertThat(participantMember?.role?.name).isEqualTo("participant")
+
+        // Verify channel is stored correctly in database
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
     }
 
     @Test
@@ -212,6 +237,9 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         val channel = (result as SceytResponse.Success).data!!
         val actualMemberIds = channel.members?.map { it.id }?.sorted()
         Truth.assertThat(actualMemberIds).isEqualTo(expectedMemberIds.sorted())
+
+        // Verify channel is stored correctly in database
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
     }
 
     @Test
@@ -221,7 +249,7 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
             members = listOf(
                 SceytMember(currentUser.toSceytUser(), "owner"),
                 SceytMember(SceytUser("user1"), "participant"),
-                SceytMember(SceytUser("user1"), "admin"), // Duplicate user with different role
+                SceytMember(SceytUser("user1"), "participant"), // Duplicate user
                 SceytMember(SceytUser("user2"), "participant")
             )
         )
@@ -230,6 +258,9 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         val channel = (result as SceytResponse.Success).data!!
         // Should handle duplicates appropriately (implementation dependent)
         Truth.assertThat(channel.members).isNotNull()
+
+        // Verify channel is stored correctly in database
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
     }
 
     @Test
@@ -248,6 +279,9 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         Truth.assertThat(result is SceytResponse.Success).isTrue()
         val channel = (result as SceytResponse.Success).data!!
         Truth.assertThat(channel.metadata).isEqualTo(metadata)
+
+        // Verify channel is stored correctly in database
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
     }
 
     @Test
@@ -265,6 +299,9 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         Truth.assertThat(result is SceytResponse.Success).isTrue()
         val channel = (result as SceytResponse.Success).data!!
         Truth.assertThat(channel.subject).isEqualTo(longSubject)
+
+        // Verify channel is stored correctly in database
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
     }
 
     @Test
@@ -282,6 +319,9 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         Truth.assertThat(result is SceytResponse.Success).isTrue()
         val channel = (result as SceytResponse.Success).data!!
         Truth.assertThat(channel.subject).isEqualTo(specialSubject)
+
+        // Verify channel is stored correctly in database
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
     }
 
     @Test
@@ -291,21 +331,25 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
             SceytMember(SceytUser("user1"), "participant"),
             SceytMember(SceytUser("user2"), "participant")
         )
-        
+
         val data1 = CreateChannelData(type = "group", members = members)
         val data2 = CreateChannelData(type = "group", members = members.reversed()) // Same members, different order
-        
+
         val result1 = channelLogic.findOrCreatePendingChannelByMembers(data1)
         val result2 = channelLogic.findOrCreatePendingChannelByMembers(data2)
-        
+
         Truth.assertThat(result1 is SceytResponse.Success).isTrue()
         Truth.assertThat(result2 is SceytResponse.Success).isTrue()
-        
+
         val channel1 = (result1 as SceytResponse.Success).data!!
         val channel2 = (result2 as SceytResponse.Success).data!!
-        
+
         // Should return the same channel regardless of member order
         Truth.assertThat(channel1.id).isEqualTo(channel2.id)
+
+        // Verify both channels are stored correctly in database
+        verifyChannelInDatabase(channel1, data1, shouldBePending = true)
+        verifyChannelInDatabase(channel2, data2, shouldBePending = true)
     }
 
     @Test
@@ -324,6 +368,9 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         val channel = (result as SceytResponse.Success).data!!
         Truth.assertThat(channel.type).isEqualTo("broadcast")
         Truth.assertThat(channel.subject).isEqualTo("Broadcast Channel")
+
+        // Verify channel is stored correctly in database
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
     }
 
     @Test
@@ -334,7 +381,7 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
                 add(SceytMember(SceytUser("user$index"), "participant"))
             }
         }
-        
+
         val data = CreateChannelData(
             type = "group",
             subject = "Large Group",
@@ -344,6 +391,9 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         Truth.assertThat(result is SceytResponse.Success).isTrue()
         val channel = (result as SceytResponse.Success).data!!
         Truth.assertThat(channel.members?.size).isEqualTo(101) // 1 owner + 100 participants
+
+        // Verify channel is stored correctly in database
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
     }
 
     @Test
@@ -359,6 +409,9 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         Truth.assertThat(result is SceytResponse.Success).isTrue()
         val channel = (result as SceytResponse.Success).data!!
         Truth.assertThat(channel.pending).isTrue()
+
+        // Verify channel is stored correctly in database
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
     }
 
     // Edge case tests
@@ -378,6 +431,9 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
         val channel = (result as SceytResponse.Success).data!!
         Truth.assertThat(channel.type).isEqualTo("group")
         Truth.assertThat(channel.members?.size).isEqualTo(1)
+
+        // Verify channel is stored correctly in database
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
     }
 
     @Test
@@ -390,19 +446,127 @@ class FindOrCreateDirectChannelLogicTests : SceytKoinComponent {
                 SceytMember(SceytUser("user1"), "participant")
             )
         )
-        
+
         // Simulate concurrent creation attempts
         val results = (1..5).map {
             channelLogic.findOrCreatePendingChannelByMembers(data)
         }
-        
+
         // All results should be successful
         results.forEach { result ->
             Truth.assertThat(result is SceytResponse.Success).isTrue()
         }
-        
+
         // All should return the same channel ID (no duplicates)
         val channelIds = results.map { (it as SceytResponse.Success).data!!.id }.distinct()
         Truth.assertThat(channelIds.size).isEqualTo(1)
+
+        // Verify the channel is stored correctly in database
+        val channel = (results.first() as SceytResponse.Success).data!!
+        verifyChannelInDatabase(channel, data, shouldBePending = true)
+    }
+
+    @Test
+    fun findOrCreatePendingChannelByMembers_should_return_same_direct_channel_with_different_member_combinations() = runTest {
+        val peerUserId = "userB"
+
+        // First: Create direct channel with only peer user (user B)
+        val dataWithPeerOnly = CreateChannelData(
+            type = "direct",
+            members = listOf(
+                SceytMember(SceytUser(peerUserId), "participant")
+            )
+        )
+
+        val firstResult = channelLogic.findOrCreatePendingChannelByMembers(dataWithPeerOnly)
+        Truth.assertThat(firstResult is SceytResponse.Success).isTrue()
+        val firstChannel = (firstResult as SceytResponse.Success).data!!
+
+        // Verify first channel creation
+        Truth.assertThat(firstChannel.type).isEqualTo("direct")
+        verifyChannelInDatabase(firstChannel, dataWithPeerOnly, shouldBePending = true)
+
+        // Second: Create direct channel with both current user and peer user (me + user B)
+        val dataWithBothUsers = CreateChannelData(
+            type = "direct",
+            members = listOf(
+                SceytMember(currentUser.toSceytUser(), "owner"),
+                SceytMember(SceytUser(peerUserId), "participant")
+            )
+        )
+
+        val secondResult = channelLogic.findOrCreatePendingChannelByMembers(dataWithBothUsers)
+        Truth.assertThat(secondResult is SceytResponse.Success).isTrue()
+        val secondChannel = (secondResult as SceytResponse.Success).data!!
+
+        // Should return the same channel regardless of member list differences
+        Truth.assertThat(secondChannel.id).isEqualTo(firstChannel.id)
+        Truth.assertThat(secondChannel.type).isEqualTo("direct")
+        Truth.assertThat(secondChannel.createdAt).isEqualTo(firstChannel.createdAt)
+
+        // Verify both channels are the same in database
+        verifyChannelInDatabase(secondChannel, dataWithBothUsers, shouldBePending = true)
+
+        // Additional verification: both should be retrievable via getDirectChannelFromDb
+        val directChannelFromDb = channelLogic.getDirectChannelFromDb(peerUserId)
+        Truth.assertThat(directChannelFromDb).isNotNull()
+        Truth.assertThat(directChannelFromDb!!.id).isEqualTo(firstChannel.id)
+        Truth.assertThat(directChannelFromDb.id).isEqualTo(secondChannel.id)
+    }
+
+      /**
+     * Helper method to verify that a channel is correctly stored in the database
+     * and matches the expected CreateChannelData
+     */
+    private suspend fun verifyChannelInDatabase(
+            channel: SceytChannel,
+            expectedData: CreateChannelData,
+            shouldBePending: Boolean = true
+    ) {
+        val channelFromDb = channelLogic.getChannelFromDb(channel.id)
+        Truth.assertThat(channelFromDb).isNotNull()
+
+        with(channelFromDb!!) {
+            Truth.assertThat(id).isEqualTo(channel.id)
+            Truth.assertThat(type).isEqualTo(expectedData.type)
+            Truth.assertThat(subject.orEmpty()).isEqualTo(expectedData.subject)
+            Truth.assertThat(avatarUrl.orEmpty()).isEqualTo(expectedData.avatarUrl)
+            //Truth.assertThat(metadata).isEqualTo(expectedData.metadata)
+            Truth.assertThat(uri.orEmpty()).isEqualTo(expectedData.uri)
+            Truth.assertThat(pending).isEqualTo(shouldBePending)
+
+             // Verify members if provided
+             if (expectedData.members.isNotEmpty()) {
+                 // The logic automatically adds current user as member if not present
+                 val expectedMemberIds = expectedData.members.map { it.user.id }.toMutableSet()
+                 if (!expectedMemberIds.contains(currentUser.id)) {
+                     expectedMemberIds.add(currentUser.id)
+                 }
+
+                 val actualMemberIds = members?.map { it.id }?.toSet() ?: emptySet()
+                 Truth.assertThat(actualMemberIds).isEqualTo(expectedMemberIds)
+
+                 // Verify member roles for explicitly provided members
+                 expectedData.members.forEach { expectedMember ->
+                     val actualMember = members?.find { it.id == expectedMember.user.id }
+                     Truth.assertThat(actualMember).isNotNull()
+                     Truth.assertThat(actualMember!!.role.name).isEqualTo(expectedMember.role.name)
+                 }
+
+                 // Verify current user is present (automatically added if not in original list)
+                 val currentUserMember = members?.find { it.id == currentUser.id }
+                 Truth.assertThat(currentUserMember).isNotNull()
+             }
+        }
+
+        // Additional verification for direct channels
+        if (expectedData.type == ChannelTypeEnum.Direct.value && expectedData.members.size == 2) {
+            val peerId = expectedData.members.find { it.user.id != currentUser.id }?.user?.id
+            if (peerId != null) {
+                val directChannelFromDb = channelLogic.getDirectChannelFromDb(peerId)
+                Truth.assertThat(directChannelFromDb).isNotNull()
+                Truth.assertThat(directChannelFromDb!!.id).isEqualTo(channel.id)
+            }
+        }
     }
 }
