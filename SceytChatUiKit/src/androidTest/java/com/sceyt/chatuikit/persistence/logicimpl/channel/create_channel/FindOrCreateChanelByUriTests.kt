@@ -1,4 +1,4 @@
-package com.sceyt.chatuikit.persistence.logicimpl.channel
+package com.sceyt.chatuikit.persistence.logicimpl.channel.create_channel
 
 import androidx.annotation.VisibleForTesting
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -37,12 +37,12 @@ import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 @SmallTest
-class PersistenceChannelsLogicImplTest : SceytKoinComponent {
+class FindOrCreateChanelByUriTests : SceytKoinComponent {
     private lateinit var database: SceytDatabase
     private lateinit var channelDao: ChannelDao
     private val channelLogic: PersistenceChannelsLogic by inject()
     private val currentUser = User("marat")
-    private val token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MzE2NjY5MjEsImV4cCI6MTczMTc1MzMyMSwibmJmIjoxNzMxNjY2OTIxLCJzdWIiOiJtYXJhdCJ9.AKLhNPorrWyeTSwEKphWMF3Hney2XPD45AHAmfeKfnM3_E5ZXZmtSGr_k6XDRTGL_qpHve3fM0MKaaTWeIT56Bhy3SSrjsvKPa7PYlDGI5xcgsy9OHwapysrJGEMlBHCbZRXs-8ftQV6CN2nBGbQq23tWMwOtSvif77sBm5SPBRRDFaAFcwWzShDfrO_ta3HD1iH60itPl9pY2993l7BVgrbEGP3kTL3edk6_YSYkzHDwMU5ZACbIDWodhtfPKbSNVIte0mbYOprx9ZOlLWVF-vW20frtY4ya7KE7ovKybly7eVJDsux1kdZdG0ZWwjw4ifqXT7AiivqhwosqEX-2w"
+    private val token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NTg2MTQ5NTQsImV4cCI6MTc1ODcwMTM1NCwibmJmIjoxNzU4NjE0OTU0LCJzdWIiOiJtYXJhdCJ9.VZz6jbK_VR1WaAgwgRhoERdjtZ1FxbZaQEvM32YVa9UF_Ehg-AV5kyv4Y4tAgNQXzU_Eq8Tj3iIBPVzkj60mKpNzCGlY0laZSopkotKFyK6n8uwVvYzKV1dNEYr0Lm8mHJcCVox8KSAWZI2RSMkGmZbqwsVuMMse-FwNNALCzD_XUuRr2FnkOQLjiImj_dbqnQzcSw8nggakCHvfhuJmRfqht3uomxLns8mWqAve_EN-piON7ub2msD56caMUoYbQynZ2q_2DlfvHKMVnwYWHdhx1iEKiB2s7sVCKu4X_91w9SVBwauFh8c00sBZbvCYCJ-NVNRVrfM_xlfW2urUOw"
 
     @get:Rule
     var instantTaskExecutorRule = InstantTaskExecutorRule()
@@ -74,51 +74,6 @@ class PersistenceChannelsLogicImplTest : SceytKoinComponent {
     fun tearDown() {
         database.close()
         ClientWrapper.currentUser = null
-    }
-
-    @Test
-    fun findOrCreatePendingChannelByMembers_should_create_new_channel_if_channel_not_found() = runTest {
-        val data = CreateChannelData(
-            type = "direct",
-            avatarUrl = "http://www.bing.com/search?q=litora",
-            metadata = "deterruisset",
-            members = listOf(
-                SceytMember(currentUser.toSceytUser(), "owner"),
-                SceytMember(SceytUser("1"), "owner"),
-                SceytMember(SceytUser("2"), "owner"),
-                SceytMember(SceytUser("3"), "owner")
-            )
-
-        )
-        val result = channelLogic.findOrCreatePendingChannelByMembers(data)
-        Truth.assertThat(result is SceytResponse.Success && result.data != null).isTrue()
-        val channel = (result as SceytResponse.Success).data!!
-        Truth.assertThat(channel.members?.map { it.id }?.sorted() == data.members.map { it.user.id }.sorted()).isTrue()
-        Truth.assertThat(channel.type == data.type).isTrue()
-        Truth.assertThat(channel.avatarUrl == data.avatarUrl).isTrue()
-        Truth.assertThat(channel.metadata == data.metadata).isTrue()
-    }
-
-    @Test
-    fun findOrCreatePendingChannelByMembers_should_not_create_new_channel_if_channel_already_exists() = runTest {
-        val data = CreateChannelData(
-            type = "direct",
-            avatarUrl = "http://www.bing.com/search?q=litora",
-            metadata = "deterruisset",
-            members = listOf(
-                SceytMember(currentUser.toSceytUser(), "owner"),
-                SceytMember(SceytUser("1"), "owner"),
-                SceytMember(SceytUser("2"), "owner"),
-                SceytMember(SceytUser("3"), "owner")
-            )
-
-        )
-        val createdChannel = channelLogic.findOrCreatePendingChannelByMembers(data).data!!
-        // Delay to make sure that the created channel cratedAt is different from the previous one
-        delay(500)
-        val result = channelLogic.findOrCreatePendingChannelByMembers(data)
-        Truth.assertThat(result is SceytResponse.Success && result.data != null).isTrue()
-        Truth.assertThat(result.data?.createdAt == createdChannel.createdAt).isTrue()
     }
 
     @Test
