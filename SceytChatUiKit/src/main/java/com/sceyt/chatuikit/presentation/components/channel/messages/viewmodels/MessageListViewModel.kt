@@ -979,9 +979,4 @@ class MessageListViewModel(
             else -> return
         }
     }
-    /*
-        private fun updateChannel(channel: SceytChannel) {
-            _channel = channel
-            _conversationId = channel.id
-        }*/
 }
