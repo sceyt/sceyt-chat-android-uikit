@@ -88,7 +88,8 @@ class GetNearAttachmentsTests {
             forwardingDetailsDb = null,
             metadata = "",
             updatedAt = 0,
-            unList = false
+            unList = false,
+            disableMentionsCount = false
         )
         database.messageDao().upsertMessageEntitiesWithTransaction(listOf(message))
     }
