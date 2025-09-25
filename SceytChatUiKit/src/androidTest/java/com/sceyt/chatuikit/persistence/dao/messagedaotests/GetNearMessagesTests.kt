@@ -48,8 +48,32 @@ class GetNearMessagesTests {
     }
 
     private fun createMessage(tid: Long, id: Long, deliveryStatus: DeliveryStatus = DeliveryStatus.Displayed): MessageEntity {
-        return MessageEntity(tid, id, channelId, "body", "text", null, id, 0, incoming = false, isTransient = false, silent = false,
-            deliveryStatus = deliveryStatus, state = MessageState.Unmodified, fromId = "1", markerCount = null, mentionedUsersIds = null, parentId = null, replyCount = 0L, displayCount = 0, autoDeleteAt = null, forwardingDetailsDb = null, bodyAttribute = null, unList = false)
+        return MessageEntity(
+            tid = tid,
+            id = id,
+            channelId = channelId,
+            body = "body",
+            type = "text",
+            metadata = null,
+            createdAt = id,
+            updatedAt = 0,
+            incoming = false,
+            isTransient = false,
+            silent = false,
+            deliveryStatus = deliveryStatus,
+            state = MessageState.Unmodified,
+            fromId = "1",
+            markerCount = null,
+            mentionedUsersIds = null,
+            parentId = null,
+            replyCount = 0L,
+            displayCount = 0,
+            autoDeleteAt = null,
+            forwardingDetailsDb = null,
+            bodyAttribute = null,
+            unList = false,
+            disableMentionsCount = false
+        )
     }
 
     @Test
