@@ -12,7 +12,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.DefaultTimeBar
 import com.sceyt.chatuikit.R
 import com.sceyt.chatuikit.databinding.SceytMediaItemVideoBinding
-import com.sceyt.chatuikit.extensions.applySystemWindowInsetsMargin
+import com.sceyt.chatuikit.extensions.applySystemWindowInsetsPadding
 import com.sceyt.chatuikit.extensions.doSafe
 import com.sceyt.chatuikit.persistence.file_transfer.NeedMediaInfoData
 import com.sceyt.chatuikit.persistence.file_transfer.ThumbFor
@@ -76,7 +76,7 @@ class MediaVideoViewHolder(
         var isPlayingBeforePause = false
         binding.videoView.findViewById<ConstraintLayout>(R.id.videoTimeContainer)?.let { videoTimeContainer ->
             with(videoTimeContainer) {
-                applySystemWindowInsetsMargin(applyBottom = true, applyRight = true, userDefaultMargins = false)
+                applySystemWindowInsetsPadding(applyBottom = true, applyRight = true, applyLeft = true)
                 findViewById<DefaultTimeBar>(R.id.exo_progress)?.setOnTouchListener { _, event ->
                     when (event.action) {
                         MotionEvent.ACTION_DOWN -> {
