@@ -28,11 +28,11 @@ Minimal Android SDK version:
 ## Installation
 1. Add the following line to the `build.gradle` file for your project:
 
-```groovy
+```kotlin
 allprojects {
     repositories {
         mavenCentral()
-        maven { url 'https://jitpack.io' }
+        maven(url = "https://jitpack.io")
     }
 }
 ```
@@ -40,9 +40,9 @@ This will enable your project to use libraries from Maven Central.
 
 2. Add the following dependency to your app's build.gradle file:
 
-```groovy
+```kotlin
 dependencies {
-    implementation 'com.sceyt:sceyt-chat-android-uikit:1.9.3'
+    implementation("com.sceyt:sceyt-chat-android-uikit:1.9.4")
 }
 ```
 ## Usage
@@ -138,7 +138,7 @@ To get more about customization, you check our [Sceyt Demo application](https://
 
 If you are using Proguard with this library, make sure to add the following rules to your proguard-rules file:
 
-``` groovy
+``` text
 # Keep all necessary classes in 'com.sceyt.chatuikit' package and its subpackages
 
 -keep class com.sceyt.chatuikit.** { *; }
