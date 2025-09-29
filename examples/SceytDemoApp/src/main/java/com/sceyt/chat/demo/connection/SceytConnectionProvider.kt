@@ -21,7 +21,7 @@ import kotlin.coroutines.CoroutineContext
 class SceytConnectionProvider(
         private val application: Application,
         private val preference: AppSharedPreference,
-        private val chatClientConnectionInterceptor: ChatClientConnectionInterceptor
+        private val chatClientConnectionInterceptor: ChatClientConnectionInterceptor,
 ) : CoroutineScope {
     private var initialized = false
     private var isConnecting = AtomicBoolean(false)
@@ -78,7 +78,7 @@ class SceytConnectionProvider(
 
     fun connectChatClient(
             userId: String = preference.getString(AppSharedPreference.PREF_USER_ID) ?: "",
-            onConnectStarted: ((Boolean, Exception?) -> Unit)? = null
+            onConnectStarted: ((Boolean, Exception?) -> Unit)? = null,
     ) {
         launch {
             val savedUserId = preference.getString(AppSharedPreference.PREF_USER_ID)
