@@ -14,5 +14,13 @@ data class DraftMessage(
         val mentionUsers: List<SceytUser>?,
         val replyOrEditMessage: SceytMessage?,
         val isReply: Boolean,
-        val bodyAttributes: List<BodyAttribute>?
-) : Parcelable
+        val bodyAttributes: List<BodyAttribute>?,
+        val attachments: List<DraftAttachment>?,
+        val voiceAttachment: DraftVoiceAttachment?,
+) : Parcelable {
+
+    fun hasContent() = !body.isNullOrEmpty()
+            || !attachments.isNullOrEmpty()
+            || voiceAttachment != null
+            || replyOrEditMessage != null
+}

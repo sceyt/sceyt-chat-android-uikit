@@ -9,6 +9,12 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.Executors
 
+data class AudioRecordData(
+        val file: File,
+        val duration: Int,
+        val amplitudes: List<Int>,
+)
+
 class AudioRecorderHelper(
         private val scope: CoroutineScope,
         private val context: Context,
@@ -71,6 +77,15 @@ class AudioRecorderHelper(
 
     val currentDuration: Int
         get() = currentRecorder?.getRecordingDuration() ?: 0
+
+    fun getAudioRecordData(): AudioRecordData? {
+        val file = audioFile ?: return null
+        val duration = currentDuration
+        if (duration < 1) {
+            return null
+        }
+        return AudioRecordData(file, duration, currentAmplitudes.toList())
+    }
 
     fun interface OnRecorderStart {
         fun onStart(started: Boolean)

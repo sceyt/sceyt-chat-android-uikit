@@ -115,6 +115,9 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
         return if (draftMessage != null) {
             val draft = "${context.getString(R.string.sceyt_draft)}:".toSpannable()
             style.draftPrefixTextStyle.apply(context, draft)
+            if (draftMessage.body.isNullOrBlank()) {
+                return true to draft.removeSuffix(":").toSpannable()
+            }
 
             val body = buildSpannedString {
                 append(draft)
@@ -124,8 +127,7 @@ open class DefaultChannelListSubtitleFormatter : Formatter<ChannelItemSubtitleFo
                     mentionTextStyle = style.mentionTextStyle)
                 ))
             }
-            return true to body
-
+            true to body
         } else false to ""
     }
 }

@@ -13,8 +13,7 @@ import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
-import com.sceyt.chatuikit.presentation.components.channel.input.mention.Mention
+import com.sceyt.chatuikit.data.models.messages.UpdateDraftMessageData
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.Flow
@@ -30,7 +29,7 @@ interface PersistenceChannelsLogic {
             offset: Int,
             searchQuery: String,
             loadKey: LoadKeyData?,
-            onlyMine:Boolean,
+            onlyMine: Boolean,
             ignoreDb: Boolean,
             awaitForConnection: Boolean,
             config: ChannelListConfig,
@@ -45,7 +44,7 @@ interface PersistenceChannelsLogic {
             onlyMine: Boolean,
             ignoreDb: Boolean,
             loadKey: LoadKeyData?,
-            directChatType: String
+            directChatType: String,
     ): Flow<PaginationResponse<SceytChannel>>
 
     suspend fun getChannelsBySQLiteQuery(query: SimpleSQLiteQuery): List<SceytChannel>
@@ -81,11 +80,7 @@ interface PersistenceChannelsLogic {
     suspend fun updateLastMessageIfNeeded(channelId: Long, message: SceytMessage?)
     suspend fun blockUnBlockUser(userId: String, block: Boolean)
     suspend fun sendChannelEvent(channelId: Long, event: String)
-    suspend fun updateDraftMessage(
-            channelId: Long, message: String?, mentionUsers: List<Mention>,
-            styling: List<BodyStyleRange>?, replyOrEditMessage: SceytMessage?, isReply: Boolean,
-    )
-
+    suspend fun updateDraftMessage(data: UpdateDraftMessageData)
     suspend fun getChannelsCountFromDb(): Int
     suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>)
     fun getChannelMessageCount(channelId: Long): Flow<Long>

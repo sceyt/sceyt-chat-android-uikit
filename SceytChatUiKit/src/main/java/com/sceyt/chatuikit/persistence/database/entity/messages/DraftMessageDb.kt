@@ -10,6 +10,12 @@ internal data class DraftMessageDb(
         @Embedded
         val draftMessageEntity: DraftMessageEntity,
 
+        @Relation(parentColumn = "chatId", entityColumn = "chatId")
+        val attachments: List<DraftAttachmentEntity>?,
+
+        @Relation(parentColumn = "chatId", entityColumn = "chatId")
+        val voiceAttachment: DraftVoiceAttachmentEntity?,
+
         @Relation(parentColumn = "chatId", entityColumn = "user_id",
             entity = UserEntity::class,
             associateBy = Junction(DraftMessageUserLinkEntity::class), )
