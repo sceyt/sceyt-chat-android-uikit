@@ -6,12 +6,14 @@ import androidx.core.view.isVisible
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.MessageState
 import com.sceyt.chatuikit.R
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytAttachment
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytUser
 import com.sceyt.chatuikit.extensions.getFileSize
 import com.sceyt.chatuikit.formatters.Formatter
+import com.sceyt.chatuikit.persistence.mappers.toSceytAttachment
 import com.sceyt.chatuikit.presentation.components.channel.input.mention.MessageBodyStyleHelper.buildWithAttributes
 import com.sceyt.chatuikit.presentation.custom_views.DecoratedTextView
 import com.sceyt.chatuikit.styles.channel.ChannelItemStyle
@@ -24,7 +26,7 @@ fun SceytMessage?.setChannelMessageDateAndStatusIcon(
         itemStyle: ChannelItemStyle,
         dateText: CharSequence,
         edited: Boolean,
-        shouldShowStatus: Boolean
+        shouldShowStatus: Boolean,
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming || !shouldShowStatus) {
         decoratedTextView.appearanceBuilder()
@@ -59,7 +61,7 @@ fun SceytMessage?.setChatMessageDateAndStatusIcon(
         decoratedTextView: DecoratedTextView,
         itemStyle: MessageItemStyle,
         dateText: CharSequence,
-        edited: Boolean
+        edited: Boolean,
 ) {
     if (this?.deliveryStatus == null || state == MessageState.Deleted || incoming) {
         decoratedTextView.appearanceBuilder()
@@ -118,6 +120,37 @@ fun SceytMessage.getFormattedBodyWithAttachments(
         }
 
         else -> context.getString(R.string.sceyt_file)
+    }
+    return SpannableString(body)
+}
+
+fun DraftMessage.getFormattedBodyWithAttachments(
+        context: Context,
+        mentionTextStyle: TextStyle,
+        attachmentNameFormatter: Formatter<SceytAttachment>,
+        mentionUserNameFormatter: Formatter<SceytUser>,
+        mentionClickListener: ((String) -> Unit)?,
+): SpannableString {
+    val body = when {
+        voiceAttachment != null -> {
+            body.orEmpty().ifEmpty { context.getString(R.string.sceyt_voice) }
+        }
+
+        attachments.isNullOrEmpty() || attachments.firstOrNull()?.type == AttachmentTypeEnum.Link -> {
+            buildWithAttributes(context, mentionTextStyle, mentionUserNameFormatter, mentionClickListener)
+        }
+
+        attachments.size == 1 -> {
+            body.orEmpty().ifEmpty {
+                attachmentNameFormatter.format(context, attachments[0].toSceytAttachment())
+            }
+        }
+
+        else -> {
+            body.orEmpty().ifEmpty {
+                context.getString(R.string.sceyt_files)
+            }
+        }
     }
     return SpannableString(body)
 }

@@ -1,14 +1,17 @@
 package com.sceyt.chatuikit.persistence.mappers
 
+import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.BodyAttribute
 import com.sceyt.chatuikit.data.models.channels.DraftAttachment
 import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.DraftVoiceAttachment
+import com.sceyt.chatuikit.data.models.messages.AttachmentTypeEnum
 import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftAttachmentEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageDb
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftMessageEntity
 import com.sceyt.chatuikit.persistence.database.entity.messages.DraftVoiceAttachmentEntity
+import com.sceyt.chatuikit.persistence.file_transfer.TransferState
 
 internal fun DraftMessageDb.toDraftMessage() = DraftMessage(
     channelId = draftMessageEntity.chatId,
@@ -65,3 +68,21 @@ internal fun AudioRecordData.toVoiceAttachmentData(channelId: Long) = DraftVoice
     duration = duration,
     amplitudes = amplitudes
 )
+
+internal fun DraftAttachment.toSceytAttachment() = Attachment
+    .Builder(
+        /* filePath = */ filePath,
+        /* url = */ "",
+        /* type = */ type.value,
+    )
+    .build()
+    .toSceytAttachment(0L, TransferState.PendingUpload)
+
+internal fun DraftVoiceAttachment.toSceytAttachment() = Attachment
+    .Builder(
+        /* filePath = */ filePath,
+        /* url = */ "",
+        /* type = */ AttachmentTypeEnum.Voice.value,
+    )
+    .build()
+    .toSceytAttachment(0L, TransferState.PendingUpload)

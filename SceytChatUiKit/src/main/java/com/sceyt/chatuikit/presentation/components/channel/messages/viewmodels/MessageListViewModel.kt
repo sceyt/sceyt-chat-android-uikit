@@ -94,6 +94,7 @@ import com.sceyt.chatuikit.shared.helpers.LinkPreviewHelper
 import com.sceyt.chatuikit.shared.utils.DateTimeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -684,7 +685,7 @@ class MessageListViewModel(
             replyOrEditMessage: SceytMessage?,
             isReply: Boolean,
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(NonCancellable) {
             val bodyAttributes = mentionUsers.map { it.toBodyAttribute() }.toMutableSet()
             styling?.let {
                 bodyAttributes.addAll(it.map { styleRange -> styleRange.toBodyAttribute() })

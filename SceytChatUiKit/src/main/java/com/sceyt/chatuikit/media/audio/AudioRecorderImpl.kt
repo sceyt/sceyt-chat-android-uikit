@@ -91,6 +91,8 @@ class AudioRecorderImpl(
                 ex.printStackTrace()
             }
             mediaRecorder = null
+            amplitudeIndex = 0
+            amplitudes.clear()
             recording.set(false)
         }
     }

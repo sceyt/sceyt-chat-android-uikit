@@ -236,9 +236,10 @@ class MessageInputView @JvmOverloads constructor(
 
         channelEventDebounceHelper.submit {
             actionListeners.sendChannelEvent(state)
-            updateDraftMessage()
-            if (state is InputUserAction.Typing)
+            if (state is InputUserAction.Typing) {
+                updateDraftMessage()
                 tryToLoadLinkPreview(state.text)
+            }
         }
     }
 
@@ -355,17 +356,14 @@ class MessageInputView @JvmOverloads constructor(
     private fun isEditingMessage() = editMessage != null
 
     private fun tryToSendRecording(file: File?, amplitudes: IntArray, duration: Int) {
-        file ?: run {
-            finishRecording()
-            return
-        }
+        file ?: return
         val metadata = Gson().toJson(AudioMetadata(amplitudes, duration))
         createAttachmentWithPaths(
             AttachmentTypeEnum.Voice to file.path, metadata = metadata,
         ).firstOrNull()?.let {
             allAttachments.add(it)
             sendMessage()
-        } ?: finishRecording()
+        }
     }
 
     private fun finishRecording() {
@@ -375,6 +373,7 @@ class MessageInputView @JvmOverloads constructor(
         binding.messageInput.setText(empty)
         determineInputState()
         binding.messageInput.requestFocus()
+        onRecordingCompletedOrCanceled()
     }
 
     private fun canShowRecorderView() = !disabledInputByGesture &&
@@ -388,13 +387,14 @@ class MessageInputView @JvmOverloads constructor(
 
             override fun onRecordingCompleted(shouldShowPreview: Boolean) {
                 audioRecorderHelper.stopRecording(onStopRecordingCompleted(shouldShowPreview))
-                onRecordingCompletedOrCanceled()
+                if (shouldShowPreview)
+                    onRecordingCompletedOrCanceled()
             }
 
             override fun onRecordingCanceled() {
-                audioRecorderHelper.cancelRecording()
-                finishRecording()
-                onRecordingCompletedOrCanceled()
+                audioRecorderHelper.cancelRecording {
+                    finishRecording()
+                }
             }
         })
     }
@@ -422,6 +422,7 @@ class MessageInputView @JvmOverloads constructor(
 
         onUserActionStateChange(InputUserAction.Recording(recording = false))
         stopRecordingUpdateJob()
+        updateDraftMessage()
     }
 
     private fun startRecordingUpdateJob() {
@@ -448,7 +449,7 @@ class MessageInputView @JvmOverloads constructor(
             return@OnRecorderStop
         }
         if (shouldShowPreview) {
-            showRecordPreview(file, amplitudes, duration, true)
+            showRecordPreview(file, amplitudes, duration)
         } else {
             finishRecording()
             tryToSendRecording(file, amplitudes.toIntArray(), duration)
@@ -459,7 +460,6 @@ class MessageInputView @JvmOverloads constructor(
             file: File?,
             amplitudes: Array<Int>,
             duration: Int,
-            updateDraftMessage: Boolean,
     ) {
         file ?: return
         val metadata = AudioMetadata(amplitudes.toIntArray(), duration)
@@ -476,8 +476,6 @@ class MessageInputView @JvmOverloads constructor(
         })
         voiceRecorderView?.isVisible = false
         binding.voiceRecordPlaybackView.isVisible = true
-        if (updateDraftMessage)
-            updateDraftMessage()
     }
 
     private fun handleAttachmentClick() {
@@ -696,7 +694,7 @@ class MessageInputView @JvmOverloads constructor(
         draftMessage.voiceAttachment?.let {
             val file = File(it.filePath)
             if (file.exists()) {
-                showRecordPreview(file, it.amplitudes.toTypedArray(), it.duration, false)
+                showRecordPreview(file, it.amplitudes.toTypedArray(), it.duration)
             }
         }
 
