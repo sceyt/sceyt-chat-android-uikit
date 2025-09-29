@@ -9,11 +9,11 @@ import com.sceyt.chatuikit.data.models.LoadKeyData
 import com.sceyt.chatuikit.data.models.PaginationResponse
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.channels.CreateChannelData
+import com.sceyt.chatuikit.data.models.channels.DraftMessage
 import com.sceyt.chatuikit.data.models.channels.EditChannelData
 import com.sceyt.chatuikit.data.models.channels.GetAllChannelsResponse
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
-import com.sceyt.chatuikit.data.models.messages.UpdateDraftMessageData
 import com.sceyt.chatuikit.push.PushData
 import com.sceyt.chatuikit.services.SceytPresenceChecker
 import kotlinx.coroutines.flow.Flow
@@ -80,7 +80,7 @@ interface PersistenceChannelsLogic {
     suspend fun updateLastMessageIfNeeded(channelId: Long, message: SceytMessage?)
     suspend fun blockUnBlockUser(userId: String, block: Boolean)
     suspend fun sendChannelEvent(channelId: Long, event: String)
-    suspend fun updateDraftMessage(data: UpdateDraftMessageData)
+    suspend fun updateDraftMessage(draftMessage: DraftMessage)
     suspend fun getChannelsCountFromDb(): Int
     suspend fun onUserPresenceChanged(users: List<SceytPresenceChecker.PresenceUser>)
     fun getChannelMessageCount(channelId: Long): Flow<Long>

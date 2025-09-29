@@ -31,18 +31,18 @@ internal abstract class DraftMessageDao {
     @Transaction
     open suspend fun insertDraftMessage(
             entity: DraftMessageEntity,
-            links: List<DraftMessageUserLinkEntity>,
-            attachments: List<DraftAttachmentEntity>,
+            links: List<DraftMessageUserLinkEntity>?,
+            attachments: List<DraftAttachmentEntity>?,
             voiceAttachment: DraftVoiceAttachmentEntity?,
     ) {
         if (existsChannel(entity.chatId)) {
             insert(entity)
 
-            links.takeIf { it.isNotEmpty() }?.let {
+            links?.takeIf { it.isNotEmpty() }?.let {
                 insertDraftMessageUserLinks(it)
             }
 
-            attachments.takeIf { it.isNotEmpty() }?.let {
+            attachments?.takeIf { it.isNotEmpty() }?.let {
                 insertDraftAttachments(it)
             }
 
