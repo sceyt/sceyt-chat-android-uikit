@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.work.ExistingWorkPolicy
 import com.sceyt.chat.models.Types
+import com.sceyt.chat.models.attachment.Attachment
 import com.sceyt.chat.models.message.DeleteMessageType
 import com.sceyt.chat.models.message.DeliveryStatus
 import com.sceyt.chat.models.message.Message
@@ -26,6 +27,7 @@ import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadNext
 import com.sceyt.chatuikit.data.models.PaginationResponse.LoadType.LoadPrev
 import com.sceyt.chatuikit.data.models.SceytResponse
 import com.sceyt.chatuikit.data.models.SyncNearMessagesResult
+import com.sceyt.chatuikit.data.models.channels.DraftAttachment
 import com.sceyt.chatuikit.data.models.channels.SceytChannel
 import com.sceyt.chatuikit.data.models.channels.SceytMember
 import com.sceyt.chatuikit.data.models.fold
@@ -36,11 +38,13 @@ import com.sceyt.chatuikit.data.models.messages.MessageId
 import com.sceyt.chatuikit.data.models.messages.MessageTypeEnum
 import com.sceyt.chatuikit.data.models.messages.SceytMessage
 import com.sceyt.chatuikit.data.models.messages.SceytReactionTotal
+import com.sceyt.chatuikit.data.models.messages.UpdateDraftMessageData
 import com.sceyt.chatuikit.data.models.onSuccess
 import com.sceyt.chatuikit.data.models.onSuccessNotNull
 import com.sceyt.chatuikit.data.toFileListItem
 import com.sceyt.chatuikit.extensions.findIndexed
 import com.sceyt.chatuikit.koin.SceytKoinComponent
+import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.persistence.extensions.asLiveData
 import com.sceyt.chatuikit.persistence.extensions.broadcastSharedFlow
 import com.sceyt.chatuikit.persistence.extensions.toArrayList
@@ -70,6 +74,7 @@ import com.sceyt.chatuikit.persistence.interactor.MessageReactionInteractor
 import com.sceyt.chatuikit.persistence.interactor.UserInteractor
 import com.sceyt.chatuikit.persistence.logic.PersistenceConnectionLogic
 import com.sceyt.chatuikit.persistence.logicimpl.channel.ChannelsCache
+import com.sceyt.chatuikit.persistence.mappers.toVoiceAttachmentData
 import com.sceyt.chatuikit.persistence.workers.UploadAndSendAttachmentWorkManager
 import com.sceyt.chatuikit.presentation.common.DebounceHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
@@ -670,14 +675,34 @@ class MessageListViewModel(
 
     fun updateDraftMessage(
             text: Editable?,
+            attachments: List<Attachment>,
+            audioRecordData: AudioRecordData?,
             mentionUsers: List<Mention>,
             styling: List<BodyStyleRange>?,
             replyOrEditMessage: SceytMessage?,
             isReply: Boolean,
     ) {
         viewModelScope.launch(Dispatchers.IO) {
-            channelInteractor.updateDraftMessage(channel.id, text?.toString(),
-                mentionUsers, styling, replyOrEditMessage, isReply)
+            val data = UpdateDraftMessageData(
+                channelId = conversationId,
+                message = text?.toString(),
+                attachments = attachments.mapNotNull { attachment ->
+                    DraftAttachment(
+                        channelId = conversationId,
+                        filePath = attachment.filePath,
+                        type = AttachmentTypeEnum.entries.find {
+                            it.value == attachment.type
+                        } ?: return@mapNotNull null
+                    )
+                },
+                voiceAttachment = audioRecordData?.toVoiceAttachmentData(conversationId),
+                mentionUsers = mentionUsers,
+                styling = styling,
+                replyOrEditMessage = replyOrEditMessage,
+                isReply = isReply
+            )
+
+            channelInteractor.updateDraftMessage(data)
         }
     }
 

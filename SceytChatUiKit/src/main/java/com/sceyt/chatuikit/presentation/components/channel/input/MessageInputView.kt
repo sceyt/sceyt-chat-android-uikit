@@ -46,6 +46,7 @@ import com.sceyt.chatuikit.extensions.setTextAndMoveSelectionEnd
 import com.sceyt.chatuikit.extensions.showSoftInput
 import com.sceyt.chatuikit.formatters.attributes.DraftMessageBodyFormatterAttributes
 import com.sceyt.chatuikit.media.audio.AudioPlayerHelper
+import com.sceyt.chatuikit.media.audio.AudioRecordData
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper
 import com.sceyt.chatuikit.media.audio.AudioRecorderHelper.OnRecorderStop
 import com.sceyt.chatuikit.persistence.extensions.getChannelType
@@ -60,8 +61,8 @@ import com.sceyt.chatuikit.presentation.components.channel.input.components.Ment
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState.Text
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputState.Voice
-import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
 import com.sceyt.chatuikit.presentation.components.channel.input.data.InputUserAction
+import com.sceyt.chatuikit.presentation.components.channel.input.data.SearchResult
 import com.sceyt.chatuikit.presentation.components.channel.input.format.BodyStyleRange
 import com.sceyt.chatuikit.presentation.components.channel.input.helpers.MessageToSendHelper
 import com.sceyt.chatuikit.presentation.components.channel.input.link.SingleLinkDetailsProvider
@@ -92,7 +93,7 @@ import com.sceyt.chatuikit.presentation.components.channel.messages.dialogs.Choo
 import com.sceyt.chatuikit.presentation.components.picker.BottomSheetMediaPicker
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.AudioMetadata
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.RecordingListener
-import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.VoiceRecordPlaybackView
+import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.VoiceRecordPlaybackView.VoiceRecordPlaybackListeners
 import com.sceyt.chatuikit.presentation.custom_views.voice_recorder.VoiceRecorderView
 import com.sceyt.chatuikit.shared.helpers.picker.FilePickerHelper
 import com.sceyt.chatuikit.shared.helpers.picker.PickType
@@ -250,7 +251,15 @@ class MessageInputView @JvmOverloads constructor(
         val replyOrEditMessage = replyMessage ?: editMessage
         val isReply = replyMessage != null
         with(binding.messageInput) {
-            actionListeners.updateDraftMessage(text, mentions, styling, replyOrEditMessage, isReply)
+            actionListeners.updateDraftMessage(
+                text = text,
+                mentionUserIds = mentions,
+                attachments = allAttachments,
+                audioRecordData = audioRecorderHelper.getAudioRecordData(),
+                styling = styling,
+                replyOrEditMessage = replyOrEditMessage,
+                isReply = isReply
+            )
         }
     }
 
@@ -396,7 +405,7 @@ class MessageInputView @JvmOverloads constructor(
         audioRecorderHelper.startRecording(
             directoryToSaveFile = directoryToSaveRecording,
             onRecordReachedMaxDurationListener = {
-                stopRecordAndShowPreviewIfExist()
+                stopRecordAndShowPreviewIfNeeded()
             }
         )
         binding.layoutInput.isInvisible = true
@@ -439,17 +448,22 @@ class MessageInputView @JvmOverloads constructor(
             return@OnRecorderStop
         }
         if (shouldShowPreview) {
-            showRecordPreview(file, amplitudes, duration)
+            showRecordPreview(file, amplitudes, duration, true)
         } else {
             finishRecording()
             tryToSendRecording(file, amplitudes.toIntArray(), duration)
         }
     }
 
-    private fun showRecordPreview(file: File?, amplitudes: Array<Int>, duration: Int) {
+    private fun showRecordPreview(
+            file: File?,
+            amplitudes: Array<Int>,
+            duration: Int,
+            updateDraftMessage: Boolean,
+    ) {
         file ?: return
         val metadata = AudioMetadata(amplitudes.toIntArray(), duration)
-        binding.voiceRecordPlaybackView.init(file, metadata, object : VoiceRecordPlaybackView.VoiceRecordPlaybackListeners {
+        binding.voiceRecordPlaybackView.init(file, metadata, object : VoiceRecordPlaybackListeners {
             override fun onDeleteVoiceRecord() {
                 file.deleteOnExit()
                 finishRecording()
@@ -462,6 +476,8 @@ class MessageInputView @JvmOverloads constructor(
         })
         voiceRecorderView?.isVisible = false
         binding.voiceRecordPlaybackView.isVisible = true
+        if (updateDraftMessage)
+            updateDraftMessage()
     }
 
     private fun handleAttachmentClick() {
@@ -496,10 +512,13 @@ class MessageInputView @JvmOverloads constructor(
 
     private fun isEnabledInput() = !disabledInputByGesture && !isInputHidden
 
-    private fun addAttachments(attachments: List<Attachment>) {
+    private fun addAttachments(attachments: List<Attachment>, updateDraftMessage: Boolean) {
         binding.viewAttachments.isVisible = true
         allAttachments.addAll(attachments)
         attachmentsAdapter.addItems(attachments.map { AttachmentItem(it) })
+        if (updateDraftMessage) {
+            updateDraftMessage()
+        }
         determineInputState()
     }
 
@@ -640,8 +659,9 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     internal fun setDraftMessage(draftMessage: DraftMessage?) {
-        if (draftMessage == null || draftMessage.body.isNullOrEmpty())
-            return
+        draftMessage ?: return
+        if (!draftMessage.hasContent()) return
+
         var body: CharSequence
         binding.messageInput.removeTextChangedListener(inputTextWatcher)
         with(binding.messageInput) {
@@ -663,6 +683,23 @@ class MessageInputView @JvmOverloads constructor(
                     replyMessage(draftMessage.replyOrEditMessage, initWithDraft = true)
                 else editMessage(draftMessage.replyOrEditMessage, initWithDraft = true)
         }
+
+        if (!draftMessage.attachments.isNullOrEmpty()) {
+            val attachments = createAttachmentWithPaths(
+                *draftMessage.attachments.map {
+                    it.type to it.filePath
+                }.toTypedArray()
+            )
+            addAttachments(attachments = attachments, updateDraftMessage = false)
+        }
+
+        draftMessage.voiceAttachment?.let {
+            val file = File(it.filePath)
+            if (file.exists()) {
+                showRecordPreview(file, it.amplitudes.toTypedArray(), it.duration, false)
+            }
+        }
+
         determineInputState()
         addInputTextWatcher()
     }
@@ -767,7 +804,7 @@ class MessageInputView @JvmOverloads constructor(
 
     fun addAttachment(vararg typeAndPath: Pair<AttachmentTypeEnum, String>) {
         val attachments = createAttachmentWithPaths(*typeAndPath)
-        addAttachments(attachments)
+        addAttachments(attachments = attachments, updateDraftMessage = true)
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -813,7 +850,7 @@ class MessageInputView @JvmOverloads constructor(
     }
 
     @SuppressWarnings("WeakerAccess")
-    fun stopRecordAndShowPreviewIfExist() {
+    fun stopRecordAndShowPreviewIfNeeded() {
         voiceRecorderView?.stopRecordAndShowPreviewIfNeeded()
     }
 
@@ -922,6 +959,7 @@ class MessageInputView @JvmOverloads constructor(
     override fun onRemoveAttachmentClick(item: AttachmentItem) {
         attachmentsAdapter.removeItem(item)
         allAttachments.remove(item.attachment)
+        updateDraftMessage()
         determineInputState()
         // Delete file if it was copied to the app's internal storage
         val file = File(item.attachment.filePath)
@@ -1031,12 +1069,22 @@ class MessageInputView @JvmOverloads constructor(
 
     override fun updateDraftMessage(
             text: Editable?,
+            attachments: List<Attachment>,
+            audioRecordData: AudioRecordData?,
             mentionUserIds: List<Mention>,
             styling: List<BodyStyleRange>?,
             replyOrEditMessage: SceytMessage?,
             isReply: Boolean,
     ) {
-        messageInputActionCallback?.updateDraftMessage(text, mentionUserIds, styling, replyOrEditMessage, isReply)
+        messageInputActionCallback?.updateDraftMessage(
+            text = text,
+            attachments = attachments,
+            audioRecordData = audioRecordData,
+            mentionUserIds = mentionUserIds,
+            styling = styling,
+            replyOrEditMessage = replyOrEditMessage,
+            isReply = isReply
+        )
     }
 
     override fun onMentionUsersListener(query: String) {
